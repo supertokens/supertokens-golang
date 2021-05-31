@@ -10,27 +10,33 @@ type NormalisedURLPath struct {
 	Value string
 }
 
-func (n NormalisedURLPath) StartsWith(other NormalisedURLPath) bool {
+func NewNormalisedURLPath(url string) (*NormalisedURLPath, error) {
+	val, err := NormaliseURLPathOrThrowError(url)
+	if err != nil {
+		return nil, err
+	}
+	return &NormalisedURLPath{
+		Value: val,
+	}, nil
+}
+
+func (n *NormalisedURLPath) StartsWith(other NormalisedURLPath) bool {
 	return strings.HasPrefix(n.Value, other.Value)
 }
 
-func (n NormalisedURLPath) AppendPath(other NormalisedURLPath) NormalisedURLPath {
+func (n *NormalisedURLPath) AppendPath(other NormalisedURLPath) NormalisedURLPath {
 	return NormalisedURLPath{Value: n.Value + other.Value}
 }
 
-func (n NormalisedURLPath) GetAsStringDangerous() string {
-	return n.Value
-}
-
-func (n NormalisedURLPath) Equals(other NormalisedURLPath) bool {
+func (n *NormalisedURLPath) Equals(other NormalisedURLPath) bool {
 	return n.Value == other.Value
 }
 
-func (n NormalisedURLPath) IsARecipePath() bool {
+func (n *NormalisedURLPath) IsARecipePath() bool {
 	return n.Value == "/recipe" || strings.HasPrefix(n.Value, "/recipe/")
 }
 
-func (n NormalisedURLPath) NormaliseURLPathOrThrowError(input string) (string, error) {
+func NormaliseURLPathOrThrowError(input string) (string, error) {
 	input = strings.ToLower(strings.Trim(input, ""))
 	if strings.HasPrefix(input, "http://") != true && strings.HasPrefix(input, "https://") != true {
 		return "", errors.New("converting to proper URL")

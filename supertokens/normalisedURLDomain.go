@@ -10,8 +10,14 @@ type NormalisedURLDomain struct {
 	Value string
 }
 
-func (n NormalisedURLDomain) GetAsStringDangerous() string {
-	return n.Value
+func NewNormalisedURLDomain(url string, ignoreProtocol bool) (*NormalisedURLDomain, error) {
+	val, err := NormaliseURLDomainOrThrowError(url, ignoreProtocol)
+	if err != nil {
+		return nil, err
+	}
+	return &NormalisedURLDomain{
+		Value: val,
+	}, nil
 }
 
 func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, error) {
