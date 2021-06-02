@@ -7,7 +7,7 @@ import (
 )
 
 type NormalisedURLDomain struct {
-	Value string
+	value string
 }
 
 func NewNormalisedURLDomain(url string, ignoreProtocol bool) (*NormalisedURLDomain, error) {
@@ -16,8 +16,12 @@ func NewNormalisedURLDomain(url string, ignoreProtocol bool) (*NormalisedURLDoma
 		return nil, err
 	}
 	return &NormalisedURLDomain{
-		Value: val,
+		value: val,
 	}, nil
+}
+
+func (n *NormalisedURLDomain) GetAsStringDangerous() string {
+	return n.value
 }
 
 func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, error) {

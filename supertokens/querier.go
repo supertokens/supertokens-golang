@@ -39,7 +39,7 @@ func (q *Querier) getAPIVersion() (string, error) {
 			return q.APIVersion, nil
 		}
 	}
-	response, err := q.sendRequestHelper(NormalisedURLPath{Value: "/apiversion"}, func(url string) (*http.Response, error) {
+	response, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -214,9 +214,9 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	if numberOfTries == 0 {
 		return nil, errors.New("No SuperTokens core available to query")
 	}
-	currentHost := q.Hosts[q.LastTriedIndex].Value
+	currentHost := q.Hosts[q.LastTriedIndex].GetAsStringDangerous()
 	q.LastTriedIndex = (q.LastTriedIndex + 1) % len(q.Hosts)
-	resp, err := httpRequest(currentHost + path.Value)
+	resp, err := httpRequest(currentHost + path.GetAsStringDangerous())
 
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {

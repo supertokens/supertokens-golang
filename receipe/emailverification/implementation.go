@@ -1,7 +1,15 @@
 package emailverification
 
-type APIImplementation struct {
-	verifyEmailPOST              func(token string, options APIOptions) map[string]interface{}
-	isEmailVerifiedGET           func(options APIOptions) map[string]interface{}
-	generateEmailVerifyTokenPOST func(options APIOptions) map[string]interface{}
+type APIImplementation struct{}
+
+func (a *APIImplementation) verifyEmailPOST(token string, options APIOptions) map[string]interface{} {
+	return options.recipeImplementation.verifyEmailUsingToken(token)
+}
+
+func (a *APIImplementation) isEmailVerifiedGET(options APIOptions) map[string]interface{} {
+	return nil
+}
+
+func (a *APIImplementation) generateEmailVerifyTokenPOST(options APIOptions) map[string]interface{} {
+	return nil
 }

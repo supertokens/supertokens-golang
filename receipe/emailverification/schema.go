@@ -37,14 +37,14 @@ type APIOptions struct {
 	res                  http.ResponseWriter
 }
 
-type APIInterface struct {
-	verifyEmailPOST              func(token string, options APIOptions) map[string]interface{}
-	isEmailVerifiedGET           func(options APIOptions) map[string]interface{}
-	generateEmailVerifyTokenPOST func(options APIOptions) map[string]interface{}
+type APIInterface interface {
+	verifyEmailPOST(token string, options APIOptions) map[string]interface{}
+	isEmailVerifiedGET(options APIOptions) map[string]interface{}
+	generateEmailVerifyTokenPOST(options APIOptions) map[string]interface{}
 }
 
-type RecipeInterface struct {
-	createEmailVerificationToken func(userId, email string) map[string]interface{}
-	verifyEmailUsingToken        func(token string) map[string]interface{}
-	isEmailVerified              func(userId, email string) bool
+type RecipeInterface interface {
+	createEmailVerificationToken(userId, email string) map[string]interface{}
+	verifyEmailUsingToken(token string) map[string]interface{}
+	isEmailVerified(userId, email string) bool
 }

@@ -11,6 +11,7 @@ import (
 )
 
 type SuperTokens struct {
+	instance          *SuperTokens
 	AppInfo           NormalisedAppinfo
 	IsInServerlessEnv bool
 	RecipeModules     []RecipeModule
@@ -59,6 +60,21 @@ func NewSuperTokens(config TypeInput) (*SuperTokens, error) {
 	return s, nil
 }
 
+func (s *SuperTokens) Init(config TypeInput) (err error) {
+	if s.instance == nil {
+		s.instance, err = NewSuperTokens(config)
+		return err
+	}
+	return nil
+}
+
+func (s *SuperTokens) GetInstanceOrThrowError() (*SuperTokens, error) {
+	if s.instance != nil {
+		return s.instance, nil
+	}
+	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
+}
+
 func (s *SuperTokens) SendTelemetry() error {
 	q := &Querier{}
 	querier, err := q.GetNewInstanceOrThrowError(s.IsInServerlessEnv, "")
@@ -66,7 +82,7 @@ func (s *SuperTokens) SendTelemetry() error {
 		return err
 	}
 
-	response, err := querier.SendGetRequest(NormalisedURLPath{Value: "/telemetry"}, map[string]string{})
+	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, map[string]string{})
 	if err != nil {
 		return err
 	}
@@ -79,7 +95,7 @@ func (s *SuperTokens) SendTelemetry() error {
 
 	data := map[string]interface{}{
 		"appName":       s.AppInfo.AppName,
-		"websiteDomain": s.AppInfo.WebsiteDomain.Value,
+		"websiteDomain": s.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 		"telemetryId":   telemetryID,
 	}
 	jsonData, err := json.Marshal(data)
@@ -100,21 +116,17 @@ func (s *SuperTokens) SendTelemetry() error {
 	return nil
 }
 
-func (s *SuperTokens) GetInstanceOrThrowError() *SuperTokens {
-	return s
-}
-
-func (s *SuperTokens) middleware() http.HandlerFunc {
+func (s *SuperTokens) Middleware() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, _ := NewNormalisedURLPath(r.URL.Path)        //error handle
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL) //doubt
 		// method := normaliseHttpMethod(r.Method)
 
-		if strings.HasPrefix(path.Value, s.AppInfo.APIBasePath.Value) == false {
+		if reflect.DeepEqual(path, s.AppInfo.APIBasePath) == false {
 			return
 		}
 		requestRID := getRIDFromRequest(r)
-		if requestRID == "" {
+		if requestRID != "" {
 			var matchedRecipe RecipeModule
 			for _, recipeModule := range s.RecipeModules {
 				if recipeModule.GetRecipeID() == requestRID {
@@ -125,6 +137,25 @@ func (s *SuperTokens) middleware() http.HandlerFunc {
 			if reflect.DeepEqual(matchedRecipe, RecipeModule{}) {
 				return
 			}
+
 		}
 	})
 }
+
+func (s *SuperTokens) handleAPI(matchedRecipe RecipeModule,
+	id string,
+	r *http.Request,
+	w http.ResponseWriter,
+	path NormalisedURLPath,
+	method http.HandlerFunc) {
+	matchedRecipe.handleAPIRequest(id, r, w, path, method)
+}
+
+// func (s *SuperTokens) getAllCORSHeaders() []string {
+// 	headerSet := []string{HeaderRID, HeaderFDI}
+// 	for _, recipe := range s.RecipeModules {
+// 		headers := recipe.getAllCORSHeaders()
+
+// 	}
+// 	return nil
+// }

@@ -7,7 +7,7 @@ import (
 )
 
 type NormalisedURLPath struct {
-	Value string
+	value string
 }
 
 func NewNormalisedURLPath(url string) (*NormalisedURLPath, error) {
@@ -16,24 +16,28 @@ func NewNormalisedURLPath(url string) (*NormalisedURLPath, error) {
 		return nil, err
 	}
 	return &NormalisedURLPath{
-		Value: val,
+		value: val,
 	}, nil
 }
 
+func (n *NormalisedURLPath) GetAsStringDangerous() string {
+	return n.value
+}
+
 func (n *NormalisedURLPath) StartsWith(other NormalisedURLPath) bool {
-	return strings.HasPrefix(n.Value, other.Value)
+	return strings.HasPrefix(n.value, other.value)
 }
 
 func (n *NormalisedURLPath) AppendPath(other NormalisedURLPath) NormalisedURLPath {
-	return NormalisedURLPath{Value: n.Value + other.Value}
+	return NormalisedURLPath{value: n.value + other.value}
 }
 
 func (n *NormalisedURLPath) Equals(other NormalisedURLPath) bool {
-	return n.Value == other.Value
+	return n.value == other.value
 }
 
 func (n *NormalisedURLPath) IsARecipePath() bool {
-	return n.Value == "/recipe" || strings.HasPrefix(n.Value, "/recipe/")
+	return n.value == "/recipe" || strings.HasPrefix(n.value, "/recipe/")
 }
 
 func NormaliseURLPathOrThrowError(input string) (string, error) {

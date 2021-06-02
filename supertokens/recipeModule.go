@@ -1,23 +1,25 @@
 package supertokens
 
+import "net/http"
+
 type RecipeModule struct {
-	RecipeID string
-	AppInfo  NormalisedAppinfo
+	recipeID string
+	appInfo  NormalisedAppinfo
 }
 
 func NewRecipeModule(recipeId string, appInfo NormalisedAppinfo) *RecipeModule {
 	return &RecipeModule{
-		RecipeID: recipeId,
-		AppInfo:  appInfo,
+		recipeID: recipeId,
+		appInfo:  appInfo,
 	}
 }
 
 func (r *RecipeModule) GetRecipeID() string {
-	return r.RecipeID
+	return r.recipeID
 }
 
 func (r *RecipeModule) GetAppInfo() NormalisedAppinfo {
-	return r.AppInfo
+	return r.appInfo
 }
 
 func (r *RecipeModule) ReturnAPIIdIfCanHandleRequest(path NormalisedURLPath, method string) string {
@@ -25,6 +27,13 @@ func (r *RecipeModule) ReturnAPIIdIfCanHandleRequest(path NormalisedURLPath, met
 	return ""
 }
 
+func (r *RecipeModule) handleAPIRequest(
+	id string,
+	req *http.Request,
+	w http.ResponseWriter,
+	path NormalisedURLPath,
+	method http.HandlerFunc) {
+}
 
 // func (r *RecipeModule) getAPIsHandled() []APIHandled {
 
