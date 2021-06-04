@@ -1,11 +1,9 @@
 package supertokens
 
 const (
-	HeaderRID                         = "rid"
-	HeaderFDI                         = "fdi-version"
-	ServerlessCacheBaseFilePath       = "/tmp"
-	ServerlessCacheAPIVersionFilePath = ServerlessCacheBaseFilePath + "/supertokens-apiversion"
-	version                           = "6.0.0"
+	HeaderRID = "rid"
+	HeaderFDI = "fdi-version"
+	version   = "0.0.1"
 )
 
 var (

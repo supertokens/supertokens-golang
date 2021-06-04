@@ -19,7 +19,8 @@ func NewRecipeImplementation(querier supertokens.Querier) *RecipeImplementation 
 func (r *RecipeImplementation) createEmailVerificationToken(userId, email string) map[string]interface{} {
 	normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify/token")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // todo handle error
+		return nil
 	}
 	response, _ := r.Querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
 		"userId": userId,
@@ -39,7 +40,8 @@ func (r *RecipeImplementation) createEmailVerificationToken(userId, email string
 func (r *RecipeImplementation) verifyEmailUsingToken(token string) map[string]interface{} {
 	normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // todo handle error
+		return nil
 	}
 	response, _ := r.Querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
 		"method": "token",
@@ -62,7 +64,8 @@ func (r *RecipeImplementation) verifyEmailUsingToken(token string) map[string]in
 func (r *RecipeImplementation) isEmailVerified(userId, email string) bool {
 	normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
 	if err != nil {
-		fmt.Println(err)
+		fmt.Println(err) // todo handle error
+		return false
 	}
 	response, _ := r.Querier.SendGetRequest(*normalisedURLPath, map[string]string{
 		"userId": userId,

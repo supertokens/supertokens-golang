@@ -104,10 +104,6 @@ func MaxVersion(version1 string, version2 string) string {
 	return version2
 }
 
-func storeIntoTempFolderForServerlessCache(filePath, data string) {
-	// todo
-}
-
 // func normaliseHttpMethod(method string) string {
 // 	return strings.ToLower(method)
 // }

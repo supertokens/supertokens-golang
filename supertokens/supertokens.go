@@ -11,10 +11,9 @@ import (
 )
 
 type SuperTokens struct {
-	instance          *SuperTokens
-	AppInfo           NormalisedAppinfo
-	IsInServerlessEnv bool
-	RecipeModules     []RecipeModule
+	instance      *SuperTokens
+	AppInfo       NormalisedAppinfo
+	RecipeModules []RecipeModule
 }
 
 func NewSuperTokens(config TypeInput) (*SuperTokens, error) {
@@ -30,7 +29,7 @@ func NewSuperTokens(config TypeInput) (*SuperTokens, error) {
 	for _, h := range hostList {
 		host, err := NewNormalisedURLDomain(h, false)
 		if err != nil {
-			fmt.Println(err)
+			return nil, err
 		}
 		hosts = append(hosts, *host)
 	}
@@ -42,16 +41,14 @@ func NewSuperTokens(config TypeInput) (*SuperTokens, error) {
 		return nil, errors.New("Please provide at least one recipe to the supertokens.init function call")
 	}
 
-	s.IsInServerlessEnv = config.IsInServerlessEnv
-
 	for _, elem := range config.RecipeList {
-		s.RecipeModules = append(s.RecipeModules, elem(s.AppInfo, s.IsInServerlessEnv))
+		s.RecipeModules = append(s.RecipeModules, elem(s.AppInfo))
 	}
 
 	telemetry := config.Telemetry
 
 	if telemetry {
-		err := s.SendTelemetry()
+		// err := s.SendTelemetry()
 		if err != nil {
 			return nil, err
 		}
@@ -75,16 +72,18 @@ func (s *SuperTokens) GetInstanceOrThrowError() (*SuperTokens, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
 
-func (s *SuperTokens) SendTelemetry() error {
+func (s *SuperTokens) SendTelemetry() {
 	q := &Querier{}
-	querier, err := q.GetNewInstanceOrThrowError(s.IsInServerlessEnv, "")
+	querier, err := q.GetNewInstanceOrThrowError("")
 	if err != nil {
-		return err
+		fmt.Println(err) // todo: handle error
+		return
 	}
 
 	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, map[string]string{})
 	if err != nil {
-		return err
+		fmt.Println(err) // todo: handle error
+		return
 	}
 	var telemetryID string
 	if response["exists"] == true {
@@ -100,29 +99,31 @@ func (s *SuperTokens) SendTelemetry() error {
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return err
+		fmt.Println(err) // todo: handle error
+		return
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return err
+		fmt.Println(err) // todo: handle error
+		return
 	}
 	req.Header.Set("api-version", "2")
 
 	client := &http.Client{}
 	_, err = client.Do(req)
 	if err != nil {
-		return err
+		fmt.Println(err) // todo: handle error
+		return
 	}
-	return nil
 }
 
 func (s *SuperTokens) Middleware() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqURL, _ := NewNormalisedURLPath(r.URL.Path)        //error handle
-		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL) //doubt
+		reqURL, _ := NewNormalisedURLPath(r.URL.Path) // todo: error handle
+		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
 		// method := normaliseHttpMethod(r.Method)
 
-		if reflect.DeepEqual(path, s.AppInfo.APIBasePath) == false {
+		if strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) == false {
 			return
 		}
 		requestRID := getRIDFromRequest(r)
@@ -142,14 +143,14 @@ func (s *SuperTokens) Middleware() http.HandlerFunc {
 	})
 }
 
-func (s *SuperTokens) handleAPI(matchedRecipe RecipeModule,
-	id string,
-	r *http.Request,
-	w http.ResponseWriter,
-	path NormalisedURLPath,
-	method http.HandlerFunc) {
-	matchedRecipe.handleAPIRequest(id, r, w, path, method)
-}
+// func (s *SuperTokens) handleAPI(matchedRecipe RecipeModule,
+// 	id string,
+// 	r *http.Request,
+// 	w http.ResponseWriter,
+// 	path NormalisedURLPath,
+// 	method http.HandlerFunc) {
+// 	matchedRecipe.handleAPIRequest(id, r, w, path, method)
+// }
 
 // func (s *SuperTokens) getAllCORSHeaders() []string {
 // 	headerSet := []string{HeaderRID, HeaderFDI}

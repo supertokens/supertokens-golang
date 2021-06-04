@@ -11,33 +11,24 @@ import (
 )
 
 type Querier struct {
-	InitCalled        bool
-	Hosts             []NormalisedURLDomain
-	APIKey            string
-	APIVersion        string
-	LastTriedIndex    int
-	RIDToCore         string
-	IsInServerlessEnv bool
+	InitCalled     bool
+	Hosts          []NormalisedURLDomain
+	APIKey         string
+	APIVersion     string
+	LastTriedIndex int
+	RIDToCore      string
 }
 
-func NewQuerier(hosts []NormalisedURLDomain, isInServerlessEnv bool, rIdToCore string) *Querier {
+func NewQuerier(hosts []NormalisedURLDomain, rIdToCore string) *Querier {
 	return &Querier{
-		Hosts:             hosts,
-		IsInServerlessEnv: isInServerlessEnv,
-		RIDToCore:         rIdToCore,
+		Hosts:     hosts,
+		RIDToCore: rIdToCore,
 	}
 }
 
 func (q *Querier) getAPIVersion() (string, error) {
-	if q.APIVersion == "" {
+	if q.APIVersion != "" {
 		return q.APIVersion, nil
-	}
-	if q.IsInServerlessEnv {
-		apiVersion := getDataFromFileForServerlessCache(ServerlessCacheAPIVersionFilePath)
-		if apiVersion != "" {
-			q.APIVersion = apiVersion
-			return q.APIVersion, nil
-		}
 	}
 	response, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
@@ -62,18 +53,15 @@ func (q *Querier) getAPIVersion() (string, error) {
 	}
 
 	q.APIVersion = *supportedVersion
-	if q.IsInServerlessEnv {
-		storeIntoTempFolderForServerlessCache(ServerlessCacheAPIVersionFilePath, *supportedVersion)
-	}
 
 	return q.APIVersion, nil
 }
 
-func (q *Querier) GetNewInstanceOrThrowError(isInServerlessEnv bool, rIDToCore string) (*Querier, error) {
+func (q *Querier) GetNewInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	if q.InitCalled == false {
 		return nil, errors.New("Please call the supertokens.init function before using SuperTokens")
 	}
-	return &Querier{Hosts: q.Hosts, IsInServerlessEnv: isInServerlessEnv, RIDToCore: rIDToCore}, nil
+	return &Querier{Hosts: q.Hosts, RIDToCore: rIDToCore}, nil
 }
 
 func (q *Querier) Init(hosts []NormalisedURLDomain, apiKey string) {

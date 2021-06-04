@@ -12,7 +12,7 @@ type Recipe struct {
 	apiImpl             APIInterface
 }
 
-func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, isInServerlessEnv bool, config TypeInput) *Recipe {
+func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config TypeInput) *Recipe {
 	return &Recipe{
 		// config: config,
 		// recipeInterfaceImpl: config.override.functions(NewRecipeImplementation()),

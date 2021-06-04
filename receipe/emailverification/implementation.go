@@ -7,9 +7,11 @@ func (a *APIImplementation) verifyEmailPOST(token string, options APIOptions) ma
 }
 
 func (a *APIImplementation) isEmailVerifiedGET(options APIOptions) map[string]interface{} {
+	// todo
 	return nil
 }
 
 func (a *APIImplementation) generateEmailVerifyTokenPOST(options APIOptions) map[string]interface{} {
+	// todo
 	return nil
 }

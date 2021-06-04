@@ -18,14 +18,13 @@ type AppInfo struct {
 	apiGatewayPath  string
 }
 
-type RecipeListFunction func(appInfo NormalisedAppinfo, isInServerlessEnv bool) RecipeModule
+type RecipeListFunction func(appInfo NormalisedAppinfo) RecipeModule
 
 type TypeInput struct {
-	Supertoken        SupertokenTypeInput
-	AppInfo           AppInfo
-	RecipeList        []RecipeListFunction
-	Telemetry         bool
-	IsInServerlessEnv bool
+	Supertoken SupertokenTypeInput
+	AppInfo    AppInfo
+	RecipeList []RecipeListFunction
+	Telemetry  bool
 }
 
 type SupertokenTypeInput struct {
