@@ -6,17 +6,19 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
-	"reflect"
+	"strconv"
 	"strings"
 )
 
 type SuperTokens struct {
-	instance      *SuperTokens
+	Instance      *SuperTokens
 	AppInfo       NormalisedAppinfo
 	RecipeModules []RecipeModule
 }
 
-func NewSuperTokens(config TypeInput) (*SuperTokens, error) {
+var s SuperTokens
+
+func newSuperTokens(config TypeInput) (*SuperTokens, error) {
 	var err error
 	var s *SuperTokens
 	s.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
@@ -57,17 +59,17 @@ func NewSuperTokens(config TypeInput) (*SuperTokens, error) {
 	return s, nil
 }
 
-func (s *SuperTokens) Init(config TypeInput) (err error) {
-	if s.instance == nil {
-		s.instance, err = NewSuperTokens(config)
+func SupertokensInit(config TypeInput) (err error) {
+	if s.Instance == nil {
+		s.Instance, err = newSuperTokens(config)
 		return err
 	}
 	return nil
 }
 
 func (s *SuperTokens) GetInstanceOrThrowError() (*SuperTokens, error) {
-	if s.instance != nil {
-		return s.instance, nil
+	if s.Instance != nil {
+		return s.Instance, nil
 	}
 	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
@@ -86,8 +88,9 @@ func (s *SuperTokens) SendTelemetry() {
 		return
 	}
 	var telemetryID string
-	if response["exists"] == true {
-		telemetryID = response["telemetryId"].(string)
+	exists, err := strconv.ParseBool(response["exists"])
+	if err == nil && exists == true {
+		telemetryID = response["telemetryId"]
 	}
 
 	url := "https://api.supertokens.io/0/st/telemetry"
@@ -119,44 +122,63 @@ func (s *SuperTokens) SendTelemetry() {
 
 func (s *SuperTokens) Middleware() http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqURL, _ := NewNormalisedURLPath(r.URL.Path) // todo: error handle
+		reqURL, _ := NewNormalisedURLPath(r.RemoteAddr) // todo: error handle
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
-		// method := normaliseHttpMethod(r.Method)
+		method := r.Method
 
-		if strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) == false {
+		if !strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) {
 			return
 		}
 		requestRID := getRIDFromRequest(r)
 		if requestRID != "" {
-			var matchedRecipe RecipeModule
+			var matchedRecipe *RecipeModule
 			for _, recipeModule := range s.RecipeModules {
 				if recipeModule.GetRecipeID() == requestRID {
-					matchedRecipe = recipeModule
+					matchedRecipe = &recipeModule
 					break
 				}
 			}
-			if reflect.DeepEqual(matchedRecipe, RecipeModule{}) {
+			if matchedRecipe == nil {
 				return
 			}
 
+			id := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
+			if id == "" {
+				return
+			}
+			s.HandleAPI(*matchedRecipe, id, r, w, path, method)
+		} else {
+			for _, recipeModule := range s.RecipeModules {
+				id := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+				if id != "" {
+					s.HandleAPI(recipeModule, id, r, w, path, method)
+					return
+				}
+			}
 		}
 	})
 }
 
-// func (s *SuperTokens) handleAPI(matchedRecipe RecipeModule,
-// 	id string,
-// 	r *http.Request,
-// 	w http.ResponseWriter,
-// 	path NormalisedURLPath,
-// 	method http.HandlerFunc) {
-// 	matchedRecipe.handleAPIRequest(id, r, w, path, method)
-// }
+func (s *SuperTokens) HandleAPI(matchedRecipe RecipeModule,
+	id string,
+	r *http.Request,
+	w http.ResponseWriter,
+	path NormalisedURLPath,
+	method string) {
+	matchedRecipe.HandleAPIRequest(id, r, w, path, method)
+}
 
-// func (s *SuperTokens) getAllCORSHeaders() []string {
-// 	headerSet := []string{HeaderRID, HeaderFDI}
-// 	for _, recipe := range s.RecipeModules {
-// 		headers := recipe.getAllCORSHeaders()
-
-// 	}
-// 	return nil
-// }
+func (s *SuperTokens) getAllCORSHeaders() []string {
+	headerMap := map[string]bool{HeaderRID: true, HeaderFDI: true}
+	for _, recipe := range s.RecipeModules {
+		headers := recipe.GetAllCORSHeaders()
+		for _, header := range headers {
+			headerMap[header] = true
+		}
+	}
+	var headers []string
+	for header := range headerMap {
+		headers = append(headers, header)
+	}
+	return headers
+}

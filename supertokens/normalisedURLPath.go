@@ -1,7 +1,6 @@
 package supertokens
 
 import (
-	"errors"
 	"net/url"
 	"strings"
 )
@@ -42,8 +41,18 @@ func (n *NormalisedURLPath) IsARecipePath() bool {
 
 func NormaliseURLPathOrThrowError(input string) (string, error) {
 	input = strings.ToLower(strings.Trim(input, ""))
-	if strings.HasPrefix(input, "http://") != true && strings.HasPrefix(input, "https://") != true {
-		return "", errors.New("converting to proper URL")
+	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
+		// return "", errors.New("converting to proper URL")
+		if (domainGiven(input) || strings.HasPrefix(input, "localhost")) &&
+			!strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
+			input = "http://" + input
+			return NormaliseURLPathOrThrowError(input)
+		}
+
+		if input[:1] != "/" {
+			input = "/" + input
+		}
+		return NormaliseURLPathOrThrowError("http://example.com" + input)
 	}
 
 	urlObj, err := url.Parse(input)
@@ -51,10 +60,27 @@ func NormaliseURLPathOrThrowError(input string) (string, error) {
 		return "", err
 	}
 	input = urlObj.Path
-
-	if input[len(input)-1:] == "/" {
+	if input != "" && input[len(input)-1:] == "/" {
 		return input[:len(input)-1], nil
 	}
 
 	return input, nil
+}
+
+func domainGiven(input string) bool {
+	if !strings.Contains(input, ".") || strings.HasPrefix(input, "/") {
+		return false
+	}
+
+	urlObj, err := url.Parse(input)
+	if err != nil {
+		return false
+	}
+	if urlObj.Host == "" {
+		urlObj, err = url.Parse("http://" + input)
+		if err != nil {
+			return false
+		}
+	}
+	return strings.Index(urlObj.Host, ".") != -1
 }

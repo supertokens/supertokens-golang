@@ -109,5 +109,5 @@ func MaxVersion(version1 string, version2 string) string {
 // }
 
 func getRIDFromRequest(r *http.Request) string {
-	return r.Header.Get("HEADER_RID")
+	return r.Header.Get(HeaderRID)
 }

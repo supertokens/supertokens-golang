@@ -27,8 +27,18 @@ func (n *NormalisedURLDomain) GetAsStringDangerous() string {
 func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, error) {
 	input = strings.ToLower(strings.Trim(input, ""))
 
-	if strings.HasPrefix(input, "http://") != true && strings.HasPrefix(input, "https://") != true && strings.HasPrefix(input, "supertokens://") != true {
-		return "", errors.New("converting to proper URL")
+	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") && !strings.HasPrefix(input, "supertokens://") {
+		// return "", errors.New("converting to proper URL")
+		if strings.HasPrefix(input, "/") {
+			return "", errors.New("Please provide a valid domain name")
+		}
+		if strings.HasPrefix(input, ".") {
+			input = input[1:]
+		}
+		if (strings.Contains(input, ".") || strings.HasPrefix(input, "localhost")) && !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
+			input = "https://" + input
+			return NormaliseURLDomainOrThrowError(input, true)
+		}
 	}
 
 	urlObj, err := url.Parse(input)
@@ -47,7 +57,7 @@ func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, 
 			input = "https://" + urlObj.Host
 		}
 	} else {
-		input = urlObj.Scheme + "//" + urlObj.Host
+		input = urlObj.Scheme + "://" + urlObj.Host
 	}
 	return input, nil
 }
