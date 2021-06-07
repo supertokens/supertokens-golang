@@ -1,17 +1,21 @@
-package emailverification
+package recipeimplementation
 
 import (
 	"fmt"
 	"strconv"
 
-	"github.com/supertokens/supertokens-golang/receipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type RecipeImplementation schema.RecipeImplementation
+// type RecipeImplementation schema.RecipeImplementation
 
-func NewRecipeImplementation(querier supertokens.Querier) *schema.RecipeImplementation {
-	return &schema.RecipeImplementation{
+type RecipeImplementation struct {
+	Querier supertokens.Querier
+}
+
+func NewRecipeImplementation(querier supertokens.Querier) *RecipeImplementation {
+	return &RecipeImplementation{
 		Querier: querier,
 	}
 }

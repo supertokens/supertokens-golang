@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/supertokens/supertokens-golang/receipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 )
 
 func EmailVerify(apiImplementation schema.APIInterface, options schema.APIOptions) error {

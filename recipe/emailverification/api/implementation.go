@@ -1,8 +1,8 @@
 package api
 
-import "github.com/supertokens/supertokens-golang/receipe/emailverification/schema"
+import "github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 
-type APIImplementation schema.APIImplementation
+type APIImplementation struct{}
 
 func (a *APIImplementation) VerifyEmailPOST(token string, options schema.APIOptions) map[string]interface{} {
 	return options.RecipeImplementation.VerifyEmailUsingToken(token)

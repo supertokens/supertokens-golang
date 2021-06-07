@@ -3,7 +3,8 @@ package schema
 import (
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/recipeimplementation"
 )
 
 type ReturnMap map[string]interface{}
@@ -15,30 +16,29 @@ var (
 	VerifyEmailUsingTokenError        ReturnMap = map[string]interface{}{"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR"}
 )
 
-type RecipeImplementation struct {
-	Querier supertokens.Querier
-}
+// type RecipeImplementation struct {
+// 	Querier supertokens.Querier
+// }
 
-type APIImplementation struct{}
+// type APIImplementation struct{}
 
 type TypeInput struct {
-	getEmailForUserId        func(userId string) string
-	getEmailVerificationURL  func(userId string) string
-	createAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
-	override                 struct {
-		functions func(originalImplementation RecipeImplementation) RecipeInterface
-		apis      func(originalImplementation APIImplementation) APIInterface
-	}
+	GetEmailForUserID        func(userID string) string
+	GetEmailVerificationURL  *func(userID User) string
+	CreateAndSendCustomEmail *func(user User, emailVerificationURLWithToken string)
+	Override                 Override
+}
+
+type Override struct {
+	Functions func(originalImplementation recipeimplementation.RecipeImplementation) RecipeInterface
+	APIs      func(originalImplementation api.APIImplementation) APIInterface
 }
 
 type TypeNormalisedInput struct {
-	getEmailForUserId        func(userId string) string
-	getEmailVerificationURL  func(user User) string
-	createAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
-	override                 struct {
-		functions func(originalImplementation RecipeImplementation) RecipeInterface
-		apis      func(originalImplementation APIImplementation) APIInterface
-	}
+	GetEmailForUserID        func(userID string) string
+	GetEmailVerificationURL  func(userID User) string
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	Override                 Override
 }
 
 type User struct {

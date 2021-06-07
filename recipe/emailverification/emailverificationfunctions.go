@@ -6,12 +6,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/receipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) string {
-	return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/verify-email"
+func GetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(schema.User) string {
+	return func(userId schema.User) string {
+		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/verify-email"
+	}
 }
 
 func CreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user schema.User, emailVerifyURLWithToken string) {

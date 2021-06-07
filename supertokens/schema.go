@@ -18,7 +18,7 @@ type AppInfo struct {
 	apiGatewayPath  string
 }
 
-type RecipeListFunction func(appInfo NormalisedAppinfo) RecipeModule
+type RecipeListFunction func(appInfo NormalisedAppinfo) *RecipeModule
 
 type TypeInput struct {
 	Supertoken SupertokenTypeInput

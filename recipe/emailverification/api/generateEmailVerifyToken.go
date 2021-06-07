@@ -1,6 +1,6 @@
 package api
 
-import "github.com/supertokens/supertokens-golang/receipe/emailverification/schema"
+import "github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 
 func GenerateEmailVerifyToken(apiImplementation schema.APIInterface, options schema.APIOptions) {
 	var result map[string]string

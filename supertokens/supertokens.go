@@ -44,7 +44,7 @@ func newSuperTokens(config TypeInput) (*SuperTokens, error) {
 	}
 
 	for _, elem := range config.RecipeList {
-		s.RecipeModules = append(s.RecipeModules, elem(s.AppInfo))
+		s.RecipeModules = append(s.RecipeModules, *elem(s.AppInfo))
 	}
 
 	telemetry := config.Telemetry
