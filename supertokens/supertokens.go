@@ -168,12 +168,7 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 	})
 }
 
-func (s *SuperTokens) HandleAPI(matchedRecipe RecipeModule,
-	id string,
-	r *http.Request,
-	w http.ResponseWriter,
-	path NormalisedURLPath,
-	method string) {
+func (s *SuperTokens) HandleAPI(matchedRecipe RecipeModule, id string, r *http.Request, w http.ResponseWriter, path NormalisedURLPath, method string) {
 	matchedRecipe.HandleAPIRequest(id, r, w, path, method)
 }
 

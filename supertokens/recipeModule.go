@@ -3,15 +3,9 @@ package supertokens
 import "net/http"
 
 type RecipeModule struct {
-	recipeID string
-	appInfo  NormalisedAppinfo
-	// Functions        RecipeModuleInterface
-	HandleAPIRequest func(
-		id string,
-		req *http.Request,
-		w http.ResponseWriter,
-		path NormalisedURLPath,
-		method string)
+	recipeID          string
+	appInfo           NormalisedAppinfo
+	HandleAPIRequest  func(id string, req *http.Request, w http.ResponseWriter, path NormalisedURLPath, method string)
 	GetAllCORSHeaders func() []string
 	GetAPIsHandled    func() []APIHandled
 }
@@ -32,6 +26,12 @@ func (r *RecipeModule) GetAppInfo() NormalisedAppinfo {
 }
 
 func (r *RecipeModule) ReturnAPIIdIfCanHandleRequest(path NormalisedURLPath, method string) string {
-	// todo
+	apisHandled := r.GetAPIsHandled()
+	for _, APIshandled := range apisHandled {
+		pathAppend := r.appInfo.APIBasePath.AppendPath(APIshandled.PathWithoutAPIBasePath)
+		if !APIshandled.Disabled && APIshandled.Method == method && pathAppend.Equals(path) {
+			return APIshandled.ID
+		}
+	}
 	return ""
 }

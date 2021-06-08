@@ -25,6 +25,15 @@ func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config sc
 	q := supertokens.Querier{}
 	instance, _ := q.GetNewInstanceOrThrowError(recipeId)
 	recipeModuleInstance := supertokens.NewRecipeModule(recipeId, appInfo)
+	recipeModuleInstance.GetAPIsHandled = func() []supertokens.APIHandled {
+		return GetAPIsHandled()
+	}
+	recipeModuleInstance.HandleAPIRequest = func(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) {
+		HandleAPIRequest(id, req, w, path, method)
+	}
+	recipeModuleInstance.GetAllCORSHeaders = func() []string {
+		return GetAllCORSHeaders()
+	}
 	verifiedConfig := ValidateAndNormaliseUserInput(appInfo, config)
 	recipeInterface := NewRecipeImplementation(*instance)
 	return &Recipe{
@@ -44,20 +53,36 @@ func GetInstanceOrThrowError() (*Recipe, error) {
 
 func RecipeInit(config schema.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) *supertokens.RecipeModule {
-		recipe := NewRecipe(RECIPE_ID, appInfo, config)
 		if r.instance == nil {
-			r.instance = recipe.instance
-			r.Config = recipe.Config
-			r.RecipeInterfaceImpl = recipe.RecipeInterfaceImpl
-			r.APIImpl = recipe.APIImpl
-			return recipe.RecipeModule
+			r.instance = NewRecipe(RECIPE_ID, appInfo, config)
+			return r.RecipeModule
 		}
 		// handle errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
 		return nil
 	}
 }
 
-func (r *Recipe) GetAPIsHandled() []supertokens.APIHandled {
+func (r *Recipe) CreateEmailVerificationToken(userID, email string) string {
+	response := r.RecipeInterfaceImpl.CreateEmailVerificationToken(userID, email)
+	if response["status"] == "OK" {
+		return response["token"].(string)
+	}
+	// todo : error("Email already verified")
+	return ""
+}
+
+func (r *Recipe) VerifyEmailUsingToken(token string) schema.User {
+	response := r.RecipeInterfaceImpl.VerifyEmailUsingToken(token)
+	if response["status"] == "OK" {
+		return response["user"].(schema.User)
+	}
+	// todo : error("Invalid token")
+	return schema.User{}
+}
+
+// implement RecipeModule
+
+func GetAPIsHandled() []supertokens.APIHandled {
 	generateEmailVerifyTokenAPI, _ := supertokens.NewNormalisedURLPath(GenerateEmailVerifyTokenAPI)
 	emailVerifyAPI, _ := supertokens.NewNormalisedURLPath(EmailVerifyAPI)
 	return []supertokens.APIHandled{{
@@ -78,12 +103,7 @@ func (r *Recipe) GetAPIsHandled() []supertokens.APIHandled {
 	}}
 }
 
-func (r *Recipe) HandleAPIRequest(
-	id string,
-	req *http.Request,
-	w http.ResponseWriter,
-	path supertokens.NormalisedURLPath,
-	method string) {
+func HandleAPIRequest(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) {
 	options := schema.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -94,4 +114,8 @@ func (r *Recipe) HandleAPIRequest(
 	if id == GenerateEmailVerifyTokenAPI {
 		api.GenerateEmailVerifyToken(r.APIImpl, options)
 	}
+}
+
+func GetAllCORSHeaders() []string {
+	return []string{}
 }

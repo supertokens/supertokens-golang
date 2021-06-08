@@ -61,14 +61,14 @@ type CreateOrRefreshAPIResponse struct {
 }
 
 type TypeInput struct {
-	CookieSecure             bool
-	CookieSameSite           CookieSameSiteStr
-	SessionExpiredStatusCode int
-	CookieDomain             string
-	AntiCsrf                 AntiCsrfStr
-	Override                 struct {
-		functions func(originalImplementation RecipeImplementation) RecipeInterface
-		apis      func(originalImplementation APIImplementation) APIInterface
+	CookieSecure             *bool
+	CookieSameSite           *CookieSameSiteStr
+	SessionExpiredStatusCode *int
+	CookieDomain             *string
+	AntiCsrf                 *AntiCsrfStr
+	Override                 *struct {
+		functions *func(originalImplementation RecipeInterface) RecipeInterface
+		apis      *func(originalImplementation APIInterface) APIInterface
 	}
 }
 
@@ -80,8 +80,8 @@ type TypeNormalisedInput struct {
 	SessionExpiredStatusCode int
 	AntiCsrf                 AntiCsrfStr
 	Override                 struct {
-		Functions func(originalImplementation RecipeImplementation) RecipeInterface
-		Apis      func(originalImplementation APIImplementation) APIInterface
+		Functions func(originalImplementation RecipeInterface) RecipeInterface
+		Apis      func(originalImplementation APIInterface) APIInterface
 	}
 }
 
@@ -97,17 +97,8 @@ type SessionContainerInterface interface {
 }
 
 type RecipeInterface interface {
-	CreateNewSession(
-		res http.ResponseWriter,
-		userID string,
-		jwtPayload interface{},
-		sessionData interface{},
-	) SessionContainerInterface
-	GetSession(
-		req *http.Request,
-		res http.ResponseWriter,
-		options VerifySessionOptions,
-	) *SessionContainerInterface
+	CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) SessionContainerInterface
+	GetSession(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) *SessionContainerInterface
 	RefreshSession(req *http.Request, res http.ResponseWriter) SessionContainerInterface
 	RevokeAllSessionsForUser(userID string) []string
 	GetAllSessionHandlesForUser(userID string) []string
@@ -120,8 +111,8 @@ type RecipeInterface interface {
 }
 
 type VerifySessionOptions struct {
-	AntiCsrfCheck   bool
-	SessionRequired bool
+	AntiCsrfCheck   *bool
+	SessionRequired *bool
 }
 
 type APIOptions struct {
