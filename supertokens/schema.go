@@ -10,26 +10,26 @@ type NormalisedAppinfo struct {
 }
 
 type AppInfo struct {
-	appName         string
-	websiteDomain   string
-	websiteBasePath string
-	apiDomain       string
-	apiBasePath     string
-	apiGatewayPath  string
+	AppName         string
+	WebsiteDomain   string
+	WebsiteBasePath *string
+	APIDomain       string
+	APIBasePath     *string
+	APIGatewayPath  *string
 }
 
 type RecipeListFunction func(appInfo NormalisedAppinfo) *RecipeModule
 
 type TypeInput struct {
-	Supertoken SupertokenTypeInput
+	Supertoken *SupertokenTypeInput
 	AppInfo    AppInfo
 	RecipeList []RecipeListFunction
-	Telemetry  bool
+	Telemetry  *bool
 }
 
 type SupertokenTypeInput struct {
 	ConnectionURI string
-	APIKey        string
+	APIKey        *string
 }
 
 type APIHandled struct {

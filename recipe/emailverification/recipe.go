@@ -1,12 +1,10 @@
-package recipe
+package emailverification
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/recipeimplementation"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -27,11 +25,13 @@ func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config sc
 	q := supertokens.Querier{}
 	instance, _ := q.GetNewInstanceOrThrowError(recipeId)
 	recipeModuleInstance := supertokens.NewRecipeModule(recipeId, appInfo)
+	verifiedConfig := ValidateAndNormaliseUserInput(appInfo, config)
+	recipeInterface := NewRecipeImplementation(*instance)
 	return &Recipe{
 		RecipeModule:        recipeModuleInstance,
-		Config:              emailverification.ValidateAndNormaliseUserInput(appInfo, config), // doubt about `this`
-		RecipeInterfaceImpl: config.Override.Functions(*recipeimplementation.NewRecipeImplementation(*instance)),
-		APIImpl:             config.Override.APIs(api.APIImplementation{}),
+		Config:              verifiedConfig,
+		RecipeInterfaceImpl: verifiedConfig.Override.Functions(recipeInterface),
+		APIImpl:             verifiedConfig.Override.APIs(api.NewAPIImplementation()),
 	}
 }
 
@@ -42,7 +42,6 @@ func GetInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
 
-// discussion required
 func RecipeInit(config schema.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) *supertokens.RecipeModule {
 		recipe := NewRecipe(RECIPE_ID, appInfo, config)
@@ -59,23 +58,23 @@ func RecipeInit(config schema.TypeInput) supertokens.RecipeListFunction {
 }
 
 func (r *Recipe) GetAPIsHandled() []supertokens.APIHandled {
-	generateEmailVerifyTokenAPI, _ := supertokens.NewNormalisedURLPath(emailverification.GenerateEmailVerifyTokenAPI)
-	emailVerifyAPI, _ := supertokens.NewNormalisedURLPath(emailverification.EmailVerifyAPI)
+	generateEmailVerifyTokenAPI, _ := supertokens.NewNormalisedURLPath(GenerateEmailVerifyTokenAPI)
+	emailVerifyAPI, _ := supertokens.NewNormalisedURLPath(EmailVerifyAPI)
 	return []supertokens.APIHandled{{
 		Method:                 "post",
 		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPI,
-		ID:                     emailverification.GenerateEmailVerifyTokenAPI,
-		Disabled:               false, // doubt
+		ID:                     GenerateEmailVerifyTokenAPI,
+		Disabled:               r.APIImpl.GenerateEmailVerifyTokenPOST == nil,
 	}, {
 		Method:                 "post",
 		PathWithoutAPIBasePath: *emailVerifyAPI,
-		ID:                     emailverification.EmailVerifyAPI,
-		Disabled:               false, // doubt
+		ID:                     EmailVerifyAPI,
+		Disabled:               r.APIImpl.VerifyEmailPOST == nil,
 	}, {
 		Method:                 "get",
 		PathWithoutAPIBasePath: *emailVerifyAPI,
-		ID:                     emailverification.EmailVerifyAPI,
-		Disabled:               false, // doubt
+		ID:                     EmailVerifyAPI,
+		Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,
 	}}
 }
 
@@ -92,7 +91,7 @@ func (r *Recipe) HandleAPIRequest(
 		Req:                  req,
 		Res:                  w,
 	}
-	if id == emailverification.GenerateEmailVerifyTokenAPI {
+	if id == GenerateEmailVerifyTokenAPI {
 		api.GenerateEmailVerifyToken(r.APIImpl, options)
 	}
 }

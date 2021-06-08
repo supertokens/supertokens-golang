@@ -2,9 +2,6 @@ package schema
 
 import (
 	"net/http"
-
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/recipeimplementation"
 )
 
 type ReturnMap map[string]interface{}
@@ -16,29 +13,24 @@ var (
 	VerifyEmailUsingTokenError        ReturnMap = map[string]interface{}{"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR"}
 )
 
-// type RecipeImplementation struct {
-// 	Querier supertokens.Querier
-// }
-
-// type APIImplementation struct{}
-
 type TypeInput struct {
 	GetEmailForUserID        func(userID string) string
 	GetEmailVerificationURL  *func(userID User) string
 	CreateAndSendCustomEmail *func(user User, emailVerificationURLWithToken string)
-	Override                 Override
-}
-
-type Override struct {
-	Functions func(originalImplementation recipeimplementation.RecipeImplementation) RecipeInterface
-	APIs      func(originalImplementation api.APIImplementation) APIInterface
+	Override                 *struct {
+		Functions *func(originalImplementation RecipeInterface) RecipeInterface
+		APIs      *func(originalImplementation APIInterface) APIInterface
+	}
 }
 
 type TypeNormalisedInput struct {
 	GetEmailForUserID        func(userID string) string
 	GetEmailVerificationURL  func(userID User) string
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
-	Override                 Override
+	Override                 struct {
+		Functions func(originalImplementation RecipeInterface) RecipeInterface
+		APIs      func(originalImplementation APIInterface) APIInterface
+	}
 }
 
 type User struct {
@@ -61,7 +53,7 @@ type APIInterface interface {
 }
 
 type RecipeInterface interface {
-	CreateEmailVerificationToken(userId, email string) ReturnMap
+	CreateEmailVerificationToken(userID, email string) ReturnMap
 	VerifyEmailUsingToken(token string) ReturnMap
-	IsEmailVerified(userId, email string) bool
+	IsEmailVerified(userID, email string) bool
 }

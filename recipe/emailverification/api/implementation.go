@@ -4,6 +4,12 @@ import "github.com/supertokens/supertokens-golang/recipe/emailverification/schem
 
 type APIImplementation struct{}
 
+// Implementing APIInterface below
+
+func NewAPIImplementation() *APIImplementation {
+	return &APIImplementation{}
+}
+
 func (a *APIImplementation) VerifyEmailPOST(token string, options schema.APIOptions) map[string]interface{} {
 	return options.RecipeImplementation.VerifyEmailUsingToken(token)
 }

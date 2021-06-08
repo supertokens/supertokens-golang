@@ -1,4 +1,4 @@
-package recipeimplementation
+package emailverification
 
 import (
 	"fmt"
@@ -7,8 +7,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
-
-// type RecipeImplementation schema.RecipeImplementation
 
 type RecipeImplementation struct {
 	Querier supertokens.Querier
@@ -20,14 +18,16 @@ func NewRecipeImplementation(querier supertokens.Querier) *RecipeImplementation 
 	}
 }
 
-func (r *RecipeImplementation) createEmailVerificationToken(userId, email string) schema.ReturnMap {
+// Implementing RecipeInterface
+
+func (r *RecipeImplementation) CreateEmailVerificationToken(userID, email string) schema.ReturnMap {
 	normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify/token")
 	if err != nil {
 		fmt.Println(err) // todo handle error
 		return nil
 	}
 	response, _ := r.Querier.SendPostRequest(*normalisedURLPath, map[string]string{
-		"userId": userId,
+		"userId": userID,
 		"email":  email,
 	})
 	if response["status"] == "OK" {
@@ -38,7 +38,7 @@ func (r *RecipeImplementation) createEmailVerificationToken(userId, email string
 	return schema.CreateEmailVerificationTokenError
 }
 
-func (r *RecipeImplementation) verifyEmailUsingToken(token string) schema.ReturnMap {
+func (r *RecipeImplementation) VerifyEmailUsingToken(token string) schema.ReturnMap {
 	normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
 	if err != nil {
 		fmt.Println(err) // todo handle error
@@ -61,7 +61,7 @@ func (r *RecipeImplementation) verifyEmailUsingToken(token string) schema.Return
 	return schema.VerifyEmailUsingTokenError
 }
 
-func (r *RecipeImplementation) isEmailVerified(userID, email string) bool {
+func (r *RecipeImplementation) IsEmailVerified(userID, email string) bool {
 	normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
 	if err != nil {
 		fmt.Println(err) // todo handle error

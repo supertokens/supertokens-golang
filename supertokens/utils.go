@@ -20,13 +20,13 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	if reflect.DeepEqual(appInfo, AppInfo{}) {
 		return NormalisedAppinfo{}, errors.New("Please provide the appInfo object when calling supertokens.init")
 	}
-	if appInfo.apiDomain == "" {
+	if appInfo.APIDomain == "" {
 		return NormalisedAppinfo{}, errors.New("Please provide your apiDomain inside the appInfo object when calling supertokens.init")
 	}
-	if appInfo.appName == "" {
+	if appInfo.AppName == "" {
 		return NormalisedAppinfo{}, errors.New("Please provide your appName inside the appInfo object when calling supertokens.init")
 	}
-	if appInfo.websiteDomain == "" {
+	if appInfo.WebsiteDomain == "" {
 		return NormalisedAppinfo{}, errors.New("Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
 	}
 	return NormalisedAppinfo{}, nil

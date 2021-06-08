@@ -6,25 +6,34 @@ import (
 )
 
 func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) schema.TypeNormalisedInput {
-	getEmailVerificationURL := *config.GetEmailVerificationURL
+	var typeNormalisedInput schema.TypeNormalisedInput
+	typeNormalisedInput.GetEmailVerificationURL = *config.GetEmailVerificationURL
 	if config.GetEmailVerificationURL == nil {
-		getEmailVerificationURL = GetEmailVerificationURL(appInfo)
+		typeNormalisedInput.GetEmailVerificationURL = GetEmailVerificationURL(appInfo)
 	}
-	createAndSendCustomEmail := *config.CreateAndSendCustomEmail
+	typeNormalisedInput.CreateAndSendCustomEmail = *config.CreateAndSendCustomEmail
 	if config.CreateAndSendCustomEmail == nil {
-		createAndSendCustomEmail = CreateAndSendCustomEmail(appInfo)
+		typeNormalisedInput.CreateAndSendCustomEmail = CreateAndSendCustomEmail(appInfo)
 	}
 
-	override := schema.Override{
-		Functions: config.Override.Functions,
-		APIs:      config.Override.APIs,
+	if config.Override != nil {
+		if config.Override.Functions != nil {
+			typeNormalisedInput.Override.Functions = *config.Override.Functions
+		} else {
+			typeNormalisedInput.Override.Functions = func(originalImplementation schema.RecipeInterface) schema.RecipeInterface {
+				return originalImplementation
+			}
+		}
+		if config.Override.APIs != nil {
+			typeNormalisedInput.Override.APIs = *config.Override.APIs
+		} else {
+			typeNormalisedInput.Override.APIs = func(originalImplementation schema.APIInterface) schema.APIInterface {
+				return originalImplementation
+			}
+		}
+
 	}
 
-	getEmailForUserId := config.GetEmailForUserID
-	return schema.TypeNormalisedInput{
-		GetEmailVerificationURL:  getEmailVerificationURL,
-		GetEmailForUserID:        getEmailForUserId,
-		CreateAndSendCustomEmail: createAndSendCustomEmail,
-		Override:                 override,
-	}
+	typeNormalisedInput.GetEmailForUserID = config.GetEmailForUserID
+	return typeNormalisedInput
 }

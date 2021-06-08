@@ -26,18 +26,25 @@ func newSuperTokens(config TypeInput) (*SuperTokens, error) {
 		return nil, err
 	}
 
-	hostList := strings.Split(config.Supertoken.ConnectionURI, ";")
-	var hosts []NormalisedURLDomain
-	for _, h := range hostList {
-		host, err := NewNormalisedURLDomain(h, false)
-		if err != nil {
-			return nil, err
-		}
-		hosts = append(hosts, *host)
-	}
-
 	q := Querier{}
-	q.Init(hosts, config.Supertoken.APIKey)
+	if config.Supertoken != nil {
+		hostList := strings.Split(config.Supertoken.ConnectionURI, ";")
+		var hosts []NormalisedURLDomain
+		for _, h := range hostList {
+			host, err := NewNormalisedURLDomain(h, false)
+			if err != nil {
+				return nil, err
+			}
+			hosts = append(hosts, *host)
+		}
+		if config.Supertoken.APIKey != nil {
+			q.Init(hosts, *config.Supertoken.APIKey)
+		} else {
+			q.Init(hosts, "")
+		}
+	} else {
+		q.Init(nil, "")
+	}
 
 	if config.RecipeList == nil || len(config.RecipeList) == 0 {
 		return nil, errors.New("Please provide at least one recipe to the supertokens.init function call")
@@ -47,13 +54,11 @@ func newSuperTokens(config TypeInput) (*SuperTokens, error) {
 		s.RecipeModules = append(s.RecipeModules, *elem(s.AppInfo))
 	}
 
-	telemetry := config.Telemetry
-
-	if telemetry {
+	if config.Telemetry != nil && *config.Telemetry {
 		// err := s.SendTelemetry()
-		if err != nil {
-			return nil, err
-		}
+		// if err != nil {
+		// 	return nil, err
+		// }
 	}
 
 	return s, nil
@@ -120,13 +125,14 @@ func (s *SuperTokens) SendTelemetry() {
 	}
 }
 
-func (s *SuperTokens) Middleware() http.HandlerFunc {
+func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, _ := NewNormalisedURLPath(r.RemoteAddr) // todo: error handle
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
 		method := r.Method
 
 		if !strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) {
+			theirHandler.ServeHTTP(w, r)
 			return
 		}
 		requestRID := getRIDFromRequest(r)
@@ -139,11 +145,13 @@ func (s *SuperTokens) Middleware() http.HandlerFunc {
 				}
 			}
 			if matchedRecipe == nil {
+				theirHandler.ServeHTTP(w, r)
 				return
 			}
 
 			id := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
 			if id == "" {
+				theirHandler.ServeHTTP(w, r)
 				return
 			}
 			s.HandleAPI(*matchedRecipe, id, r, w, path, method)
@@ -152,6 +160,7 @@ func (s *SuperTokens) Middleware() http.HandlerFunc {
 				id := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 				if id != "" {
 					s.HandleAPI(recipeModule, id, r, w, path, method)
+					theirHandler.ServeHTTP(w, r)
 					return
 				}
 			}
