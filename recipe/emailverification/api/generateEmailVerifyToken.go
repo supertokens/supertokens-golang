@@ -1,13 +1,35 @@
 package api
 
-import "github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+import (
+	"fmt"
 
-func GenerateEmailVerifyToken(apiImplementation schema.APIInterface, options schema.APIOptions) {
-	var result map[string]string
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+)
 
-	response := apiImplementation.GenerateEmailVerifyTokenPOST(options)
-	for k, v := range response {
-		result[k] = v.(string)
+func GenerateEmailVerifyToken(apiImplementation schema.APIImplementation, options schema.APIOptions) error {
+	var result map[string]interface{}
+
+	if apiImplementation.GenerateEmailVerifyTokenPOST == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
 	}
-	// todo: send200Response(options.res, result);
+
+	response, err := apiImplementation.GenerateEmailVerifyTokenPOST(options)
+	if err != nil {
+		return err
+	}
+
+	if response.OK {
+		result = map[string]interface{}{
+			"status": "OK",
+		}
+	} else {
+		result = map[string]interface{}{
+			"status": "EMAIL_ALREADY_VERIFIED_ERROR",
+		}
+	}
+
+	// TODO: send200Response(options.res, result);
+	fmt.Printf("", result)
+	return nil
 }

@@ -4,32 +4,23 @@ import (
 	"net/http"
 )
 
-type ReturnMap map[string]interface{}
-
-var (
-	CreateEmailVerificationTokenOk    ReturnMap = map[string]interface{}{"status": "OK", "token": ""}
-	CreateEmailVerificationTokenError ReturnMap = map[string]interface{}{"status": "EMAIL_ALREADY_VERIFIED_ERROR"}
-	VerifyEmailUsingTokenOk           ReturnMap = map[string]interface{}{"status": "OK", "user": User{}}
-	VerifyEmailUsingTokenError        ReturnMap = map[string]interface{}{"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR"}
-)
-
 type TypeInput struct {
-	GetEmailForUserID        func(userID string) string
-	GetEmailVerificationURL  *func(userID User) string
-	CreateAndSendCustomEmail *func(user User, emailVerificationURLWithToken string)
+	GetEmailForUserID        func(userID string) (string, error)
+	GetEmailVerificationURL  func(user User) string
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
 	Override                 *struct {
-		Functions *func(originalImplementation RecipeInterface) RecipeInterface
-		APIs      *func(originalImplementation APIInterface) APIInterface
+		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
+		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
 }
 
 type TypeNormalisedInput struct {
-	GetEmailForUserID        func(userID string) string
-	GetEmailVerificationURL  func(userID User) string
+	GetEmailForUserID        func(userID string) (string, error)
+	GetEmailVerificationURL  func(user User) string
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
 	Override                 struct {
-		Functions func(originalImplementation RecipeInterface) RecipeInterface
-		APIs      func(originalImplementation APIInterface) APIInterface
+		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
+		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
 }
 
@@ -39,21 +30,41 @@ type User struct {
 }
 
 type APIOptions struct {
-	RecipeImplementation RecipeInterface
+	RecipeImplementation RecipeImplementation
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request
-	Res                  http.ResponseWriter
+	Res                  http.ResponseWriter // TODO: why is the writer not a pointer?
+	OtherHandler         http.HandlerFunc    // TODO: should this be a pointer?
 }
 
-type APIInterface interface {
-	VerifyEmailPOST(token string, options APIOptions) map[string]interface{}
-	IsEmailVerifiedGET(options APIOptions) map[string]interface{}
-	GenerateEmailVerifyTokenPOST(options APIOptions) map[string]interface{}
+type CreateEmailVerificationTokenResponse struct {
+	OK *struct {
+		Token string
+	}
+	EmailAlreadyVerifiedError bool // Zero value will be false
 }
 
-type RecipeInterface interface {
-	CreateEmailVerificationToken(userID, email string) ReturnMap
-	VerifyEmailUsingToken(token string) ReturnMap
-	IsEmailVerified(userID, email string) bool
+type CreateEmailVerificationTokenAPIResponse struct {
+	OK                        bool
+	EmailAlreadyVerifiedError bool // Zero value will be false
+}
+
+type VerifyEmailUsingTokenResponse struct {
+	OK *struct {
+		User User
+	}
+	InvalidTokenError bool // Zero value will be false
+}
+
+type APIImplementation struct {
+	VerifyEmailPOST              func(token string, options APIOptions) (*VerifyEmailUsingTokenResponse, error)
+	IsEmailVerifiedGET           func(options APIOptions) (bool, error)
+	GenerateEmailVerifyTokenPOST func(options APIOptions) (*CreateEmailVerificationTokenAPIResponse, error)
+}
+
+type RecipeImplementation struct {
+	CreateEmailVerificationToken func(userID, email string) (*CreateEmailVerificationTokenResponse, error)
+	VerifyEmailUsingToken        func(token string) (*VerifyEmailUsingTokenResponse, error)
+	IsEmailVerified              func(userID, email string) (bool, error)
 }

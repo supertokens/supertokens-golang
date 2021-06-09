@@ -11,36 +11,37 @@ import (
 )
 
 type Querier struct {
-	InitCalled     bool
-	Hosts          []NormalisedURLDomain
-	APIKey         string
-	APIVersion     string
-	LastTriedIndex int
-	RIDToCore      string
+	RIDToCore string
 }
 
-func NewQuerier(hosts []NormalisedURLDomain, rIdToCore string) *Querier {
-	return &Querier{
-		Hosts:     hosts,
+// TODO: these are declared at global scope.. will they get reinit on every import?
+var InitCalled bool = false
+var Hosts []NormalisedURLDomain = nil
+var APIKey *string
+var APIVersion string
+var LastTriedIndex int
+
+func NewQuerier(rIdToCore string) Querier {
+	return Querier{
 		RIDToCore: rIdToCore,
 	}
 }
 
 func (q *Querier) getAPIVersion() (string, error) {
-	if q.APIVersion != "" {
-		return q.APIVersion, nil
+	if APIVersion != "" {
+		return APIVersion, nil
 	}
 	response, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
 		}
-		if q.APIKey != "" {
-			req.Header.Set("api-key", q.APIKey)
+		if APIKey != nil {
+			req.Header.Set("api-key", *APIKey)
 		}
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(q.Hosts))
+	}, len(Hosts))
 
 	if err != nil {
 		return "", err
@@ -52,25 +53,25 @@ func (q *Querier) getAPIVersion() (string, error) {
 		return "", errors.New("The running SuperTokens core version is not compatible with this Golang SDK. Please visit https://supertokens.io/docs/community/compatibility to find the right version")
 	}
 
-	q.APIVersion = *supportedVersion
+	APIVersion = *supportedVersion
 
-	return q.APIVersion, nil
+	return APIVersion, nil
 }
 
-func (q *Querier) GetNewInstanceOrThrowError(rIDToCore string) (*Querier, error) {
-	if q.InitCalled == false {
+func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
+	if InitCalled == false {
 		return nil, errors.New("Please call the supertokens.init function before using SuperTokens")
 	}
-	return &Querier{Hosts: q.Hosts, RIDToCore: rIDToCore}, nil
+	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func (q *Querier) Init(hosts []NormalisedURLDomain, apiKey string) {
-	if q.InitCalled == false {
-		q.InitCalled = true
-		q.Hosts = hosts
-		q.APIKey = apiKey
-		q.APIVersion = ""
-		q.LastTriedIndex = 0
+func InitQuerier(hosts []NormalisedURLDomain, apiKey *string) {
+	if InitCalled == false {
+		InitCalled = true
+		Hosts = hosts
+		APIKey = apiKey
+		APIVersion = ""
+		LastTriedIndex = 0
 	}
 }
 
@@ -92,8 +93,8 @@ func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]string
 
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("cdi-version", apiVerion)
-		if q.APIKey != "" {
-			req.Header.Set("api-key", q.APIKey)
+		if APIKey != nil {
+			req.Header.Set("api-key", *APIKey)
 		}
 		if path.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -101,7 +102,7 @@ func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]string
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(q.Hosts))
+	}, len(Hosts))
 }
 
 func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]string) (map[string]string, error) {
@@ -122,8 +123,8 @@ func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]stri
 
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("cdi-version", apiVerion)
-		if q.APIKey != "" {
-			req.Header.Set("api-key", q.APIKey)
+		if APIKey != nil {
+			req.Header.Set("api-key", *APIKey)
 		}
 		if path.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -131,7 +132,7 @@ func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]stri
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(q.Hosts))
+	}, len(Hosts))
 }
 
 func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]string) (map[string]string, error) {
@@ -153,8 +154,8 @@ func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]strin
 			return nil, apiVersionError
 		}
 		req.Header.Set("cdi-version", apiVerion)
-		if q.APIKey != "" {
-			req.Header.Set("api-key", q.APIKey)
+		if APIKey != nil {
+			req.Header.Set("api-key", *APIKey)
 		}
 		if path.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -162,7 +163,7 @@ func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]strin
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(q.Hosts))
+	}, len(Hosts))
 }
 
 func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]string) (map[string]string, error) {
@@ -183,8 +184,8 @@ func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]string)
 
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("cdi-version", apiVerion)
-		if q.APIKey != "" {
-			req.Header.Set("api-key", q.APIKey)
+		if APIKey != nil {
+			req.Header.Set("api-key", *APIKey)
 		}
 		if path.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -192,7 +193,7 @@ func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]string)
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(q.Hosts))
+	}, len(Hosts))
 }
 
 type httpRequestFunction func(url string) (*http.Response, error)
@@ -202,8 +203,8 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	if numberOfTries == 0 {
 		return nil, errors.New("No SuperTokens core available to query")
 	}
-	currentHost := q.Hosts[q.LastTriedIndex].GetAsStringDangerous()
-	q.LastTriedIndex = (q.LastTriedIndex + 1) % len(q.Hosts)
+	currentHost := Hosts[LastTriedIndex].GetAsStringDangerous()
+	LastTriedIndex = (LastTriedIndex + 1) % len(Hosts)
 	resp, err := httpRequest(currentHost + path.GetAsStringDangerous())
 
 	if err != nil {
