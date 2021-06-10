@@ -57,8 +57,8 @@ func (r *Recipe) CreateEmailVerificationToken(userID, email string) (string, err
 	if err != nil {
 		return "", err
 	}
-	if response.OK != nil {
-		return response.OK.Token, nil
+	if response.Ok != nil {
+		return response.Ok.Token, nil
 	}
 	return "", errors.New("Email has already been verified")
 }
@@ -68,15 +68,15 @@ func (r *Recipe) VerifyEmailUsingToken(token string) (*schema.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if response.OK != nil {
-		return &response.OK.User, nil
+	if response.Ok != nil {
+		return &response.Ok.User, nil
 	}
 	return nil, errors.New("Invalid email verification token")
 }
 
 // implement RecipeModule
 
-func GetAPIsHandled() (*[]supertokens.APIHandled, error) {
+func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	generateEmailVerifyTokenAPI, err := supertokens.NewNormalisedURLPath(GenerateEmailVerifyTokenAPI)
 	if err != nil {
 		return nil, err
@@ -85,7 +85,7 @@ func GetAPIsHandled() (*[]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &[]supertokens.APIHandled{{
+	return []supertokens.APIHandled{{
 		Method:                 "post",
 		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPI,
 		ID:                     GenerateEmailVerifyTokenAPI,

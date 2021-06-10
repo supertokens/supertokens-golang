@@ -39,7 +39,7 @@ type APIOptions struct {
 }
 
 type CreateEmailVerificationTokenResponse struct {
-	OK *struct {
+	Ok *struct {
 		Token string
 	}
 	EmailAlreadyVerifiedError bool // Zero value will be false
@@ -51,7 +51,7 @@ type CreateEmailVerificationTokenAPIResponse struct {
 }
 
 type VerifyEmailUsingTokenResponse struct {
-	OK *struct {
+	Ok *struct {
 		User User
 	}
 	InvalidTokenError bool // Zero value will be false

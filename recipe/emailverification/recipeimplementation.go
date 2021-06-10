@@ -20,7 +20,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 			})
 			if response["status"] == "OK" {
 				resp := schema.CreateEmailVerificationTokenResponse{
-					OK: &struct{ Token string }{Token: response["token"]},
+					Ok: &struct{ Token string }{Token: response["token"]},
 				}
 				return &resp, nil
 			}
@@ -42,7 +42,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 
 			if response["status"] == "OK" {
 				return &schema.VerifyEmailUsingTokenResponse{
-					OK: &struct{ User schema.User }{User: schema.User{
+					Ok: &struct{ User schema.User }{User: schema.User{
 						ID:    response["userId"],
 						Email: response["email"],
 					}},

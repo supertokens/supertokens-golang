@@ -34,7 +34,7 @@ func MakeAPIImplementation() schema.APIImplementation {
 			}
 
 			emailVerifyLink := options.Config.GetEmailVerificationURL(schema.User{ID: userId, Email: email}) +
-				"?token=" + response.OK.Token + "&rid=" + options.RecipeID
+				"?token=" + response.Ok.Token + "&rid=" + options.RecipeID
 
 			options.Config.CreateAndSendCustomEmail(schema.User{ID: userId, Email: email}, emailVerifyLink)
 

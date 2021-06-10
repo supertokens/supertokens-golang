@@ -42,7 +42,7 @@ func EmailVerify(apiImplementation schema.APIImplementation, options schema.APIO
 			return err
 		}
 
-		if response.OK != nil {
+		if response.Ok != nil {
 			result = map[string]interface{}{
 				"status": "OK",
 			}

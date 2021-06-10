@@ -67,8 +67,8 @@ type TypeInput struct {
 	CookieDomain             *string
 	AntiCsrf                 *AntiCsrfStr
 	Override                 *struct {
-		functions *func(originalImplementation RecipeInterface) RecipeInterface
-		apis      *func(originalImplementation APIInterface) APIInterface
+		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
+		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
 }
 
@@ -80,34 +80,34 @@ type TypeNormalisedInput struct {
 	SessionExpiredStatusCode int
 	AntiCsrf                 AntiCsrfStr
 	Override                 struct {
-		Functions func(originalImplementation RecipeInterface) RecipeInterface
-		Apis      func(originalImplementation APIInterface) APIInterface
+		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
+		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
 }
 
-type SessionContainerInterface interface {
-	RevokeSession()
-	GetSessionData() interface{}
-	UpdateSessionData(newSessionData interface{}) interface{}
-	GetUserId() string
-	GetJWTPayload() interface{}
-	GetHandle() string
-	GetAccessToken() string
-	UpdateJWTPayload(newJWTPayload interface{})
+type SessionContainerInterface struct {
+	RevokeSession     func()
+	GetSessionData    func() interface{}
+	UpdateSessionData func(newSessionData interface{}) interface{}
+	GetUserId         func() string
+	GetJWTPayload     func() interface{}
+	GetHandle         func() string
+	GetAccessToken    func() string
+	UpdateJWTPayload  func(newJWTPayload interface{})
 }
 
-type RecipeInterface interface {
-	CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) SessionContainerInterface
-	GetSession(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) *SessionContainerInterface
-	RefreshSession(req *http.Request, res http.ResponseWriter) SessionContainerInterface
-	RevokeAllSessionsForUser(userID string) []string
-	GetAllSessionHandlesForUser(userID string) []string
-	RevokeSession(sessionHandle string) bool
-	RevokeMultipleSessions(sessionHandles []string) []string
-	GetSessionData(sessionHandle string) interface{}
-	UpdateSessionData(sessionHandle string, newSessionData interface{})
-	GetJWTPayload(sessionHandle string) interface{}
-	UpdateJWTPayload(sessionHandle string, newJWTPayload interface{})
+type RecipeInterface struct {
+	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) SessionContainerInterface
+	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) *SessionContainerInterface
+	RefreshSession              func(req *http.Request, res http.ResponseWriter) SessionContainerInterface
+	RevokeAllSessionsForUser    func(userID string) []string
+	GetAllSessionHandlesForUser func(userID string) []string
+	RevokeSession               func(sessionHandle string) bool
+	RevokeMultipleSessions      func(sessionHandles []string) []string
+	GetSessionData              func(sessionHandle string) interface{}
+	UpdateSessionData           func(sessionHandle string, newSessionData interface{})
+	GetJWTPayload               func(sessionHandle string) interface{}
+	UpdateJWTPayload            func(sessionHandle string, newJWTPayload interface{})
 }
 
 type VerifySessionOptions struct {
@@ -123,8 +123,8 @@ type APIOptions struct {
 	Res                  http.ResponseWriter
 }
 
-type APIInterface interface {
-	RefreshPOST(options APIOptions)
-	SignOutPOST(options APIOptions) map[string]string
-	VerifySession(verifySessionOptions *VerifySessionOptions, options APIOptions)
+type APIInterface struct {
+	RefreshPOST   func(options APIOptions)
+	SignOutPOST   func(options APIOptions) map[string]string
+	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions)
 }
