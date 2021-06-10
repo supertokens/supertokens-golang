@@ -12,80 +12,80 @@ import (
 const RECIPE_ID = "emailverification"
 
 type Recipe struct {
-	RecipeModule        *supertokens.RecipeModule
-	instance            *Recipe
-	Config              schema.TypeNormalisedInput
-	RecipeInterfaceImpl schema.RecipeInterface
-	APIImpl             schema.APIInterface
+	RecipeModule supertokens.RecipeModule
+	Config       schema.TypeNormalisedInput
+	RecipeImpl   schema.RecipeImplementation
+	APIImpl      schema.APIImplementation
 }
 
-var r Recipe
+var r *Recipe = nil
 
-func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) *Recipe {
-	q := supertokens.Querier{}
-	instance, _ := q.GetNewInstanceOrThrowError(recipeId)
-	recipeModuleInstance := supertokens.NewRecipeModule(recipeId, appInfo)
-	recipeModuleInstance.GetAPIsHandled = func() []supertokens.APIHandled {
-		return GetAPIsHandled()
-	}
-	recipeModuleInstance.HandleAPIRequest = func(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) {
-		HandleAPIRequest(id, req, w, path, method)
-	}
-	recipeModuleInstance.GetAllCORSHeaders = func() []string {
-		return GetAllCORSHeaders()
-	}
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) Recipe {
+	querierInstance, _ := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
 	verifiedConfig := ValidateAndNormaliseUserInput(appInfo, config)
-	recipeInterface := NewRecipeImplementation(*instance)
-	return &Recipe{
-		RecipeModule:        recipeModuleInstance,
-		Config:              verifiedConfig,
-		RecipeInterfaceImpl: verifiedConfig.Override.Functions(recipeInterface),
-		APIImpl:             verifiedConfig.Override.APIs(api.NewAPIImplementation()),
+	recipeImplementation := MakeRecipeImplementation(*querierInstance)
+
+	return Recipe{
+		RecipeModule: recipeModuleInstance,
+		Config:       verifiedConfig,
+		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),
+		APIImpl:      verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
 	}
 }
 
 func GetInstanceOrThrowError() (*Recipe, error) {
-	if r.instance != nil {
-		return r.instance, nil
+	if r != nil {
+		return r, nil
 	}
 	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
 
 func RecipeInit(config schema.TypeInput) supertokens.RecipeListFunction {
-	return func(appInfo supertokens.NormalisedAppinfo) *supertokens.RecipeModule {
-		if r.instance == nil {
-			r.instance = NewRecipe(RECIPE_ID, appInfo, config)
-			return r.RecipeModule
+	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
+		if r == nil {
+			recipe := MakeRecipe(RECIPE_ID, appInfo, config)
+			r = &recipe
+			return &r.RecipeModule, nil
 		}
-		// handle errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
-		return nil
+		return nil, errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
-func (r *Recipe) CreateEmailVerificationToken(userID, email string) string {
-	response := r.RecipeInterfaceImpl.CreateEmailVerificationToken(userID, email)
-	if response["status"] == "OK" {
-		return response["token"].(string)
+func (r *Recipe) CreateEmailVerificationToken(userID, email string) (string, error) {
+	response, err := r.RecipeImpl.CreateEmailVerificationToken(userID, email)
+	if err != nil {
+		return "", err
 	}
-	// todo : error("Email already verified")
-	return ""
+	if response.OK != nil {
+		return response.OK.Token, nil
+	}
+	return "", errors.New("Email has already been verified")
 }
 
-func (r *Recipe) VerifyEmailUsingToken(token string) schema.User {
-	response := r.RecipeInterfaceImpl.VerifyEmailUsingToken(token)
-	if response["status"] == "OK" {
-		return response["user"].(schema.User)
+func (r *Recipe) VerifyEmailUsingToken(token string) (*schema.User, error) {
+	response, err := r.RecipeImpl.VerifyEmailUsingToken(token)
+	if err != nil {
+		return nil, err
 	}
-	// todo : error("Invalid token")
-	return schema.User{}
+	if response.OK != nil {
+		return &response.OK.User, nil
+	}
+	return nil, errors.New("Invalid email verification token")
 }
 
 // implement RecipeModule
 
-func GetAPIsHandled() []supertokens.APIHandled {
-	generateEmailVerifyTokenAPI, _ := supertokens.NewNormalisedURLPath(GenerateEmailVerifyTokenAPI)
-	emailVerifyAPI, _ := supertokens.NewNormalisedURLPath(EmailVerifyAPI)
-	return []supertokens.APIHandled{{
+func GetAPIsHandled() (*[]supertokens.APIHandled, error) {
+	generateEmailVerifyTokenAPI, err := supertokens.NewNormalisedURLPath(GenerateEmailVerifyTokenAPI)
+	if err != nil {
+		return nil, err
+	}
+	emailVerifyAPI, err := supertokens.NewNormalisedURLPath(EmailVerifyAPI)
+	if err != nil {
+		return nil, err
+	}
+	return &[]supertokens.APIHandled{{
 		Method:                 "post",
 		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPI,
 		ID:                     GenerateEmailVerifyTokenAPI,
@@ -100,20 +100,24 @@ func GetAPIsHandled() []supertokens.APIHandled {
 		PathWithoutAPIBasePath: *emailVerifyAPI,
 		ID:                     EmailVerifyAPI,
 		Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,
-	}}
+	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) {
+func HandleAPIRequest(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) error {
 	options := schema.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
-		RecipeImplementation: r.RecipeInterfaceImpl,
+		RecipeImplementation: r.RecipeImpl,
 		Req:                  req,
 		Res:                  w,
 	}
+	var err error = nil
 	if id == GenerateEmailVerifyTokenAPI {
-		api.GenerateEmailVerifyToken(r.APIImpl, options)
+		err = api.GenerateEmailVerifyToken(r.APIImpl, options)
+	} else {
+		err = api.EmailVerify(r.APIImpl, options)
 	}
+	return err
 }
 
 func GetAllCORSHeaders() []string {

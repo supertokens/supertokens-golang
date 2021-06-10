@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -10,9 +11,15 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 )
 
-func EmailVerify(apiImplementation schema.APIInterface, options schema.APIOptions) error {
-	var result map[string]string
+func EmailVerify(apiImplementation schema.APIImplementation, options schema.APIOptions) error {
+	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
+
+		if apiImplementation.VerifyEmailPOST == nil {
+			options.OtherHandler(options.Res, options.Req)
+			return nil
+		}
+
 		body, err := ioutil.ReadAll(options.Req.Response.Body)
 		if err != nil {
 			return err
@@ -30,20 +37,39 @@ func EmailVerify(apiImplementation schema.APIInterface, options schema.APIOption
 			return errors.New("The email verification token must be a string")
 		}
 
-		response := apiImplementation.VerifyEmailPOST(token.(string), options)
-		if response["status"] == "OK" {
-			result["status"] = "OK"
+		response, err := apiImplementation.VerifyEmailPOST(token.(string), options)
+		if err != nil {
+			return err
+		}
+
+		if response.OK != nil {
+			result = map[string]interface{}{
+				"status": "OK",
+			}
 		} else {
-			for k, v := range response {
-				result[k] = v.(string)
+			result = map[string]interface{}{
+				"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR",
 			}
 		}
 	} else {
-		response := apiImplementation.IsEmailVerifiedGET(options)
-		for k, v := range response {
-			result[k] = v.(string)
+		if apiImplementation.IsEmailVerifiedGET == nil {
+			options.OtherHandler(options.Res, options.Req)
+			return nil
 		}
+
+		response, err := apiImplementation.IsEmailVerifiedGET(options)
+		if err != nil {
+			return err
+		}
+
+		result = map[string]interface{}{
+			"status":     "OK",
+			"isVerified": response,
+		}
+
 	}
-	// todo: send200Response(options.res, result);
+
+	// TODO: send200Response(options.res, result);
+	fmt.Printf("", result)
 	return nil
 }
