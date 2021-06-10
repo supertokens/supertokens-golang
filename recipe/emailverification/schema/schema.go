@@ -34,8 +34,8 @@ type APIOptions struct {
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request
-	Res                  http.ResponseWriter // TODO: why is the writer not a pointer?
-	OtherHandler         http.HandlerFunc    // TODO: should this be a pointer?
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
 }
 
 type CreateEmailVerificationTokenResponse struct {
