@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -80,13 +79,11 @@ func GetInstanceOrThrowError() (*SuperTokens, error) {
 func (s *SuperTokens) SendTelemetry() {
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
-		fmt.Println(err) // todo: handle error
 		return
 	}
 
 	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, map[string]string{})
 	if err != nil {
-		fmt.Println(err) // todo: handle error
 		return
 	}
 	var telemetryID string
@@ -104,12 +101,10 @@ func (s *SuperTokens) SendTelemetry() {
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		fmt.Println(err) // todo: handle error
 		return
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		fmt.Println(err) // todo: handle error
 		return
 	}
 	req.Header.Set("api-version", "2")
@@ -117,14 +112,13 @@ func (s *SuperTokens) SendTelemetry() {
 	client := &http.Client{}
 	_, err = client.Do(req)
 	if err != nil {
-		fmt.Println(err) // todo: handle error
 		return
 	}
 }
 
 func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		reqURL, _ := NewNormalisedURLPath(r.RemoteAddr) // todo: error handle
+		reqURL, _ := NewNormalisedURLPath(r.RemoteAddr) // TODO: error handle
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
 		method := r.Method
 

@@ -7,13 +7,13 @@ type RecipeModule struct {
 	appInfo           NormalisedAppinfo
 	HandleAPIRequest  func(id string, req *http.Request, w http.ResponseWriter, path NormalisedURLPath, method string) error
 	GetAllCORSHeaders func() []string
-	GetAPIsHandled    func() (*[]APIHandled, error)
+	GetAPIsHandled    func() ([]APIHandled, error)
 }
 
 func MakeRecipeModule(recipeId string, appInfo NormalisedAppinfo,
 	HandleAPIRequest func(id string, req *http.Request, w http.ResponseWriter, path NormalisedURLPath, method string) error,
 	GetAllCORSHeaders func() []string,
-	GetAPIsHandled func() (*[]APIHandled, error)) RecipeModule {
+	GetAPIsHandled func() ([]APIHandled, error)) RecipeModule {
 	return RecipeModule{
 		recipeID:          recipeId,
 		appInfo:           appInfo,
@@ -36,7 +36,7 @@ func (r *RecipeModule) ReturnAPIIdIfCanHandleRequest(path NormalisedURLPath, met
 	if err != nil {
 		return nil, err
 	}
-	for _, APIshandled := range *apisHandled {
+	for _, APIshandled := range apisHandled {
 		pathAppend := r.appInfo.APIBasePath.AppendPath(APIshandled.PathWithoutAPIBasePath)
 		if !APIshandled.Disabled && APIshandled.Method == method && pathAppend.Equals(path) {
 			return &APIshandled.ID, nil

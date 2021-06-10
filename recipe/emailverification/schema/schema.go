@@ -34,12 +34,12 @@ type APIOptions struct {
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request
-	Res                  http.ResponseWriter // TODO: why is the writer not a pointer?
-	OtherHandler         http.HandlerFunc    // TODO: should this be a pointer?
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
 }
 
 type CreateEmailVerificationTokenResponse struct {
-	OK *struct {
+	Ok *struct {
 		Token string
 	}
 	EmailAlreadyVerifiedError bool // Zero value will be false
@@ -51,7 +51,7 @@ type CreateEmailVerificationTokenAPIResponse struct {
 }
 
 type VerifyEmailUsingTokenResponse struct {
-	OK *struct {
+	Ok *struct {
 		User User
 	}
 	InvalidTokenError bool // Zero value will be false
