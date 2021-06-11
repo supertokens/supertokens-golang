@@ -94,6 +94,7 @@ func (s *SuperTokens) SendTelemetry() {
 
 	url := "https://api.supertokens.io/0/st/telemetry"
 
+	// TODO: Add SDK name
 	data := map[string]interface{}{
 		"appName":       s.AppInfo.AppName,
 		"websiteDomain": s.AppInfo.WebsiteDomain.GetAsStringDangerous(),

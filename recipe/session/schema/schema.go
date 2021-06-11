@@ -6,34 +6,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type AntiCsrfStr string
-type CookieSameSiteStr string
-
-const (
-	ViaToken        AntiCsrfStr = "VIA_TOKEN"
-	ViaCustomHeader AntiCsrfStr = "VIA_CUSTOM_HEADER"
-	NoneAntiCsrf    AntiCsrfStr = "NONE"
-
-	Strict     CookieSameSiteStr = "strict"
-	Lax        CookieSameSiteStr = "lax"
-	NoneCookie CookieSameSiteStr = "NONE"
-)
-
-type RecipeImplementation struct {
-	Querier       supertokens.Querier
-	Config        TypeNormalisedInput
-	HandshakeInfo HandshakeInfo
-}
-
-type APIImplementation struct{}
-
 type HandshakeInfo struct {
 	JWTSigningPublicKey            string
-	AntiCsrf                       AntiCsrfStr
+	AntiCsrf                       string
 	AccessTokenBlacklistingEnabled bool
-	JWTSigningPublicKeyExpiryTime  int
-	AccessTokenValidity            int
-	RefreshTokenValidity           int
+	JWTSigningPublicKeyExpiryTime  uint64
+	AccessTokenValidity            uint64
+	RefreshTokenValidity           uint64
 }
 
 type CreateOrRefreshAPIResponse struct {
@@ -44,28 +23,28 @@ type CreateOrRefreshAPIResponse struct {
 	}
 	AccessToken struct {
 		Token       string
-		Expiry      int
-		CreatedTime int
+		Expiry      uint64
+		CreatedTime uint64
 	}
 	RefreshToken struct {
 		Token       string
-		Expiry      int
-		CreatedTime int
+		Expiry      uint64
+		CreatedTime uint64
 	}
 	IDRefreshToken struct {
 		Token       string
-		Expiry      int
-		CreatedTime int
+		Expiry      uint64
+		CreatedTime uint64
 	}
 	AntiCsrfToken *string
 }
 
 type TypeInput struct {
 	CookieSecure             *bool
-	CookieSameSite           *CookieSameSiteStr
+	CookieSameSite           *string
 	SessionExpiredStatusCode *int
 	CookieDomain             *string
-	AntiCsrf                 *AntiCsrfStr
+	AntiCsrf                 *string
 	Override                 *struct {
 		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs      func(originalImplementation APIImplementation) APIImplementation
@@ -75,39 +54,25 @@ type TypeInput struct {
 type TypeNormalisedInput struct {
 	RefreshTokenPath         supertokens.NormalisedURLPath
 	CookieDomain             *string
-	CookieSameSite           CookieSameSiteStr
+	CookieSameSite           string
 	CookieSecure             bool
 	SessionExpiredStatusCode int
-	AntiCsrf                 AntiCsrfStr
+	AntiCsrf                 string
 	Override                 struct {
 		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
 }
 
-type SessionContainerInterface struct {
-	RevokeSession     func()
-	GetSessionData    func() interface{}
-	UpdateSessionData func(newSessionData interface{}) interface{}
+type SessionContainer struct {
+	RevokeSession     func() error
+	GetSessionData    func() (interface{}, error)
+	UpdateSessionData func(newSessionData interface{}) (interface{}, error)
 	GetUserId         func() string
 	GetJWTPayload     func() interface{}
 	GetHandle         func() string
 	GetAccessToken    func() string
-	UpdateJWTPayload  func(newJWTPayload interface{})
-}
-
-type RecipeInterface struct {
-	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) SessionContainerInterface
-	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) *SessionContainerInterface
-	RefreshSession              func(req *http.Request, res http.ResponseWriter) SessionContainerInterface
-	RevokeAllSessionsForUser    func(userID string) []string
-	GetAllSessionHandlesForUser func(userID string) []string
-	RevokeSession               func(sessionHandle string) bool
-	RevokeMultipleSessions      func(sessionHandles []string) []string
-	GetSessionData              func(sessionHandle string) interface{}
-	UpdateSessionData           func(sessionHandle string, newSessionData interface{})
-	GetJWTPayload               func(sessionHandle string) interface{}
-	UpdateJWTPayload            func(sessionHandle string, newJWTPayload interface{})
+	UpdateJWTPayload  func(newJWTPayload interface{}) error
 }
 
 type VerifySessionOptions struct {
@@ -115,16 +80,33 @@ type VerifySessionOptions struct {
 	SessionRequired *bool
 }
 
+type RecipeImplementation struct {
+	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload *interface{}, sessionData *interface{}) (SessionContainer, error)
+	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
+	RefreshSession              func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
+	RevokeAllSessionsForUser    func(userID string) ([]string, error)
+	GetAllSessionHandlesForUser func(userID string) ([]string, error)
+	RevokeSession               func(sessionHandle string) (bool, error)
+	RevokeMultipleSessions      func(sessionHandles []string) ([]string, error)
+	GetSessionData              func(sessionHandle string) (interface{}, error)
+	UpdateSessionData           func(sessionHandle string, newSessionData interface{}) error
+	GetJWTPayload               func(sessionHandle string) (interface{}, error)
+	UpdateJWTPayload            func(sessionHandle string, newJWTPayload interface{}) error
+	GetAccessTokenLifeTimeMS    func() (uint64, error)
+	GetRefreshTokenLifeTimeMS   func() (uint64, error)
+}
+
 type APIOptions struct {
-	RecipeImplementation RecipeInterface
+	RecipeImplementation RecipeImplementation
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request
 	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
 }
 
-type APIInterface struct {
-	RefreshPOST   func(options APIOptions)
-	SignOutPOST   func(options APIOptions) map[string]string
+type APIImplementation struct {
+	RefreshPOST   func(options APIOptions) error
+	SignOutPOST   func(options APIOptions) error
 	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions)
 }
