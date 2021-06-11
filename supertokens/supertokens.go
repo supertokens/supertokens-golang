@@ -17,7 +17,6 @@ type SuperTokens struct {
 var superTokensInstance *SuperTokens = nil
 
 func SupertokensInit(config TypeInput) error {
-
 	if superTokensInstance != nil {
 		return nil
 	}

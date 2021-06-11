@@ -64,11 +64,11 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func InitQuerier(querierHosts []NormalisedURLDomain, querierAPIKey *string) {
+func InitQuerier(hosts []NormalisedURLDomain, APIKey *string) {
 	if querierInitCalled == false {
 		querierInitCalled = true
-		querierHosts = querierHosts
-		querierAPIKey = querierAPIKey
+		querierHosts = hosts
+		querierAPIKey = APIKey
 		querierAPIVersion = ""
 		querierLastTriedIndex = 0
 	}

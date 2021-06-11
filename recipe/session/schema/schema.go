@@ -19,14 +19,6 @@ const (
 	NoneCookie CookieSameSiteStr = "NONE"
 )
 
-type RecipeImplementation struct {
-	Querier       supertokens.Querier
-	Config        TypeNormalisedInput
-	HandshakeInfo HandshakeInfo
-}
-
-type APIImplementation struct{}
-
 type HandshakeInfo struct {
 	JWTSigningPublicKey            string
 	AntiCsrf                       AntiCsrfStr
@@ -96,7 +88,7 @@ type SessionContainerInterface struct {
 	UpdateJWTPayload  func(newJWTPayload interface{})
 }
 
-type RecipeInterface struct {
+type RecipeImplementation struct {
 	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) SessionContainerInterface
 	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) *SessionContainerInterface
 	RefreshSession              func(req *http.Request, res http.ResponseWriter) SessionContainerInterface
@@ -116,14 +108,14 @@ type VerifySessionOptions struct {
 }
 
 type APIOptions struct {
-	RecipeImplementation RecipeInterface
+	RecipeImplementation RecipeImplementation
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 }
 
-type APIInterface struct {
+type APIImplementation struct {
 	RefreshPOST   func(options APIOptions)
 	SignOutPOST   func(options APIOptions) map[string]string
 	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions)

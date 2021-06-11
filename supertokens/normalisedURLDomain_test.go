@@ -11,7 +11,7 @@ type NormalisedURLDomainTest struct {
 	Output string
 }
 
-func TestNewNormalisedURLDomain(t *testing.T) {
+func TestNormaliseURLDomainOrThrowError(t *testing.T) {
 	input := []NormalisedURLDomainTest{{
 		Input:  "http://api.example.com",
 		Output: "http://api.example.com",

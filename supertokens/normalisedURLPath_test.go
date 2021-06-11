@@ -11,7 +11,7 @@ type NormalisedURLPathTest struct {
 	Output string
 }
 
-func TestNewNormalisedURLPath(t *testing.T) {
+func TestNormaliseURLPathOrThrowError(t *testing.T) {
 	input := []NormalisedURLPathTest{{
 		Input:  "exists",
 		Output: "/exists",
