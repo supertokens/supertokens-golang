@@ -4,14 +4,15 @@ import (
 	"errors"
 	"net/url"
 	"strings"
+	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
 )
 
-func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *schema.TypeInput) (schema.TypeNormalisedInput, error) {
-	typeNormalisedInput := MakeTypeNormalisedInput(appInfo)
+func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *schema.TypeInput) (schema.TypeNormalisedInput, error) {
+	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
 	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.APIDomain.GetAsStringDangerous())
 	if err != nil {
@@ -35,7 +36,7 @@ func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	typeNormalisedInput.AntiCsrf = antiCsrf
 
 	if config.CookieDomain != nil {
-		cookieDomain, err := NormaliseSessionScopeOrThrowError(*config.CookieDomain)
+		cookieDomain, err := normaliseSessionScopeOrThrowError(*config.CookieDomain)
 		if err != nil {
 			return schema.TypeNormalisedInput{}, err
 		}
@@ -89,7 +90,7 @@ func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	return typeNormalisedInput, nil
 }
 
-func MakeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
+func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
 	return schema.TypeNormalisedInput{
 		CookieDomain:             nil,
 		CookieSameSite:           CookieSameSite_LAX,
@@ -130,7 +131,7 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	return parsedURL, nil
 }
 
-func NormaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
+func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 	sessionScope = strings.TrimSpace(sessionScope)
 	sessionScope = strings.ToLower(sessionScope)
 
@@ -164,4 +165,8 @@ func NormaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 		noDotNormalised = "." + sessionScope
 	}
 	return noDotNormalised, nil
+}
+
+func getCurrTimeInMS() uint64 {
+	return uint64(time.Now().UnixNano() / 1000000)
 }

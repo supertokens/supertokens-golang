@@ -53,7 +53,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 			if err != nil {
 				return false, err
 			}
-			response, _ := querier.SendGetRequest(*normalisedURLPath, map[string]string{
+			response, _ := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
 				"userId": userID,
 				"email":  email,
 			})

@@ -23,7 +23,7 @@ var r *Recipe = nil
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) Recipe {
 	querierInstance, _ := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
-	verifiedConfig := ValidateAndNormaliseUserInput(appInfo, config)
+	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 
 	return Recipe{

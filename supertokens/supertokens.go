@@ -80,7 +80,7 @@ func (s *SuperTokens) SendTelemetry() {
 		return
 	}
 
-	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, map[string]string{})
+	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, map[string]interface{}{})
 	if err != nil {
 		return
 	}

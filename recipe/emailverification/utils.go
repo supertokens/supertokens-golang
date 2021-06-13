@@ -7,8 +7,8 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) schema.TypeNormalisedInput {
-	typeNormalisedInput := MakeTypeNormalisedInput(appInfo)
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) schema.TypeNormalisedInput {
+	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
 	if config.GetEmailVerificationURL != nil {
 		typeNormalisedInput.GetEmailVerificationURL = config.GetEmailVerificationURL
@@ -34,7 +34,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	return typeNormalisedInput
 }
 
-func MakeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
+func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
 	return schema.TypeNormalisedInput{
 		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.New("Not defined by user") },
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
