@@ -34,7 +34,7 @@ func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *s
 	}
 }
 
-// implement RecipeModule
+// Implement RecipeModule
 
 func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	refreshAPIPath, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
@@ -58,22 +58,23 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) error {
-	// options := schema.APIOptions{
-	// 	Config:               r.Config,
-	// 	RecipeID:             r.RecipeModule.GetRecipeID(),
-	// 	RecipeImplementation: r.RecipeInterfaceImpl,
-	// 	Req:                  req,
-	// 	Res:                  w,
-	// }
+func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, thierhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+	options := schema.APIOptions{
+		Config:               r.Config,
+		RecipeID:             r.RecipeModule.GetRecipeID(),
+		RecipeImplementation: r.RecipeImpl,
+		Req:                  req,
+		Res:                  res,
+		OtherHandler:         thierhandler,
+	}
 	if id == RefreshAPIPath {
-		// api.handleRefreshAPI(r.APIImpl, options)
+		api.HandleRefreshAPI(r.APIImpl, options)
 	} else {
-		// api.signOutAPI(r.APIImpl, options)
+		return api.SignOutAPI(r.APIImpl, options)
 	}
 	return nil
 }
 
 func GetAllCORSHeaders() []string {
-	return []string{}
+	return []string{antiCsrfHeaderKey, ridHeaderKey}
 }

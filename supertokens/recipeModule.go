@@ -5,13 +5,15 @@ import "net/http"
 type RecipeModule struct {
 	recipeID          string
 	appInfo           NormalisedAppinfo
-	HandleAPIRequest  func(id string, req *http.Request, w http.ResponseWriter, path NormalisedURLPath, method string) error
+	HandleAPIRequest  func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
 	GetAllCORSHeaders func() []string
 	GetAPIsHandled    func() ([]APIHandled, error)
 }
 
-func MakeRecipeModule(recipeId string, appInfo NormalisedAppinfo,
-	HandleAPIRequest func(id string, req *http.Request, w http.ResponseWriter, path NormalisedURLPath, method string) error,
+func MakeRecipeModule(
+	recipeId string,
+	appInfo NormalisedAppinfo,
+	HandleAPIRequest func(id string, req *http.Request, w http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	GetAllCORSHeaders func() []string,
 	GetAPIsHandled func() ([]APIHandled, error)) RecipeModule {
 	return RecipeModule{

@@ -14,11 +14,13 @@ type Querier struct {
 	RIDToCore string
 }
 
-var querierInitCalled bool = false
-var querierHosts []NormalisedURLDomain = nil
-var querierAPIKey *string
-var querierAPIVersion string
-var querierLastTriedIndex int
+var (
+	querierInitCalled     bool                  = false
+	querierHosts          []NormalisedURLDomain = nil
+	querierAPIKey         *string
+	querierAPIVersion     string
+	querierLastTriedIndex int
+)
 
 func NewQuerier(rIdToCore string) Querier {
 	return Querier{
@@ -46,7 +48,7 @@ func (q *Querier) getquerierAPIVersion() (string, error) {
 		return "", err
 	}
 
-	cdiSupportedByServer := strings.Split(response["versions"], ",")
+	cdiSupportedByServer := strings.Split(response["versions"].(string), ",")
 	supportedVersion := getLargestVersionFromIntersection(cdiSupportedByServer, cdiSupported)
 	if supportedVersion == nil {
 		return "", errors.New("The running SuperTokens core version is not compatible with this Golang SDK. Please visit https://supertokens.io/docs/community/compatibility to find the right version")
@@ -74,7 +76,7 @@ func InitQuerier(hosts []NormalisedURLDomain, APIKey *string) {
 	}
 }
 
-func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]string) (map[string]string, error) {
+func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
 	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
@@ -104,7 +106,7 @@ func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]string
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]string) (map[string]string, error) {
+func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
 	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
@@ -134,7 +136,7 @@ func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]stri
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]string) (map[string]string, error) {
+func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]string) (map[string]interface{}, error) {
 	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
@@ -165,7 +167,7 @@ func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]strin
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]string) (map[string]string, error) {
+func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
 	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
@@ -197,8 +199,7 @@ func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]string)
 
 type httpRequestFunction func(url string) (*http.Response, error)
 
-func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction,
-	numberOfTries int) (map[string]string, error) {
+func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int) (map[string]interface{}, error) {
 	if numberOfTries == 0 {
 		return nil, errors.New("No SuperTokens core available to query")
 	}
@@ -227,10 +228,10 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		return nil, readErr
 	}
 
-	finalResult := make(map[string]string)
+	finalResult := make(map[string]interface{})
 	jsonError := json.Unmarshal(body, &finalResult)
 	if jsonError != nil {
-		return map[string]string{
+		return map[string]interface{}{
 			"result": string(body),
 		}, nil
 	}

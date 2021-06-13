@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
-	"strconv"
 	"strings"
 )
 
@@ -86,9 +85,9 @@ func (s *SuperTokens) SendTelemetry() {
 		return
 	}
 	var telemetryID string
-	exists, err := strconv.ParseBool(response["exists"])
-	if err == nil && exists {
-		telemetryID = response["telemetryId"]
+	exists := response["exists"].(bool)
+	if exists {
+		telemetryID = response["telemetryId"].(string)
 	}
 
 	url := "https://api.supertokens.io/0/st/telemetry"
@@ -151,7 +150,7 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 				theirHandler.ServeHTTP(w, r)
 				return
 			}
-			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, path, method)
+			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler, path, method)
 			if apiErr != nil {
 				// TODO: handle error
 				return
@@ -165,7 +164,7 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 				}
 
 				if id != nil {
-					err := recipeModule.HandleAPIRequest(*id, r, w, path, method)
+					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler, path, method)
 					if err != nil {
 						// TODO: handle error
 						return

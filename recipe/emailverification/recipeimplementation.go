@@ -1,8 +1,6 @@
 package emailverification
 
 import (
-	"strconv"
-
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -14,13 +12,13 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 			if err != nil {
 				return nil, err
 			}
-			response, _ := querier.SendPostRequest(*normalisedURLPath, map[string]string{
+			response, _ := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
 				"userId": userID,
 				"email":  email,
 			})
 			if response["status"] == "OK" {
 				resp := schema.CreateEmailVerificationTokenResponse{
-					Ok: &struct{ Token string }{Token: response["token"]},
+					Ok: &struct{ Token string }{Token: response["token"].(string)},
 				}
 				return &resp, nil
 			}
@@ -35,7 +33,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 				return nil, err
 			}
 
-			response, _ := querier.SendPostRequest(*normalisedURLPath, map[string]string{
+			response, _ := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
 				"method": "token",
 				"token":  token,
 			})
@@ -43,8 +41,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 			if response["status"] == "OK" {
 				return &schema.VerifyEmailUsingTokenResponse{
 					Ok: &struct{ User schema.User }{User: schema.User{
-						ID:    response["userId"],
-						Email: response["email"],
+						ID:    response["userId"].(string),
+						Email: response["email"].(string),
 					}},
 				}, nil
 			}
@@ -60,10 +58,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 				"email":  email,
 			})
 
-			isVerified, err := strconv.ParseBool(response["isVerified"])
-			if err != nil {
-				return false, err
-			}
+			isVerified := response["isVerified"].(bool)
 			return isVerified, nil
 		},
 	}

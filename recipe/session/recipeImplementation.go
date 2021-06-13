@@ -9,11 +9,14 @@ import (
 
 func MakeRecipeImplementation(querier supertokens.Querier, config schema.TypeNormalisedInput) schema.RecipeImplementation {
 	return schema.RecipeImplementation{
-		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) schema.SessionContainerInterface {
-			return schema.SessionContainerInterface{}
+		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (schema.SessionContainer, error) {
+			// TODO
+			return schema.SessionContainer{}, nil
 		},
-		GetSession: func(req *http.Request, res http.ResponseWriter, options *schema.VerifySessionOptions) *schema.SessionContainerInterface {
-			return nil
+		GetSession: func(req *http.Request, res http.ResponseWriter, options *schema.VerifySessionOptions) (*schema.SessionContainer, error) {
+			// TODO
+			return nil, nil
 		},
 	}
 }
+

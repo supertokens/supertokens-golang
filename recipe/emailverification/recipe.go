@@ -103,13 +103,14 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, w http.ResponseWriter, path supertokens.NormalisedURLPath, method string) error {
+func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := schema.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
 		Req:                  req,
-		Res:                  w,
+		Res:                  res,
+		OtherHandler:         theirHandler,
 	}
 	var err error = nil
 	if id == GenerateEmailVerifyTokenAPI {

@@ -17,26 +17,20 @@ type HandshakeInfo struct {
 
 type CreateOrRefreshAPIResponse struct {
 	Session struct {
-		Handle        string
-		UserID        string
-		UserDataInJWT interface{}
-	}
-	AccessToken struct {
-		Token       string
-		Expiry      uint64
-		CreatedTime uint64
-	}
-	RefreshToken struct {
-		Token       string
-		Expiry      uint64
-		CreatedTime uint64
-	}
-	IDRefreshToken struct {
-		Token       string
-		Expiry      uint64
-		CreatedTime uint64
-	}
-	AntiCsrfToken *string
+		Handle        string      `json:"handle"`
+		UserID        string      `json:"userId"`
+		UserDataInJWT interface{} `json:"userDataInJWT"`
+	} `json:"session"`
+	AccessToken    CreateOrRefreshAPIResponseToken `json:"accessToken"`
+	RefreshToken   CreateOrRefreshAPIResponseToken `json:"refreshToken"`
+	IDRefreshToken CreateOrRefreshAPIResponseToken `json:"idRefreshToken"`
+	AntiCsrfToken  *string                         `json:"antiCsrfToken"`
+}
+
+type CreateOrRefreshAPIResponseToken struct {
+	Token       string `json:"token"`
+	Expiry      uint64 `json:"expiry"`
+	CreatedTime uint64 `json:"createdTime"`
 }
 
 type TypeInput struct {
@@ -81,19 +75,24 @@ type VerifySessionOptions struct {
 }
 
 type RecipeImplementation struct {
-	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload *interface{}, sessionData *interface{}) (SessionContainer, error)
-	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
-	RefreshSession              func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
-	RevokeAllSessionsForUser    func(userID string) ([]string, error)
-	GetAllSessionHandlesForUser func(userID string) ([]string, error)
-	RevokeSession               func(sessionHandle string) (bool, error)
-	RevokeMultipleSessions      func(sessionHandles []string) ([]string, error)
-	GetSessionData              func(sessionHandle string) (interface{}, error)
-	UpdateSessionData           func(sessionHandle string, newSessionData interface{}) error
-	GetJWTPayload               func(sessionHandle string) (interface{}, error)
-	UpdateJWTPayload            func(sessionHandle string, newJWTPayload interface{}) error
-	GetAccessTokenLifeTimeMS    func() (uint64, error)
-	GetRefreshTokenLifeTimeMS   func() (uint64, error)
+	Querier                       supertokens.Querier
+	Config                        TypeNormalisedInput
+	HandshakeInfo                 HandshakeInfo
+	GetHandshakeInfo              func() HandshakeInfo
+	UpdateJwtSigningPublicKeyInfo func(newKey string, newExpiry uint64)
+	CreateNewSession              func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (SessionContainer, error)
+	GetSession                    func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
+	RefreshSession                func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
+	RevokeAllSessionsForUser      func(userID string) ([]string, error)
+	GetAllSessionHandlesForUser   func(userID string) ([]string, error)
+	RevokeSession                 func(sessionHandle string) (bool, error)
+	RevokeMultipleSessions        func(sessionHandles []string) ([]string, error)
+	GetSessionData                func(sessionHandle string) (interface{}, error)
+	UpdateSessionData             func(sessionHandle string, newSessionData interface{}) error
+	GetJWTPayload                 func(sessionHandle string) (interface{}, error)
+	UpdateJWTPayload              func(sessionHandle string, newJWTPayload interface{}) error
+	GetAccessTokenLifeTimeMS      func() (uint64, error)
+	GetRefreshTokenLifeTimeMS     func() (uint64, error)
 }
 
 type APIOptions struct {
@@ -107,6 +106,6 @@ type APIOptions struct {
 
 type APIImplementation struct {
 	RefreshPOST   func(options APIOptions) error
-	SignOutPOST   func(options APIOptions) error
+	SignOutPOST   func(options APIOptions) (map[string]string, error)
 	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions)
 }

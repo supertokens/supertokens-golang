@@ -22,15 +22,15 @@ func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 		return schema.TypeNormalisedInput{}, err
 	}
 
-	cookieSameSite := schema.Lax
+	cookieSameSite := CookieSameSite_LAX
 	if topLevelAPIDomain != topLevelWebsiteDomain {
-		cookieSameSite = schema.NoneCookie
+		cookieSameSite = CookieSameSite_NONE
 	}
 	typeNormalisedInput.CookieSameSite = cookieSameSite
 
-	antiCsrf := schema.NoneAntiCsrf
-	if cookieSameSite == schema.NoneCookie {
-		antiCsrf = schema.ViaCustomHeader
+	antiCsrf := AntiCSRF_NONE
+	if cookieSameSite == CookieSameSite_NONE {
+		antiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
 	}
 	typeNormalisedInput.AntiCsrf = antiCsrf
 
@@ -55,7 +55,7 @@ func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	}
 
 	if config.AntiCsrf != nil {
-		if *config.AntiCsrf != schema.NoneAntiCsrf || *config.AntiCsrf != schema.ViaCustomHeader || *config.AntiCsrf != schema.ViaToken {
+		if *config.AntiCsrf != AntiCSRF_NONE || *config.AntiCsrf != AntiCSRF_VIA_TOKEN || *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
 			return typeNormalisedInput, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
 		}
 		typeNormalisedInput.AntiCsrf = *config.AntiCsrf
@@ -64,7 +64,7 @@ func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	IsAnIPAPIDomain, err := supertokens.IsAnIPAddress(topLevelAPIDomain)
 
 	IsAnIPWebsiteDomain, err := supertokens.IsAnIPAddress(topLevelWebsiteDomain)
-	if typeNormalisedInput.CookieSameSite == schema.NoneCookie &&
+	if typeNormalisedInput.CookieSameSite == CookieSameSite_NONE &&
 		!typeNormalisedInput.CookieSecure &&
 		!(topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
 		!(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain) {
@@ -92,10 +92,10 @@ func ValidateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 func MakeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
 	return schema.TypeNormalisedInput{
 		CookieDomain:             nil,
-		CookieSameSite:           schema.Lax,
+		CookieSameSite:           CookieSameSite_LAX,
 		CookieSecure:             strings.HasPrefix(appInfo.APIDomain.GetAsStringDangerous(), "https"),
 		SessionExpiredStatusCode: 401,
-		AntiCsrf:                 schema.NoneAntiCsrf,
+		AntiCsrf:                 AntiCSRF_NONE,
 		Override: struct {
 			Functions func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation
 			APIs      func(originalImplementation schema.APIImplementation) schema.APIImplementation
