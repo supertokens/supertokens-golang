@@ -22,7 +22,6 @@ func getInfoFromAccessToken(token string, jwtSigningPublicKey string, doAntiCsrf
 	if err != nil {
 		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
 			Msg: err.Error(),
-			
 		}
 	}
 

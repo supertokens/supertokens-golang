@@ -5,6 +5,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/schema"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type Session struct {
@@ -84,34 +85,20 @@ func (session *Session) GetAccessToken() string {
 }
 
 // UpdateJWTPayload function used to update jwt payload for this session
-// func (session *Session) UpdateJWTPayload(newJWTPayload map[string]interface{}) error {
-// 	sessionInfo, err := core.RegenerateSession(session.accessToken, newJWTPayload)
-// 	if err != nil {
-// 		if errors.IsUnauthorizedError(err) {
-// 			clearSessionFromCookie(session.recipeImplementation.Config, *session.res)
-// 		}
-// 		return err
-// 	}
-// 	session.userDataInJWT = sessionInfo.UserDataInJWT
-// 	if sessionInfo.AccessToken != nil {
-// 		session.accessToken = (*sessionInfo.AccessToken).Token
-
-// 		attachFrontTokenInHeaders(
-// 			session.response,
-// 			session.userID,
-// 			(*sessionInfo.AccessToken).Expiry,
-// 			session.userDataInJWT,
-// 		)
-
-// 		attachAccessTokenToCookie(
-// 			session.response,
-// 			(*sessionInfo.AccessToken).Token,
-// 			(*sessionInfo.AccessToken).Expiry,
-// 			(*sessionInfo.AccessToken).Domain,
-// 			(*sessionInfo.AccessToken).CookieSecure,
-// 			(*sessionInfo.AccessToken).CookiePath,
-// 			(*sessionInfo.AccessToken).SameSite,
-// 		)
-// 	}
-// 	return nil
-// }
+func (session *Session) UpdateJWTPayload(newJWTPayload map[string]interface{}) error {
+	path, err := supertokens.NewNormalisedURLPath("/recipe/session/regenerate")
+	if err != nil {
+		return err
+	}
+	response, err := session.recipeImplementation.Querier.SendPostRequest(*path, map[string]interface{}{
+		"accessToken":   session.accessToken,
+		"userDataInJWT": newJWTPayload,
+	})
+	if response["status"] == UnauthorizedError {
+		clearSessionFromCookie(session.recipeImplementation.Config, *session.res)
+		return errors.UnauthorizedError{
+			Msg: "Session has probably been revoked while updating JWT payload",
+		}
+	}
+	return nil
+}

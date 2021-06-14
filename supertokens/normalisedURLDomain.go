@@ -1,9 +1,11 @@
 package supertokens
 
 import (
-	"errors"
+	"fmt"
 	"net/url"
 	"strings"
+
+	"github.com/supertokens/supertokens-golang/errors"
 )
 
 type NormalisedURLDomain struct {
@@ -28,9 +30,9 @@ func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, 
 	input = strings.ToLower(strings.Trim(input, ""))
 
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") && !strings.HasPrefix(input, "supertokens://") {
-		// return "", errors.New("converting to proper URL")
+		fmt.Println("converting to proper URL")
 		if strings.HasPrefix(input, "/") {
-			return "", errors.New("Please provide a valid domain name")
+			return "", errors.GeneralError{Msg: "Please provide a valid domain name"}
 		}
 		if strings.HasPrefix(input, ".") {
 			input = input[1:]

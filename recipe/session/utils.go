@@ -1,11 +1,11 @@
 package session
 
 import (
-	"errors"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
@@ -56,8 +56,8 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	}
 
 	if config.AntiCsrf != nil {
-		if *config.AntiCsrf != AntiCSRF_NONE || *config.AntiCsrf != AntiCSRF_VIA_TOKEN || *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
-			return typeNormalisedInput, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
+		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
+			return typeNormalisedInput, errors.GeneralError{Msg: "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'"}
 		}
 		typeNormalisedInput.AntiCsrf = *config.AntiCsrf
 	}
@@ -69,7 +69,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 		!typeNormalisedInput.CookieSecure &&
 		!(topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
 		!(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain) {
-		return typeNormalisedInput, errors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+		return typeNormalisedInput, errors.GeneralError{Msg: "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false."}
 	}
 
 	if config.Override != nil {
@@ -92,6 +92,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
 	return schema.TypeNormalisedInput{
+		RefreshTokenPath:         supertokens.NormalisedURLPath{},
 		CookieDomain:             nil,
 		CookieSameSite:           CookieSameSite_LAX,
 		CookieSecure:             strings.HasPrefix(appInfo.APIDomain.GetAsStringDangerous(), "https"),
@@ -100,14 +101,11 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeN
 		Override: struct {
 			Functions func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation
 			APIs      func(originalImplementation schema.APIImplementation) schema.APIImplementation
-		}{
-			Functions: func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation {
-				return originalImplementation
-			},
-			APIs: func(originalImplementation schema.APIImplementation) schema.APIImplementation {
-				return originalImplementation
-			},
-		},
+		}{Functions: func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation {
+			return originalImplementation
+		}, APIs: func(originalImplementation schema.APIImplementation) schema.APIImplementation {
+			return originalImplementation
+		}},
 	}
 }
 
@@ -126,7 +124,7 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	}
 	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
 	if err != nil {
-		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
+		return "", errors.GeneralError{Msg: "Please make sure that the apiDomain and websiteDomain have correct values"}
 	}
 	return parsedURL, nil
 }
@@ -145,7 +143,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 
 	urlObj, err := url.Parse(sessionScope)
 	if err != nil {
-		return "", errors.New("Please provide a valid sessionScope")
+		return "", errors.GeneralError{Msg: "Please provide a valid sessionScope"}
 	}
 	sessionScope = urlObj.Host
 	if strings.HasPrefix(sessionScope, ".") {

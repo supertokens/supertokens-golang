@@ -1,9 +1,8 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func GenerateEmailVerifyToken(apiImplementation schema.APIImplementation, options schema.APIOptions) error {
@@ -29,7 +28,6 @@ func GenerateEmailVerifyToken(apiImplementation schema.APIImplementation, option
 		}
 	}
 
-	// TODO: send200Response(options.res, result);
-	fmt.Printf("", result)
+	supertokens.Send200Response(options.Res, result)
 	return nil
 }

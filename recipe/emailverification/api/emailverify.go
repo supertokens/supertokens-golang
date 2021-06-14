@@ -2,13 +2,13 @@ package api
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
 
+	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func EmailVerify(apiImplementation schema.APIImplementation, options schema.APIOptions) error {
@@ -31,10 +31,10 @@ func EmailVerify(apiImplementation schema.APIImplementation, options schema.APIO
 		}
 		token, ok := readBody["token"]
 		if !ok {
-			return errors.New("Please provide the email verification token")
+			return errors.GeneralError{Msg: "Please provide the email verification token"}
 		}
 		if reflect.ValueOf(token).Kind() != reflect.String {
-			return errors.New("The email verification token must be a string")
+			return errors.GeneralError{Msg: "The email verification token must be a string"}
 		}
 
 		response, err := apiImplementation.VerifyEmailPOST(token.(string), options)
@@ -69,7 +69,6 @@ func EmailVerify(apiImplementation schema.APIImplementation, options schema.APIO
 
 	}
 
-	// TODO: send200Response(options.res, result);
-	fmt.Printf("", result)
+	supertokens.Send200Response(options.Res, result)
 	return nil
 }

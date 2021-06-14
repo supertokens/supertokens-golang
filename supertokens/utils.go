@@ -1,7 +1,6 @@
 package supertokens
 
 import (
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -10,6 +9,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/supertokens/supertokens-golang/errors"
 )
 
 func IsAnIPAddress(ipaddress string) (bool, error) {
@@ -18,16 +19,24 @@ func IsAnIPAddress(ipaddress string) (bool, error) {
 
 func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, error) {
 	if reflect.DeepEqual(appInfo, AppInfo{}) {
-		return NormalisedAppinfo{}, errors.New("Please provide the appInfo object when calling supertokens.init")
+		return NormalisedAppinfo{}, errors.GeneralError{
+			Msg: "Please provide the appInfo object when calling supertokens.init",
+		}
 	}
 	if appInfo.APIDomain == "" {
-		return NormalisedAppinfo{}, errors.New("Please provide your apiDomain inside the appInfo object when calling supertokens.init")
+		return NormalisedAppinfo{}, errors.GeneralError{
+			Msg: "Please provide your apiDomain inside the appInfo object when calling supertokens.init",
+		}
 	}
 	if appInfo.AppName == "" {
-		return NormalisedAppinfo{}, errors.New("Please provide your appName inside the appInfo object when calling supertokens.init")
+		return NormalisedAppinfo{}, errors.GeneralError{
+			Msg: "Please provide your appName inside the appInfo object when calling supertokens.init",
+		}
 	}
 	if appInfo.WebsiteDomain == "" {
-		return NormalisedAppinfo{}, errors.New("Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
+		return NormalisedAppinfo{}, errors.GeneralError{
+			Msg: "Please provide your websiteDomain inside the appInfo object when calling supertokens.init",
+		}
 	}
 	return NormalisedAppinfo{}, nil
 }
@@ -76,13 +85,13 @@ func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
 	}
 	maxVersionSoFar := intersection[0]
 	for i := 1; i < len(intersection); i++ {
-		maxVersionSoFar = MaxVersion(intersection[i], maxVersionSoFar)
+		maxVersionSoFar = maxVersion(intersection[i], maxVersionSoFar)
 	}
 	return &maxVersionSoFar
 }
 
 // MaxVersion returns max of v1 and v2
-func MaxVersion(version1 string, version2 string) string {
+func maxVersion(version1 string, version2 string) string {
 	var splittedv1 = strings.Split(version1, ".")
 	var splittedv2 = strings.Split(version2, ".")
 	var minLength = len(splittedv1)
@@ -110,4 +119,22 @@ func MaxVersion(version1 string, version2 string) string {
 
 func getRIDFromRequest(r *http.Request) string {
 	return r.Header.Get(HeaderRID)
+}
+
+func Send200Response(res http.ResponseWriter, responseJson interface{}) {
+	res.WriteHeader(200)
+	bytes := []byte(fmt.Sprintf("%+v", responseJson))
+	res.Write(bytes)
+}
+
+func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
+	if statusCode < 300 {
+		return errors.GeneralError{
+			Msg: "Calling sendNon200Response with status code < 300",
+		}
+	}
+	res.WriteHeader(statusCode)
+	bytes := []byte(fmt.Sprintf("%+v", message))
+	res.Write(bytes)
+	return nil
 }

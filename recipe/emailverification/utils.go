@@ -1,8 +1,7 @@
 package emailverification
 
 import (
-	"errors"
-
+	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -36,7 +35,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
 	return schema.TypeNormalisedInput{
-		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.New("Not defined by user") },
+		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.GeneralError{Msg: "Not defined by user"} },
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
 		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
 		Override: struct {

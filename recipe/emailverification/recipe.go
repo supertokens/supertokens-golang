@@ -1,9 +1,9 @@
 package emailverification
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -38,7 +38,7 @@ func GetInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
+	return nil, errors.GeneralError{Msg: "Initialisation not done. Did you forget to call the SuperTokens.init function?"}
 }
 
 func RecipeInit(config schema.TypeInput) supertokens.RecipeListFunction {
@@ -48,7 +48,7 @@ func RecipeInit(config schema.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
+		return nil, errors.GeneralError{Msg: "Emailverification recipe has already been initialised. Please check your code for bugs."}
 	}
 }
 
@@ -60,7 +60,7 @@ func (r *Recipe) CreateEmailVerificationToken(userID, email string) (string, err
 	if response.Ok != nil {
 		return response.Ok.Token, nil
 	}
-	return "", errors.New("Email has already been verified")
+	return "", errors.GeneralError{Msg: "Email has already been verified"}
 }
 
 func (r *Recipe) VerifyEmailUsingToken(token string) (*schema.User, error) {
@@ -71,7 +71,7 @@ func (r *Recipe) VerifyEmailUsingToken(token string) (*schema.User, error) {
 	if response.Ok != nil {
 		return &response.Ok.User, nil
 	}
-	return nil, errors.New("Invalid email verification token")
+	return nil, errors.GeneralError{Msg: "Invalid email verification token"}
 }
 
 // implement RecipeModule

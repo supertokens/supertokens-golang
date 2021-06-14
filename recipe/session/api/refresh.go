@@ -1,6 +1,9 @@
 package api
 
-import "github.com/supertokens/supertokens-golang/recipe/session/schema"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/session/schema"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 func HandleRefreshAPI(apiImplementation schema.APIImplementation, options schema.APIOptions) {
 	if apiImplementation.RefreshPOST == nil {
@@ -8,5 +11,5 @@ func HandleRefreshAPI(apiImplementation schema.APIImplementation, options schema
 		return
 	}
 	apiImplementation.RefreshPOST(options)
-	// TODO: send200Response(options.res, {})
+	supertokens.Send200Response(options.Res, nil)
 }

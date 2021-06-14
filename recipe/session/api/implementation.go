@@ -1,9 +1,9 @@
 package api
 
 import (
-	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/schema"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -43,7 +43,7 @@ func MakeAPIImplementation() schema.APIImplementation {
 				return nil, err
 			}
 			if session == nil {
-				return nil, errors.New("Session is undefined. Should not come here.")
+				return nil, errors.GeneralError{Msg: "Session is undefined. Should not come here."}
 			}
 			session.RevokeSession()
 			return map[string]string{
