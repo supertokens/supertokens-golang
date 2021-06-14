@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/schema"
+	"github.com/supertokens/supertokens-golang/recipe/session/models"
 )
 
 const (
@@ -31,12 +31,12 @@ const (
 )
 
 type TokenInfo struct {
-	Uid string                 `json:"uid"`
-	Ate uint64                 `json:"ate"`
-	Up  map[string]interface{} `json:"up"`
+	Uid string      `json:"uid"`
+	Ate uint64      `json:"ate"`
+	Up  interface{} `json:"up"`
 }
 
-func clearSessionFromCookie(config schema.TypeNormalisedInput, res http.ResponseWriter) {
+func clearSessionFromCookie(config models.TypeNormalisedInput, res http.ResponseWriter) {
 	setCookie(config, res, accessTokenCookieKey, "", 0, "accessTokenPath")
 	setCookie(config, res, refreshTokenCookieKey, "", 0, "refreshTokenPath")
 	setCookie(config, res, idRefreshTokenCookieKey, "", 0, "accessTokenPath")
@@ -44,11 +44,11 @@ func clearSessionFromCookie(config schema.TypeNormalisedInput, res http.Response
 	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
 }
 
-func attachAccessTokenToCookie(config schema.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
+func attachAccessTokenToCookie(config models.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
 	setCookie(config, res, accessTokenCookieKey, token, expiry, "accessTokenPath")
 }
 
-func attachRefreshTokenToCookie(config schema.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
+func attachRefreshTokenToCookie(config models.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
 	setCookie(config, res, refreshTokenCookieKey, token, expiry, "refreshTokenPath")
 }
 
@@ -77,14 +77,14 @@ func setAntiCsrfTokenInHeaders(res http.ResponseWriter, antiCsrfToken string) {
 	setHeader(res, "Access-Control-Expose-Headers", antiCsrfHeaderKey, true)
 }
 
-func setIDRefreshTokenInHeaderAndCookie(config schema.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
+func setIDRefreshTokenInHeaderAndCookie(config models.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
 	setHeader(res, idRefreshTokenHeaderKey, idRefreshToken+";"+fmt.Sprint(expiry), false)
 	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
 
 	setCookie(config, res, idRefreshTokenCookieKey, idRefreshToken, expiry, "accessTokenPath")
 }
 
-func setFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uint64, jwtPayload map[string]interface{}) {
+func setFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uint64, jwtPayload interface{}) {
 	tokenInfo := &TokenInfo{
 		Uid: userId,
 		Ate: atExpiry,
@@ -111,7 +111,7 @@ func setHeader(res http.ResponseWriter, key string, value string, allowDuplicate
 	}
 }
 
-func setCookie(config schema.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
+func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
 	var domain *string
 	if config.CookieDomain != nil {
 		domain = config.CookieDomain

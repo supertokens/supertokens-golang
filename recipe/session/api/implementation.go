@@ -4,17 +4,17 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/errors"
-	"github.com/supertokens/supertokens-golang/recipe/session/schema"
+	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeAPIImplementation() schema.APIImplementation {
-	return schema.APIImplementation{
-		RefreshPOST: func(options schema.APIOptions) error {
+func MakeAPIImplementation() models.APIImplementation {
+	return models.APIImplementation{
+		RefreshPOST: func(options models.APIOptions) error {
 			_, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
 			return err
 		},
-		VerifySession: func(verifySessionOptions *schema.VerifySessionOptions, options schema.APIOptions) {
+		VerifySession: func(verifySessionOptions *models.VerifySessionOptions, options models.APIOptions) {
 			method := options.Req.Method
 			if method == http.MethodOptions || method == http.MethodTrace {
 				options.OtherHandler(options.Res, options.Req)
@@ -36,14 +36,14 @@ func MakeAPIImplementation() schema.APIImplementation {
 			options.OtherHandler(options.Res, options.Req)
 			return
 		},
-		SignOutPOST: func(options schema.APIOptions) (map[string]string, error) {
+		SignOutPOST: func(options models.APIOptions) (map[string]string, error) {
 			session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, nil)
 			if err != nil {
 				// TODO: error check handle
 				return nil, err
 			}
 			if session == nil {
-				return nil, errors.GeneralError{Msg: "Session is undefined. Should not come here."}
+				return nil, errors.BadInputError{Msg: "Session is undefined. Should not come here."}
 			}
 			session.RevokeSession()
 			return map[string]string{

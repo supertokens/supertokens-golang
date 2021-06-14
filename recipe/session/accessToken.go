@@ -2,8 +2,6 @@ package session
 
 import (
 	"strings"
-
-	"github.com/supertokens/supertokens-golang/errors"
 )
 
 type accessTokenInfoStruct struct {
@@ -20,7 +18,7 @@ type accessTokenInfoStruct struct {
 func getInfoFromAccessToken(token string, jwtSigningPublicKey string, doAntiCsrfCheck bool) (accessTokenInfoStruct, error) {
 	payload, err := verifyJWTAndGetPayload(token, jwtSigningPublicKey)
 	if err != nil {
-		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
+		return accessTokenInfoStruct{}, TryRefreshTokenError{
 			Msg: err.Error(),
 		}
 	}
@@ -57,13 +55,13 @@ func getInfoFromAccessToken(token string, jwtSigningPublicKey string, doAntiCsrf
 		(antiCsrfToken == nil && doAntiCsrfCheck) ||
 		expiryTime == nil ||
 		timeCreated == nil {
-		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
+		return accessTokenInfoStruct{}, TryRefreshTokenError{
 			Msg: "Access token does not contain all the information. Maybe the structure has changed?",
 		}
 	}
 
 	if *expiryTime < getCurrTimeInMS() {
-		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
+		return accessTokenInfoStruct{}, TryRefreshTokenError{
 			Msg: "Access token expired",
 		}
 	}

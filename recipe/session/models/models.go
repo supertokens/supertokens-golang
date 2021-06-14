@@ -1,4 +1,4 @@
-package schema
+package models
 
 import (
 	"net/http"
@@ -61,8 +61,8 @@ type TypeNormalisedInput struct {
 type SessionContainer struct {
 	RevokeSession     func() error
 	GetSessionData    func() (interface{}, error)
-	UpdateSessionData func(newSessionData interface{}) (interface{}, error)
-	GetUserId         func() string
+	UpdateSessionData func(newSessionData interface{}) error
+	GetUserID         func() string
 	GetJWTPayload     func() interface{}
 	GetHandle         func() string
 	GetAccessToken    func() string
@@ -75,10 +75,6 @@ type VerifySessionOptions struct {
 }
 
 type RecipeImplementation struct {
-	Querier                       supertokens.Querier
-	Config                        TypeNormalisedInput
-	HandshakeInfo                 HandshakeInfo
-	GetHandshakeInfo              func() HandshakeInfo
 	UpdateJwtSigningPublicKeyInfo func(newKey string, newExpiry uint64)
 	CreateNewSession              func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (SessionContainer, error)
 	GetSession                    func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)

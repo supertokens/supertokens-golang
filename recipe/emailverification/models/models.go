@@ -1,4 +1,4 @@
-package schema
+package models
 
 import (
 	"net/http"

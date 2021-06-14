@@ -2,11 +2,11 @@ package emailverification
 
 import (
 	"github.com/supertokens/supertokens-golang/errors"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config schema.TypeInput) schema.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config models.TypeInput) models.TypeNormalisedInput {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
 	if config.GetEmailVerificationURL != nil {
@@ -33,19 +33,19 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	return typeNormalisedInput
 }
 
-func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
-	return schema.TypeNormalisedInput{
-		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.GeneralError{Msg: "Not defined by user"} },
+func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeNormalisedInput {
+	return models.TypeNormalisedInput{
+		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.BadInputError{Msg: "Not defined by user"} },
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
 		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
 		Override: struct {
-			Functions func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation
-			APIs      func(originalImplementation schema.APIImplementation) schema.APIImplementation
+			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
+			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
 		}{
-			Functions: func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation {
+			Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
 				return originalImplementation
 			},
-			APIs: func(originalImplementation schema.APIImplementation) schema.APIImplementation {
+			APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
 				return originalImplementation
 			},
 		},

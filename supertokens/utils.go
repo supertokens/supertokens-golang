@@ -19,22 +19,22 @@ func IsAnIPAddress(ipaddress string) (bool, error) {
 
 func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, error) {
 	if reflect.DeepEqual(appInfo, AppInfo{}) {
-		return NormalisedAppinfo{}, errors.GeneralError{
+		return NormalisedAppinfo{}, errors.BadInputError{
 			Msg: "Please provide the appInfo object when calling supertokens.init",
 		}
 	}
 	if appInfo.APIDomain == "" {
-		return NormalisedAppinfo{}, errors.GeneralError{
+		return NormalisedAppinfo{}, errors.BadInputError{
 			Msg: "Please provide your apiDomain inside the appInfo object when calling supertokens.init",
 		}
 	}
 	if appInfo.AppName == "" {
-		return NormalisedAppinfo{}, errors.GeneralError{
+		return NormalisedAppinfo{}, errors.BadInputError{
 			Msg: "Please provide your appName inside the appInfo object when calling supertokens.init",
 		}
 	}
 	if appInfo.WebsiteDomain == "" {
-		return NormalisedAppinfo{}, errors.GeneralError{
+		return NormalisedAppinfo{}, errors.BadInputError{
 			Msg: "Please provide your websiteDomain inside the appInfo object when calling supertokens.init",
 		}
 	}
@@ -129,7 +129,7 @@ func Send200Response(res http.ResponseWriter, responseJson interface{}) {
 
 func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
 	if statusCode < 300 {
-		return errors.GeneralError{
+		return errors.BadInputError{
 			Msg: "Calling sendNon200Response with status code < 300",
 		}
 	}

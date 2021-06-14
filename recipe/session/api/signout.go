@@ -1,8 +1,8 @@
 package api
 
-import "github.com/supertokens/supertokens-golang/recipe/session/schema"
+import "github.com/supertokens/supertokens-golang/recipe/session/models"
 
-func SignOutAPI(apiImplementation schema.APIImplementation, options schema.APIOptions) error {
+func SignOutAPI(apiImplementation models.APIImplementation, options models.APIOptions) error {
 	if apiImplementation.SignOutPOST == nil {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil

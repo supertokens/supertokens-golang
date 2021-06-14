@@ -1,23 +1,23 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 )
 
-func MakeAPIImplementation() schema.APIImplementation {
-	return schema.APIImplementation{
-		VerifyEmailPOST: func(token string, options schema.APIOptions) (*schema.VerifyEmailUsingTokenResponse, error) {
+func MakeAPIImplementation() models.APIImplementation {
+	return models.APIImplementation{
+		VerifyEmailPOST: func(token string, options models.APIOptions) (*models.VerifyEmailUsingTokenResponse, error) {
 			return options.RecipeImplementation.VerifyEmailUsingToken((token))
 		},
 
-		IsEmailVerifiedGET: func(options schema.APIOptions) (bool, error) {
+		IsEmailVerifiedGET: func(options models.APIOptions) (bool, error) {
 			// TODO: session management
 			userId := "TODO"
 			email := "TODO"
 			return options.RecipeImplementation.IsEmailVerified(userId, email)
 		},
 
-		GenerateEmailVerifyTokenPOST: func(options schema.APIOptions) (*schema.CreateEmailVerificationTokenAPIResponse, error) {
+		GenerateEmailVerifyTokenPOST: func(options models.APIOptions) (*models.CreateEmailVerificationTokenAPIResponse, error) {
 			// TODO: session management
 			userId := "TODO"
 			email := "TODO"
@@ -28,17 +28,17 @@ func MakeAPIImplementation() schema.APIImplementation {
 			}
 
 			if response.EmailAlreadyVerifiedError == true {
-				return &schema.CreateEmailVerificationTokenAPIResponse{
+				return &models.CreateEmailVerificationTokenAPIResponse{
 					EmailAlreadyVerifiedError: true,
 				}, nil
 			}
 
-			emailVerifyLink := options.Config.GetEmailVerificationURL(schema.User{ID: userId, Email: email}) +
+			emailVerifyLink := options.Config.GetEmailVerificationURL(models.User{ID: userId, Email: email}) +
 				"?token=" + response.Ok.Token + "&rid=" + options.RecipeID
 
-			options.Config.CreateAndSendCustomEmail(schema.User{ID: userId, Email: email}, emailVerifyLink)
+			options.Config.CreateAndSendCustomEmail(models.User{ID: userId, Email: email}, emailVerifyLink)
 
-			return &schema.CreateEmailVerificationTokenAPIResponse{
+			return &models.CreateEmailVerificationTokenAPIResponse{
 				OK: true,
 			}, nil
 		},

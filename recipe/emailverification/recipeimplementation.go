@@ -1,13 +1,13 @@
 package emailverification
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplementation {
-	return schema.RecipeImplementation{
-		CreateEmailVerificationToken: func(userID, email string) (*schema.CreateEmailVerificationTokenResponse, error) {
+func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
+	return models.RecipeImplementation{
+		CreateEmailVerificationToken: func(userID, email string) (*models.CreateEmailVerificationTokenResponse, error) {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify/token")
 			if err != nil {
 				return nil, err
@@ -17,17 +17,17 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 				"email":  email,
 			})
 			if response["status"] == "OK" {
-				resp := schema.CreateEmailVerificationTokenResponse{
+				resp := models.CreateEmailVerificationTokenResponse{
 					Ok: &struct{ Token string }{Token: response["token"].(string)},
 				}
 				return &resp, nil
 			}
 
-			return &schema.CreateEmailVerificationTokenResponse{
+			return &models.CreateEmailVerificationTokenResponse{
 				EmailAlreadyVerifiedError: true,
 			}, nil
 		},
-		VerifyEmailUsingToken: func(token string) (*schema.VerifyEmailUsingTokenResponse, error) {
+		VerifyEmailUsingToken: func(token string) (*models.VerifyEmailUsingTokenResponse, error) {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
 			if err != nil {
 				return nil, err
@@ -39,14 +39,14 @@ func MakeRecipeImplementation(querier supertokens.Querier) schema.RecipeImplemen
 			})
 
 			if response["status"] == "OK" {
-				return &schema.VerifyEmailUsingTokenResponse{
-					Ok: &struct{ User schema.User }{User: schema.User{
+				return &models.VerifyEmailUsingTokenResponse{
+					Ok: &struct{ User models.User }{User: models.User{
 						ID:    response["userId"].(string),
 						Email: response["email"].(string),
 					}},
 				}, nil
 			}
-			return &schema.VerifyEmailUsingTokenResponse{InvalidTokenError: true}, nil
+			return &models.VerifyEmailUsingTokenResponse{InvalidTokenError: true}, nil
 		},
 		IsEmailVerified: func(userID, email string) (bool, error) {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")

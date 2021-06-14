@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
-	"github.com/supertokens/supertokens-golang/recipe/session/schema"
+	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -12,14 +12,14 @@ const RECIPE_ID = "session"
 
 type SessionRecipe struct {
 	RecipeModule supertokens.RecipeModule
-	Config       schema.TypeNormalisedInput
-	RecipeImpl   schema.RecipeImplementation
-	APIImpl      schema.APIImplementation
+	Config       models.TypeNormalisedInput
+	RecipeImpl   models.RecipeImplementation
+	APIImpl      models.APIImplementation
 }
 
 var r *SessionRecipe = nil
 
-func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *schema.TypeInput) SessionRecipe {
+func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) SessionRecipe {
 	querierInstance, _ := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
 	verifiedConfig, _ := validateAndNormaliseUserInput(r, appInfo, config)
@@ -59,7 +59,7 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 }
 
 func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, thierhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
-	options := schema.APIOptions{
+	options := models.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,

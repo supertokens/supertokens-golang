@@ -1,26 +1,27 @@
 package session
 
 import (
+	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
 	"github.com/supertokens/supertokens-golang/errors"
-	"github.com/supertokens/supertokens-golang/recipe/session/schema"
+	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
 )
 
-func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *schema.TypeInput) (schema.TypeNormalisedInput, error) {
+func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
 	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.APIDomain.GetAsStringDangerous())
 	if err != nil {
-		return schema.TypeNormalisedInput{}, err
+		return models.TypeNormalisedInput{}, err
 	}
 	topLevelWebsiteDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.WebsiteDomain.GetAsStringDangerous())
 	if err != nil {
-		return schema.TypeNormalisedInput{}, err
+		return models.TypeNormalisedInput{}, err
 	}
 
 	cookieSameSite := CookieSameSite_LAX
@@ -38,7 +39,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	if config.CookieDomain != nil {
 		cookieDomain, err := normaliseSessionScopeOrThrowError(*config.CookieDomain)
 		if err != nil {
-			return schema.TypeNormalisedInput{}, err
+			return models.TypeNormalisedInput{}, err
 		}
 		typeNormalisedInput.CookieDomain = &cookieDomain
 	}
@@ -57,7 +58,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 
 	if config.AntiCsrf != nil {
 		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
-			return typeNormalisedInput, errors.GeneralError{Msg: "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'"}
+			return typeNormalisedInput, errors.BadInputError{Msg: "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'"}
 		}
 		typeNormalisedInput.AntiCsrf = *config.AntiCsrf
 	}
@@ -69,7 +70,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 		!typeNormalisedInput.CookieSecure &&
 		!(topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
 		!(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain) {
-		return typeNormalisedInput, errors.GeneralError{Msg: "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false."}
+		return typeNormalisedInput, errors.BadInputError{Msg: "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false."}
 	}
 
 	if config.Override != nil {
@@ -83,15 +84,15 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 
 	refreshAPIPath, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
 	if err != nil {
-		return schema.TypeNormalisedInput{}, err
+		return models.TypeNormalisedInput{}, err
 	}
 	typeNormalisedInput.RefreshTokenPath = appInfo.APIBasePath.AppendPath(*refreshAPIPath)
 
 	return typeNormalisedInput, nil
 }
 
-func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeNormalisedInput {
-	return schema.TypeNormalisedInput{
+func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeNormalisedInput {
+	return models.TypeNormalisedInput{
 		RefreshTokenPath:         supertokens.NormalisedURLPath{},
 		CookieDomain:             nil,
 		CookieSameSite:           CookieSameSite_LAX,
@@ -99,11 +100,11 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) schema.TypeN
 		SessionExpiredStatusCode: 401,
 		AntiCsrf:                 AntiCSRF_NONE,
 		Override: struct {
-			Functions func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation
-			APIs      func(originalImplementation schema.APIImplementation) schema.APIImplementation
-		}{Functions: func(originalImplementation schema.RecipeImplementation) schema.RecipeImplementation {
+			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
+			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
+		}{Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
 			return originalImplementation
-		}, APIs: func(originalImplementation schema.APIImplementation) schema.APIImplementation {
+		}, APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
 			return originalImplementation
 		}},
 	}
@@ -124,7 +125,7 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	}
 	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
 	if err != nil {
-		return "", errors.GeneralError{Msg: "Please make sure that the apiDomain and websiteDomain have correct values"}
+		return "", errors.BadInputError{Msg: "Please make sure that the apiDomain and websiteDomain have correct values"}
 	}
 	return parsedURL, nil
 }
@@ -143,7 +144,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 
 	urlObj, err := url.Parse(sessionScope)
 	if err != nil {
-		return "", errors.GeneralError{Msg: "Please provide a valid sessionScope"}
+		return "", errors.BadInputError{Msg: "Please provide a valid sessionScope"}
 	}
 	sessionScope = urlObj.Host
 	if strings.HasPrefix(sessionScope, ".") {
@@ -167,4 +168,17 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 
 func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
+}
+
+func attachCreateOrRefreshSessionResponseToRes(config models.TypeNormalisedInput, res http.ResponseWriter, response models.CreateOrRefreshAPIResponse) {
+	accessToken := response.AccessToken
+	refreshToken := response.RefreshToken
+	idRefreshToken := response.IDRefreshToken
+	setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
+	attachAccessTokenToCookie(config, res, accessToken.Token, accessToken.Expiry)
+	attachRefreshTokenToCookie(config, res, refreshToken.Token, refreshToken.Expiry)
+	setIDRefreshTokenInHeaderAndCookie(config, res, idRefreshToken.Token, idRefreshToken.Expiry)
+	if response.AntiCsrfToken != nil {
+		setAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
+	}
 }

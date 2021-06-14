@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/schema"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GenerateEmailVerifyToken(apiImplementation schema.APIImplementation, options schema.APIOptions) error {
+func GenerateEmailVerifyToken(apiImplementation models.APIImplementation, options models.APIOptions) error {
 	var result map[string]interface{}
 
 	if apiImplementation.GenerateEmailVerifyTokenPOST == nil {

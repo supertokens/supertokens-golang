@@ -25,12 +25,12 @@ const header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsInZlcnNpb24iOiIyIn0="
 func verifyJWTAndGetPayload(jwt string, jwtSigningPublicKey string) (map[string]interface{}, error) {
 	var splitted = strings.Split(jwt, ".")
 	if len(splitted) != 3 {
-		return nil, errors.GeneralError{
+		return nil, errors.BadInputError{
 			Msg: "Invalid JWT",
 		}
 	}
 	if header != splitted[0] {
-		return nil, errors.GeneralError{
+		return nil, errors.BadInputError{
 			Msg: "JWT header mismatch",
 		}
 	}
@@ -71,14 +71,14 @@ func verifyJWTAndGetPayload(jwt string, jwtSigningPublicKey string) (map[string]
 func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode([]byte(str))
 	if block == nil {
-		return nil, errors.GeneralError{
+		return nil, errors.BadInputError{
 			Msg: "failed to parse PEM block containing the public key",
 		}
 	}
 
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return nil, errors.GeneralError{
+		return nil, errors.BadInputError{
 			Msg: "failed to parse DER encoded public key:" + err.Error(),
 		}
 	}

@@ -32,7 +32,7 @@ func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, 
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") && !strings.HasPrefix(input, "supertokens://") {
 		fmt.Println("converting to proper URL")
 		if strings.HasPrefix(input, "/") {
-			return "", errors.GeneralError{Msg: "Please provide a valid domain name"}
+			return "", errors.BadInputError{Msg: "Please provide a valid domain name"}
 		}
 		if strings.HasPrefix(input, ".") {
 			input = input[1:]

@@ -46,7 +46,7 @@ func SupertokensInit(config TypeInput) error {
 	}
 
 	if config.RecipeList == nil || len(config.RecipeList) == 0 {
-		return errors.GeneralError{Msg: "Please provide at least one recipe to the supertokens.init function call"}
+		return errors.BadInputError{Msg: "Please provide at least one recipe to the supertokens.init function call"}
 	}
 
 	for _, elem := range config.RecipeList {
@@ -72,7 +72,7 @@ func GetInstanceOrThrowError() (*SuperTokens, error) {
 	if superTokensInstance != nil {
 		return superTokensInstance, nil
 	}
-	return nil, errors.GeneralError{Msg: "Initialisation not done. Did you forget to call the SuperTokens.init function?"}
+	return nil, errors.BadInputError{Msg: "Initialisation not done. Did you forget to call the SuperTokens.init function?"}
 }
 
 func (s *SuperTokens) SendTelemetry() {
