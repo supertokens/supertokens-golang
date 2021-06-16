@@ -4,13 +4,15 @@ const BadInputErrorStr = "BAD_INPUT_ERROR"
 
 // BadInputError used for non specific exceptions
 type BadInputError struct {
-	Msg         string
-	ActualError error
+	Msg  string
+	Type string
 }
 
 func MakeBadInputError(msg string) BadInputError {
-	// TODO
-	return BadInputError{Msg: msg}
+	return BadInputError{
+		Msg:  msg,
+		Type: BadInputErrorStr,
+	}
 }
 
 func (err BadInputError) Error() string {

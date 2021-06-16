@@ -16,21 +16,28 @@ type HandshakeInfo struct {
 }
 
 type CreateOrRefreshAPIResponse struct {
-	Session struct {
-		Handle        string      `json:"handle"`
-		UserID        string      `json:"userId"`
-		UserDataInJWT interface{} `json:"userDataInJWT"`
-	} `json:"session"`
+	Session        SessionStruct                   `json:"session"`
 	AccessToken    CreateOrRefreshAPIResponseToken `json:"accessToken"`
 	RefreshToken   CreateOrRefreshAPIResponseToken `json:"refreshToken"`
 	IDRefreshToken CreateOrRefreshAPIResponseToken `json:"idRefreshToken"`
 	AntiCsrfToken  *string                         `json:"antiCsrfToken"`
 }
 
+type SessionStruct struct {
+	Handle        string      `json:"handle"`
+	UserID        string      `json:"userId"`
+	UserDataInJWT interface{} `json:"userDataInJWT"`
+}
+
 type CreateOrRefreshAPIResponseToken struct {
 	Token       string `json:"token"`
 	Expiry      uint64 `json:"expiry"`
 	CreatedTime uint64 `json:"createdTime"`
+}
+
+type GetSessionResponse struct {
+	Session     SessionStruct                   `json:"session"`
+	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
 
 type TypeInput struct {
@@ -43,6 +50,12 @@ type TypeInput struct {
 		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
+	ErrorHandlers *ErrorHandlers
+}
+
+type ErrorHandlers struct {
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
+	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
 }
 
 type TypeNormalisedInput struct {
@@ -56,6 +69,7 @@ type TypeNormalisedInput struct {
 		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs      func(originalImplementation APIImplementation) APIImplementation
 	}
+	ErrorHandlers NormalisedErrorHandlers
 }
 
 type SessionContainer struct {
@@ -104,4 +118,17 @@ type APIImplementation struct {
 	RefreshPOST   func(options APIOptions) error
 	SignOutPOST   func(options APIOptions) (map[string]string, error)
 	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions)
+}
+
+type SessionRecipe struct {
+	RecipeModule supertokens.RecipeModule
+	Config       TypeNormalisedInput
+	RecipeImpl   RecipeImplementation
+	APIImpl      APIImplementation
+}
+
+type NormalisedErrorHandlers struct {
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
+	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
+	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
 }

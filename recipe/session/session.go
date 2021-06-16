@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -40,7 +41,7 @@ func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormali
 		GetSessionData: func() (interface{}, error) {
 			data, err := getSessionData(querier, session.sessionHandle)
 			if err != nil {
-				if IsUnauthorizedError(err) {
+				if errors.IsUnauthorizedError(err) {
 					clearSessionFromCookie(config, session.res)
 				}
 				return nil, err
@@ -50,7 +51,7 @@ func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormali
 		UpdateSessionData: func(newSessionData interface{}) error {
 			err := updateSessionData(querier, session.sessionHandle, newSessionData)
 			if err != nil {
-				if IsUnauthorizedError(err) {
+				if errors.IsUnauthorizedError(err) {
 					clearSessionFromCookie(config, session.res)
 				}
 				return err
@@ -66,11 +67,9 @@ func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormali
 				"accessToken":   session.accessToken,
 				"userDataInJWT": newJWTPayload,
 			})
-			if response["status"] == UnauthorizedErrorStr {
+			if response["status"] == errors.UnauthorizedErrorStr {
 				clearSessionFromCookie(config, session.res)
-				return UnauthorizedError{
-					Msg: "Session has probably been revoked while updating JWT payload",
-				}
+				return errors.MakeUnauthorizedError("Session has probably been revoked while updating JWT payload")
 			}
 			return nil
 		},

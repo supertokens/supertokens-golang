@@ -7,12 +7,13 @@ import (
 	"time"
 
 	"github.com/supertokens/supertokens-golang/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
 )
 
-func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
+func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
 	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.APIDomain.GetAsStringDangerous())
@@ -36,7 +37,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 	}
 	typeNormalisedInput.AntiCsrf = antiCsrf
 
-	if config.CookieDomain != nil {
+	if config != nil && config.CookieDomain != nil {
 		cookieDomain, err := normaliseSessionScopeOrThrowError(*config.CookieDomain)
 		if err != nil {
 			return models.TypeNormalisedInput{}, err
@@ -44,28 +45,52 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 		typeNormalisedInput.CookieDomain = &cookieDomain
 	}
 
-	if config.CookieSameSite != nil {
+	if config != nil && config.CookieSameSite != nil {
 		typeNormalisedInput.CookieSameSite = *config.CookieSameSite
 	}
 
-	if config.CookieSecure != nil {
+	if config != nil && config.CookieSecure != nil {
 		typeNormalisedInput.CookieSecure = *config.CookieSecure
 	}
 
-	if config.SessionExpiredStatusCode != nil {
+	if config != nil && config.SessionExpiredStatusCode != nil {
 		typeNormalisedInput.SessionExpiredStatusCode = *config.SessionExpiredStatusCode
 	}
 
-	if config.AntiCsrf != nil {
+	if config != nil && config.AntiCsrf != nil {
 		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
 			return typeNormalisedInput, errors.BadInputError{Msg: "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'"}
 		}
-		typeNormalisedInput.AntiCsrf = *config.AntiCsrf
+		if cookieSameSite == CookieSameSite_NONE {
+			typeNormalisedInput.AntiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
+		} else {
+			typeNormalisedInput.AntiCsrf = *config.AntiCsrf
+		}
+	}
+
+	errorHandlers := models.NormalisedErrorHandlers{
+		OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res, otherHandler)
+		},
+		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res, otherHandler)
+		},
+		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+			return api.SendUnauthorisedResponse(*recipeInstance, message, req, res, otherHandler)
+		},
+	}
+	if config != nil && config.ErrorHandlers != nil {
+		if config.ErrorHandlers.OnTokenTheftDetected != nil {
+			errorHandlers.OnTokenTheftDetected = config.ErrorHandlers.OnTokenTheftDetected
+		}
+		if config.ErrorHandlers.OnUnauthorised != nil {
+			errorHandlers.OnUnauthorised = config.ErrorHandlers.OnUnauthorised
+		}
 	}
 
 	IsAnIPAPIDomain, err := supertokens.IsAnIPAddress(topLevelAPIDomain)
-
 	IsAnIPWebsiteDomain, err := supertokens.IsAnIPAddress(topLevelWebsiteDomain)
+
 	if typeNormalisedInput.CookieSameSite == CookieSameSite_NONE &&
 		!typeNormalisedInput.CookieSecure &&
 		!(topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
@@ -73,7 +98,7 @@ func validateAndNormaliseUserInput(recipeInstance *SessionRecipe, appInfo supert
 		return typeNormalisedInput, errors.BadInputError{Msg: "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false."}
 	}
 
-	if config.Override != nil {
+	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
 			typeNormalisedInput.Override.Functions = config.Override.Functions
 		}

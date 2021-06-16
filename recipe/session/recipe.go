@@ -10,23 +10,16 @@ import (
 
 const RECIPE_ID = "session"
 
-type SessionRecipe struct {
-	RecipeModule supertokens.RecipeModule
-	Config       models.TypeNormalisedInput
-	RecipeImpl   models.RecipeImplementation
-	APIImpl      models.APIImplementation
-}
+var r *models.SessionRecipe = nil
 
-var r *SessionRecipe = nil
-
-func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) SessionRecipe {
+func NewRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) models.SessionRecipe {
 	querierInstance, _ := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
 	verifiedConfig, _ := validateAndNormaliseUserInput(r, appInfo, config)
 
 	recipeImplementation := MakeRecipeImplementation(*querierInstance, verifiedConfig)
 
-	return SessionRecipe{
+	return models.SessionRecipe{
 		RecipeModule: recipeModuleInstance,
 		Config:       verifiedConfig,
 		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),

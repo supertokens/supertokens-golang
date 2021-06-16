@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/errors"
+	sessionErrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -39,7 +40,11 @@ func MakeAPIImplementation() models.APIImplementation {
 		SignOutPOST: func(options models.APIOptions) (map[string]string, error) {
 			session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, nil)
 			if err != nil {
-				// TODO: error check handle
+				if sessionErrors.IsUnauthorizedError(err) {
+					return map[string]string{
+						"status": "OK",
+					}, nil
+				}
 				return nil, err
 			}
 			if session == nil {
