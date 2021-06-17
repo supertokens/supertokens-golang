@@ -1,7 +1,9 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 )
 
 func MakeAPIImplementation() models.APIImplementation {
@@ -11,18 +13,43 @@ func MakeAPIImplementation() models.APIImplementation {
 		},
 
 		IsEmailVerifiedGET: func(options models.APIOptions) (bool, error) {
-			// TODO: session management
-			userId := "TODO"
-			email := "TODO"
-			return options.RecipeImplementation.IsEmailVerified(userId, email)
+			sessionInstance, err := session.GetInstanceOrThrowError()
+			if err != nil {
+				return false, err
+			}
+			session, err := sessionInstance.RecipeImpl.GetSession(options.Req, options.Res, nil)
+			if err != nil {
+				return false, err
+			}
+			if session == nil {
+				return false, errors.MakeBadInputError("Session is undefined. Should not come here.")
+			}
+			userID := session.GetUserID()
+			email, err := options.Config.GetEmailForUserID(userID)
+			if err != nil {
+				return false, err
+			}
+			return options.RecipeImplementation.IsEmailVerified(userID, email)
 		},
 
 		GenerateEmailVerifyTokenPOST: func(options models.APIOptions) (*models.CreateEmailVerificationTokenAPIResponse, error) {
-			// TODO: session management
-			userId := "TODO"
-			email := "TODO"
-			response, err := options.RecipeImplementation.CreateEmailVerificationToken(userId, email)
-
+			sessionInstance, err := session.GetInstanceOrThrowError()
+			if err != nil {
+				return nil, err
+			}
+			session, err := sessionInstance.RecipeImpl.GetSession(options.Req, options.Res, nil)
+			if err != nil {
+				return nil, err
+			}
+			if session == nil {
+				return nil, errors.MakeBadInputError("Session is undefined. Should not come here.")
+			}
+			userID := session.GetUserID()
+			email, err := options.Config.GetEmailForUserID(userID)
+			if err != nil {
+				return nil, err
+			}
+			response, err := options.RecipeImplementation.CreateEmailVerificationToken(userID, email)
 			if err != nil {
 				return nil, err
 			}
@@ -33,11 +60,9 @@ func MakeAPIImplementation() models.APIImplementation {
 				}, nil
 			}
 
-			emailVerifyLink := options.Config.GetEmailVerificationURL(models.User{ID: userId, Email: email}) +
-				"?token=" + response.Ok.Token + "&rid=" + options.RecipeID
+			emailVerifyLink := options.Config.GetEmailVerificationURL(models.User{ID: userID, Email: email}) + "?token=" + response.Ok.Token + "&rid=" + options.RecipeID
 
-			options.Config.CreateAndSendCustomEmail(models.User{ID: userId, Email: email}, emailVerifyLink)
-
+			options.Config.CreateAndSendCustomEmail(models.User{ID: userID, Email: email}, emailVerifyLink)
 			return &models.CreateEmailVerificationTokenAPIResponse{
 				OK: true,
 			}, nil
