@@ -128,7 +128,7 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 		Output: "/one/two",
 	}, {
 		Input:  "127.0.0.1:4000/one/two",
-		Output: "/127.0.0.1:4000/one/two", // needs to be fixed
+		Output: "/127.0.0.1:4000/one/two", // TODO: needs to be fixed
 	}, {
 		Input:  "127.0.0.1/one/two",
 		Output: "/one/two",

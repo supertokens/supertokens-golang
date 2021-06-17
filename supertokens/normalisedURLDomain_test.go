@@ -89,7 +89,7 @@ func TestNormaliseURLDomainOrThrowError(t *testing.T) {
 		Output: "http://localhost:4000",
 	}, {
 		Input:  "127.0.0.1:4000",
-		Output: "https://127.0.0.1:4000", // needs to be fixed
+		Output: "https://127.0.0.1:4000", // TODO: needs to be fixed
 	}, {
 		Input:  "127.0.0.1",
 		Output: "http://127.0.0.1",

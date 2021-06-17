@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type Session struct {
+type SessionContainerInput struct {
 	sessionHandle string
 	userID        string
 	userDataInJWT interface{}
@@ -16,8 +16,8 @@ type Session struct {
 	accessToken   string
 }
 
-func MakeSession(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) Session {
-	return Session{
+func MakeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) SessionContainerInput {
+	return SessionContainerInput{
 		sessionHandle: sessionHandle,
 		userID:        userID,
 		userDataInJWT: userDataInJWT,
@@ -26,7 +26,7 @@ func MakeSession(accessToken string, sessionHandle string, userID string, userDa
 	}
 }
 
-func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session Session) *models.SessionContainer {
+func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session SessionContainerInput) *models.SessionContainer {
 	return &models.SessionContainer{
 		RevokeSession: func() error {
 			success, err := revokeSessionHelper(querier, session.sessionHandle)
@@ -38,6 +38,7 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 			}
 			return nil
 		},
+
 		GetSessionData: func() (interface{}, error) {
 			data, err := getSessionDataHelper(querier, session.sessionHandle)
 			if err != nil {
@@ -48,6 +49,7 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 			}
 			return data, nil
 		},
+
 		UpdateSessionData: func(newSessionData interface{}) error {
 			err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
 			if err != nil {
