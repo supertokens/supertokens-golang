@@ -20,7 +20,8 @@ type TryRefreshTokenError struct {
 
 func MakeTryRefreshTokenError(msg string) TryRefreshTokenError {
 	return TryRefreshTokenError{
-		Msg:  msg,
+		Msg: msg,
+		// TODO: Do we need this Type field?
 		Type: TryRefreshTokenErrorStr,
 	}
 }
@@ -36,6 +37,7 @@ type TokenTheftDetectedError struct {
 	Payload TokenTheftDetectedErrorPayload
 }
 
+// TODO: why do we need the json thing?
 type TokenTheftDetectedErrorPayload struct {
 	SessionHandle string `json:"sessionHandle"`
 	UserID        string `json:"userId"`
