@@ -90,7 +90,7 @@ type VerifySessionOptions struct {
 
 type RecipeImplementation struct {
 	UpdateJwtSigningPublicKeyInfo func(newKey string, newExpiry uint64)
-	CreateNewSession              func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (SessionContainer, error)
+	CreateNewSession              func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*SessionContainer, error)
 	GetSession                    func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
 	RefreshSession                func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
 	RevokeAllSessionsForUser      func(userID string) ([]string, error)

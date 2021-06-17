@@ -13,8 +13,20 @@ import (
 	"golang.org/x/net/publicsuffix"
 )
 
+// TODO: Please go through this normalisation once properly.. there were several bugs in it.
 func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
-	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
+	typeNormalisedInput, err := makeTypeNormalisedInput(appInfo)
+	if err != nil {
+		return models.TypeNormalisedInput{}, err
+	}
+
+	if config != nil && config.CookieDomain != nil {
+		cookieDomain, err := normaliseSessionScopeOrThrowError(*config.CookieDomain)
+		if err != nil {
+			return models.TypeNormalisedInput{}, err
+		}
+		typeNormalisedInput.CookieDomain = &cookieDomain
+	}
 
 	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.APIDomain.GetAsStringDangerous())
 	if err != nil {
@@ -25,26 +37,11 @@ func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo
 		return models.TypeNormalisedInput{}, err
 	}
 
-	cookieSameSite := CookieSameSite_LAX
+	cookieSameSite := cookieSameSite_LAX
 	if topLevelAPIDomain != topLevelWebsiteDomain {
-		cookieSameSite = CookieSameSite_NONE
+		cookieSameSite = cookieSameSite_NONE
 	}
 	typeNormalisedInput.CookieSameSite = cookieSameSite
-
-	antiCsrf := AntiCSRF_NONE
-	if cookieSameSite == CookieSameSite_NONE {
-		antiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
-	}
-	typeNormalisedInput.AntiCsrf = antiCsrf
-
-	if config != nil && config.CookieDomain != nil {
-		cookieDomain, err := normaliseSessionScopeOrThrowError(*config.CookieDomain)
-		if err != nil {
-			return models.TypeNormalisedInput{}, err
-		}
-		typeNormalisedInput.CookieDomain = &cookieDomain
-	}
-
 	if config != nil && config.CookieSameSite != nil {
 		typeNormalisedInput.CookieSameSite = *config.CookieSameSite
 	}
@@ -57,19 +54,20 @@ func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo
 		typeNormalisedInput.SessionExpiredStatusCode = *config.SessionExpiredStatusCode
 	}
 
+	antiCsrf := antiCSRF_NONE
+	if typeNormalisedInput.CookieSameSite == cookieSameSite_NONE {
+		antiCsrf = antiCSRF_VIA_CUSTOM_HEADER
+	}
+	typeNormalisedInput.AntiCsrf = antiCsrf
 	if config != nil && config.AntiCsrf != nil {
-		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
+		if *config.AntiCsrf != antiCSRF_NONE && *config.AntiCsrf != antiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != antiCSRF_VIA_TOKEN {
 			return typeNormalisedInput, errors.BadInputError{Msg: "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'"}
 		}
-		if cookieSameSite == CookieSameSite_NONE {
-			typeNormalisedInput.AntiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
-		} else {
-			typeNormalisedInput.AntiCsrf = *config.AntiCsrf
-		}
+		typeNormalisedInput.AntiCsrf = *config.AntiCsrf
 	}
 
 	errorHandlers := models.NormalisedErrorHandlers{
-		OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
 			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res, otherHandler)
 		},
 		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
@@ -87,11 +85,18 @@ func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo
 			errorHandlers.OnUnauthorised = config.ErrorHandlers.OnUnauthorised
 		}
 	}
+	typeNormalisedInput.ErrorHandlers = errorHandlers
 
 	IsAnIPAPIDomain, err := supertokens.IsAnIPAddress(topLevelAPIDomain)
+	if err != nil {
+		return models.TypeNormalisedInput{}, err
+	}
 	IsAnIPWebsiteDomain, err := supertokens.IsAnIPAddress(topLevelWebsiteDomain)
+	if err != nil {
+		return models.TypeNormalisedInput{}, err
+	}
 
-	if typeNormalisedInput.CookieSameSite == CookieSameSite_NONE &&
+	if typeNormalisedInput.CookieSameSite == cookieSameSite_NONE &&
 		!typeNormalisedInput.CookieSecure &&
 		!(topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
 		!(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain) {
@@ -107,23 +112,21 @@ func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo
 		}
 	}
 
-	refreshAPIPath, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
-	if err != nil {
-		return models.TypeNormalisedInput{}, err
-	}
-	typeNormalisedInput.RefreshTokenPath = appInfo.APIBasePath.AppendPath(*refreshAPIPath)
-
 	return typeNormalisedInput, nil
 }
 
-func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeNormalisedInput {
+func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) (models.TypeNormalisedInput, error) {
+	refreshAPIPath, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
+	if err != nil {
+		return models.TypeNormalisedInput{}, err
+	}
 	return models.TypeNormalisedInput{
-		RefreshTokenPath:         supertokens.NormalisedURLPath{},
+		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(*refreshAPIPath),
 		CookieDomain:             nil,
-		CookieSameSite:           CookieSameSite_LAX,
+		CookieSameSite:           cookieSameSite_LAX,
 		CookieSecure:             strings.HasPrefix(appInfo.APIDomain.GetAsStringDangerous(), "https"),
 		SessionExpiredStatusCode: 401,
-		AntiCsrf:                 AntiCSRF_NONE,
+		AntiCsrf:                 antiCSRF_NONE,
 		Override: struct {
 			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
 			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
@@ -132,9 +135,10 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeN
 		}, APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
 			return originalImplementation
 		}},
-	}
+	}, nil
 }
 
+// TODO: how is this tested?
 func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	urlObj, err := url.Parse(URL)
 	if err != nil {
@@ -159,6 +163,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 	sessionScope = strings.TrimSpace(sessionScope)
 	sessionScope = strings.ToLower(sessionScope)
 
+	// TODO: some warning...
 	if strings.HasPrefix(sessionScope, ".") {
 		sessionScope = sessionScope[1:]
 	}
@@ -171,6 +176,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 	if err != nil {
 		return "", errors.BadInputError{Msg: "Please provide a valid sessionScope"}
 	}
+	// TODO: some warning...
 	sessionScope = urlObj.Host
 	if strings.HasPrefix(sessionScope, ".") {
 		sessionScope = sessionScope[1:]

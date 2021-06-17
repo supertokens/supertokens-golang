@@ -1,0 +1,3 @@
+package emailverification
+
+// TODO: add all the user facing functions here...

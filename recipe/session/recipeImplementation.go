@@ -17,14 +17,14 @@ var (
 func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
 	staticConfig = config
 	return models.RecipeImplementation{
-		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (models.SessionContainer, error) {
-			response, err := CreateNewSession(querier, userID, jwtPayload, sessionData)
+		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
+			response, err := createNewSessionHelper(querier, userID, jwtPayload, sessionData)
 			if err != nil {
-				return models.SessionContainer{}, err
+				return nil, err
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, response)
 			session := MakeSession(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
-			return MakeSessionContainer(querier, config, session), nil
+			return NewSessionContainer(querier, config, session), nil
 		},
 		GetSession: func(req *http.Request, res http.ResponseWriter, options *models.VerifySessionOptions) (*models.SessionContainer, error) {
 			var doAntiCsrfCheck *bool
@@ -33,7 +33,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			}
 			idRefreshToken := getIDRefreshTokenFromCookie(req)
 			if idRefreshToken == nil {
-				if options != nil && *options.SessionRequired == false {
+				if options != nil && options.SessionRequired != nil &&
+					!(*options.SessionRequired) {
 					return nil, errors.MakeUnauthorizedError("Session does not exist. Are you sending the session tokens in the request as cookies?")
 				}
 			}
@@ -48,7 +49,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				doAntiCsrfCheck = &doAntiCsrfCheckBool
 			}
 			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-			response, err := GetSession(querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
+			response, err := getSessionHelper(querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) {
 					clearSessionFromCookie(config, res)
@@ -61,8 +62,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				accessToken = &response.AccessToken.Token
 			}
 			session := MakeSession(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
-			sessionContainer := MakeSessionContainer(querier, config, session)
-			return &sessionContainer, nil
+			sessionContainer := NewSessionContainer(querier, config, session)
+			return sessionContainer, nil
 		},
 		RefreshSession: func(req *http.Request, res http.ResponseWriter) (models.SessionContainer, error) {
 			inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
@@ -74,7 +75,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				return models.SessionContainer{}, errors.MakeUnauthorizedError("Refresh token not found. Are you sending the refresh token in the request as a cookie?")
 			}
 			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-			response, err := refreshSession(querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
+			response, err := refreshSessionHelper(querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) || errors.IsTokenTheftDetectedError(err) {
 					clearSessionFromCookie(config, res)
@@ -83,32 +84,32 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, response)
 			session := MakeSession(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
-			sessionContainer := MakeSessionContainer(querier, config, session)
-			return sessionContainer, nil
+			sessionContainer := NewSessionContainer(querier, config, session)
+			return *sessionContainer, nil
 		},
 		RevokeAllSessionsForUser: func(userID string) ([]string, error) {
-			return revokeAllSessionsForUser(querier, userID)
+			return revokeAllSessionsForUserHelper(querier, userID)
 		},
 		GetAllSessionHandlesForUser: func(userID string) ([]string, error) {
-			return getAllSessionHandlesForUser(querier, userID)
+			return getAllSessionHandlesForUserHelper(querier, userID)
 		},
 		RevokeSession: func(sessionHandle string) (bool, error) {
-			return revokeSession(querier, sessionHandle)
+			return revokeSessionHelper(querier, sessionHandle)
 		},
 		RevokeMultipleSessions: func(sessionHandles []string) ([]string, error) {
-			return revokeMultipleSessions(querier, sessionHandles)
+			return revokeMultipleSessionsHelper(querier, sessionHandles)
 		},
 		GetSessionData: func(sessionHandle string) (interface{}, error) {
-			return getSessionData(querier, sessionHandle)
+			return getSessionDataHelper(querier, sessionHandle)
 		},
 		UpdateSessionData: func(sessionHandle string, newSessionData interface{}) error {
-			return updateSessionData(querier, sessionHandle, newSessionData)
+			return updateSessionDataHelper(querier, sessionHandle, newSessionData)
 		},
 		GetJWTPayload: func(sessionHandle string) (interface{}, error) {
-			return getJWTPayload(querier, sessionHandle)
+			return getJWTPayloadHelper(querier, sessionHandle)
 		},
 		UpdateJWTPayload: func(sessionHandle string, newJWTPayload interface{}) error {
-			return updateJWTPayload(querier, sessionHandle, newJWTPayload)
+			return updateJWTPayloadHelper(querier, sessionHandle, newJWTPayload)
 		},
 	}
 }

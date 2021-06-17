@@ -10,7 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func CreateNewSession(querier supertokens.Querier, userID string, JWTPayload interface{}, sessionData interface{}) (models.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPayload interface{}, sessionData interface{}) (models.CreateOrRefreshAPIResponse, error) {
 	URL, err := supertokens.NewNormalisedURLPath("/recipe/session")
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
@@ -24,7 +24,7 @@ func CreateNewSession(querier supertokens.Querier, userID string, JWTPayload int
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
 	}
-	requestBody["enableAntiCsrf"] = handShakeInfo.AntiCsrf == AntiCSRF_VIA_TOKEN
+	requestBody["enableAntiCsrf"] = handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN
 	response, err := querier.SendPostRequest(*URL, requestBody)
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
@@ -44,17 +44,17 @@ func CreateNewSession(querier supertokens.Querier, userID string, JWTPayload int
 	return resp, nil
 }
 
-func GetSession(querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck bool, containsCustomHeader bool) (models.GetSessionResponse, error) {
+func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck bool, containsCustomHeader bool) (models.GetSessionResponse, error) {
 	handShakeInfo, err := GetHandshakeInfo(querier)
 	if err != nil {
 		return models.GetSessionResponse{}, err
 	}
 	if handShakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() {
-		accessTokenInfo, err := getInfoFromAccessToken(accessToken, handShakeInfo.JWTSigningPublicKey, handShakeInfo.AntiCsrf == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+		accessTokenInfo, err := getInfoFromAccessToken(accessToken, handShakeInfo.JWTSigningPublicKey, handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 		if err != nil {
 			return models.GetSessionResponse{}, err
 		}
-		if handShakeInfo.AntiCsrf == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck {
+		if handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck {
 			if antiCsrfToken == nil || *antiCsrfToken == *accessTokenInfo.antiCsrfToken {
 				if antiCsrfToken == nil {
 					return models.GetSessionResponse{}, errors.BadInputError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
@@ -62,7 +62,7 @@ func GetSession(querier supertokens.Querier, accessToken string, antiCsrfToken *
 					return models.GetSessionResponse{}, errors.BadInputError{Msg: "anti-csrf check failed"}
 				}
 			}
-		} else if handShakeInfo.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER && doAntiCsrfCheck {
+		} else if handShakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER && doAntiCsrfCheck {
 			if !containsCustomHeader {
 				return models.GetSessionResponse{}, errors.BadInputError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
 			}
@@ -82,7 +82,7 @@ func GetSession(querier supertokens.Querier, accessToken string, antiCsrfToken *
 		"accessToken":     accessToken,
 		"antiCsrfToken":   antiCsrfToken,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
-		"enableAntiCsrf":  handShakeInfo.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"enableAntiCsrf":  handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/verify")
 	if err != nil {
@@ -110,13 +110,13 @@ func GetSession(querier supertokens.Querier, accessToken string, antiCsrfToken *
 	}
 }
 
-func refreshSession(querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (models.CreateOrRefreshAPIResponse, error) {
+func refreshSessionHelper(querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (models.CreateOrRefreshAPIResponse, error) {
 	handShakeInfo, err := GetHandshakeInfo(querier)
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
 	}
 
-	if handShakeInfo.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+	if handShakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 		if !containsCustomHeader {
 			return models.CreateOrRefreshAPIResponse{}, sessionErrors.MakeUnauthorizedError("anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.")
 		}
@@ -128,7 +128,7 @@ func refreshSession(querier supertokens.Querier, refreshToken string, antiCsrfTo
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
 		"antiCsrfToken":  antiCsrfToken,
-		"enableAntiCsrf": handShakeInfo.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"enableAntiCsrf": handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	response, err := querier.SendPostRequest(*path, requestBody)
 	if response["status"] == "OK" {
@@ -147,7 +147,7 @@ func refreshSession(querier supertokens.Querier, refreshToken string, antiCsrfTo
 	}
 }
 
-func revokeAllSessionsForUser(querier supertokens.Querier, userID string) ([]string, error) {
+func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/remove")
 	if err != nil {
 		return nil, err
@@ -161,7 +161,7 @@ func revokeAllSessionsForUser(querier supertokens.Querier, userID string) ([]str
 	return response["sessionHandlesRevoked"].([]string), nil
 }
 
-func getAllSessionHandlesForUser(querier supertokens.Querier, userID string) ([]string, error) {
+func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/user")
 	if err != nil {
 		return nil, err
@@ -176,7 +176,7 @@ func getAllSessionHandlesForUser(querier supertokens.Querier, userID string) ([]
 }
 
 // revokeSession function used to revoke a specific session
-func revokeSession(querier supertokens.Querier, sessionHandle string) (bool, error) {
+func revokeSessionHelper(querier supertokens.Querier, sessionHandle string) (bool, error) {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/remove")
 	if err != nil {
 		return false, err
@@ -191,7 +191,7 @@ func revokeSession(querier supertokens.Querier, sessionHandle string) (bool, err
 	return len(response["sessionHandlesRevoked"].([]interface{})) == 1, nil
 }
 
-func revokeMultipleSessions(querier supertokens.Querier, sessionHandles []string) ([]string, error) {
+func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []string) ([]string, error) {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/remove")
 	if err != nil {
 		return nil, err
@@ -206,7 +206,7 @@ func revokeMultipleSessions(querier supertokens.Querier, sessionHandles []string
 	return response["sessionHandlesRevoked"].([]string), nil
 }
 
-func getSessionData(querier supertokens.Querier, sessionHandle string) (map[string]interface{}, error) {
+func getSessionDataHelper(querier supertokens.Querier, sessionHandle string) (map[string]interface{}, error) {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/data")
 	if err != nil {
 		return nil, err
@@ -224,7 +224,7 @@ func getSessionData(querier supertokens.Querier, sessionHandle string) (map[stri
 	return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
 }
 
-func updateSessionData(querier supertokens.Querier, sessionHandle string, newSessionData interface{}) error {
+func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData interface{}) error {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/data")
 	if err != nil {
 		return err
@@ -240,7 +240,7 @@ func updateSessionData(querier supertokens.Querier, sessionHandle string, newSes
 	return nil
 }
 
-func getJWTPayload(querier supertokens.Querier, sessionHandle string) (interface{}, error) {
+func getJWTPayloadHelper(querier supertokens.Querier, sessionHandle string) (interface{}, error) {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/jwt/data")
 	if err != nil {
 		return nil, err
@@ -257,7 +257,7 @@ func getJWTPayload(querier supertokens.Querier, sessionHandle string) (interface
 	return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
 }
 
-func updateJWTPayload(querier supertokens.Querier, sessionHandle string, newJWTPayload interface{}) error {
+func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, newJWTPayload interface{}) error {
 	path, err := supertokens.NewNormalisedURLPath("/recipe/jwt/data")
 	if err != nil {
 		return err
