@@ -30,7 +30,7 @@ func EmailVerify(apiImplementation models.APIImplementation, options models.APIO
 			return err
 		}
 		token, ok := readBody["token"]
-		if !ok {
+		if !ok || token == nil {
 			return errors.BadInputError{Msg: "Please provide the email verification token"}
 		}
 		if reflect.ValueOf(token).Kind() != reflect.String {
