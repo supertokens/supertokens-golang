@@ -21,14 +21,17 @@ func VerifySession(recipeInstance models.SessionRecipe, options *models.VerifySe
 }
 
 func SendTryRefreshTokenResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter, otherHandler http.HandlerFunc) error {
+	// TODO: need to do proper error handling...
 	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func SendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter, otherHandler http.HandlerFunc) error {
+	// TODO: need to do proper error handling...
 	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func SendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter, otherHandler http.HandlerFunc) error {
+	// TODO: need to do proper error handling...
 	recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
 	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }

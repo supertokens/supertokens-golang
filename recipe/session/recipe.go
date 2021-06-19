@@ -91,11 +91,10 @@ func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 		OtherHandler:         theirhandler,
 	}
 	if id == refreshAPIPath {
-		api.HandleRefreshAPI(r.APIImpl, options)
+		return api.HandleRefreshAPI(r.APIImpl, options)
 	} else {
 		return api.SignOutAPI(r.APIImpl, options)
 	}
-	return nil
 }
 
 func GetAllCORSHeaders() []string {

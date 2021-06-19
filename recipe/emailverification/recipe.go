@@ -118,13 +118,11 @@ func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 		Res:                  res,
 		OtherHandler:         theirHandler,
 	}
-	var err error = nil
 	if id == generateEmailVerifyTokenAPI {
-		err = api.GenerateEmailVerifyToken(r.APIImpl, options)
+		return api.GenerateEmailVerifyToken(r.APIImpl, options)
 	} else {
-		err = api.EmailVerify(r.APIImpl, options)
+		return api.EmailVerify(r.APIImpl, options)
 	}
-	return err
 }
 
 func GetAllCORSHeaders() []string {

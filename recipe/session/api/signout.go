@@ -10,10 +10,13 @@ func SignOutAPI(apiImplementation models.APIImplementation, options models.APIOp
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	result, err := apiImplementation.SignOutPOST(options)
+	err := apiImplementation.SignOutPOST(options)
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, result)
+
+	supertokens.Send200Response(options.Res, map[string]interface{}{
+		"status": "OK",
+	})
 	return nil
 }
