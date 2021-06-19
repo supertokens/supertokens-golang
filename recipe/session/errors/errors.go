@@ -18,6 +18,7 @@ type TryRefreshTokenError struct {
 	Type string
 }
 
+// TODO: Do we need this function? Some places we are not using it.
 func MakeTryRefreshTokenError(msg string) TryRefreshTokenError {
 	return TryRefreshTokenError{
 		Msg: msg,

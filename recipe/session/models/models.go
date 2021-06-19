@@ -13,6 +13,7 @@ type HandshakeInfo struct {
 	JWTSigningPublicKeyExpiryTime  uint64
 	AccessTokenValidity            uint64
 	RefreshTokenValidity           uint64
+	SigningKeyLastUpdated          uint64
 }
 
 type CreateOrRefreshAPIResponse struct {

@@ -17,10 +17,10 @@ type accessTokenInfoStruct struct {
 	timeCreated             uint64
 }
 
-func getInfoFromAccessToken(token string, jwtSigningPublicKey string, doAntiCsrfCheck bool) (accessTokenInfoStruct, error) {
+func getInfoFromAccessToken(token string, jwtSigningPublicKey string, doAntiCsrfCheck bool) (*accessTokenInfoStruct, error) {
 	payload, err := verifyJWTAndGetPayload(token, jwtSigningPublicKey)
 	if err != nil {
-		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
+		return nil, errors.TryRefreshTokenError{
 			Msg: err.Error(),
 		}
 	}
@@ -57,18 +57,18 @@ func getInfoFromAccessToken(token string, jwtSigningPublicKey string, doAntiCsrf
 		(antiCsrfToken == nil && doAntiCsrfCheck) ||
 		expiryTime == nil ||
 		timeCreated == nil {
-		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
+		return nil, errors.TryRefreshTokenError{
 			Msg: "Access token does not contain all the information. Maybe the structure has changed?",
 		}
 	}
 
 	if *expiryTime < getCurrTimeInMS() {
-		return accessTokenInfoStruct{}, errors.TryRefreshTokenError{
+		return nil, errors.TryRefreshTokenError{
 			Msg: "Access token expired",
 		}
 	}
 
-	return accessTokenInfoStruct{
+	return &accessTokenInfoStruct{
 		sessionHandle:           *sessionHandle,
 		userID:                  *userID,
 		refreshTokenHash1:       *refreshTokenHash1,

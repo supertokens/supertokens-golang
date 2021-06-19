@@ -31,7 +31,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 
 			// TODO: we are setting cookies to this `res` inside that function.
 			// But since it's not a pointer, will it work?
-			attachCreateOrRefreshSessionResponseToRes(config, res, response)
+			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
 			sessionContainerInput := MakeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			return NewSessionContainer(querier, config, sessionContainerInput), nil
 		},
@@ -76,6 +76,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 
 			// TODO: we should make AccessToken a pointer and check != nil instead..
 			// And wouldn't DeepEqual return false when comparing it to an empty struct?
+
+			// TODO: is doing (*response).AccessToken same as response.AccessToken?
 			if reflect.DeepEqual(response.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
 				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
 				attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
@@ -107,7 +109,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				}
 				return models.SessionContainer{}, err
 			}
-			attachCreateOrRefreshSessionResponseToRes(config, res, response)
+			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
 			sessionContainerInput := MakeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			sessionContainer := NewSessionContainer(querier, config, sessionContainerInput)
 			return *sessionContainer, nil
@@ -169,6 +171,7 @@ func GetHandshakeInfo(querier supertokens.Querier) (models.HandshakeInfo, error)
 			JWTSigningPublicKeyExpiryTime:  response["jwtSigningPublicKeyExpiryTime"].(uint64),
 			AccessTokenValidity:            response["accessTokenValidity"].(uint64),
 			RefreshTokenValidity:           response["refreshTokenValidity"].(uint64),
+			SigningKeyLastUpdated:          getCurrTimeInMS(),
 		}
 	}
 	return *recipeImplHandshakeInfo, nil
@@ -176,6 +179,10 @@ func GetHandshakeInfo(querier supertokens.Querier) (models.HandshakeInfo, error)
 
 func UpdateJwtSigningPublicKeyInfo(newKey string, newExpiry uint64) {
 	if recipeImplHandshakeInfo == nil {
+		if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime != newExpiry ||
+			recipeImplHandshakeInfo.JWTSigningPublicKey != newKey {
+			recipeImplHandshakeInfo.SigningKeyLastUpdated = getCurrTimeInMS()
+		}
 		recipeImplHandshakeInfo.JWTSigningPublicKey = newKey
 		recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime = newExpiry
 	}
