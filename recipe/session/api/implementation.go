@@ -16,11 +16,11 @@ func MakeAPIImplementation() models.APIImplementation {
 			return err
 		},
 
-		VerifySession: func(verifySessionOptions *models.VerifySessionOptions, options models.APIOptions) {
+		VerifySession: func(verifySessionOptions *models.VerifySessionOptions, options models.APIOptions) error {
 			method := options.Req.Method
 			if method == http.MethodOptions || method == http.MethodTrace {
 				options.OtherHandler(options.Res, options.Req)
-				return
+				return nil
 			}
 
 			incomingPath, err := supertokens.NewNormalisedURLPath(options.Req.RequestURI)
@@ -29,16 +29,24 @@ func MakeAPIImplementation() models.APIImplementation {
 				// Likewise for any other error generated in this function
 
 				options.OtherHandler(options.Res, options.Req)
-				return
+				return err
 			}
 			refreshTokenPath := options.Config.RefreshTokenPath
-
 			if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
-				// TODO:
+				_, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
+				if err != nil {
+					options.OtherHandler(options.Res, options.Req)
+					return err
+				}
 			} else {
-				// TODO:
+				_, err := options.RecipeImplementation.GetSession(options.Req, options.Res, verifySessionOptions)
+				if err != nil {
+					options.OtherHandler(options.Res, options.Req)
+					return err
+				}
 			}
 			options.OtherHandler(options.Res, options.Req)
+			return nil
 		},
 
 		SignOutPOST: func(options models.APIOptions) error {

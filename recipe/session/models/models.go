@@ -118,7 +118,7 @@ type APIOptions struct {
 type APIImplementation struct {
 	RefreshPOST   func(options APIOptions) error
 	SignOutPOST   func(options APIOptions) error
-	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions)
+	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions) error
 }
 
 type SessionRecipe struct {
