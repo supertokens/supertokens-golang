@@ -135,6 +135,7 @@ func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfT
 	} else if response["status"] == "UNAUTHORISED" {
 		return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
 	} else {
+		// TODO: check using "ok" method instead of checking fir nil directly.
 		if response["jwtSigningPublicKey"] != nil && response["jwtSigningPublicKeyExpiryTime"] != nil {
 			UpdateJwtSigningPublicKeyInfo(response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 		}
