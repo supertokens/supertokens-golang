@@ -20,9 +20,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
 
-	// TODO: you need to pass a pointer to r right? instead of r itself. Cause when this is called
-	// r is nil.
-	verifiedConfig, configError := validateAndNormaliseUserInput(r, appInfo, config)
+	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
 		return models.SessionRecipe{}, configError
 	}
@@ -36,6 +34,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}, nil
 }
 
+// TODO: Rename to GetRecipeInstanceOrThrowError
 func GetInstanceOrThrowError() (*models.SessionRecipe, error) {
 	if r != nil {
 		return r, nil

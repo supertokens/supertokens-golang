@@ -15,6 +15,7 @@ func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPaylo
 	if err != nil {
 		return nil, err
 	}
+	// TODO: do a POC with a nil value for sessionData and JWTPayload
 	requestBody := map[string]interface{}{
 		"userId":             userID,
 		"userDataInJWT":      JWTPayload,
@@ -36,7 +37,7 @@ func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPaylo
 	delete(response, "jwtSigningPublicKeyExpiryTime")
 
 	var resp models.CreateOrRefreshAPIResponse
-	// TODO: what is this?
+
 	bytes := []byte(fmt.Sprintf("%+v", response))
 	err = json.Unmarshal(bytes, &resp)
 	if err != nil {
@@ -134,7 +135,6 @@ func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfT
 	} else if response["status"] == "UNAUTHORISED" {
 		return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
 	} else {
-		// TODO: is the below nill check proper?
 		if response["jwtSigningPublicKey"] != nil && response["jwtSigningPublicKeyExpiryTime"] != nil {
 			UpdateJwtSigningPublicKeyInfo(response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 		}

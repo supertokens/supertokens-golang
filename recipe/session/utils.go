@@ -14,7 +14,7 @@ import (
 )
 
 // TODO: Please go through this normalisation once properly.. there were several bugs in it.
-func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
 	typeNormalisedInput, err := makeTypeNormalisedInput(appInfo)
 	if err != nil {
 		return models.TypeNormalisedInput{}, err
@@ -68,12 +68,24 @@ func validateAndNormaliseUserInput(recipeInstance *models.SessionRecipe, appInfo
 
 	errorHandlers := models.NormalisedErrorHandlers{
 		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+			recipeInstance, err := GetInstanceOrThrowError()
+			if err != nil {
+				return err
+			}
 			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res, otherHandler)
 		},
 		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+			recipeInstance, err := GetInstanceOrThrowError()
+			if err != nil {
+				return err
+			}
 			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res, otherHandler)
 		},
 		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+			recipeInstance, err := GetInstanceOrThrowError()
+			if err != nil {
+				return err
+			}
 			return api.SendUnauthorisedResponse(*recipeInstance, message, req, res, otherHandler)
 		},
 	}
@@ -138,7 +150,7 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) (models.Type
 	}, nil
 }
 
-// TODO: how is this tested?
+// TODO: implement test cases? - see node code (search for getTopLevelDomainForSameSiteResolution)
 func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	urlObj, err := url.Parse(URL)
 	if err != nil {
@@ -163,10 +175,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 	sessionScope = strings.TrimSpace(sessionScope)
 	sessionScope = strings.ToLower(sessionScope)
 
-	// TODO: some warning...
-	if strings.HasPrefix(sessionScope, ".") {
-		sessionScope = sessionScope[1:]
-	}
+	sessionScope = strings.TrimPrefix(sessionScope, ".")
 
 	if !strings.HasPrefix(sessionScope, "http://") && !strings.HasPrefix(sessionScope, "https://") {
 		sessionScope = "http://" + sessionScope
@@ -176,11 +185,9 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (string, error) {
 	if err != nil {
 		return "", errors.BadInputError{Msg: "Please provide a valid sessionScope"}
 	}
-	// TODO: some warning...
+
 	sessionScope = urlObj.Host
-	if strings.HasPrefix(sessionScope, ".") {
-		sessionScope = sessionScope[1:]
-	}
+	sessionScope = strings.TrimPrefix(sessionScope, ".")
 
 	noDotNormalised := sessionScope
 

@@ -91,20 +91,19 @@ type VerifySessionOptions struct {
 }
 
 type RecipeImplementation struct {
-	UpdateJwtSigningPublicKeyInfo func(newKey string, newExpiry uint64)
-	CreateNewSession              func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*SessionContainer, error)
-	GetSession                    func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
-	RefreshSession                func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
-	RevokeAllSessionsForUser      func(userID string) ([]string, error)
-	GetAllSessionHandlesForUser   func(userID string) ([]string, error)
-	RevokeSession                 func(sessionHandle string) (bool, error)
-	RevokeMultipleSessions        func(sessionHandles []string) ([]string, error)
-	GetSessionData                func(sessionHandle string) (interface{}, error)
-	UpdateSessionData             func(sessionHandle string, newSessionData interface{}) error
-	GetJWTPayload                 func(sessionHandle string) (interface{}, error)
-	UpdateJWTPayload              func(sessionHandle string, newJWTPayload interface{}) error
-	GetAccessTokenLifeTimeMS      func() (uint64, error)
-	GetRefreshTokenLifeTimeMS     func() (uint64, error)
+	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*SessionContainer, error)
+	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
+	RefreshSession              func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
+	RevokeAllSessionsForUser    func(userID string) ([]string, error)
+	GetAllSessionHandlesForUser func(userID string) ([]string, error)
+	RevokeSession               func(sessionHandle string) (bool, error)
+	RevokeMultipleSessions      func(sessionHandles []string) ([]string, error)
+	GetSessionData              func(sessionHandle string) (interface{}, error)
+	UpdateSessionData           func(sessionHandle string, newSessionData interface{}) error
+	GetJWTPayload               func(sessionHandle string) (interface{}, error)
+	UpdateJWTPayload            func(sessionHandle string, newJWTPayload interface{}) error
+	GetAccessTokenLifeTimeMS    func() (uint64, error)
+	GetRefreshTokenLifeTimeMS   func() (uint64, error)
 }
 
 type APIOptions struct {

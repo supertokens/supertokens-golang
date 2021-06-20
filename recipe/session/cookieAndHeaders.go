@@ -137,7 +137,6 @@ func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name 
 	httpOnly := true
 
 	if domain != nil {
-		// TODO: is this all from the older code?
 		cookie := http.Cookie{
 			Name:     name,
 			Value:    url.QueryEscape(value),
@@ -185,7 +184,6 @@ func getCookieValue(request *http.Request, key string) *string {
 	return nil
 }
 
-// TODO: need to discuss this...
 // setCookieValue replaces cookie.go SetCookie, it replaces the cookie values instead of appending them
 func setCookieValue(w http.ResponseWriter, cookie *http.Cookie) {
 	cookieHeader := w.Header().Values("Set-Cookie")

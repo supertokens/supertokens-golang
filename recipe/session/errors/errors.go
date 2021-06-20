@@ -38,10 +38,9 @@ type TokenTheftDetectedError struct {
 	Payload TokenTheftDetectedErrorPayload
 }
 
-// TODO: why do we need the json thing?
 type TokenTheftDetectedErrorPayload struct {
-	SessionHandle string `json:"sessionHandle"`
-	UserID        string `json:"userId"`
+	SessionHandle string
+	UserID        string
 }
 
 func MakeTokenTheftDetectedError(sessionHandle, userID, msg string) TokenTheftDetectedError {

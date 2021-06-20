@@ -22,14 +22,13 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 	GetHandshakeInfo(querier)
 
 	return models.RecipeImplementation{
-		// TODO: jwtPayload and sessionData need to be optional / pointers?
 		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
 			response, err := createNewSessionHelper(querier, userID, jwtPayload, sessionData)
 			if err != nil {
 				return nil, err
 			}
 
-			// TODO: we are setting cookies to this `res` inside that function.
+			// TODO: For POC: we are setting cookies to this `res` inside that function.
 			// But since it's not a pointer, will it work?
 			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
 			sessionContainerInput := MakeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
@@ -67,18 +66,15 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			response, err := getSessionHelper(querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) {
-					// TODO: will this set these cookies / headers in the final response
+					// TODO: For POC: will this set these cookies / headers in the final response
 					// sent by our API / the user?
 					clearSessionFromCookie(config, res)
 				}
 				return nil, err
 			}
 
-			// TODO: we should make AccessToken a pointer and check != nil instead..
-			// And wouldn't DeepEqual return false when comparing it to an empty struct?
-
-			// TODO: is doing (*response).AccessToken same as response.AccessToken?
-			if reflect.DeepEqual(response.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
+			// TODO: for POC: is doing (*response).AccessToken same as response.AccessToken?
+			if !reflect.DeepEqual(response.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
 				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
 				attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
 				accessToken = &response.AccessToken.Token
