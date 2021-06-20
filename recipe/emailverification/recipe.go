@@ -20,8 +20,11 @@ type Recipe struct {
 
 var r *Recipe = nil
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config models.TypeInput) Recipe {
-	querierInstance, _ := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config models.TypeInput) (Recipe, error) {
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return Recipe{}, err
+	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
@@ -31,20 +34,23 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 		Config:       verifiedConfig,
 		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),
 		APIImpl:      verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-	}
+	}, nil
 }
 
 func GetInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, errors.BadInputError{Msg: "Initialisation not done. Did you forget to call the SuperTokens.init function?"}
+	return nil, errors.BadInputError{Msg: "Initialisation not done. Did you forget to call the init function?"}
 }
 
 func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe := MakeRecipe(RECIPE_ID, appInfo, config)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
+			if err != nil {
+				return nil, err
+			}
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
@@ -77,28 +83,28 @@ func (r *Recipe) VerifyEmailUsingToken(token string) (*models.User, error) {
 // implement RecipeModule
 
 func GetAPIsHandled() ([]supertokens.APIHandled, error) {
-	generateEmailVerifyTokenAPI, err := supertokens.NewNormalisedURLPath(GenerateEmailVerifyTokenAPI)
+	generateEmailVerifyTokenAPINormalised, err := supertokens.NewNormalisedURLPath(generateEmailVerifyTokenAPI)
 	if err != nil {
 		return nil, err
 	}
-	emailVerifyAPI, err := supertokens.NewNormalisedURLPath(EmailVerifyAPI)
+	emailVerifyAPINormalised, err := supertokens.NewNormalisedURLPath(emailVerifyAPI)
 	if err != nil {
 		return nil, err
 	}
 	return []supertokens.APIHandled{{
 		Method:                 "post",
-		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPI,
-		ID:                     GenerateEmailVerifyTokenAPI,
+		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPINormalised,
+		ID:                     generateEmailVerifyTokenAPI,
 		Disabled:               r.APIImpl.GenerateEmailVerifyTokenPOST == nil,
 	}, {
 		Method:                 "post",
-		PathWithoutAPIBasePath: *emailVerifyAPI,
-		ID:                     EmailVerifyAPI,
+		PathWithoutAPIBasePath: *emailVerifyAPINormalised,
+		ID:                     emailVerifyAPI,
 		Disabled:               r.APIImpl.VerifyEmailPOST == nil,
 	}, {
 		Method:                 "get",
-		PathWithoutAPIBasePath: *emailVerifyAPI,
-		ID:                     EmailVerifyAPI,
+		PathWithoutAPIBasePath: *emailVerifyAPINormalised,
+		ID:                     emailVerifyAPI,
 		Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,
 	}}, nil
 }
@@ -112,13 +118,11 @@ func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 		Res:                  res,
 		OtherHandler:         theirHandler,
 	}
-	var err error = nil
-	if id == GenerateEmailVerifyTokenAPI {
-		err = api.GenerateEmailVerifyToken(r.APIImpl, options)
+	if id == generateEmailVerifyTokenAPI {
+		return api.GenerateEmailVerifyToken(r.APIImpl, options)
 	} else {
-		err = api.EmailVerify(r.APIImpl, options)
+		return api.EmailVerify(r.APIImpl, options)
 	}
-	return err
 }
 
 func GetAllCORSHeaders() []string {

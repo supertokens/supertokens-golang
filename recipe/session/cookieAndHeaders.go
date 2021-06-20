@@ -109,6 +109,7 @@ func setHeader(res http.ResponseWriter, key string, value string, allowDuplicate
 	} else {
 		res.Header().Set(key, existingValue+", "+value)
 	}
+	// TODO: this is incorrect.. see node code.
 }
 
 func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {

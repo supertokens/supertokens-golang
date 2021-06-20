@@ -68,6 +68,29 @@ func verifyJWTAndGetPayload(jwt string, jwtSigningPublicKey string) (map[string]
 	return result, nil
 }
 
+func getPayloadWithoutVerifying(jwt string) (map[string]interface{}, error) {
+	var splitted = strings.Split(jwt, ".")
+	if len(splitted) != 3 {
+		return nil, errors.BadInputError{
+			Msg: "Invalid JWT",
+		}
+	}
+
+	var payload = splitted[1]
+
+	var decodedPayload, base64Error = b64.StdEncoding.DecodeString(payload)
+	if base64Error != nil {
+		return nil, base64Error
+	}
+
+	var result map[string]interface{}
+	jsonError := json.Unmarshal(decodedPayload, &result)
+	if jsonError != nil {
+		return nil, jsonError
+	}
+	return result, nil
+}
+
 func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode([]byte(str))
 	if block == nil {

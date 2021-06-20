@@ -13,10 +13,17 @@ const RECIPE_ID = "session"
 
 var r *models.SessionRecipe = nil
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) models.SessionRecipe {
-	querierInstance, _ := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.SessionRecipe, error) {
+	querierInstance, querierError := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if querierError != nil {
+		return models.SessionRecipe{}, querierError
+	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
-	verifiedConfig, _ := validateAndNormaliseUserInput(r, appInfo, config)
+
+	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
+	if configError != nil {
+		return models.SessionRecipe{}, configError
+	}
 	recipeImplementation := MakeRecipeImplementation(*querierInstance, verifiedConfig)
 
 	return models.SessionRecipe{
@@ -24,68 +31,71 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		Config:       verifiedConfig,
 		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),
 		APIImpl:      verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-	}
+	}, nil
 }
 
+// TODO: Rename to GetRecipeInstanceOrThrowError
 func GetInstanceOrThrowError() (*models.SessionRecipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, errors.BadInputError{Msg: "Initialisation not done. Did you forget to call the SuperTokens.init function?"}
+	return nil, errors.BadInputError{Msg: "Initialisation not done. Did you forget to call the init function?"}
 }
 
 func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe := MakeRecipe(RECIPE_ID, appInfo, &config)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, &config)
+			if err != nil {
+				return nil, err
+			}
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, errors.BadInputError{Msg: "Emailverification recipe has already been initialised. Please check your code for bugs."}
+		return nil, errors.BadInputError{Msg: "Session recipe has already been initialised. Please check your code for bugs."}
 	}
 }
 
 // Implement RecipeModule
 
 func GetAPIsHandled() ([]supertokens.APIHandled, error) {
-	refreshAPIPath, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
+	refreshAPIPathNormalised, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
 	if err != nil {
 		return nil, err
 	}
-	signoutAPIPath, err := supertokens.NewNormalisedURLPath(SignoutAPIPath)
+	signoutAPIPathNormalised, err := supertokens.NewNormalisedURLPath(signoutAPIPath)
 	if err != nil {
 		return nil, err
 	}
 	return []supertokens.APIHandled{{
 		Method:                 "post",
-		PathWithoutAPIBasePath: *refreshAPIPath,
-		ID:                     RefreshAPIPath,
+		PathWithoutAPIBasePath: *refreshAPIPathNormalised,
+		ID:                     refreshAPIPath,
 		Disabled:               r.APIImpl.RefreshPOST == nil,
 	}, {
 		Method:                 "post",
-		PathWithoutAPIBasePath: *signoutAPIPath,
-		ID:                     SignoutAPIPath,
+		PathWithoutAPIBasePath: *signoutAPIPathNormalised,
+		ID:                     signoutAPIPath,
 		Disabled:               r.APIImpl.SignOutPOST == nil,
 	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, thierhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := models.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
 		Req:                  req,
 		Res:                  res,
-		OtherHandler:         thierhandler,
+		OtherHandler:         theirhandler,
 	}
-	if id == RefreshAPIPath {
-		api.HandleRefreshAPI(r.APIImpl, options)
+	if id == refreshAPIPath {
+		return api.HandleRefreshAPI(r.APIImpl, options)
 	} else {
 		return api.SignOutAPI(r.APIImpl, options)
 	}
-	return nil
 }
 
 func GetAllCORSHeaders() []string {
-	return []string{antiCsrfHeaderKey, ridHeaderKey}
+	return getCORSAllowedHeaders()
 }

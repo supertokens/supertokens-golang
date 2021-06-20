@@ -1,6 +1,6 @@
 package emailverification
 
 const (
-	GenerateEmailVerifyTokenAPI = "/user/email/verify/token"
-	EmailVerifyAPI              = "/user/email/verify"
+	generateEmailVerifyTokenAPI = "/user/email/verify/token"
+	emailVerifyAPI              = "/user/email/verify"
 )

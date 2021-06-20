@@ -18,9 +18,11 @@ type TryRefreshTokenError struct {
 	Type string
 }
 
+// TODO: Do we need this function? Some places we are not using it.
 func MakeTryRefreshTokenError(msg string) TryRefreshTokenError {
 	return TryRefreshTokenError{
-		Msg:  msg,
+		Msg: msg,
+		// TODO: Do we need this Type field?
 		Type: TryRefreshTokenErrorStr,
 	}
 }
@@ -37,8 +39,8 @@ type TokenTheftDetectedError struct {
 }
 
 type TokenTheftDetectedErrorPayload struct {
-	SessionHandle string `json:"sessionHandle"`
-	UserID        string `json:"userId"`
+	SessionHandle string
+	UserID        string
 }
 
 func MakeTokenTheftDetectedError(sessionHandle, userID, msg string) TokenTheftDetectedError {

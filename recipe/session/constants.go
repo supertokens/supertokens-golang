@@ -1,14 +1,14 @@
 package session
 
 const (
-	RefreshAPIPath             = "/session/refresh"
-	SignoutAPIPath             = "/signout"
+	refreshAPIPath = "/session/refresh"
+	signoutAPIPath = "/signout"
 
-	AntiCSRF_VIA_TOKEN         = "VIA_TOKEN"
-	AntiCSRF_VIA_CUSTOM_HEADER = "VIA_CUSTOM_HEADER"
-	AntiCSRF_NONE              = "NONE"
-	
-	CookieSameSite_NONE        = "none"
-	CookieSameSite_LAX         = "lax"
-	CookieSameSite_STRICT      = "strict"
+	antiCSRF_VIA_TOKEN         = "VIA_TOKEN"
+	antiCSRF_VIA_CUSTOM_HEADER = "VIA_CUSTOM_HEADER"
+	antiCSRF_NONE              = "NONE"
+
+	cookieSameSite_NONE   = "none"
+	cookieSameSite_LAX    = "lax"
+	cookieSameSite_STRICT = "strict"
 )

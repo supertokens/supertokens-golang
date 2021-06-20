@@ -15,6 +15,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			_, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
 			return err
 		},
+
 		VerifySession: func(verifySessionOptions *models.VerifySessionOptions, options models.APIOptions) error {
 			method := options.Req.Method
 			if method == http.MethodOptions || method == http.MethodTrace {
@@ -24,11 +25,13 @@ func MakeAPIImplementation() models.APIImplementation {
 
 			incomingPath, err := supertokens.NewNormalisedURLPath(options.Req.RequestURI)
 			if err != nil {
+				// TODO: You are supposed to call the user's error handler here.. not ignore the error.
+				// Likewise for any other error generated in this function
+
 				options.OtherHandler(options.Res, options.Req)
 				return err
 			}
 			refreshTokenPath := options.Config.RefreshTokenPath
-
 			if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
 				_, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
 				if err != nil {
@@ -45,23 +48,24 @@ func MakeAPIImplementation() models.APIImplementation {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
 		},
-		SignOutPOST: func(options models.APIOptions) (map[string]string, error) {
+
+		SignOutPOST: func(options models.APIOptions) error {
 			session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, nil)
 			if err != nil {
 				if sessionErrors.IsUnauthorizedError(err) {
-					return map[string]string{
-						"status": "OK",
-					}, nil
+					return nil
 				}
-				return nil, err
+				return err
 			}
 			if session == nil {
-				return nil, errors.BadInputError{Msg: "Session is undefined. Should not come here."}
+				return errors.BadInputError{Msg: "Session is undefined. Should not come here."}
 			}
-			session.RevokeSession()
-			return map[string]string{
-				"status": "OK",
-			}, nil
+			err = session.RevokeSession()
+
+			if err != nil {
+				return err
+			}
+			return nil
 		},
 	}
 }

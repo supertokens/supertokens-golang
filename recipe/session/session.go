@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type Session struct {
+type SessionContainerInput struct {
 	sessionHandle string
 	userID        string
 	userDataInJWT interface{}
@@ -16,8 +16,8 @@ type Session struct {
 	accessToken   string
 }
 
-func MakeSession(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) Session {
-	return Session{
+func MakeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) SessionContainerInput {
+	return SessionContainerInput{
 		sessionHandle: sessionHandle,
 		userID:        userID,
 		userDataInJWT: userDataInJWT,
@@ -26,10 +26,10 @@ func MakeSession(accessToken string, sessionHandle string, userID string, userDa
 	}
 }
 
-func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session Session) models.SessionContainer {
-	return models.SessionContainer{
+func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session SessionContainerInput) *models.SessionContainer {
+	return &models.SessionContainer{
 		RevokeSession: func() error {
-			success, err := revokeSession(querier, session.sessionHandle)
+			success, err := revokeSessionHelper(querier, session.sessionHandle)
 			if err != nil {
 				return err
 			}
@@ -38,8 +38,9 @@ func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormali
 			}
 			return nil
 		},
+
 		GetSessionData: func() (interface{}, error) {
-			data, err := getSessionData(querier, session.sessionHandle)
+			data, err := getSessionDataHelper(querier, session.sessionHandle)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) {
 					clearSessionFromCookie(config, session.res)
@@ -48,8 +49,9 @@ func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormali
 			}
 			return data, nil
 		},
+
 		UpdateSessionData: func(newSessionData interface{}) error {
-			err := updateSessionData(querier, session.sessionHandle, newSessionData)
+			err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) {
 					clearSessionFromCookie(config, session.res)
@@ -67,6 +69,9 @@ func MakeSessionContainer(querier supertokens.Querier, config models.TypeNormali
 				"accessToken":   session.accessToken,
 				"userDataInJWT": newJWTPayload,
 			})
+			if err != nil {
+				return err
+			}
 			if response["status"] == errors.UnauthorizedErrorStr {
 				clearSessionFromCookie(config, session.res)
 				return errors.MakeUnauthorizedError("Session has probably been revoked while updating JWT payload")

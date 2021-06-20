@@ -29,6 +29,9 @@ func SendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *
 }
 
 func SendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter, otherHandler http.HandlerFunc) error {
-	recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
+	_, err := recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
+	if err != nil {
+		return err
+	}
 	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }

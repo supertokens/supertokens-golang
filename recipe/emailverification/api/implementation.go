@@ -13,11 +13,7 @@ func MakeAPIImplementation() models.APIImplementation {
 		},
 
 		IsEmailVerifiedGET: func(options models.APIOptions) (bool, error) {
-			sessionInstance, err := session.GetInstanceOrThrowError()
-			if err != nil {
-				return false, err
-			}
-			session, err := sessionInstance.RecipeImpl.GetSession(options.Req, options.Res, nil)
+			session, err := session.GetSession(options.Req, options.Res, nil)
 			if err != nil {
 				return false, err
 			}
@@ -33,17 +29,14 @@ func MakeAPIImplementation() models.APIImplementation {
 		},
 
 		GenerateEmailVerifyTokenPOST: func(options models.APIOptions) (*models.CreateEmailVerificationTokenAPIResponse, error) {
-			sessionInstance, err := session.GetInstanceOrThrowError()
-			if err != nil {
-				return nil, err
-			}
-			session, err := sessionInstance.RecipeImpl.GetSession(options.Req, options.Res, nil)
+			session, err := session.GetSession(options.Req, options.Res, nil)
 			if err != nil {
 				return nil, err
 			}
 			if session == nil {
 				return nil, errors.MakeBadInputError("Session is undefined. Should not come here.")
 			}
+
 			userID := session.GetUserID()
 			email, err := options.Config.GetEmailForUserID(userID)
 			if err != nil {
@@ -54,7 +47,7 @@ func MakeAPIImplementation() models.APIImplementation {
 				return nil, err
 			}
 
-			if response.EmailAlreadyVerifiedError == true {
+			if response.EmailAlreadyVerifiedError {
 				return &models.CreateEmailVerificationTokenAPIResponse{
 					EmailAlreadyVerifiedError: true,
 				}, nil
