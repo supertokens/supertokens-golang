@@ -102,14 +102,15 @@ func getCORSAllowedHeaders() []string {
 	}
 }
 
-func setHeader(res http.ResponseWriter, key string, value string, allowDuplicateKey bool) {
+func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey bool) {
 	existingValue := res.Header().Get(strings.ToLower(key))
 	if existingValue == "" {
 		res.Header().Set(key, value)
-	} else {
+	} else if allowDuplicateKey {
 		res.Header().Set(key, existingValue+", "+value)
+	} else {
+		res.Header().Set(key, value)
 	}
-	// TODO: this is incorrect.. see node code.
 }
 
 func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {

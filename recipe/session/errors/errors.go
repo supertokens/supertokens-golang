@@ -10,8 +10,6 @@ const (
 	TokenTheftDetectedErrorStr = "TOKEN_THEFT_DETECTED"
 )
 
-type SessionError struct{}
-
 // TryRefreshTokenError used for when the refresh API needs to be called
 type TryRefreshTokenError struct {
 	Msg  string

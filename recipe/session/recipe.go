@@ -34,8 +34,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}, nil
 }
 
-// TODO: Rename to GetRecipeInstanceOrThrowError
-func GetInstanceOrThrowError() (*models.SessionRecipe, error) {
+func GetRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	if r != nil {
 		return r, nil
 	}

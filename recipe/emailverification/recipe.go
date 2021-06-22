@@ -37,7 +37,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 	}, nil
 }
 
-func GetInstanceOrThrowError() (*Recipe, error) {
+func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}

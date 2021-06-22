@@ -9,8 +9,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPayload interface{}, sessionData interface{}) (*models.CreateOrRefreshAPIResponse, error) {
-	// TODO: JWTPayload and sessionData can be nil (if not, then they should be pointers)
+func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, userID string, JWTPayload, sessionData interface{}) (*models.CreateOrRefreshAPIResponse, error) {
 	URL, err := supertokens.NewNormalisedURLPath("/recipe/session")
 	if err != nil {
 		return nil, err
@@ -21,7 +20,7 @@ func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPaylo
 		"userDataInJWT":      JWTPayload,
 		"userDataInDatabase": sessionData,
 	}
-	handShakeInfo, err := GetHandshakeInfo(querier)
+	handShakeInfo, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +29,7 @@ func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPaylo
 	if err != nil {
 		return nil, err
 	}
-	UpdateJwtSigningPublicKeyInfo(response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+	UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 
 	delete(response, "status")
 	delete(response, "jwtSigningPublicKey")
@@ -46,8 +45,8 @@ func createNewSessionHelper(querier supertokens.Querier, userID string, JWTPaylo
 	return &resp, nil
 }
 
-func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck bool, containsCustomHeader bool) (*models.GetSessionResponse, error) {
-	handShakeInfo, err := GetHandshakeInfo(querier)
+func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (*models.GetSessionResponse, error) {
+	handShakeInfo, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 	if err != nil {
 		return nil, err
 	}
@@ -104,6 +103,7 @@ func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfT
 					UserID:        accessTokenInfo.userID,
 					UserDataInJWT: accessTokenInfo.userData,
 				},
+				AccessToken: nil,
 			}, nil
 		}
 	}
@@ -122,10 +122,11 @@ func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfT
 		return nil, err
 	}
 	if response["status"] == "OK" {
-		UpdateJwtSigningPublicKeyInfo(response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+		UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 		delete(response, "status")
 		delete(response, "jwtSigningPublicKey")
 		delete(response, "jwtSigningPublicKeyExpiryTime")
+		// TODO: For POC: check if pointer is unmarshalled
 		var result models.GetSessionResponse
 		err := json.Unmarshal([]byte(fmt.Sprintf("%+v", response)), &result)
 		if err != nil {
@@ -137,14 +138,14 @@ func getSessionHelper(querier supertokens.Querier, accessToken string, antiCsrfT
 	} else {
 		// TODO: check using "ok" method instead of checking fir nil directly.
 		if response["jwtSigningPublicKey"] != nil && response["jwtSigningPublicKeyExpiryTime"] != nil {
-			UpdateJwtSigningPublicKeyInfo(response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+			UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 		}
 		return nil, sessionErrors.MakeTryRefreshTokenError(response["message"].(string))
 	}
 }
 
-func refreshSessionHelper(querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (*models.CreateOrRefreshAPIResponse, error) {
-	handShakeInfo, err := GetHandshakeInfo(querier)
+func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (*models.CreateOrRefreshAPIResponse, error) {
+	handShakeInfo, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 	if err != nil {
 		return nil, err
 	}
@@ -260,7 +261,9 @@ func getSessionDataHelper(querier supertokens.Querier, sessionHandle string) (ma
 }
 
 func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData interface{}) error {
-	// TODO: newSessionData needs to be normalised?
+	if newSessionData == nil {
+		newSessionData = map[string]string{}
+	}
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/data")
 	if err != nil {
 		return err
@@ -297,7 +300,9 @@ func getJWTPayloadHelper(querier supertokens.Querier, sessionHandle string) (int
 }
 
 func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, newJWTPayload interface{}) error {
-	// TODO: newJWTPayload needs to be normalised?
+	if newJWTPayload == nil {
+		newJWTPayload = map[string]string{}
+	}
 	path, err := supertokens.NewNormalisedURLPath("/recipe/jwt/data")
 	if err != nil {
 		return err

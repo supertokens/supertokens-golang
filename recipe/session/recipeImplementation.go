@@ -9,21 +9,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// TODO: these are not meant to be static variables.
-// We need to think of a different pattern for them.
-var (
-	recipeImplHandshakeInfo *models.HandshakeInfo
-	staticConfig            models.TypeNormalisedInput
-)
-
 func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
-	staticConfig = config
-
-	GetHandshakeInfo(querier)
+	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
+	GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 
 	return models.RecipeImplementation{
 		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
-			response, err := createNewSessionHelper(querier, userID, jwtPayload, sessionData)
+			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
 			if err != nil {
 				return nil, err
 			}
@@ -63,7 +55,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				doAntiCsrfCheck = &doAntiCsrfCheckBool
 			}
 
-			response, err := getSessionHelper(querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
+			response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) {
 					// TODO: For POC: will this set these cookies / headers in the final response
@@ -84,31 +76,30 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			return sessionContainer, nil
 		},
 
-		// TODO: Why not return a pointer here?
-		RefreshSession: func(req *http.Request, res http.ResponseWriter) (models.SessionContainer, error) {
+		RefreshSession: func(req *http.Request, res http.ResponseWriter) (*models.SessionContainer, error) {
 			inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 			if inputIdRefreshToken == nil {
-				return models.SessionContainer{}, errors.MakeUnauthorizedError("Session does not exist. Are you sending the session tokens in the request as cookies?")
+				return nil, errors.MakeUnauthorizedError("Session does not exist. Are you sending the session tokens in the request as cookies?")
 			}
 
 			inputRefreshToken := getRefreshTokenFromCookie(req)
 			if inputRefreshToken == nil {
 				clearSessionFromCookie(config, res)
-				return models.SessionContainer{}, errors.MakeUnauthorizedError("Refresh token not found. Are you sending the refresh token in the request as a cookie?")
+				return nil, errors.MakeUnauthorizedError("Refresh token not found. Are you sending the refresh token in the request as a cookie?")
 			}
 
 			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-			response, err := refreshSessionHelper(querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
+			response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
 			if err != nil {
 				if errors.IsUnauthorizedError(err) || errors.IsTokenTheftDetectedError(err) {
 					clearSessionFromCookie(config, res)
 				}
-				return models.SessionContainer{}, err
+				return nil, err
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
 			sessionContainerInput := MakeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			sessionContainer := NewSessionContainer(querier, config, sessionContainerInput)
-			return *sessionContainer, nil
+			return sessionContainer, nil
 		},
 
 		RevokeAllSessionsForUser: func(userID string) ([]string, error) {
@@ -143,15 +134,27 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			return updateJWTPayloadHelper(querier, sessionHandle, newJWTPayload)
 		},
 
-		// TODO: getAccessTokenLifeTimeMS
+		GetAccessTokenLifeTimeMS: func() (uint64, error) {
+			handShake, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+			if err != nil {
+				return 0, err
+			}
+			return handShake.AccessTokenValidity, nil
+		},
 
-		// TODO: getRefreshTokenLifeTimeMS
+		GetRefreshTokenLifeTimeMS: func() (uint64, error) {
+			handShake, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+			if err != nil {
+				return 0, err
+			}
+			return handShake.RefreshTokenValidity, nil
+		},
 	}
 }
 
-func GetHandshakeInfo(querier supertokens.Querier) (models.HandshakeInfo, error) {
+func GetHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier) (models.HandshakeInfo, error) {
 	if recipeImplHandshakeInfo == nil {
-		antiCsrf := staticConfig.AntiCsrf
+		antiCsrf := config.AntiCsrf
 		path, err := supertokens.NewNormalisedURLPath("/recipe/handshake")
 		if err != nil {
 			return models.HandshakeInfo{}, err
@@ -173,7 +176,7 @@ func GetHandshakeInfo(querier supertokens.Querier) (models.HandshakeInfo, error)
 	return *recipeImplHandshakeInfo, nil
 }
 
-func UpdateJwtSigningPublicKeyInfo(newKey string, newExpiry uint64) {
+func UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo *models.HandshakeInfo, newKey string, newExpiry uint64) {
 	if recipeImplHandshakeInfo == nil {
 		if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime != newExpiry ||
 			recipeImplHandshakeInfo.JWTSigningPublicKey != newKey {

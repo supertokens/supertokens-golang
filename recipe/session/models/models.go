@@ -38,8 +38,8 @@ type CreateOrRefreshAPIResponseToken struct {
 
 // TODO: Since AccessToken can be undefined, should we make this a pointer?
 type GetSessionResponse struct {
-	Session     SessionStruct                   `json:"session"`
-	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
+	Session     SessionStruct                    `json:"session"`
+	AccessToken *CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
 
 type TypeInput struct {
@@ -93,7 +93,7 @@ type VerifySessionOptions struct {
 type RecipeImplementation struct {
 	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*SessionContainer, error)
 	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
-	RefreshSession              func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
+	RefreshSession              func(req *http.Request, res http.ResponseWriter) (*SessionContainer, error)
 	RevokeAllSessionsForUser    func(userID string) ([]string, error)
 	GetAllSessionHandlesForUser func(userID string) ([]string, error)
 	RevokeSession               func(sessionHandle string) (bool, error)
