@@ -1,6 +1,7 @@
 package api
 
 import (
+	defaultErrors "errors"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/errors"
@@ -52,7 +53,7 @@ func MakeAPIImplementation() models.APIImplementation {
 		SignOutPOST: func(options models.APIOptions) error {
 			session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, nil)
 			if err != nil {
-				if sessionErrors.IsUnauthorizedError(err) {
+				if defaultErrors.As(err, &sessionErrors.UnauthorizedError{}) {
 					return nil
 				}
 				return err

@@ -30,7 +30,6 @@ func EmailVerify(apiImplementation models.APIImplementation, options models.APIO
 			return err
 		}
 		token, ok := readBody["token"]
-		// TODO: For POC: check if we also need to add token == nil - if we add that, do we need to do !ok?
 		if !ok {
 			return errors.BadInputError{Msg: "Please provide the email verification token"}
 		}

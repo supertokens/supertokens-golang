@@ -36,10 +36,9 @@ type CreateOrRefreshAPIResponseToken struct {
 	CreatedTime uint64 `json:"createdTime"`
 }
 
-// TODO: Since AccessToken can be undefined, should we make this a pointer?
 type GetSessionResponse struct {
 	Session     SessionStruct                    `json:"session"`
-	AccessToken *CreateOrRefreshAPIResponseToken `json:"accessToken"`
+	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
 
 type TypeInput struct {

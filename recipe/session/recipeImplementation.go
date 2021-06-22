@@ -1,6 +1,7 @@
 package session
 
 import (
+	defaultErrors "errors"
 	"net/http"
 	"reflect"
 
@@ -39,7 +40,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 					!(*options.SessionRequired) {
 					return nil, nil
 				}
-				return nil, errors.MakeUnauthorizedError("Session does not exist. Are you sending the session tokens in the request as cookies?")
+				return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 			}
 
 			accessToken := getAccessTokenFromCookie(req)
@@ -57,7 +58,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 
 			response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 			if err != nil {
-				if errors.IsUnauthorizedError(err) {
+				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 					// TODO: For POC: will this set these cookies / headers in the final response
 					// sent by our API / the user?
 					clearSessionFromCookie(config, res)
@@ -65,7 +66,6 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				return nil, err
 			}
 
-			// TODO: for POC: is doing (*response).AccessToken same as response.AccessToken?
 			if !reflect.DeepEqual(response.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
 				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
 				attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
@@ -79,19 +79,19 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 		RefreshSession: func(req *http.Request, res http.ResponseWriter) (*models.SessionContainer, error) {
 			inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 			if inputIdRefreshToken == nil {
-				return nil, errors.MakeUnauthorizedError("Session does not exist. Are you sending the session tokens in the request as cookies?")
+				return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 			}
 
 			inputRefreshToken := getRefreshTokenFromCookie(req)
 			if inputRefreshToken == nil {
 				clearSessionFromCookie(config, res)
-				return nil, errors.MakeUnauthorizedError("Refresh token not found. Are you sending the refresh token in the request as a cookie?")
+				return nil, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 			}
 
 			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
 			response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
 			if err != nil {
-				if errors.IsUnauthorizedError(err) || errors.IsTokenTheftDetectedError(err) {
+				if defaultErrors.As(err, &errors.UnauthorizedError{}) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 					clearSessionFromCookie(config, res)
 				}
 				return nil, err

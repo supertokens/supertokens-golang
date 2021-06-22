@@ -2,9 +2,9 @@ package session
 
 import (
 	"encoding/json"
-	"fmt"
+	defaultErrors "errors"
 
-	sessionErrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -14,7 +14,12 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 	if err != nil {
 		return nil, err
 	}
-	// TODO: do a POC with a nil value for sessionData and JWTPayload
+	if JWTPayload == nil {
+		JWTPayload = map[string]interface{}{}
+	}
+	if sessionData == nil {
+		sessionData = map[string]interface{}{}
+	}
 	requestBody := map[string]interface{}{
 		"userId":             userID,
 		"userDataInJWT":      JWTPayload,
@@ -35,10 +40,12 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 	delete(response, "jwtSigningPublicKey")
 	delete(response, "jwtSigningPublicKeyExpiryTime")
 
+	responseByte, err := json.Marshal(response)
+	if err != nil {
+		return nil, err
+	}
 	var resp models.CreateOrRefreshAPIResponse
-
-	bytes := []byte(fmt.Sprintf("%+v", response))
-	err = json.Unmarshal(bytes, &resp)
+	err = json.Unmarshal(responseByte, &resp)
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +60,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 	if handShakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() {
 		accessTokenInfo, err := getInfoFromAccessToken(accessToken, handShakeInfo.JWTSigningPublicKey, handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 		if err != nil {
-			if !sessionErrors.IsTryRefreshTokenError(err) {
+			if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 				return nil, err
 			}
 
@@ -81,15 +88,15 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 				if accessTokenInfo != nil {
 					if antiCsrfToken == nil || *antiCsrfToken == *accessTokenInfo.antiCsrfToken {
 						if antiCsrfToken == nil {
-							return nil, sessionErrors.TryRefreshTokenError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
+							return nil, errors.TryRefreshTokenError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
 						} else {
-							return nil, sessionErrors.TryRefreshTokenError{Msg: "anti-csrf check failed"}
+							return nil, errors.TryRefreshTokenError{Msg: "anti-csrf check failed"}
 						}
 					}
 				}
 			} else if handShakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 				if !containsCustomHeader {
-					return nil, sessionErrors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
+					return nil, errors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
 				}
 			}
 		}
@@ -103,7 +110,6 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 					UserID:        accessTokenInfo.userID,
 					UserDataInJWT: accessTokenInfo.userData,
 				},
-				AccessToken: nil,
 			}, nil
 		}
 	}
@@ -121,26 +127,31 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 	if err != nil {
 		return nil, err
 	}
-	if response["status"] == "OK" {
+	status := response["status"]
+	if status.(string) == "OK" {
 		UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 		delete(response, "status")
 		delete(response, "jwtSigningPublicKey")
 		delete(response, "jwtSigningPublicKeyExpiryTime")
-		// TODO: For POC: check if pointer is unmarshalled
+		responseByte, err := json.Marshal(response)
+		if err != nil {
+			return nil, err
+		}
 		var result models.GetSessionResponse
-		err := json.Unmarshal([]byte(fmt.Sprintf("%+v", response)), &result)
+		err = json.Unmarshal(responseByte, &result)
 		if err != nil {
 			return nil, err
 		}
 		return &result, nil
-	} else if response["status"] == "UNAUTHORISED" {
-		return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
+	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
+		return nil, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
-		// TODO: check using "ok" method instead of checking fir nil directly.
-		if response["jwtSigningPublicKey"] != nil && response["jwtSigningPublicKeyExpiryTime"] != nil {
-			UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+		jwtSigningPublicKey, jwtSigningPublicKeyExist := response["jwtSigningPublicKey"]
+		jwtSigningPublicKeyExpiryTime, jwtSigningPublicKeyExpiryTimeExist := response["jwtSigningPublicKeyExpiryTime"]
+		if jwtSigningPublicKeyExist && jwtSigningPublicKeyExpiryTimeExist {
+			UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, jwtSigningPublicKey.(string), jwtSigningPublicKeyExpiryTime.(uint64))
 		}
-		return nil, sessionErrors.MakeTryRefreshTokenError(response["message"].(string))
+		return nil, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
 }
 
@@ -152,7 +163,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config 
 
 	if handShakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 		if !containsCustomHeader {
-			return nil, sessionErrors.MakeUnauthorizedError("anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.")
+			return nil, errors.UnauthorizedError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request."}
 		}
 	}
 	path, err := supertokens.NewNormalisedURLPath("/recipe/session/refresh")
@@ -170,17 +181,27 @@ func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config 
 	}
 	if response["status"] == "OK" {
 		delete(response, "status")
+		responseByte, err := json.Marshal(response)
+		if err != nil {
+			return nil, err
+		}
 		var result models.CreateOrRefreshAPIResponse
-		err := json.Unmarshal([]byte(fmt.Sprintf("%+v", response)), &result)
+		err = json.Unmarshal(responseByte, &result)
 		if err != nil {
 			return nil, err
 		}
 		return &result, nil
-	} else if response["status"] == "UNAUTHORISED" {
-		return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
+	} else if response["status"] == errors.UnauthorizedErrorStr {
+		return nil, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
-		session := response["session"].(sessionErrors.TokenTheftDetectedErrorPayload)
-		return nil, sessionErrors.MakeTokenTheftDetectedError(session.SessionHandle, session.UserID, "Token theft detected")
+		session := response["session"].(errors.TokenTheftDetectedErrorPayload)
+		return nil, errors.TokenTheftDetectedError{
+			Msg: session.SessionHandle,
+			Payload: errors.TokenTheftDetectedErrorPayload{
+				UserID:        session.UserID,
+				SessionHandle: "Token theft detected",
+			},
+		}
 	}
 }
 
@@ -257,7 +278,7 @@ func getSessionDataHelper(querier supertokens.Querier, sessionHandle string) (ma
 	if response["status"] == "OK" {
 		return response["userDataInDatabase"].(map[string]interface{}), nil
 	}
-	return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
+	return nil, errors.UnauthorizedError{Msg: response["message"].(string)}
 }
 
 func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData interface{}) error {
@@ -276,8 +297,8 @@ func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, 
 	if err != nil {
 		return err
 	}
-	if response["status"] == "UNAUTHORISED" {
-		return sessionErrors.MakeUnauthorizedError(response["message"].(string))
+	if response["status"] == errors.UnauthorizedErrorStr {
+		return errors.UnauthorizedError{Msg: response["message"].(string)}
 	}
 	return nil
 }
@@ -296,7 +317,7 @@ func getJWTPayloadHelper(querier supertokens.Querier, sessionHandle string) (int
 	if response["status"] == "OK" {
 		return response["userDataInJWT"], nil
 	}
-	return nil, sessionErrors.MakeUnauthorizedError(response["message"].(string))
+	return nil, errors.UnauthorizedError{Msg: response["message"].(string)}
 }
 
 func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, newJWTPayload interface{}) error {
@@ -314,8 +335,8 @@ func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, n
 	if err != nil {
 		return err
 	}
-	if response["status"] == "UNAUTHORISED" {
-		return sessionErrors.MakeUnauthorizedError(response["message"].(string))
+	if response["status"] == errors.UnauthorizedErrorStr {
+		return errors.UnauthorizedError{Msg: response["message"].(string)}
 	}
 	return nil
 }

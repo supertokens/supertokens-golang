@@ -8,13 +8,6 @@ type BadInputError struct {
 	Type string
 }
 
-func MakeBadInputError(msg string) BadInputError {
-	return BadInputError{
-		Msg:  msg,
-		Type: BadInputErrorStr,
-	}
-}
-
 func (err BadInputError) Error() string {
 	return err.Msg
 }

@@ -18,7 +18,7 @@ func MakeAPIImplementation() models.APIImplementation {
 				return false, err
 			}
 			if session == nil {
-				return false, errors.MakeBadInputError("Session is undefined. Should not come here.")
+				return false, errors.BadInputError{Msg: "Session is undefined. Should not come here."}
 			}
 			userID := session.GetUserID()
 			email, err := options.Config.GetEmailForUserID(userID)
@@ -34,7 +34,7 @@ func MakeAPIImplementation() models.APIImplementation {
 				return nil, err
 			}
 			if session == nil {
-				return nil, errors.MakeBadInputError("Session is undefined. Should not come here.")
+				return nil, errors.BadInputError{Msg: "Session is undefined. Should not come here."}
 			}
 
 			userID := session.GetUserID()
