@@ -28,7 +28,6 @@ func MakeAPIImplementation() models.APIImplementation {
 			if err != nil {
 				// TODO: You are supposed to call the user's error handler here.. not ignore the error.
 				// Likewise for any other error generated in this function
-
 				options.OtherHandler(options.Res, options.Req)
 				return err
 			}
