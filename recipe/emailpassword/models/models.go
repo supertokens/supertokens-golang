@@ -54,7 +54,7 @@ type TypeInputSignUp struct {
 type NormalisedFormField struct {
 	ID       string
 	Validate func(value interface{}) *string
-	Optional *bool
+	Optional bool
 }
 
 type TypeNormalisedInputSignUp struct {
@@ -71,7 +71,8 @@ type TypeInputResetPasswordUsingTokenFeature struct {
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
-	TypeInputResetPasswordUsingTokenFeature
+	GetResetPasswordURL      func(user User) string
+	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }
@@ -83,6 +84,7 @@ type User struct {
 }
 
 type TypeInput struct {
+	SessionFeature                 *TypeNormalisedInputSessionFeature
 	SignUpFeature                  *TypeInputSignUp
 	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
