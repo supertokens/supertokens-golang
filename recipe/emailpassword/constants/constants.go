@@ -1,4 +1,4 @@
-package emailpassword
+package constants
 
 const (
 	FormFieldPasswordID           = "password"

@@ -71,8 +71,8 @@ type TypeInputResetPasswordUsingTokenFeature struct {
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL      func(user User) string
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string)
+	GetResetPasswordURL            func(user User) string
+	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }
@@ -103,15 +103,19 @@ type RecipeImplementation struct {
 		email    string
 		password string
 	}) SignInUpResponse
+
 	SignIn func(input struct {
 		email    string
 		password string
 	}) SignInUpResponse
-	GetUserById              func(input struct{ userId string }) *User
-	GetUserByEmail           func(input struct{ email string }) *User
+
+	GetUserById    func(input struct{ userId string }) *User
+	GetUserByEmail func(input struct{ email string }) *User
+
 	CreateResetPasswordToken func(input struct {
 		userId string
 	}) CreateResetPasswordTokenResponse
+
 	ResetPasswordUsingToken func(input struct {
 		token       string
 		newPassword string
@@ -128,13 +132,30 @@ type APIOptions struct {
 }
 
 type APIImplementation struct {
-	EmailExistsGET                 func()
-	GeneratePasswordResetTokenPOST func()
-	PasswordResetPOST              func()
-	SignInPOST                     func()
-	SignUpPOST                     func()
+	EmailExistsGET                 func(Email string, Options APIOptions) EmailExistsGETResponse
+	GeneratePasswordResetTokenPOST func(FormFields []FormFieldValue, Options APIOptions) GeneratePasswordResetTokenPOSTResponse
+	PasswordResetPOST              func(FormFields []FormFieldValue, Token string, Options APIOptions) PasswordResetPOSTResponse
+	SignInPOST                     func(FormFields []FormFieldValue, Options APIOptions) SignInUpResponse
+	SignUpPOST                     func(FormFields []FormFieldValue, Options APIOptions) SignInUpResponse
 }
 
+type FormFieldValue struct {
+	ID    string
+	Value string
+}
+
+type EmailExistsGETResponse struct {
+	Ok    bool
+	Exist bool
+}
+
+type GeneratePasswordResetTokenPOSTResponse struct {
+	Ok bool
+}
+
+type PasswordResetPOSTResponse struct {
+	Status string
+}
 type SignInUpResponse struct {
 	Ok *struct {
 		User User

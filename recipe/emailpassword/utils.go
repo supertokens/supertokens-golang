@@ -4,6 +4,7 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	emailverificationModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -29,10 +30,10 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 		formFieldsForGenerateTokenForm []models.NormalisedFormField
 	)
 	for _, FormField := range signUpConfig.FormFields {
-		if FormField.ID == FormFieldPasswordID {
+		if FormField.ID == constants.FormFieldPasswordID {
 			formFieldsForPasswordResetForm = append(formFieldsForPasswordResetForm, FormField)
 		}
-		if FormField.ID == FormFieldEmailID {
+		if FormField.ID == constants.FormFieldEmailID {
 			formFieldsForGenerateTokenForm = append(formFieldsForGenerateTokenForm, FormField)
 		}
 	}
@@ -91,9 +92,9 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 				validate func(value interface{}) *string
 				optional bool = false
 			)
-			if formField.ID == FormFieldPasswordID {
+			if formField.ID == constants.FormFieldPasswordID {
 				validate = formField.Validate
-			} else if formField.ID == FormFieldEmailID {
+			} else if formField.ID == constants.FormFieldEmailID {
 				validate = defaultEmailValidator
 			}
 			normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
@@ -128,13 +129,13 @@ func normaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.
 				validate func(value interface{}) *string
 				optional bool = false
 			)
-			if formField.ID == FormFieldPasswordID {
+			if formField.ID == constants.FormFieldPasswordID {
 				formFieldPasswordIDCount++
 				validate = defaultPasswordValidator
 				if formField.Validate != nil {
 					validate = formField.Validate
 				}
-			} else if formField.ID == FormFieldEmailID {
+			} else if formField.ID == constants.FormFieldEmailID {
 				formFieldEmailIDCount++
 				validate = defaultEmailValidator
 				if formField.Validate != nil {
@@ -158,14 +159,14 @@ func normaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.
 	}
 	if formFieldPasswordIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
-			ID:       FormFieldPasswordID,
+			ID:       constants.FormFieldPasswordID,
 			Validate: defaultPasswordValidator,
 			Optional: false,
 		})
 	}
 	if formFieldEmailIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
-			ID:       FormFieldEmailID,
+			ID:       constants.FormFieldEmailID,
 			Validate: defaultEmailValidator,
 			Optional: false,
 		})
