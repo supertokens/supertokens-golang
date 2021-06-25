@@ -3,6 +3,7 @@ package emailpassword
 import (
 	defaultErrors "errors"
 
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -20,29 +21,30 @@ type Recipe struct {
 
 var r *Recipe = nil
 
-// func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config models.TypeInput, recipes struct {
-// 	EmailVerificationInstance *emailverification.Recipe
-// }) (Recipe, error) {
-// 	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, config)
-// 	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature)
-// 	if recipes.EmailVerificationInstance != nil {
-// 		emailVerificationRecipe = *recipes.EmailVerificationInstance
-// 	}
-// 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
-// 	if err != nil {
-// 		return Recipe{}, err
-// 	}
-// 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
-// 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config models.TypeInput, recipes struct {
+	EmailVerificationInstance *emailverification.Recipe
+}) (Recipe, error) {
+	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, config)
+	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature)
+	if recipes.EmailVerificationInstance != nil {
+		emailVerificationRecipe = *recipes.EmailVerificationInstance
+	}
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return Recipe{}, err
+	}
+	// TODO:
+	// recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
+	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 
-// 	return Recipe{
-// 		RecipeModule:            recipeModuleInstance,
-// 		Config:                  verifiedConfig,
-// 		RecipeImpl:              verifiedConfig.Override.Functions(recipeImplementation),
-// 		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-// 		EmailVerificationRecipe: emailVerificationRecipe,
-// 	}, nil
-// }
+	return Recipe{
+		// RecipeModule:            recipeModuleInstance,
+		Config:                  verifiedConfig,
+		RecipeImpl:              verifiedConfig.Override.Functions(recipeImplementation),
+		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
+		EmailVerificationRecipe: emailVerificationRecipe,
+	}, nil
+}
 
 func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {

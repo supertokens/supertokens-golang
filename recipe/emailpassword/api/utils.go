@@ -1,6 +1,7 @@
 package api
 
 import (
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -10,7 +11,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 )
 
-func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw []models.FormFieldValue) ([]models.FormFieldValue, error) {
+func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw *http.Request) ([]models.FormFieldValue, error) {
+
 	if formFieldsRaw == nil {
 		return nil, errors.BadInputError{Msg: "Missing input param: formFields"}
 	}
@@ -18,11 +20,11 @@ func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormFiel
 		return nil, errors.BadInputError{Msg: "formFields must be an array"}
 	}
 	var formFields []models.FormFieldValue
-	for _, formField := range formFieldsRaw {
-		if formField.ID == constants.FormFieldEmailID {
+	for key := range formFieldsRaw.PostForm {
+		if key == constants.FormFieldEmailID {
 			formFields = append(formFields, models.FormFieldValue{
-				ID:    formField.ID,
-				Value: strings.TrimSpace(formField.Value),
+				ID:    key,
+				Value: strings.TrimSpace(formFieldsRaw.PostFormValue(key)),
 			})
 		}
 	}

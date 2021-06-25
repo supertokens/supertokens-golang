@@ -99,27 +99,12 @@ type TypeInput struct {
 }
 
 type RecipeImplementation struct {
-	SignUp func(input struct {
-		email    string
-		password string
-	}) SignInUpResponse
-
-	SignIn func(input struct {
-		email    string
-		password string
-	}) SignInUpResponse
-
-	GetUserById    func(input struct{ userId string }) *User
-	GetUserByEmail func(input struct{ email string }) *User
-
-	CreateResetPasswordToken func(input struct {
-		userId string
-	}) CreateResetPasswordTokenResponse
-
-	ResetPasswordUsingToken func(input struct {
-		token       string
-		newPassword string
-	}) ResetPasswordUsingTokenResponse
+	SignUp                   func(email string, password string) SignInUpResponse
+	SignIn                   func(email string, password string) SignInUpResponse
+	GetUserById              func(userId string) *User
+	GetUserByEmail           func(email string) *User
+	CreateResetPasswordToken func(userId string) CreateResetPasswordTokenResponse
+	ResetPasswordUsingToken  func(token string, newPassword string) ResetPasswordUsingTokenResponse
 }
 
 type APIOptions struct {
@@ -132,11 +117,11 @@ type APIOptions struct {
 }
 
 type APIImplementation struct {
-	EmailExistsGET                 func(Email string, Options APIOptions) EmailExistsGETResponse
-	GeneratePasswordResetTokenPOST func(FormFields []FormFieldValue, Options APIOptions) GeneratePasswordResetTokenPOSTResponse
-	PasswordResetPOST              func(FormFields []FormFieldValue, Token string, Options APIOptions) PasswordResetPOSTResponse
-	SignInPOST                     func(FormFields []FormFieldValue, Options APIOptions) SignInUpResponse
-	SignUpPOST                     func(FormFields []FormFieldValue, Options APIOptions) SignInUpResponse
+	EmailExistsGET                 func(email string, options APIOptions) EmailExistsGETResponse
+	GeneratePasswordResetTokenPOST func(formFields []FormFieldValue, options APIOptions) GeneratePasswordResetTokenPOSTResponse
+	PasswordResetPOST              func(formFields []FormFieldValue, token string, options APIOptions) PasswordResetPOSTResponse
+	SignInPOST                     func(formFields []FormFieldValue, options APIOptions) SignInUpResponse
+	SignUpPOST                     func(formFields []FormFieldValue, options APIOptions) SignInUpResponse
 }
 
 type FormFieldValue struct {

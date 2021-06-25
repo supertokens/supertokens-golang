@@ -10,7 +10,7 @@ func GeneratePasswordResetToken(apiImplementation models.APIImplementation, opti
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
-	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm, nil) // TODO: need help
+	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm, options.Req) // TODO: need help
 	if err != nil {
 		return err
 	}
