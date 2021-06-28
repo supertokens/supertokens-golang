@@ -1,14 +1,18 @@
 package api
 
 import (
+	"context"
 	defaultErrors "errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/errors"
-	sessionErrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
+
+type contextKey int
+
+const sessionContext contextKey = iota
 
 func MakeAPIImplementation() models.APIImplementation {
 	return models.APIImplementation{
@@ -31,34 +35,37 @@ func MakeAPIImplementation() models.APIImplementation {
 				options.OtherHandler(options.Res, options.Req)
 				return err
 			}
+			var ctx context.Context
 			refreshTokenPath := options.Config.RefreshTokenPath
 			if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
-				_, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
+				session, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
 				if err != nil {
 					options.OtherHandler(options.Res, options.Req)
 					return err
 				}
+				ctx = context.WithValue(options.Req.Context(), sessionContext, session)
 			} else {
-				_, err := options.RecipeImplementation.GetSession(options.Req, options.Res, verifySessionOptions)
+				session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, verifySessionOptions)
 				if err != nil {
 					options.OtherHandler(options.Res, options.Req)
 					return err
 				}
+				ctx = context.WithValue(options.Req.Context(), sessionContext, session)
 			}
-			options.OtherHandler(options.Res, options.Req)
+			options.OtherHandler(options.Res, options.Req.WithContext(ctx))
 			return nil
 		},
 
 		SignOutPOST: func(options models.APIOptions) error {
 			session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, nil)
 			if err != nil {
-				if defaultErrors.As(err, &sessionErrors.UnauthorizedError{}) {
+				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 					return nil
 				}
 				return err
 			}
 			if session == nil {
-				return errors.BadInputError{Msg: "Session is undefined. Should not come here."}
+				return defaultErrors.New("Session is undefined. Should not come here.")
 			}
 			err = session.RevokeSession()
 

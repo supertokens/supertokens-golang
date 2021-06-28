@@ -1,7 +1,6 @@
 package supertokens
 
 import (
-	"fmt"
 	"net/url"
 	"strings"
 )
@@ -43,7 +42,6 @@ func (n *NormalisedURLPath) IsARecipePath() bool {
 func NormaliseURLPathOrThrowError(input string) (string, error) {
 	input = strings.ToLower(strings.Trim(input, ""))
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
-		fmt.Println("converting to proper URL")
 		if (domainGiven(input) || strings.HasPrefix(input, "localhost")) &&
 			!strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 			input = "http://" + input

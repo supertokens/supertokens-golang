@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -31,10 +30,10 @@ func EmailVerify(apiImplementation models.APIImplementation, options models.APIO
 		}
 		token, ok := readBody["token"]
 		if !ok {
-			return errors.BadInputError{Msg: "Please provide the email verification token"}
+			return supertokens.BadInputError{Msg: "Please provide the email verification token"}
 		}
 		if reflect.ValueOf(token).Kind() != reflect.String {
-			return errors.BadInputError{Msg: "The email verification token must be a string"}
+			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
 		response, err := apiImplementation.VerifyEmailPOST(token.(string), options)

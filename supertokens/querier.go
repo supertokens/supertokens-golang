@@ -3,12 +3,11 @@ package supertokens
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"strings"
-
-	"github.com/supertokens/supertokens-golang/errors"
 )
 
 type Querier struct {
@@ -52,7 +51,7 @@ func (q *Querier) getquerierAPIVersion() (string, error) {
 	cdiSupportedByServer := strings.Split(response["versions"].(string), ",")
 	supportedVersion := getLargestVersionFromIntersection(cdiSupportedByServer, cdiSupported)
 	if supportedVersion == nil {
-		return "", errors.BadInputError{Msg: "The running SuperTokens core version is not compatible with this Golang SDK. Please visit https://supertokens.io/docs/community/compatibility to find the right version"}
+		return "", errors.New("The running SuperTokens core version is not compatible with this Golang SDK. Please visit https://supertokens.io/docs/community/compatibility to find the right version")
 	}
 
 	querierAPIVersion = *supportedVersion
@@ -62,7 +61,7 @@ func (q *Querier) getquerierAPIVersion() (string, error) {
 
 func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	if querierInitCalled == false {
-		return nil, errors.BadInputError{Msg: "Please call the supertokens.init function before using SuperTokens"}
+		return nil, errors.New("Please call the supertokens.init function before using SuperTokens")
 	}
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
@@ -202,7 +201,7 @@ type httpRequestFunction func(url string) (*http.Response, error)
 
 func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int) (map[string]interface{}, error) {
 	if numberOfTries == 0 {
-		return nil, errors.BadInputError{Msg: "No SuperTokens core available to query"}
+		return nil, errors.New("No SuperTokens core available to query")
 	}
 	currentHost := querierHosts[querierLastTriedIndex].GetAsStringDangerous()
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(querierHosts)
@@ -221,7 +220,7 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= 400 {
-		return nil, errors.BadInputError{Msg: fmt.Sprintf("%v", resp.StatusCode)}
+		return nil, errors.New(fmt.Sprintf("%v", resp.StatusCode))
 	}
 
 	body, readErr := ioutil.ReadAll(resp.Body)

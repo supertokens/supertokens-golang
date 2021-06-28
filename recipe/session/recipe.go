@@ -3,7 +3,6 @@ package session
 import (
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -38,7 +37,7 @@ func GetRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, errors.BadInputError{Msg: "Initialisation not done. Did you forget to call the init function?"}
+	return nil, supertokens.BadInputError{Msg: "Initialisation not done. Did you forget to call the init function?"}
 }
 
 func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
@@ -51,7 +50,7 @@ func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, errors.BadInputError{Msg: "Session recipe has already been initialised. Please check your code for bugs."}
+		return nil, supertokens.BadInputError{Msg: "Session recipe has already been initialised. Please check your code for bugs."}
 	}
 }
 

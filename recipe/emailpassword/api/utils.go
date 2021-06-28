@@ -5,19 +5,19 @@ import (
 	"reflect"
 	"strings"
 
-	"github.com/supertokens/supertokens-golang/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	emailpasswordErrors "github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw *http.Request) ([]models.FormFieldValue, error) {
 
 	if formFieldsRaw == nil {
-		return nil, errors.BadInputError{Msg: "Missing input param: formFields"}
+		return nil, supertokens.BadInputError{Msg: "Missing input param: formFields"}
 	}
 	if reflect.TypeOf(formFieldsRaw).Kind() == reflect.Array {
-		return nil, errors.BadInputError{Msg: "formFields must be an array"}
+		return nil, supertokens.BadInputError{Msg: "formFields must be an array"}
 	}
 	var formFields []models.FormFieldValue
 	for key := range formFieldsRaw.PostForm {
@@ -35,7 +35,7 @@ func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormFiel
 func validateFormOrThrowError(configFormFields []models.NormalisedFormField, inputs []models.FormFieldValue) error {
 	var validationErrors []emailpasswordErrors.ErrorPayload
 	if len(configFormFields) != len(inputs) {
-		return errors.BadInputError{Msg: "Are you sending too many / too few formFields?"}
+		return supertokens.BadInputError{Msg: "Are you sending too many / too few formFields?"}
 	}
 	for _, field := range configFormFields {
 		var input models.FormFieldValue

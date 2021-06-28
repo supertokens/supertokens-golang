@@ -1,7 +1,7 @@
 package emailpassword
 
 import (
-	defaultErrors "errors"
+	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
@@ -50,5 +50,5 @@ func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
+	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
