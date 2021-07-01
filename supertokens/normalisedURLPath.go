@@ -19,23 +19,23 @@ func NewNormalisedURLPath(url string) (*NormalisedURLPath, error) {
 	}, nil
 }
 
-func (n *NormalisedURLPath) GetAsStringDangerous() string {
+func (n NormalisedURLPath) GetAsStringDangerous() string {
 	return n.value
 }
 
-func (n *NormalisedURLPath) StartsWith(other NormalisedURLPath) bool {
+func (n NormalisedURLPath) StartsWith(other NormalisedURLPath) bool {
 	return strings.HasPrefix(n.value, other.value)
 }
 
-func (n *NormalisedURLPath) AppendPath(other NormalisedURLPath) NormalisedURLPath {
+func (n NormalisedURLPath) AppendPath(other NormalisedURLPath) NormalisedURLPath {
 	return NormalisedURLPath{value: n.value + other.value}
 }
 
-func (n *NormalisedURLPath) Equals(other NormalisedURLPath) bool {
+func (n NormalisedURLPath) Equals(other NormalisedURLPath) bool {
 	return n.value == other.value
 }
 
-func (n *NormalisedURLPath) IsARecipePath() bool {
+func (n NormalisedURLPath) IsARecipePath() bool {
 	return n.value == "/recipe" || strings.HasPrefix(n.value, "/recipe/")
 }
 

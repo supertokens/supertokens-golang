@@ -6,18 +6,9 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 )
 
-type TypeFormField struct {
-	ID    string
-	Value interface{}
-}
-
-type TypeInputSetJwtPayloadForSession func(user User, formFields []TypeFormField, action string) map[string]interface{}
-
-type TypeInputSetSessionDataForSession func(user User, formFields []TypeFormField, action string) map[string]interface{}
-
 type TypeNormalisedInputSessionFeature struct {
-	SetJwtPayload  TypeInputSetJwtPayloadForSession
-	SetSessionData TypeInputSetSessionDataForSession
+	SetJwtPayload  func(user User, formFields []FormFieldValue, action string) map[string]interface{}
+	SetSessionData func(user User, formFields []FormFieldValue, action string) map[string]interface{}
 }
 
 type TypeNormalisedInput struct {
@@ -78,9 +69,9 @@ type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 }
 
 type User struct {
-	ID         string
-	Email      string
-	TimeJoined uint64
+	ID         string `json:"id"`
+	Email      string `json:"email"`
+	TimeJoined uint64 `json:"timejoined"`
 }
 
 type TypeInput struct {
@@ -125,8 +116,8 @@ type APIImplementation struct {
 }
 
 type FormFieldValue struct {
-	ID    string
-	Value string
+	ID    string `json:"id"`
+	Value string `json:"value"`
 }
 
 type EmailExistsGETResponse struct {
@@ -142,16 +133,12 @@ type PasswordResetPOSTResponse struct {
 	Status string
 }
 type SignInUpResponse struct {
-	Ok *struct {
-		User User
-	}
-	Status string
+	User   User   `json:"user"`
+	Status string `json:"status"`
 }
 
 type CreateResetPasswordTokenResponse struct {
-	Ok *struct {
-		Token string
-	}
+	Token  string
 	Status string
 }
 

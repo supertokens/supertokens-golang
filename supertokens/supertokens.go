@@ -20,7 +20,7 @@ func SupertokensInit(config TypeInput) error {
 		return nil
 	}
 
-	superTokensInstance := SuperTokens{}
+	superTokensInstance := &SuperTokens{}
 
 	var err error
 	superTokensInstance.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
@@ -177,7 +177,7 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 	})
 }
 
-func (s *SuperTokens) getAllCORSHeaders() []string {
+func (s *SuperTokens) GetAllCORSHeaders() []string {
 	headerMap := map[string]bool{HeaderRID: true, HeaderFDI: true}
 	for _, recipe := range s.RecipeModules {
 		headers := recipe.GetAllCORSHeaders()
@@ -190,4 +190,8 @@ func (s *SuperTokens) getAllCORSHeaders() []string {
 		headers = append(headers, header)
 	}
 	return headers
+}
+
+func (s *SuperTokens) ErrorHandler() {
+	
 }

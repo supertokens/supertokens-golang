@@ -13,7 +13,7 @@ type RecipeModule struct {
 func MakeRecipeModule(
 	recipeId string,
 	appInfo NormalisedAppinfo,
-	HandleAPIRequest func(id string, req *http.Request, w http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
+	HandleAPIRequest func(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	GetAllCORSHeaders func() []string,
 	GetAPIsHandled func() ([]APIHandled, error)) RecipeModule {
 	return RecipeModule{
@@ -25,11 +25,11 @@ func MakeRecipeModule(
 	}
 }
 
-func (r *RecipeModule) GetRecipeID() string {
+func (r RecipeModule) GetRecipeID() string {
 	return r.recipeID
 }
 
-func (r *RecipeModule) GetAppInfo() NormalisedAppinfo {
+func (r RecipeModule) GetAppInfo() NormalisedAppinfo {
 	return r.appInfo
 }
 

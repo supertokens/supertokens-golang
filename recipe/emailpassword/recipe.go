@@ -2,8 +2,10 @@ package emailpassword
 
 import (
 	"errors"
+	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -33,12 +35,11 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 	if err != nil {
 		return Recipe{}, err
 	}
-	// TODO:
-	// recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 
 	return Recipe{
-		// RecipeModule:            recipeModuleInstance,
+		RecipeModule:            recipeModuleInstance,
 		Config:                  verifiedConfig,
 		RecipeImpl:              verifiedConfig.Override.Functions(recipeImplementation),
 		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
@@ -46,9 +47,85 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 	}, nil
 }
 
-func GetRecipeInstanceOrThrowError() (*Recipe, error) {
+func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
+}
+
+func GetAPIsHandled() ([]supertokens.APIHandled, error) {
+	signUpAPI, err := supertokens.NewNormalisedURLPath(constants.SignUpAPI)
+	if err != nil {
+		return nil, err
+	}
+	signInAPI, err := supertokens.NewNormalisedURLPath(constants.SignInAPI)
+	if err != nil {
+		return nil, err
+	}
+	generatePasswordResetTokenAPI, err := supertokens.NewNormalisedURLPath(constants.GeneratePasswordResetTokenAPI)
+	if err != nil {
+		return nil, err
+	}
+	passwordResetAPI, err := supertokens.NewNormalisedURLPath(constants.PasswordResetAPI)
+	if err != nil {
+		return nil, err
+	}
+	signupEmailExistsAPI, err := supertokens.NewNormalisedURLPath(constants.SignupEmailExistsAPI)
+	if err != nil {
+		return nil, err
+	}
+	return []supertokens.APIHandled{{
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: *signUpAPI,
+		ID:                     constants.SignUpAPI,
+		Disabled:               r.APIImpl.SignUpPOST == nil,
+	}, {
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: *signInAPI,
+		ID:                     constants.SignInAPI,
+		Disabled:               r.APIImpl.SignInPOST == nil,
+	}, {
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: *generatePasswordResetTokenAPI,
+		ID:                     constants.GeneratePasswordResetTokenAPI,
+		Disabled:               r.APIImpl.GeneratePasswordResetTokenPOST == nil,
+	}, {
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: *passwordResetAPI,
+		ID:                     constants.PasswordResetAPI,
+		Disabled:               r.APIImpl.PasswordResetPOST == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: *signupEmailExistsAPI,
+		ID:                     constants.SignupEmailExistsAPI,
+		Disabled:               r.APIImpl.EmailExistsGET == nil,
+	}}, nil
+}
+
+func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+	options := models.APIOptions{
+		Config:               r.Config,
+		OtherHandler:         theirHandler,
+		RecipeID:             r.RecipeModule.GetRecipeID(),
+		RecipeImplementation: r.RecipeImpl,
+		Req:                  req,
+		Res:                  res,
+	}
+	if id == constants.SignUpAPI {
+		return api.SignUpAPI(r.APIImpl, options)
+	} else if id == constants.SignInAPI {
+		return api.SignInAPI(r.APIImpl, options)
+	} else if id == constants.GeneratePasswordResetTokenAPI {
+		return api.GeneratePasswordResetToken(r.APIImpl, options)
+	} else if id == constants.PasswordResetAPI {
+		return api.PasswordReset(r.APIImpl, options)
+	} else if id == constants.SignupEmailExistsAPI {
+		return api.EmailExists(r.APIImpl, options)
+	}
+	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+}
+
+func GetAllCORSHeaders() []string {
+	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
 }

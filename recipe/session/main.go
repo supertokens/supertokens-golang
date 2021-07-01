@@ -7,7 +7,7 @@ import (
 )
 
 func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -15,7 +15,7 @@ func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interfa
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *models.VerifySessionOptions) (*models.SessionContainer, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -23,7 +23,7 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *models.Veri
 }
 
 func RefreshSession(req *http.Request, res http.ResponseWriter) (*models.SessionContainer, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -31,7 +31,7 @@ func RefreshSession(req *http.Request, res http.ResponseWriter) (*models.Session
 }
 
 func RevokeAllSessionsForUser(userID string) ([]string, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -39,7 +39,7 @@ func RevokeAllSessionsForUser(userID string) ([]string, error) {
 }
 
 func GetAllSessionHandlesForUser(userID string) ([]string, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func GetAllSessionHandlesForUser(userID string) ([]string, error) {
 }
 
 func RevokeSession(sessionHandle string) (bool, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
@@ -55,7 +55,7 @@ func RevokeSession(sessionHandle string) (bool, error) {
 }
 
 func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 }
 
 func GetSessionData(sessionHandle string) (interface{}, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func GetSessionData(sessionHandle string) (interface{}, error) {
 }
 
 func UpdateSessionData(sessionHandle string, newSessionData interface{}) error {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func UpdateSessionData(sessionHandle string, newSessionData interface{}) error {
 }
 
 func GetJWTPayload(sessionHandle string) (interface{}, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -87,7 +87,7 @@ func GetJWTPayload(sessionHandle string) (interface{}, error) {
 }
 
 func UpdateJWTPayload(sessionHandle string, newJWTPayload interface{}) error {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
@@ -95,7 +95,7 @@ func UpdateJWTPayload(sessionHandle string, newJWTPayload interface{}) error {
 }
 
 func GetAccessTokenLifeTimeMS() (uint64, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return 0, err
 	}
@@ -103,7 +103,7 @@ func GetAccessTokenLifeTimeMS() (uint64, error) {
 }
 
 func GetRefreshTokenLifeTimeMS() (uint64, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return 0, err
 	}

@@ -53,11 +53,11 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 	}
 }
 
-func defaultSetJwtPayloadForSession(user models.User, formFields []models.TypeFormField, action string) map[string]interface{} {
+func defaultSetJwtPayloadForSession(user models.User, formFields []models.FormFieldValue, action string) map[string]interface{} {
 	return map[string]interface{}{}
 }
 
-func defaultSetSessionDataForSession(user models.User, formFields []models.TypeFormField, action string) map[string]interface{} {
+func defaultSetSessionDataForSession(user models.User, formFields []models.FormFieldValue, action string) map[string]interface{} {
 	return map[string]interface{}{}
 }
 

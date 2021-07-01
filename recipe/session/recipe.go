@@ -1,6 +1,7 @@
 package session
 
 import (
+	"errors"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
@@ -33,11 +34,11 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}, nil
 }
 
-func GetRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
+func getRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, supertokens.BadInputError{Msg: "Initialisation not done. Did you forget to call the init function?"}
+	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
@@ -50,7 +51,7 @@ func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, supertokens.BadInputError{Msg: "Session recipe has already been initialised. Please check your code for bugs."}
+		return nil, errors.New("Session recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
@@ -66,12 +67,12 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 		return nil, err
 	}
 	return []supertokens.APIHandled{{
-		Method:                 "post",
+		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: *refreshAPIPathNormalised,
 		ID:                     refreshAPIPath,
 		Disabled:               r.APIImpl.RefreshPOST == nil,
 	}, {
-		Method:                 "post",
+		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: *signoutAPIPathNormalised,
 		ID:                     signoutAPIPath,
 		Disabled:               r.APIImpl.SignOutPOST == nil,

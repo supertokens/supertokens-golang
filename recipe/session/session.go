@@ -73,7 +73,7 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 			if err != nil {
 				return err
 			}
-			if response["status"] == errors.UnauthorizedErrorStr {
+			if response["status"].(string) == errors.UnauthorizedErrorStr {
 				clearSessionFromCookie(config, session.res)
 				return errors.UnauthorizedError{Msg: "Session has probably been revoked while updating JWT payload"}
 			}

@@ -10,8 +10,6 @@ import (
 	"encoding/pem"
 	"errors"
 	"strings"
-
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 /*
@@ -29,9 +27,7 @@ func verifyJWTAndGetPayload(jwt string, jwtSigningPublicKey string) (map[string]
 		return nil, errors.New("Invalid JWT")
 	}
 	if header != splitted[0] {
-		return nil, supertokens.BadInputError{
-			Msg: "JWT header mismatch",
-		}
+		return nil, errors.New("JWT header mismatch")
 	}
 	var payload = splitted[1]
 
@@ -70,9 +66,7 @@ func verifyJWTAndGetPayload(jwt string, jwtSigningPublicKey string) (map[string]
 func getPayloadWithoutVerifying(jwt string) (map[string]interface{}, error) {
 	var splitted = strings.Split(jwt, ".")
 	if len(splitted) != 3 {
-		return nil, supertokens.BadInputError{
-			Msg: "Invalid JWT",
-		}
+		return nil, errors.New("Invalid JWT")
 	}
 
 	var payload = splitted[1]
@@ -93,16 +87,12 @@ func getPayloadWithoutVerifying(jwt string) (map[string]interface{}, error) {
 func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {
 	block, _ := pem.Decode([]byte(str))
 	if block == nil {
-		return nil, supertokens.BadInputError{
-			Msg: "failed to parse PEM block containing the public key",
-		}
+		return nil, errors.New("failed to parse PEM block containing the public key")
 	}
 
 	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
 	if err != nil {
-		return nil, supertokens.BadInputError{
-			Msg: "failed to parse DER encoded public key:" + err.Error(),
-		}
+		return nil, errors.New("failed to parse DER encoded public key:" + err.Error())
 	}
 
 	return pub.(*rsa.PublicKey), nil

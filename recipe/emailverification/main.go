@@ -3,7 +3,7 @@ package emailverification
 import "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 
 func CreateEmailVerificationToken(userID, email string) (string, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return "", err
 	}
@@ -11,7 +11,7 @@ func CreateEmailVerificationToken(userID, email string) (string, error) {
 }
 
 func VerifyEmailUsingToken(token string) (*models.User, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -19,7 +19,7 @@ func VerifyEmailUsingToken(token string) (*models.User, error) {
 }
 
 func IsEmailVerified(userID, email string) (bool, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}

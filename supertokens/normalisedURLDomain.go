@@ -20,7 +20,7 @@ func NewNormalisedURLDomain(url string, ignoreProtocol bool) (*NormalisedURLDoma
 	}, nil
 }
 
-func (n *NormalisedURLDomain) GetAsStringDangerous() string {
+func (n NormalisedURLDomain) GetAsStringDangerous() string {
 	return n.value
 }
 

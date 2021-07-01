@@ -37,7 +37,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 	}, nil
 }
 
-func GetRecipeInstanceOrThrowError() (*Recipe, error) {
+func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
@@ -92,17 +92,17 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 		return nil, err
 	}
 	return []supertokens.APIHandled{{
-		Method:                 "post",
+		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPINormalised,
 		ID:                     generateEmailVerifyTokenAPI,
 		Disabled:               r.APIImpl.GenerateEmailVerifyTokenPOST == nil,
 	}, {
-		Method:                 "post",
+		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: *emailVerifyAPINormalised,
 		ID:                     emailVerifyAPI,
 		Disabled:               r.APIImpl.VerifyEmailPOST == nil,
 	}, {
-		Method:                 "get",
+		Method:                 http.MethodGet,
 		PathWithoutAPIBasePath: *emailVerifyAPINormalised,
 		ID:                     emailVerifyAPI,
 		Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,

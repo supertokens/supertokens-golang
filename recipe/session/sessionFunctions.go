@@ -191,7 +191,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config 
 			return nil, err
 		}
 		return &result, nil
-	} else if response["status"] == errors.UnauthorizedErrorStr {
+	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
 		return nil, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
 		session := response["session"].(errors.TokenTheftDetectedErrorPayload)
@@ -297,7 +297,7 @@ func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, 
 	if err != nil {
 		return err
 	}
-	if response["status"] == errors.UnauthorizedErrorStr {
+	if response["status"].(string) == errors.UnauthorizedErrorStr {
 		return errors.UnauthorizedError{Msg: response["message"].(string)}
 	}
 	return nil
@@ -335,7 +335,7 @@ func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, n
 	if err != nil {
 		return err
 	}
-	if response["status"] == errors.UnauthorizedErrorStr {
+	if response["status"].(string) == errors.UnauthorizedErrorStr {
 		return errors.UnauthorizedError{Msg: response["message"].(string)}
 	}
 	return nil

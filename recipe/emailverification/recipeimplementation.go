@@ -12,11 +12,15 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			if err != nil {
 				return nil, err
 			}
-			response, _ := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
 				"userId": userID,
 				"email":  email,
 			})
-			if response["status"] == "OK" {
+			if err != nil {
+				return nil, err
+			}
+			status, ok := response["status"]
+			if ok && status == "OK" {
 				resp := models.CreateEmailVerificationTokenResponse{
 					Ok: &struct{ Token string }{Token: response["token"].(string)},
 				}
@@ -33,12 +37,15 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				return nil, err
 			}
 
-			response, _ := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
 				"method": "token",
 				"token":  token,
 			})
-
-			if response["status"] == "OK" {
+			if err != nil {
+				return nil, err
+			}
+			status, ok := response["status"]
+			if ok && status == "OK" {
 				return &models.VerifyEmailUsingTokenResponse{
 					Ok: &struct{ User models.User }{User: models.User{
 						ID:    response["userId"].(string),
@@ -53,11 +60,13 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			if err != nil {
 				return false, err
 			}
-			response, _ := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
+			response, err := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
 				"userId": userID,
 				"email":  email,
 			})
-
+			if err != nil {
+				return false, err
+			}
 			isVerified := response["isVerified"].(bool)
 			return isVerified, nil
 		},

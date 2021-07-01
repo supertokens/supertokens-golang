@@ -1,30 +1,29 @@
 package api
 
 import (
-	"net/http"
-	"reflect"
+	"errors"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	emailpasswordErrors "github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw *http.Request) ([]models.FormFieldValue, error) {
-
+func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw []models.FormFieldValue) ([]models.FormFieldValue, error) {
 	if formFieldsRaw == nil {
-		return nil, supertokens.BadInputError{Msg: "Missing input param: formFields"}
+		return nil, errors.New("Missing input param: formFields")
 	}
-	if reflect.TypeOf(formFieldsRaw).Kind() == reflect.Array {
-		return nil, supertokens.BadInputError{Msg: "formFields must be an array"}
+
+	if len(formFieldsRaw) == 0 {
+		return nil, errors.New("formFields must be an array")
 	}
+
 	var formFields []models.FormFieldValue
-	for key := range formFieldsRaw.PostForm {
-		if key == constants.FormFieldEmailID {
+	for _, formField := range formFieldsRaw {
+		if formField.ID == constants.FormFieldEmailID {
 			formFields = append(formFields, models.FormFieldValue{
-				ID:    key,
-				Value: strings.TrimSpace(formFieldsRaw.PostFormValue(key)),
+				ID:    formField.ID,
+				Value: strings.TrimSpace(formField.Value),
 			})
 		}
 	}
@@ -35,7 +34,7 @@ func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormFiel
 func validateFormOrThrowError(configFormFields []models.NormalisedFormField, inputs []models.FormFieldValue) error {
 	var validationErrors []emailpasswordErrors.ErrorPayload
 	if len(configFormFields) != len(inputs) {
-		return supertokens.BadInputError{Msg: "Are you sending too many / too few formFields?"}
+		return errors.New("Are you sending too many / too few formFields?")
 	}
 	for _, field := range configFormFields {
 		var input models.FormFieldValue

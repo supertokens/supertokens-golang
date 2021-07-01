@@ -156,8 +156,7 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 	},
 	}
 	for _, val := range input {
-		path, _ := NormaliseURLPathOrThrowError(val.Input)
-		// pathStr := path.GetAsStringDangerous()
+		path, _ := NormaliseURLPathOrThrowError(val.Input) // TODO: assert error
 		assert.Equal(t, val.Output, path, val.Input)
 	}
 }

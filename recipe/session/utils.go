@@ -41,7 +41,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config == nil || config.CookieSameSite == nil {
-		cookieSameSite = cookieSameSite
+		cookieSameSite = *config.CookieSameSite
 	} else {
 		cookieSameSite, err = normaliseSameSiteOrThrowError(*config.CookieSameSite)
 		if err != nil {
@@ -79,21 +79,21 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	errorHandlers := models.NormalisedErrorHandlers{
 		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
-			recipeInstance, err := GetRecipeInstanceOrThrowError()
+			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
 			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res, otherHandler)
 		},
 		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
-			recipeInstance, err := GetRecipeInstanceOrThrowError()
+			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
 			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res, otherHandler)
 		},
 		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
-			recipeInstance, err := GetRecipeInstanceOrThrowError()
+			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
@@ -201,7 +201,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (*string, error) {
 
 	urlObj, err := url.Parse(sessionScope)
 	if err != nil {
-		return nil, supertokens.BadInputError{Msg: "Please provide a valid sessionScope"}
+		return nil, errors.New("Please provide a valid sessionScope")
 	}
 
 	sessionScope = urlObj.Host

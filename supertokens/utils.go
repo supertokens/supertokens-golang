@@ -18,24 +18,16 @@ func IsAnIPAddress(ipaddress string) (bool, error) {
 
 func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, error) {
 	if reflect.DeepEqual(appInfo, AppInfo{}) {
-		return NormalisedAppinfo{}, BadInputError{
-			Msg: "Please provide the appInfo object when calling supertokens.init",
-		}
+		return NormalisedAppinfo{}, errors.New("Please provide the appInfo object when calling supertokens.init")
 	}
 	if appInfo.APIDomain == "" {
-		return NormalisedAppinfo{}, BadInputError{
-			Msg: "Please provide your apiDomain inside the appInfo object when calling supertokens.init",
-		}
+		return NormalisedAppinfo{}, errors.New("Please provide your apiDomain inside the appInfo object when calling supertokens.init")
 	}
 	if appInfo.AppName == "" {
-		return NormalisedAppinfo{}, BadInputError{
-			Msg: "Please provide your appName inside the appInfo object when calling supertokens.init",
-		}
+		return NormalisedAppinfo{}, errors.New("Please provide your appName inside the appInfo object when calling supertokens.init")
 	}
 	if appInfo.WebsiteDomain == "" {
-		return NormalisedAppinfo{}, BadInputError{
-			Msg: "Please provide your websiteDomain inside the appInfo object when calling supertokens.init",
-		}
+		return NormalisedAppinfo{}, errors.New("Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
 	}
 	return NormalisedAppinfo{}, nil
 }
