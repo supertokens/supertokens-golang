@@ -28,8 +28,8 @@ type TypeNormalisedInput struct {
 }
 
 type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User) string
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
 }
 
 type TypeInputFormField struct {
@@ -58,12 +58,12 @@ type TypeNormalisedInputSignIn struct {
 
 type TypeInputResetPasswordUsingTokenFeature struct {
 	GetResetPasswordURL      func(user User) string
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string)
+	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string) error
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 	GetResetPasswordURL            func(user User) string
-	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string)
+	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string) error
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }
@@ -79,7 +79,7 @@ type TypeInput struct {
 	SignUpFeature                  *TypeInputSignUp
 	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
-	Override                       struct {
+	Override                       *struct {
 		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs                     func(originalImplementation APIImplementation) APIImplementation
 		EmailVerificationFeature *struct {

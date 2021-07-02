@@ -35,8 +35,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
-	recipeImplementation := MakeRecipeImplementation(*querierInstance)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled)
+	recipeImplementation := makeRecipeImplementation(*querierInstance)
 
 	return Recipe{
 		RecipeModule:            recipeModuleInstance,
@@ -54,7 +54,9 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func GetAPIsHandled() ([]supertokens.APIHandled, error) {
+// implement RecipeModule
+
+func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	signUpAPI, err := supertokens.NewNormalisedURLPath(constants.SignUpAPI)
 	if err != nil {
 		return nil, err
@@ -103,7 +105,7 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
 	options := models.APIOptions{
 		Config:               r.Config,
 		OtherHandler:         theirHandler,
@@ -126,6 +128,6 @@ func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
 }
 
-func GetAllCORSHeaders() []string {
+func getAllCORSHeaders() []string {
 	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
 }

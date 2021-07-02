@@ -1,17 +1,18 @@
 package emailpassword
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
+func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
 	return models.RecipeImplementation{
 		SignUp: func(email, password string) models.SignInUpResponse {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signup")
 			if err != nil {
 				return models.SignInUpResponse{
-					Status: "EMAIL_ALREADY_EXISTS_ERROR",
+					Status: constants.EmailAlreadyExistsError,
 				}
 			}
 			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
@@ -20,7 +21,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			})
 			if err != nil {
 				return models.SignInUpResponse{
-					Status: "EMAIL_ALREADY_EXISTS_ERROR",
+					Status: constants.EmailAlreadyExistsError,
 				}
 			}
 			status, ok := response["status"]
@@ -31,7 +32,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				}
 			}
 			return models.SignInUpResponse{
-				Status: "EMAIL_ALREADY_EXISTS_ERROR",
+				Status: constants.EmailAlreadyExistsError,
 			}
 		},
 
@@ -39,7 +40,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signin")
 			if err != nil {
 				return models.SignInUpResponse{
-					Status: "WRONG_CREDENTIALS_ERROR",
+					Status: constants.WrongCredentialsError,
 				}
 			}
 			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
@@ -48,7 +49,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			})
 			if err != nil {
 				return models.SignInUpResponse{
-					Status: "WRONG_CREDENTIALS_ERROR",
+					Status: constants.WrongCredentialsError,
 				}
 			}
 			status, ok := response["status"]
@@ -59,7 +60,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				}
 			}
 			return models.SignInUpResponse{
-				Status: "WRONG_CREDENTIALS_ERROR",
+				Status: constants.WrongCredentialsError,
 			}
 		},
 
@@ -105,7 +106,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/password/reset/token")
 			if err != nil {
 				return models.CreateResetPasswordTokenResponse{
-					Status: "UNKNOWN_USER_ID",
+					Status: constants.UnknownUserID,
 				}
 			}
 			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
@@ -113,7 +114,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			})
 			if err != nil {
 				return models.CreateResetPasswordTokenResponse{
-					Status: "UNKNOWN_USER_ID",
+					Status: constants.UnknownUserID,
 				}
 			}
 			status, ok := response["status"]
@@ -124,7 +125,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				}
 			}
 			return models.CreateResetPasswordTokenResponse{
-				Status: "UNKNOWN_USER_ID",
+				Status: constants.UnknownUserID,
 			}
 		},
 
@@ -132,7 +133,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/password/reset")
 			if err != nil {
 				return models.ResetPasswordUsingTokenResponse{
-					Status: "RESET_PASSWORD_INVALID_TOKEN_ERROR",
+					Status: constants.ResetPasswordInvalidTokenError,
 				}
 			}
 			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{

@@ -11,7 +11,7 @@ type NormalisedURLDomain struct {
 }
 
 func NewNormalisedURLDomain(url string, ignoreProtocol bool) (*NormalisedURLDomain, error) {
-	val, err := NormaliseURLDomainOrThrowError(url, ignoreProtocol)
+	val, err := normaliseURLDomainOrThrowError(url, ignoreProtocol)
 	if err != nil {
 		return nil, err
 	}
@@ -24,7 +24,7 @@ func (n NormalisedURLDomain) GetAsStringDangerous() string {
 	return n.value
 }
 
-func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, error) {
+func normaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, error) {
 	input = strings.ToLower(strings.Trim(input, ""))
 
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") && !strings.HasPrefix(input, "supertokens://") {
@@ -36,7 +36,7 @@ func NormaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, 
 		}
 		if (strings.Contains(input, ".") || strings.HasPrefix(input, "localhost")) && !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 			input = "https://" + input
-			return NormaliseURLDomainOrThrowError(input, true)
+			return normaliseURLDomainOrThrowError(input, true)
 		}
 	}
 

@@ -1,6 +1,7 @@
 package emailpassword
 
 import (
+	"errors"
 	"reflect"
 	"regexp"
 
@@ -11,16 +12,78 @@ import (
 )
 
 func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, appInfo supertokens.NormalisedAppinfo, config models.TypeInput) models.TypeNormalisedInput {
-	// sessionFeature := validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
-	// signUpFeature := validateAndNormaliseSignupConfig(config.SignUpFeature)
-	// signInFeature := validateAndNormaliseSignInConfig(signUpFeature)
-	// resetPasswordUsingTokenFeature := validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, config.ResetPasswordUsingTokenFeature)
-	// emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
-	return models.TypeNormalisedInput{}
+	sessionFeature := validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
+	signUpFeature := validateAndNormaliseSignupConfig(config.SignUpFeature)
+	signInFeature := validateAndNormaliseSignInConfig(signUpFeature)
+	resetPasswordUsingTokenFeature := validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, config.ResetPasswordUsingTokenFeature)
+	emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
+	typeNormalisedInput := models.TypeNormalisedInput{
+		SessionFeature:                 sessionFeature,
+		SignUpFeature:                  signUpFeature,
+		SignInFeature:                  signInFeature,
+		ResetPasswordUsingTokenFeature: resetPasswordUsingTokenFeature,
+		EmailVerificationFeature:       emailVerificationFeature,
+		Override: struct {
+			Functions                func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
+			APIs                     func(originalImplementation models.APIImplementation) models.APIImplementation
+			EmailVerificationFeature *struct {
+				Functions func(originalImplementation emailverificationModels.RecipeImplementation) emailverificationModels.RecipeImplementation
+				APIs      func(originalImplementation emailverificationModels.APIImplementation) emailverificationModels.APIImplementation
+			}
+		}{
+			Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
+				return originalImplementation
+			},
+			APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
+				return originalImplementation
+			},
+			EmailVerificationFeature: config.Override.EmailVerificationFeature,
+		},
+	}
+	if config.Override != nil {
+		if config.Override.Functions != nil {
+			typeNormalisedInput.Override.Functions = config.Override.Functions
+		}
+		if config.Override.APIs != nil {
+			typeNormalisedInput.Override.APIs = config.Override.APIs
+		}
+	}
+
+	return typeNormalisedInput
 }
+
 func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config models.TypeInput) emailverificationModels.TypeInput {
+	getEmailVerificationURL := func(user emailverificationModels.User) (string, error) {
+		userInfo := recipeInstance.GetUserById(user.ID)
+		if userInfo == nil || config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+			return "", errors.New("Unknown User ID provided")
+		}
+		return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
+	}
+	if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
+		getEmailVerificationURL = nil
+	}
+	createAndSendCustomEmail := func(user emailverificationModels.User, link string) error {
+		userInfo := recipeInstance.GetUserById(user.ID)
+		if userInfo == nil || config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+			return errors.New("Unknown User ID provided")
+		}
+		return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+	}
+	if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+		createAndSendCustomEmail = nil
+	}
 	return emailverificationModels.TypeInput{
-		// GetEmailForUserID: recipeInstance.GetEmailForUserID,
+		GetEmailForUserID: getEmailForUserId,
+		Override: &struct {
+			Functions func(originalImplementation emailverificationModels.RecipeImplementation) emailverificationModels.RecipeImplementation
+			APIs      func(originalImplementation emailverificationModels.APIImplementation) emailverificationModels.APIImplementation
+		}{
+			Functions: config.Override.EmailVerificationFeature.Functions,
+			APIs:      config.Override.EmailVerificationFeature.APIs,
+		},
+		CreateAndSendCustomEmail: createAndSendCustomEmail,
+		GetEmailVerificationURL:  getEmailVerificationURL,
 	}
 }
 
@@ -53,12 +116,12 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 	}
 }
 
-func defaultSetJwtPayloadForSession(user models.User, formFields []models.FormFieldValue, action string) map[string]interface{} {
-	return map[string]interface{}{}
+func defaultSetJwtPayloadForSession(_ models.User, _ []models.FormFieldValue, _ string) map[string]interface{} {
+	return nil
 }
 
-func defaultSetSessionDataForSession(user models.User, formFields []models.FormFieldValue, action string) map[string]interface{} {
-	return map[string]interface{}{}
+func defaultSetSessionDataForSession(_ models.User, _ []models.FormFieldValue, _ string) map[string]interface{} {
+	return nil
 }
 
 func validateAndNormaliseSessionFeatureConfig(config *models.TypeNormalisedInputSessionFeature) models.TypeNormalisedInputSessionFeature {

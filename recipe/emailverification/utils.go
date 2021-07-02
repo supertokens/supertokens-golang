@@ -25,7 +25,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
 		}
-
 	}
 
 	if config.GetEmailForUserID != nil {

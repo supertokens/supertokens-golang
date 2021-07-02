@@ -10,9 +10,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
+func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
 	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
-	GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+	getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 
 	return models.RecipeImplementation{
 		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
@@ -135,7 +135,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 		},
 
 		GetAccessTokenLifeTimeMS: func() (uint64, error) {
-			handShake, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+			handShake, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 			if err != nil {
 				return 0, err
 			}
@@ -143,7 +143,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 		},
 
 		GetRefreshTokenLifeTimeMS: func() (uint64, error) {
-			handShake, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+			handShake, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 			if err != nil {
 				return 0, err
 			}
@@ -152,7 +152,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 	}
 }
 
-func GetHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier) (models.HandshakeInfo, error) {
+func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier) (models.HandshakeInfo, error) {
 	if recipeImplHandshakeInfo == nil {
 		antiCsrf := config.AntiCsrf
 		path, err := supertokens.NewNormalisedURLPath("/recipe/handshake")
@@ -176,7 +176,7 @@ func GetHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 	return *recipeImplHandshakeInfo, nil
 }
 
-func UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo *models.HandshakeInfo, newKey string, newExpiry uint64) {
+func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo *models.HandshakeInfo, newKey string, newExpiry uint64) {
 	if recipeImplHandshakeInfo == nil {
 		if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime != newExpiry ||
 			recipeImplHandshakeInfo.JWTSigningPublicKey != newKey {

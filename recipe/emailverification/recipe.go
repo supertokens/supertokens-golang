@@ -25,9 +25,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled)
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
-	recipeImplementation := MakeRecipeImplementation(*querierInstance)
+	recipeImplementation := makeRecipeImplementation(*querierInstance)
 
 	return Recipe{
 		RecipeModule: recipeModuleInstance,
@@ -82,7 +82,7 @@ func (r *Recipe) VerifyEmailUsingToken(token string) (*models.User, error) {
 
 // implement RecipeModule
 
-func GetAPIsHandled() ([]supertokens.APIHandled, error) {
+func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	generateEmailVerifyTokenAPINormalised, err := supertokens.NewNormalisedURLPath(generateEmailVerifyTokenAPI)
 	if err != nil {
 		return nil, err
@@ -109,7 +109,7 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := models.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -125,6 +125,6 @@ func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 	}
 }
 
-func GetAllCORSHeaders() []string {
+func getAllCORSHeaders() []string {
 	return []string{}
 }

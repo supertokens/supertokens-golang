@@ -6,8 +6,8 @@ import (
 
 type TypeInput struct {
 	GetEmailForUserID        func(userID string) (string, error)
-	GetEmailVerificationURL  func(user User) string
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
 	Override                 *struct {
 		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs      func(originalImplementation APIImplementation) APIImplementation
@@ -16,8 +16,8 @@ type TypeInput struct {
 
 type TypeNormalisedInput struct {
 	GetEmailForUserID        func(userID string) (string, error)
-	GetEmailVerificationURL  func(user User) string
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
 	Override                 struct {
 		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs      func(originalImplementation APIImplementation) APIImplementation

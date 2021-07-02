@@ -52,8 +52,11 @@ func MakeAPIImplementation() models.APIImplementation {
 					EmailAlreadyVerifiedError: true,
 				}, nil
 			}
-
-			emailVerifyLink := options.Config.GetEmailVerificationURL(models.User{ID: userID, Email: email}) + "?token=" + response.Ok.Token + "&rid=" + options.RecipeID
+			emailVerificationURL, err := options.Config.GetEmailVerificationURL(models.User{ID: userID, Email: email})
+			if err != nil {
+				return nil, err
+			}
+			emailVerifyLink := emailVerificationURL + "?token=" + response.Ok.Token + "&rid=" + options.RecipeID
 
 			options.Config.CreateAndSendCustomEmail(models.User{ID: userID, Email: email}, emailVerifyLink)
 			return &models.CreateEmailVerificationTokenAPIResponse{

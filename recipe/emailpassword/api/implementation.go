@@ -30,7 +30,7 @@ func MakeAPIImplementation() models.APIImplementation {
 				}
 			}
 			response := options.RecipeImplementation.CreateResetPasswordToken(user.ID)
-			if response.Status == "UNKNOWN_USER_ID" {
+			if response.Status == constants.UnknownUserID {
 				return models.GeneratePasswordResetTokenPOSTResponse{
 					Ok: true,
 				}
@@ -72,7 +72,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 
 			response := options.RecipeImplementation.SignIn(email, newPassword)
-			if response.Status == "WRONG_CREDENTIALS_ERROR" {
+			if response.Status == constants.WrongCredentialsError {
 				return response
 			}
 
@@ -83,7 +83,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			_, err := session.CreateNewSession(options.Res, user.ID, jwtPayload, sessionData)
 			if err != nil {
 				return models.SignInUpResponse{
-					Status: "WRONG_CREDENTIALS_ERROR",
+					Status: constants.WrongCredentialsError,
 				}
 			}
 
@@ -108,7 +108,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 
 			response := options.RecipeImplementation.SignIn(email, newPassword)
-			if response.Status == "EMAIL_ALREADY_EXISTS_ERROR" {
+			if response.Status == constants.EmailAlreadyExistsError {
 				return response
 			}
 
@@ -119,7 +119,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			_, err := session.CreateNewSession(options.Res, user.ID, jwtPayload, sessionData)
 			if err != nil {
 				return models.SignInUpResponse{
-					Status: "EMAIL_ALREADY_EXISTS_ERROR",
+					Status: constants.EmailAlreadyExistsError,
 				}
 			}
 

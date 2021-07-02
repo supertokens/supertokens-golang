@@ -25,7 +25,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 		"userDataInJWT":      JWTPayload,
 		"userDataInDatabase": sessionData,
 	}
-	handShakeInfo, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+	handShakeInfo, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 	if err != nil {
 		return nil, err
 	}
@@ -34,7 +34,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 	if err != nil {
 		return nil, err
 	}
-	UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+	updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 
 	delete(response, "status")
 	delete(response, "jwtSigningPublicKey")
@@ -53,7 +53,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 }
 
 func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (*models.GetSessionResponse, error) {
-	handShakeInfo, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+	handShakeInfo, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 	if err != nil {
 		return nil, err
 	}
@@ -129,7 +129,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 	}
 	status := response["status"]
 	if status.(string) == "OK" {
-		UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+		updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
 		delete(response, "status")
 		delete(response, "jwtSigningPublicKey")
 		delete(response, "jwtSigningPublicKeyExpiryTime")
@@ -149,14 +149,14 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 		jwtSigningPublicKey, jwtSigningPublicKeyExist := response["jwtSigningPublicKey"]
 		jwtSigningPublicKeyExpiryTime, jwtSigningPublicKeyExpiryTimeExist := response["jwtSigningPublicKeyExpiryTime"]
 		if jwtSigningPublicKeyExist && jwtSigningPublicKeyExpiryTimeExist {
-			UpdateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, jwtSigningPublicKey.(string), jwtSigningPublicKeyExpiryTime.(uint64))
+			updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, jwtSigningPublicKey.(string), jwtSigningPublicKeyExpiryTime.(uint64))
 		}
 		return nil, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
 }
 
 func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (*models.CreateOrRefreshAPIResponse, error) {
-	handShakeInfo, err := GetHandshakeInfo(recipeImplHandshakeInfo, config, querier)
+	handShakeInfo, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 	if err != nil {
 		return nil, err
 	}

@@ -5,7 +5,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
+func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
 	return models.RecipeImplementation{
 		CreateEmailVerificationToken: func(userID, email string) (*models.CreateEmailVerificationTokenResponse, error) {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify/token")

@@ -18,13 +18,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if querierError != nil {
 		return models.SessionRecipe{}, querierError
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, HandleAPIRequest, GetAllCORSHeaders, GetAPIsHandled)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled)
 
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
 		return models.SessionRecipe{}, configError
 	}
-	recipeImplementation := MakeRecipeImplementation(*querierInstance, verifiedConfig)
+	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
 
 	return models.SessionRecipe{
 		RecipeModule: recipeModuleInstance,
@@ -57,7 +57,7 @@ func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 
 // Implement RecipeModule
 
-func GetAPIsHandled() ([]supertokens.APIHandled, error) {
+func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	refreshAPIPathNormalised, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
 	if err != nil {
 		return nil, err
@@ -79,7 +79,7 @@ func GetAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := models.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -95,6 +95,6 @@ func HandleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 	}
 }
 
-func GetAllCORSHeaders() []string {
+func getAllCORSHeaders() []string {
 	return getCORSAllowedHeaders()
 }

@@ -10,7 +10,7 @@ type NormalisedURLPath struct {
 }
 
 func NewNormalisedURLPath(url string) (*NormalisedURLPath, error) {
-	val, err := NormaliseURLPathOrThrowError(url)
+	val, err := normaliseURLPathOrThrowError(url)
 	if err != nil {
 		return nil, err
 	}
@@ -39,19 +39,19 @@ func (n NormalisedURLPath) IsARecipePath() bool {
 	return n.value == "/recipe" || strings.HasPrefix(n.value, "/recipe/")
 }
 
-func NormaliseURLPathOrThrowError(input string) (string, error) {
+func normaliseURLPathOrThrowError(input string) (string, error) {
 	input = strings.ToLower(strings.Trim(input, ""))
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 		if (domainGiven(input) || strings.HasPrefix(input, "localhost")) &&
 			!strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 			input = "http://" + input
-			return NormaliseURLPathOrThrowError(input)
+			return normaliseURLPathOrThrowError(input)
 		}
 
 		if input[:1] != "/" {
 			input = "/" + input
 		}
-		return NormaliseURLPathOrThrowError("http://example.com" + input)
+		return normaliseURLPathOrThrowError("http://example.com" + input)
 	}
 
 	urlObj, err := url.Parse(input)
