@@ -1,10 +1,11 @@
 package session
 
 import (
-	"errors"
+	defaultErrors "errors"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
+	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -18,7 +19,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if querierError != nil {
 		return models.SessionRecipe{}, querierError
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, isErrorFromThisRecipe, handleError)
 
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
@@ -38,7 +39,7 @@ func getRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
+	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
@@ -51,7 +52,7 @@ func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, errors.New("Session recipe has already been initialised. Please check your code for bugs.")
+		return nil, defaultErrors.New("Session recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
@@ -97,4 +98,15 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 
 func getAllCORSHeaders() []string {
 	return getCORSAllowedHeaders()
+}
+
+func isErrorFromThisRecipe(err error) bool {
+	if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) || defaultErrors.As(err, &errors.TryRefreshTokenError{}) || defaultErrors.As(err, &errors.UnauthorizedError{}) {
+		return true
+	}
+	return false
+}
+
+func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {}
 }

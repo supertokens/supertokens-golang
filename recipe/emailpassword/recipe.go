@@ -1,11 +1,12 @@
 package emailpassword
 
 import (
-	"errors"
+	defaultErrors "errors"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -33,7 +34,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, isErrorFromThisRecipe, handleError)
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 
 	return Recipe{
@@ -55,7 +56,7 @@ func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, errors.New("Emailpassword recipe has already been initialised. Please check your code for bugs.")
+		return nil, defaultErrors.New("Emailpassword recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
@@ -63,7 +64,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
+	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 // implement RecipeModule
@@ -142,4 +143,12 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 
 func getAllCORSHeaders() []string {
 	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
+}
+
+func isErrorFromThisRecipe(err error) bool {
+	return defaultErrors.As(err, &errors.FieldError{})
+}
+
+func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {}
 }

@@ -67,7 +67,7 @@ func SupertokensInit(config TypeInput) error {
 	return nil
 }
 
-func GetInstanceOrThrowError() (*SuperTokens, error) {
+func getInstanceOrThrowError() (*SuperTokens, error) {
 	if superTokensInstance != nil {
 		return superTokensInstance, nil
 	}
@@ -192,6 +192,18 @@ func (s *SuperTokens) GetAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *SuperTokens) ErrorHandler() {
-	
+func (s *SuperTokens) ErrorHandler(err error) func(err error, req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+	return func(err error, req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+		if errors.As(err, &BadInputError{}) {
+			SendNon200Response(res, err.Error(), 400)
+			return
+		}
+		for _, recipe := range s.RecipeModules {
+			if recipe.IsErrorFromThisRecipe(err) {
+				errhandler := recipe.HandleError(err)
+				errhandler(req, res, next)
+			}
+		}
+		next(res, req)
+	}
 }
