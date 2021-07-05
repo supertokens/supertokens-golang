@@ -134,5 +134,7 @@ func isErrorFromThisRecipe(err error) bool {
 }
 
 func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {}
+	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+		next(res, req)
+	}
 }

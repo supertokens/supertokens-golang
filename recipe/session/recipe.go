@@ -108,5 +108,16 @@ func isErrorFromThisRecipe(err error) bool {
 }
 
 func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {}
+	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+		if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+			r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res, next)
+		} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
+			r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res, next)
+		} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
+			errs := err.(errors.TokenTheftDetectedError)
+			r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res, next)
+		} else {
+			next(res, req)
+		}
+	}
 }

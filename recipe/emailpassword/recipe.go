@@ -150,5 +150,15 @@ func isErrorFromThisRecipe(err error) bool {
 }
 
 func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {}
+	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
+		if defaultErrors.As(err, &errors.FieldError{}) {
+			errs := err.(errors.FieldError)
+			supertokens.Send200Response(res, map[string]interface{}{
+				"status":     "FIELD_ERROR",
+				"formFields": errs.Payload,
+			})
+		} else {
+			next(res, req)
+		}
+	}
 }
