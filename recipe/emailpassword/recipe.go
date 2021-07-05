@@ -23,13 +23,11 @@ type Recipe struct {
 
 var r *Recipe = nil
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config models.TypeInput, recipes struct {
-	EmailVerificationInstance *emailverification.Recipe
-}) (Recipe, error) {
-	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, config)
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
+	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, *config)
 	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature)
-	if recipes.EmailVerificationInstance != nil {
-		emailVerificationRecipe = *recipes.EmailVerificationInstance
+	if emailVerificationInstance != nil {
+		emailVerificationRecipe = *emailVerificationInstance
 	}
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
@@ -45,6 +43,20 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config m
 		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
 		EmailVerificationRecipe: emailVerificationRecipe,
 	}, nil
+}
+
+func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
+	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
+		if r == nil {
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, &config, nil)
+			if err != nil {
+				return nil, err
+			}
+			r = &recipe
+			return &r.RecipeModule, nil
+		}
+		return nil, errors.New("Emailpassword recipe has already been initialised. Please check your code for bugs.")
+	}
 }
 
 func getRecipeInstanceOrThrowError() (*Recipe, error) {
