@@ -3,13 +3,12 @@ package supertokens
 import "net/http"
 
 type RecipeModule struct {
-	recipeID              string
-	appInfo               NormalisedAppinfo
-	HandleAPIRequest      func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
-	GetAllCORSHeaders     func() []string
-	GetAPIsHandled        func() ([]APIHandled, error)
-	IsErrorFromThisRecipe func(err error) bool
-	HandleError           func(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc)
+	recipeID          string
+	appInfo           NormalisedAppinfo
+	HandleAPIRequest  func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
+	GetAllCORSHeaders func() []string
+	GetAPIsHandled    func() ([]APIHandled, error)
+	HandleError       func(err error, req *http.Request, res http.ResponseWriter) bool
 }
 
 func MakeRecipeModule(
@@ -18,16 +17,14 @@ func MakeRecipeModule(
 	handleAPIRequest func(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
-	isErrorFromThisRecipe func(err error) bool,
-	handleError func(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc)) RecipeModule {
+	handleError func(err error, req *http.Request, res http.ResponseWriter) bool) RecipeModule {
 	return RecipeModule{
-		recipeID:              recipeId,
-		appInfo:               appInfo,
-		HandleAPIRequest:      handleAPIRequest,
-		GetAllCORSHeaders:     getAllCORSHeaders,
-		GetAPIsHandled:        getAPIsHandled,
-		IsErrorFromThisRecipe: isErrorFromThisRecipe,
-		HandleError:           handleError,
+		recipeID:          recipeId,
+		appInfo:           appInfo,
+		HandleAPIRequest:  handleAPIRequest,
+		GetAllCORSHeaders: getAllCORSHeaders,
+		GetAPIsHandled:    getAPIsHandled,
+		HandleError:       handleError,
 	}
 }
 

@@ -1,5 +1,7 @@
 package supertokens
 
+import "net/http"
+
 type NormalisedAppinfo struct {
 	AppName         string
 	WebsiteDomain   NormalisedURLDomain
@@ -21,10 +23,11 @@ type AppInfo struct {
 type RecipeListFunction func(appInfo NormalisedAppinfo) (*RecipeModule, error)
 
 type TypeInput struct {
-	Supertoken *SupertokenTypeInput
-	AppInfo    AppInfo
-	RecipeList []RecipeListFunction
-	Telemetry  *bool
+	Supertoken     *SupertokenTypeInput
+	AppInfo        AppInfo
+	RecipeList     []RecipeListFunction
+	Telemetry      *bool
+	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 type SupertokenTypeInput struct {

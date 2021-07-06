@@ -78,26 +78,26 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	errorHandlers := models.NormalisedErrorHandlers{
-		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res, otherHandler)
+			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res)
 		},
-		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res, otherHandler)
+			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res)
 		},
-		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error {
+		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendUnauthorisedResponse(*recipeInstance, message, req, res, otherHandler)
+			return api.SendUnauthorisedResponse(*recipeInstance, message, req, res)
 		},
 	}
 

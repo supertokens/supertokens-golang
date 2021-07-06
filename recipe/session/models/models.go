@@ -37,7 +37,7 @@ type CreateOrRefreshAPIResponseToken struct {
 }
 
 type GetSessionResponse struct {
-	Session     SessionStruct                    `json:"session"`
+	Session     SessionStruct                   `json:"session"`
 	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
 
@@ -55,8 +55,8 @@ type TypeInput struct {
 }
 
 type ErrorHandlers struct {
-	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
-	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
 }
 
 type TypeNormalisedInput struct {
@@ -128,7 +128,7 @@ type SessionRecipe struct {
 }
 
 type NormalisedErrorHandlers struct {
-	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
-	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
-	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter, otherHandler http.HandlerFunc) error
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
 }

@@ -19,7 +19,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if querierError != nil {
 		return models.SessionRecipe{}, querierError
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, isErrorFromThisRecipe, handleError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
@@ -100,24 +100,17 @@ func getAllCORSHeaders() []string {
 	return getCORSAllowedHeaders()
 }
 
-func isErrorFromThisRecipe(err error) bool {
-	if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) || defaultErrors.As(err, &errors.TryRefreshTokenError{}) || defaultErrors.As(err, &errors.UnauthorizedError{}) {
+func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
+	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+		r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
+		return true
+	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
+		r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
+		return true
+	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
+		errs := err.(errors.TokenTheftDetectedError)
+		r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 		return true
 	}
 	return false
-}
-
-func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-		if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-			r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res, next)
-		} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
-			r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res, next)
-		} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
-			errs := err.(errors.TokenTheftDetectedError)
-			r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res, next)
-		} else {
-			next(res, req)
-		}
-	}
 }

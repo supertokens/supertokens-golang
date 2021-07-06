@@ -3,9 +3,7 @@ package supertokens
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
@@ -29,37 +27,51 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	if appInfo.WebsiteDomain == "" {
 		return NormalisedAppinfo{}, errors.New("Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
 	}
-	return NormalisedAppinfo{}, nil
-}
-
-func getDataFromFileForServerlessCache(filePath string) string {
-	jsonFile, err := os.Open(filePath)
+	apiGatewayPath, err := NewNormalisedURLPath("")
 	if err != nil {
-		fmt.Println(err)
-		return ""
+		return NormalisedAppinfo{}, err
 	}
-
-	defer jsonFile.Close()
-
-	byteValue, err := ioutil.ReadAll(jsonFile)
-	if err != nil {
-		fmt.Println(err)
-		return ""
-	}
-
-	return string(byteValue)
-}
-
-func containsHost(hostsAlive []string, host string) bool {
-	if len(hostsAlive) == 0 {
-		return false
-	}
-	for _, value := range hostsAlive {
-		if value == host {
-			return true
+	if appInfo.APIGatewayPath != nil {
+		apiGatewayPath, err = NewNormalisedURLPath(*appInfo.APIGatewayPath)
+		if err != nil {
+			return NormalisedAppinfo{}, err
 		}
 	}
-	return false
+	websiteDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain, false)
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+	apiDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain, false)
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+
+	APIBasePathStr := "/auth"
+	if appInfo.APIBasePath != nil {
+		APIBasePathStr = *appInfo.APIBasePath
+	}
+	APIBasePathURL, err := NewNormalisedURLPath(APIBasePathStr)
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+	apiBasePath := apiGatewayPath.AppendPath(*APIBasePathURL)
+
+	websiteBasePathStr := "/auth"
+	if appInfo.WebsiteBasePath != nil {
+		websiteBasePathStr = *appInfo.WebsiteBasePath
+	}
+	websiteBasePath, err := NewNormalisedURLPath(websiteBasePathStr)
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+	return NormalisedAppinfo{
+		AppName:         appInfo.AppName,
+		APIGatewayPath:  *apiGatewayPath,
+		WebsiteDomain:   *websiteDomain,
+		APIDomain:       *apiDomain,
+		APIBasePath:     apiBasePath,
+		WebsiteBasePath: *websiteBasePath,
+	}, nil
 }
 
 func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
@@ -103,10 +115,6 @@ func maxVersion(version1 string, version2 string) string {
 	}
 	return version2
 }
-
-// func normaliseHttpMethod(method string) string {
-// 	return strings.ToLower(method)
-// }
 
 func getRIDFromRequest(r *http.Request) string {
 	return r.Header.Get(HeaderRID)

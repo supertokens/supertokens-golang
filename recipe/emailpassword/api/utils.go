@@ -1,21 +1,21 @@
 package api
 
 import (
-	"errors"
+	defaultErrors "errors"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
-	emailpasswordErrors "github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 )
 
 func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw []models.FormFieldValue) ([]models.FormFieldValue, error) {
 	if formFieldsRaw == nil {
-		return nil, errors.New("Missing input param: formFields")
+		return nil, defaultErrors.New("Missing input param: formFields")
 	}
 
 	if len(formFieldsRaw) == 0 {
-		return nil, errors.New("formFields must be an array")
+		return nil, defaultErrors.New("formFields must be an array")
 	}
 
 	var formFields []models.FormFieldValue
@@ -32,9 +32,9 @@ func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormFiel
 }
 
 func validateFormOrThrowError(configFormFields []models.NormalisedFormField, inputs []models.FormFieldValue) error {
-	var validationErrors []emailpasswordErrors.ErrorPayload
+	var validationErrors []errors.ErrorPayload
 	if len(configFormFields) != len(inputs) {
-		return errors.New("Are you sending too many / too few formFields?")
+		return defaultErrors.New("Are you sending too many / too few formFields?")
 	}
 	for _, field := range configFormFields {
 		var input models.FormFieldValue
@@ -45,7 +45,7 @@ func validateFormOrThrowError(configFormFields []models.NormalisedFormField, inp
 			}
 		}
 		if input.Value == "" && !field.Optional {
-			validationErrors = append(validationErrors, emailpasswordErrors.ErrorPayload{ID: field.ID, Error: "Field is not optional"})
+			validationErrors = append(validationErrors, errors.ErrorPayload{ID: field.ID, Error: "Field is not optional"})
 		} else {
 			err := field.Validate(input.Value)
 			if err != nil {
@@ -57,7 +57,7 @@ func validateFormOrThrowError(configFormFields []models.NormalisedFormField, inp
 		}
 	}
 	if len(validationErrors) != 0 {
-		return emailpasswordErrors.FieldError{
+		return errors.FieldError{
 			Msg:     "Error in input formFields",
 			Payload: validationErrors,
 		}

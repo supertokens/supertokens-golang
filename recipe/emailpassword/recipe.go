@@ -27,6 +27,9 @@ var r *Recipe = nil
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
 	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, *config)
 	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature)
+	if err != nil {
+		return Recipe{}, err
+	}
 	if emailVerificationInstance != nil {
 		emailVerificationRecipe = *emailVerificationInstance
 	}
@@ -34,7 +37,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, isErrorFromThisRecipe, handleError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 
 	return Recipe{
@@ -145,20 +148,14 @@ func getAllCORSHeaders() []string {
 	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
 }
 
-func isErrorFromThisRecipe(err error) bool {
-	return defaultErrors.As(err, &errors.FieldError{})
-}
-
-func handleError(err error) func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-	return func(req *http.Request, res http.ResponseWriter, next http.HandlerFunc) {
-		if defaultErrors.As(err, &errors.FieldError{}) {
-			errs := err.(errors.FieldError)
-			supertokens.Send200Response(res, map[string]interface{}{
-				"status":     "FIELD_ERROR",
-				"formFields": errs.Payload,
-			})
-		} else {
-			next(res, req)
-		}
+func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
+	if defaultErrors.As(err, &errors.FieldError{}) {
+		errs := err.(errors.FieldError)
+		supertokens.Send200Response(res, map[string]interface{}{
+			"status":     "FIELD_ERROR",
+			"formFields": errs.Payload,
+		})
+		return true
 	}
+	return false
 }
