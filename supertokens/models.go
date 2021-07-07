@@ -23,7 +23,7 @@ type AppInfo struct {
 type RecipeListFunction func(appInfo NormalisedAppinfo) (*RecipeModule, error)
 
 type TypeInput struct {
-	Supertoken     *SupertokenTypeInput
+	Supertokens     *SupertokenTypeInput
 	AppInfo        AppInfo
 	RecipeList     []RecipeListFunction
 	Telemetry      *bool

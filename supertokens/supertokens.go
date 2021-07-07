@@ -34,8 +34,8 @@ func SupertokensInit(config TypeInput) error {
 		return err
 	}
 
-	if config.Supertoken != nil {
-		hostList := strings.Split(config.Supertoken.ConnectionURI, ";")
+	if config.Supertokens != nil {
+		hostList := strings.Split(config.Supertokens.ConnectionURI, ";")
 		var hosts []NormalisedURLDomain
 		for _, h := range hostList {
 			host, err := NewNormalisedURLDomain(h, false)
@@ -45,7 +45,7 @@ func SupertokensInit(config TypeInput) error {
 			hosts = append(hosts, *host)
 		}
 
-		InitQuerier(hosts, config.Supertoken.APIKey)
+		InitQuerier(hosts, config.Supertokens.APIKey)
 	} else {
 		InitQuerier(nil, nil)
 	}
