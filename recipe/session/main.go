@@ -3,6 +3,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 )
 
@@ -108,4 +109,12 @@ func GetRefreshTokenLifeTimeMS() (uint64, error) {
 		return 0, err
 	}
 	return instance.RecipeImpl.GetRefreshTokenLifeTimeMS()
+}
+
+func VerifySession(options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		panic("can't fetch instance")
+	}
+	return api.VerifySession(*instance, options)
 }
