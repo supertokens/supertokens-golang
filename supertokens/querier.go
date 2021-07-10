@@ -8,7 +8,10 @@ import (
 	"io/ioutil"
 	"net/http"
 	"strings"
+	"sync"
 )
+
+var querierLock sync.Mutex
 
 type Querier struct {
 	RIDToCore string
@@ -29,6 +32,8 @@ func NewQuerier(rIdToCore string) Querier {
 }
 
 func (q *Querier) getquerierAPIVersion() (string, error) {
+	querierLock.Lock()
+	defer querierLock.Unlock()
 	if querierAPIVersion != "" {
 		return querierAPIVersion, nil
 	}
@@ -60,13 +65,17 @@ func (q *Querier) getquerierAPIVersion() (string, error) {
 }
 
 func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
+	querierLock.Lock()
+	defer querierLock.Unlock()
 	if querierInitCalled == false {
 		return nil, errors.New("Please call the supertokens.init function before using SuperTokens")
 	}
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func InitQuerier(hosts []NormalisedURLDomain, APIKey *string) {
+func initQuerier(hosts []NormalisedURLDomain, APIKey *string) {
+	querierLock.Lock()
+	defer querierLock.Unlock()
 	if querierInitCalled == false {
 		querierInitCalled = true
 		querierHosts = hosts

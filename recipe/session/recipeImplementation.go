@@ -4,11 +4,14 @@ import (
 	defaultErrors "errors"
 	"net/http"
 	"reflect"
+	"sync"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
+
+var handshakeInfoLock sync.Mutex
 
 func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
 	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
@@ -153,6 +156,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 }
 
 func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier) (models.HandshakeInfo, error) {
+	handshakeInfoLock.Lock()
+	defer handshakeInfoLock.Unlock()
 	if recipeImplHandshakeInfo == nil {
 		antiCsrf := config.AntiCsrf
 		path, err := supertokens.NewNormalisedURLPath("/recipe/handshake")
@@ -177,6 +182,8 @@ func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 }
 
 func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo *models.HandshakeInfo, newKey string, newExpiry uint64) {
+	handshakeInfoLock.Lock()
+	defer handshakeInfoLock.Unlock()
 	if recipeImplHandshakeInfo == nil {
 		if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime != newExpiry ||
 			recipeImplHandshakeInfo.JWTSigningPublicKey != newKey {

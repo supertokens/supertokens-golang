@@ -14,13 +14,12 @@ type SuperTokens struct {
 	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
-var superTokensInstance *SuperTokens = nil
+var superTokensInstance *SuperTokens
 
 func SupertokensInit(config TypeInput) error {
 	if superTokensInstance != nil {
 		return nil
 	}
-
 	superTokensInstance := &SuperTokens{}
 
 	superTokensInstance.OnGeneralError = onGeneralError
@@ -45,9 +44,9 @@ func SupertokensInit(config TypeInput) error {
 			hosts = append(hosts, *host)
 		}
 
-		InitQuerier(hosts, config.Supertokens.APIKey)
+		initQuerier(hosts, config.Supertokens.APIKey)
 	} else {
-		InitQuerier(nil, nil)
+		initQuerier(nil, nil)
 	}
 
 	if config.RecipeList == nil || len(config.RecipeList) == 0 {

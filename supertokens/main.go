@@ -6,7 +6,7 @@ func Middleware() func(req *http.Request, res http.ResponseWriter, theirHandler 
 	return func(req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc) {
 		superTokensInstance, err := getInstanceOrThrowError()
 		if err != nil {
-			panic("supertokens not initialised" + err.Error())
+			panic("supertokens not initialised - " + err.Error())
 		}
 		middleware := superTokensInstance.Middleware(theirHandler)
 		middleware(res, req)
@@ -16,7 +16,7 @@ func Middleware() func(req *http.Request, res http.ResponseWriter, theirHandler 
 func GetAllCORSHeaders() []string {
 	superTokensInstance, err := getInstanceOrThrowError()
 	if err != nil {
-		panic("supertokens not initialised" + err.Error())
+		panic("supertokens not initialised - " + err.Error())
 	}
 	return superTokensInstance.GetAllCORSHeaders()
 }

@@ -18,15 +18,15 @@ type Recipe struct {
 	APIImpl      models.APIImplementation
 }
 
-var r *Recipe = nil
+var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config models.TypeInput) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (Recipe, error) {
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, nil)
-	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
+	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 
 	return Recipe{
@@ -44,7 +44,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
+func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)

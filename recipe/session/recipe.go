@@ -12,12 +12,12 @@ import (
 
 const RECIPE_ID = "session"
 
-var r *models.SessionRecipe = nil
+var r *models.SessionRecipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.SessionRecipe, error) {
-	querierInstance, querierError := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
-	if querierError != nil {
-		return models.SessionRecipe{}, querierError
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return models.SessionRecipe{}, err
 	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
@@ -42,10 +42,10 @@ func getRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
+func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, &config)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
 			if err != nil {
 				return nil, err
 			}

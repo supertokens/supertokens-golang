@@ -48,7 +48,7 @@ func normaliseURLPathOrThrowError(input string) (string, error) {
 			return normaliseURLPathOrThrowError(input)
 		}
 
-		if input[:1] != "/" {
+		if !strings.HasPrefix(input, "/") {
 			input = "/" + input
 		}
 		return normaliseURLPathOrThrowError("http://example.com" + input)

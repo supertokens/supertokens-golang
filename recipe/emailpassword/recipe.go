@@ -22,16 +22,13 @@ type Recipe struct {
 	EmailVerificationRecipe emailverification.Recipe
 }
 
-var r *Recipe = nil
+var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
-	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, *config)
-	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature)
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (Recipe, error) {
+	verifiedConfig := validateAndNormaliseUserInput(r.RecipeImpl, appInfo, config)
+	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
 	if err != nil {
 		return Recipe{}, err
-	}
-	if emailVerificationInstance != nil {
-		emailVerificationRecipe = *emailVerificationInstance
 	}
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
@@ -49,10 +46,10 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}, nil
 }
 
-func RecipeInit(config models.TypeInput) supertokens.RecipeListFunction {
+func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, &config, nil)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
 			if err != nil {
 				return nil, err
 			}

@@ -11,109 +11,128 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, appInfo supertokens.NormalisedAppinfo, config models.TypeInput) models.TypeNormalisedInput {
-	sessionFeature := validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
-	signUpFeature := validateAndNormaliseSignupConfig(config.SignUpFeature)
+func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) models.TypeNormalisedInput {
+	sessionFeature := validateAndNormaliseSessionFeatureConfig(nil)
+	signUpFeature := validateAndNormaliseSignupConfig(nil)
+	resetPasswordUsingTokenFeature := validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, nil)
+
+	if config != nil && config.SessionFeature != nil {
+		sessionFeature = validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
+	}
+
+	if config != nil && config.SignUpFeature != nil {
+		signUpFeature = validateAndNormaliseSignupConfig(config.SignUpFeature)
+	}
+
 	signInFeature := validateAndNormaliseSignInConfig(signUpFeature)
-	resetPasswordUsingTokenFeature := validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, config.ResetPasswordUsingTokenFeature)
+
+	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
+		resetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, config.ResetPasswordUsingTokenFeature)
+	}
+
 	emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
+
 	typeNormalisedInput := models.TypeNormalisedInput{
 		SessionFeature:                 sessionFeature,
 		SignUpFeature:                  signUpFeature,
 		SignInFeature:                  signInFeature,
 		ResetPasswordUsingTokenFeature: resetPasswordUsingTokenFeature,
 		EmailVerificationFeature:       emailVerificationFeature,
-		Override: struct {
-			Functions                func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs                     func(originalImplementation models.APIImplementation) models.APIImplementation
-			EmailVerificationFeature *struct {
-				Functions func(originalImplementation emailverificationModels.RecipeImplementation) emailverificationModels.RecipeImplementation
-				APIs      func(originalImplementation emailverificationModels.APIImplementation) emailverificationModels.APIImplementation
-			}
-		}{
-			Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
-				return originalImplementation
-			},
-			APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
-				return originalImplementation
-			},
-			EmailVerificationFeature: config.Override.EmailVerificationFeature,
-		},
 	}
-	if config.Override != nil {
+
+	typeNormalisedInput.Override.Functions = func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
+		return originalImplementation
+	}
+	typeNormalisedInput.Override.APIs = func(originalImplementation models.APIImplementation) models.APIImplementation {
+		return originalImplementation
+	}
+	typeNormalisedInput.Override.EmailVerificationFeature = nil
+
+	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
 			typeNormalisedInput.Override.Functions = config.Override.Functions
 		}
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
 		}
+		if config.Override.EmailVerificationFeature != nil {
+			typeNormalisedInput.Override.EmailVerificationFeature = config.Override.EmailVerificationFeature
+		}
 	}
 
 	return typeNormalisedInput
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config models.TypeInput) emailverificationModels.TypeInput {
-	getEmailVerificationURL := func(user emailverificationModels.User) (string, error) {
-		userInfo := recipeInstance.GetUserById(user.ID)
-		if userInfo == nil || config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-			return "", errors.New("Unknown User ID provided")
+func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config *models.TypeInput) emailverificationModels.TypeInput {
+	var emailverificationTypeInput emailverificationModels.TypeInput
+	emailverificationTypeInput.GetEmailForUserID = getEmailForUserId
+
+	emailverificationTypeInput.Override = nil
+	if config != nil && config.Override != nil {
+		override := config.Override
+		if override.EmailVerificationFeature != nil {
+			emailverificationTypeInput.Override = override.EmailVerificationFeature
+
+			if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+				emailverificationTypeInput.CreateAndSendCustomEmail = nil
+			} else {
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user emailverificationModels.User, link string) error {
+					userInfo := recipeInstance.GetUserById(user.ID)
+					if userInfo == nil {
+						return errors.New("Unknown User ID provided")
+					}
+					return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+				}
+			}
+
+			if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
+				emailverificationTypeInput.GetEmailVerificationURL = nil
+			} else {
+				emailverificationTypeInput.GetEmailVerificationURL = func(user emailverificationModels.User) (string, error) {
+					userInfo := recipeInstance.GetUserById(user.ID)
+					if userInfo == nil {
+						return "", errors.New("Unknown User ID provided")
+					}
+					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
+				}
+			}
 		}
-		return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
 	}
-	if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
-		getEmailVerificationURL = nil
-	}
-	createAndSendCustomEmail := func(user emailverificationModels.User, link string) error {
-		userInfo := recipeInstance.GetUserById(user.ID)
-		if userInfo == nil || config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-			return errors.New("Unknown User ID provided")
-		}
-		return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
-	}
-	if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-		createAndSendCustomEmail = nil
-	}
-	return emailverificationModels.TypeInput{
-		GetEmailForUserID: getEmailForUserId,
-		Override: &struct {
-			Functions func(originalImplementation emailverificationModels.RecipeImplementation) emailverificationModels.RecipeImplementation
-			APIs      func(originalImplementation emailverificationModels.APIImplementation) emailverificationModels.APIImplementation
-		}{
-			Functions: config.Override.EmailVerificationFeature.Functions,
-			APIs:      config.Override.EmailVerificationFeature.APIs,
-		},
-		CreateAndSendCustomEmail: createAndSendCustomEmail,
-		GetEmailVerificationURL:  getEmailVerificationURL,
-	}
+
+	return emailverificationTypeInput
 }
 
 func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.NormalisedAppinfo, signUpConfig models.TypeNormalisedInputSignUp, config *models.TypeInputResetPasswordUsingTokenFeature) models.TypeNormalisedInputResetPasswordUsingTokenFeature {
-	var (
-		formFieldsForPasswordResetForm []models.NormalisedFormField
-		formFieldsForGenerateTokenForm []models.NormalisedFormField
-	)
-	for _, FormField := range signUpConfig.FormFields {
-		if FormField.ID == constants.FormFieldPasswordID {
-			formFieldsForPasswordResetForm = append(formFieldsForPasswordResetForm, FormField)
-		}
-		if FormField.ID == constants.FormFieldEmailID {
-			formFieldsForGenerateTokenForm = append(formFieldsForGenerateTokenForm, FormField)
+	normalisedInputResetPasswordUsingTokenFeature := models.TypeNormalisedInputResetPasswordUsingTokenFeature{
+		FormFieldsForGenerateTokenForm: nil,
+		FormFieldsForPasswordResetForm: nil,
+		GetResetPasswordURL:            defaultGetResetPasswordURL(appInfo),
+		CreateAndSendCustomEmail:       defaultCreateAndSendCustomPasswordResetEmail(appInfo),
+	}
+
+	if len(signUpConfig.FormFields) > 0 {
+		var (
+			formFieldsForPasswordResetForm []models.NormalisedFormField
+			formFieldsForGenerateTokenForm []models.NormalisedFormField
+		)
+		for _, FormField := range signUpConfig.FormFields {
+			if FormField.ID == constants.FormFieldPasswordID {
+				formFieldsForPasswordResetForm = append(formFieldsForPasswordResetForm, FormField)
+			}
+			if FormField.ID == constants.FormFieldEmailID {
+				formFieldsForGenerateTokenForm = append(formFieldsForGenerateTokenForm, FormField)
+			}
 		}
 	}
-	getResetPasswordURL := defaultGetResetPasswordURL(appInfo)
+
 	if config != nil && config.GetResetPasswordURL != nil {
-		getResetPasswordURL = config.GetResetPasswordURL
+		normalisedInputResetPasswordUsingTokenFeature.GetResetPasswordURL = config.GetResetPasswordURL
 	}
-	createAndSendCustomEmail := defaultCreateAndSendCustomPasswordResetEmail(appInfo)
 	if config != nil && config.CreateAndSendCustomEmail != nil {
-		createAndSendCustomEmail = config.CreateAndSendCustomEmail
+		normalisedInputResetPasswordUsingTokenFeature.CreateAndSendCustomEmail = config.CreateAndSendCustomEmail
 	}
-	return models.TypeNormalisedInputResetPasswordUsingTokenFeature{
-		FormFieldsForGenerateTokenForm: formFieldsForGenerateTokenForm,
-		FormFieldsForPasswordResetForm: formFieldsForPasswordResetForm,
-		GetResetPasswordURL:            getResetPasswordURL,
-		CreateAndSendCustomEmail:       createAndSendCustomEmail,
-	}
+
+	return normalisedInputResetPasswordUsingTokenFeature
 }
 
 func defaultSetJwtPayloadForSession(_ models.User, _ []models.FormFieldValue, _ string) map[string]interface{} {
@@ -125,20 +144,20 @@ func defaultSetSessionDataForSession(_ models.User, _ []models.FormFieldValue, _
 }
 
 func validateAndNormaliseSessionFeatureConfig(config *models.TypeNormalisedInputSessionFeature) models.TypeNormalisedInputSessionFeature {
-	setJwtPayload := defaultSetJwtPayloadForSession
-	if config != nil || config.SetJwtPayload != nil {
-		setJwtPayload = config.SetJwtPayload
+	normalisedInputSessionFeature := models.TypeNormalisedInputSessionFeature{
+		SetJwtPayload:  defaultSetJwtPayloadForSession,
+		SetSessionData: defaultSetSessionDataForSession,
 	}
 
-	setSessionData := defaultSetSessionDataForSession
-	if config != nil || config.SetSessionData != nil {
-		setJwtPayload = config.SetSessionData
+	if config != nil && config.SetJwtPayload != nil {
+		normalisedInputSessionFeature.SetJwtPayload = config.SetJwtPayload
 	}
 
-	return models.TypeNormalisedInputSessionFeature{
-		SetJwtPayload:  setJwtPayload,
-		SetSessionData: setSessionData,
+	if config != nil && config.SetSessionData != nil {
+		normalisedInputSessionFeature.SetSessionData = config.SetSessionData
 	}
+
+	return normalisedInputSessionFeature
 }
 
 func validateAndNormaliseSignInConfig(signUpConfig models.TypeNormalisedInputSignUp) models.TypeNormalisedInputSignIn {
@@ -172,7 +191,9 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 
 func validateAndNormaliseSignupConfig(config *models.TypeInputSignUp) models.TypeNormalisedInputSignUp {
 	if config == nil {
-		return models.TypeNormalisedInputSignUp{}
+		return models.TypeNormalisedInputSignUp{
+			FormFields: nil,
+		}
 	}
 	return models.TypeNormalisedInputSignUp{
 		FormFields: normaliseSignUpFormFields(config.FormFields),
