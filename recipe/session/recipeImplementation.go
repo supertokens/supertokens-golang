@@ -24,16 +24,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				return nil, err
 			}
 
-			// TODO: For POC: we are setting cookies to this `res` inside that function.
-			// But since it's not a pointer, will it work?
 			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
 			sessionContainerInput := MakeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			return NewSessionContainer(querier, config, sessionContainerInput), nil
 		},
 
 		GetSession: func(req *http.Request, res http.ResponseWriter, options *models.VerifySessionOptions) (*models.SessionContainer, error) {
-			var doAntiCsrfCheck *bool
-			if options.AntiCsrfCheck != nil {
+			var doAntiCsrfCheck *bool = nil
+			if options != nil {
 				doAntiCsrfCheck = options.AntiCsrfCheck
 			}
 
@@ -62,8 +60,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					// TODO: For POC: will this set these cookies / headers in the final response
-					// sent by our API / the user?
 					clearSessionFromCookie(config, res)
 				}
 				return nil, err

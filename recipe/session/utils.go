@@ -40,16 +40,15 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		cookieSameSite = cookieSameSite_NONE
 	}
 
-	if config == nil || config.CookieSameSite == nil {
-		cookieSameSite = *config.CookieSameSite
-	} else {
+	if config != nil && config.CookieSameSite != nil {
 		cookieSameSite, err = normaliseSameSiteOrThrowError(*config.CookieSameSite)
 		if err != nil {
 			return models.TypeNormalisedInput{}, err
 		}
 	}
+
 	cookieSecure := false
-	if config != nil || config.CookieSecure != nil {
+	if config == nil || config.CookieSecure == nil {
 		cookieSecure = strings.HasPrefix(appInfo.APIDomain.GetAsStringDangerous(), "https")
 	} else {
 		cookieSecure = *config.CookieSecure
@@ -138,6 +137,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		AntiCsrf:                 antiCsrf,
+		ErrorHandlers:            errorHandlers,
 		Override: struct {
 			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
 			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation

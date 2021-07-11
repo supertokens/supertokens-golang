@@ -1,8 +1,8 @@
 package supertokens
 
 import (
+	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -122,7 +122,12 @@ func getRIDFromRequest(r *http.Request) string {
 
 func Send200Response(res http.ResponseWriter, responseJson interface{}) {
 	res.WriteHeader(200)
-	bytes := []byte(fmt.Sprintf("%+v", responseJson))
+	res.Header().Add("content-type", "application/json")
+	bytes, err := json.Marshal(responseJson)
+	if err != nil {
+		res.WriteHeader(500)
+		res.Write([]byte("error in json marshalling"))
+	}
 	res.Write(bytes)
 }
 
@@ -131,7 +136,15 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 		return errors.New("Calling sendNon200Response with status code < 300")
 	}
 	res.WriteHeader(statusCode)
-	bytes := []byte(fmt.Sprintf("%+v", message))
+	res.Header().Add("content-type", "application/json")
+	response := map[string]interface{}{
+		"message": message,
+	}
+	bytes, err := json.Marshal(response)
+	if err != nil {
+		res.WriteHeader(500)
+		res.Write([]byte("error in json marshalling"))
+	}
 	res.Write(bytes)
 	return nil
 }

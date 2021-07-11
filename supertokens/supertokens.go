@@ -20,15 +20,15 @@ func SupertokensInit(config TypeInput) error {
 	if superTokensInstance != nil {
 		return nil
 	}
-	superTokensInstance := &SuperTokens{}
+	superTokens := &SuperTokens{}
 
-	superTokensInstance.OnGeneralError = onGeneralError
+	superTokens.OnGeneralError = defaultOnGeneralError
 	if config.OnGeneralError != nil {
-		superTokensInstance.OnGeneralError = config.OnGeneralError
+		superTokens.OnGeneralError = config.OnGeneralError
 	}
 
 	var err error
-	superTokensInstance.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
+	superTokens.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
 	if err != nil {
 		return err
 	}
@@ -54,11 +54,11 @@ func SupertokensInit(config TypeInput) error {
 	}
 
 	for _, elem := range config.RecipeList {
-		recipeModule, err := elem(superTokensInstance.AppInfo)
+		recipeModule, err := elem(superTokens.AppInfo)
 		if err != nil {
 			return err
 		}
-		superTokensInstance.RecipeModules = append(superTokensInstance.RecipeModules, *recipeModule)
+		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
 	}
 
 	if config.Telemetry != nil && *config.Telemetry {
@@ -69,6 +69,7 @@ func SupertokensInit(config TypeInput) error {
 		// }
 	}
 
+	superTokensInstance = superTokens
 	return nil
 }
 
@@ -218,6 +219,6 @@ func (s *SuperTokens) ErrorHandler(err error, req *http.Request, res http.Respon
 	return true
 }
 
-func onGeneralError(err error, req *http.Request, res http.ResponseWriter) {
+func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
 	SendNon200Response(res, err.Error(), 500)
 }

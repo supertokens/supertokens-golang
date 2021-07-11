@@ -30,9 +30,7 @@ func MakeAPIImplementation() models.APIImplementation {
 
 			incomingPath, err := supertokens.NewNormalisedURLPath(options.Req.RequestURI)
 			if err != nil {
-				// TODO: You are supposed to call the user's error handler here.. not ignore the error.
-				// Likewise for any other error generated in this function
-				options.OtherHandler(options.Res, options.Req)
+				supertokens.ErrorHandler(err, options.Req, options.Res)
 				return err
 			}
 			var ctx context.Context
@@ -40,14 +38,14 @@ func MakeAPIImplementation() models.APIImplementation {
 			if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
 				session, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
 				if err != nil {
-					options.OtherHandler(options.Res, options.Req)
+					supertokens.ErrorHandler(err, options.Req, options.Res)
 					return err
 				}
 				ctx = context.WithValue(options.Req.Context(), sessionContext, session)
 			} else {
 				session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, verifySessionOptions)
 				if err != nil {
-					options.OtherHandler(options.Res, options.Req)
+					supertokens.ErrorHandler(err, options.Req, options.Res)
 					return err
 				}
 				ctx = context.WithValue(options.Req.Context(), sessionContext, session)

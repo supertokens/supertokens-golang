@@ -20,3 +20,11 @@ func GetAllCORSHeaders() []string {
 	}
 	return superTokensInstance.GetAllCORSHeaders()
 }
+
+func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) bool {
+	superTokensInstance, insterr := getInstanceOrThrowError()
+	if insterr != nil {
+		panic("supertokens not initialised - " + insterr.Error())
+	}
+	return superTokensInstance.ErrorHandler(err, req, res)
+}
