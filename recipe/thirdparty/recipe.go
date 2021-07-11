@@ -30,11 +30,15 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
-	verifiedConfig := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
+	verifiedConfig, err := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
+	if err != nil {
+		return Recipe{}, err
+	}
 	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
 	if err != nil {
 		return Recipe{}, err
 	}
+	providers := config.SignInAndUpFeature.Providers
 
 	return Recipe{
 		RecipeModule:            recipeModuleInstance,
@@ -42,6 +46,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		RecipeImpl:              verifiedConfig.Override.Functions(recipeImplementation),
 		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
 		EmailVerificationRecipe: emailVerificationRecipe,
+		Providers:               providers,
 	}, nil
 }
 
@@ -55,7 +60,7 @@ func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, defaultErrors.New("Emailpassword recipe has already been initialised. Please check your code for bugs.")
+		return nil, defaultErrors.New("ThirdParty recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 

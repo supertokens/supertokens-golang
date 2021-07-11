@@ -72,30 +72,29 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 		override := config.Override
 		if override.EmailVerificationFeature != nil {
 			emailverificationTypeInput.Override = override.EmailVerificationFeature
-
-			if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = nil
-			} else {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user emailverificationModels.User, link string) error {
-					userInfo := recipeInstance.GetUserById(user.ID)
-					if userInfo == nil {
-						return errors.New("Unknown User ID provided")
-					}
-					return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
-				}
+		}
+	}
+	if config != nil && config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+		emailverificationTypeInput.CreateAndSendCustomEmail = nil
+	} else {
+		emailverificationTypeInput.CreateAndSendCustomEmail = func(user emailverificationModels.User, link string) error {
+			userInfo := recipeInstance.GetUserById(user.ID)
+			if userInfo == nil {
+				return errors.New("Unknown User ID provided")
 			}
+			return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+		}
+	}
 
-			if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
-				emailverificationTypeInput.GetEmailVerificationURL = nil
-			} else {
-				emailverificationTypeInput.GetEmailVerificationURL = func(user emailverificationModels.User) (string, error) {
-					userInfo := recipeInstance.GetUserById(user.ID)
-					if userInfo == nil {
-						return "", errors.New("Unknown User ID provided")
-					}
-					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
-				}
+	if config != nil && config.EmailVerificationFeature.GetEmailVerificationURL == nil {
+		emailverificationTypeInput.GetEmailVerificationURL = nil
+	} else {
+		emailverificationTypeInput.GetEmailVerificationURL = func(user emailverificationModels.User) (string, error) {
+			userInfo := recipeInstance.GetUserById(user.ID)
+			if userInfo == nil {
+				return "", errors.New("Unknown User ID provided")
 			}
+			return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
 		}
 	}
 
