@@ -74,10 +74,10 @@ type TypeInput struct {
 	EmailVerificationFeature *TypeInputEmailVerificationFeature
 	Override                 *struct {
 		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
-		Apis                     func(originalImplementation APIImplementation) APIImplementation
+		APIs                     func(originalImplementation APIImplementation) APIImplementation
 		EmailVerificationFeature *struct {
 			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			aApis     func(originalImplementation models.APIImplementation) models.APIImplementation
+			APIs     func(originalImplementation models.APIImplementation) models.APIImplementation
 		}
 	}
 }
@@ -85,13 +85,13 @@ type TypeInput struct {
 type TypeNormalisedInput struct {
 	SessionFeature           TypeInputSessionFeature
 	SignInAndUpFeature       TypeInputSignInAndUp
-	EmailVerificationFeature TypeInputEmailVerificationFeature
+	EmailVerificationFeature models.TypeInput
 	Override                 struct {
 		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
-		Apis                     func(originalImplementation APIImplementation) APIImplementation
+		APIs                     func(originalImplementation APIImplementation) APIImplementation
 		EmailVerificationFeature struct {
 			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			aApis     func(originalImplementation models.APIImplementation) models.APIImplementation
+			APIs     func(originalImplementation models.APIImplementation) models.APIImplementation
 		}
 	}
 }
@@ -124,7 +124,7 @@ type RecipeImplementation struct {
 type APIOptions struct {
 	RecipeImplementation RecipeImplementation
 	Config               TypeNormalisedInput
-	RecipeId             string
+	RecipeID             string
 	Providers            []TypeProvider
 	Req                  *http.Request
 	Res                  http.ResponseWriter

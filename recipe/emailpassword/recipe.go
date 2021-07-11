@@ -90,7 +90,11 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []supertokens.APIHandled{{
+	emailverificationAPIhandled, err := r.EmailVerificationRecipe.RecipeModule.GetAPIsHandled()
+	if err != nil {
+		return nil, err
+	}
+	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: *signUpAPI,
 		ID:                     constants.SignUpAPI,
@@ -115,7 +119,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: *signupEmailExistsAPI,
 		ID:                     constants.SignupEmailExistsAPI,
 		Disabled:               r.APIImpl.EmailExistsGET == nil,
-	}}, nil
+	}}, emailverificationAPIhandled...), nil
 }
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
