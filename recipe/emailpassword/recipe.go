@@ -25,17 +25,24 @@ type Recipe struct {
 var r *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (Recipe, error) {
+	r = &Recipe{}
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	verifiedConfig := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
+	r.Config = verifiedConfig
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+
 	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
 	if err != nil {
 		return Recipe{}, err
 	}
+	r.EmailVerificationRecipe = emailVerificationRecipe
+
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
 	return Recipe{
 		RecipeModule:            recipeModuleInstance,

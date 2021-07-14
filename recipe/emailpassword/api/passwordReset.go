@@ -25,7 +25,7 @@ func PasswordReset(apiImplementation models.APIImplementation, options models.AP
 		panic(err)
 	}
 
-	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm, formFieldsRaw["formFields"].([]models.FormFieldValue))
+	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm, formFieldsRaw["formFields"].([]interface{}))
 	if err != nil {
 		return err
 	}

@@ -16,7 +16,6 @@ var handshakeInfoLock sync.Mutex
 func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
 	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
 	getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
-
 	return models.RecipeImplementation{
 		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
 			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
@@ -168,9 +167,9 @@ func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 			JWTSigningPublicKey:            response["jwtSigningPublicKey"].(string),
 			AntiCsrf:                       antiCsrf,
 			AccessTokenBlacklistingEnabled: response["accessTokenBlacklistingEnabled"].(bool),
-			JWTSigningPublicKeyExpiryTime:  response["jwtSigningPublicKeyExpiryTime"].(uint64),
-			AccessTokenValidity:            response["accessTokenValidity"].(uint64),
-			RefreshTokenValidity:           response["refreshTokenValidity"].(uint64),
+			JWTSigningPublicKeyExpiryTime:  uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)),
+			AccessTokenValidity:            uint64(response["accessTokenValidity"].(float64)),
+			RefreshTokenValidity:           uint64(response["refreshTokenValidity"].(float64)),
 			SigningKeyLastUpdated:          getCurrTimeInMS(),
 		}
 	}

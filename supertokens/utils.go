@@ -76,10 +76,10 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 
 func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
 	var intersection = []string{}
-	for i := 0; i < len(v1); i++ {
-		for y := 0; y < len(v2); y++ {
-			if v1[i] == v2[y] {
-				intersection = append(intersection, v1[i])
+	for _, i := range v1 {
+		for _, j := range v2 {
+			if i == j {
+				intersection = append(intersection, i)
 			}
 		}
 	}

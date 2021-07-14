@@ -1,6 +1,7 @@
 package api
 
 import (
+	"encoding/json"
 	defaultErrors "errors"
 	"strings"
 
@@ -9,7 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 )
 
-func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw []models.FormFieldValue) ([]models.FormFieldValue, error) {
+func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormField, formFieldsRaw []interface{}) ([]models.FormFieldValue, error) {
 	if formFieldsRaw == nil {
 		return nil, defaultErrors.New("Missing input param: formFields")
 	}
@@ -19,11 +20,26 @@ func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormFiel
 	}
 
 	var formFields []models.FormFieldValue
-	for _, formField := range formFieldsRaw {
+	for _, rawFormField := range formFieldsRaw {
+		jsonformField, err := json.Marshal(rawFormField)
+		if err != nil {
+			return nil, err
+		}
+		var formField models.FormFieldValue
+		err = json.Unmarshal(jsonformField, &formField)
+		if err != nil {
+			return nil, err
+		}
+
 		if formField.ID == constants.FormFieldEmailID {
 			formFields = append(formFields, models.FormFieldValue{
 				ID:    formField.ID,
 				Value: strings.TrimSpace(formField.Value),
+			})
+		} else {
+			formFields = append(formFields, models.FormFieldValue{
+				ID:    formField.ID,
+				Value: formField.Value,
 			})
 		}
 	}

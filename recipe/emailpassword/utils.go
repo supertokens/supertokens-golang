@@ -166,7 +166,7 @@ func validateAndNormaliseSignInConfig(signUpConfig models.TypeNormalisedInputSig
 }
 
 func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models.NormalisedFormField {
-	var normalisedFormFields []models.NormalisedFormField
+	normalisedFormFields := make([]models.NormalisedFormField, 0)
 	if len(formFields) > 0 {
 		for _, formField := range formFields {
 			var (
@@ -191,7 +191,7 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 func validateAndNormaliseSignupConfig(config *models.TypeInputSignUp) models.TypeNormalisedInputSignUp {
 	if config == nil {
 		return models.TypeNormalisedInputSignUp{
-			FormFields: nil,
+			FormFields: normaliseSignUpFormFields(nil),
 		}
 	}
 	return models.TypeNormalisedInputSignUp{
@@ -262,6 +262,9 @@ func defaultValidator(_ interface{}) *string {
 }
 
 func defaultPasswordValidator(value interface{}) *string {
+	// length >= 8 && < 100
+    // must have a number and a character
+	
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the password field yields a string"
 		return &msg
@@ -275,12 +278,12 @@ func defaultPasswordValidator(value interface{}) *string {
 		return &msg
 	}
 	alphaCheck, err := regexp.Match(`^.*[A-Za-z]+.*$`, []byte(value.(string)))
-	if err != nil || alphaCheck {
+	if err != nil || !alphaCheck {
 		msg := "Password must contain at least one alphabet"
 		return &msg
 	}
 	numCheck, err := regexp.Match(`^.*[0-9]+.*$`, []byte(value.(string)))
-	if err != nil || numCheck {
+	if err != nil || !numCheck {
 		msg := "Password must contain at least one number"
 		return &msg
 	}
@@ -293,7 +296,7 @@ func defaultEmailValidator(value interface{}) *string {
 		return &msg
 	}
 	emailCheck, err := regexp.Match(`^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`, []byte(value.(string)))
-	if err != nil || emailCheck {
+	if err != nil || !emailCheck {
 		msg := "Email is invalid"
 		return &msg
 	}

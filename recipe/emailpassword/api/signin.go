@@ -24,7 +24,7 @@ func SignInAPI(apiImplementation models.APIImplementation, options models.APIOpt
 		panic(err)
 	}
 
-	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm, formFieldsRaw["formFields"].([]models.FormFieldValue))
+	formFields, err := validateFormFieldsOrThrowError(options.Config.SignInFeature.FormFields, formFieldsRaw["formFields"].([]interface{}))
 	if err != nil {
 		return err
 	}

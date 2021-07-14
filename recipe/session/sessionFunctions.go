@@ -34,7 +34,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 	if err != nil {
 		return nil, err
 	}
-	updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+	updateJwtSigningPublicKeyInfo(&handShakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 
 	delete(response, "status")
 	delete(response, "jwtSigningPublicKey")
@@ -113,9 +113,13 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 			}, nil
 		}
 	}
+	antiCsrfTokenStr := ""
+	if antiCsrfToken != nil {
+		antiCsrfTokenStr = *antiCsrfToken
+	}
 	requestBody := map[string]interface{}{
 		"accessToken":     accessToken,
-		"antiCsrfToken":   antiCsrfToken,
+		"antiCsrfToken":   antiCsrfTokenStr,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
 		"enableAntiCsrf":  handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
@@ -129,7 +133,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 	}
 	status := response["status"]
 	if status.(string) == "OK" {
-		updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), response["jwtSigningPublicKeyExpiryTime"].(uint64))
+		updateJwtSigningPublicKeyInfo(&handShakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 		delete(response, "status")
 		delete(response, "jwtSigningPublicKey")
 		delete(response, "jwtSigningPublicKeyExpiryTime")
@@ -149,7 +153,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 		jwtSigningPublicKey, jwtSigningPublicKeyExist := response["jwtSigningPublicKey"]
 		jwtSigningPublicKeyExpiryTime, jwtSigningPublicKeyExpiryTimeExist := response["jwtSigningPublicKeyExpiryTime"]
 		if jwtSigningPublicKeyExist && jwtSigningPublicKeyExpiryTimeExist {
-			updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, jwtSigningPublicKey.(string), jwtSigningPublicKeyExpiryTime.(uint64))
+			updateJwtSigningPublicKeyInfo(&handShakeInfo, jwtSigningPublicKey.(string), uint64(jwtSigningPublicKeyExpiryTime.(float64)))
 		}
 		return nil, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
@@ -170,9 +174,13 @@ func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config 
 	if err != nil {
 		return nil, err
 	}
+	antiCsrfTokenStr := ""
+	if antiCsrfToken != nil {
+		antiCsrfTokenStr = *antiCsrfToken
+	}
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
-		"antiCsrfToken":  antiCsrfToken,
+		"antiCsrfToken":  antiCsrfTokenStr,
 		"enableAntiCsrf": handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	response, err := querier.SendPostRequest(*path, requestBody)
@@ -224,7 +232,7 @@ func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID strin
 	if err != nil {
 		return nil, err
 	}
-	response, err := querier.SendPostRequest(*path, map[string]interface{}{
+	response, err := querier.SendGetRequest(*path, map[string]interface{}{
 		"userId": userID,
 	})
 	if err != nil {

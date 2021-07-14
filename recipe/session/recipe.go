@@ -15,17 +15,22 @@ const RECIPE_ID = "session"
 var r *models.SessionRecipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.SessionRecipe, error) {
-	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
-	if err != nil {
-		return models.SessionRecipe{}, err
-	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
-
+	r = &models.SessionRecipe{}
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
 		return models.SessionRecipe{}, configError
 	}
+	r.Config = verifiedConfig
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return models.SessionRecipe{}, err
+	}
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
+	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
 	return models.SessionRecipe{
 		RecipeModule: recipeModuleInstance,

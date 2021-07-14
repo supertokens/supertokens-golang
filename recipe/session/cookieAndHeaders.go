@@ -207,13 +207,6 @@ func setCookieValue(w http.ResponseWriter, cookie *http.Cookie) {
 	}
 }
 
-// func setRelevantHeadersForOptionsAPI(response http.ResponseWriter) {
-// 	setHeader(response, "Access-Control-Allow-Headers", antiCsrfHeaderKey)
-// 	setHeader(response, "Access-Control-Allow-Headers", frontendSDKNameHeaderKey)
-// 	setHeader(response, "Access-Control-Allow-Headers", frontendSDKVersionHeaderKey)
-// 	setHeader(response, "Access-Control-Allow-Credentials", "true")
-// }
-
 func getCookieName(cookie string) string {
 	parts := strings.Split(textproto.TrimString(cookie), ";")
 	if len(parts) == 1 && parts[0] == "" {

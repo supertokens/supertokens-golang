@@ -18,16 +18,21 @@ type Recipe struct {
 	APIImpl      models.APIImplementation
 }
 
-var r *Recipe
+var r = &Recipe{}
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (Recipe, error) {
+	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
+	r.Config = verifiedConfig
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, nil)
-	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, nil)
 
 	return Recipe{
 		RecipeModule: recipeModuleInstance,
@@ -91,6 +96,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return []supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPINormalised,

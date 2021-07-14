@@ -1,6 +1,8 @@
 package emailpassword
 
 import (
+	"encoding/json"
+
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -26,9 +28,22 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
+				respJSON, err := json.Marshal(response["user"])
+				if err != nil {
+					return models.SignInUpResponse{
+						Status: constants.WrongCredentialsError,
+					}
+				}
+				var user models.User
+				err = json.Unmarshal(respJSON, &user)
+				if err != nil {
+					return models.SignInUpResponse{
+						Status: constants.WrongCredentialsError,
+					}
+				}
 				return models.SignInUpResponse{
 					Status: status.(string),
-					User:   response["user"].(models.User),
+					User:   user,
 				}
 			}
 			return models.SignInUpResponse{
@@ -54,9 +69,22 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
+				respJSON, err := json.Marshal(response["user"])
+				if err != nil {
+					return models.SignInUpResponse{
+						Status: constants.WrongCredentialsError,
+					}
+				}
+				var user models.User
+				err = json.Unmarshal(respJSON, &user)
+				if err != nil {
+					return models.SignInUpResponse{
+						Status: constants.WrongCredentialsError,
+					}
+				}
 				return models.SignInUpResponse{
 					Status: status.(string),
-					User:   response["user"].(models.User),
+					User:   user,
 				}
 			}
 			return models.SignInUpResponse{
@@ -77,7 +105,15 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
-				user := response["user"].(models.User)
+				respJSON, err := json.Marshal(response["user"])
+				if err != nil {
+					return nil
+				}
+				var user models.User
+				err = json.Unmarshal(respJSON, &user)
+				if err != nil {
+					return nil
+				}
 				return &user
 			}
 			return nil
@@ -96,7 +132,15 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
-				user := response["user"].(models.User)
+				respJSON, err := json.Marshal(response["user"])
+				if err != nil {
+					return nil
+				}
+				var user models.User
+				err = json.Unmarshal(respJSON, &user)
+				if err != nil {
+					return nil
+				}
 				return &user
 			}
 			return nil

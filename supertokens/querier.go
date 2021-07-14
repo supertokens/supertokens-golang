@@ -37,7 +37,7 @@ func (q *Querier) getquerierAPIVersion() (string, error) {
 	if querierAPIVersion != "" {
 		return querierAPIVersion, nil
 	}
-	response, err := q.sendRequestHelper(NormalisedURLPath{value: "/querierAPIVersion"}, func(url string) (*http.Response, error) {
+	response, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -53,8 +53,18 @@ func (q *Querier) getquerierAPIVersion() (string, error) {
 		return "", err
 	}
 
-	cdiSupportedByServer := strings.Split(response["versions"].(string), ",")
-	supportedVersion := getLargestVersionFromIntersection(cdiSupportedByServer, cdiSupported)
+	respJSON, err := json.Marshal(response)
+	if err != nil {
+		return "", err
+	}
+	var cdiSupportedByServer struct {
+		Versions []string `json:"versions"`
+	}
+	err = json.Unmarshal(respJSON, &cdiSupportedByServer)
+	if err != nil {
+		return "", err
+	}
+	supportedVersion := getLargestVersionFromIntersection(cdiSupportedByServer.Versions, cdiSupported)
 	if supportedVersion == nil {
 		return "", errors.New("The running SuperTokens core version is not compatible with this Golang SDK. Please visit https://supertokens.io/docs/community/compatibility to find the right version")
 	}
@@ -87,6 +97,17 @@ func initQuerier(hosts []NormalisedURLDomain, APIKey *string) {
 
 func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
 	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
+		if data == nil {
+			data = map[string]interface{}{}
+		}
+		for key, value := range data {
+			switch value.(type) {
+			case map[string]interface{}:
+				if len(value.(map[string]interface{})) == 0 {
+					data[key] = map[string]interface{}{}
+				}
+			}
+		}
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
@@ -101,7 +122,7 @@ func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]interf
 			return nil, querierAPIVersionError
 		}
 
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("content-type", "application/json")
 		req.Header.Set("cdi-version", apiVerion)
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
@@ -131,7 +152,7 @@ func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]inte
 			return nil, querierAPIVersionError
 		}
 
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("content-type", "application/json")
 		req.Header.Set("cdi-version", apiVerion)
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
@@ -192,7 +213,7 @@ func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]interfa
 			return nil, querierAPIVersionError
 		}
 
-		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("content-type", "application/json")
 		req.Header.Set("cdi-version", apiVerion)
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
@@ -228,13 +249,12 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 400 {
-		return nil, errors.New(fmt.Sprintf("%v", resp.StatusCode))
-	}
-
 	body, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
 		return nil, readErr
+	}
+	if resp.StatusCode != 200 {
+		return nil, errors.New(fmt.Sprintf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body))
 	}
 
 	finalResult := make(map[string]interface{})
