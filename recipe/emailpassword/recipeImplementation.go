@@ -76,7 +76,7 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 		},
 
-		GetUserById: func(userId string) *models.User {
+		GetUserByID: func(userId string) *models.User {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user")
 			if err != nil {
 				return nil

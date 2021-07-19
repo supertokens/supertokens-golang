@@ -26,12 +26,12 @@ func SignInUp(thirdPartyID string, thirdPartyUserID string, email models.EmailSt
 	return nil, result.Error
 }
 
-func GetUserById(userID string) (*models.User, error) {
+func GetUserByID(userID string) (*models.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserById(userID), nil
+	return instance.RecipeImpl.GetUserByID(userID), nil
 }
 
 // TODO
@@ -64,7 +64,7 @@ func VerifyEmailUsingToken(token string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	userInThisRecipe := instance.RecipeImpl.GetUserById(user.ID)
+	userInThisRecipe := instance.RecipeImpl.GetUserByID(user.ID)
 	if userInThisRecipe == nil {
 		return nil, errors.New("Unknown User ID provided")
 	}
@@ -88,7 +88,7 @@ func getEmailForUserId(userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	userInfo := instance.RecipeImpl.GetUserById(userID)
+	userInfo := instance.RecipeImpl.GetUserByID(userID)
 	if userInfo == nil {
 		return "", errors.New("Unknown User ID provided")
 	}

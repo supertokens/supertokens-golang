@@ -1,11 +1,11 @@
-package thirdparty
+package thirdpartyemailpassword
 
 import (
-	"encoding/json"
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -14,16 +14,14 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	if config != nil {
 		sessionFeature = validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
 	}
+	signUpFeature := validateAndNormaliseSignUpConfig(config.SignUpFeature)
+
 	emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
-	signInAndUpFeature, err := validateAndNormaliseSignInAndUpConfig(config.SignInAndUpFeature)
-	if err != nil {
-		return models.TypeNormalisedInput{}, err
-	}
 
 	typeNormalisedInput := models.TypeNormalisedInput{
 		SessionFeature:           sessionFeature,
 		EmailVerificationFeature: emailVerificationFeature,
-		SignInAndUpFeature:       signInAndUpFeature,
+		SignUpFeature:            signUpFeature,
 	}
 	typeNormalisedInput.Override.Functions = func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
 		return originalImplementation
@@ -48,11 +46,11 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	return typeNormalisedInput, nil
 }
 
-func defaultSetJwtPayloadForSession(User models.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]string {
+func defaultSetJwtPayloadForSession(user models.User, context interface{}, action string) map[string]interface{} {
 	return nil
 }
 
-func defaultSetSessionDataForSession(User models.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]string {
+func defaultSetSessionDataForSession(user models.User, context interface{}, action string) map[string]interface{} {
 	return nil
 }
 
@@ -70,6 +68,17 @@ func validateAndNormaliseSessionFeatureConfig(config *models.TypeNormalisedInput
 		}
 	}
 	return normalisedInputSessionFeature
+}
+
+func validateAndNormaliseSignUpConfig(config *models.TypeInputSignUp) models.TypeNormalisedInputSignUp {
+	if config != nil {
+		return models.TypeNormalisedInputSignUp{
+			FormFields: emailpassword.NormaliseSignUpFormFields(config.FormFields),
+		}
+	}
+	return models.TypeNormalisedInputSignUp{
+		FormFields: emailpassword.NormaliseSignUpFormFields(nil),
+	}
 }
 
 func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config *models.TypeInput) evm.TypeInput {
@@ -108,27 +117,4 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 	}
 
 	return emailverificationTypeInput
-}
-
-func validateAndNormaliseSignInAndUpConfig(config models.TypeInputSignInAndUp) (models.TypeNormalisedInputSignInAndUp, error) {
-	providers := config.Providers
-	if len(providers) == 0 {
-		return models.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "thirdparty recipe requires atleast 1 provider to be passed in signInAndUpFeature.providers config"}
-	}
-	return models.TypeNormalisedInputSignInAndUp{
-		Providers: providers,
-	}, nil
-}
-
-func parseUser(value interface{}) (*models.User, error) {
-	respJSON, err := json.Marshal(value)
-	if err != nil {
-		return nil, err
-	}
-	var user models.User
-	err = json.Unmarshal(respJSON, &user)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
 }

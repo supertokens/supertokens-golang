@@ -39,7 +39,7 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				CreatedNewUser: response["createdNewUser"].(bool),
 			}
 		},
-		GetUserById: func(userID string) *models.User {
+		GetUserByID: func(userID string) *models.User {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user")
 			if err != nil {
 				return nil

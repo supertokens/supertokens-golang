@@ -16,7 +16,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 		},
 
-		GeneratePasswordResetTokenPOST: func(formFields []models.FormFieldValue, options models.APIOptions) models.GeneratePasswordResetTokenPOSTResponse {
+		GeneratePasswordResetTokenPOST: func(formFields []models.TypeFormField, options models.APIOptions) models.GeneratePasswordResetTokenPOSTResponse {
 			var email string
 			for _, formField := range formFields {
 				if formField.ID == constants.FormFieldEmailID {
@@ -43,7 +43,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 		},
 
-		PasswordResetPOST: func(formFields []models.FormFieldValue, token string, options models.APIOptions) models.PasswordResetPOSTResponse {
+		PasswordResetPOST: func(formFields []models.TypeFormField, token string, options models.APIOptions) models.PasswordResetPOSTResponse {
 			var newPassword string
 			for _, formField := range formFields {
 				if formField.ID == constants.FormFieldPasswordID {
@@ -57,7 +57,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 		},
 
-		SignInPOST: func(formFields []models.FormFieldValue, options models.APIOptions) models.SignInUpResponse {
+		SignInPOST: func(formFields []models.TypeFormField, options models.APIOptions) models.SignInUpResponse {
 			var email string
 			for _, formField := range formFields {
 				if formField.ID == constants.FormFieldEmailID {
@@ -93,7 +93,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 		},
 
-		SignUpPOST: func(formFields []models.FormFieldValue, options models.APIOptions) models.SignInUpResponse {
+		SignUpPOST: func(formFields []models.TypeFormField, options models.APIOptions) models.SignInUpResponse {
 			var email string
 			for _, formField := range formFields {
 				if formField.ID == constants.FormFieldEmailID {

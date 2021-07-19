@@ -8,7 +8,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	emailverificationModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -64,8 +64,8 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	return typeNormalisedInput
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config *models.TypeInput) emailverificationModels.TypeInput {
-	var emailverificationTypeInput emailverificationModels.TypeInput
+func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config *models.TypeInput) evm.TypeInput {
+	var emailverificationTypeInput evm.TypeInput
 	emailverificationTypeInput.GetEmailForUserID = getEmailForUserId
 
 	emailverificationTypeInput.Override = nil
@@ -78,8 +78,8 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 	if config != nil && config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
 		emailverificationTypeInput.CreateAndSendCustomEmail = nil
 	} else {
-		emailverificationTypeInput.CreateAndSendCustomEmail = func(user emailverificationModels.User, link string) error {
-			userInfo := recipeInstance.GetUserById(user.ID)
+		emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) error {
+			userInfo := recipeInstance.GetUserByID(user.ID)
 			if userInfo == nil {
 				return errors.New("Unknown User ID provided")
 			}
@@ -90,8 +90,8 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 	if config != nil && config.EmailVerificationFeature.GetEmailVerificationURL == nil {
 		emailverificationTypeInput.GetEmailVerificationURL = nil
 	} else {
-		emailverificationTypeInput.GetEmailVerificationURL = func(user emailverificationModels.User) (string, error) {
-			userInfo := recipeInstance.GetUserById(user.ID)
+		emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
+			userInfo := recipeInstance.GetUserByID(user.ID)
 			if userInfo == nil {
 				return "", errors.New("Unknown User ID provided")
 			}
@@ -135,11 +135,11 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 	return normalisedInputResetPasswordUsingTokenFeature
 }
 
-func defaultSetJwtPayloadForSession(_ models.User, _ []models.FormFieldValue, _ string) map[string]interface{} {
+func defaultSetJwtPayloadForSession(_ models.User, _ []models.TypeFormField, _ string) map[string]interface{} {
 	return nil
 }
 
-func defaultSetSessionDataForSession(_ models.User, _ []models.FormFieldValue, _ string) map[string]interface{} {
+func defaultSetSessionDataForSession(_ models.User, _ []models.TypeFormField, _ string) map[string]interface{} {
 	return nil
 }
 
@@ -192,15 +192,15 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 func validateAndNormaliseSignupConfig(config *models.TypeInputSignUp) models.TypeNormalisedInputSignUp {
 	if config == nil {
 		return models.TypeNormalisedInputSignUp{
-			FormFields: normaliseSignUpFormFields(nil),
+			FormFields: NormaliseSignUpFormFields(nil),
 		}
 	}
 	return models.TypeNormalisedInputSignUp{
-		FormFields: normaliseSignUpFormFields(config.FormFields),
+		FormFields: NormaliseSignUpFormFields(config.FormFields),
 	}
 }
 
-func normaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.NormalisedFormField {
+func NormaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.NormalisedFormField {
 	var (
 		normalisedFormFields     []models.NormalisedFormField
 		formFieldPasswordIDCount = 0

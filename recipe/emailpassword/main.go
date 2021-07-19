@@ -22,12 +22,12 @@ func SignIn(email string, password string) (models.User, error) {
 	return instance.RecipeImpl.SignIn(email, password).User, nil
 }
 
-func GetUserById(userID string) (*models.User, error) {
+func GetUserByID(userID string) (*models.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserById(userID), nil
+	return instance.RecipeImpl.GetUserByID(userID), nil
 }
 
 func GetUserByEmail(email string) (*models.User, error) {
@@ -99,7 +99,7 @@ func getEmailForUserId(userID string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	userInfo := instance.RecipeImpl.GetUserById(userID)
+	userInfo := instance.RecipeImpl.GetUserByID(userID)
 	if userInfo == nil {
 		return "", errors.New("Unknown User ID provided")
 	}

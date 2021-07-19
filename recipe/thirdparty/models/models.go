@@ -93,7 +93,7 @@ type TypeNormalisedInput struct {
 }
 
 type RecipeImplementation struct {
-	GetUserById             func(userID string) *User
+	GetUserByID             func(userID string) *User
 	GetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string) *User
 	SignInUp                func(thirdPartyID string, thirdPartyUserID string, email EmailStruct) SignInUpResponse
 }
