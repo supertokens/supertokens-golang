@@ -7,10 +7,7 @@ import (
 
 func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
 	return models.RecipeImplementation{
-		SignInUp: func(thirdPartyID, thirdPartyUserID string, email struct {
-			ID         string
-			IsVerified bool
-		}) models.SignInUpResponse {
+		SignInUp: func(thirdPartyID, thirdPartyUserID string, email models.EmailStruct) models.SignInUpResponse {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signinup")
 			if err != nil {
 				return models.SignInUpResponse{

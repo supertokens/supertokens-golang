@@ -8,10 +8,12 @@ import (
 
 type UserInfo struct {
 	ID    string
-	Email *struct {
-		ID         string
-		IsVerified bool
-	}
+	Email *EmailStruct
+}
+
+type EmailStruct struct {
+	ID         string
+	IsVerified bool
 }
 
 type TypeProviderGetResponse struct {
@@ -93,14 +95,7 @@ type TypeNormalisedInput struct {
 type RecipeImplementation struct {
 	GetUserById             func(userID string) *User
 	GetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string) *User
-	SignInUp                func(
-		thirdPartyID string,
-		thirdPartyUserID string,
-		email struct {
-			ID         string
-			IsVerified bool
-		},
-	) SignInUpResponse
+	SignInUp                func(thirdPartyID string, thirdPartyUserID string, email EmailStruct) SignInUpResponse
 }
 
 type SignInUpResponse struct {
