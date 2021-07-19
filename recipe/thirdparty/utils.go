@@ -1,6 +1,7 @@
 package thirdparty
 
 import (
+	"encoding/json"
 	"errors"
 
 	emailverificationModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
@@ -117,4 +118,17 @@ func validateAndNormaliseSignInAndUpConfig(config models.TypeInputSignInAndUp) (
 	return models.TypeNormalisedInputSignInAndUp{
 		Providers: providers,
 	}, nil
+}
+
+func parseUser(value interface{}) (*models.User, error) {
+	respJSON, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	var user models.User
+	err = json.Unmarshal(respJSON, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

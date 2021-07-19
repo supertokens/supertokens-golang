@@ -1,6 +1,7 @@
 package emailpassword
 
 import (
+	"encoding/json"
 	"errors"
 	"reflect"
 	"regexp"
@@ -263,8 +264,8 @@ func defaultValidator(_ interface{}) *string {
 
 func defaultPasswordValidator(value interface{}) *string {
 	// length >= 8 && < 100
-    // must have a number and a character
-	
+	// must have a number and a character
+
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the password field yields a string"
 		return &msg
@@ -301,4 +302,17 @@ func defaultEmailValidator(value interface{}) *string {
 		return &msg
 	}
 	return nil
+}
+
+func parseUser(value interface{}) (*models.User, error) {
+	respJSON, err := json.Marshal(value)
+	if err != nil {
+		return nil, err
+	}
+	var user models.User
+	err = json.Unmarshal(respJSON, &user)
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
 }

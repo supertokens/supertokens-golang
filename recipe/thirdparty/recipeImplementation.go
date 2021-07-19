@@ -1,8 +1,6 @@
 package thirdparty
 
 import (
-	"encoding/json"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -31,15 +29,7 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 					Error:  err,
 				}
 			}
-			respJSON, err := json.Marshal(response["user"])
-			if err != nil {
-				return models.SignInUpResponse{
-					Status: "FIELD_ERROR",
-					Error:  err,
-				}
-			}
-			var user models.User
-			err = json.Unmarshal(respJSON, &user)
+			user, err := parseUser(response["user"])
 			if err != nil {
 				return models.SignInUpResponse{
 					Status: "FIELD_ERROR",
@@ -48,7 +38,7 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 			return models.SignInUpResponse{
 				Status:         "OK",
-				User:           user,
+				User:           *user,
 				CreatedNewUser: response["createdNewUser"].(bool),
 			}
 		},
@@ -61,16 +51,11 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				"userId": userID,
 			})
 			if response["status"] == "OK" {
-				respJSON, err := json.Marshal(response["user"])
+				user, err := parseUser(response["user"])
 				if err != nil {
 					return nil
 				}
-				var user models.User
-				err = json.Unmarshal(respJSON, &user)
-				if err != nil {
-					return nil
-				}
-				return &user
+				return user
 			}
 			return nil
 		},
@@ -84,16 +69,11 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				"thirdPartyUserId": thirdPartyUserID,
 			})
 			if response["status"] == "OK" {
-				respJSON, err := json.Marshal(response["user"])
+				user, err := parseUser(response["user"])
 				if err != nil {
 					return nil
 				}
-				var user models.User
-				err = json.Unmarshal(respJSON, &user)
-				if err != nil {
-					return nil
-				}
-				return &user
+				return user
 			}
 			return nil
 		},

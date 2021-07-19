@@ -114,14 +114,14 @@ func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey boo
 }
 
 func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
-	var domain *string
+	var domain string
 	if config.CookieDomain != nil {
-		domain = config.CookieDomain
+		domain = *config.CookieDomain
 	}
 	secure := config.CookieSecure
 	sameSite := config.CookieSameSite
+	
 	path := ""
-
 	if pathType == "refreshTokenPath" {
 		path = config.RefreshTokenPath.GetAsStringDangerous()
 	} else if pathType == "accessTokenPath" {
@@ -137,20 +137,20 @@ func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name 
 
 	httpOnly := true
 
-	if domain != nil {
-		cookie := http.Cookie{
+	if domain != "" {
+		cookie := &http.Cookie{
 			Name:     name,
 			Value:    url.QueryEscape(value),
-			Domain:   *domain,
+			Domain:   domain,
 			Secure:   secure,
 			HttpOnly: httpOnly,
 			Expires:  time.Unix(int64(expires/1000), 0),
 			Path:     path,
 			SameSite: sameSiteField,
 		}
-		setCookieValue(res, &cookie)
+		setCookieValue(res, cookie)
 	} else {
-		cookie := http.Cookie{
+		cookie := &http.Cookie{
 			Name:     name,
 			Value:    url.QueryEscape(value),
 			Secure:   secure,
@@ -159,7 +159,7 @@ func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name 
 			Path:     path,
 			SameSite: sameSiteField,
 		}
-		setCookieValue(res, &cookie)
+		setCookieValue(res, cookie)
 	}
 }
 
@@ -173,9 +173,13 @@ func getHeader(request *http.Request, key string) *string {
 
 func getCookieValue(request *http.Request, key string) *string {
 	cookies := request.Cookies()
-	for _, value := range cookies {
-		if value.Name == key {
-			val, err := url.QueryUnescape(value.Value)
+	if len(cookies) == 0 {
+		return nil
+	}
+	
+	for _, cookie := range cookies {
+		if cookie.Name == key {
+			val, err := url.QueryUnescape(cookie.Value)
 			if err != nil {
 				return nil
 			}
