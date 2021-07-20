@@ -74,6 +74,7 @@ func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
+				// TODO:
 				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
 					return models.UserInfo{}
 				},
@@ -82,6 +83,7 @@ func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
 	}
 }
 
+// TODO:
 func getClientSecret(clientId, keyId, teamId, privateKey string) string {
 	return ""
 }

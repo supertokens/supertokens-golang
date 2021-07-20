@@ -30,7 +30,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 	verifiedConfig := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())

@@ -7,6 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
 
+// TODO:
 func MakeAPIImplementation() models.APIImplementation {
 	return models.APIImplementation{
 		AuthorisationUrlGET: func(provider models.TypeProvider, options models.APIOptions) models.AuthorisationUrlGETResponse {
@@ -14,6 +15,7 @@ func MakeAPIImplementation() models.APIImplementation {
 			var params map[string]string
 			paramsString := "?"
 			for key, value := range providerInfo.AuthorisationRedirect.Params {
+				// TODO: check for value as function
 				params[key] = value
 				paramsString = paramsString + key + "=" + value + "&"
 			}

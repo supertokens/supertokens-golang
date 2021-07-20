@@ -29,7 +29,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, err
 	}
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
-	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 	verifiedConfig, err := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
 	if err != nil {
 		return Recipe{}, err

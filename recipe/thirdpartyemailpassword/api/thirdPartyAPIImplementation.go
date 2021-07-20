@@ -6,5 +6,8 @@ import (
 )
 
 func GetThirdPartyIterfaceImpl(apiImplmentation models.APIImplementation) tpm.APIImplementation {
-	return tpm.APIImplementation{}
+	return tpm.APIImplementation{
+		AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
+		SignInUpPOST:        apiImplmentation.SignInUpPOST,
+	}
 }

@@ -76,7 +76,7 @@ type TypeNormalisedInput struct {
 	SessionFeature                 TypeNormalisedInputSessionFeature
 	SignUpFeature                  TypeNormalisedInputSignUp
 	Providers                      []tpm.TypeProvider
-	ResetPasswordUsingTokenFeature epm.TypeInputResetPasswordUsingTokenFeature
+	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evm.TypeInput
 	Override                       struct {
 		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation

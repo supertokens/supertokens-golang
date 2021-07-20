@@ -6,7 +6,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
+func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
 	return models.RecipeImplementation{
 		SignUp: func(email, password string) models.SignInUpResponse {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signup")

@@ -51,6 +51,7 @@ func Facebook(config TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
+				// TODO:
 				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
 					return models.UserInfo{}
 				},

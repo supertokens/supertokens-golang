@@ -13,7 +13,7 @@ func AuthorisationUrlAPI(apiImplementation models.APIImplementation, options mod
 		return nil
 	}
 	queryParams := options.Req.URL.Query()
-	thirdPartyId := queryParams["thirdPartyId"][0]
+	thirdPartyId := queryParams.Get("thirdPartyId")
 
 	if len(thirdPartyId) == 0 {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}

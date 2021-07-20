@@ -19,10 +19,19 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
 
 	typeNormalisedInput := models.TypeNormalisedInput{
-		SessionFeature:           sessionFeature,
-		EmailVerificationFeature: emailVerificationFeature,
-		SignUpFeature:            signUpFeature,
+		SessionFeature:                 sessionFeature,
+		EmailVerificationFeature:       emailVerificationFeature,
+		SignUpFeature:                  signUpFeature,
+		ResetPasswordUsingTokenFeature: nil,
+		Providers:                      nil,
 	}
+	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = config.ResetPasswordUsingTokenFeature
+	}
+	if config != nil && config.Providers != nil {
+		typeNormalisedInput.Providers = config.Providers
+	}
+
 	typeNormalisedInput.Override.Functions = func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
 		return originalImplementation
 	}

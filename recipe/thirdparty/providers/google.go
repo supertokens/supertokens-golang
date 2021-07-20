@@ -68,6 +68,7 @@ func Google(config TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
+				// TODO:
 				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
 					// accessTokenAPIResponse := authCodeResponse.(googleGetProfileInfoInput)
 					// accessToken := accessTokenAPIResponse.AccessToken
