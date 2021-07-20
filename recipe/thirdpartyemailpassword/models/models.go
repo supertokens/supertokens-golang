@@ -52,8 +52,8 @@ type TypeNormalisedInputSignUp struct {
 }
 
 type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User) string
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
 }
 
 type TypeInput struct {
@@ -61,7 +61,7 @@ type TypeInput struct {
 	SignUpFeature                  *TypeInputSignUp
 	Providers                      []tpm.TypeProvider
 	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
-	EmailVerificationFeature       *epm.TypeInputEmailVerificationFeature
+	EmailVerificationFeature       *TypeInputEmailVerificationFeature
 	Override                       *struct {
 		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
 		APIs                     func(originalImplementation APIImplementation) APIImplementation

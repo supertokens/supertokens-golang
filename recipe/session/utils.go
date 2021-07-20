@@ -168,13 +168,12 @@ func normaliseSameSiteOrThrowError(sameSite string) (string, error) {
 	return sameSite, nil
 }
 
-// TODO: implement test cases? - see node code (search for getTopLevelDomainForSameSiteResolution)
 func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	urlObj, err := url.Parse(URL)
 	if err != nil {
 		return "", err
 	}
-	hostname := urlObj.Host
+	hostname := urlObj.Hostname()
 	isAnIP, err := supertokens.IsAnIPAddress(hostname)
 	if err != nil {
 		return "", err
@@ -204,7 +203,7 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (*string, error) {
 		return nil, errors.New("Please provide a valid sessionScope")
 	}
 
-	sessionScope = urlObj.Host
+	sessionScope = urlObj.Hostname()
 	sessionScope = strings.TrimPrefix(sessionScope, ".")
 
 	noDotNormalised := sessionScope

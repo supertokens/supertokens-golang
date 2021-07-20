@@ -34,7 +34,6 @@ func GetUserByID(userID string) (*models.User, error) {
 	return instance.RecipeImpl.GetUserByID(userID), nil
 }
 
-// TODO
 func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*models.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {

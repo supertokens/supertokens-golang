@@ -46,7 +46,7 @@ func normaliseURLDomainOrThrowError(input string, ignoreProtocol bool) (string, 
 	}
 
 	if ignoreProtocol {
-		isAnIP, err := IsAnIPAddress(urlObj.Host)
+		isAnIP, err := IsAnIPAddress(urlObj.Hostname())
 		if err != nil {
 			return "", err
 		}

@@ -128,7 +128,7 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 		Output: "/one/two",
 	}, {
 		Input:  "127.0.0.1:4000/one/two",
-		Output: "/127.0.0.1:4000/one/two", // TODO: needs to be fixed
+		Output: "/one/two",
 	}, {
 		Input:  "127.0.0.1/one/two",
 		Output: "/one/two",
@@ -153,10 +153,9 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 	}, {
 		Input:  "/app.example.com",
 		Output: "/app.example.com",
-	},
-	}
+	}}
 	for _, val := range input {
-		path, _ := normaliseURLPathOrThrowError(val.Input) // TODO: assert error
+		path, _ := normaliseURLPathOrThrowError(val.Input)
 		assert.Equal(t, val.Output, path, val.Input)
 	}
 }

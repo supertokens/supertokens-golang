@@ -7,7 +7,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
 
-// TODO:
 func MakeAPIImplementation() models.APIImplementation {
 	return models.APIImplementation{
 		AuthorisationUrlGET: func(provider models.TypeProvider, options models.APIOptions) models.AuthorisationUrlGETResponse {
@@ -76,6 +75,7 @@ func MakeAPIImplementation() models.APIImplementation {
 	}
 }
 
+// TODO:
 func postRequest(providerInfo models.TypeProviderGetResponse) (string, error) {
 	return "", nil
 }

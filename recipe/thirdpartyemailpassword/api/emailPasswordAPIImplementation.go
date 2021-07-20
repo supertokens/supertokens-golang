@@ -1,10 +1,11 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-// TODO
-func GetIterfaceImpl(apiImplmentation models.APIImplementation) models.APIImplementation {
-	return models.APIImplementation{}
+// :
+func GetEmailPasswordIterfaceImpl(apiImplmentation models.APIImplementation) epm.APIImplementation {
+	return epm.APIImplementation{}
 }

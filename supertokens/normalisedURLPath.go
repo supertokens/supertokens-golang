@@ -40,7 +40,7 @@ func (n NormalisedURLPath) IsARecipePath() bool {
 }
 
 func normaliseURLPathOrThrowError(input string) (string, error) {
-	input = strings.ToLower(strings.Trim(input, ""))
+	input = strings.ToLower(strings.TrimSpace(input))
 	if !strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
 		if (domainGiven(input) || strings.HasPrefix(input, "localhost")) &&
 			!strings.HasPrefix(input, "http://") && !strings.HasPrefix(input, "https://") {
@@ -59,27 +59,26 @@ func normaliseURLPathOrThrowError(input string) (string, error) {
 		return "", err
 	}
 	input = urlObj.Path
-	if input != "" && input[len(input)-1:] == "/" {
-		return input[:len(input)-1], nil
-	}
+	input = strings.TrimSuffix(input, "/")
 
 	return input, nil
 }
 
 func domainGiven(input string) bool {
+	// If no dot, return false.
 	if !strings.Contains(input, ".") || strings.HasPrefix(input, "/") {
 		return false
 	}
 
 	urlObj, err := url.Parse(input)
 	if err != nil {
-		return false
+		return true
 	}
-	if urlObj.Host == "" {
+	if urlObj.Hostname() == "" {
 		urlObj, err = url.Parse("http://" + input)
 		if err != nil {
 			return false
 		}
 	}
-	return strings.Index(urlObj.Host, ".") != -1
+	return strings.Index(urlObj.Hostname(), ".") != -1
 }

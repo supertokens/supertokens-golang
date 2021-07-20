@@ -6,7 +6,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
