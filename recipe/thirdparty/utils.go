@@ -48,11 +48,11 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	return typeNormalisedInput, nil
 }
 
-func defaultSetJwtPayloadForSession(User models.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]string {
+func defaultSetJwtPayloadForSession(User models.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{} {
 	return nil
 }
 
-func defaultSetSessionDataForSession(User models.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]string {
+func defaultSetSessionDataForSession(User models.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{} {
 	return nil
 }
 

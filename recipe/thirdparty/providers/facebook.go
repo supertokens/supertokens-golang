@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"net/http"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
@@ -51,13 +52,45 @@ func Facebook(config TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				// TODO:
-				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
-					return models.UserInfo{}
+				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+					accessTokenAPIResponse := authCodeResponse.(facebookGetProfileInfoInput)
+					accessToken := accessTokenAPIResponse.AccessToken
+					response, err := getFacebookAuthRequest(accessToken)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					userInfo := response["data"].(map[string]interface{})
+					ID := userInfo["id"].(string)
+					email := userInfo["email"].(string)
+					if email == "" {
+						return models.UserInfo{
+							ID: ID,
+						}, nil
+					}
+					isVerified := userInfo["verified_email"].(bool)
+					return models.UserInfo{
+						ID: ID,
+						Email: &models.EmailStruct{
+							ID:         email,
+							IsVerified: isVerified,
+						},
+					}, nil
 				},
 			}
 		},
 	}
+}
+
+func getFacebookAuthRequest(accessToken string) (map[string]interface{}, error) {
+	url := "https://graph.facebook.com/me"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("access_token", accessToken)
+	req.Header.Add("fields", "id,email")
+	req.Header.Add("format", "json")
+	return doGetRequest(req)
 }
 
 type facebookGetProfileInfoInput struct {

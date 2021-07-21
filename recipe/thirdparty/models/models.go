@@ -19,7 +19,7 @@ type EmailStruct struct {
 type TypeProviderGetResponse struct {
 	AccessTokenAPI        URLParams
 	AuthorisationRedirect URLParams
-	GetProfileInfo        func(authCodeResponse interface{}) UserInfo
+	GetProfileInfo        func(authCodeResponse interface{}) (UserInfo, error)
 }
 
 type URLParams struct {
@@ -42,9 +42,9 @@ type User struct {
 	}
 }
 
-type TypeInputSetJwtPayloadForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]string
+type TypeInputSetJwtPayloadForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{}
 
-type TypeInputSetSessionDataForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]string
+type TypeInputSetSessionDataForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{}
 
 type TypeNormalisedInputSessionFeature struct {
 	SetJwtPayload  TypeInputSetJwtPayloadForSession

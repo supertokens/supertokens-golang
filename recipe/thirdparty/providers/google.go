@@ -1,6 +1,10 @@
 package providers
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -68,16 +72,71 @@ func Google(config TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				// TODO:
-				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
-					// accessTokenAPIResponse := authCodeResponse.(googleGetProfileInfoInput)
-					// accessToken := accessTokenAPIResponse.AccessToken
-					// authHeader := "Bearer " + accessToken
-					return models.UserInfo{}
+				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+					accessTokenAPIResponse := authCodeResponse.(googleGetProfileInfoInput)
+					accessToken := accessTokenAPIResponse.AccessToken
+					authHeader := "Bearer " + accessToken
+					response, err := getGoogleAuthRequest(authHeader)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					userInfo := response["data"].(map[string]interface{})
+					ID := userInfo["id"].(string)
+					email := userInfo["email"].(string)
+					if email == "" {
+						return models.UserInfo{
+							ID: ID,
+						}, nil
+					}
+					isVerified := userInfo["verified_email"].(bool)
+					return models.UserInfo{
+						ID: ID,
+						Email: &models.EmailStruct{
+							ID:         email,
+							IsVerified: isVerified,
+						},
+					}, nil
 				},
 			}
 		},
 	}
+}
+
+func getGoogleAuthRequest(authHeader string) (map[string]interface{}, error) {
+	params := map[string]string{
+		"alt": "json",
+	}
+	paramsJson, err := json.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	url := "https://www.googleapis.com/oauth2/v1/userinfo"
+	req, err := http.NewRequest("GET", url, bytes.NewBuffer([]byte(paramsJson)))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	return doGetRequest(req)
+}
+
+func doGetRequest(req *http.Request) (map[string]interface{}, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }
 
 type googleGetProfileInfoInput struct {

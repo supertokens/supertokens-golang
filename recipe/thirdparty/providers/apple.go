@@ -29,7 +29,7 @@ func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
 		ID: appleID,
 		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://appleid.apple.com/auth/token"
-			clientSecret := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
+			clientSecret, _ := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
 				"client_secret": clientSecret,
@@ -75,8 +75,8 @@ func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
 					Params: authorizationRedirectParams,
 				},
 				// TODO:
-				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
-					return models.UserInfo{}
+				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error){
+					return models.UserInfo{}, nil
 				},
 			}
 		},
@@ -84,8 +84,8 @@ func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
 }
 
 // TODO:
-func getClientSecret(clientId, keyId, teamId, privateKey string) string {
-	return ""
+func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error) {
+	return "", nil
 }
 
 type appleGetProfileInfoInput struct {

@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"net/http"
 	"reflect"
 	"strings"
 
@@ -64,13 +65,73 @@ func Github(config TypeThirdPartyProviderGithubConfig) models.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				// TODO:
-				GetProfileInfo: func(authCodeResponse interface{}) models.UserInfo {
-					return models.UserInfo{}
+				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+					accessTokenAPIResponse := authCodeResponse.(githubGetProfileInfoInput)
+					accessToken := accessTokenAPIResponse.AccessToken
+					authHeader := "Bearer " + accessToken
+					response, err := getGithubAuthRequest(authHeader)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					userInfo := response["data"].(map[string]interface{})
+					emailsInfoResponse, err := getGithubEmailsInfo(authHeader)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					emailsInfo := emailsInfoResponse["data"].([]interface{})
+					ID := userInfo["id"].(string) // github userId will be a number
+					// if user has choosen not to show their email publicly, userInfo here will
+					// have email as null. So we instead get the info from the emails api and
+					// use the email which is maked as primary one.
+					var emailInfo map[string]interface{}
+					for _, emailInfo := range emailsInfo {
+						emailInfoMap := emailInfo.(map[string]interface{})
+						if emailInfoMap["primary"].(bool) {
+							emailInfo = emailInfoMap
+						}
+					}
+					if emailInfo == nil {
+						return models.UserInfo{
+							ID: ID,
+						}, nil
+					}
+					isVerified := false
+					if emailInfo != nil {
+						isVerified = emailInfo["verified"].(bool)
+					}
+					return models.UserInfo{
+						ID: ID,
+						Email: &models.EmailStruct{
+							ID:         emailInfo["email"].(string),
+							IsVerified: isVerified,
+						},
+					}, nil
 				},
 			}
 		},
 	}
+}
+
+func getGithubAuthRequest(authHeader string) (map[string]interface{}, error) {
+	url := "https://api.github.com/user"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	return doGetRequest(req)
+}
+
+func getGithubEmailsInfo(authHeader string) (map[string]interface{}, error) {
+	url := "https://api.github.com/user/emails"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	return doGetRequest(req)
 }
 
 type githubGetProfileInfoInput struct {

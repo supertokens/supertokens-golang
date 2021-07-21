@@ -1,7 +1,7 @@
 package thirdparty
 
 import (
-	defaultErrors "errors"
+	"errors"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -60,7 +60,7 @@ func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, defaultErrors.New("ThirdParty recipe has already been initialised. Please check your code for bugs.")
+		return nil, errors.New("ThirdParty recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
@@ -68,7 +68,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
+	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 // implement RecipeModule
