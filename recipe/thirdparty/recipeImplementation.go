@@ -1,6 +1,8 @@
 package thirdparty
 
 import (
+	"fmt"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -10,6 +12,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 		SignInUp: func(thirdPartyID, thirdPartyUserID string, email models.EmailStruct) models.SignInUpResponse {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signinup")
 			if err != nil {
+				fmt.Println("here")
 				return models.SignInUpResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,
@@ -21,6 +24,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				"email":            email,
 			})
 			if err != nil {
+				fmt.Println("here 2")
 				return models.SignInUpResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,
@@ -28,6 +32,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 			user, err := parseUser(response["user"])
 			if err != nil {
+				fmt.Println("here 3")
 				return models.SignInUpResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"reflect"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
@@ -50,7 +49,7 @@ func Google(config TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
 				additionalParams = config.AuthorisationRedirect.Params
 			}
 
-			authorizationRedirectParams := map[string]string{
+			authorizationRedirectParams := map[string]interface{}{
 				"scope":                  strings.Join(scopes, " "),
 				"access_type":            "offline",
 				"include_granted_scopes": "true",
@@ -58,29 +57,35 @@ func Google(config TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
 				"client_id":              config.ClientID,
 			}
 			for key, value := range additionalParams {
-				if reflect.ValueOf(value).Kind() == reflect.String {
-					authorizationRedirectParams[key] = value.(string)
-				}
+				authorizationRedirectParams[key] = value
 			}
 
 			return models.TypeProviderGetResponse{
-				AccessTokenAPI: models.URLParams{
+				AccessTokenAPI: models.AccessTokenAPI{
 					URL:    accessTokenAPIURL,
 					Params: accessTokenAPIParams,
 				},
-				AuthorisationRedirect: models.URLParams{
+				AuthorisationRedirect: models.AuthorisationRedirect{
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
 				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
-					accessTokenAPIResponse := authCodeResponse.(googleGetProfileInfoInput)
+					authCodeResponseJson, err := json.Marshal(authCodeResponse)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					var accessTokenAPIResponse googleGetProfileInfoInput
+					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
 					accessToken := accessTokenAPIResponse.AccessToken
 					authHeader := "Bearer " + accessToken
 					response, err := getGoogleAuthRequest(authHeader)
 					if err != nil {
 						return models.UserInfo{}, err
 					}
-					userInfo := response["data"].(map[string]interface{})
+					userInfo := response.(map[string]interface{})
 					ID := userInfo["id"].(string)
 					email := userInfo["email"].(string)
 					if email == "" {
@@ -102,7 +107,7 @@ func Google(config TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
 	}
 }
 
-func getGoogleAuthRequest(authHeader string) (map[string]interface{}, error) {
+func getGoogleAuthRequest(authHeader string) (interface{}, error) {
 	params := map[string]string{
 		"alt": "json",
 	}
@@ -119,7 +124,7 @@ func getGoogleAuthRequest(authHeader string) (map[string]interface{}, error) {
 	return doGetRequest(req)
 }
 
-func doGetRequest(req *http.Request) (map[string]interface{}, error) {
+func doGetRequest(req *http.Request) (interface{}, error) {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -131,7 +136,7 @@ func doGetRequest(req *http.Request) (map[string]interface{}, error) {
 	}
 	defer resp.Body.Close()
 
-	var result map[string]interface{}
+	var result interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return nil, err
@@ -140,9 +145,9 @@ func doGetRequest(req *http.Request) (map[string]interface{}, error) {
 }
 
 type googleGetProfileInfoInput struct {
-	AccessToken  string
-	ExpiresIn    int
-	TokenType    string
-	Scope        string
-	RefreshToken string
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+	Scope        string `json:"scope"`
+	RefreshToken string `json:"refresh_token"`
 }

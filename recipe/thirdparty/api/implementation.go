@@ -3,10 +3,12 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
-	"strings"
+	"reflect"
 
+	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
@@ -15,13 +17,20 @@ func MakeAPIImplementation() models.APIImplementation {
 	return models.APIImplementation{
 		AuthorisationUrlGET: func(provider models.TypeProvider, options models.APIOptions) models.AuthorisationUrlGETResponse {
 			providerInfo := provider.Get(nil, nil)
-			var params map[string]string
+			params := make(map[string]string)
 			for key, value := range providerInfo.AuthorisationRedirect.Params {
-				// TODO: check for value as function
-				params[key] = value
+				if reflect.ValueOf(value).Kind() == reflect.String {
+					params[key] = value.(string)
+				} else {
+					call, ok := value.(func(req *http.Request) string)
+					if ok {
+						params[key] = call(options.Req)
+					}
+				}
+
 			}
-			paramsString := getParamString(providerInfo.AuthorisationRedirect.Params)
-			url := providerInfo.AuthorisationRedirect.URL + paramsString
+			paramsString, _ := getParamString(params)
+			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
 			return models.AuthorisationUrlGETResponse{
 				Status: "OK",
 				URL:    url,
@@ -36,8 +45,9 @@ func MakeAPIImplementation() models.APIImplementation {
 					Error:  err,
 				}
 			}
-			userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse["data"])
+			userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
 			if err != nil {
+				fmt.Println("GetProfileInfo err")
 				return models.SignInUpPOSTResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,
@@ -53,6 +63,7 @@ func MakeAPIImplementation() models.APIImplementation {
 
 			response := options.RecipeImplementation.SignInUp(provider.ID, userInfo.ID, *emailInfo)
 			if response.Status == "FIELD_ERROR" {
+				fmt.Println("SignInUp err")
 				return models.SignInUpPOSTResponse{
 					Status: response.Status,
 					Error:  response.Error,
@@ -64,11 +75,12 @@ func MakeAPIImplementation() models.APIImplementation {
 				action = "signup"
 			}
 
-			jwtPayload := options.Config.SessionFeature.SetJwtPayload(response.User, accessTokenAPIResponse["data"], action)
-			sessionData := options.Config.SessionFeature.SetSessionData(response.User, accessTokenAPIResponse["data"], action)
+			jwtPayload := options.Config.SessionFeature.SetJwtPayload(response.User, accessTokenAPIResponse, action)
+			sessionData := options.Config.SessionFeature.SetSessionData(response.User, accessTokenAPIResponse, action)
 
 			_, err = session.CreateNewSession(options.Res, response.User.ID, jwtPayload, sessionData)
 			if err != nil {
+				fmt.Println("CreateNewSession err", err)
 				return models.SignInUpPOSTResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,
@@ -78,15 +90,18 @@ func MakeAPIImplementation() models.APIImplementation {
 				Status:           "OK",
 				CreatedNewUser:   response.CreatedNewUser,
 				User:             response.User,
-				AuthCodeResponse: accessTokenAPIResponse["data"],
+				AuthCodeResponse: accessTokenAPIResponse,
 			}
 		},
 	}
 }
 
 func postRequest(providerInfo models.TypeProviderGetResponse) (map[string]interface{}, error) {
-	paramsString := getParamString(providerInfo.AuthorisationRedirect.Params)
-	req, err := http.NewRequest("POST", providerInfo.AccessTokenAPI.URL, bytes.NewBuffer([]byte(paramsString)))
+	querystring, err := getParamString(providerInfo.AccessTokenAPI.Params)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", providerInfo.AccessTokenAPI.URL, bytes.NewBuffer([]byte(querystring)))
 	if err != nil {
 		return nil, err
 	}
@@ -106,11 +121,10 @@ func postRequest(providerInfo models.TypeProviderGetResponse) (map[string]interf
 	return result, nil
 }
 
-func getParamString(params map[string]string) string {
-	paramsString := "?"
-	for key, value := range params {
-		paramsString = paramsString + key + "=" + value + "&"
+func getParamString(paramsMap map[string]string) (string, error) {
+	params := make(map[string]interface{})
+	for key, value := range paramsMap {
+		params[key] = value
 	}
-	paramsString = strings.TrimSuffix(paramsString, "&")
-	return paramsString
+	return qs.Marshal(params)
 }

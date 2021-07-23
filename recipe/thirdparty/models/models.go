@@ -12,19 +12,24 @@ type UserInfo struct {
 }
 
 type EmailStruct struct {
-	ID         string
-	IsVerified bool
+	ID         string `json:"id"`
+	IsVerified bool   `json:"isVerified"`
 }
 
 type TypeProviderGetResponse struct {
-	AccessTokenAPI        URLParams
-	AuthorisationRedirect URLParams
+	AccessTokenAPI        AccessTokenAPI
+	AuthorisationRedirect AuthorisationRedirect
 	GetProfileInfo        func(authCodeResponse interface{}) (UserInfo, error)
 }
 
-type URLParams struct {
+type AccessTokenAPI struct {
 	URL    string
 	Params map[string]string
+}
+
+type AuthorisationRedirect struct {
+	URL    string
+	Params map[string]interface{}
 }
 
 type TypeProvider struct {
@@ -121,8 +126,8 @@ type APIImplementation struct {
 }
 
 type AuthorisationUrlGETResponse struct {
-	Status string
-	URL    string
+	Status string `json:"status"`
+	URL    string `json:"url"`
 }
 
 type SignInUpPOSTResponse struct {

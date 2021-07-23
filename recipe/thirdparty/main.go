@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 )
 
 type signInUpResponse struct {
@@ -80,6 +81,22 @@ func IsEmailVerified(userID string) (bool, error) {
 		return false, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
+}
+
+func Apple(config providers.TypeThirdPartyProviderAppleConfig) models.TypeProvider {
+	return providers.Apple(config)
+}
+
+func Facebook(config providers.TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
+	return providers.Facebook(config)
+}
+
+func Github(config providers.TypeThirdPartyProviderGithubConfig) models.TypeProvider {
+	return providers.Github(config)
+}
+
+func Google(config providers.TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
+	return providers.Google(config)
 }
 
 func getEmailForUserId(userID string) (string, error) {

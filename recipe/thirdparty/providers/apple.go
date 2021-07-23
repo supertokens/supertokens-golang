@@ -1,7 +1,7 @@
 package providers
 
 import (
-	"reflect"
+	"encoding/json"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
@@ -53,29 +53,36 @@ func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
 				additionalParams = config.AuthorisationRedirect.Params
 			}
 
-			authorizationRedirectParams := map[string]string{
+			authorizationRedirectParams := map[string]interface{}{
 				"scope":         strings.Join(scopes, " "),
 				"response_mode": "form_post",
 				"response_type": "code",
 				"client_id":     config.ClientID,
 			}
 			for key, value := range additionalParams {
-				if reflect.ValueOf(value).Kind() == reflect.String {
-					authorizationRedirectParams[key] = value.(string)
-				}
+				authorizationRedirectParams[key] = value
 			}
 
 			return models.TypeProviderGetResponse{
-				AccessTokenAPI: models.URLParams{
+				AccessTokenAPI: models.AccessTokenAPI{
 					URL:    accessTokenAPIURL,
 					Params: accessTokenAPIParams,
 				},
-				AuthorisationRedirect: models.URLParams{
+				AuthorisationRedirect: models.AuthorisationRedirect{
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
 				// TODO:
-				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error){
+				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+					authCodeResponseJson, err := json.Marshal(authCodeResponse)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					var accessTokenAPIResponse appleGetProfileInfoInput
+					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
 					return models.UserInfo{}, nil
 				},
 			}
@@ -89,9 +96,9 @@ func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error)
 }
 
 type appleGetProfileInfoInput struct {
-	AccessToken  string
-	ExpiresIn    int
-	TokenType    string
-	RefreshToken string
-	IDToken      string
+	AccessToken  string `json:"access_token"`
+	ExpiresIn    int    `json:"expires_in"`
+	TokenType    string `json:"token_type"`
+	RefreshToken string `json:"refresh_token"`
+	IDToken      string `json:"id_token"`
 }

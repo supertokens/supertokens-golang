@@ -1,6 +1,7 @@
 package providers
 
 import (
+	"encoding/json"
 	"net/http"
 	"strings"
 
@@ -37,29 +38,37 @@ func Facebook(config TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
 				scopes = append(scopes, config.Scope...)
 			}
 
-			authorizationRedirectParams := map[string]string{
+			authorizationRedirectParams := map[string]interface{}{
 				"scope":         strings.Join(scopes, " "),
 				"response_type": "code",
 				"client_id":     config.ClientID,
 			}
 
 			return models.TypeProviderGetResponse{
-				AccessTokenAPI: models.URLParams{
+				AccessTokenAPI: models.AccessTokenAPI{
 					URL:    accessTokenAPIURL,
 					Params: accessTokenAPIParams,
 				},
-				AuthorisationRedirect: models.URLParams{
+				AuthorisationRedirect: models.AuthorisationRedirect{
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
 				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
-					accessTokenAPIResponse := authCodeResponse.(facebookGetProfileInfoInput)
+					authCodeResponseJson, err := json.Marshal(authCodeResponse)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
+					var accessTokenAPIResponse facebookGetProfileInfoInput
+					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+					if err != nil {
+						return models.UserInfo{}, err
+					}
 					accessToken := accessTokenAPIResponse.AccessToken
 					response, err := getFacebookAuthRequest(accessToken)
 					if err != nil {
 						return models.UserInfo{}, err
 					}
-					userInfo := response["data"].(map[string]interface{})
+					userInfo := response.(map[string]interface{})
 					ID := userInfo["id"].(string)
 					email := userInfo["email"].(string)
 					if email == "" {
@@ -81,7 +90,7 @@ func Facebook(config TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
 	}
 }
 
-func getFacebookAuthRequest(accessToken string) (map[string]interface{}, error) {
+func getFacebookAuthRequest(accessToken string) (interface{}, error) {
 	url := "https://graph.facebook.com/me"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -94,7 +103,7 @@ func getFacebookAuthRequest(accessToken string) (map[string]interface{}, error) 
 }
 
 type facebookGetProfileInfoInput struct {
-	AccessToken string
-	ExpiresIn   int
-	TokenType   string
+	AccessToken string `json:"access_token"`
+	ExpiresIn   int    `json:"expires_in"`
+	TokenType   string `json:"token_type"`
 }

@@ -23,21 +23,36 @@ type Recipe struct {
 
 var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
+	r = &Recipe{}
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 	verifiedConfig, err := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
 	if err != nil {
 		return Recipe{}, err
 	}
-	emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
-	if err != nil {
-		return Recipe{}, err
+	r.Config = verifiedConfig
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+
+	var emailVerificationRecipe emailverification.Recipe
+	if emailVerificationInstance == nil {
+		emailVerificationRecipe, err = emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
+		if err != nil {
+			return Recipe{}, err
+		}
+		r.EmailVerificationRecipe = emailVerificationRecipe
+
+	} else {
+		r.EmailVerificationRecipe = *emailVerificationInstance
+		emailVerificationRecipe = *emailVerificationInstance
 	}
+
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+
 	providers := config.SignInAndUpFeature.Providers
 
 	return Recipe{
@@ -53,7 +68,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil)
 			if err != nil {
 				return nil, err
 			}
@@ -105,6 +120,7 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 		OtherHandler:         theirHandler,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
+		Providers:            r.Providers,
 		Req:                  req,
 		Res:                  res,
 	}

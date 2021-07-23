@@ -98,7 +98,7 @@ func TestNormaliseURLDomainOrThrowError(t *testing.T) {
 		Output: "https://127.0.0.1:80",
 	}}
 	for _, val := range input {
-		domain, _ := normaliseURLDomainOrThrowError(val.Input, false) // TODO: assert error
+		domain, _ := normaliseURLDomainOrThrowError(val.Input, false)
 		assert.Equal(t, val.Output, domain, val.Input)
 	}
 }
