@@ -107,14 +107,14 @@ func MakeAPIImplementation() models.APIImplementation {
 				}
 			}
 
-			response := options.RecipeImplementation.SignIn(email, newPassword)
+			response := options.RecipeImplementation.SignUp(email, newPassword)
 			if response.Status == constants.EmailAlreadyExistsError {
 				return response
 			}
 
 			user := response.User
-			jwtPayload := options.Config.SessionFeature.SetJwtPayload(user, formFields, "signin")
-			sessionData := options.Config.SessionFeature.SetSessionData(user, formFields, "signin")
+			jwtPayload := options.Config.SessionFeature.SetJwtPayload(user, formFields, "signup")
+			sessionData := options.Config.SessionFeature.SetSessionData(user, formFields, "signup")
 
 			_, err := session.CreateNewSession(options.Res, user.ID, jwtPayload, sessionData)
 			if err != nil {

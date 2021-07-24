@@ -10,7 +10,7 @@ func EmailExists(apiImplementation models.APIImplementation, options models.APIO
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
-	email := options.Req.PostForm.Get("email")
+	email := options.Req.URL.Query().Get("email")
 	if email == "" {
 		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
 	}
