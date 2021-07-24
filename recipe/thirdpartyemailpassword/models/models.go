@@ -16,27 +16,13 @@ type User struct {
 	}
 }
 
-type TypeContextEmailPasswordSignUp struct {
-	LoginType  string
-	FormFields []epm.TypeFormField
-}
-
-type TypeContextEmailPasswordSessionDataAndJWT struct {
-	LoginType  string
-	FormFields []epm.TypeFormField
-}
-
-type TypeContextEmailPasswordSignIn struct {
-	LoginType string
-}
-
-type TypeContextThirdParty struct {
-	LoginType                  string
+type TypeContext struct {
+	FormFields                 []epm.TypeFormField
 	ThirdPartyAuthCodeResponse interface{}
 }
 
-type TypeInputSetJwtPayloadForSession func(user User, context interface{}, action string) map[string]interface{}
-type TypeInputSetSessionDataForSession func(user User, context interface{}, action string) map[string]interface{}
+type TypeInputSetJwtPayloadForSession func(user User, context TypeContext, action string) map[string]interface{}
+type TypeInputSetSessionDataForSession func(user User, context TypeContext, action string) map[string]interface{}
 
 type TypeNormalisedInputSessionFeature struct {
 	SetJwtPayload  TypeInputSetJwtPayloadForSession
@@ -91,29 +77,65 @@ type TypeNormalisedInput struct {
 type RecipeImplementation struct {
 	GetUserByID             func(userID string) *User
 	GetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string) *User
-	SignInUp                func(thirdPartyID string, thirdPartyUserID string, email tpm.EmailStruct) tpm.SignInUpResponse
+	SignInUp                func(thirdPartyID string, thirdPartyUserID string, email tpm.EmailStruct) SignInUpResponse
 
-	SignUp                   func(email string, password string) epm.SignInUpResponse
-	SignIn                   func(email string, password string) epm.SignInUpResponse
+	SignUp                   func(email string, password string) SignInUpResponse
+	SignIn                   func(email string, password string) SignInUpResponse
 	GetUserByEmail           func(email string) *User
-	CreateResetPasswordToken func(userId string) epm.CreateResetPasswordTokenResponse
+	CreateResetPasswordToken func(userID string) epm.CreateResetPasswordTokenResponse
 	ResetPasswordUsingToken  func(token string, newPassword string) epm.ResetPasswordUsingTokenResponse
 }
 
-type EmailPasswordAPIOptions epm.APIOptions
+type SignInUpResponse struct {
+	Status         string
+	CreatedNewUser bool
+	User           User
+	Error          error
+}
 
-type ThirdPartyAPIOptions tpm.APIOptions
+type SignInUpAPIInput struct {
+	EmailpasswordInput *EmailpasswordInput
+	ThirdPartyInput    *ThirdPartyInput
+}
 
-// type SignInAPIInput struct {}
-// type SignInUpAPIOutput struct{}
+type EmailpasswordInput struct {
+	IsSignIn   bool
+	FormFields []epm.TypeFormField
+	Options    epm.APIOptions
+}
+
+type ThirdPartyInput struct {
+	Provider    tpm.TypeProvider
+	Code        string
+	RedirectURI string
+	Options     tpm.APIOptions
+}
+
+type SignInUpAPIOutput struct {
+	EmailpasswordOutput *EmailpasswordOutput
+	ThirdPartyOutput    *ThirdPartyOutput
+}
+
+type EmailpasswordOutput struct {
+	Status         string
+	User           User
+	CreatedNewUser bool
+}
+
+type ThirdPartyOutput struct {
+	Status           string
+	CreatedNewUser   bool
+	User             User
+	AuthCodeResponse interface{}
+	Error            error
+}
 
 type APIImplementation struct {
 	AuthorisationUrlGET func(provider tpm.TypeProvider, options tpm.APIOptions) tpm.AuthorisationUrlGETResponse
-	SignInUpPOST        func(provider tpm.TypeProvider, code string, redirectURI string, options tpm.APIOptions) tpm.SignInUpPOSTResponse
 
 	EmailExistsGET                 func(email string, options epm.APIOptions) epm.EmailExistsGETResponse
 	GeneratePasswordResetTokenPOST func(formFields []epm.TypeFormField, options epm.APIOptions) epm.GeneratePasswordResetTokenPOSTResponse
 	PasswordResetPOST              func(formFields []epm.TypeFormField, token string, options epm.APIOptions) epm.PasswordResetPOSTResponse
-	SignInPOST                     func(formFields []epm.TypeFormField, options epm.APIOptions) epm.SignInUpResponse
-	SignUpPOST                     func(formFields []epm.TypeFormField, options epm.APIOptions) epm.SignInUpResponse
+
+	SignInUpPOST func(input SignInUpAPIInput) SignInUpAPIOutput
 }

@@ -71,13 +71,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 	emailverificationTypeInput.Override = nil
 	if config != nil && config.Override != nil {
 		override := config.Override
-		if override.EmailVerificationFeature != nil {
-			emailverificationTypeInput.Override = override.EmailVerificationFeature
-		}
-	}
-	if config != nil && config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-		emailverificationTypeInput.CreateAndSendCustomEmail = nil
-	} else {
+
 		emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) error {
 			userInfo := recipeInstance.GetUserByID(user.ID)
 			if userInfo == nil {
@@ -85,17 +79,23 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 			}
 			return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
 		}
-	}
 
-	if config != nil && config.EmailVerificationFeature.GetEmailVerificationURL == nil {
-		emailverificationTypeInput.GetEmailVerificationURL = nil
-	} else {
 		emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
 			userInfo := recipeInstance.GetUserByID(user.ID)
 			if userInfo == nil {
 				return "", errors.New("Unknown User ID provided")
 			}
 			return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
+		}
+
+		if override.EmailVerificationFeature != nil {
+			emailverificationTypeInput.Override = override.EmailVerificationFeature
+			if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+				emailverificationTypeInput.CreateAndSendCustomEmail = nil
+			}
+			if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
+				emailverificationTypeInput.GetEmailVerificationURL = nil
+			}
 		}
 	}
 

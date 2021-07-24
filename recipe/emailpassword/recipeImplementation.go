@@ -76,13 +76,13 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			}
 		},
 
-		GetUserByID: func(userId string) *models.User {
+		GetUserByID: func(userID string) *models.User {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user")
 			if err != nil {
 				return nil
 			}
 			response, err := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
-				"userId": userId,
+				"userId": userID,
 			})
 			if err != nil {
 				return nil
@@ -120,7 +120,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			return nil
 		},
 
-		CreateResetPasswordToken: func(userId string) models.CreateResetPasswordTokenResponse {
+		CreateResetPasswordToken: func(userID string) models.CreateResetPasswordTokenResponse {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/password/reset/token")
 			if err != nil {
 				return models.CreateResetPasswordTokenResponse{
@@ -128,7 +128,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 				}
 			}
 			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
-				"userId": userId,
+				"userId": userID,
 			})
 			if err != nil {
 				return models.CreateResetPasswordTokenResponse{

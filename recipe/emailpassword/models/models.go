@@ -92,9 +92,9 @@ type TypeInput struct {
 type RecipeImplementation struct {
 	SignUp                   func(email string, password string) SignInUpResponse
 	SignIn                   func(email string, password string) SignInUpResponse
-	GetUserByID              func(userId string) *User
+	GetUserByID              func(userID string) *User
 	GetUserByEmail           func(email string) *User
-	CreateResetPasswordToken func(userId string) CreateResetPasswordTokenResponse
+	CreateResetPasswordToken func(userID string) CreateResetPasswordTokenResponse
 	ResetPasswordUsingToken  func(token string, newPassword string) ResetPasswordUsingTokenResponse
 }
 

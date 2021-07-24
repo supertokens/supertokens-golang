@@ -9,10 +9,10 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpm.EmailStruct) (tpm.SignInUpResponse, error) {
+func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpm.EmailStruct) (models.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpm.SignInUpResponse{}, err
+		return models.SignInUpResponse{}, err
 	}
 	return instance.RecipeImpl.SignInUp(thirdPartyID, thirdPartyUserID, email), nil
 }
@@ -25,18 +25,18 @@ func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email
 	return instance.RecipeImpl.GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID), nil
 }
 
-func SignUp(email, password string) (epm.SignInUpResponse, error) {
+func SignUp(email, password string) (models.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return epm.SignInUpResponse{}, err
+		return models.SignInUpResponse{}, err
 	}
 	return instance.RecipeImpl.SignUp(email, password), nil
 }
 
-func SignIn(email, password string) (epm.SignInUpResponse, error) {
+func SignIn(email, password string) (models.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return epm.SignInUpResponse{}, err
+		return models.SignInUpResponse{}, err
 	}
 	return instance.RecipeImpl.SignIn(email, password), nil
 }

@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -55,11 +56,11 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	return typeNormalisedInput, nil
 }
 
-func defaultSetJwtPayloadForSession(user models.User, context interface{}, action string) map[string]interface{} {
+func defaultSetJwtPayloadForSession(user models.User, context models.TypeContext, action string) map[string]interface{} {
 	return nil
 }
 
-func defaultSetSessionDataForSession(user models.User, context interface{}, action string) map[string]interface{} {
+func defaultSetSessionDataForSession(user models.User, context models.TypeContext, action string) map[string]interface{} {
 	return nil
 }
 
@@ -97,13 +98,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 	emailverificationTypeInput.Override = nil
 	if config != nil && config.Override != nil {
 		override := config.Override
-		if override.EmailVerificationFeature != nil {
-			emailverificationTypeInput.Override = override.EmailVerificationFeature
-		}
-	}
-	if config != nil && config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-		emailverificationTypeInput.CreateAndSendCustomEmail = nil
-	} else {
+
 		emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) error {
 			userInfo := recipeInstance.GetUserByID(user.ID)
 			if userInfo == nil {
@@ -111,11 +106,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 			}
 			return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
 		}
-	}
 
-	if config != nil && config.EmailVerificationFeature.GetEmailVerificationURL == nil {
-		emailverificationTypeInput.GetEmailVerificationURL = nil
-	} else {
 		emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
 			userInfo := recipeInstance.GetUserByID(user.ID)
 			if userInfo == nil {
@@ -123,7 +114,29 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImp
 			}
 			return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
 		}
+
+		if override.EmailVerificationFeature != nil {
+			emailverificationTypeInput.Override = override.EmailVerificationFeature
+			if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
+				emailverificationTypeInput.CreateAndSendCustomEmail = nil
+			}
+			if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
+				emailverificationTypeInput.GetEmailVerificationURL = nil
+			}
+		}
 	}
 
 	return emailverificationTypeInput
+}
+
+func normalisedToType(normalisedformFields []epm.NormalisedFormField) []epm.TypeInputFormField {
+	var formFields []epm.TypeInputFormField
+	for _, normalisedformField := range normalisedformFields {
+		formFields = append(formFields, epm.TypeInputFormField{
+			ID: normalisedformField.ID,
+			Validate: normalisedformField.Validate,
+			Optional: &normalisedformField.Optional,
+		})
+	}
+	return formFields
 }

@@ -21,17 +21,86 @@ func MakeAPIImplementation() models.APIImplementation {
 		PasswordResetPOST: func(formFields []epm.TypeFormField, token string, options epm.APIOptions) epm.PasswordResetPOSTResponse {
 			return emailPasswordImplementation.PasswordResetPOST(formFields, token, options)
 		},
-		SignInPOST: func(formFields []epm.TypeFormField, options epm.APIOptions) epm.SignInUpResponse {
-			return emailPasswordImplementation.SignInPOST(formFields, options)
-		},
-		SignUpPOST: func(formFields []epm.TypeFormField, options epm.APIOptions) epm.SignInUpResponse {
-			return emailPasswordImplementation.SignInPOST(formFields, options)
+		SignInUpPOST: func(input models.SignInUpAPIInput) models.SignInUpAPIOutput {
+			if input.EmailpasswordInput != nil {
+				if input.EmailpasswordInput.IsSignIn {
+					response := emailPasswordImplementation.SignInPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
+					if response.Status == "OK" {
+						return models.SignInUpAPIOutput{
+							EmailpasswordOutput: &models.EmailpasswordOutput{
+								Status: response.Status,
+								User: models.User{
+									ID:         response.User.ID,
+									Email:      response.User.Email,
+									TimeJoined: response.User.TimeJoined,
+									ThirdParty: nil,
+								},
+								CreatedNewUser: false,
+							},
+						}
+					} else {
+						return models.SignInUpAPIOutput{
+							EmailpasswordOutput: &models.EmailpasswordOutput{
+								Status: response.Status,
+								User: models.User{
+									ID:         response.User.ID,
+									Email:      response.User.Email,
+									TimeJoined: response.User.TimeJoined,
+									ThirdParty: nil,
+								},
+								CreatedNewUser: false,
+							},
+						}
+					}
+				} else {
+					response := emailPasswordImplementation.SignUpPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
+					if response.Status == "OK" {
+						return models.SignInUpAPIOutput{
+							EmailpasswordOutput: &models.EmailpasswordOutput{
+								Status: response.Status,
+								User: models.User{
+									ID:         response.User.ID,
+									Email:      response.User.Email,
+									TimeJoined: response.User.TimeJoined,
+									ThirdParty: nil,
+								},
+								CreatedNewUser: true,
+							},
+						}
+					} else {
+						return models.SignInUpAPIOutput{
+							EmailpasswordOutput: &models.EmailpasswordOutput{
+								Status: response.Status,
+								User: models.User{
+									ID:         response.User.ID,
+									Email:      response.User.Email,
+									TimeJoined: response.User.TimeJoined,
+									ThirdParty: nil,
+								},
+								CreatedNewUser: false,
+							},
+						}
+					}
+				}
+			}
+			response := thirdPartyImplementation.SignInUpPOST(input.ThirdPartyInput.Provider, input.ThirdPartyInput.Code, input.ThirdPartyInput.RedirectURI, input.ThirdPartyInput.Options)
+			return models.SignInUpAPIOutput{
+				ThirdPartyOutput: &models.ThirdPartyOutput{
+					Status:         response.Status,
+					CreatedNewUser: response.CreatedNewUser,
+					User: models.User{
+						ID:         response.User.ID,
+						Email:      response.User.Email,
+						TimeJoined: response.User.TimeJoined,
+						ThirdParty: &response.User.ThirdParty,
+					},
+					AuthCodeResponse: response.AuthCodeResponse,
+					Error:            response.Error,
+				},
+			}
 		},
 		AuthorisationUrlGET: func(provider tpm.TypeProvider, options tpm.APIOptions) tpm.AuthorisationUrlGETResponse {
 			return thirdPartyImplementation.AuthorisationUrlGET(provider, options)
-		},
-		SignInUpPOST: func(provider tpm.TypeProvider, code, redirectURI string, options tpm.APIOptions) tpm.SignInUpPOSTResponse {
-			return thirdPartyImplementation.SignInUpPOST(provider, code, redirectURI, options)
 		},
 	}
 }

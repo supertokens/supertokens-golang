@@ -25,6 +25,10 @@ var r *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
 	r = &Recipe{}
+
+	providers := config.SignInAndUpFeature.Providers
+	r.Providers = config.SignInAndUpFeature.Providers
+
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
@@ -52,8 +56,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
-
-	providers := config.SignInAndUpFeature.Providers
 
 	return Recipe{
 		RecipeModule:            recipeModuleInstance,

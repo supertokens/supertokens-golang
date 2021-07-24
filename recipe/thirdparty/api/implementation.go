@@ -3,7 +3,6 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"reflect"
@@ -47,7 +46,6 @@ func MakeAPIImplementation() models.APIImplementation {
 			}
 			userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
 			if err != nil {
-				fmt.Println("GetProfileInfo err")
 				return models.SignInUpPOSTResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,
@@ -63,7 +61,6 @@ func MakeAPIImplementation() models.APIImplementation {
 
 			response := options.RecipeImplementation.SignInUp(provider.ID, userInfo.ID, *emailInfo)
 			if response.Status == "FIELD_ERROR" {
-				fmt.Println("SignInUp err")
 				return models.SignInUpPOSTResponse{
 					Status: response.Status,
 					Error:  response.Error,
@@ -80,7 +77,6 @@ func MakeAPIImplementation() models.APIImplementation {
 
 			_, err = session.CreateNewSession(options.Res, response.User.ID, jwtPayload, sessionData)
 			if err != nil {
-				fmt.Println("CreateNewSession err", err)
 				return models.SignInUpPOSTResponse{
 					Status: "FIELD_ERROR",
 					Error:  err,
