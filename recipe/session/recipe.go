@@ -31,6 +31,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+	r.RecipeModule = recipeModuleInstance
 
 	return models.SessionRecipe{
 		RecipeModule: recipeModuleInstance,

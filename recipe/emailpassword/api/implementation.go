@@ -11,8 +11,8 @@ func MakeAPIImplementation() models.APIImplementation {
 		EmailExistsGET: func(email string, options models.APIOptions) models.EmailExistsGETResponse {
 			user := options.RecipeImplementation.GetUserByEmail(email)
 			return models.EmailExistsGETResponse{
-				Ok:    true,
-				Exist: user != nil,
+				Status: "OK",
+				Exist:  user != nil,
 			}
 		},
 
@@ -26,20 +26,25 @@ func MakeAPIImplementation() models.APIImplementation {
 			user := options.RecipeImplementation.GetUserByEmail(email)
 			if user == nil {
 				return models.GeneratePasswordResetTokenPOSTResponse{
-					Ok: true,
+					Status: "OK",
 				}
 			}
 			response := options.RecipeImplementation.CreateResetPasswordToken(user.ID)
 			if response.Status == constants.UnknownUserID {
 				return models.GeneratePasswordResetTokenPOSTResponse{
-					Ok: true,
+					Status: "OK",
 				}
 			}
 			passwordResetLink := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user) + "?token=" + response.Token + "&rid=" + options.RecipeID
-			options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
+			err := options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
+			if err != nil {
+				return models.GeneratePasswordResetTokenPOSTResponse{
+					Status: "ERROR",
+				}
+			}
 
 			return models.GeneratePasswordResetTokenPOSTResponse{
-				Ok: true,
+				Status: "OK",
 			}
 		},
 

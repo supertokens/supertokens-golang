@@ -39,28 +39,23 @@ type APIOptions struct {
 }
 
 type CreateEmailVerificationTokenResponse struct {
-	Ok *struct {
-		Token string
-	}
-	EmailAlreadyVerifiedError bool // Zero value will be false
-}
-
-type CreateEmailVerificationTokenAPIResponse struct {
-	OK                        bool
-	EmailAlreadyVerifiedError bool // Zero value will be false
+	Status string
+	Token  string
 }
 
 type VerifyEmailUsingTokenResponse struct {
-	Ok *struct {
-		User User
-	}
-	InvalidTokenError bool // Zero value will be false
+	Status string
+	User   User
+}
+
+type GenerateEmailVerifyTokenPOSTResponse struct {
+	Status string
 }
 
 type APIImplementation struct {
 	VerifyEmailPOST              func(token string, options APIOptions) (*VerifyEmailUsingTokenResponse, error)
 	IsEmailVerifiedGET           func(options APIOptions) (bool, error)
-	GenerateEmailVerifyTokenPOST func(options APIOptions) (*CreateEmailVerificationTokenAPIResponse, error)
+	GenerateEmailVerifyTokenPOST func(options APIOptions) (*GenerateEmailVerifyTokenPOSTResponse, error)
 }
 
 type RecipeImplementation struct {

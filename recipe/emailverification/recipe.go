@@ -33,6 +33,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, nil)
+	r.RecipeModule = recipeModuleInstance
 
 	return Recipe{
 		RecipeModule: recipeModuleInstance,
@@ -68,8 +69,8 @@ func (r *Recipe) CreateEmailVerificationToken(userID, email string) (string, err
 	if err != nil {
 		return "", err
 	}
-	if response.Ok != nil {
-		return response.Ok.Token, nil
+	if response.Status == "OK" {
+		return response.Token, nil
 	}
 	return "", errors.New("Email has already been verified")
 }
@@ -79,8 +80,8 @@ func (r *Recipe) VerifyEmailUsingToken(token string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	if response.Ok != nil {
-		return &response.Ok.User, nil
+	if response.Status == "OK" {
+		return &response.User, nil
 	}
 	return nil, errors.New("Invalid email verification token")
 }

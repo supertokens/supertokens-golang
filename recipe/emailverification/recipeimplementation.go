@@ -22,13 +22,14 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			status, ok := response["status"]
 			if ok && status == "OK" {
 				resp := models.CreateEmailVerificationTokenResponse{
-					Ok: &struct{ Token string }{Token: response["token"].(string)},
+					Status: "OK",
+					Token:  response["token"].(string),
 				}
 				return &resp, nil
 			}
 
 			return &models.CreateEmailVerificationTokenResponse{
-				EmailAlreadyVerifiedError: true,
+				Status: "EMAIL_ALREADY_VERIFIED_ERROR",
 			}, nil
 		},
 		VerifyEmailUsingToken: func(token string) (*models.VerifyEmailUsingTokenResponse, error) {
@@ -47,13 +48,16 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			status, ok := response["status"]
 			if ok && status == "OK" {
 				return &models.VerifyEmailUsingTokenResponse{
-					Ok: &struct{ User models.User }{User: models.User{
+					Status: "OK",
+					User: models.User{
 						ID:    response["userId"].(string),
 						Email: response["email"].(string),
-					}},
+					},
 				}, nil
 			}
-			return &models.VerifyEmailUsingTokenResponse{InvalidTokenError: true}, nil
+			return &models.VerifyEmailUsingTokenResponse{
+				Status: "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR",
+			}, nil
 		},
 		IsEmailVerified: func(userID, email string) (bool, error) {
 			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")

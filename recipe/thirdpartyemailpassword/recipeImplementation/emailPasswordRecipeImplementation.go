@@ -8,7 +8,7 @@ import (
 func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeImplementation) epm.RecipeImplementation {
 	return epm.RecipeImplementation{
 		SignUp: func(email, password string) epm.SignInUpResponse {
-			response := recipeImplementation.SignIn(email, password)
+			response := recipeImplementation.SignUp(email, password)
 			return epm.SignInUpResponse{
 				User: epm.User{
 					ID:         response.User.ID,
@@ -42,6 +42,9 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeImp
 		},
 		GetUserByEmail: func(email string) *epm.User {
 			user := recipeImplementation.GetUserByEmail(email)
+			if user == nil {
+				return nil
+			}
 			return &epm.User{
 				ID:         user.ID,
 				Email:      user.Email,

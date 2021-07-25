@@ -13,13 +13,12 @@ import (
 func EmailVerify(apiImplementation models.APIImplementation, options models.APIOptions) error {
 	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
-
 		if apiImplementation.VerifyEmailPOST == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
 		}
 
-		body, err := ioutil.ReadAll(options.Req.Response.Body)
+		body, err := ioutil.ReadAll(options.Req.Body)
 		if err != nil {
 			return err
 		}
@@ -41,14 +40,8 @@ func EmailVerify(apiImplementation models.APIImplementation, options models.APIO
 			return err
 		}
 
-		if response.Ok != nil {
-			result = map[string]interface{}{
-				"status": "OK",
-			}
-		} else {
-			result = map[string]interface{}{
-				"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR",
-			}
+		result = map[string]interface{}{
+			"status": response.Status,
 		}
 	} else {
 		if apiImplementation.IsEmailVerifiedGET == nil {

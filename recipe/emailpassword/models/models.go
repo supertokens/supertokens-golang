@@ -121,12 +121,12 @@ type TypeFormField struct {
 }
 
 type EmailExistsGETResponse struct {
-	Ok    bool
-	Exist bool
+	Status string
+	Exist  bool
 }
 
 type GeneratePasswordResetTokenPOSTResponse struct {
-	Ok bool
+	Status string
 }
 
 type PasswordResetPOSTResponse struct {

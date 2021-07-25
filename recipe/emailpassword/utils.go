@@ -123,6 +123,8 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 				formFieldsForGenerateTokenForm = append(formFieldsForGenerateTokenForm, FormField)
 			}
 		}
+		normalisedInputResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm = formFieldsForGenerateTokenForm
+		normalisedInputResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm = formFieldsForPasswordResetForm
 	}
 
 	if config != nil && config.GetResetPasswordURL != nil {

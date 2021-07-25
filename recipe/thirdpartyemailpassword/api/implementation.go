@@ -42,12 +42,6 @@ func MakeAPIImplementation() models.APIImplementation {
 						return models.SignInUpAPIOutput{
 							EmailpasswordOutput: &models.EmailpasswordOutput{
 								Status: response.Status,
-								User: models.User{
-									ID:         response.User.ID,
-									Email:      response.User.Email,
-									TimeJoined: response.User.TimeJoined,
-									ThirdParty: nil,
-								},
 								CreatedNewUser: false,
 							},
 						}
@@ -71,12 +65,6 @@ func MakeAPIImplementation() models.APIImplementation {
 						return models.SignInUpAPIOutput{
 							EmailpasswordOutput: &models.EmailpasswordOutput{
 								Status: response.Status,
-								User: models.User{
-									ID:         response.User.ID,
-									Email:      response.User.Email,
-									TimeJoined: response.User.TimeJoined,
-									ThirdParty: nil,
-								},
 								CreatedNewUser: false,
 							},
 						}

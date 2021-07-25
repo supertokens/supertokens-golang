@@ -56,6 +56,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+	r.RecipeModule = recipeModuleInstance
 
 	return Recipe{
 		RecipeModule:            recipeModuleInstance,

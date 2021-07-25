@@ -3,6 +3,8 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
@@ -27,13 +29,21 @@ func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.Normalised
 		if err != nil {
 			return err
 		}
+		fmt.Println("params", string(jsonData))
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 		if err != nil {
 			return err
 		}
 		req.Header.Set("api-version", "0")
+		
 		client := &http.Client{}
-		client.Do(req)
+		resp, err := client.Do(req)
+		fmt.Println("err", err)
+		body, err := io.ReadAll(resp.Body)
+		fmt.Println("body", string(body))
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 }

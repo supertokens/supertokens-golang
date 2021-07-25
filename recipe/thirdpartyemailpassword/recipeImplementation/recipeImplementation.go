@@ -57,6 +57,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		},
 		GetUserByID: func(userID string) *models.User {
 			user := emailPasswordImplementation.GetUserByID(userID)
+			if user == nil {
+				return nil
+			}
 			if user != nil {
 				return &models.User{
 					ID:         user.ID,
@@ -69,6 +72,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				return nil
 			}
 			userinfo := thirdPartyImplementation.GetUserByID(userID)
+			if userinfo == nil {
+				return nil
+			}
 			if userinfo != nil {
 				return &models.User{
 					ID:         userinfo.ID,
@@ -84,6 +90,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				return nil
 			}
 			userinfo := thirdPartyImplementation.GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID)
+			if userinfo == nil {
+				return nil
+			}
 			if userinfo != nil {
 				return &models.User{
 					ID:         userinfo.ID,
@@ -96,6 +105,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		},
 		GetUserByEmail: func(email string) *models.User {
 			userinfo := emailPasswordImplementation.GetUserByEmail(email)
+			if userinfo == nil {
+				return nil
+			}
 			if userinfo != nil {
 				return &models.User{
 					ID:         userinfo.ID,
