@@ -121,16 +121,16 @@ type TypeFormField struct {
 }
 
 type EmailExistsGETResponse struct {
-	Status string
-	Exist  bool
+	Status string `json:"status"`
+	Exist  bool   `json:"exist"`
 }
 
 type GeneratePasswordResetTokenPOSTResponse struct {
-	Status string
+	Status string `json:"status"`
 }
 
 type PasswordResetPOSTResponse struct {
-	Status string
+	Status string `json:"status"`
 }
 type SignInUpResponse struct {
 	User   User   `json:"user"`
@@ -138,10 +138,10 @@ type SignInUpResponse struct {
 }
 
 type CreateResetPasswordTokenResponse struct {
-	Token  string
-	Status string
+	Token  string `json:"token"`
+	Status string `json:"status"`
 }
 
 type ResetPasswordUsingTokenResponse struct {
-	Status string
+	Status string `json:"status"`
 }

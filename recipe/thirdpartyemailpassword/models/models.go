@@ -87,10 +87,10 @@ type RecipeImplementation struct {
 }
 
 type SignInUpResponse struct {
-	Status         string
-	CreatedNewUser bool
-	User           User
-	Error          error
+	Status         string `json:"status"`
+	CreatedNewUser bool   `json:"createdNewUser"`
+	User           User   `json:"user"`
+	Error          error  `json:"error"`
 }
 
 type SignInUpAPIInput struct {
@@ -117,17 +117,17 @@ type SignInUpAPIOutput struct {
 }
 
 type EmailpasswordOutput struct {
-	Status         string
-	User           User
-	CreatedNewUser bool
+	Status         string `json:"status"`
+	User           User   `json:"user"`
+	CreatedNewUser bool   `json:"createdNewUser"`
 }
 
 type ThirdPartyOutput struct {
-	Status           string
-	CreatedNewUser   bool
-	User             User
-	AuthCodeResponse interface{}
-	Error            error
+	Status           string      `json:"status"`
+	CreatedNewUser   bool        `json:"createdNewUser"`
+	User             User        `json:"user"`
+	AuthCodeResponse interface{} `json:"authCodeResponse"`
+	Error            error       `json:"error"`
 }
 
 type APIImplementation struct {

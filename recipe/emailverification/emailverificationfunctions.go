@@ -36,7 +36,10 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		req.Header.Set("content-type", "application/json")
 		req.Header.Set("api-version", "0")
 		client := &http.Client{}
-		client.Do(req)
+		_, err = client.Do(req)
+		if err != nil {
+			return err
+		}
 		return nil
 	}
 }

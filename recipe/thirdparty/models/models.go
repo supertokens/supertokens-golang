@@ -104,10 +104,10 @@ type RecipeImplementation struct {
 }
 
 type SignInUpResponse struct {
-	Status         string
-	CreatedNewUser bool
-	User           User
-	Error          error
+	Status         string `json:"status"`
+	CreatedNewUser bool   `json:"createdNewUser"`
+	User           User   `json:"user"`
+	Error          error  `json:"error"`
 }
 
 type APIOptions struct {
@@ -131,9 +131,9 @@ type AuthorisationUrlGETResponse struct {
 }
 
 type SignInUpPOSTResponse struct {
-	Status           string
-	CreatedNewUser   bool
-	User             User
-	AuthCodeResponse interface{}
-	Error            error
+	Status           string      `json:"status"`
+	CreatedNewUser   bool        `json:"createdNewUser"`
+	User             User        `json:"user"`
+	AuthCodeResponse interface{} `json:"authCodeResponse"`
+	Error            error       `json:"error"`
 }

@@ -39,17 +39,17 @@ type APIOptions struct {
 }
 
 type CreateEmailVerificationTokenResponse struct {
-	Status string
-	Token  string
+	Status string `json:"status"`
+	Token  string `json:"token"`
 }
 
 type VerifyEmailUsingTokenResponse struct {
-	Status string
-	User   User
+	Status string `json:"status"`
+	User   User   `json:"user"`
 }
 
 type GenerateEmailVerifyTokenPOSTResponse struct {
-	Status string
+	Status string `json:"status"`
 }
 
 type APIImplementation struct {
