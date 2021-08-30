@@ -80,15 +80,6 @@ type TypeInput struct {
 	}
 }
 
-type RecipeImplementationReturnType struct {
-	SignUp struct {
-		OK *struct {
-			user User
-		}
-		EmailAlreadyExistsError *struct{}
-	}
-}
-
 type TypeFormField struct {
 	ID    string `json:"id"`
 	Value string `json:"value"`
