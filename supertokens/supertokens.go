@@ -46,6 +46,10 @@ func supertokensInit(config TypeInput) error {
 
 		initQuerier(hosts, config.Supertokens.APIKey)
 	} else {
+		// TODO: here we don't want to initialise the querier since there is
+		// no info about SuperTokens core - so why are we doing this?
+
+		// TODO: Add tests for init without supertokens core.
 		initQuerier(nil, nil)
 	}
 
@@ -62,10 +66,8 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	if config.Telemetry != nil && *config.Telemetry {
-		err := sendTelemetry()
-		if err != nil {
-			return err
-		}
+		sendTelemetry()
+		// we ignore all errors from this function.
 	}
 
 	superTokensInstance = superTokens
@@ -231,6 +233,7 @@ type UserPaginationResult struct {
 	NextPaginationToken *string
 }
 
+// TODO: Add tests
 func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
@@ -273,6 +276,7 @@ func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, inclu
 	return &result, nil
 }
 
+// TODO: Add tests
 func getUserCount(includeRecipeIds *[]string) (int, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")

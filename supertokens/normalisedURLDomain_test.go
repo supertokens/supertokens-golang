@@ -12,6 +12,7 @@ type NormalisedURLDomainTest struct {
 }
 
 func TestNormaliseURLDomainOrThrowError(t *testing.T) {
+	// TODO: check if we have covered all test cases
 	input := []NormalisedURLDomainTest{{
 		Input:  "http://api.example.com",
 		Output: "http://api.example.com",

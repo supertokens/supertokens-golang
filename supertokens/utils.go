@@ -74,6 +74,7 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	}, nil
 }
 
+// TODO: Add tests
 func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
 	var intersection = []string{}
 	for _, i := range v1 {

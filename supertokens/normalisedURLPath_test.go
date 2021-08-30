@@ -12,6 +12,7 @@ type NormalisedURLPathTest struct {
 }
 
 func TestNormaliseURLPathOrThrowError(t *testing.T) {
+	// TODO: check if we have covered all test cases
 	input := []NormalisedURLPathTest{{
 		Input:  "exists",
 		Output: "/exists",
