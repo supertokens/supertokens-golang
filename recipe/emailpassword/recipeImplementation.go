@@ -1,58 +1,55 @@
 package emailpassword
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
-	return models.RecipeImplementation{
-		SignUp: func(email, password string) (models.SignInUpResponse, error) {
+func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterface {
+	return models.RecipeInterface{
+		SignUp: func(email, password string) (models.SignUpResponse, error) {
 			response, err := querier.SendPostRequest("/recipe/signup", map[string]interface{}{
 				"email":    email,
 				"password": password,
 			})
 			if err != nil {
-				return models.SignInUpResponse{}, err
+				return models.SignUpResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return models.SignInUpResponse{}, err
+					return models.SignUpResponse{}, err
 				}
-				return models.SignInUpResponse{
-					Status: status.(string),
-					User:   *user,
+				return models.SignUpResponse{
+					OK: &struct{ User models.User }{User: *user},
 				}, nil
 			}
-			return models.SignInUpResponse{
-				Status: constants.EmailAlreadyExistsError,
+			return models.SignUpResponse{
+				EmailAlreadyExistsError: &struct{}{},
 			}, nil
 		},
 
-		SignIn: func(email, password string) (models.SignInUpResponse, error) {
+		SignIn: func(email, password string) (models.SignInResponse, error) {
 			response, err := querier.SendPostRequest("/recipe/signin", map[string]interface{}{
 				"email":    email,
 				"password": password,
 			})
 			if err != nil {
-				return models.SignInUpResponse{}, err
+				return models.SignInResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return models.SignInUpResponse{}, err
+					return models.SignInResponse{}, err
 				}
-				return models.SignInUpResponse{
-					Status: status.(string),
-					User:   *user,
+				return models.SignInResponse{
+					OK: &struct{ User models.User }{User: *user},
 				}, nil
 			}
-			return models.SignInUpResponse{
-				Status: constants.WrongCredentialsError,
+			return models.SignInResponse{
+				WrongCredentialsError: &struct{}{},
 			}, nil
 		},
 
@@ -102,12 +99,11 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				return models.CreateResetPasswordTokenResponse{
-					Status: status.(string),
-					Token:  response["token"].(string),
+					OK: &struct{ Token string }{Token: response["token"].(string)},
 				}, nil
 			}
 			return models.CreateResetPasswordTokenResponse{
-				Status: constants.UnknownUserID,
+				UnknownUserIdError: &struct{}{},
 			}, nil
 		},
 
@@ -120,9 +116,16 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			if err != nil {
 				return models.ResetPasswordUsingTokenResponse{}, nil
 			}
-			return models.ResetPasswordUsingTokenResponse{
-				Status: response["status"].(string),
-			}, nil
+
+			if response["status"].(string) == "OK" {
+				return models.ResetPasswordUsingTokenResponse{
+					OK: &struct{}{},
+				}, nil
+			} else {
+				return models.ResetPasswordUsingTokenResponse{
+					ResetPasswordInvalidTokenError: &struct{}{},
+				}, nil
+			}
 		},
 
 		UpdateEmailOrPassword: func(userId string, email, password *string) (models.UpdateEmailOrPasswordResponse, error) {
@@ -139,9 +142,20 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplemen
 			if err != nil {
 				return models.UpdateEmailOrPasswordResponse{}, nil
 			}
-			return models.UpdateEmailOrPasswordResponse{
-				Status: response["status"].(string),
-			}, nil
+
+			if response["status"].(string) == "OK" {
+				return models.UpdateEmailOrPasswordResponse{
+					OK: &struct{}{},
+				}, nil
+			} else if response["status"].(string) == "EMAIL_ALREADY_EXISTS_ERROR" {
+				return models.UpdateEmailOrPasswordResponse{
+					EmailAlreadyExistsError: &struct{}{},
+				}, nil
+			} else {
+				return models.UpdateEmailOrPasswordResponse{
+					UnknownUserIdError: &struct{}{},
+				}, nil
+			}
 		},
 	}
 }

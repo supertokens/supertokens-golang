@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SignInAPI(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func SignInAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.SignInPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -28,7 +28,20 @@ func SignInAPI(apiImplementation models.APIImplementation, options models.APIOpt
 	if err != nil {
 		return err
 	}
-	result := apiImplementation.SignInPOST(formFields, options)
-	supertokens.Send200Response(options.Res, result)
+
+	result, err := apiImplementation.SignInPOST(formFields, options)
+	if err != nil {
+		return err
+	}
+	if result.WrongCredentialsError != nil {
+		supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "WRONG_CREDENTIALS_ERROR",
+		})
+	} else {
+		supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "OK",
+			"user":   result.OK.User,
+		})
+	}
 	return nil
 }

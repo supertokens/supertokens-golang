@@ -5,7 +5,6 @@ import (
 	defaultErrors "errors"
 	"strings"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 )
@@ -31,7 +30,7 @@ func validateFormFieldsOrThrowError(configFormFields []models.NormalisedFormFiel
 			return nil, err
 		}
 
-		if formField.ID == constants.FormFieldEmailID {
+		if formField.ID == "email" {
 			formFields = append(formFields, models.TypeFormField{
 				ID:    formField.ID,
 				Value: strings.TrimSpace(formField.Value),

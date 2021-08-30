@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GeneratePasswordResetToken(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func GeneratePasswordResetToken(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.GeneratePasswordResetTokenPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -29,7 +29,12 @@ func GeneratePasswordResetToken(apiImplementation models.APIImplementation, opti
 		return err
 	}
 
-	result := apiImplementation.GeneratePasswordResetTokenPOST(formFields, options)
-	supertokens.Send200Response(options.Res, result)
+	_, err = apiImplementation.GeneratePasswordResetTokenPOST(formFields, options)
+	if err != nil {
+		return err
+	}
+	supertokens.Send200Response(options.Res, map[string]interface{}{
+		"status": "OK",
+	})
 	return nil
 }

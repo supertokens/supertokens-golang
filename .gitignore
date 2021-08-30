@@ -15,3 +15,5 @@
 vendor/
 
 gin/
+
+.DS_Store

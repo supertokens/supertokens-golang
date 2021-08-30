@@ -15,8 +15,9 @@ func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ mo
 	}
 }
 
-func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, passwordResetURLWithToken string) error {
-	return func(user models.User, passwordResetURLWithToken string) error {
+// TODO: only do these in case of non testing
+func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, passwordResetURLWithToken string) {
+	return func(user models.User, passwordResetURLWithToken string) {
 		url := "https://api.supertokens.io/0/st/auth/password/reset"
 		data := map[string]string{
 			"email":            user.Email,
@@ -25,11 +26,11 @@ func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.Normalised
 		}
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			return err
+			return
 		}
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return err
+			return
 		}
 		req.Header.Set("content-type", "application/json")
 		req.Header.Set("api-version", "0")
@@ -37,8 +38,7 @@ func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.Normalised
 		client := &http.Client{}
 		_, err = client.Do(req)
 		if err != nil {
-			return err
+			return
 		}
-		return nil
 	}
 }

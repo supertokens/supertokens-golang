@@ -1,25 +1,17 @@
 package models
 
 import (
-	"net/http"
-
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 )
 
-type TypeNormalisedInputSessionFeature struct {
-	SetJwtPayload  func(user User, formFields []TypeFormField, action string) map[string]interface{}
-	SetSessionData func(user User, formFields []TypeFormField, action string) map[string]interface{}
-}
-
 type TypeNormalisedInput struct {
-	SessionFeature                 TypeNormalisedInputSessionFeature
 	SignUpFeature                  TypeNormalisedInputSignUp
 	SignInFeature                  TypeNormalisedInputSignIn
 	ResetPasswordUsingTokenFeature TypeNormalisedInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       models.TypeInput
 	Override                       struct {
-		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
-		APIs                     func(originalImplementation APIImplementation) APIImplementation
+		Functions                func(originalImplementation RecipeInterface) RecipeInterface
+		APIs                     func(originalImplementation APIInterface) APIInterface
 		EmailVerificationFeature *struct {
 			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
 			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
@@ -58,12 +50,12 @@ type TypeNormalisedInputSignIn struct {
 
 type TypeInputResetPasswordUsingTokenFeature struct {
 	GetResetPasswordURL      func(user User) string
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string) error
+	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string)
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 	GetResetPasswordURL            func(user User) string
-	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string) error
+	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }
@@ -75,13 +67,12 @@ type User struct {
 }
 
 type TypeInput struct {
-	SessionFeature                 *TypeNormalisedInputSessionFeature
 	SignUpFeature                  *TypeInputSignUp
 	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
 	Override                       *struct {
-		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
-		APIs                     func(originalImplementation APIImplementation) APIImplementation
+		Functions                func(originalImplementation RecipeInterface) RecipeInterface
+		APIs                     func(originalImplementation APIInterface) APIInterface
 		EmailVerificationFeature *struct {
 			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
 			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
@@ -89,66 +80,16 @@ type TypeInput struct {
 	}
 }
 
-type RecipeImplementation struct {
-	SignUp                   func(email string, password string) (SignInUpResponse, error)
-	SignIn                   func(email string, password string) (SignInUpResponse, error)
-	GetUserByID              func(userID string) (*User, error)
-	GetUserByEmail           func(email string) (*User, error)
-	CreateResetPasswordToken func(userID string) (CreateResetPasswordTokenResponse, error)
-	ResetPasswordUsingToken  func(token string, newPassword string) (ResetPasswordUsingTokenResponse, error)
-	UpdateEmailOrPassword    func(userId string, email *string, password *string) (UpdateEmailOrPasswordResponse, error)
-}
-
-type APIOptions struct {
-	RecipeImplementation RecipeImplementation
-	Config               TypeNormalisedInput
-	RecipeID             string
-	Req                  *http.Request
-	Res                  http.ResponseWriter
-	OtherHandler         http.HandlerFunc
-}
-
-type APIImplementation struct {
-	EmailExistsGET                 func(email string, options APIOptions) EmailExistsGETResponse
-	GeneratePasswordResetTokenPOST func(formFields []TypeFormField, options APIOptions) GeneratePasswordResetTokenPOSTResponse
-	PasswordResetPOST              func(formFields []TypeFormField, token string, options APIOptions) PasswordResetPOSTResponse
-	SignInPOST                     func(formFields []TypeFormField, options APIOptions) SignInUpResponse
-	SignUpPOST                     func(formFields []TypeFormField, options APIOptions) SignInUpResponse
+type RecipeImplementationReturnType struct {
+	SignUp struct {
+		OK *struct {
+			user User
+		}
+		EmailAlreadyExistsError *struct{}
+	}
 }
 
 type TypeFormField struct {
 	ID    string `json:"id"`
 	Value string `json:"value"`
 }
-
-type EmailExistsGETResponse struct {
-	Status string `json:"status"`
-	Exist  bool   `json:"exist"`
-}
-
-type GeneratePasswordResetTokenPOSTResponse struct {
-	Status string `json:"status"`
-}
-
-type PasswordResetPOSTResponse struct {
-	Status string `json:"status"`
-}
-type SignInUpResponse struct {
-	User   User   `json:"user"`
-	Status string `json:"status"`
-}
-
-type CreateResetPasswordTokenResponse struct {
-	Token  string `json:"token"`
-	Status string `json:"status"`
-}
-
-type ResetPasswordUsingTokenResponse struct {
-	Status string `json:"status"`
-}
-
-type UpdateEmailOrPasswordResponse struct {
-	Status string `json:"status"`
-}
-
-// TODO: See if we can give specific values to Status instead of generic string.

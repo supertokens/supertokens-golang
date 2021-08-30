@@ -1,25 +1,23 @@
 package emailpassword
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 )
 
-func SignUp(email string, password string) (models.User, error) {
+func SignUp(email string, password string) (models.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.User{}, err
+		return models.SignUpResponse{}, err
 	}
-	return instance.RecipeImpl.SignUp(email, password).User, nil
+	return instance.RecipeImpl.SignUp(email, password)
 }
 
-func SignIn(email string, password string) (models.User, error) {
+func SignIn(email string, password string) (models.SignInResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.User{}, err
+		return models.SignInResponse{}, err
 	}
-	return instance.RecipeImpl.SignIn(email, password).User, nil
+	return instance.RecipeImpl.SignIn(email, password)
 }
 
 func GetUserByID(userID string) (*models.User, error) {
@@ -27,7 +25,7 @@ func GetUserByID(userID string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByID(userID), nil
+	return instance.RecipeImpl.GetUserByID(userID)
 }
 
 func GetUserByEmail(email string) (*models.User, error) {
@@ -35,32 +33,40 @@ func GetUserByEmail(email string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByEmail(email), nil
+	return instance.RecipeImpl.GetUserByEmail(email)
 }
 
-func CreateResetPasswordToken(userID string) (string, error) {
+func CreateResetPasswordToken(userID string) (models.CreateResetPasswordTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return models.CreateResetPasswordTokenResponse{}, err
 	}
-	return instance.RecipeImpl.CreateResetPasswordToken(userID).Token, nil
+	return instance.RecipeImpl.CreateResetPasswordToken(userID)
 }
 
-func ResetPasswordUsingToken(token string, newPassword string) error {
+func ResetPasswordUsingToken(token string, newPassword string) (models.ResetPasswordUsingTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return err
+		return models.ResetPasswordUsingTokenResponse{}, nil
 	}
-	instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
-	return nil
+	return instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
 }
 
+func UpdateEmailOrPassword(userId string, email *string, password *string) (models.UpdateEmailOrPasswordResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return models.UpdateEmailOrPasswordResponse{}, nil
+	}
+	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
+}
+
+// TODO: fix the functions below.
 func CreateEmailVerificationToken(userID string) (string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return "", err
 	}
-	email, err := getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
 		return "", err
 	}
@@ -87,21 +93,9 @@ func IsEmailVerified(userID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	email, err := getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
 		return false, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
-}
-
-func getEmailForUserId(userID string) (string, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return "", err
-	}
-	userInfo := instance.RecipeImpl.GetUserByID(userID)
-	if userInfo == nil {
-		return "", errors.New("Unknown User ID provided")
-	}
-	return userInfo.Email, nil
 }

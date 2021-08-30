@@ -17,8 +17,8 @@ const RECIPE_ID = "emailpassword"
 type Recipe struct {
 	RecipeModule            supertokens.RecipeModule
 	Config                  models.TypeNormalisedInput
-	RecipeImpl              models.RecipeImplementation
-	APIImpl                 models.APIImplementation
+	RecipeImpl              models.RecipeInterface
+	APIImpl                 models.APIInterface
 	EmailVerificationRecipe emailverification.Recipe
 }
 
@@ -26,12 +26,14 @@ var r *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
 	r = &Recipe{}
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
-	verifiedConfig := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
+	verifiedConfig := validateAndNormaliseUserInput(*r, appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
@@ -49,16 +51,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		emailVerificationRecipe = *emailVerificationInstance
 	}
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
-	r.RecipeModule = recipeModuleInstance
-
-	return Recipe{
-		RecipeModule:            recipeModuleInstance,
-		Config:                  verifiedConfig,
-		RecipeImpl:              verifiedConfig.Override.Functions(recipeImplementation),
-		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-		EmailVerificationRecipe: emailVerificationRecipe,
-	}, nil
+	return *r, nil
 }
 
 func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
@@ -139,12 +132,13 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
 	options := models.APIOptions{
-		Config:               r.Config,
-		OtherHandler:         theirHandler,
-		RecipeID:             r.RecipeModule.GetRecipeID(),
-		RecipeImplementation: r.RecipeImpl,
-		Req:                  req,
-		Res:                  res,
+		Config:                                r.Config,
+		OtherHandler:                          theirHandler,
+		RecipeID:                              r.RecipeModule.GetRecipeID(),
+		RecipeImplementation:                  r.RecipeImpl,
+		EmailVerificationRecipeImplementation: r.EmailVerificationRecipe.RecipeImpl,
+		Req:                                   req,
+		Res:                                   res,
 	}
 	if id == constants.SignUpAPI {
 		return api.SignUpAPI(r.APIImpl, options)
@@ -174,4 +168,15 @@ func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
 		return true
 	}
 	return false
+}
+
+func (r *Recipe) getEmailForUserId(userID string) (string, error) {
+	userInfo, err := r.RecipeImpl.GetUserByID(userID)
+	if err != nil {
+		return "", err
+	}
+	if userInfo == nil {
+		return "", defaultErrors.New("Unknown User ID provided")
+	}
+	return userInfo.Email, nil
 }
