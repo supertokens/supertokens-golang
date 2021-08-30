@@ -5,7 +5,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GenerateEmailVerifyToken(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func GenerateEmailVerifyToken(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.GenerateEmailVerifyTokenPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -15,8 +15,14 @@ func GenerateEmailVerifyToken(apiImplementation models.APIImplementation, option
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, map[string]interface{}{
-		"status": response.Status,
-	})
+	if response.EmailAlreadyVerifiedError != nil {
+		supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "EMAIL_ALREADY_VERIFIED_ERROR",
+		})
+	} else {
+		supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "OK",
+		})
+	}
 	return nil
 }

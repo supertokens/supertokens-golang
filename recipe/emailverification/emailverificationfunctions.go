@@ -15,8 +15,8 @@ func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(
 	}
 }
 
-func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, emailVerifyURLWithToken string) error {
-	return func(user models.User, emailVerifyURLWithToken string) error {
+func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, emailVerifyURLWithToken string) {
+	return func(user models.User, emailVerifyURLWithToken string) {
 		const url = "https://api.supertokens.io/0/st/auth/email/verify"
 
 		data := map[string]string{
@@ -26,11 +26,11 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		}
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			return err
+			return
 		}
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return err
+			return
 		}
 
 		req.Header.Set("content-type", "application/json")
@@ -38,8 +38,8 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		client := &http.Client{}
 		_, err = client.Do(req)
 		if err != nil {
-			return err
+			return
 		}
-		return nil
+		return
 	}
 }
