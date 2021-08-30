@@ -8,7 +8,7 @@ import (
 
 type APIOptions struct {
 	RecipeImplementation                  RecipeInterface
-	EmailVerificationRecipeImplementation models.RecipeImplementation
+	EmailVerificationRecipeImplementation models.RecipeInterface
 	Config                                TypeNormalisedInput
 	RecipeID                              string
 	Req                                   *http.Request

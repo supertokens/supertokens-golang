@@ -1,21 +1,28 @@
 package emailverification
 
-import "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
-func CreateEmailVerificationToken(userID, email string) (string, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return "", err
-	}
-	return instance.CreateEmailVerificationToken(userID, email)
+func EmailVerificationInit(config *models.TypeInput) supertokens.RecipeListFunction {
+	return recipeInit(config)
 }
 
-func VerifyEmailUsingToken(token string) (*models.User, error) {
+func CreateEmailVerificationToken(userID, email string) (models.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return nil, err
+		return models.CreateEmailVerificationTokenResponse{}, err
 	}
-	return instance.VerifyEmailUsingToken(token)
+	return instance.RecipeImpl.CreateEmailVerificationToken(userID, email)
+}
+
+func VerifyEmailUsingToken(token string) (models.VerifyEmailUsingTokenResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return models.VerifyEmailUsingTokenResponse{}, err
+	}
+	return instance.RecipeImpl.VerifyEmailUsingToken(token)
 }
 
 func IsEmailVerified(userID, email string) (bool, error) {
@@ -24,4 +31,20 @@ func IsEmailVerified(userID, email string) (bool, error) {
 		return false, err
 	}
 	return instance.RecipeImpl.IsEmailVerified(userID, email)
+}
+
+func RevokeEmailVerificationTokens(userID, email string) (models.RevokeEmailVerificationTokensResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return models.RevokeEmailVerificationTokensResponse{}, err
+	}
+	return instance.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
+}
+
+func UnverifyEmail(userID, email string) (models.UnverifyEmailResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return models.UnverifyEmailResponse{}, err
+	}
+	return instance.RecipeImpl.UnverifyEmail(userID, email)
 }

@@ -1,8 +1,16 @@
 package emailpassword
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	envModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
+
+func EmailPasswordInit(config *models.TypeInput) supertokens.RecipeListFunction {
+	return recipeInit(config)
+}
 
 func SignUp(email string, password string) (models.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
@@ -60,32 +68,31 @@ func UpdateEmailOrPassword(userId string, email *string, password *string) (mode
 	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
 }
 
-// TODO: fix the functions below.
-func CreateEmailVerificationToken(userID string) (string, error) {
+func CreateEmailVerificationToken(userID string) (envModels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return envModels.CreateEmailVerificationTokenResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return "", err
+		return envModels.CreateEmailVerificationTokenResponse{}, err
 	}
-	return instance.EmailVerificationRecipe.CreateEmailVerificationToken(userID, email)
+	return instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken(userID, email)
 }
 
-func VerifyEmailUsingToken(token string) (models.User, error) {
+func VerifyEmailUsingToken(token string) (*models.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.User{}, err
+		return nil, err
 	}
-	user, err := instance.EmailVerificationRecipe.VerifyEmailUsingToken(token)
+	response, err := instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken(token)
 	if err != nil {
-		return models.User{}, err
+		return nil, err
 	}
-	return models.User{
-		ID:    user.ID,
-		Email: user.Email,
-	}, nil
+	if response.EmailVerificationInvalidTokenError != nil {
+		return nil, errors.New("email verification token is invalid")
+	}
+	return instance.RecipeImpl.GetUserByID(response.OK.User.ID)
 }
 
 func IsEmailVerified(userID string) (bool, error) {
@@ -98,4 +105,28 @@ func IsEmailVerified(userID string) (bool, error) {
 		return false, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
+}
+
+func RevokeEmailVerificationTokens(userID string) (envModels.RevokeEmailVerificationTokensResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return envModels.RevokeEmailVerificationTokensResponse{}, err
+	}
+	email, err := instance.getEmailForUserId(userID)
+	if err != nil {
+		return envModels.RevokeEmailVerificationTokensResponse{}, err
+	}
+	return instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
+}
+
+func UnverifyEmail(userID string) (envModels.UnverifyEmailResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return envModels.UnverifyEmailResponse{}, err
+	}
+	email, err := instance.getEmailForUserId(userID)
+	if err != nil {
+		return envModels.UnverifyEmailResponse{}, err
+	}
+	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }

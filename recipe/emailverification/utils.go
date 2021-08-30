@@ -39,13 +39,13 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeN
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
 		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
 		Override: struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
 		}{
-			Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
+			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
 				return originalImplementation
 			},
-			APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
+			APIs: func(originalImplementation models.APIInterface) models.APIInterface {
 				return originalImplementation
 			},
 		},

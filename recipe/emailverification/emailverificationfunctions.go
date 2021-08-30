@@ -15,6 +15,7 @@ func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(
 	}
 }
 
+// TODO: send only if not testing
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, emailVerifyURLWithToken string) {
 	return func(user models.User, emailVerifyURLWithToken string) {
 		const url = "https://api.supertokens.io/0/st/auth/email/verify"

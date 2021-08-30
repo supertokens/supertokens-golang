@@ -53,8 +53,8 @@ func makeTypeNormalisedInput(recipeInstance Recipe) models.TypeNormalisedInput {
 			Functions                func(originalImplementation models.RecipeInterface) models.RecipeInterface
 			APIs                     func(originalImplementation models.APIInterface) models.APIInterface
 			EmailVerificationFeature *struct {
-				Functions func(originalImplementation evm.RecipeImplementation) evm.RecipeImplementation
-				APIs      func(originalImplementation evm.APIImplementation) evm.APIImplementation
+				Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
+				APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
 			}
 		}{
 			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
@@ -80,15 +80,15 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance Recipe, config *
 		}
 		if config.EmailVerificationFeature != nil {
 			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) error {
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) {
 					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
 					if err != nil {
-						return err
+						return
 					}
 					if userInfo == nil {
-						return errors.New("Unknown User ID provided")
+						return
 					}
-					return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
 				}
 			}
 

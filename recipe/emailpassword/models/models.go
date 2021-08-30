@@ -13,8 +13,8 @@ type TypeNormalisedInput struct {
 		Functions                func(originalImplementation RecipeInterface) RecipeInterface
 		APIs                     func(originalImplementation APIInterface) APIInterface
 		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
 		}
 	}
 }
@@ -74,8 +74,8 @@ type TypeInput struct {
 		Functions                func(originalImplementation RecipeInterface) RecipeInterface
 		APIs                     func(originalImplementation APIInterface) APIInterface
 		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
 		}
 	}
 }
