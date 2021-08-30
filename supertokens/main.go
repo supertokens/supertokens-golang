@@ -1,6 +1,7 @@
 package supertokens
 
 import (
+	"errors"
 	"net/http"
 )
 
@@ -16,10 +17,10 @@ func Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	return instance.middleware(theirHandler)
 }
 
-func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) bool {
+func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) error {
 	instance, instanceErr := getInstanceOrThrowError()
 	if instanceErr != nil {
-		panic("Please call SupertokensInit before using the ErrorHandler function")
+		return errors.New("please call SupertokensInit before using the ErrorHandler function")
 	}
 	return instance.errorHandler(err, req, res)
 }

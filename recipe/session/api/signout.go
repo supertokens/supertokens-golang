@@ -5,12 +5,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SignOutAPI(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func SignOutAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.SignOutPOST == nil {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	err := apiImplementation.SignOutPOST(options)
+	_, err := apiImplementation.SignOutPOST(options)
 	if err != nil {
 		return err
 	}

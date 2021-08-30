@@ -13,10 +13,12 @@ import (
 
 var handshakeInfoLock sync.Mutex
 
-func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeImplementation {
+func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeInterface {
+
 	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
 	getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
-	return models.RecipeImplementation{
+
+	return models.RecipeInterface{
 		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
 			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
 			if err != nil {

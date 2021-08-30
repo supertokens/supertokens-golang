@@ -1,15 +1,19 @@
 package api
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func VerifySession(recipeInstance models.SessionRecipe, options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {
-	return func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {
-		recipeInstance.APIImpl.VerifySession(options, models.APIOptions{
+// TODO: we need to expose this?
+const sessionContext contextKey = iota
+
+func VerifySession(recipeInstance models.SessionRecipe, options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) error {
+	return func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) error {
+		session, err := recipeInstance.APIImpl.VerifySession(options, models.APIOptions{
 			Config:               recipeInstance.Config,
 			OtherHandler:         otherHandler,
 			Req:                  r,
@@ -17,21 +21,16 @@ func VerifySession(recipeInstance models.SessionRecipe, options *models.VerifySe
 			RecipeID:             recipeInstance.RecipeModule.GetRecipeID(),
 			RecipeImplementation: recipeInstance.RecipeImpl,
 		})
+		if err != nil {
+			return supertokens.ErrorHandler(err, r, w)
+		}
+		if session != nil {
+			var ctx context.Context
+			ctx = context.WithValue(r.Context(), sessionContext, session)
+			otherHandler(w, r.WithContext(ctx))
+		} else {
+			otherHandler(w, r)
+		}
+		return nil
 	}
-}
-
-func SendTryRefreshTokenResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
-}
-
-func SendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
-}
-
-func SendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
-	_, err := recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
-	if err != nil {
-		return err
-	}
-	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }

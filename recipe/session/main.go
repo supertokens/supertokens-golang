@@ -5,12 +5,17 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
+func SessionInit(config *models.TypeInput) supertokens.RecipeListFunction {
+	return recipeInit(config)
+}
+
+func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (models.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return nil, err
+		return models.SessionContainer{}, err
 	}
 	return instance.RecipeImpl.CreateNewSession(res, userID, jwtPayload, sessionData)
 }
@@ -23,10 +28,18 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *models.Veri
 	return instance.RecipeImpl.GetSession(req, res, options)
 }
 
-func RefreshSession(req *http.Request, res http.ResponseWriter) (*models.SessionContainer, error) {
+func GetSessionInformation(sessionHandle string) (models.SessionInformation, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return nil, err
+		return models.SessionInformation{}, err
+	}
+	return instance.RecipeImpl.GetSessionInformation(sessionHandle)
+}
+
+func RefreshSession(req *http.Request, res http.ResponseWriter) (models.SessionContainer, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return models.SessionContainer{}, err
 	}
 	return instance.RecipeImpl.RefreshSession(req, res)
 }
@@ -63,14 +76,6 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 	return instance.RecipeImpl.RevokeMultipleSessions(sessionHandles)
 }
 
-func GetSessionData(sessionHandle string) (interface{}, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return nil, err
-	}
-	return instance.RecipeImpl.GetSessionData(sessionHandle)
-}
-
 func UpdateSessionData(sessionHandle string, newSessionData interface{}) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
@@ -79,36 +84,12 @@ func UpdateSessionData(sessionHandle string, newSessionData interface{}) error {
 	return instance.RecipeImpl.UpdateSessionData(sessionHandle, newSessionData)
 }
 
-func GetJWTPayload(sessionHandle string) (interface{}, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return nil, err
-	}
-	return instance.RecipeImpl.GetJWTPayload(sessionHandle)
-}
-
 func UpdateJWTPayload(sessionHandle string, newJWTPayload interface{}) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
 	return instance.RecipeImpl.UpdateJWTPayload(sessionHandle, newJWTPayload)
-}
-
-func GetAccessTokenLifeTimeMS() (uint64, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return 0, err
-	}
-	return instance.RecipeImpl.GetAccessTokenLifeTimeMS()
-}
-
-func GetRefreshTokenLifeTimeMS() (uint64, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return 0, err
-	}
-	return instance.RecipeImpl.GetRefreshTokenLifeTimeMS()
 }
 
 func VerifySession(options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {

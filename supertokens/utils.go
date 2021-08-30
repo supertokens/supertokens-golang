@@ -126,10 +126,12 @@ func Send200Response(res http.ResponseWriter, responseJson interface{}) {
 	res.Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(responseJson)
 	if err != nil {
+		// TODO: send an error from this and not send 500
 		res.WriteHeader(500)
 		res.Write([]byte("error in json marshalling"))
+	} else {
+		res.Write(bytes)
 	}
-	res.Write(bytes)
 }
 
 func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
@@ -143,9 +145,11 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 	}
 	bytes, err := json.Marshal(response)
 	if err != nil {
+		// TODO: send an error from this and not send 500
 		res.WriteHeader(500)
 		res.Write([]byte("error in json marshalling"))
+	} else {
+		res.Write(bytes)
 	}
-	res.Write(bytes)
 	return nil
 }

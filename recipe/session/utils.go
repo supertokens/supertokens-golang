@@ -139,11 +139,11 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
 		Override: struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
-		}{Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
+		}{Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
 			return originalImplementation
-		}, APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
+		}, APIs: func(originalImplementation models.APIInterface) models.APIInterface {
 			return originalImplementation
 		}},
 	}
@@ -236,4 +236,20 @@ func attachCreateOrRefreshSessionResponseToRes(config models.TypeNormalisedInput
 	if response.AntiCsrfToken != nil {
 		setAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
 	}
+}
+
+func SendTryRefreshTokenResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func SendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func SendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
+	_, err := recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
+	if err != nil {
+		return err
+	}
+	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }

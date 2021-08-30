@@ -48,7 +48,7 @@ func getRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)

@@ -9,9 +9,9 @@ import (
 )
 
 type superTokens struct {
-	AppInfo        NormalisedAppinfo
-	RecipeModules  []RecipeModule
-	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
+	AppInfo       NormalisedAppinfo
+	RecipeModules []RecipeModule
+	// OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 var superTokensInstance *superTokens
@@ -22,10 +22,11 @@ func supertokensInit(config TypeInput) error {
 	}
 	superTokens := &superTokens{}
 
-	superTokens.OnGeneralError = defaultOnGeneralError
-	if config.OnGeneralError != nil {
-		superTokens.OnGeneralError = config.OnGeneralError
-	}
+	// TODO: we don't need this anymore right?
+	// superTokens.OnGeneralError = defaultOnGeneralError
+	// if config.OnGeneralError != nil {
+	// 	superTokens.OnGeneralError = config.OnGeneralError
+	// }
 
 	var err error
 	superTokens.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
@@ -204,21 +205,20 @@ func (s *superTokens) getAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) bool {
+func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) error {
 	if errors.As(err, &BadInputError{}) {
-		if catcherr := SendNon200Response(res, err.Error(), 400); catcherr != nil {
-			panic("internal server err" + catcherr.Error())
+		if catcher := SendNon200Response(res, err.Error(), 400); catcher != nil {
+			return errors.New("internal server err" + catcher.Error())
 		}
-		return true
+		return nil
 	}
 	for _, recipe := range s.RecipeModules {
 		handled := recipe.HandleError(err, req, res)
 		if handled {
-			return true
+			return nil
 		}
 	}
-	superTokensInstance.OnGeneralError(err, req, res)
-	return true
+	return err
 }
 
 func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
