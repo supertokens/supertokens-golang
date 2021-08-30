@@ -91,8 +91,12 @@ func initQuerier(hosts []NormalisedURLDomain, APIKey *string) {
 	}
 }
 
-func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
-	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
+func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
+	nP, err := NewNormalisedURLPath(path)
+	if err != nil {
+		return nil, err
+	}
+	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
 		if data == nil {
 			data = map[string]interface{}{}
 		}
@@ -124,7 +128,7 @@ func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]interf
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
 		}
-		if path.IsARecipePath() && q.RIDToCore != "" {
+		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
 		}
 
@@ -133,8 +137,12 @@ func (q *Querier) SendPostRequest(path NormalisedURLPath, data map[string]interf
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
-	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
+func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
+	nP, err := NewNormalisedURLPath(path)
+	if err != nil {
+		return nil, err
+	}
+	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
@@ -154,7 +162,7 @@ func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]inte
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
 		}
-		if path.IsARecipePath() && q.RIDToCore != "" {
+		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
 		}
 
@@ -163,8 +171,12 @@ func (q *Querier) SendDeleteRequest(path NormalisedURLPath, data map[string]inte
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]interface{}) (map[string]interface{}, error) {
-	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
+func (q *Querier) SendGetRequest(path string, params map[string]interface{}) (map[string]interface{}, error) {
+	nP, err := NewNormalisedURLPath(path)
+	if err != nil {
+		return nil, err
+	}
+	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -185,7 +197,7 @@ func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]inter
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
 		}
-		if path.IsARecipePath() && q.RIDToCore != "" {
+		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
 		}
 
@@ -194,8 +206,12 @@ func (q *Querier) SendGetRequest(path NormalisedURLPath, params map[string]inter
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]interface{}) (map[string]interface{}, error) {
-	return q.sendRequestHelper(path, func(url string) (*http.Response, error) {
+func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
+	nP, err := NewNormalisedURLPath(path)
+	if err != nil {
+		return nil, err
+	}
+	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
@@ -215,7 +231,7 @@ func (q *Querier) SendPutRequest(path NormalisedURLPath, data map[string]interfa
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
 		}
-		if path.IsARecipePath() && q.RIDToCore != "" {
+		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
 		}
 

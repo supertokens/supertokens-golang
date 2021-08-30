@@ -88,7 +88,7 @@ func sendTelemetry() error {
 		return err
 	}
 
-	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, nil)
+	response, err := querier.SendGetRequest("/telemetry", nil)
 	if err != nil {
 		return err
 	}
@@ -254,7 +254,7 @@ func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, inclu
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
 
-	resp, err := querier.SendGetRequest(NormalisedURLPath{value: "/users"}, requestBody)
+	resp, err := querier.SendGetRequest("/users", requestBody)
 
 	if err != nil {
 		return nil, err
@@ -290,7 +290,7 @@ func getUserCount(includeRecipeIds *[]string) (int, error) {
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
 
-	resp, err := querier.SendGetRequest(NormalisedURLPath{value: "/users/count"}, requestBody)
+	resp, err := querier.SendGetRequest("/users/count", requestBody)
 
 	if err != nil {
 		return -1, err

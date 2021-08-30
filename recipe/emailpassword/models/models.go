@@ -90,12 +90,13 @@ type TypeInput struct {
 }
 
 type RecipeImplementation struct {
-	SignUp                   func(email string, password string) SignInUpResponse
-	SignIn                   func(email string, password string) SignInUpResponse
-	GetUserByID              func(userID string) *User
-	GetUserByEmail           func(email string) *User
-	CreateResetPasswordToken func(userID string) CreateResetPasswordTokenResponse
-	ResetPasswordUsingToken  func(token string, newPassword string) ResetPasswordUsingTokenResponse
+	SignUp                   func(email string, password string) (SignInUpResponse, error)
+	SignIn                   func(email string, password string) (SignInUpResponse, error)
+	GetUserByID              func(userID string) (*User, error)
+	GetUserByEmail           func(email string) (*User, error)
+	CreateResetPasswordToken func(userID string) (CreateResetPasswordTokenResponse, error)
+	ResetPasswordUsingToken  func(token string, newPassword string) (ResetPasswordUsingTokenResponse, error)
+	UpdateEmailOrPassword    func(userId string, email *string, password *string) (UpdateEmailOrPasswordResponse, error)
 }
 
 type APIOptions struct {
@@ -145,3 +146,9 @@ type CreateResetPasswordTokenResponse struct {
 type ResetPasswordUsingTokenResponse struct {
 	Status string `json:"status"`
 }
+
+type UpdateEmailOrPasswordResponse struct {
+	Status string `json:"status"`
+}
+
+// TODO: See if we can give specific values to Status instead of generic string.
