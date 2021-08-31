@@ -19,15 +19,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 	getHandshakeInfo(recipeImplHandshakeInfo, config, querier)
 
 	return models.RecipeInterface{
-		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*models.SessionContainer, error) {
+		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (models.SessionContainer, error) {
 			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
 			if err != nil {
-				return nil, err
+				return models.SessionContainer{}, err
 			}
-
 			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
-			sessionContainerInput := MakeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
-			return NewSessionContainer(querier, config, sessionContainerInput), nil
+			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
+			return newSessionContainer(querier, config, &sessionContainerInput), nil
 		},
 
 		GetSession: func(req *http.Request, res http.ResponseWriter, options *models.VerifySessionOptions) (*models.SessionContainer, error) {

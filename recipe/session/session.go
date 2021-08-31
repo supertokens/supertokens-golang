@@ -1,8 +1,10 @@
 package session
 
 import (
+	"encoding/json"
 	defaultErrors "errors"
 	"net/http"
+	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
@@ -17,7 +19,7 @@ type SessionContainerInput struct {
 	accessToken   string
 }
 
-func MakeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) SessionContainerInput {
+func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) SessionContainerInput {
 	return SessionContainerInput{
 		sessionHandle: sessionHandle,
 		userID:        userID,
@@ -27,8 +29,9 @@ func MakeSessionContainerInput(accessToken string, sessionHandle string, userID 
 	}
 }
 
-func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session SessionContainerInput) *models.SessionContainer {
-	return &models.SessionContainer{
+func newSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session *SessionContainerInput) models.SessionContainer {
+
+	return models.SessionContainer{
 		RevokeSession: func() error {
 			success, err := revokeSessionHelper(querier, session.sessionHandle)
 			if err != nil {
@@ -41,14 +44,14 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 		},
 
 		GetSessionData: func() (interface{}, error) {
-			data, err := getSessionDataHelper(querier, session.sessionHandle)
+			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 					clearSessionFromCookie(config, session.res)
 				}
 				return nil, err
 			}
-			return data, nil
+			return sessionInformation.SessionData, nil
 		},
 
 		UpdateSessionData: func(newSessionData interface{}) error {
@@ -61,12 +64,12 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 			}
 			return nil
 		},
+
 		UpdateJWTPayload: func(newJWTPayload interface{}) error {
-			path, err := supertokens.NewNormalisedURLPath("/recipe/session/regenerate")
-			if err != nil {
-				return err
+			if newJWTPayload == nil {
+				newJWTPayload = map[string]interface{}{}
 			}
-			response, err := querier.SendPostRequest(*path, map[string]interface{}{
+			response, err := querier.SendPostRequest("/recipe/session/regenerate", map[string]interface{}{
 				"accessToken":   session.accessToken,
 				"userDataInJWT": newJWTPayload,
 			})
@@ -76,6 +79,24 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 			if response["status"].(string) == errors.UnauthorizedErrorStr {
 				clearSessionFromCookie(config, session.res)
 				return errors.UnauthorizedError{Msg: "Session has probably been revoked while updating JWT payload"}
+			}
+
+			responseByte, err := json.Marshal(response)
+			if err != nil {
+				return err
+			}
+			var resp models.GetSessionResponse
+			err = json.Unmarshal(responseByte, &resp)
+			if err != nil {
+				return err
+			}
+
+			// TODO: test that it actually changes the session object
+			session.userDataInJWT = resp.Session.UserDataInJWT
+			if !reflect.DeepEqual(resp.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
+				session.accessToken = resp.AccessToken.Token
+				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInJWT)
+				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
 			}
 			return nil
 		},
@@ -90,6 +111,26 @@ func NewSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 		},
 		GetAccessToken: func() string {
 			return session.accessToken
+		},
+		GetTimeCreated: func() (uint64, error) {
+			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
+			if err != nil {
+				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+					clearSessionFromCookie(config, session.res)
+				}
+				return 0, err
+			}
+			return sessionInformation.TimeCreated, nil
+		},
+		GetExpiry: func() (uint64, error) {
+			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
+			if err != nil {
+				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+					clearSessionFromCookie(config, session.res)
+				}
+				return 0, err
+			}
+			return sessionInformation.Expiry, nil
 		},
 	}
 }

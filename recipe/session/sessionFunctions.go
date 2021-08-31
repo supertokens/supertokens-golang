@@ -289,6 +289,27 @@ func getSessionDataHelper(querier supertokens.Querier, sessionHandle string) (ma
 	return nil, errors.UnauthorizedError{Msg: response["message"].(string)}
 }
 
+func getSessionInformationHelper(querier supertokens.Querier, sessionHandle string) (models.SessionInformation, error) {
+	response, err := querier.SendGetRequest("/recipe/session",
+		map[string]interface{}{
+			"sessionHandle": sessionHandle,
+		})
+	if err != nil {
+		return models.SessionInformation{}, err
+	}
+	if response["status"] == "OK" {
+		return models.SessionInformation{
+			SessionHandle: response["sessionHandle"].(string),
+			UserId:        response["userId"].(string),
+			SessionData:   response["userDataInDatabase"].(map[string]interface{}),
+			Expiry:        uint64(response["expiry"].(float64)),
+			TimeCreated:   uint64(response["timeCreated"].(float64)),
+			JwtPayload:    response["userDataInJWT"].(map[string]interface{}),
+		}, nil
+	}
+	return models.SessionInformation{}, errors.UnauthorizedError{Msg: response["message"].(string)}
+}
+
 func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData interface{}) error {
 	if newSessionData == nil {
 		newSessionData = map[string]string{}
