@@ -253,3 +253,7 @@ func SendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, session
 	}
 	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }
+
+func frontendHasInterceptor(req *http.Request) bool {
+	return getRidFromHeader(req) != nil
+}

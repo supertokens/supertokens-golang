@@ -32,7 +32,8 @@ func (err TokenTheftDetectedError) Error() string {
 
 // UnauthorizedError used for when the user has been logged out
 type UnauthorizedError struct {
-	Msg string
+	Msg          string
+	ClearCookies *bool
 }
 
 func (err UnauthorizedError) Error() string {
