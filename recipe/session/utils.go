@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
@@ -82,21 +81,21 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			if err != nil {
 				return err
 			}
-			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res)
+			return sendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res)
 		},
 		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res)
+			return sendTryRefreshTokenResponse(*recipeInstance, message, req, res)
 		},
 		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendUnauthorisedResponse(*recipeInstance, message, req, res)
+			return sendUnauthorisedResponse(*recipeInstance, message, req, res)
 		},
 	}
 
@@ -238,15 +237,15 @@ func attachCreateOrRefreshSessionResponseToRes(config models.TypeNormalisedInput
 	}
 }
 
-func SendTryRefreshTokenResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+func sendTryRefreshTokenResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
 	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
-func SendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+func sendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
 	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
-func SendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
+func sendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
 	_, err := recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
 	if err != nil {
 		return err

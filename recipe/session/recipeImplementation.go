@@ -24,7 +24,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			if err != nil {
 				return models.SessionContainer{}, err
 			}
-			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
+			attachCreateOrRefreshSessionResponseToRes(config, res, response)
 			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			return newSessionContainer(querier, config, &sessionContainerInput), nil
 		},
@@ -104,7 +104,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				}
 				return models.SessionContainer{}, err
 			}
-			attachCreateOrRefreshSessionResponseToRes(config, res, *response)
+			attachCreateOrRefreshSessionResponseToRes(config, res, response)
 			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
 			return sessionContainer, nil
@@ -167,6 +167,8 @@ func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 				signingKeyLastUpdated = recipeImplHandshakeInfo.SigningKeyLastUpdated
 			}
 		}
+
+		// TODO: check that this is actually updated in place
 		recipeImplHandshakeInfo = &models.HandshakeInfo{
 			SigningKeyLastUpdated:          signingKeyLastUpdated,
 			JWTSigningPublicKey:            response["jwtSigningPublicKey"].(string),

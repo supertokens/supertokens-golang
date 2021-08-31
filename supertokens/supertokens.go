@@ -213,16 +213,15 @@ func (s *superTokens) errorHandler(err error, req *http.Request, res http.Respon
 		return nil
 	}
 	for _, recipe := range s.RecipeModules {
-		handled := recipe.HandleError(err, req, res)
+		handled, err := recipe.HandleError(err, req, res)
+		if err != nil {
+			return err
+		}
 		if handled {
 			return nil
 		}
 	}
 	return err
-}
-
-func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
-	SendNon200Response(res, err.Error(), 500)
 }
 
 type UserPaginationResult struct {

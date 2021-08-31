@@ -106,17 +106,14 @@ func getAllCORSHeaders() []string {
 	return getCORSAllowedHeaders()
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-		r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
-		return true
+		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
-		r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
-		return true
+		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 		errs := err.(errors.TokenTheftDetectedError)
-		r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
-		return true
+		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	}
-	return false
+	return false, nil
 }

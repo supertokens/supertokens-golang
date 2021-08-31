@@ -158,16 +158,17 @@ func getAllCORSHeaders() []string {
 	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.FieldError{}) {
 		errs := err.(errors.FieldError)
 		supertokens.Send200Response(res, map[string]interface{}{
 			"status":     "FIELD_ERROR",
 			"formFields": errs.Payload,
 		})
-		return true
+		// TODO: return true, supertokens.Send200Response(...)
+		return true, nil
 	}
-	return false
+	return false, nil
 }
 
 func (r *Recipe) getEmailForUserId(userID string) (string, error) {
