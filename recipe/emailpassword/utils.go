@@ -144,15 +144,6 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 
 	return normalisedInputResetPasswordUsingTokenFeature
 }
-
-func defaultSetJwtPayloadForSession(_ models.User, _ []models.TypeFormField, _ string) map[string]interface{} {
-	return nil
-}
-
-func defaultSetSessionDataForSession(_ models.User, _ []models.TypeFormField, _ string) map[string]interface{} {
-	return nil
-}
-
 func validateAndNormaliseSignInConfig(signUpConfig models.TypeNormalisedInputSignUp) models.TypeNormalisedInputSignIn {
 	return models.TypeNormalisedInputSignIn{
 		FormFields: normaliseSignInFormFields(signUpConfig.FormFields),

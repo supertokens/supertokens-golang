@@ -3,7 +3,8 @@ package api
 import (
 	"bytes"
 	"encoding/json"
-	"io"
+	"errors"
+	"io/ioutil"
 	"net/http"
 	"reflect"
 
@@ -12,11 +13,11 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
 
-func MakeAPIImplementation() models.APIImplementation {
-	return models.APIImplementation{
-		AuthorisationUrlGET: func(provider models.TypeProvider, options models.APIOptions) models.AuthorisationUrlGETResponse {
+func MakeAPIImplementation() models.APIInterface {
+	return models.APIInterface{
+		AuthorisationUrlGET: func(provider models.TypeProvider, options models.APIOptions) (models.AuthorisationUrlGETResponse, error) {
 			providerInfo := provider.Get(nil, nil)
-			params := make(map[string]string)
+			params := map[string]string{}
 			for key, value := range providerInfo.AuthorisationRedirect.Params {
 				if reflect.ValueOf(value).Kind() == reflect.String {
 					params[key] = value.(string)
@@ -24,70 +25,84 @@ func MakeAPIImplementation() models.APIImplementation {
 					call, ok := value.(func(req *http.Request) string)
 					if ok {
 						params[key] = call(options.Req)
+					} else {
+						return models.AuthorisationUrlGETResponse{}, errors.New("type of value in params must be a string or a function")
 					}
 				}
-
 			}
-			paramsString, _ := getParamString(params)
+			paramsString, err := getParamString(params)
+			if err != nil {
+				return models.AuthorisationUrlGETResponse{}, err
+			}
 			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
 			return models.AuthorisationUrlGETResponse{
-				Status: "OK",
-				URL:    url,
-			}
+				OK: &struct{ Url string }{
+					Url: url,
+				},
+			}, nil
 		},
-		SignInUpPOST: func(provider models.TypeProvider, code, redirectURI string, options models.APIOptions) models.SignInUpPOSTResponse {
+
+		SignInUpPOST: func(provider models.TypeProvider, code, redirectURI string, options models.APIOptions) (models.SignInUpPOSTResponse, error) {
 			providerInfo := provider.Get(&redirectURI, &code)
+
 			accessTokenAPIResponse, err := postRequest(providerInfo)
+
 			if err != nil {
-				return models.SignInUpPOSTResponse{
-					Status: "FIELD_ERROR",
-					Error:  err,
-				}
+				return models.SignInUpPOSTResponse{}, err
 			}
+
 			userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
 			if err != nil {
-				return models.SignInUpPOSTResponse{
-					Status: "FIELD_ERROR",
-					Error:  err,
-				}
+				return models.SignInUpPOSTResponse{}, err
 			}
 
 			emailInfo := userInfo.Email
 			if emailInfo == nil {
 				return models.SignInUpPOSTResponse{
-					Status: "NO_EMAIL_GIVEN_BY_PROVIDER",
-				}
+					NoEmailGivenByProviderError: &struct{}{},
+				}, nil
 			}
 
-			response := options.RecipeImplementation.SignInUp(provider.ID, userInfo.ID, *emailInfo)
-			if response.Status == "FIELD_ERROR" {
-				return models.SignInUpPOSTResponse{
-					Status: response.Status,
-					Error:  response.Error,
-				}
-			}
-
-			action := "signin"
-			if response.CreatedNewUser {
-				action = "signup"
-			}
-
-			jwtPayload := options.Config.SessionFeature.SetJwtPayload(response.User, accessTokenAPIResponse, action)
-			sessionData := options.Config.SessionFeature.SetSessionData(response.User, accessTokenAPIResponse, action)
-
-			_, err = session.CreateNewSession(options.Res, response.User.ID, jwtPayload, sessionData)
+			response, err := options.RecipeImplementation.SignInUp(provider.ID, userInfo.ID, *emailInfo)
 			if err != nil {
+				return models.SignInUpPOSTResponse{}, err
+			}
+			if response.FieldError != nil {
 				return models.SignInUpPOSTResponse{
-					Status: "FIELD_ERROR",
-					Error:  err,
+					FieldError: &struct{ Error string }{
+						Error: response.FieldError.Error,
+					},
+				}, nil
+			}
+
+			if emailInfo.IsVerified {
+				tokenResponse, err := options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken(response.OK.User.ID, response.OK.User.Email)
+				if err != nil {
+					return models.SignInUpPOSTResponse{}, err
 				}
+				if tokenResponse.OK != nil {
+					_, err := options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken(tokenResponse.OK.Token)
+					if err != nil {
+						return models.SignInUpPOSTResponse{}, err
+					}
+				}
+			}
+
+			_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil)
+			if err != nil {
+				return models.SignInUpPOSTResponse{}, err
 			}
 			return models.SignInUpPOSTResponse{
-				Status:           "OK",
-				CreatedNewUser:   response.CreatedNewUser,
-				User:             response.User,
-				AuthCodeResponse: accessTokenAPIResponse,
-			}
+				OK: &struct {
+					CreatedNewUser   bool
+					User             models.User
+					AuthCodeResponse interface{}
+				}{
+					CreatedNewUser:   response.OK.CreatedNewUser,
+					User:             response.OK.User,
+					AuthCodeResponse: accessTokenAPIResponse,
+				},
+			}, nil
 		},
 	}
 }
@@ -106,9 +121,14 @@ func postRequest(providerInfo models.TypeProviderGetResponse) (map[string]interf
 
 	client := &http.Client{}
 	response, err := client.Do(req)
-	body, err := io.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
 	defer response.Body.Close()
-
+	body, err := ioutil.ReadAll(response.Body)
+	if err != nil {
+		return nil, err
+	}
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
@@ -118,7 +138,7 @@ func postRequest(providerInfo models.TypeProviderGetResponse) (map[string]interf
 }
 
 func getParamString(paramsMap map[string]string) (string, error) {
-	params := make(map[string]interface{})
+	params := map[string]interface{}{}
 	for key, value := range paramsMap {
 		params[key] = value
 	}

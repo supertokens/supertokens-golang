@@ -15,8 +15,8 @@ const RECIPE_ID = "thirdparty"
 type Recipe struct {
 	RecipeModule            supertokens.RecipeModule
 	Config                  models.TypeNormalisedInput
-	RecipeImpl              models.RecipeImplementation
-	APIImpl                 models.APIImplementation
+	RecipeImpl              models.RecipeInterface
+	APIImpl                 models.APIInterface
 	EmailVerificationRecipe emailverification.Recipe
 	Providers               []models.TypeProvider
 }
@@ -26,25 +26,23 @@ var r *Recipe
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
 	r = &Recipe{}
 
-	providers := config.SignInAndUpFeature.Providers
-	r.Providers = config.SignInAndUpFeature.Providers
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := MakeRecipeImplementation(*querierInstance)
-	verifiedConfig, err := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
+	verifiedConfig, err := validateAndNormaliseUserInput(*r, appInfo, config)
 	if err != nil {
 		return Recipe{}, err
 	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
+	r.Providers = config.SignInAndUpFeature.Providers
 
-	var emailVerificationRecipe emailverification.Recipe
 	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err = emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -52,23 +50,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	} else {
 		r.EmailVerificationRecipe = *emailVerificationInstance
-		emailVerificationRecipe = *emailVerificationInstance
 	}
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
-	r.RecipeModule = recipeModuleInstance
-
-	return Recipe{
-		RecipeModule:            recipeModuleInstance,
-		Config:                  verifiedConfig,
-		RecipeImpl:              verifiedConfig.Override.Functions(recipeImplementation),
-		APIImpl:                 verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-		EmailVerificationRecipe: emailVerificationRecipe,
-		Providers:               providers,
-	}, nil
+	return *r, nil
 }
 
-func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil)
@@ -119,13 +106,14 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
 	options := models.APIOptions{
-		Config:               r.Config,
-		OtherHandler:         theirHandler,
-		RecipeID:             r.RecipeModule.GetRecipeID(),
-		RecipeImplementation: r.RecipeImpl,
-		Providers:            r.Providers,
-		Req:                  req,
-		Res:                  res,
+		Config:                                r.Config,
+		OtherHandler:                          theirHandler,
+		RecipeID:                              r.RecipeModule.GetRecipeID(),
+		RecipeImplementation:                  r.RecipeImpl,
+		EmailVerificationRecipeImplementation: r.EmailVerificationRecipe.RecipeImpl,
+		Providers:                             r.Providers,
+		Req:                                   req,
+		Res:                                   res,
 	}
 	if id == SignInUpAPI {
 		return api.SignInUpAPI(r.APIImpl, options)
@@ -139,6 +127,17 @@ func getAllCORSHeaders() []string {
 	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
-	return false
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	return false, nil
+}
+
+func (r *Recipe) getEmailForUserId(userID string) (string, error) {
+	userInfo, err := r.RecipeImpl.GetUserByID(userID)
+	if err != nil {
+		return "", err
+	}
+	if userInfo == nil {
+		return "", errors.New("Unknown User ID provided")
+	}
+	return userInfo.Email, nil
 }

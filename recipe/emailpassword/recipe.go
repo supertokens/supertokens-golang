@@ -32,15 +32,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 	verifiedConfig := validateAndNormaliseUserInput(*r, appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
 
-	var emailVerificationRecipe emailverification.Recipe
 	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err = emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -48,7 +46,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	} else {
 		r.EmailVerificationRecipe = *emailVerificationInstance
-		emailVerificationRecipe = *emailVerificationInstance
 	}
 
 	return *r, nil

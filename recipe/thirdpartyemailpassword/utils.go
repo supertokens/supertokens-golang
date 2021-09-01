@@ -56,14 +56,6 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	return typeNormalisedInput, nil
 }
 
-func defaultSetJwtPayloadForSession(user models.User, context models.TypeContext, action string) map[string]interface{} {
-	return nil
-}
-
-func defaultSetSessionDataForSession(user models.User, context models.TypeContext, action string) map[string]interface{} {
-	return nil
-}
-
 func validateAndNormaliseSessionFeatureConfig(config *models.TypeNormalisedInputSessionFeature) models.TypeNormalisedInputSessionFeature {
 	normalisedInputSessionFeature := models.TypeNormalisedInputSessionFeature{
 		SetJwtPayload:  defaultSetJwtPayloadForSession,
@@ -133,7 +125,7 @@ func normalisedToType(normalisedformFields []epm.NormalisedFormField) []epm.Type
 	var formFields []epm.TypeInputFormField
 	for _, normalisedformField := range normalisedformFields {
 		formFields = append(formFields, epm.TypeInputFormField{
-			ID: normalisedformField.ID,
+			ID:       normalisedformField.ID,
 			Validate: normalisedformField.Validate,
 			Optional: &normalisedformField.Optional,
 		})
