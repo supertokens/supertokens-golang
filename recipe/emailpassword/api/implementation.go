@@ -17,7 +17,7 @@ func MakeAPIImplementation() models.APIInterface {
 			}, nil
 		},
 
-		GeneratePasswordResetTokenPOST: func(formFields []models.TypeFormField, options models.APIOptions) (models.GeneratePasswordResetTokenPOST, error) {
+		GeneratePasswordResetTokenPOST: func(formFields []models.TypeFormField, options models.APIOptions) (models.GeneratePasswordResetTokenPOSTResponse, error) {
 			var email string
 			for _, formField := range formFields {
 				if formField.ID == "email" {
@@ -27,21 +27,21 @@ func MakeAPIImplementation() models.APIInterface {
 
 			user, err := options.RecipeImplementation.GetUserByEmail(email)
 			if err != nil {
-				return models.GeneratePasswordResetTokenPOST{}, err
+				return models.GeneratePasswordResetTokenPOSTResponse{}, err
 			}
 
 			if user == nil {
-				return models.GeneratePasswordResetTokenPOST{
+				return models.GeneratePasswordResetTokenPOSTResponse{
 					OK: &struct{}{},
 				}, nil
 			}
 
 			response, err := options.RecipeImplementation.CreateResetPasswordToken(user.ID)
 			if err != nil {
-				return models.GeneratePasswordResetTokenPOST{}, err
+				return models.GeneratePasswordResetTokenPOSTResponse{}, err
 			}
 			if response.UnknownUserIdError != nil {
-				return models.GeneratePasswordResetTokenPOST{
+				return models.GeneratePasswordResetTokenPOSTResponse{
 					OK: &struct{}{},
 				}, nil
 			}
@@ -50,7 +50,7 @@ func MakeAPIImplementation() models.APIInterface {
 
 			options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
 
-			return models.GeneratePasswordResetTokenPOST{
+			return models.GeneratePasswordResetTokenPOSTResponse{
 				OK: &struct{}{},
 			}, nil
 		},

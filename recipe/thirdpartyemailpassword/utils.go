@@ -10,11 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
-	sessionFeature := validateAndNormaliseSessionFeatureConfig(nil)
-	if config != nil {
-		sessionFeature = validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
-	}
+func validateAndNormaliseUserInput(recipeInstance models.RecipeInterface, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
 	signUpFeature := validateAndNormaliseSignUpConfig(config.SignUpFeature)
 
 	emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)

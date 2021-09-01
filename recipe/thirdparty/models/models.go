@@ -45,10 +45,6 @@ type User struct {
 	}
 }
 
-type TypeInputSetJwtPayloadForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{}
-
-type TypeInputSetSessionDataForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{}
-
 type TypeInputEmailVerificationFeature struct {
 	GetEmailVerificationURL  func(user User) (string, error)
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
