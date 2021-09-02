@@ -8,86 +8,124 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-func MakeAPIImplementation() models.APIImplementation {
+func MakeAPIImplementation() models.APIInterface {
 	emailPasswordImplementation := epapi.MakeAPIImplementation()
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
-	return models.APIImplementation{
-		EmailExistsGET: func(email string, options epm.APIOptions) epm.EmailExistsGETResponse {
+	return models.APIInterface{
+		EmailExistsGET: func(email string, options epm.APIOptions) (epm.EmailExistsGETResponse, error) {
 			return emailPasswordImplementation.EmailExistsGET(email, options)
+
 		},
-		GeneratePasswordResetTokenPOST: func(formFields []epm.TypeFormField, options epm.APIOptions) epm.GeneratePasswordResetTokenPOSTResponse {
+		GeneratePasswordResetTokenPOST: func(formFields []epm.TypeFormField, options epm.APIOptions) (epm.GeneratePasswordResetTokenPOSTResponse, error) {
 			return emailPasswordImplementation.GeneratePasswordResetTokenPOST(formFields, options)
 		},
-		PasswordResetPOST: func(formFields []epm.TypeFormField, token string, options epm.APIOptions) epm.PasswordResetPOSTResponse {
+
+		PasswordResetPOST: func(formFields []epm.TypeFormField, token string, options epm.APIOptions) (epm.ResetPasswordUsingTokenResponse, error) {
 			return emailPasswordImplementation.PasswordResetPOST(formFields, token, options)
 		},
-		SignInUpPOST: func(input models.SignInUpAPIInput) models.SignInUpAPIOutput {
+
+		SignInUpPOST: func(input models.SignInUpAPIInput) (models.SignInUpAPIOutput, error) {
 			if input.EmailpasswordInput != nil {
 				if input.EmailpasswordInput.IsSignIn {
-					response := emailPasswordImplementation.SignInPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
-					if response.Status == "OK" {
+					response, err := emailPasswordImplementation.SignInPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
+					if err != nil {
+						return models.SignInUpAPIOutput{}, err
+					}
+					if response.OK != nil {
 						return models.SignInUpAPIOutput{
 							EmailpasswordOutput: &models.EmailpasswordOutput{
-								Status: response.Status,
-								User: models.User{
-									ID:         response.User.ID,
-									Email:      response.User.Email,
-									TimeJoined: response.User.TimeJoined,
-									ThirdParty: nil,
+								OK: &struct {
+									User           models.User
+									CreatedNewUser bool
+								}{
+									User: models.User{
+										ID:         response.OK.User.ID,
+										Email:      response.OK.User.Email,
+										TimeJoined: response.OK.User.TimeJoined,
+										ThirdParty: nil,
+									},
+									CreatedNewUser: false,
 								},
-								CreatedNewUser: false,
 							},
-						}
+						}, nil
 					} else {
 						return models.SignInUpAPIOutput{
 							EmailpasswordOutput: &models.EmailpasswordOutput{
-								Status: response.Status,
-								CreatedNewUser: false,
+								WrongCredentialsError: &struct{}{},
 							},
-						}
+						}, nil
 					}
 				} else {
-					response := emailPasswordImplementation.SignUpPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
-					if response.Status == "OK" {
+					response, err := emailPasswordImplementation.SignUpPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
+					if err != nil {
+						return models.SignInUpAPIOutput{}, err
+					}
+					if response.OK != nil {
 						return models.SignInUpAPIOutput{
 							EmailpasswordOutput: &models.EmailpasswordOutput{
-								Status: response.Status,
-								User: models.User{
-									ID:         response.User.ID,
-									Email:      response.User.Email,
-									TimeJoined: response.User.TimeJoined,
-									ThirdParty: nil,
+								OK: &struct {
+									User           models.User
+									CreatedNewUser bool
+								}{
+									User: models.User{
+										ID:         response.OK.User.ID,
+										Email:      response.OK.User.Email,
+										TimeJoined: response.OK.User.TimeJoined,
+										ThirdParty: nil,
+									},
+									CreatedNewUser: true,
 								},
-								CreatedNewUser: true,
 							},
-						}
+						}, nil
 					} else {
 						return models.SignInUpAPIOutput{
 							EmailpasswordOutput: &models.EmailpasswordOutput{
-								Status: response.Status,
-								CreatedNewUser: false,
+								EmailAlreadyExistsError: &struct{}{},
 							},
-						}
+						}, nil
 					}
 				}
-			}
-			response := thirdPartyImplementation.SignInUpPOST(input.ThirdPartyInput.Provider, input.ThirdPartyInput.Code, input.ThirdPartyInput.RedirectURI, input.ThirdPartyInput.Options)
-			return models.SignInUpAPIOutput{
-				ThirdPartyOutput: &models.ThirdPartyOutput{
-					Status:         response.Status,
-					CreatedNewUser: response.CreatedNewUser,
-					User: models.User{
-						ID:         response.User.ID,
-						Email:      response.User.Email,
-						TimeJoined: response.User.TimeJoined,
-						ThirdParty: &response.User.ThirdParty,
-					},
-					AuthCodeResponse: response.AuthCodeResponse,
-					Error:            response.Error,
-				},
+			} else {
+				response, err := thirdPartyImplementation.SignInUpPOST(input.ThirdPartyInput.Provider, input.ThirdPartyInput.Code, input.ThirdPartyInput.RedirectURI, input.ThirdPartyInput.Options)
+				if err != nil {
+					return models.SignInUpAPIOutput{}, err
+				}
+				if response.FieldError != nil {
+					return models.SignInUpAPIOutput{
+						ThirdPartyOutput: &models.ThirdPartyOutput{
+							FieldError: &struct{ Error string }{},
+						},
+					}, nil
+				} else if response.NoEmailGivenByProviderError != nil {
+					return models.SignInUpAPIOutput{
+						ThirdPartyOutput: &models.ThirdPartyOutput{
+							NoEmailGivenByProviderError: &struct{}{},
+						},
+					}, nil
+				} else {
+					return models.SignInUpAPIOutput{
+						ThirdPartyOutput: &models.ThirdPartyOutput{
+							OK: &struct {
+								CreatedNewUser   bool
+								User             models.User
+								AuthCodeResponse interface{}
+							}{
+								CreatedNewUser:   response.OK.CreatedNewUser,
+								AuthCodeResponse: response.OK.AuthCodeResponse,
+								User: models.User{
+									ID:         response.OK.User.ID,
+									TimeJoined: response.OK.User.TimeJoined,
+									Email:      response.OK.User.Email,
+									ThirdParty: &response.OK.User.ThirdParty,
+								},
+							},
+						},
+					}, nil
+				}
 			}
 		},
-		AuthorisationUrlGET: func(provider tpm.TypeProvider, options tpm.APIOptions) tpm.AuthorisationUrlGETResponse {
+
+		AuthorisationUrlGET: func(provider tpm.TypeProvider, options tpm.APIOptions) (tpm.AuthorisationUrlGETResponse, error) {
 			return thirdPartyImplementation.AuthorisationUrlGET(provider, options)
 		},
 	}

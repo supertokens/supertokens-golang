@@ -1,22 +1,26 @@
 package api
 
 import (
+	"errors"
+
 	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-func GetThirdPartyIterfaceImpl(apiImplmentation models.APIImplementation) tpm.APIImplementation {
+func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpm.APIInterface {
 	signInUpPOST := apiImplmentation.SignInUpPOST
 	if signInUpPOST == nil {
-		return tpm.APIImplementation{
+		return tpm.APIInterface{
 			AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
 			SignInUpPOST:        nil,
 		}
 	}
-	return tpm.APIImplementation{
+	return tpm.APIInterface{
+
 		AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
-		SignInUpPOST: func(provider tpm.TypeProvider, code, redirectURI string, options tpm.APIOptions) tpm.SignInUpPOSTResponse {
-			resp := signInUpPOST(models.SignInUpAPIInput{
+
+		SignInUpPOST: func(provider tpm.TypeProvider, code, redirectURI string, options tpm.APIOptions) (tpm.SignInUpPOSTResponse, error) {
+			resp, err := signInUpPOST(models.SignInUpAPIInput{
 				ThirdPartyInput: &models.ThirdPartyInput{
 					Provider:    provider,
 					Code:        code,
@@ -24,32 +28,40 @@ func GetThirdPartyIterfaceImpl(apiImplmentation models.APIImplementation) tpm.AP
 					Options:     options,
 				},
 			})
+			if err != nil {
+				return tpm.SignInUpPOSTResponse{}, err
+			}
 			result := resp.ThirdPartyOutput
 			if result != nil {
-				if result.Status == "OK" {
+				if result.OK != nil {
 					return tpm.SignInUpPOSTResponse{
-						Status:         result.Status,
-						CreatedNewUser: result.CreatedNewUser,
-						User: tpm.User{
-							ID:         result.User.ID,
-							Email:      result.User.Email,
-							TimeJoined: result.User.TimeJoined,
-							ThirdParty: *result.User.ThirdParty,
+						OK: &struct {
+							CreatedNewUser   bool
+							User             tpm.User
+							AuthCodeResponse interface{}
+						}{
+							CreatedNewUser: result.OK.CreatedNewUser,
+							User: tpm.User{
+								ID:         result.OK.User.ID,
+								TimeJoined: result.OK.User.TimeJoined,
+								Email:      result.OK.User.Email,
+								ThirdParty: *result.OK.User.ThirdParty,
+							},
 						},
-						AuthCodeResponse: result.AuthCodeResponse,
-					}
-				} else if result.Status == "NO_EMAIL_GIVEN_BY_PROVIDER" {
+					}, nil
+				} else if result.NoEmailGivenByProviderError != nil {
 					return tpm.SignInUpPOSTResponse{
-						Status: "NO_EMAIL_GIVEN_BY_PROVIDER",
-					}
-				} else if result.Status == "FIELD_ERROR" {
+						NoEmailGivenByProviderError: &struct{}{},
+					}, nil
+				} else if result.FieldError != nil {
 					return tpm.SignInUpPOSTResponse{
-						Status: "FIELD_ERROR",
-						Error:  result.Error,
-					}
+						FieldError: &struct{ Error string }{
+							Error: result.FieldError.Error,
+						},
+					}, nil
 				}
 			}
-			return tpm.SignInUpPOSTResponse{}
+			return tpm.SignInUpPOSTResponse{}, errors.New("should never come here")
 		},
 	}
 }
