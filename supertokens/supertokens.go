@@ -213,12 +213,14 @@ func (s *superTokens) errorHandler(err error, req *http.Request, res http.Respon
 		return nil
 	}
 	for _, recipe := range s.RecipeModules {
-		handled, err := recipe.HandleError(err, req, res)
-		if err != nil {
-			return err
-		}
-		if handled {
-			return nil
+		if recipe.HandleError != nil {
+			handled, err := recipe.HandleError(err, req, res)
+			if err != nil {
+				return err
+			}
+			if handled {
+				return nil
+			}
 		}
 	}
 	return err

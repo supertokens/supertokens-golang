@@ -61,7 +61,7 @@ func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 			r = &recipe
 			return &r.RecipeModule, nil
 		}
-		return nil, defaultErrors.New("Emailpassword recipe has already been initialised. Please check your code for bugs.")
+		return nil, defaultErrors.New("emailpassword recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
@@ -69,7 +69,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if r != nil {
 		return r, nil
 	}
-	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
+	return nil, defaultErrors.New("initialisation not done. Did you forget to call the init function?")
 }
 
 // implement RecipeModule
@@ -165,7 +165,7 @@ func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, e
 		// TODO: return true, supertokens.Send200Response(...)
 		return true, nil
 	}
-	return false, nil
+	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
 }
 
 func (r *Recipe) getEmailForUserId(userID string) (string, error) {
@@ -174,7 +174,7 @@ func (r *Recipe) getEmailForUserId(userID string) (string, error) {
 		return "", err
 	}
 	if userInfo == nil {
-		return "", defaultErrors.New("Unknown User ID provided")
+		return "", defaultErrors.New("unknown User ID provided")
 	}
 	return userInfo.Email, nil
 }

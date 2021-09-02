@@ -24,8 +24,8 @@ type Recipe struct {
 	EmailVerificationRecipe emailverification.Recipe
 	emailPasswordRecipe     *emailpassword.Recipe
 	thirdPartyRecipe        *thirdparty.Recipe
-	RecipeImpl              models.RecipeImplementation
-	APIImpl                 models.APIImplementation
+	RecipeImpl              models.RecipeInterface
+	APIImpl                 models.APIInterface
 }
 
 var r *Recipe
@@ -258,15 +258,27 @@ func getAllCORSHeaders() []string {
 	return corsHeaders
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
-	handleError := r.emailPasswordRecipe.RecipeModule.HandleError(err, req, res)
-	if !handleError {
-		if r.thirdPartyRecipe != nil {
-			handleError = r.thirdPartyRecipe.RecipeModule.HandleError(err, req, res)
-		}
-		if !handleError {
-			handleError = r.emailPasswordRecipe.RecipeModule.HandleError(err, req, res)
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	handleError, err := r.emailPasswordRecipe.RecipeModule.HandleError(err, req, res)
+	if err != nil || handleError {
+		return handleError, err
+	}
+	if r.thirdPartyRecipe != nil {
+		handleError, err = r.thirdPartyRecipe.RecipeModule.HandleError(err, req, res)
+		if err != nil || handleError {
+			return handleError, err
 		}
 	}
-	return handleError
+	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
+}
+
+func (r *Recipe) getEmailForUserId(userID string) (string, error) {
+	userInfo, err := r.RecipeImpl.GetUserByID(userID)
+	if err != nil {
+		return "", err
+	}
+	if userInfo == nil {
+		return "", errors.New("Unknown User ID provided")
+	}
+	return userInfo.Email, nil
 }

@@ -128,7 +128,7 @@ func getAllCORSHeaders() []string {
 }
 
 func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	return false, nil
+	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
 }
 
 func (r *Recipe) getEmailForUserId(userID string) (string, error) {
@@ -137,7 +137,7 @@ func (r *Recipe) getEmailForUserId(userID string) (string, error) {
 		return "", err
 	}
 	if userInfo == nil {
-		return "", errors.New("Unknown User ID provided")
+		return "", errors.New("unknown User ID provided")
 	}
 	return userInfo.Email, nil
 }

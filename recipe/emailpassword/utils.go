@@ -17,6 +17,7 @@ func validateAndNormaliseUserInput(recipeInstance Recipe, appInfo supertokens.No
 
 	if config != nil && config.SignUpFeature != nil {
 		typeNormalisedInput.SignUpFeature = validateAndNormaliseSignupConfig(config.SignUpFeature)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, nil)
 	}
 
 	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)

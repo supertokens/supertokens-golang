@@ -128,15 +128,3 @@ func Facebook(config providers.TypeThirdPartyProviderFacebookConfig) tpm.TypePro
 func Apple(config providers.TypeThirdPartyProviderAppleConfig) tpm.TypeProvider {
 	return providers.Apple(config)
 }
-
-func getEmailForUserId(userID string) (string, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return "", err
-	}
-	userInfo := instance.RecipeImpl.GetUserByID(userID)
-	if userInfo == nil {
-		return "", errors.New("Unknown User ID provided")
-	}
-	return userInfo.Email, nil
-}

@@ -11,8 +11,8 @@ type RecipeInterface struct {
 	SignInUp                 func(thirdPartyID string, thirdPartyUserID string, email EmailStruct) (SignInUpResponse, error)
 	SignUp                   func(email string, password string) (SignUpResponse, error)
 	SignIn                   func(email string, password string) (SignInResponse, error)
-	CreateResetPasswordToken func(userID string) epm.CreateResetPasswordTokenResponse
-	ResetPasswordUsingToken  func(token string, newPassword string) epm.ResetPasswordUsingTokenResponse
+	CreateResetPasswordToken func(userID string) (epm.CreateResetPasswordTokenResponse, error)
+	ResetPasswordUsingToken  func(token string, newPassword string) (epm.ResetPasswordUsingTokenResponse, error)
 	UpdateEmailOrPassword    func(userId string, email *string, password *string) (epm.UpdateEmailOrPasswordResponse, error)
 }
 
