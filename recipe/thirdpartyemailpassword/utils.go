@@ -120,6 +120,8 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance Recipe, config *
 	return emailverificationTypeInput
 }
 
+// used to convert FormField of thirdpartyemailpassword to emailpassword's
+// TODO: why can't we just use ep's form field type in this recipe too?
 func normalisedToType(normalisedformFields []epm.NormalisedFormField) []epm.TypeInputFormField {
 	var formFields []epm.TypeInputFormField
 	for _, normalisedformField := range normalisedformFields {

@@ -32,162 +32,108 @@ var r *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe) (Recipe, error) {
 	r = &Recipe{}
-	emailpasswordquerierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(emailpassword.RECIPE_ID)
-	if err != nil {
-		return Recipe{}, err
-	}
-	thirdpartyquerierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(thirdparty.RECIPE_ID)
-	if err != nil {
-		return Recipe{}, err
-	}
-	recipeImplementation := recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance)
-	verifiedConfig, err := validateAndNormaliseUserInput(recipeImplementation, appInfo, config)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+
+	verifiedConfig, err := validateAndNormaliseUserInput(*r, appInfo, config)
 	if err != nil {
 		return Recipe{}, err
 	}
 	r.Config = verifiedConfig
-	APIImpl := verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.APIImpl = APIImpl
-	RecipeImpl := verifiedConfig.Override.Functions(recipeImplementation)
-	r.RecipeImpl = RecipeImpl
-
-	var emailVerificationRecipe emailverification.Recipe
-	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err = emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
+	{
+		emailpasswordquerierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(emailpassword.RECIPE_ID)
 		if err != nil {
 			return Recipe{}, err
 		}
-	} else {
-		emailVerificationRecipe = *emailVerificationInstance
+		thirdpartyquerierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(thirdparty.RECIPE_ID)
+		if err != nil {
+			return Recipe{}, err
+		}
+
+		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance))
 	}
-	r.EmailVerificationRecipe = emailVerificationRecipe
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+
+	if emailVerificationInstance == nil {
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
+		if err != nil {
+			return Recipe{}, err
+		}
+		r.EmailVerificationRecipe = emailVerificationRecipe
+
+	} else {
+		r.EmailVerificationRecipe = *emailVerificationInstance
+	}
 
 	var emailPasswordRecipe emailpassword.Recipe
 	if emailPasswordInstance == nil {
 		emailPasswordConfig := &epm.TypeInput{
-			SessionFeature: &epm.TypeNormalisedInputSessionFeature{
-				SetJwtPayload: func(user epm.User, formFields []epm.TypeFormField, action string) map[string]interface{} {
-					return verifiedConfig.SessionFeature.SetJwtPayload(models.User{
-						ID:         user.ID,
-						Email:      user.Email,
-						TimeJoined: user.TimeJoined,
-					}, models.TypeContext{
-						FormFields:                 formFields,
-						ThirdPartyAuthCodeResponse: nil,
-					}, action)
-				},
-				SetSessionData: func(user epm.User, formFields []epm.TypeFormField, action string) map[string]interface{} {
-					return verifiedConfig.SessionFeature.SetSessionData(models.User{
-						ID:         user.ID,
-						Email:      user.Email,
-						TimeJoined: user.TimeJoined,
-					}, models.TypeContext{
-						FormFields:                 formFields,
-						ThirdPartyAuthCodeResponse: nil,
-					}, action)
-				},
-			},
 			SignUpFeature: &epm.TypeInputSignUp{
 				FormFields: normalisedToType(verifiedConfig.SignUpFeature.FormFields),
 			},
 			ResetPasswordUsingTokenFeature: verifiedConfig.ResetPasswordUsingTokenFeature,
 			Override: &struct {
-				Functions                func(originalImplementation epm.RecipeImplementation) epm.RecipeImplementation
-				APIs                     func(originalImplementation epm.APIImplementation) epm.APIImplementation
+				Functions                func(originalImplementation epm.RecipeInterface) epm.RecipeInterface
+				APIs                     func(originalImplementation epm.APIInterface) epm.APIInterface
 				EmailVerificationFeature *struct {
-					Functions func(originalImplementation evm.RecipeImplementation) evm.RecipeImplementation
-					APIs      func(originalImplementation evm.APIImplementation) evm.APIImplementation
+					Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
+					APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
 				}
 			}{
-				Functions: func(_ epm.RecipeImplementation) epm.RecipeImplementation {
-					return recipeimplementation.MakeEmailPasswordRecipeImplementation(recipeImplementation)
+				Functions: func(_ epm.RecipeInterface) epm.RecipeInterface {
+					return recipeimplementation.MakeEmailPasswordRecipeImplementation(r.RecipeImpl)
 				},
-				APIs: func(_ epm.APIImplementation) epm.APIImplementation {
-					return api.GetEmailPasswordIterfaceImpl(APIImpl)
+				APIs: func(_ epm.APIInterface) epm.APIInterface {
+					return api.GetEmailPasswordIterfaceImpl(r.APIImpl)
 				},
 				EmailVerificationFeature: nil,
 			},
 		}
-		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &emailVerificationRecipe)
+		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe)
 		if err != nil {
 			return Recipe{}, err
 		}
+		r.emailPasswordRecipe = &emailPasswordRecipe
 	} else {
-		emailPasswordRecipe = *emailPasswordInstance
+		r.emailPasswordRecipe = emailPasswordInstance
 	}
-	r.emailPasswordRecipe = &emailPasswordRecipe
 
-	var thirdPartyRecipe *thirdparty.Recipe
 	if len(verifiedConfig.Providers) > 0 {
 		if thirdPartyInstance == nil {
 			thirdPartyConfig := &tpm.TypeInput{
-				SessionFeature: &tpm.TypeNormalisedInputSessionFeature{
-					SetJwtPayload: func(user tpm.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{} {
-						return verifiedConfig.SessionFeature.SetJwtPayload(models.User{
-							ID:         user.ID,
-							Email:      user.Email,
-							TimeJoined: user.TimeJoined,
-						}, models.TypeContext{
-							FormFields:                 nil,
-							ThirdPartyAuthCodeResponse: thirdPartyAuthCodeResponse,
-						}, action)
-					},
-					SetSessionData: func(user tpm.User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{} {
-						return verifiedConfig.SessionFeature.SetSessionData(models.User{
-							ID:         user.ID,
-							Email:      user.Email,
-							TimeJoined: user.TimeJoined,
-						}, models.TypeContext{
-							FormFields:                 nil,
-							ThirdPartyAuthCodeResponse: thirdPartyAuthCodeResponse,
-						}, action)
-					},
-				},
 				SignInAndUpFeature: tpm.TypeInputSignInAndUp{
 					Providers: verifiedConfig.Providers,
 				},
 				Override: &struct {
-					Functions                func(originalImplementation tpm.RecipeImplementation) tpm.RecipeImplementation
-					APIs                     func(originalImplementation tpm.APIImplementation) tpm.APIImplementation
+					Functions                func(originalImplementation tpm.RecipeInterface) tpm.RecipeInterface
+					APIs                     func(originalImplementation tpm.APIInterface) tpm.APIInterface
 					EmailVerificationFeature *struct {
-						Functions func(originalImplementation evm.RecipeImplementation) evm.RecipeImplementation
-						APIs      func(originalImplementation evm.APIImplementation) evm.APIImplementation
+						Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
+						APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
 					}
 				}{
-					Functions: func(_ tpm.RecipeImplementation) tpm.RecipeImplementation {
-						return recipeimplementation.MakeThirdPartyRecipeImplementation(recipeImplementation)
+					Functions: func(_ tpm.RecipeInterface) tpm.RecipeInterface {
+						return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
 					},
-					APIs: func(_ tpm.APIImplementation) tpm.APIImplementation {
-						return api.GetThirdPartyIterfaceImpl(APIImpl)
+					APIs: func(_ tpm.APIInterface) tpm.APIInterface {
+						return api.GetThirdPartyIterfaceImpl(r.APIImpl)
 					},
 					EmailVerificationFeature: nil,
 				},
 			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &emailVerificationRecipe)
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe)
 			if err != nil {
 				return Recipe{}, err
 			}
-			thirdPartyRecipe = &thirdPartyRecipeinstance
+			r.thirdPartyRecipe = &thirdPartyRecipeinstance
 		} else {
-			thirdPartyRecipe = thirdPartyInstance
+			r.thirdPartyRecipe = thirdPartyInstance
 		}
-		r.thirdPartyRecipe = thirdPartyRecipe
 	}
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
-
-	return Recipe{
-		RecipeModule:            recipeModuleInstance,
-		Config:                  verifiedConfig,
-		RecipeImpl:              RecipeImpl,
-		APIImpl:                 APIImpl,
-		EmailVerificationRecipe: emailVerificationRecipe,
-		emailPasswordRecipe:     &emailPasswordRecipe,
-		thirdPartyRecipe:        thirdPartyRecipe,
-	}, nil
+	return *r, nil
 }
 
-func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil)
