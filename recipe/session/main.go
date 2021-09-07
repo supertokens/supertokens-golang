@@ -101,12 +101,10 @@ func VerifySession(options *models.VerifySessionOptions, otherHandler http.Handl
 }
 
 func GetSessionFromRequest(r *http.Request) *models.SessionContainer {
-	value := r.Context().Value(SessionContext)
+	value := r.Context().Value(models.SessionContext)
 	if value == nil {
 		return nil
 	}
 	temp := value.(*models.SessionContainer)
 	return temp
 }
-
-var SessionContext = models.SessionContext
