@@ -209,6 +209,7 @@ func (s *superTokens) getAllCORSHeaders() []string {
 }
 
 func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) {
+	// TODO: replace errors.As with errors.Is if we are not casting the error to that specific type.
 	if errors.As(err, &BadInputError{}) {
 		if catcher := SendNon200Response(res, err.Error(), 400); catcher != nil {
 			s.OnGeneralError(err, req, res)
@@ -230,6 +231,7 @@ func (s *superTokens) errorHandler(err error, req *http.Request, res http.Respon
 	s.OnGeneralError(err, req, res)
 }
 
+// TODO: make this an array of users.
 type UserPaginationResult struct {
 	Users struct {
 		recipeId string
@@ -265,6 +267,8 @@ func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, inclu
 		return nil, err
 	}
 
+	// TODO: try not to do marshal and unmarshal
+	// TODO: Also, Unmarshal is slow, so try and use something else.
 	temporaryVariable, err := json.Marshal(resp)
 	if err != nil {
 		return nil, err

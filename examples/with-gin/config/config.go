@@ -2,9 +2,11 @@ package config
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -53,9 +55,30 @@ func Init() {
 			WebsiteDomain: "http://localhost" + config.GetString("server.websitePort"),
 		},
 		RecipeList: []supertokens.RecipeListFunction{
-			emailpassword.EmailPasswordInit(nil),
+			emailpassword.EmailPasswordInit(&models.TypeInput{
+				Override: &struct {
+					Functions                func(originalImplementation models.RecipeInterface) models.RecipeInterface
+					APIs                     func(originalImplementation models.APIInterface) models.APIInterface
+					EmailVerificationFeature *struct {
+						Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+						APIs      func(originalImplementation models.APIInterface) models.APIInterface
+					}
+				}{
+					Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
+						return models.RecipeInterface{
+							SignUp: func(email, password string) (models.SignUpResponse, error) {
+								return originalImplementation.SignUp(email, password)
+							},
+						}
+					},
+				},
+			}),
 			session.SessionInit(nil),
 			// thirdparty.RecipeInit(thirdpartyConfig),
+		},
+		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
+			// TODO: would this get propogated to the panic / recovery middleware?
+			http.Error(res, err.Error(), 500)
 		},
 	})
 	if err != nil {
