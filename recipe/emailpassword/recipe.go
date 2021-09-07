@@ -32,7 +32,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	verifiedConfig := validateAndNormaliseUserInput(*r, appInfo, config)
+	verifiedConfig := validateAndNormaliseUserInput(r, appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
@@ -158,12 +158,10 @@ func getAllCORSHeaders() []string {
 func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.FieldError{}) {
 		errs := err.(errors.FieldError)
-		supertokens.Send200Response(res, map[string]interface{}{
+		return true, supertokens.Send200Response(res, map[string]interface{}{
 			"status":     "FIELD_ERROR",
 			"formFields": errs.Payload,
 		})
-		// TODO: return true, supertokens.Send200Response(...)
-		return true, nil
 	}
 	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
 }

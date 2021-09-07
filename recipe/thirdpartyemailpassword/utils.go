@@ -10,7 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance Recipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
+func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
 	if config != nil && config.SignUpFeature != nil {
@@ -42,7 +42,7 @@ func validateAndNormaliseUserInput(recipeInstance Recipe, appInfo supertokens.No
 	return typeNormalisedInput, nil
 }
 
-func makeTypeNormalisedInput(recipeInstance Recipe) models.TypeNormalisedInput {
+func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput {
 	return models.TypeNormalisedInput{
 		SignUpFeature:                  validateAndNormaliseSignUpConfig(nil),
 		Providers:                      nil,
@@ -78,7 +78,7 @@ func validateAndNormaliseSignUpConfig(config *models.TypeInputSignUp) models.Typ
 	}
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance Recipe, config *models.TypeInput) evm.TypeInput {
+func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evm.TypeInput {
 	emailverificationTypeInput := evm.TypeInput{
 		GetEmailForUserID: recipeInstance.getEmailForUserId,
 		Override:          nil,

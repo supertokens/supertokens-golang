@@ -33,8 +33,7 @@ func GeneratePasswordResetToken(apiImplementation models.APIInterface, options m
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, map[string]interface{}{
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"status": "OK",
 	})
-	return nil
 }

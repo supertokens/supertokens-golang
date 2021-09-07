@@ -16,13 +16,12 @@ func GenerateEmailVerifyToken(apiImplementation models.APIInterface, options mod
 		return err
 	}
 	if response.EmailAlreadyVerifiedError != nil {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "EMAIL_ALREADY_VERIFIED_ERROR",
 		})
 	} else {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 		})
 	}
-	return nil
 }

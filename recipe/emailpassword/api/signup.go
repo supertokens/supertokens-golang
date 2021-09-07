@@ -35,7 +35,7 @@ func SignUpAPI(apiImplementation models.APIInterface, options models.APIOptions)
 		return err
 	}
 	if result.OK != nil {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 			"user":   result.OK.User,
 		})
@@ -48,5 +48,4 @@ func SignUpAPI(apiImplementation models.APIInterface, options models.APIOptions)
 			}},
 		}
 	}
-	return nil
 }

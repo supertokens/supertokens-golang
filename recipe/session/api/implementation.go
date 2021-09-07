@@ -9,8 +9,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type contextKey int
-
 func MakeAPIImplementation() models.APIInterface {
 	return models.APIInterface{
 		RefreshPOST: func(options models.APIOptions) error {

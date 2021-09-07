@@ -21,6 +21,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 				if err != nil {
 					return models.SignUpResponse{}, err
 				}
+				// TODO: reconsider using the word OK and also making it a struct that contains the actual info
 				return models.SignUpResponse{
 					OK: &struct{ User models.User }{User: *user},
 				}, nil

@@ -32,7 +32,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, nil)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	r.RecipeModule = recipeModuleInstance
 
 	return Recipe{
@@ -112,4 +112,8 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 
 func getAllCORSHeaders() []string {
 	return []string{}
+}
+
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	return false, nil
 }

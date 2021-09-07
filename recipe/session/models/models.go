@@ -121,3 +121,5 @@ type SessionInformation struct {
 	JwtPayload    interface{}
 	TimeCreated   uint64
 }
+
+const SessionContext int = iota
