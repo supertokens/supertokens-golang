@@ -8,8 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// TODO: we need to expose this?
-const sessionContext contextKey = iota
+const SessionContext = iota
 
 func VerifySession(recipeInstance models.SessionRecipe, options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {
 	return func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {
@@ -26,7 +25,7 @@ func VerifySession(recipeInstance models.SessionRecipe, options *models.VerifySe
 			return
 		}
 		if session != nil {
-			ctx := context.WithValue(r.Context(), sessionContext, session)
+			ctx := context.WithValue(r.Context(), SessionContext, session)
 			otherHandler(w, r.WithContext(ctx))
 		} else {
 			otherHandler(w, r)

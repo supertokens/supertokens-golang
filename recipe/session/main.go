@@ -99,3 +99,12 @@ func VerifySession(options *models.VerifySessionOptions) func(w http.ResponseWri
 	}
 	return api.VerifySession(*instance, options)
 }
+
+func GetSessionFromRequest(r *http.Request) *models.SessionContainer {
+	value := r.Context().Value(api.SessionContext)
+	if value == nil {
+		return nil
+	}
+	temp := value.(models.SessionContainer)
+	return &temp
+}

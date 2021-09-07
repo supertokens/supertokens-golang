@@ -37,9 +37,6 @@ func newRouter() *gin.Engine {
 	}
 	router.Use(cors.New(corsConfig))
 
-	health := new(controllers.HealthController)
-
-	router.GET("/health", health.Status)
 	auth := router.Group("/auth", middlewares.Supertokens())
 	auth.POST("/*action")
 	auth.GET("/*action")

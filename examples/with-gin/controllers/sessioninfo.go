@@ -6,11 +6,8 @@ import (
 )
 
 func Sessioninfo(c *gin.Context) {
-	var session *models.SessionContainer
-	value, ok := c.Get("supertokens_session_key")
-	if ok && value != nil {
-		session = value.(*models.SessionContainer)
-	}
+
+	var session *models.SessionContainer = Session.GetSessionFromRequest(c.Request)
 	if session == nil {
 		c.JSON(500, "no session found")
 		return
