@@ -28,14 +28,15 @@ func newRouter() *gin.Engine {
 	}))
 
 	router.Use(gin.Recovery())
-	corsConfig := cors.Config{
+
+	router.Use(cors.New(cors.Config{
 		AllowOrigins:     []string{"http://localhost:3000"},
 		AllowMethods:     []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"},
 		AllowHeaders:     append([]string{"content-type"}, supertokens.GetAllCORSHeaders()...),
 		MaxAge:           1 * time.Minute,
 		AllowCredentials: true,
-	}
-	router.Use(cors.New(corsConfig))
+	}))
+
 	router.Use(middlewares.Supertokens())
 
 	router.GET("/sessioninfo", middlewares.VerifySession(nil), controllers.Sessioninfo)
