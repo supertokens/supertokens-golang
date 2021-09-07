@@ -2,7 +2,6 @@ package server
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/supertokens/supertokens-golang/examples/with-gin/config"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -35,7 +34,8 @@ func Init() {
 	// 	},
 	// }
 
-	err := supertokens.SupertokensInit(supertokens.TypeInput{
+	// TODO: general error handling?
+	err := supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.SupertokenTypeInput{
 			ConnectionURI: "https://try.supertokens.io",
 		},
@@ -46,13 +46,9 @@ func Init() {
 		},
 		RecipeList: []supertokens.RecipeListFunction{
 			// emailpassword.RecipeInit(nil),
-			session.RecipeInit(nil),
-			thirdpartyemailpassword.RecipeInit(thirdpartyemailpasswordConfig),
+			session.SessionInit(nil),
+			thirdpartyemailpassword.ThirdPartyEmailPasswordInit(thirdpartyemailpasswordConfig),
 			// thirdparty.RecipeInit(thirdpartyConfig),
-		},
-		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
-			res.WriteHeader(500)
-			res.Write([]byte("Internal error: " + err.Error()))
 		},
 	})
 	if err != nil {

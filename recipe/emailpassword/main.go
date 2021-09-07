@@ -8,6 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+// TODO: change this to and others to just Init
 func EmailPasswordInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }

@@ -13,10 +13,10 @@ const sessionContext = "supertokens_session_key"
 
 func Supertokens() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		handler := supertokens.Middleware()
-		handler(c.Request, c.Writer, func(rw http.ResponseWriter, r *http.Request) {
+		handler := supertokens.Middleware(func(rw http.ResponseWriter, r *http.Request) {
 			c.Next()
 		})
+		handler(c.Writer, c.Request)
 	}
 }
 
