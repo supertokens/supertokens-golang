@@ -2,9 +2,12 @@ package config
 
 import (
 	"log"
-	"path/filepath"
+	"net/http"
 
 	"github.com/spf13/viper"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 var config *viper.Viper
@@ -22,12 +25,45 @@ func Init() {
 	if err != nil {
 		log.Fatal("error on parsing configuration file")
 	}
-}
 
-func relativePath(basedir string, path *string) {
-	p := *path
-	if len(p) > 0 && p[0] != '/' {
-		*path = filepath.Join(basedir, p)
+	// thirdpartyemailpasswordConfig := &models.TypeInput{
+	// 	Providers: []tpm.TypeProvider{thirdparty.Github(providers.TypeThirdPartyProviderGithubConfig{
+	// 		ClientID:     config.GetString("GITHUB_CLIENT_ID"),
+	// 		ClientSecret: config.GetString("GITHUB_CLIENT_SECRET"),
+	// 	}),
+	// 	},
+	// }
+
+	// thirdpartyConfig := &tpm.TypeInput{
+	// 	SignInAndUpFeature: tpm.TypeInputSignInAndUp{
+	// 		Providers: []tpm.TypeProvider{thirdparty.Github(providers.TypeThirdPartyProviderGithubConfig{
+	// 			ClientID:     config.GetString("GITHUB_CLIENT_ID"),
+	// 			ClientSecret: config.GetString("GITHUB_CLIENT_SECRET"),
+	// 		}),
+	// 		},
+	// 	},
+	// }
+
+	err = supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.SupertokenTypeInput{
+			ConnectionURI: "https://try.supertokens.io",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens Demo App",
+			APIDomain:     "http://localhost" + config.GetString("server.apiPort"),
+			WebsiteDomain: "http://localhost" + config.GetString("server.websitePort"),
+		},
+		RecipeList: []supertokens.RecipeListFunction{
+			emailpassword.EmailPasswordInit(nil),
+			session.SessionInit(nil),
+			// thirdparty.RecipeInit(thirdpartyConfig),
+		},
+		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
+			http.Error(res, err.Error(), 500)
+		},
+	})
+	if err != nil {
+		panic(err.Error())
 	}
 }
 

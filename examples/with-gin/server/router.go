@@ -36,8 +36,8 @@ func newRouter() *gin.Engine {
 		AllowCredentials: true,
 	}
 	router.Use(cors.New(corsConfig))
+	router.Use(middlewares.Supertokens())
 
-	router.Any("/auth/*action", middlewares.Supertokens())
 	router.GET("/sessioninfo", middlewares.VerifySession(nil), controllers.Sessioninfo)
 
 	return router
