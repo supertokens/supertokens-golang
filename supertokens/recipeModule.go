@@ -18,6 +18,9 @@ func MakeRecipeModule(
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error)) RecipeModule {
+	if handleError == nil {
+		panic("nil passed for handleError in recipe")
+	}
 	return RecipeModule{
 		recipeID:          recipeId,
 		appInfo:           appInfo,
