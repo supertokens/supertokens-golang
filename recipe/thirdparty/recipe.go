@@ -32,7 +32,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	verifiedConfig, err := validateAndNormaliseUserInput(*r, appInfo, config)
+	verifiedConfig, err := validateAndNormaliseUserInput(r, appInfo, config)
 	if err != nil {
 		return Recipe{}, err
 	}

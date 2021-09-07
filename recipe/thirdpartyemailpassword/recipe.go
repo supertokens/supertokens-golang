@@ -34,7 +34,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r = &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
-	verifiedConfig, err := validateAndNormaliseUserInput(*r, appInfo, config)
+	verifiedConfig, err := validateAndNormaliseUserInput(r, appInfo, config)
 	if err != nil {
 		return Recipe{}, err
 	}
