@@ -1,30 +1,45 @@
 package supertokens
 
-import "net/http"
+import (
+	"net/http"
+)
 
-func Middleware() func(req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc) {
-	return func(req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc) {
-		superTokensInstance, err := getInstanceOrThrowError()
-		if err != nil {
-			panic("supertokens not initialised - " + err.Error())
-		}
-		middleware := superTokensInstance.Middleware(theirHandler)
-		middleware(res, req)
+func Init(config TypeInput) error {
+	return supertokensInit(config)
+}
+
+func Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
+	instance, err := getInstanceOrThrowError()
+	if err != nil {
+		panic("Please call SupertokensInit before using the middleware")
 	}
+	return instance.middleware(theirHandler)
+}
+
+func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) {
+	instance, instanceErr := getInstanceOrThrowError()
+	if instanceErr != nil {
+		panic("Please call SupertokensInit before using the error handler")
+	}
+	instance.errorHandler(err, req, res)
 }
 
 func GetAllCORSHeaders() []string {
-	superTokensInstance, err := getInstanceOrThrowError()
+	instance, err := getInstanceOrThrowError()
 	if err != nil {
-		panic("supertokens not initialised - " + err.Error())
+		panic("Please call SupertokensInit before using the GetAllCORSHeaders function")
 	}
-	return superTokensInstance.GetAllCORSHeaders()
+	return instance.getAllCORSHeaders()
 }
 
-func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) bool {
-	superTokensInstance, insterr := getInstanceOrThrowError()
-	if insterr != nil {
-		panic("supertokens not initialised - " + insterr.Error())
-	}
-	return superTokensInstance.ErrorHandler(err, req, res)
+func GetUserCount(includeRecipeIds *[]string) (int, error) {
+	return getUserCount(includeRecipeIds)
+}
+
+func GetUsersOldestFirst(limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
+	return getUsers("ASC", limit, paginationToken, includeRecipeIds)
+}
+
+func GetUsersNewestFirst(limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
+	return getUsers("DESC", limit, paginationToken, includeRecipeIds)
 }

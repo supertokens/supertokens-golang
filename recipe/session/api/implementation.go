@@ -1,7 +1,6 @@
 package api
 
 import (
-	"context"
 	defaultErrors "errors"
 	"net/http"
 
@@ -10,67 +9,55 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type contextKey int
-
-const sessionContext contextKey = iota
-
-func MakeAPIImplementation() models.APIImplementation {
-	return models.APIImplementation{
+func MakeAPIImplementation() models.APIInterface {
+	return models.APIInterface{
 		RefreshPOST: func(options models.APIOptions) error {
 			_, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
 			return err
 		},
 
-		VerifySession: func(verifySessionOptions *models.VerifySessionOptions, options models.APIOptions) error {
+		VerifySession: func(verifySessionOptions *models.VerifySessionOptions, options models.APIOptions) (*models.SessionContainer, error) {
 			method := options.Req.Method
 			if method == http.MethodOptions || method == http.MethodTrace {
-				options.OtherHandler(options.Res, options.Req)
-				return nil
+				return nil, nil
 			}
 
 			incomingPath, err := supertokens.NewNormalisedURLPath(options.Req.RequestURI)
 			if err != nil {
-				supertokens.ErrorHandler(err, options.Req, options.Res)
-				return err
+				return nil, err
 			}
-			var ctx context.Context
+
 			refreshTokenPath := options.Config.RefreshTokenPath
 			if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
 				session, err := options.RecipeImplementation.RefreshSession(options.Req, options.Res)
-				if err != nil {
-					supertokens.ErrorHandler(err, options.Req, options.Res)
-					return err
-				}
-				ctx = context.WithValue(options.Req.Context(), sessionContext, session)
+				return &session, err
 			} else {
-				session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, verifySessionOptions)
-				if err != nil {
-					supertokens.ErrorHandler(err, options.Req, options.Res)
-					return err
-				}
-				ctx = context.WithValue(options.Req.Context(), sessionContext, session)
+				return options.RecipeImplementation.GetSession(options.Req, options.Res, verifySessionOptions)
 			}
-			options.OtherHandler(options.Res, options.Req.WithContext(ctx))
-			return nil
 		},
 
-		SignOutPOST: func(options models.APIOptions) error {
+		SignOutPOST: func(options models.APIOptions) (models.SignOutPOSTResponse, error) {
 			session, err := options.RecipeImplementation.GetSession(options.Req, options.Res, nil)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					return nil
+					return models.SignOutPOSTResponse{
+						OK: &struct{}{},
+					}, nil
 				}
-				return err
+				return models.SignOutPOSTResponse{}, err
 			}
 			if session == nil {
-				return defaultErrors.New("Session is undefined. Should not come here.")
+				return models.SignOutPOSTResponse{}, defaultErrors.New("session is nil. Should not come here.")
 			}
-			err = session.RevokeSession()
 
+			err = session.RevokeSession()
 			if err != nil {
-				return err
+				return models.SignOutPOSTResponse{}, err
 			}
-			return nil
+
+			return models.SignOutPOSTResponse{
+				OK: &struct{}{},
+			}, nil
 		},
 	}
 }

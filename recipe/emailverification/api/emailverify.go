@@ -10,7 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailVerify(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func EmailVerify(apiImplementation models.APIInterface, options models.APIOptions) error {
 	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
 		if apiImplementation.VerifyEmailPOST == nil {
@@ -39,9 +39,15 @@ func EmailVerify(apiImplementation models.APIImplementation, options models.APIO
 		if err != nil {
 			return err
 		}
-
-		result = map[string]interface{}{
-			"status": response.Status,
+		if response.EmailVerificationInvalidTokenError != nil {
+			result = map[string]interface{}{
+				"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR",
+			}
+		} else {
+			result = map[string]interface{}{
+				"status": "OK",
+				"user":   response.OK.User,
+			}
 		}
 	} else {
 		if apiImplementation.IsEmailVerifiedGET == nil {
@@ -49,18 +55,16 @@ func EmailVerify(apiImplementation models.APIImplementation, options models.APIO
 			return nil
 		}
 
-		response, err := apiImplementation.IsEmailVerifiedGET(options)
+		isVerified, err := apiImplementation.IsEmailVerifiedGET(options)
 		if err != nil {
 			return err
 		}
 
 		result = map[string]interface{}{
 			"status":     "OK",
-			"isVerified": response,
+			"isVerified": isVerified,
 		}
-
 	}
 
-	supertokens.Send200Response(options.Res, result)
-	return nil
+	return supertokens.Send200Response(options.Res, result)
 }

@@ -3,7 +3,7 @@ package providers
 import (
 	"bytes"
 	"encoding/json"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -130,7 +130,7 @@ func doGetRequest(req *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	body, err := io.ReadAll(resp.Body)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
 	}

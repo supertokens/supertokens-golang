@@ -21,9 +21,10 @@ type TokenTheftDetectedError struct {
 	Payload TokenTheftDetectedErrorPayload
 }
 
+// TODO: test if this gets proper deserialised
 type TokenTheftDetectedErrorPayload struct {
-	SessionHandle string
-	UserID        string
+	SessionHandle string `json:"sessionHandle"`
+	UserID        string `json:"userId"`
 }
 
 func (err TokenTheftDetectedError) Error() string {
@@ -32,7 +33,8 @@ func (err TokenTheftDetectedError) Error() string {
 
 // UnauthorizedError used for when the user has been logged out
 type UnauthorizedError struct {
-	Msg string
+	Msg          string
+	ClearCookies *bool
 }
 
 func (err UnauthorizedError) Error() string {

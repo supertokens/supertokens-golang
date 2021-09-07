@@ -3,6 +3,7 @@ package api
 import (
 	"encoding/json"
 	"io/ioutil"
+	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -14,7 +15,7 @@ type bodyParams struct {
 	RedirectURI  string `json:"redirectURI"`
 }
 
-func SignInUpAPI(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func SignInUpAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.SignInUpPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -38,7 +39,7 @@ func SignInUpAPI(apiImplementation models.APIImplementation, options models.APIO
 		return supertokens.BadInputError{Msg: "Please provide the code in request body"}
 	}
 
-	if bodyParams.ThirdPartyId == "" {
+	if bodyParams.RedirectURI == "" {
 		return supertokens.BadInputError{Msg: "Please provide the redirectURI in request body"}
 	}
 
@@ -49,23 +50,30 @@ func SignInUpAPI(apiImplementation models.APIImplementation, options models.APIO
 		}
 	}
 
-	result := apiImplementation.SignInUpPOST(provider, bodyParams.Code, bodyParams.RedirectURI, options)
+	if reflect.DeepEqual(provider, models.TypeProvider{}) {
+		return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
+	}
 
-	if result.Status == "OK" {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
-			"status":         result.Status,
-			"user":           result.User,
-			"createdNewUser": result.CreatedNewUser,
+	result, err := apiImplementation.SignInUpPOST(provider, bodyParams.Code, bodyParams.RedirectURI, options)
+
+	if err != nil {
+		return err
+	}
+
+	if result.OK != nil {
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status":         "OK",
+			"user":           result.OK.User,
+			"createdNewUser": result.OK.CreatedNewUser,
 		})
-	} else if result.Status == "NO_EMAIL_GIVEN_BY_PROVIDER" {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+	} else if result.NoEmailGivenByProviderError != nil {
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "NO_EMAIL_GIVEN_BY_PROVIDER",
 		})
 	} else {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "FIELD_ERROR",
-			"error":  result.Error,
+			"error":  result.FieldError.Error,
 		})
 	}
-	return nil
 }

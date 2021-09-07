@@ -48,7 +48,7 @@ func getRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
 	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
@@ -106,17 +106,14 @@ func getAllCORSHeaders() []string {
 	return getCORSAllowedHeaders()
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) bool {
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-		r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
-		return true
+		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
-		r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
-		return true
+		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 		errs := err.(errors.TokenTheftDetectedError)
-		r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
-		return true
+		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	}
-	return false
+	return false, nil
 }

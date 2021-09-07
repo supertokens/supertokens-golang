@@ -9,7 +9,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PasswordReset(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func PasswordReset(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.PasswordResetPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -17,7 +17,7 @@ func PasswordReset(apiImplementation models.APIImplementation, options models.AP
 
 	body, err := ioutil.ReadAll(options.Req.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	var formFieldsRaw map[string]interface{}
 	err = json.Unmarshal(body, &formFieldsRaw)
@@ -38,8 +38,17 @@ func PasswordReset(apiImplementation models.APIImplementation, options models.AP
 		return supertokens.BadInputError{Msg: "The password reset token must be a string"}
 	}
 
-	result := apiImplementation.PasswordResetPOST(formFields, token.(string), options)
-	supertokens.Send200Response(options.Res, result)
-	return nil
-
+	result, err := apiImplementation.PasswordResetPOST(formFields, token.(string), options)
+	if err != nil {
+		return err
+	}
+	if result.OK != nil {
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "OK",
+		})
+	} else {
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "RESET_PASSWORD_INVALID_TOKEN_ERROR",
+		})
+	}
 }

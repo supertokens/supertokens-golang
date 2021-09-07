@@ -14,8 +14,8 @@ type NormalisedAppinfo struct {
 type AppInfo struct {
 	AppName         string
 	WebsiteDomain   string
-	WebsiteBasePath *string
 	APIDomain       string
+	WebsiteBasePath *string
 	APIBasePath     *string
 	APIGatewayPath  *string
 }
@@ -23,7 +23,7 @@ type AppInfo struct {
 type RecipeListFunction func(appInfo NormalisedAppinfo) (*RecipeModule, error)
 
 type TypeInput struct {
-	Supertokens     *SupertokenTypeInput
+	Supertokens    *SupertokenTypeInput
 	AppInfo        AppInfo
 	RecipeList     []RecipeListFunction
 	Telemetry      *bool

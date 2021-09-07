@@ -8,7 +8,7 @@ type RecipeModule struct {
 	HandleAPIRequest  func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
 	GetAllCORSHeaders func() []string
 	GetAPIsHandled    func() ([]APIHandled, error)
-	HandleError       func(err error, req *http.Request, res http.ResponseWriter) bool
+	HandleError       func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
 }
 
 func MakeRecipeModule(
@@ -17,7 +17,10 @@ func MakeRecipeModule(
 	handleAPIRequest func(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
-	handleError func(err error, req *http.Request, res http.ResponseWriter) bool) RecipeModule {
+	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error)) RecipeModule {
+	if handleError == nil {
+		panic("nil passed for handleError in recipe")
+	}
 	return RecipeModule{
 		recipeID:          recipeId,
 		appInfo:           appInfo,

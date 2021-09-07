@@ -6,68 +6,77 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeAPIImplementation() models.APIImplementation {
-	return models.APIImplementation{
-		VerifyEmailPOST: func(token string, options models.APIOptions) (*models.VerifyEmailUsingTokenResponse, error) {
+func MakeAPIImplementation() models.APIInterface {
+	return models.APIInterface{
+		VerifyEmailPOST: func(token string, options models.APIOptions) (models.VerifyEmailUsingTokenResponse, error) {
 			return options.RecipeImplementation.VerifyEmailUsingToken((token))
 		},
 
-		IsEmailVerifiedGET: func(options models.APIOptions) (bool, error) {
+		IsEmailVerifiedGET: func(options models.APIOptions) (models.IsEmailVerifiedGETResponse, error) {
 			session, err := session.GetSession(options.Req, options.Res, nil)
 			if err != nil {
-				return false, err
+				return models.IsEmailVerifiedGETResponse{}, err
 			}
 			if session == nil {
-				return false, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
+				return models.IsEmailVerifiedGETResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 			}
+
 			userID := session.GetUserID()
+
 			email, err := options.Config.GetEmailForUserID(userID)
 			if err != nil {
-				return false, err
+				return models.IsEmailVerifiedGETResponse{}, err
 			}
-			return options.RecipeImplementation.IsEmailVerified(userID, email)
+			isVerified, err := options.RecipeImplementation.IsEmailVerified(userID, email)
+			if err != nil {
+				return models.IsEmailVerifiedGETResponse{}, err
+			}
+			return models.IsEmailVerifiedGETResponse{
+				OK: &struct{ IsVerified bool }{
+					IsVerified: isVerified,
+				},
+			}, nil
 		},
 
-		GenerateEmailVerifyTokenPOST: func(options models.APIOptions) (*models.GenerateEmailVerifyTokenPOSTResponse, error) {
+		GenerateEmailVerifyTokenPOST: func(options models.APIOptions) (models.GenerateEmailVerifyTokenPOSTResponse, error) {
 			session, err := session.GetSession(options.Req, options.Res, nil)
 			if err != nil {
-				return nil, err
+				return models.GenerateEmailVerifyTokenPOSTResponse{}, err
 			}
 			if session == nil {
-				return nil, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
+				return models.GenerateEmailVerifyTokenPOSTResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 			}
 
 			userID := session.GetUserID()
 			email, err := options.Config.GetEmailForUserID(userID)
 			if err != nil {
-				return nil, err
+				return models.GenerateEmailVerifyTokenPOSTResponse{}, err
 			}
 			response, err := options.RecipeImplementation.CreateEmailVerificationToken(userID, email)
 			if err != nil {
-				return nil, err
+				return models.GenerateEmailVerifyTokenPOSTResponse{}, err
 			}
 
-			if response.Status == "EMAIL_ALREADY_VERIFIED_ERROR" {
-				return &models.GenerateEmailVerifyTokenPOSTResponse{
-					Status: response.Status,
+			if response.EmailAlreadyVerifiedError != nil {
+				return models.GenerateEmailVerifyTokenPOSTResponse{
+					EmailAlreadyVerifiedError: &struct{}{},
 				}, nil
 			}
+
 			user := models.User{
 				ID:    userID,
 				Email: email,
 			}
 			emailVerificationURL, err := options.Config.GetEmailVerificationURL(user)
 			if err != nil {
-				return nil, err
+				return models.GenerateEmailVerifyTokenPOSTResponse{}, err
 			}
-			emailVerifyLink := emailVerificationURL + "?token=" + response.Token + "&rid=" + options.RecipeID
+			emailVerifyLink := emailVerificationURL + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
-			err = options.Config.CreateAndSendCustomEmail(user, emailVerifyLink)
-			if err != nil {
-				return nil, err
-			}
-			return &models.GenerateEmailVerifyTokenPOSTResponse{
-				Status: "OK",
+			options.Config.CreateAndSendCustomEmail(user, emailVerifyLink)
+
+			return models.GenerateEmailVerifyTokenPOSTResponse{
+				OK: &struct{}{},
 			}, nil
 		},
 	}

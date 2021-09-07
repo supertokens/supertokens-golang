@@ -7,5 +7,5 @@ const (
 )
 
 var (
-	cdiSupported = []string{"2.7"}
+	cdiSupported = []string{"2.8"}
 )

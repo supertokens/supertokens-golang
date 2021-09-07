@@ -1,8 +1,6 @@
 package models
 
 import (
-	"net/http"
-
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 )
 
@@ -47,15 +45,6 @@ type User struct {
 	}
 }
 
-type TypeInputSetJwtPayloadForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{}
-
-type TypeInputSetSessionDataForSession func(User User, thirdPartyAuthCodeResponse interface{}, action string) map[string]interface{}
-
-type TypeNormalisedInputSessionFeature struct {
-	SetJwtPayload  TypeInputSetJwtPayloadForSession
-	SetSessionData TypeInputSetSessionDataForSession
-}
-
 type TypeInputEmailVerificationFeature struct {
 	GetEmailVerificationURL  func(user User) (string, error)
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
@@ -70,70 +59,27 @@ type TypeNormalisedInputSignInAndUp struct {
 }
 
 type TypeInput struct {
-	SessionFeature           *TypeNormalisedInputSessionFeature
 	SignInAndUpFeature       TypeInputSignInAndUp
 	EmailVerificationFeature *TypeInputEmailVerificationFeature
 	Override                 *struct {
-		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
-		APIs                     func(originalImplementation APIImplementation) APIImplementation
+		Functions                func(originalImplementation RecipeInterface) RecipeInterface
+		APIs                     func(originalImplementation APIInterface) APIInterface
 		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
 		}
 	}
 }
 
 type TypeNormalisedInput struct {
-	SessionFeature           TypeNormalisedInputSessionFeature
 	SignInAndUpFeature       TypeNormalisedInputSignInAndUp
 	EmailVerificationFeature models.TypeInput
 	Override                 struct {
-		Functions                func(originalImplementation RecipeImplementation) RecipeImplementation
-		APIs                     func(originalImplementation APIImplementation) APIImplementation
+		Functions                func(originalImplementation RecipeInterface) RecipeInterface
+		APIs                     func(originalImplementation APIInterface) APIInterface
 		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
 		}
 	}
-}
-
-type RecipeImplementation struct {
-	GetUserByID             func(userID string) *User
-	GetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string) *User
-	SignInUp                func(thirdPartyID string, thirdPartyUserID string, email EmailStruct) SignInUpResponse
-}
-
-type SignInUpResponse struct {
-	Status         string `json:"status"`
-	CreatedNewUser bool   `json:"createdNewUser"`
-	User           User   `json:"user"`
-	Error          error  `json:"error"`
-}
-
-type APIOptions struct {
-	RecipeImplementation RecipeImplementation
-	Config               TypeNormalisedInput
-	RecipeID             string
-	Providers            []TypeProvider
-	Req                  *http.Request
-	Res                  http.ResponseWriter
-	OtherHandler         http.HandlerFunc
-}
-
-type APIImplementation struct {
-	AuthorisationUrlGET func(provider TypeProvider, options APIOptions) AuthorisationUrlGETResponse
-	SignInUpPOST        func(provider TypeProvider, code string, redirectURI string, options APIOptions) SignInUpPOSTResponse
-}
-
-type AuthorisationUrlGETResponse struct {
-	Status string `json:"status"`
-	URL    string `json:"url"`
-}
-
-type SignInUpPOSTResponse struct {
-	Status           string      `json:"status"`
-	CreatedNewUser   bool        `json:"createdNewUser"`
-	User             User        `json:"user"`
-	AuthCodeResponse interface{} `json:"authCodeResponse"`
-	Error            error       `json:"error"`
 }

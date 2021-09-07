@@ -14,8 +14,8 @@ const RECIPE_ID = "emailverification"
 type Recipe struct {
 	RecipeModule supertokens.RecipeModule
 	Config       models.TypeNormalisedInput
-	RecipeImpl   models.RecipeImplementation
-	APIImpl      models.APIImplementation
+	RecipeImpl   models.RecipeInterface
+	APIImpl      models.APIInterface
 }
 
 var r = &Recipe{}
@@ -32,7 +32,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, nil)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	r.RecipeModule = recipeModuleInstance
 
 	return Recipe{
@@ -50,7 +50,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
@@ -62,28 +62,6 @@ func RecipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
 		}
 		return nil, errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
 	}
-}
-
-func (r *Recipe) CreateEmailVerificationToken(userID, email string) (string, error) {
-	response, err := r.RecipeImpl.CreateEmailVerificationToken(userID, email)
-	if err != nil {
-		return "", err
-	}
-	if response.Status == "OK" {
-		return response.Token, nil
-	}
-	return "", errors.New("Email has already been verified")
-}
-
-func (r *Recipe) VerifyEmailUsingToken(token string) (*models.User, error) {
-	response, err := r.RecipeImpl.VerifyEmailUsingToken(token)
-	if err != nil {
-		return nil, err
-	}
-	if response.Status == "OK" {
-		return &response.User, nil
-	}
-	return nil, errors.New("Invalid email verification token")
 }
 
 // implement RecipeModule
@@ -134,4 +112,8 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 
 func getAllCORSHeaders() []string {
 	return []string{}
+}
+
+func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	return false, nil
 }

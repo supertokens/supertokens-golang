@@ -80,5 +80,5 @@ func domainGiven(input string) bool {
 			return false
 		}
 	}
-	return strings.Index(urlObj.Hostname(), ".") != -1
+	return strings.Contains(urlObj.Hostname(), ".")
 }

@@ -48,8 +48,8 @@ type TypeInput struct {
 	CookieDomain             *string
 	AntiCsrf                 *string
 	Override                 *struct {
-		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
-		APIs      func(originalImplementation APIImplementation) APIImplementation
+		Functions func(originalImplementation RecipeInterface) RecipeInterface
+		APIs      func(originalImplementation APIInterface) APIInterface
 	}
 	ErrorHandlers *ErrorHandlers
 }
@@ -67,10 +67,37 @@ type TypeNormalisedInput struct {
 	SessionExpiredStatusCode int
 	AntiCsrf                 string
 	Override                 struct {
-		Functions func(originalImplementation RecipeImplementation) RecipeImplementation
-		APIs      func(originalImplementation APIImplementation) APIImplementation
+		Functions func(originalImplementation RecipeInterface) RecipeInterface
+		APIs      func(originalImplementation APIInterface) APIInterface
 	}
 	ErrorHandlers NormalisedErrorHandlers
+}
+
+type VerifySessionOptions struct {
+	AntiCsrfCheck   *bool
+	SessionRequired *bool
+}
+
+type APIOptions struct {
+	RecipeImplementation RecipeInterface
+	Config               TypeNormalisedInput
+	RecipeID             string
+	Req                  *http.Request
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
+}
+
+type SessionRecipe struct {
+	RecipeModule supertokens.RecipeModule
+	Config       TypeNormalisedInput
+	RecipeImpl   RecipeInterface
+	APIImpl      APIInterface
+}
+
+type NormalisedErrorHandlers struct {
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
 }
 
 type SessionContainer struct {
@@ -82,53 +109,17 @@ type SessionContainer struct {
 	GetHandle         func() string
 	GetAccessToken    func() string
 	UpdateJWTPayload  func(newJWTPayload interface{}) error
+	GetTimeCreated    func() (uint64, error)
+	GetExpiry         func() (uint64, error)
 }
 
-type VerifySessionOptions struct {
-	AntiCsrfCheck   *bool
-	SessionRequired *bool
+type SessionInformation struct {
+	SessionHandle string
+	UserId        string
+	SessionData   interface{}
+	Expiry        uint64
+	JwtPayload    interface{}
+	TimeCreated   uint64
 }
 
-type RecipeImplementation struct {
-	CreateNewSession            func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (*SessionContainer, error)
-	GetSession                  func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
-	RefreshSession              func(req *http.Request, res http.ResponseWriter) (*SessionContainer, error)
-	RevokeAllSessionsForUser    func(userID string) ([]string, error)
-	GetAllSessionHandlesForUser func(userID string) ([]string, error)
-	RevokeSession               func(sessionHandle string) (bool, error)
-	RevokeMultipleSessions      func(sessionHandles []string) ([]string, error)
-	GetSessionData              func(sessionHandle string) (interface{}, error)
-	UpdateSessionData           func(sessionHandle string, newSessionData interface{}) error
-	GetJWTPayload               func(sessionHandle string) (interface{}, error)
-	UpdateJWTPayload            func(sessionHandle string, newJWTPayload interface{}) error
-	GetAccessTokenLifeTimeMS    func() (uint64, error)
-	GetRefreshTokenLifeTimeMS   func() (uint64, error)
-}
-
-type APIOptions struct {
-	RecipeImplementation RecipeImplementation
-	Config               TypeNormalisedInput
-	RecipeID             string
-	Req                  *http.Request
-	Res                  http.ResponseWriter
-	OtherHandler         http.HandlerFunc
-}
-
-type APIImplementation struct {
-	RefreshPOST   func(options APIOptions) error
-	SignOutPOST   func(options APIOptions) error
-	VerifySession func(verifySessionOptions *VerifySessionOptions, options APIOptions) error
-}
-
-type SessionRecipe struct {
-	RecipeModule supertokens.RecipeModule
-	Config       TypeNormalisedInput
-	RecipeImpl   RecipeImplementation
-	APIImpl      APIImplementation
-}
-
-type NormalisedErrorHandlers struct {
-	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
-	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter) error
-	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
-}
+const SessionContext int = iota

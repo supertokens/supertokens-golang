@@ -4,22 +4,29 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	envModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SignUp(email string, password string) (models.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return models.User{}, err
-	}
-	return instance.RecipeImpl.SignUp(email, password).User, nil
+// TODO: change this to and others to just Init
+func EmailPasswordInit(config *models.TypeInput) supertokens.RecipeListFunction {
+	return recipeInit(config)
 }
 
-func SignIn(email string, password string) (models.User, error) {
+func SignUp(email string, password string) (models.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.User{}, err
+		return models.SignUpResponse{}, err
 	}
-	return instance.RecipeImpl.SignIn(email, password).User, nil
+	return instance.RecipeImpl.SignUp(email, password)
+}
+
+func SignIn(email string, password string) (models.SignInResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return models.SignInResponse{}, err
+	}
+	return instance.RecipeImpl.SignIn(email, password)
 }
 
 func GetUserByID(userID string) (*models.User, error) {
@@ -27,7 +34,7 @@ func GetUserByID(userID string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByID(userID), nil
+	return instance.RecipeImpl.GetUserByID(userID)
 }
 
 func GetUserByEmail(email string) (*models.User, error) {
@@ -35,51 +42,58 @@ func GetUserByEmail(email string) (*models.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByEmail(email), nil
+	return instance.RecipeImpl.GetUserByEmail(email)
 }
 
-func CreateResetPasswordToken(userID string) (string, error) {
+func CreateResetPasswordToken(userID string) (models.CreateResetPasswordTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return models.CreateResetPasswordTokenResponse{}, err
 	}
-	return instance.RecipeImpl.CreateResetPasswordToken(userID).Token, nil
+	return instance.RecipeImpl.CreateResetPasswordToken(userID)
 }
 
-func ResetPasswordUsingToken(token string, newPassword string) error {
+func ResetPasswordUsingToken(token string, newPassword string) (models.ResetPasswordUsingTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return err
+		return models.ResetPasswordUsingTokenResponse{}, nil
 	}
-	instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
-	return nil
+	return instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
 }
 
-func CreateEmailVerificationToken(userID string) (string, error) {
+func UpdateEmailOrPassword(userId string, email *string, password *string) (models.UpdateEmailOrPasswordResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return models.UpdateEmailOrPasswordResponse{}, nil
 	}
-	email, err := getEmailForUserId(userID)
-	if err != nil {
-		return "", err
-	}
-	return instance.EmailVerificationRecipe.CreateEmailVerificationToken(userID, email)
+	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
 }
 
-func VerifyEmailUsingToken(token string) (models.User, error) {
+func CreateEmailVerificationToken(userID string) (envModels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.User{}, err
+		return envModels.CreateEmailVerificationTokenResponse{}, err
 	}
-	user, err := instance.EmailVerificationRecipe.VerifyEmailUsingToken(token)
+	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return models.User{}, err
+		return envModels.CreateEmailVerificationTokenResponse{}, err
 	}
-	return models.User{
-		ID:    user.ID,
-		Email: user.Email,
-	}, nil
+	return instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken(userID, email)
+}
+
+func VerifyEmailUsingToken(token string) (*models.User, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	response, err := instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken(token)
+	if err != nil {
+		return nil, err
+	}
+	if response.EmailVerificationInvalidTokenError != nil {
+		return nil, errors.New("email verification token is invalid")
+	}
+	return instance.RecipeImpl.GetUserByID(response.OK.User.ID)
 }
 
 func IsEmailVerified(userID string) (bool, error) {
@@ -87,21 +101,33 @@ func IsEmailVerified(userID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	email, err := getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
 		return false, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
 }
 
-func getEmailForUserId(userID string) (string, error) {
+func RevokeEmailVerificationTokens(userID string) (envModels.RevokeEmailVerificationTokensResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return envModels.RevokeEmailVerificationTokensResponse{}, err
 	}
-	userInfo := instance.RecipeImpl.GetUserByID(userID)
-	if userInfo == nil {
-		return "", errors.New("Unknown User ID provided")
+	email, err := instance.getEmailForUserId(userID)
+	if err != nil {
+		return envModels.RevokeEmailVerificationTokensResponse{}, err
 	}
-	return userInfo.Email, nil
+	return instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
+}
+
+func UnverifyEmail(userID string) (envModels.UnverifyEmailResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return envModels.UnverifyEmailResponse{}, err
+	}
+	email, err := instance.getEmailForUserId(userID)
+	if err != nil {
+		return envModels.UnverifyEmailResponse{}, err
+	}
+	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }

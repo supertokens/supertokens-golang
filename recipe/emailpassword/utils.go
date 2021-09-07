@@ -6,48 +6,27 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) models.TypeNormalisedInput {
-	sessionFeature := validateAndNormaliseSessionFeatureConfig(nil)
-	signUpFeature := validateAndNormaliseSignupConfig(nil)
-	resetPasswordUsingTokenFeature := validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, nil)
+func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) models.TypeNormalisedInput {
 
-	if config != nil && config.SessionFeature != nil {
-		sessionFeature = validateAndNormaliseSessionFeatureConfig(config.SessionFeature)
-	}
+	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
 	if config != nil && config.SignUpFeature != nil {
-		signUpFeature = validateAndNormaliseSignupConfig(config.SignUpFeature)
+		typeNormalisedInput.SignUpFeature = validateAndNormaliseSignupConfig(config.SignUpFeature)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, nil)
 	}
 
-	signInFeature := validateAndNormaliseSignInConfig(signUpFeature)
+	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)
 
 	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
-		resetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, signUpFeature, config.ResetPasswordUsingTokenFeature)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, config.ResetPasswordUsingTokenFeature)
 	}
 
-	emailVerificationFeature := validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
-
-	typeNormalisedInput := models.TypeNormalisedInput{
-		SessionFeature:                 sessionFeature,
-		SignUpFeature:                  signUpFeature,
-		SignInFeature:                  signInFeature,
-		ResetPasswordUsingTokenFeature: resetPasswordUsingTokenFeature,
-		EmailVerificationFeature:       emailVerificationFeature,
-	}
-
-	typeNormalisedInput.Override.Functions = func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
-		return originalImplementation
-	}
-	typeNormalisedInput.Override.APIs = func(originalImplementation models.APIImplementation) models.APIImplementation {
-		return originalImplementation
-	}
-	typeNormalisedInput.Override.EmailVerificationFeature = nil
+	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
 
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
@@ -64,37 +43,67 @@ func validateAndNormaliseUserInput(recipeInstance models.RecipeImplementation, a
 	return typeNormalisedInput
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance models.RecipeImplementation, config *models.TypeInput) evm.TypeInput {
-	var emailverificationTypeInput evm.TypeInput
-	emailverificationTypeInput.GetEmailForUserID = getEmailForUserId
-
-	emailverificationTypeInput.Override = nil
-	if config != nil && config.Override != nil {
-		override := config.Override
-
-		emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) error {
-			userInfo := recipeInstance.GetUserByID(user.ID)
-			if userInfo == nil {
-				return errors.New("Unknown User ID provided")
+func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput {
+	signUpConfig := validateAndNormaliseSignupConfig(nil)
+	return models.TypeNormalisedInput{
+		SignUpFeature:                  signUpConfig,
+		SignInFeature:                  validateAndNormaliseSignInConfig(signUpConfig),
+		ResetPasswordUsingTokenFeature: validateAndNormaliseResetPasswordUsingTokenConfig(recipeInstance.RecipeModule.GetAppInfo(), signUpConfig, nil),
+		EmailVerificationFeature:       validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
+		Override: struct {
+			Functions                func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs                     func(originalImplementation models.APIInterface) models.APIInterface
+			EmailVerificationFeature *struct {
+				Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
+				APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
 			}
-			return config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+		}{
+			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
+				return originalImplementation
+			},
+			APIs: func(originalImplementation models.APIInterface) models.APIInterface {
+				return originalImplementation
+			},
+			EmailVerificationFeature: nil,
+		},
+	}
+}
+
+func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evm.TypeInput {
+	emailverificationTypeInput := evm.TypeInput{
+		GetEmailForUserID: recipeInstance.getEmailForUserId,
+		Override:          nil,
+	}
+
+	if config != nil {
+		if config.Override != nil {
+			emailverificationTypeInput.Override = config.Override.EmailVerificationFeature
 		}
-
-		emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
-			userInfo := recipeInstance.GetUserByID(user.ID)
-			if userInfo == nil {
-				return "", errors.New("Unknown User ID provided")
+		if config.EmailVerificationFeature != nil {
+			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) {
+					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
+					if err != nil {
+						return
+					}
+					if userInfo == nil {
+						return
+					}
+					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+				}
 			}
-			return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
-		}
 
-		if override.EmailVerificationFeature != nil {
-			emailverificationTypeInput.Override = override.EmailVerificationFeature
-			if config.EmailVerificationFeature.CreateAndSendCustomEmail == nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = nil
-			}
-			if config.EmailVerificationFeature.GetEmailVerificationURL == nil {
-				emailverificationTypeInput.GetEmailVerificationURL = nil
+			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
+				emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
+					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
+					if err != nil {
+						return "", err
+					}
+					if userInfo == nil {
+						return "", errors.New("Unknown User ID provided")
+					}
+					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
+				}
 			}
 		}
 	}
@@ -116,10 +125,10 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 			formFieldsForGenerateTokenForm []models.NormalisedFormField
 		)
 		for _, FormField := range signUpConfig.FormFields {
-			if FormField.ID == constants.FormFieldPasswordID {
+			if FormField.ID == "password" {
 				formFieldsForPasswordResetForm = append(formFieldsForPasswordResetForm, FormField)
 			}
-			if FormField.ID == constants.FormFieldEmailID {
+			if FormField.ID == "email" {
 				formFieldsForGenerateTokenForm = append(formFieldsForGenerateTokenForm, FormField)
 			}
 		}
@@ -136,32 +145,6 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 
 	return normalisedInputResetPasswordUsingTokenFeature
 }
-
-func defaultSetJwtPayloadForSession(_ models.User, _ []models.TypeFormField, _ string) map[string]interface{} {
-	return nil
-}
-
-func defaultSetSessionDataForSession(_ models.User, _ []models.TypeFormField, _ string) map[string]interface{} {
-	return nil
-}
-
-func validateAndNormaliseSessionFeatureConfig(config *models.TypeNormalisedInputSessionFeature) models.TypeNormalisedInputSessionFeature {
-	normalisedInputSessionFeature := models.TypeNormalisedInputSessionFeature{
-		SetJwtPayload:  defaultSetJwtPayloadForSession,
-		SetSessionData: defaultSetSessionDataForSession,
-	}
-
-	if config != nil && config.SetJwtPayload != nil {
-		normalisedInputSessionFeature.SetJwtPayload = config.SetJwtPayload
-	}
-
-	if config != nil && config.SetSessionData != nil {
-		normalisedInputSessionFeature.SetSessionData = config.SetSessionData
-	}
-
-	return normalisedInputSessionFeature
-}
-
 func validateAndNormaliseSignInConfig(signUpConfig models.TypeNormalisedInputSignUp) models.TypeNormalisedInputSignIn {
 	return models.TypeNormalisedInputSignIn{
 		FormFields: normaliseSignInFormFields(signUpConfig.FormFields),
@@ -176,9 +159,9 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 				validate func(value interface{}) *string
 				optional bool = false
 			)
-			if formField.ID == constants.FormFieldPasswordID {
+			if formField.ID == "password" {
 				validate = formField.Validate
-			} else if formField.ID == constants.FormFieldEmailID {
+			} else if formField.ID == "email" {
 				validate = defaultEmailValidator
 			}
 			normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
@@ -215,13 +198,13 @@ func NormaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.
 				validate func(value interface{}) *string
 				optional bool = false
 			)
-			if formField.ID == constants.FormFieldPasswordID {
+			if formField.ID == "password" {
 				formFieldPasswordIDCount++
 				validate = defaultPasswordValidator
 				if formField.Validate != nil {
 					validate = formField.Validate
 				}
-			} else if formField.ID == constants.FormFieldEmailID {
+			} else if formField.ID == "email" {
 				formFieldEmailIDCount++
 				validate = defaultEmailValidator
 				if formField.Validate != nil {
@@ -245,14 +228,14 @@ func NormaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.
 	}
 	if formFieldPasswordIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
-			ID:       constants.FormFieldPasswordID,
+			ID:       "password",
 			Validate: defaultPasswordValidator,
 			Optional: false,
 		})
 	}
 	if formFieldEmailIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
-			ID:       constants.FormFieldEmailID,
+			ID:       "email",
 			Validate: defaultEmailValidator,
 			Optional: false,
 		})

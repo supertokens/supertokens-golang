@@ -5,7 +5,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func HandleRefreshAPI(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func HandleRefreshAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.RefreshPOST == nil {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
@@ -14,6 +14,5 @@ func HandleRefreshAPI(apiImplementation models.APIImplementation, options models
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, nil)
-	return nil
+	return supertokens.Send200Response(options.Res, nil)
 }

@@ -1,166 +1,161 @@
 package emailpassword
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
-	return models.RecipeImplementation{
-		SignUp: func(email, password string) models.SignInUpResponse {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signup")
-			if err != nil {
-				return models.SignInUpResponse{
-					Status: constants.EmailAlreadyExistsError,
-				}
-			}
-			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterface {
+	return models.RecipeInterface{
+		SignUp: func(email, password string) (models.SignUpResponse, error) {
+			response, err := querier.SendPostRequest("/recipe/signup", map[string]interface{}{
 				"email":    email,
 				"password": password,
 			})
 			if err != nil {
-				return models.SignInUpResponse{
-					Status: constants.EmailAlreadyExistsError,
-				}
+				return models.SignUpResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return models.SignInUpResponse{
-						Status: constants.WrongCredentialsError,
-					}
+					return models.SignUpResponse{}, err
 				}
-				return models.SignInUpResponse{
-					Status: status.(string),
-					User:   *user,
-				}
+				// TODO: reconsider using the word OK and also making it a struct that contains the actual info
+				return models.SignUpResponse{
+					OK: &struct{ User models.User }{User: *user},
+				}, nil
 			}
-			return models.SignInUpResponse{
-				Status: constants.EmailAlreadyExistsError,
-			}
+			return models.SignUpResponse{
+				EmailAlreadyExistsError: &struct{}{},
+			}, nil
 		},
 
-		SignIn: func(email, password string) models.SignInUpResponse {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/signin")
-			if err != nil {
-				return models.SignInUpResponse{
-					Status: constants.WrongCredentialsError,
-				}
-			}
-			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+		SignIn: func(email, password string) (models.SignInResponse, error) {
+			response, err := querier.SendPostRequest("/recipe/signin", map[string]interface{}{
 				"email":    email,
 				"password": password,
 			})
 			if err != nil {
-				return models.SignInUpResponse{
-					Status: constants.WrongCredentialsError,
-				}
+				return models.SignInResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return models.SignInUpResponse{
-						Status: constants.WrongCredentialsError,
-					}
+					return models.SignInResponse{}, err
 				}
-				return models.SignInUpResponse{
-					Status: status.(string),
-					User:   *user,
-				}
+				return models.SignInResponse{
+					OK: &struct{ User models.User }{User: *user},
+				}, nil
 			}
-			return models.SignInUpResponse{
-				Status: constants.WrongCredentialsError,
-			}
+			return models.SignInResponse{
+				WrongCredentialsError: &struct{}{},
+			}, nil
 		},
 
-		GetUserByID: func(userID string) *models.User {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user")
-			if err != nil {
-				return nil
-			}
-			response, err := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
+		GetUserByID: func(userID string) (*models.User, error) {
+			response, err := querier.SendGetRequest("/recipe/user", map[string]interface{}{
 				"userId": userID,
 			})
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return nil
+					return nil, err
 				}
-				return user
+				return user, nil
 			}
-			return nil
+			return nil, nil
 		},
 
-		GetUserByEmail: func(email string) *models.User {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user")
-			if err != nil {
-				return nil
-			}
-			response, err := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
+		GetUserByEmail: func(email string) (*models.User, error) {
+			response, err := querier.SendGetRequest("/recipe/user", map[string]interface{}{
 				"email": email,
 			})
 			if err != nil {
-				return nil
+				return nil, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return nil
+					return nil, err
 				}
-				return user
+				return user, nil
 			}
-			return nil
+			return nil, nil
 		},
 
-		CreateResetPasswordToken: func(userID string) models.CreateResetPasswordTokenResponse {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/password/reset/token")
-			if err != nil {
-				return models.CreateResetPasswordTokenResponse{
-					Status: constants.UnknownUserID,
-				}
-			}
-			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+		CreateResetPasswordToken: func(userID string) (models.CreateResetPasswordTokenResponse, error) {
+			response, err := querier.SendPostRequest("/recipe/user/password/reset/token", map[string]interface{}{
 				"userId": userID,
 			})
 			if err != nil {
-				return models.CreateResetPasswordTokenResponse{
-					Status: constants.UnknownUserID,
-				}
+				return models.CreateResetPasswordTokenResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				return models.CreateResetPasswordTokenResponse{
-					Status: status.(string),
-					Token:  response["token"].(string),
-				}
+					OK: &struct{ Token string }{Token: response["token"].(string)},
+				}, nil
 			}
 			return models.CreateResetPasswordTokenResponse{
-				Status: constants.UnknownUserID,
-			}
+				UnknownUserIdError: &struct{}{},
+			}, nil
 		},
 
-		ResetPasswordUsingToken: func(token, newPassword string) models.ResetPasswordUsingTokenResponse {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/password/reset")
-			if err != nil {
-				return models.ResetPasswordUsingTokenResponse{
-					Status: constants.ResetPasswordInvalidTokenError,
-				}
-			}
-			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+		ResetPasswordUsingToken: func(token, newPassword string) (models.ResetPasswordUsingTokenResponse, error) {
+			response, err := querier.SendPostRequest("/recipe/user/password/reset", map[string]interface{}{
 				"method":      "token",
 				"token":       token,
 				"newPassword": newPassword,
 			})
-			return models.ResetPasswordUsingTokenResponse{
-				Status: response["status"].(string),
+			if err != nil {
+				return models.ResetPasswordUsingTokenResponse{}, nil
+			}
+
+			if response["status"].(string) == "OK" {
+				return models.ResetPasswordUsingTokenResponse{
+					OK: &struct{}{},
+				}, nil
+			} else {
+				return models.ResetPasswordUsingTokenResponse{
+					ResetPasswordInvalidTokenError: &struct{}{},
+				}, nil
+			}
+		},
+
+		UpdateEmailOrPassword: func(userId string, email, password *string) (models.UpdateEmailOrPasswordResponse, error) {
+			requestBody := map[string]interface{}{
+				"userId": userId,
+			}
+			if email != nil {
+				requestBody["email"] = email
+			}
+			if password != nil {
+				requestBody["password"] = password
+			}
+			response, err := querier.SendPutRequest("/recipe/user", requestBody)
+			if err != nil {
+				return models.UpdateEmailOrPasswordResponse{}, nil
+			}
+
+			if response["status"].(string) == "OK" {
+				return models.UpdateEmailOrPasswordResponse{
+					OK: &struct{}{},
+				}, nil
+			} else if response["status"].(string) == "EMAIL_ALREADY_EXISTS_ERROR" {
+				return models.UpdateEmailOrPasswordResponse{
+					EmailAlreadyExistsError: &struct{}{},
+				}, nil
+			} else {
+				return models.UpdateEmailOrPasswordResponse{
+					UnknownUserIdError: &struct{}{},
+				}, nil
 			}
 		},
 	}

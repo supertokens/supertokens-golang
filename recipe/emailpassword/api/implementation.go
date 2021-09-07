@@ -1,137 +1,137 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 )
 
-func MakeAPIImplementation() models.APIImplementation {
-	return models.APIImplementation{
-		EmailExistsGET: func(email string, options models.APIOptions) models.EmailExistsGETResponse {
-			user := options.RecipeImplementation.GetUserByEmail(email)
-			return models.EmailExistsGETResponse{
-				Status: "OK",
-				Exist:  user != nil,
+func MakeAPIImplementation() models.APIInterface {
+	return models.APIInterface{
+		EmailExistsGET: func(email string, options models.APIOptions) (models.EmailExistsGETResponse, error) {
+			user, err := options.RecipeImplementation.GetUserByEmail(email)
+			if err != nil {
+				return models.EmailExistsGETResponse{}, err
 			}
+			return models.EmailExistsGETResponse{
+				OK: &struct{ Exists bool }{Exists: user != nil},
+			}, nil
 		},
 
-		GeneratePasswordResetTokenPOST: func(formFields []models.TypeFormField, options models.APIOptions) models.GeneratePasswordResetTokenPOSTResponse {
+		GeneratePasswordResetTokenPOST: func(formFields []models.TypeFormField, options models.APIOptions) (models.GeneratePasswordResetTokenPOSTResponse, error) {
 			var email string
 			for _, formField := range formFields {
-				if formField.ID == constants.FormFieldEmailID {
+				if formField.ID == "email" {
 					email = formField.Value
 				}
 			}
-			user := options.RecipeImplementation.GetUserByEmail(email)
+
+			user, err := options.RecipeImplementation.GetUserByEmail(email)
+			if err != nil {
+				return models.GeneratePasswordResetTokenPOSTResponse{}, err
+			}
+
 			if user == nil {
 				return models.GeneratePasswordResetTokenPOSTResponse{
-					Status: "OK",
-				}
+					OK: &struct{}{},
+				}, nil
 			}
-			response := options.RecipeImplementation.CreateResetPasswordToken(user.ID)
-			if response.Status == constants.UnknownUserID {
-				return models.GeneratePasswordResetTokenPOSTResponse{
-					Status: "OK",
-				}
-			}
-			passwordResetLink := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user) + "?token=" + response.Token + "&rid=" + options.RecipeID
-			err := options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
+
+			response, err := options.RecipeImplementation.CreateResetPasswordToken(user.ID)
 			if err != nil {
-				return models.GeneratePasswordResetTokenPOSTResponse{
-					Status: "ERROR",
-				}
+				return models.GeneratePasswordResetTokenPOSTResponse{}, err
 			}
+			if response.UnknownUserIdError != nil {
+				return models.GeneratePasswordResetTokenPOSTResponse{
+					OK: &struct{}{},
+				}, nil
+			}
+
+			passwordResetLink := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user) + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
+
+			options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
 
 			return models.GeneratePasswordResetTokenPOSTResponse{
-				Status: "OK",
-			}
+				OK: &struct{}{},
+			}, nil
 		},
 
-		PasswordResetPOST: func(formFields []models.TypeFormField, token string, options models.APIOptions) models.PasswordResetPOSTResponse {
+		PasswordResetPOST: func(formFields []models.TypeFormField, token string, options models.APIOptions) (models.ResetPasswordUsingTokenResponse, error) {
 			var newPassword string
 			for _, formField := range formFields {
-				if formField.ID == constants.FormFieldPasswordID {
+				if formField.ID == "password" {
 					newPassword = formField.Value
 				}
 			}
-			response := options.RecipeImplementation.ResetPasswordUsingToken(token, newPassword)
 
-			return models.PasswordResetPOSTResponse{
-				Status: response.Status,
+			response, err := options.RecipeImplementation.ResetPasswordUsingToken(token, newPassword)
+			if err != nil {
+				return models.ResetPasswordUsingTokenResponse{}, err
 			}
+
+			return response, nil
 		},
 
-		SignInPOST: func(formFields []models.TypeFormField, options models.APIOptions) models.SignInUpResponse {
+		SignInPOST: func(formFields []models.TypeFormField, options models.APIOptions) (models.SignInResponse, error) {
 			var email string
 			for _, formField := range formFields {
-				if formField.ID == constants.FormFieldEmailID {
+				if formField.ID == "email" {
 					email = formField.Value
 				}
 			}
-			var newPassword string
+			var password string
 			for _, formField := range formFields {
-				if formField.ID == constants.FormFieldPasswordID {
-					newPassword = formField.Value
+				if formField.ID == "password" {
+					password = formField.Value
 				}
 			}
 
-			response := options.RecipeImplementation.SignIn(email, newPassword)
-			if response.Status == constants.WrongCredentialsError {
-				return response
-			}
-
-			user := response.User
-			jwtPayload := options.Config.SessionFeature.SetJwtPayload(user, formFields, "signin")
-			sessionData := options.Config.SessionFeature.SetSessionData(user, formFields, "signin")
-
-			_, err := session.CreateNewSession(options.Res, user.ID, jwtPayload, sessionData)
+			response, err := options.RecipeImplementation.SignIn(email, password)
 			if err != nil {
-				return models.SignInUpResponse{
-					Status: constants.WrongCredentialsError,
-				}
+				return models.SignInResponse{}, err
+			}
+			if response.WrongCredentialsError != nil {
+				return response, nil
 			}
 
-			return models.SignInUpResponse{
-				User:   user,
-				Status: "OK",
+			user := response.OK.User
+			_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
+			if err != nil {
+				return models.SignInResponse{}, err
 			}
+
+			return response, nil
 		},
 
-		SignUpPOST: func(formFields []models.TypeFormField, options models.APIOptions) models.SignInUpResponse {
+		SignUpPOST: func(formFields []models.TypeFormField, options models.APIOptions) (models.SignUpResponse, error) {
 			var email string
 			for _, formField := range formFields {
-				if formField.ID == constants.FormFieldEmailID {
+				if formField.ID == "email" {
 					email = formField.Value
 				}
 			}
-			var newPassword string
+			var password string
 			for _, formField := range formFields {
-				if formField.ID == constants.FormFieldPasswordID {
-					newPassword = formField.Value
+				if formField.ID == "password" {
+					password = formField.Value
 				}
 			}
 
-			response := options.RecipeImplementation.SignUp(email, newPassword)
-			if response.Status == constants.EmailAlreadyExistsError {
-				return response
-			}
-
-			user := response.User
-			jwtPayload := options.Config.SessionFeature.SetJwtPayload(user, formFields, "signup")
-			sessionData := options.Config.SessionFeature.SetSessionData(user, formFields, "signup")
-
-			_, err := session.CreateNewSession(options.Res, user.ID, jwtPayload, sessionData)
+			response, err := options.RecipeImplementation.SignUp(email, password)
 			if err != nil {
-				return models.SignInUpResponse{
-					Status: constants.EmailAlreadyExistsError,
-				}
+				return models.SignUpResponse{}, err
+			}
+			if response.EmailAlreadyExistsError != nil {
+				return response, nil
 			}
 
-			return models.SignInUpResponse{
-				User:   user,
-				Status: "OK",
+			user := response.OK.User
+
+			_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
+			if err != nil {
+				return models.SignUpResponse{}, err
 			}
+
+			return response, nil
 		},
 	}
 }

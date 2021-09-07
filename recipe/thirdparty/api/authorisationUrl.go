@@ -7,11 +7,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func AuthorisationUrlAPI(apiImplementation models.APIImplementation, options models.APIOptions) error {
+func AuthorisationUrlAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.AuthorisationUrlGET == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
+
 	queryParams := options.Req.URL.Query()
 	thirdPartyId := queryParams.Get("thirdPartyId")
 
@@ -28,7 +29,13 @@ func AuthorisationUrlAPI(apiImplementation models.APIImplementation, options mod
 	if reflect.DeepEqual(provider, models.TypeProvider{}) {
 		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
 	}
-	result := apiImplementation.AuthorisationUrlGET(provider, options)
-	supertokens.Send200Response(options.Res, result)
-	return nil
+
+	result, err := apiImplementation.AuthorisationUrlGET(provider, options)
+	if err != nil {
+		return err
+	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
+		"status": "OK",
+		"url":    result.OK.Url,
+	})
 }

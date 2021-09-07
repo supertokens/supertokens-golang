@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
@@ -82,21 +81,21 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			if err != nil {
 				return err
 			}
-			return api.SendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res)
+			return sendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res)
 		},
 		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendTryRefreshTokenResponse(*recipeInstance, message, req, res)
+			return sendTryRefreshTokenResponse(*recipeInstance, message, req, res)
 		},
 		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
-			return api.SendUnauthorisedResponse(*recipeInstance, message, req, res)
+			return sendUnauthorisedResponse(*recipeInstance, message, req, res)
 		},
 	}
 
@@ -139,11 +138,11 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
 		Override: struct {
-			Functions func(originalImplementation models.RecipeImplementation) models.RecipeImplementation
-			APIs      func(originalImplementation models.APIImplementation) models.APIImplementation
-		}{Functions: func(originalImplementation models.RecipeImplementation) models.RecipeImplementation {
+			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
+			APIs      func(originalImplementation models.APIInterface) models.APIInterface
+		}{Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
 			return originalImplementation
-		}, APIs: func(originalImplementation models.APIImplementation) models.APIImplementation {
+		}, APIs: func(originalImplementation models.APIInterface) models.APIInterface {
 			return originalImplementation
 		}},
 	}
@@ -236,4 +235,24 @@ func attachCreateOrRefreshSessionResponseToRes(config models.TypeNormalisedInput
 	if response.AntiCsrfToken != nil {
 		setAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
 	}
+}
+
+func sendTryRefreshTokenResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func sendUnauthorisedResponse(recipeInstance models.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func sendTokenTheftDetectedResponse(recipeInstance models.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
+	_, err := recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
+	if err != nil {
+		return err
+	}
+	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func frontendHasInterceptor(req *http.Request) bool {
+	return getRidFromHeader(req) != nil
 }

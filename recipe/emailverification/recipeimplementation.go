@@ -5,74 +5,85 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeRecipeImplementation(querier supertokens.Querier) models.RecipeImplementation {
-	return models.RecipeImplementation{
-		CreateEmailVerificationToken: func(userID, email string) (*models.CreateEmailVerificationTokenResponse, error) {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify/token")
-			if err != nil {
-				return nil, err
-			}
-			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+func makeRecipeImplementation(querier supertokens.Querier) models.RecipeInterface {
+	return models.RecipeInterface{
+		CreateEmailVerificationToken: func(userID, email string) (models.CreateEmailVerificationTokenResponse, error) {
+			response, err := querier.SendPostRequest("/recipe/user/email/verify/token", map[string]interface{}{
 				"userId": userID,
 				"email":  email,
 			})
 			if err != nil {
-				return nil, err
+				return models.CreateEmailVerificationTokenResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status == "OK" {
-				resp := models.CreateEmailVerificationTokenResponse{
-					Status: "OK",
-					Token:  response["token"].(string),
-				}
-				return &resp, nil
+				return models.CreateEmailVerificationTokenResponse{
+					OK: &struct{ Token string }{Token: response["token"].(string)},
+				}, nil
 			}
 
-			return &models.CreateEmailVerificationTokenResponse{
-				Status: "EMAIL_ALREADY_VERIFIED_ERROR",
+			return models.CreateEmailVerificationTokenResponse{
+				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
 		},
-		VerifyEmailUsingToken: func(token string) (*models.VerifyEmailUsingTokenResponse, error) {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
-			if err != nil {
-				return nil, err
-			}
 
-			response, err := querier.SendPostRequest(*normalisedURLPath, map[string]interface{}{
+		VerifyEmailUsingToken: func(token string) (models.VerifyEmailUsingTokenResponse, error) {
+			response, err := querier.SendPostRequest("/recipe/user/email/verify", map[string]interface{}{
 				"method": "token",
 				"token":  token,
 			})
 			if err != nil {
-				return nil, err
+				return models.VerifyEmailUsingTokenResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status == "OK" {
-				return &models.VerifyEmailUsingTokenResponse{
-					Status: "OK",
-					User: models.User{
+				return models.VerifyEmailUsingTokenResponse{
+					OK: &struct{ User models.User }{User: models.User{
 						ID:    response["userId"].(string),
 						Email: response["email"].(string),
-					},
+					}},
 				}, nil
 			}
-			return &models.VerifyEmailUsingTokenResponse{
-				Status: "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR",
+			return models.VerifyEmailUsingTokenResponse{
+				EmailVerificationInvalidTokenError: &struct{}{},
 			}, nil
 		},
+
 		IsEmailVerified: func(userID, email string) (bool, error) {
-			normalisedURLPath, err := supertokens.NewNormalisedURLPath("/recipe/user/email/verify")
-			if err != nil {
-				return false, err
-			}
-			response, err := querier.SendGetRequest(*normalisedURLPath, map[string]interface{}{
+			response, err := querier.SendGetRequest("/recipe/user/email/verify", map[string]interface{}{
 				"userId": userID,
 				"email":  email,
 			})
 			if err != nil {
 				return false, err
 			}
-			isVerified := response["isVerified"].(bool)
-			return isVerified, nil
+			return response["isVerified"].(bool), nil
+		},
+
+		RevokeEmailVerificationTokens: func(userId string, email string) (models.RevokeEmailVerificationTokensResponse, error) {
+			_, err := querier.SendPostRequest("/recipe/user/email/verify/token/remove", map[string]interface{}{
+				"userId": userId,
+				"email":  email,
+			})
+			if err != nil {
+				return models.RevokeEmailVerificationTokensResponse{}, err
+			}
+			return models.RevokeEmailVerificationTokensResponse{
+				OK: &struct{}{},
+			}, nil
+		},
+
+		UnverifyEmail: func(userId string, email string) (models.UnverifyEmailResponse, error) {
+			_, err := querier.SendPostRequest("/recipe/user/email/verify/remove", map[string]interface{}{
+				"userId": userId,
+				"email":  email,
+			})
+			if err != nil {
+				return models.UnverifyEmailResponse{}, err
+			}
+			return models.UnverifyEmailResponse{
+				OK: &struct{}{},
+			}, nil
 		},
 	}
 }

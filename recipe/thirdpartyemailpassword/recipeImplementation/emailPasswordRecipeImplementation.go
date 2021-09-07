@@ -5,57 +5,91 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeImplementation) epm.RecipeImplementation {
-	return epm.RecipeImplementation{
-		SignUp: func(email, password string) epm.SignInUpResponse {
-			response := recipeImplementation.SignUp(email, password)
-			return epm.SignInUpResponse{
-				User: epm.User{
-					ID:         response.User.ID,
-					Email:      response.User.Email,
-					TimeJoined: response.User.TimeJoined,
-				},
-				Status: response.Status,
+func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInterface) epm.RecipeInterface {
+	return epm.RecipeInterface{
+		SignUp: func(email, password string) (epm.SignUpResponse, error) {
+			response, err := recipeImplementation.SignUp(email, password)
+			if err != nil {
+				return epm.SignUpResponse{}, err
 			}
-		},
-		SignIn: func(email, password string) epm.SignInUpResponse {
-			response := recipeImplementation.SignIn(email, password)
-			return epm.SignInUpResponse{
-				User: epm.User{
-					ID:         response.User.ID,
-					Email:      response.User.Email,
-					TimeJoined: response.User.TimeJoined,
-				},
-				Status: response.Status,
+			if response.EmailAlreadyExistsError != nil {
+				return epm.SignUpResponse{
+					EmailAlreadyExistsError: &struct{}{},
+				}, nil
 			}
+			return epm.SignUpResponse{
+				OK: &struct{ User epm.User }{
+					User: epm.User{
+						ID:         response.OK.User.ID,
+						Email:      response.OK.User.Email,
+						TimeJoined: response.OK.User.TimeJoined,
+					},
+				},
+			}, nil
 		},
-		GetUserByID: func(userId string) *epm.User {
-			user := recipeImplementation.GetUserByID(userId)
+
+		SignIn: func(email, password string) (epm.SignInResponse, error) {
+			response, err := recipeImplementation.SignIn(email, password)
+			if err != nil {
+				return epm.SignInResponse{}, err
+			}
+			if response.WrongCredentialsError != nil {
+				return epm.SignInResponse{
+					WrongCredentialsError: &struct{}{},
+				}, nil
+			}
+			return epm.SignInResponse{
+				OK: &struct{ User epm.User }{
+					User: epm.User{
+						ID:         response.OK.User.ID,
+						Email:      response.OK.User.Email,
+						TimeJoined: response.OK.User.TimeJoined,
+					},
+				},
+			}, nil
+		},
+
+		GetUserByID: func(userId string) (*epm.User, error) {
+			user, err := recipeImplementation.GetUserByID(userId)
+			if err != nil {
+				return nil, err
+			}
 			if user == nil || user.ThirdParty != nil {
-				return nil
+				return nil, nil
 			}
 			return &epm.User{
 				ID:         user.ID,
 				Email:      user.Email,
 				TimeJoined: user.TimeJoined,
-			}
+			}, nil
 		},
-		GetUserByEmail: func(email string) *epm.User {
-			user := recipeImplementation.GetUserByEmail(email)
-			if user == nil {
-				return nil
+
+		GetUserByEmail: func(email string) (*epm.User, error) {
+			users, err := recipeImplementation.GetUsersByEmail(email)
+			if err != nil {
+				return nil, err
 			}
-			return &epm.User{
-				ID:         user.ID,
-				Email:      user.Email,
-				TimeJoined: user.TimeJoined,
+
+			for _, user := range users {
+				if user.ThirdParty == nil {
+					return &epm.User{
+						ID:         user.ID,
+						Email:      user.Email,
+						TimeJoined: user.TimeJoined,
+					}, nil
+				}
 			}
+			return nil, nil
 		},
-		CreateResetPasswordToken: func(userID string) epm.CreateResetPasswordTokenResponse {
+
+		CreateResetPasswordToken: func(userID string) (epm.CreateResetPasswordTokenResponse, error) {
 			return recipeImplementation.CreateResetPasswordToken(userID)
 		},
-		ResetPasswordUsingToken: func(token, newPassword string) epm.ResetPasswordUsingTokenResponse {
+		ResetPasswordUsingToken: func(token, newPassword string) (epm.ResetPasswordUsingTokenResponse, error) {
 			return recipeImplementation.ResetPasswordUsingToken(token, newPassword)
+		},
+		UpdateEmailOrPassword: func(userId string, email, password *string) (epm.UpdateEmailOrPasswordResponse, error) {
+			return recipeImplementation.UpdateEmailOrPassword(userId, email, password)
 		},
 	}
 }

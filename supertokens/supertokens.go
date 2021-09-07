@@ -8,19 +8,19 @@ import (
 	"strings"
 )
 
-type SuperTokens struct {
+type superTokens struct {
 	AppInfo        NormalisedAppinfo
 	RecipeModules  []RecipeModule
 	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
-var superTokensInstance *SuperTokens
+var superTokensInstance *superTokens
 
-func SupertokensInit(config TypeInput) error {
+func supertokensInit(config TypeInput) error {
 	if superTokensInstance != nil {
 		return nil
 	}
-	superTokens := &SuperTokens{}
+	superTokens := &superTokens{}
 
 	superTokens.OnGeneralError = defaultOnGeneralError
 	if config.OnGeneralError != nil {
@@ -46,11 +46,15 @@ func SupertokensInit(config TypeInput) error {
 
 		initQuerier(hosts, config.Supertokens.APIKey)
 	} else {
+		// TODO: here we don't want to initialise the querier since there is
+		// no info about SuperTokens core - so why are we doing this?
+
+		// TODO: Add tests for init without supertokens core.
 		initQuerier(nil, nil)
 	}
 
 	if config.RecipeList == nil || len(config.RecipeList) == 0 {
-		return errors.New("Please provide at least one recipe to the supertokens.init function call")
+		return errors.New("please provide at least one recipe to the supertokens.init function call")
 	}
 
 	for _, elem := range config.RecipeList {
@@ -62,31 +66,33 @@ func SupertokensInit(config TypeInput) error {
 	}
 
 	if config.Telemetry != nil && *config.Telemetry {
-		// TODO: Telemetry
-		// err := SendTelemetry()
-		// if err != nil {
-		// 	return err
-		// }
+		sendTelemetry()
+		// we ignore all errors from this function.
 	}
 
 	superTokensInstance = superTokens
 	return nil
 }
 
-func getInstanceOrThrowError() (*SuperTokens, error) {
+func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
+	http.Error(res, err.Error(), 500)
+}
+
+func getInstanceOrThrowError() (*superTokens, error) {
 	if superTokensInstance != nil {
 		return superTokensInstance, nil
 	}
-	return nil, errors.New("Initialisation not done. Did you forget to call the SuperTokens.init function?")
+	return nil, errors.New("initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
 
-func SendTelemetry() error {
+func sendTelemetry() error {
+	// TODO: only if non testing.
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return err
 	}
 
-	response, err := querier.SendGetRequest(NormalisedURLPath{value: "/telemetry"}, nil)
+	response, err := querier.SendGetRequest("/telemetry", nil)
 	if err != nil {
 		return err
 	}
@@ -98,11 +104,11 @@ func SendTelemetry() error {
 
 	url := "https://api.supertokens.io/0/st/telemetry"
 
-	// TODO: Add SDK name
 	data := map[string]interface{}{
 		"appName":       superTokensInstance.AppInfo.AppName,
 		"websiteDomain": superTokensInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 		"telemetryId":   telemetryID,
+		"sdk":           "golang",
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
@@ -122,11 +128,11 @@ func SendTelemetry() error {
 	return nil
 }
 
-func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
+func (s *superTokens) middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
-			s.ErrorHandler(err, r, w)
+			s.errorHandler(err, r, w)
 		}
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
 		method := r.Method
@@ -152,7 +158,7 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 			id, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
 
 			if err != nil {
-				s.ErrorHandler(err, r, w)
+				s.errorHandler(err, r, w)
 				return
 			}
 
@@ -162,21 +168,21 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 			}
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler, path, method)
 			if apiErr != nil {
-				s.ErrorHandler(apiErr, r, w)
+				s.errorHandler(apiErr, r, w)
 				return
 			}
 		} else {
 			for _, recipeModule := range s.RecipeModules {
 				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 				if err != nil {
-					s.ErrorHandler(err, r, w)
+					s.errorHandler(err, r, w)
 					return
 				}
 
 				if id != nil {
 					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler, path, method)
 					if err != nil {
-						s.ErrorHandler(err, r, w)
+						s.errorHandler(err, r, w)
 						return
 					}
 					return
@@ -187,7 +193,7 @@ func (s *SuperTokens) Middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 	})
 }
 
-func (s *SuperTokens) GetAllCORSHeaders() []string {
+func (s *superTokens) getAllCORSHeaders() []string {
 	headerMap := map[string]bool{HeaderRID: true, HeaderFDI: true}
 	for _, recipe := range s.RecipeModules {
 		headers := recipe.GetAllCORSHeaders()
@@ -202,23 +208,102 @@ func (s *SuperTokens) GetAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *SuperTokens) ErrorHandler(err error, req *http.Request, res http.ResponseWriter) bool {
+func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) {
+	// TODO: replace errors.As with errors.Is if we are not casting the error to that specific type.
 	if errors.As(err, &BadInputError{}) {
-		if catcherr := SendNon200Response(res, err.Error(), 400); catcherr != nil {
-			panic("internal server err" + catcherr.Error())
+		if catcher := SendNon200Response(res, err.Error(), 400); catcher != nil {
+			s.OnGeneralError(err, req, res)
 		}
-		return true
+		return
 	}
 	for _, recipe := range s.RecipeModules {
-		handled := recipe.HandleError(err, req, res)
-		if handled {
-			return true
+		if recipe.HandleError != nil {
+			handled, err := recipe.HandleError(err, req, res)
+			if err != nil {
+				s.OnGeneralError(err, req, res)
+				return
+			}
+			if handled {
+				return
+			}
 		}
 	}
-	superTokensInstance.OnGeneralError(err, req, res)
-	return true
+	s.OnGeneralError(err, req, res)
 }
 
-func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
-	SendNon200Response(res, err.Error(), 500)
+// TODO: make this an array of users.
+type UserPaginationResult struct {
+	Users struct {
+		recipeId string
+		user     map[string]interface{}
+	}
+	NextPaginationToken *string
+}
+
+// TODO: Add tests
+func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
+
+	querier, err := GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		return nil, err
+	}
+
+	requestBody := map[string]interface{}{
+		"timeJoinedOrder": timeJoinedOrder,
+	}
+	if limit != nil {
+		requestBody["limit"] = *limit
+	}
+	if paginationToken != nil {
+		requestBody["paginationToken"] = *paginationToken
+	}
+	if includeRecipeIds != nil {
+		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
+	}
+
+	resp, err := querier.SendGetRequest("/users", requestBody)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: try not to do marshal and unmarshal
+	// TODO: Also, Unmarshal is slow, so try and use something else.
+	temporaryVariable, err := json.Marshal(resp)
+	if err != nil {
+		return nil, err
+	}
+
+	var result = UserPaginationResult{}
+
+	err = json.Unmarshal(temporaryVariable, &result)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &result, nil
+}
+
+// TODO: Add tests
+func getUserCount(includeRecipeIds *[]string) (int, error) {
+
+	querier, err := GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		return -1, err
+	}
+
+	requestBody := map[string]interface{}{}
+
+	if includeRecipeIds != nil {
+		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
+	}
+
+	resp, err := querier.SendGetRequest("/users/count", requestBody)
+
+	if err != nil {
+		return -1, err
+	}
+
+	return resp["count"].(int), nil
 }
