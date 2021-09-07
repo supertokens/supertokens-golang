@@ -14,6 +14,5 @@ func HandleRefreshAPI(apiImplementation models.APIInterface, options models.APIO
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, nil)
-	return nil
+	return supertokens.Send200Response(options.Res, nil)
 }

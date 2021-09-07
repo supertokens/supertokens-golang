@@ -2,6 +2,7 @@ package server
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/supertokens/supertokens-golang/examples/with-gin/config"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
@@ -44,6 +45,9 @@ func Init() {
 			emailpassword.EmailPasswordInit(nil),
 			session.SessionInit(nil),
 			// thirdparty.RecipeInit(thirdpartyConfig),
+		},
+		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
+			http.Error(res, err.Error(), 500)
 		},
 	})
 	if err != nil {

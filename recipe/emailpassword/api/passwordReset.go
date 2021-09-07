@@ -43,13 +43,12 @@ func PasswordReset(apiImplementation models.APIInterface, options models.APIOpti
 		return err
 	}
 	if result.OK != nil {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 		})
 	} else {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "RESET_PASSWORD_INVALID_TOKEN_ERROR",
 		})
 	}
-	return nil
 }

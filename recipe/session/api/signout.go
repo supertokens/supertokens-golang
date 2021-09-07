@@ -15,8 +15,7 @@ func SignOutAPI(apiImplementation models.APIInterface, options models.APIOptions
 		return err
 	}
 
-	supertokens.Send200Response(options.Res, map[string]interface{}{
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"status": "OK",
 	})
-	return nil
 }

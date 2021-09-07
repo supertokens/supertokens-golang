@@ -1,7 +1,6 @@
 package supertokens
 
 import (
-	"errors"
 	"net/http"
 )
 
@@ -17,12 +16,12 @@ func Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	return instance.middleware(theirHandler)
 }
 
-func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) error {
+func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) {
 	instance, instanceErr := getInstanceOrThrowError()
 	if instanceErr != nil {
-		return errors.New("please call SupertokensInit before using the ErrorHandler function")
+		panic("Please call SupertokensInit before using the error handler")
 	}
-	return instance.errorHandler(err, req, res)
+	instance.errorHandler(err, req, res)
 }
 
 func GetAllCORSHeaders() []string {

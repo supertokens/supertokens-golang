@@ -158,12 +158,10 @@ func getAllCORSHeaders() []string {
 func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.FieldError{}) {
 		errs := err.(errors.FieldError)
-		supertokens.Send200Response(res, map[string]interface{}{
+		return true, supertokens.Send200Response(res, map[string]interface{}{
 			"status":     "FIELD_ERROR",
 			"formFields": errs.Payload,
 		})
-		// TODO: return true, supertokens.Send200Response(...)
-		return true, nil
 	}
 	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
 }

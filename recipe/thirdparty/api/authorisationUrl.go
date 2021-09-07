@@ -34,10 +34,8 @@ func AuthorisationUrlAPI(apiImplementation models.APIInterface, options models.A
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, map[string]interface{}{
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"status": "OK",
 		"url":    result.OK.Url,
 	})
-
-	return nil
 }

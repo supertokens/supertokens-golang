@@ -66,6 +66,5 @@ func EmailVerify(apiImplementation models.APIInterface, options models.APIOption
 		}
 	}
 
-	supertokens.Send200Response(options.Res, result)
-	return nil
+	return supertokens.Send200Response(options.Res, result)
 }

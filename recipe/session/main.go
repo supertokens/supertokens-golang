@@ -92,7 +92,7 @@ func UpdateJWTPayload(sessionHandle string, newJWTPayload interface{}) error {
 	return instance.RecipeImpl.UpdateJWTPayload(sessionHandle, newJWTPayload)
 }
 
-func VerifySession(options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) error {
+func VerifySession(options *models.VerifySessionOptions) func(w http.ResponseWriter, r *http.Request, otherHandler http.HandlerFunc) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		panic("can't fetch instance")

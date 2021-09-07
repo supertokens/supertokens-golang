@@ -34,14 +34,13 @@ func SignInAPI(apiImplementation models.APIInterface, options models.APIOptions)
 		return err
 	}
 	if result.WrongCredentialsError != nil {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "WRONG_CREDENTIALS_ERROR",
 		})
 	} else {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 			"user":   result.OK.User,
 		})
 	}
-	return nil
 }

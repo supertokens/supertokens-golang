@@ -121,17 +121,16 @@ func getRIDFromRequest(r *http.Request) string {
 	return r.Header.Get(HeaderRID)
 }
 
-func Send200Response(res http.ResponseWriter, responseJson interface{}) {
+func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
 	res.WriteHeader(200)
 	res.Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(responseJson)
 	if err != nil {
-		// TODO: send an error from this and not send 500
-		res.WriteHeader(500)
-		res.Write([]byte("error in json marshalling"))
+		return err
 	} else {
 		res.Write(bytes)
 	}
+	return nil
 }
 
 func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
@@ -145,9 +144,7 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 	}
 	bytes, err := json.Marshal(response)
 	if err != nil {
-		// TODO: send an error from this and not send 500
-		res.WriteHeader(500)
-		res.Write([]byte("error in json marshalling"))
+		return err
 	} else {
 		res.Write(bytes)
 	}

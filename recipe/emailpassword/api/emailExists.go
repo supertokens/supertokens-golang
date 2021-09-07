@@ -19,10 +19,8 @@ func EmailExists(apiImplementation models.APIInterface, options models.APIOption
 	if err != nil {
 		return err
 	}
-	supertokens.Send200Response(options.Res, map[string]interface{}{
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"status": "OK",
 		"exists": result.OK.Exists,
 	})
-
-	return nil
 }

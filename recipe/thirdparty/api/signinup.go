@@ -61,20 +61,19 @@ func SignInUpAPI(apiImplementation models.APIInterface, options models.APIOption
 	}
 
 	if result.OK != nil {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status":         "OK",
 			"user":           result.OK.User,
 			"createdNewUser": result.OK.CreatedNewUser,
 		})
 	} else if result.NoEmailGivenByProviderError != nil {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "NO_EMAIL_GIVEN_BY_PROVIDER",
 		})
 	} else {
-		supertokens.Send200Response(options.Res, map[string]interface{}{
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "FIELD_ERROR",
 			"error":  result.FieldError.Error,
 		})
 	}
-	return nil
 }

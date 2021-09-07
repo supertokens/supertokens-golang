@@ -9,9 +9,9 @@ import (
 )
 
 type superTokens struct {
-	AppInfo       NormalisedAppinfo
-	RecipeModules []RecipeModule
-	// OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
+	AppInfo        NormalisedAppinfo
+	RecipeModules  []RecipeModule
+	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 var superTokensInstance *superTokens
@@ -22,11 +22,10 @@ func supertokensInit(config TypeInput) error {
 	}
 	superTokens := &superTokens{}
 
-	// TODO: we don't need this anymore right?
-	// superTokens.OnGeneralError = defaultOnGeneralError
-	// if config.OnGeneralError != nil {
-	// 	superTokens.OnGeneralError = config.OnGeneralError
-	// }
+	superTokens.OnGeneralError = defaultOnGeneralError
+	if config.OnGeneralError != nil {
+		superTokens.OnGeneralError = config.OnGeneralError
+	}
 
 	var err error
 	superTokens.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
@@ -73,6 +72,10 @@ func supertokensInit(config TypeInput) error {
 
 	superTokensInstance = superTokens
 	return nil
+}
+
+func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
+	http.Error(res, err.Error(), 500)
 }
 
 func getInstanceOrThrowError() (*superTokens, error) {
@@ -205,25 +208,26 @@ func (s *superTokens) getAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) error {
+func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) {
 	if errors.As(err, &BadInputError{}) {
 		if catcher := SendNon200Response(res, err.Error(), 400); catcher != nil {
-			return errors.New("internal server err" + catcher.Error())
+			s.OnGeneralError(err, req, res)
 		}
-		return nil
+		return
 	}
 	for _, recipe := range s.RecipeModules {
 		if recipe.HandleError != nil {
 			handled, err := recipe.HandleError(err, req, res)
 			if err != nil {
-				return err
+				s.OnGeneralError(err, req, res)
+				return
 			}
 			if handled {
-				return nil
+				return
 			}
 		}
 	}
-	return err
+	s.OnGeneralError(err, req, res)
 }
 
 type UserPaginationResult struct {
