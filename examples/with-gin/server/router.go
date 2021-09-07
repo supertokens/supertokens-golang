@@ -37,10 +37,8 @@ func newRouter() *gin.Engine {
 	}
 	router.Use(cors.New(corsConfig))
 
-	auth := router.Group("/auth", middlewares.Supertokens())
-	auth.POST("/*action")
-	auth.GET("/*action")
-	router.GET("/sessioninfo", middlewares.VerifySession(), controllers.Sessioninfo)
+	router.Any("/auth/*action", middlewares.Supertokens())
+	router.GET("/sessioninfo", middlewares.VerifySession(nil), controllers.Sessioninfo)
 
 	return router
 }

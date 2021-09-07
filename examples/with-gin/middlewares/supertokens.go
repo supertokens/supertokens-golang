@@ -10,8 +10,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// const sessionContext = "supertokens_session_key"
-
 func Supertokens() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		handler := supertokens.Middleware(func(rw http.ResponseWriter, r *http.Request) {
@@ -21,9 +19,9 @@ func Supertokens() gin.HandlerFunc {
 	}
 }
 
-func VerifySession() gin.HandlerFunc {
+func VerifySession(options *models.VerifySessionOptions) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sessionfunc := session.VerifySession(nil, func(rw http.ResponseWriter, r *http.Request) {
+		sessionfunc := session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.Set(strconv.Itoa(models.SessionContext), session.GetSessionFromRequest(r))
 			c.Next()
 		})
