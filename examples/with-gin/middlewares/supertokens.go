@@ -2,6 +2,7 @@ package middlewares
 
 import (
 	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -21,18 +22,10 @@ func Supertokens() gin.HandlerFunc {
 
 func VerifySession() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		sessionfunc := session.VerifySession(nil)
-		sessionfunc(c.Writer, c.Request, func(rw http.ResponseWriter, r *http.Request) {
+		sessionfunc := session.VerifySession(nil, func(rw http.ResponseWriter, r *http.Request) {
+			c.Set(strconv.Itoa(session.SessionContext), session.GetSessionFromRequest(r))
 			c.Next()
-			// sessionContainer, err := session.GetSession(c.Request, c.Writer, nil)
-			// if err != nil {
-			// 	fmt.Println(err)
-			// 	c.Abort()
-			// }
-			// if sessionContainer != nil {
-			// 	c.Set(sessionContext, sessionContainer)
-			// }
-			// c.Next()
 		})
+		sessionfunc(c.Writer, c.Request)
 	}
 }
