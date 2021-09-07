@@ -1,0 +1,6 @@
+config/prod.yaml
+config/dev.yaml
+config/stage.yaml
+.DS_Store
+build/*
+log.txt
