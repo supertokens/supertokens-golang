@@ -41,7 +41,7 @@ func main() {
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
 		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
 		handlers.AllowCredentials(),
-	)(http.HandlerFunc(supertokens.Middleware(router.ServeHTTP))))
+	)(supertokens.Middleware(router)))
 }
 
 func sessioninfo(w http.ResponseWriter, r *http.Request) {

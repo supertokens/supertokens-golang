@@ -12,11 +12,11 @@ import (
 
 func Supertokens() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		handler := supertokens.Middleware(func(rw http.ResponseWriter, r *http.Request) {
+		handler := supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			// TODO: pass this request / response to the next function?
 			c.Next()
-		})
-		handler(c.Writer, c.Request)
+		}))
+		handler.ServeHTTP(c.Writer, c.Request)
 	}
 }
 
