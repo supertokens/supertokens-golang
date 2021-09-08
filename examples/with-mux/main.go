@@ -8,7 +8,6 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -45,14 +44,14 @@ func main() {
 }
 
 func sessioninfo(w http.ResponseWriter, r *http.Request) {
-	var session *models.SessionContainer = session.GetSessionFromRequest(r)
+	sessionContainer := session.GetSessionFromRequest(r)
 
-	if session == nil {
+	if sessionContainer == nil {
 		w.WriteHeader(500)
 		w.Write([]byte("no session found"))
 		return
 	}
-	sessionData, err := session.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionData()
 	if err != nil {
 		supertokens.ErrorHandler(err, r, w)
 		return
@@ -60,9 +59,9 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	w.Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(map[string]interface{}{
-		"sessionHandle": session.GetHandle(),
-		"userId":        session.GetUserID(),
-		"jwtPayload":    session.GetJWTPayload(),
+		"sessionHandle": sessionContainer.GetHandle(),
+		"userId":        sessionContainer.GetUserID(),
+		"jwtPayload":    sessionContainer.GetJWTPayload(),
 		"sessionData":   sessionData,
 	})
 	if err != nil {

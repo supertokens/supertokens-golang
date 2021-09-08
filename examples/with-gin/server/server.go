@@ -57,20 +57,22 @@ func verifySession(options *models.VerifySessionOptions) gin.HandlerFunc {
 }
 
 func sessioninfo(c *gin.Context) {
-	session := session.GetSessionFromRequest(c.Request)
-	if session == nil {
+	sessionContainer := session.GetSessionFromRequest(c.Request)
+	if sessionContainer == nil {
 		c.JSON(500, "no session found")
 		return
 	}
-	sessionData, err := session.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionData()
 	if err != nil {
+		// TODO: this should be session.ErrorHandler which should then return an error
+		// if the response is not sent and can be handled by the user themselves.
 		supertokens.ErrorHandler(err, c.Request, c.Writer)
 		return
 	}
 	c.JSON(200, map[string]interface{}{
-		"sessionHandle": session.GetHandle(),
-		"userId":        session.GetUserID(),
-		"jwtPayload":    session.GetJWTPayload(),
+		"sessionHandle": sessionContainer.GetHandle(),
+		"userId":        sessionContainer.GetUserID(),
+		"jwtPayload":    sessionContainer.GetJWTPayload(),
 		"sessionData":   sessionData,
 	})
 }
