@@ -8,6 +8,7 @@ func Init(config TypeInput) error {
 	return supertokensInit(config)
 }
 
+// TODO: is it better to have this as func Middleware(theirHandler http.Handler) http.Handler?
 func Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	instance, err := getInstanceOrThrowError()
 	if err != nil {
@@ -16,6 +17,7 @@ func Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
 	return instance.middleware(theirHandler)
 }
 
+// TODO: Make this match (err error, w http.ResponseWriter, r *http.Request) or the standard http.Error() signature.
 func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) {
 	instance, instanceErr := getInstanceOrThrowError()
 	if instanceErr != nil {

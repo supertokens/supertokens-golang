@@ -54,9 +54,9 @@ func Init() {
 			WebsiteDomain: "http://localhost" + config.GetString("server.websitePort"),
 		},
 		RecipeList: []supertokens.RecipeListFunction{
-			emailpassword.EmailPasswordInit(nil),
-			session.SessionInit(nil),
-			// thirdparty.RecipeInit(thirdpartyConfig),
+			emailpassword.Init(nil),
+			session.Init(nil),
+			// thirdparty.Init(thirdpartyConfig),
 		},
 		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
 			// TODO: would this get propogated to the panic / recovery middleware?

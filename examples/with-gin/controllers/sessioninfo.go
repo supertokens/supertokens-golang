@@ -5,6 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func Sessioninfo(c *gin.Context) {
@@ -19,7 +20,7 @@ func Sessioninfo(c *gin.Context) {
 	}
 	sessionData, err := session.GetSessionData()
 	if err != nil {
-		c.JSON(500, "error in sessiondata")
+		supertokens.ErrorHandler(err, c.Request, c.Writer)
 		return
 	}
 	c.JSON(200, map[string]interface{}{

@@ -13,6 +13,7 @@ import (
 func Supertokens() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		handler := supertokens.Middleware(func(rw http.ResponseWriter, r *http.Request) {
+			// TODO: pass this request / response to the next function?
 			c.Next()
 		})
 		handler(c.Writer, c.Request)
@@ -23,6 +24,7 @@ func VerifySession(options *models.VerifySessionOptions) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		sessionfunc := session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.Set(strconv.Itoa(models.SessionContext), session.GetSessionFromRequest(r))
+			// TODO: pass this request / response to the next function?
 			c.Next()
 		})
 		sessionfunc(c.Writer, c.Request)
