@@ -14,7 +14,7 @@ type signInUpResponse struct {
 	User           models.User
 }
 
-func ThirdPartyInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func Init(config *models.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }
 

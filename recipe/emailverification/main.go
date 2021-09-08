@@ -5,7 +5,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailVerificationInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func Init(config *models.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }
 

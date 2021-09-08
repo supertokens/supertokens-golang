@@ -11,7 +11,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ThirdPartyEmailPasswordInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func Init(config *models.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }
 
