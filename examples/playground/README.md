@@ -1,0 +1,1 @@
+The `main.go` in this folder is used as a playground to write / test random code snippets.
