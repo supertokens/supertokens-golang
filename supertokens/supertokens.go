@@ -128,7 +128,7 @@ func sendTelemetry() error {
 	return nil
 }
 
-func (s *superTokens) middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
+func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
@@ -166,7 +166,7 @@ func (s *superTokens) middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 				theirHandler.ServeHTTP(w, r)
 				return
 			}
-			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler, path, method)
+			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
 			if apiErr != nil {
 				s.errorHandler(apiErr, r, w)
 				return
@@ -180,7 +180,7 @@ func (s *superTokens) middleware(theirHandler http.HandlerFunc) http.HandlerFunc
 				}
 
 				if id != nil {
-					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler, path, method)
+					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
 					if err != nil {
 						s.errorHandler(err, r, w)
 						return

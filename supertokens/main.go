@@ -8,8 +8,7 @@ func Init(config TypeInput) error {
 	return supertokensInit(config)
 }
 
-// TODO: is it better to have this as func Middleware(theirHandler http.Handler) http.Handler?
-func Middleware(theirHandler http.HandlerFunc) http.HandlerFunc {
+func Middleware(theirHandler http.Handler) http.Handler {
 	instance, err := getInstanceOrThrowError()
 	if err != nil {
 		panic("Please call SupertokensInit before using the middleware")
