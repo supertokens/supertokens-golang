@@ -25,6 +25,7 @@ func Init() {
 		log.Fatal("error on parsing configuration file")
 	}
 
+	// TODO: tidy up example
 	// thirdpartyemailpasswordConfig := &models.TypeInput{
 	// 	Providers: []tpm.TypeProvider{thirdparty.Github(providers.TypeThirdPartyProviderGithubConfig{
 	// 		ClientID:     config.GetString("GITHUB_CLIENT_ID"),
