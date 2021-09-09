@@ -2,7 +2,6 @@ package config
 
 import (
 	"log"
-	"net/http"
 
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
@@ -46,7 +45,7 @@ func Init() {
 
 	err = supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.SupertokenTypeInput{
-			ConnectionURI: "https://try.supertokens.ioo",
+			ConnectionURI: "https://try.supertokens.io",
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens Demo App",
@@ -57,9 +56,6 @@ func Init() {
 			emailpassword.Init(nil),
 			session.Init(nil),
 			// thirdparty.Init(thirdpartyConfig),
-		},
-		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
-			http.Error(res, err.Error(), 500)
 		},
 	})
 	if err != nil {
