@@ -199,7 +199,6 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 						if err != nil {
 							s.OnGeneralError(err, r, w)
 						}
-						return
 					}
 					return
 				}
@@ -224,17 +223,17 @@ func (s *superTokens) getAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) error {
+func (s *superTokens) errorHandler(originalError error, req *http.Request, res http.ResponseWriter) error {
 	// TODO: replace errors.As with errors.Is if we are not casting the error to that specific type.
-	if errors.As(err, &BadInputError{}) {
-		if catcher := SendNon200Response(res, err.Error(), 400); catcher != nil {
-			s.OnGeneralError(err, req, res)
+	if errors.As(originalError, &BadInputError{}) {
+		if catcher := SendNon200Response(res, originalError.Error(), 400); catcher != nil {
+			s.OnGeneralError(originalError, req, res)
 		}
 		return nil
 	}
 	for _, recipe := range s.RecipeModules {
 		if recipe.HandleError != nil {
-			handled, err := recipe.HandleError(err, req, res)
+			handled, err := recipe.HandleError(originalError, req, res)
 			if err != nil {
 				return err
 			}
@@ -243,7 +242,7 @@ func (s *superTokens) errorHandler(err error, req *http.Request, res http.Respon
 			}
 		}
 	}
-	return err
+	return originalError
 }
 
 // TODO: make this an array of users.
