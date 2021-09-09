@@ -35,13 +35,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeNormalisedInput {
 	return models.TypeNormalisedInput{
-		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.New("Not defined by user") },
+		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.New("not defined by user") },
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
 		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
-		Override: struct {
-			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
-			APIs      func(originalImplementation models.APIInterface) models.APIInterface
-		}{
+		Override: models.OverrideStruct{
 			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
 				return originalImplementation
 			},

@@ -7,7 +7,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/api"
@@ -71,14 +70,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				FormFields: normalisedToType(verifiedConfig.SignUpFeature.FormFields),
 			},
 			ResetPasswordUsingTokenFeature: verifiedConfig.ResetPasswordUsingTokenFeature,
-			Override: &struct {
-				Functions                func(originalImplementation epm.RecipeInterface) epm.RecipeInterface
-				APIs                     func(originalImplementation epm.APIInterface) epm.APIInterface
-				EmailVerificationFeature *struct {
-					Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
-					APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
-				}
-			}{
+			Override: &epm.OverrideStruct{
 				Functions: func(_ epm.RecipeInterface) epm.RecipeInterface {
 					return recipeimplementation.MakeEmailPasswordRecipeImplementation(r.RecipeImpl)
 				},
@@ -103,14 +95,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				SignInAndUpFeature: tpm.TypeInputSignInAndUp{
 					Providers: verifiedConfig.Providers,
 				},
-				Override: &struct {
-					Functions                func(originalImplementation tpm.RecipeInterface) tpm.RecipeInterface
-					APIs                     func(originalImplementation tpm.APIInterface) tpm.APIInterface
-					EmailVerificationFeature *struct {
-						Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
-						APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
-					}
-				}{
+				Override: &tpm.OverrideStruct{
 					Functions: func(_ tpm.RecipeInterface) tpm.RecipeInterface {
 						return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
 					},

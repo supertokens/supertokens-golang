@@ -61,25 +61,17 @@ type TypeNormalisedInputSignInAndUp struct {
 type TypeInput struct {
 	SignInAndUpFeature       TypeInputSignInAndUp
 	EmailVerificationFeature *TypeInputEmailVerificationFeature
-	Override                 *struct {
-		Functions                func(originalImplementation RecipeInterface) RecipeInterface
-		APIs                     func(originalImplementation APIInterface) APIInterface
-		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
-			APIs      func(originalImplementation models.APIInterface) models.APIInterface
-		}
-	}
+	Override                 *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
 	SignInAndUpFeature       TypeNormalisedInputSignInAndUp
 	EmailVerificationFeature models.TypeInput
-	Override                 struct {
-		Functions                func(originalImplementation RecipeInterface) RecipeInterface
-		APIs                     func(originalImplementation APIInterface) APIInterface
-		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
-			APIs      func(originalImplementation models.APIInterface) models.APIInterface
-		}
-	}
+	Override                 OverrideStruct
+}
+
+type OverrideStruct struct {
+	Functions                func(originalImplementation RecipeInterface) RecipeInterface
+	APIs                     func(originalImplementation APIInterface) APIInterface
+	EmailVerificationFeature *models.OverrideStruct
 }

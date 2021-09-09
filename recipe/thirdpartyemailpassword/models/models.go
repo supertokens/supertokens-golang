@@ -39,14 +39,7 @@ type TypeInput struct {
 	Providers                      []tpm.TypeProvider
 	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
-	Override                       *struct {
-		Functions                func(originalImplementation RecipeInterface) RecipeInterface
-		APIs                     func(originalImplementation APIInterface) APIInterface
-		EmailVerificationFeature *struct {
-			Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
-			APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
-		}
-	}
+	Override                       *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
@@ -54,14 +47,13 @@ type TypeNormalisedInput struct {
 	Providers                      []tpm.TypeProvider
 	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evm.TypeInput
-	Override                       struct {
-		Functions                func(originalImplementation RecipeInterface) RecipeInterface
-		APIs                     func(originalImplementation APIInterface) APIInterface
-		EmailVerificationFeature *struct {
-			Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
-			APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
-		}
-	}
+	Override                       OverrideStruct
+}
+
+type OverrideStruct struct {
+	Functions                func(originalImplementation RecipeInterface) RecipeInterface
+	APIs                     func(originalImplementation APIInterface) APIInterface
+	EmailVerificationFeature *evm.OverrideStruct
 }
 
 type EmailStruct struct {

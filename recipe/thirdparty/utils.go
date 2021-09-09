@@ -39,14 +39,7 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput 
 	return models.TypeNormalisedInput{
 		SignInAndUpFeature:       models.TypeNormalisedInputSignInAndUp{},
 		EmailVerificationFeature: validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
-		Override: struct {
-			Functions                func(originalImplementation models.RecipeInterface) models.RecipeInterface
-			APIs                     func(originalImplementation models.APIInterface) models.APIInterface
-			EmailVerificationFeature *struct {
-				Functions func(originalImplementation evm.RecipeInterface) evm.RecipeInterface
-				APIs      func(originalImplementation evm.APIInterface) evm.APIInterface
-			}
-		}{
+		Override: models.OverrideStruct{
 			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
 				return originalImplementation
 			},

@@ -4,20 +4,19 @@ type TypeInput struct {
 	GetEmailForUserID        func(userID string) (string, error)
 	GetEmailVerificationURL  func(user User) (string, error)
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
-	Override                 *struct {
-		Functions func(originalImplementation RecipeInterface) RecipeInterface
-		APIs      func(originalImplementation APIInterface) APIInterface
-	}
+	Override                 *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
 	GetEmailForUserID        func(userID string) (string, error)
 	GetEmailVerificationURL  func(user User) (string, error)
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
-	Override                 struct {
-		Functions func(originalImplementation RecipeInterface) RecipeInterface
-		APIs      func(originalImplementation APIInterface) APIInterface
-	}
+	Override                 OverrideStruct
+}
+
+type OverrideStruct struct {
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
 }
 
 type User struct {

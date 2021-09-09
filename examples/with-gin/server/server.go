@@ -38,6 +38,13 @@ func Init() {
 	// Adding an API that requires session verification
 	router.GET("/sessioninfo", verifySession(nil), sessioninfo)
 
+	router.GET("/auth/signup/email/exists", func(c *gin.Context) {
+		c.JSON(200, map[string]interface{}{
+			"status": "OK",
+			"exists": true,
+		})
+	})
+
 	// starting the server
 	err := router.Run(config.GetString("server.apiPort"))
 	if err != nil {

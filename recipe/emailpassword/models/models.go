@@ -9,14 +9,13 @@ type TypeNormalisedInput struct {
 	SignInFeature                  TypeNormalisedInputSignIn
 	ResetPasswordUsingTokenFeature TypeNormalisedInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       models.TypeInput
-	Override                       struct {
-		Functions                func(originalImplementation RecipeInterface) RecipeInterface
-		APIs                     func(originalImplementation APIInterface) APIInterface
-		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
-			APIs      func(originalImplementation models.APIInterface) models.APIInterface
-		}
-	}
+	Override                       OverrideStruct
+}
+
+type OverrideStruct struct {
+	Functions                func(originalImplementation RecipeInterface) RecipeInterface
+	APIs                     func(originalImplementation APIInterface) APIInterface
+	EmailVerificationFeature *models.OverrideStruct
 }
 
 type TypeInputEmailVerificationFeature struct {
@@ -70,14 +69,7 @@ type TypeInput struct {
 	SignUpFeature                  *TypeInputSignUp
 	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
-	Override                       *struct {
-		Functions                func(originalImplementation RecipeInterface) RecipeInterface
-		APIs                     func(originalImplementation APIInterface) APIInterface
-		EmailVerificationFeature *struct {
-			Functions func(originalImplementation models.RecipeInterface) models.RecipeInterface
-			APIs      func(originalImplementation models.APIInterface) models.APIInterface
-		}
-	}
+	Override                       *OverrideStruct
 }
 
 type TypeFormField struct {
