@@ -132,7 +132,11 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
-			s.errorHandler(err, r, w)
+			err = s.errorHandler(err, r, w)
+			if err != nil {
+				s.OnGeneralError(err, r, w)
+			}
+			return
 		}
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
 		method := r.Method
@@ -158,7 +162,10 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			id, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
 
 			if err != nil {
-				s.errorHandler(err, r, w)
+				err = s.errorHandler(err, r, w)
+				if err != nil {
+					s.OnGeneralError(err, r, w)
+				}
 				return
 			}
 
@@ -168,21 +175,30 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			}
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
 			if apiErr != nil {
-				s.errorHandler(apiErr, r, w)
+				err = s.errorHandler(err, r, w)
+				if err != nil {
+					s.OnGeneralError(err, r, w)
+				}
 				return
 			}
 		} else {
 			for _, recipeModule := range s.RecipeModules {
 				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 				if err != nil {
-					s.errorHandler(err, r, w)
+					err = s.errorHandler(err, r, w)
+					if err != nil {
+						s.OnGeneralError(err, r, w)
+					}
 					return
 				}
 
 				if id != nil {
 					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
 					if err != nil {
-						s.errorHandler(err, r, w)
+						err = s.errorHandler(err, r, w)
+						if err != nil {
+							s.OnGeneralError(err, r, w)
+						}
 						return
 					}
 					return
@@ -208,27 +224,26 @@ func (s *superTokens) getAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) {
+func (s *superTokens) errorHandler(err error, req *http.Request, res http.ResponseWriter) error {
 	// TODO: replace errors.As with errors.Is if we are not casting the error to that specific type.
 	if errors.As(err, &BadInputError{}) {
 		if catcher := SendNon200Response(res, err.Error(), 400); catcher != nil {
 			s.OnGeneralError(err, req, res)
 		}
-		return
+		return nil
 	}
 	for _, recipe := range s.RecipeModules {
 		if recipe.HandleError != nil {
 			handled, err := recipe.HandleError(err, req, res)
 			if err != nil {
-				s.OnGeneralError(err, req, res)
-				return
+				return err
 			}
 			if handled {
-				return
+				return nil
 			}
 		}
 	}
-	s.OnGeneralError(err, req, res)
+	return err
 }
 
 // TODO: make this an array of users.
