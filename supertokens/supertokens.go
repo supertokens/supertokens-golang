@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 )
@@ -242,6 +243,7 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 			}
 		}
 	}
+	fmt.Println(originalError.Error())
 	return originalError
 }
 
