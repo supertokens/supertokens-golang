@@ -53,7 +53,11 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 	}
 	sessionData, err := sessionContainer.GetSessionData()
 	if err != nil {
-		supertokens.ErrorHandler(err, r, w)
+		err = supertokens.ErrorHandler(err, r, w)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+		}
 		return
 	}
 	w.WriteHeader(200)

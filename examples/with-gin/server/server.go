@@ -64,9 +64,11 @@ func sessioninfo(c *gin.Context) {
 	}
 	sessionData, err := sessionContainer.GetSessionData()
 	if err != nil {
-		// TODO: this should be session.ErrorHandler which should then return an error
-		// if the response is not sent and can be handled by the user themselves.
-		supertokens.ErrorHandler(err, c.Request, c.Writer)
+		err = supertokens.ErrorHandler(err, c.Request, c.Writer)
+		if err != nil {
+			c.JSON(500, err.Error())
+			return
+		}
 		return
 	}
 	c.JSON(200, map[string]interface{}{
