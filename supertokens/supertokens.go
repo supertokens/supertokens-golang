@@ -131,6 +131,7 @@ func sendTelemetry() error {
 
 func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		fmt.Println("1")
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
 			err = s.errorHandler(err, r, w)
@@ -139,6 +140,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			}
 			return
 		}
+		fmt.Println("2")
 		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
 		method := r.Method
 
@@ -146,6 +148,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			theirHandler.ServeHTTP(w, r)
 			return
 		}
+		fmt.Println("3")
 		requestRID := getRIDFromRequest(r)
 		if requestRID != "" {
 			var matchedRecipe *RecipeModule
@@ -159,7 +162,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				theirHandler.ServeHTTP(w, r)
 				return
 			}
-
+			fmt.Println("4")
 			id, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
 
 			if err != nil {
@@ -169,13 +172,16 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				}
 				return
 			}
+			fmt.Println("5")
 
 			if id == nil {
 				theirHandler.ServeHTTP(w, r)
 				return
 			}
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
+			fmt.Println("6")
 			if apiErr != nil {
+				fmt.Println("7")
 				apiErr = s.errorHandler(apiErr, r, w)
 				if apiErr != nil {
 					s.OnGeneralError(apiErr, r, w)
@@ -183,6 +189,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				return
 			}
 		} else {
+			fmt.Println("8")
 			for _, recipeModule := range s.RecipeModules {
 				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 				if err != nil {
@@ -192,6 +199,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 					}
 					return
 				}
+				fmt.Println("9")
 
 				if id != nil {
 					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
@@ -204,6 +212,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 					return
 				}
 			}
+			fmt.Println("10")
 			theirHandler.ServeHTTP(w, r)
 		}
 	})
@@ -243,7 +252,6 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 			}
 		}
 	}
-	fmt.Println(originalError.Error())
 	return originalError
 }
 
