@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"net/http"
 	"strings"
 )
@@ -67,7 +68,6 @@ func supertokensInit(config TypeInput) error {
 
 	if config.Telemetry != nil && *config.Telemetry {
 		sendTelemetry()
-		// we ignore all errors from this function.
 	}
 
 	superTokensInstance = superTokens
@@ -85,47 +85,45 @@ func getInstanceOrThrowError() (*superTokens, error) {
 	return nil, errors.New("initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
 
-func sendTelemetry() error {
-	// TODO: only if non testing.
+// TODO: add test to see query
+func sendTelemetry() {
+	if flag.Lookup("test.v") != nil {
+		// if running in test mode, we do not want to send this.
+		return
+	}
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
-		return err
+		return
 	}
 
 	response, err := querier.SendGetRequest("/telemetry", nil)
 	if err != nil {
-		return err
+		return
 	}
-	var telemetryID string
 	exists := response["exists"].(bool)
-	if exists {
-		telemetryID = response["telemetryId"].(string)
-	}
 
 	url := "https://api.supertokens.io/0/st/telemetry"
 
 	data := map[string]interface{}{
 		"appName":       superTokensInstance.AppInfo.AppName,
 		"websiteDomain": superTokensInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-		"telemetryId":   telemetryID,
 		"sdk":           "golang",
+	}
+	if exists {
+		data["telemetryId"] = response["telemetryId"].(string)
 	}
 	jsonData, err := json.Marshal(data)
 	if err != nil {
-		return err
+		return
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		return err
+		return
 	}
 	req.Header.Set("api-version", "2")
 
 	client := &http.Client{}
-	_, err = client.Do(req)
-	if err != nil {
-		return err
-	}
-	return nil
+	client.Do(req)
 }
 
 func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {

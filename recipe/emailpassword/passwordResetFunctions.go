@@ -3,6 +3,7 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
@@ -15,9 +16,13 @@ func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ mo
 	}
 }
 
-// TODO: only do these in case of non testing
+// TODO: add test to see query
 func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, passwordResetURLWithToken string) {
 	return func(user models.User, passwordResetURLWithToken string) {
+		if flag.Lookup("test.v") != nil {
+			// if running in test mode, we do not want to send this.
+			return
+		}
 		url := "https://api.supertokens.io/0/st/auth/password/reset"
 		data := map[string]string{
 			"email":            user.Email,

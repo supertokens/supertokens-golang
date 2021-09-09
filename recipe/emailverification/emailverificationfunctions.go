@@ -3,6 +3,7 @@ package emailverification
 import (
 	"bytes"
 	"encoding/json"
+	"flag"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
@@ -15,9 +16,13 @@ func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(
 	}
 }
 
-// TODO: send only if not testing
+// TODO: add test to see query
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, emailVerifyURLWithToken string) {
 	return func(user models.User, emailVerifyURLWithToken string) {
+		if flag.Lookup("test.v") != nil {
+			// if running in test mode, we do not want to send this.
+			return
+		}
 		const url = "https://api.supertokens.io/0/st/auth/email/verify"
 
 		data := map[string]string{
