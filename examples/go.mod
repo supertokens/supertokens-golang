@@ -9,7 +9,5 @@ require (
 	github.com/gorilla/handlers v1.5.1
 	github.com/gorilla/mux v1.8.0
 	github.com/spf13/viper v1.8.1
-	github.com/supertokens/supertokens-golang v0.0.0-20210909063351-7d248370eee0
+	github.com/supertokens/supertokens-golang v0.0.0-20210909070424-b13c10ce5994
 )
-
-replace github.com/supertokens/supertokens-golang => ../

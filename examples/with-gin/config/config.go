@@ -5,7 +5,6 @@ import (
 
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -54,19 +53,7 @@ func Init() {
 			WebsiteDomain: "http://localhost" + config.GetString("server.websitePort"),
 		},
 		RecipeList: []supertokens.RecipeListFunction{
-			emailpassword.Init(&models.TypeInput{
-				Override: &models.OverrideStruct{
-					APIs: func(originalImplementation models.APIInterface) models.APIInterface {
-						return models.APIInterface{
-							EmailExistsGET:                 nil,
-							GeneratePasswordResetTokenPOST: originalImplementation.GeneratePasswordResetTokenPOST,
-							PasswordResetPOST:              originalImplementation.PasswordResetPOST,
-							SignInPOST:                     originalImplementation.SignInPOST,
-							SignUpPOST:                     originalImplementation.SignUpPOST,
-						}
-					},
-				},
-			}),
+			emailpassword.Init(nil),
 			session.Init(nil),
 			// thirdparty.Init(thirdpartyConfig),
 		},

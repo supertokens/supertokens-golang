@@ -33,6 +33,8 @@ func Init() {
 		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			c.Next()
 		})).ServeHTTP(c.Writer, c.Request)
+		// we call Abort so that the next handler in the chain is not called, unless we call Next explicitly
+		c.Abort()
 	})
 
 	// Adding an API that requires session verification
@@ -60,6 +62,8 @@ func verifySession(options *models.VerifySessionOptions) gin.HandlerFunc {
 			c.Request = c.Request.WithContext(r.Context())
 			c.Next()
 		})(c.Writer, c.Request)
+		// we call Abort so that the next handler in the chain is not called, unless we call Next explicitly
+		c.Abort()
 	}
 }
 

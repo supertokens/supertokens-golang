@@ -126,6 +126,7 @@ func sendTelemetry() {
 	client.Do(req)
 }
 
+// TODO: accept theirHandler being nil
 func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
