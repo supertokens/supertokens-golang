@@ -16,7 +16,6 @@ func Middleware(theirHandler http.Handler) http.Handler {
 	return instance.middleware(theirHandler)
 }
 
-// TODO: Make this match (err error, w http.ResponseWriter, r *http.Request) or the standard http.Error() signature.
 func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) error {
 	instance, instanceErr := getInstanceOrThrowError()
 	if instanceErr != nil {

@@ -175,9 +175,9 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			}
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
 			if apiErr != nil {
-				err = s.errorHandler(err, r, w)
-				if err != nil {
-					s.OnGeneralError(err, r, w)
+				apiErr = s.errorHandler(apiErr, r, w)
+				if apiErr != nil {
+					s.OnGeneralError(apiErr, r, w)
 				}
 				return
 			}

@@ -46,7 +46,7 @@ func Init() {
 
 	err = supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.SupertokenTypeInput{
-			ConnectionURI: "https://try.supertokens.io",
+			ConnectionURI: "https://try.supertokens.ioo",
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens Demo App",
@@ -59,7 +59,6 @@ func Init() {
 			// thirdparty.Init(thirdpartyConfig),
 		},
 		OnGeneralError: func(err error, req *http.Request, res http.ResponseWriter) {
-			// TODO: would this get propogated to the panic / recovery middleware?
 			http.Error(res, err.Error(), 500)
 		},
 	})
