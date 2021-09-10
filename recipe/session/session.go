@@ -91,7 +91,6 @@ func newSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 				return err
 			}
 
-			// TODO: test that it actually changes the session object
 			session.userDataInJWT = resp.Session.UserDataInJWT
 			if !reflect.DeepEqual(resp.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
 				session.accessToken = resp.AccessToken.Token
