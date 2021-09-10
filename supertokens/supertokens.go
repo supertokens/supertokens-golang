@@ -220,7 +220,6 @@ func (s *superTokens) getAllCORSHeaders() []string {
 }
 
 func (s *superTokens) errorHandler(originalError error, req *http.Request, res http.ResponseWriter) error {
-	// TODO: replace errors.As with errors.Is if we are not casting the error to that specific type.
 	if errors.As(originalError, &BadInputError{}) {
 		if catcher := SendNon200Response(res, originalError.Error(), 400); catcher != nil {
 			s.OnGeneralError(originalError, req, res)
