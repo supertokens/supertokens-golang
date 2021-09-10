@@ -21,21 +21,13 @@ type TypeContext struct {
 	ThirdPartyAuthCodeResponse interface{}
 }
 
-type TypeInputSignUp struct {
-	FormFields []epm.TypeInputFormField
-}
-
-type TypeNormalisedInputSignUp struct {
-	FormFields []epm.NormalisedFormField
-}
-
 type TypeInputEmailVerificationFeature struct {
 	GetEmailVerificationURL  func(user User) (string, error)
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
 }
 
 type TypeInput struct {
-	SignUpFeature                  *TypeInputSignUp
+	SignUpFeature                  *epm.TypeInputSignUp
 	Providers                      []tpm.TypeProvider
 	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
@@ -43,7 +35,7 @@ type TypeInput struct {
 }
 
 type TypeNormalisedInput struct {
-	SignUpFeature                  TypeNormalisedInputSignUp
+	SignUpFeature                  *epm.TypeInputSignUp
 	Providers                      []tpm.TypeProvider
 	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evm.TypeInput

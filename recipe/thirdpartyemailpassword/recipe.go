@@ -66,9 +66,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	var emailPasswordRecipe emailpassword.Recipe
 	if emailPasswordInstance == nil {
 		emailPasswordConfig := &epm.TypeInput{
-			SignUpFeature: &epm.TypeInputSignUp{
-				FormFields: normalisedToType(verifiedConfig.SignUpFeature.FormFields),
-			},
+			SignUpFeature:                  verifiedConfig.SignUpFeature,
 			ResetPasswordUsingTokenFeature: verifiedConfig.ResetPasswordUsingTokenFeature,
 			Override: &epm.OverrideStruct{
 				Functions: func(_ epm.RecipeInterface) epm.RecipeInterface {

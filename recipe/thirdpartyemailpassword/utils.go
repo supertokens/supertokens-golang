@@ -3,8 +3,6 @@ package thirdpartyemailpassword
 import (
 	"errors"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
-	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -14,7 +12,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
 	if config != nil && config.SignUpFeature != nil {
-		typeNormalisedInput.SignUpFeature = validateAndNormaliseSignUpConfig(config.SignUpFeature)
+		typeNormalisedInput.SignUpFeature = config.SignUpFeature
 	}
 
 	if config != nil && config.Providers != nil {
@@ -44,7 +42,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput {
 	return models.TypeNormalisedInput{
-		SignUpFeature:                  validateAndNormaliseSignUpConfig(nil),
+		SignUpFeature:                  nil,
 		Providers:                      nil,
 		ResetPasswordUsingTokenFeature: nil,
 		EmailVerificationFeature:       validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
@@ -57,17 +55,6 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput 
 			},
 			EmailVerificationFeature: nil,
 		},
-	}
-}
-
-func validateAndNormaliseSignUpConfig(config *models.TypeInputSignUp) models.TypeNormalisedInputSignUp {
-	if config != nil {
-		return models.TypeNormalisedInputSignUp{
-			FormFields: emailpassword.NormaliseSignUpFormFields(config.FormFields),
-		}
-	}
-	return models.TypeNormalisedInputSignUp{
-		FormFields: emailpassword.NormaliseSignUpFormFields(nil),
 	}
 }
 
@@ -111,18 +98,4 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 	}
 
 	return emailverificationTypeInput
-}
-
-// used to convert FormField of thirdpartyemailpassword to emailpassword's
-// TODO: why can't we just use ep's form field type in this recipe too?
-func normalisedToType(normalisedformFields []epm.NormalisedFormField) []epm.TypeInputFormField {
-	var formFields []epm.TypeInputFormField
-	for _, normalisedformField := range normalisedformFields {
-		formFields = append(formFields, epm.TypeInputFormField{
-			ID:       normalisedformField.ID,
-			Validate: normalisedformField.Validate,
-			Optional: &normalisedformField.Optional,
-		})
-	}
-	return formFields
 }
