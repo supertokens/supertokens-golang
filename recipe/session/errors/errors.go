@@ -21,10 +21,9 @@ type TokenTheftDetectedError struct {
 	Payload TokenTheftDetectedErrorPayload
 }
 
-// TODO: test if this gets proper deserialised
 type TokenTheftDetectedErrorPayload struct {
-	SessionHandle string `json:"sessionHandle"`
-	UserID        string `json:"userId"`
+	SessionHandle string
+	UserID        string
 }
 
 func (err TokenTheftDetectedError) Error() string {

@@ -218,10 +218,13 @@ func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config 
 	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
 		return models.CreateOrRefreshAPIResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
-		session := response["session"].(errors.TokenTheftDetectedErrorPayload)
+		sessionInfo := errors.TokenTheftDetectedErrorPayload{
+			SessionHandle: (response["session"].(map[string]interface{}))["handle"].(string),
+			UserID:        (response["session"].(map[string]interface{}))["userId"].(string),
+		}
 		return models.CreateOrRefreshAPIResponse{}, errors.TokenTheftDetectedError{
 			Msg:     "Token theft detected",
-			Payload: session,
+			Payload: sessionInfo,
 		}
 	}
 }
