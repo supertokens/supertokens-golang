@@ -162,6 +162,6 @@ func Facebook(config providers.TypeThirdPartyProviderFacebookConfig) tpm.TypePro
 	return providers.Facebook(config)
 }
 
-func Apple(config providers.TypeThirdPartyProviderAppleConfig) tpm.TypeProvider {
-	return providers.Apple(config)
-}
+// func Apple(config providers.TypeThirdPartyProviderAppleConfig) tpm.TypeProvider {
+// 	return providers.Apple(config)
+// }
