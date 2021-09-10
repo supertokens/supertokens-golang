@@ -12,8 +12,13 @@ type NormalisedURLPathTest struct {
 }
 
 func TestNormaliseURLPathOrThrowError(t *testing.T) {
-	// TODO: check if we have covered all test cases
 	input := []NormalisedURLPathTest{{
+		Input:  "exists?email=john.doe%40gmail.com",
+		Output: "/exists",
+	}, {
+		Input:  "/auth/email/exists?email=john.doe%40gmail.com",
+		Output: "/auth/email/exists",
+	}, {
 		Input:  "exists",
 		Output: "/exists",
 	}, {
@@ -70,6 +75,9 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 	}, {
 		Input:  "http://api.example.com/one/two?hello=1",
 		Output: "/one/two",
+	}, {
+		Input:  "http://api.example.com/hello",
+		Output: "/hello",
 	}, {
 		Input:  "http://api.example.com/one/two/",
 		Output: "/one/two",
