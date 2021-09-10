@@ -101,27 +101,27 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}
 	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *signUpAPI,
+		PathWithoutAPIBasePath: signUpAPI,
 		ID:                     constants.SignUpAPI,
 		Disabled:               r.APIImpl.SignUpPOST == nil,
 	}, {
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *signInAPI,
+		PathWithoutAPIBasePath: signInAPI,
 		ID:                     constants.SignInAPI,
 		Disabled:               r.APIImpl.SignInPOST == nil,
 	}, {
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *generatePasswordResetTokenAPI,
+		PathWithoutAPIBasePath: generatePasswordResetTokenAPI,
 		ID:                     constants.GeneratePasswordResetTokenAPI,
 		Disabled:               r.APIImpl.GeneratePasswordResetTokenPOST == nil,
 	}, {
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *passwordResetAPI,
+		PathWithoutAPIBasePath: passwordResetAPI,
 		ID:                     constants.PasswordResetAPI,
 		Disabled:               r.APIImpl.PasswordResetPOST == nil,
 	}, {
 		Method:                 http.MethodGet,
-		PathWithoutAPIBasePath: *signupEmailExistsAPI,
+		PathWithoutAPIBasePath: signupEmailExistsAPI,
 		ID:                     constants.SignupEmailExistsAPI,
 		Disabled:               r.APIImpl.EmailExistsGET == nil,
 	}}, emailverificationAPIhandled...), nil

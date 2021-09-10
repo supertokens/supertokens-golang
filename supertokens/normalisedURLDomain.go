@@ -10,12 +10,12 @@ type NormalisedURLDomain struct {
 	value string
 }
 
-func NewNormalisedURLDomain(url string, ignoreProtocol bool) (*NormalisedURLDomain, error) {
-	val, err := normaliseURLDomainOrThrowError(url, ignoreProtocol)
+func NewNormalisedURLDomain(url string) (NormalisedURLDomain, error) {
+	val, err := normaliseURLDomainOrThrowError(url, false)
 	if err != nil {
-		return nil, err
+		return NormalisedURLDomain{}, err
 	}
-	return &NormalisedURLDomain{
+	return NormalisedURLDomain{
 		value: val,
 	}, nil
 }

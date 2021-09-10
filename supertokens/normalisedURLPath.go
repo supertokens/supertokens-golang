@@ -9,12 +9,12 @@ type NormalisedURLPath struct {
 	value string
 }
 
-func NewNormalisedURLPath(url string) (*NormalisedURLPath, error) {
+func NewNormalisedURLPath(url string) (NormalisedURLPath, error) {
 	val, err := normaliseURLPathOrThrowError(url)
 	if err != nil {
-		return nil, err
+		return NormalisedURLPath{}, err
 	}
-	return &NormalisedURLPath{
+	return NormalisedURLPath{
 		value: val,
 	}, nil
 }

@@ -11,3 +11,5 @@ require (
 	github.com/spf13/viper v1.8.1
 	github.com/supertokens/supertokens-golang v0.0.0-20210909070424-b13c10ce5994
 )
+
+replace github.com/supertokens/supertokens-golang => ../

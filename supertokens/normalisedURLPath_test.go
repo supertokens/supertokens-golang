@@ -156,7 +156,7 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 		Output: "/app.example.com",
 	}}
 	for _, val := range input {
-		path, _ := normaliseURLPathOrThrowError(val.Input)
-		assert.Equal(t, val.Output, path, val.Input)
+		path, _ := NewNormalisedURLPath(val.Input)
+		assert.Equal(t, val.Output, path.value, val.Input)
 	}
 }

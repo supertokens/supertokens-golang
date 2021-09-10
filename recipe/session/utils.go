@@ -130,7 +130,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	typeNormalisedInput := models.TypeNormalisedInput{
-		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(*refreshAPIPath),
+		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
 		CookieSameSite:           cookieSameSite,
 		CookieSecure:             cookieSecure,

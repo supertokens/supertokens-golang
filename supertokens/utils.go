@@ -37,11 +37,11 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 			return NormalisedAppinfo{}, err
 		}
 	}
-	websiteDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain, false)
+	websiteDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain)
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
-	apiDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain, false)
+	apiDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain)
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
@@ -54,7 +54,7 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
-	apiBasePath := apiGatewayPath.AppendPath(*APIBasePathURL)
+	apiBasePath := apiGatewayPath.AppendPath(APIBasePathURL)
 
 	websiteBasePathStr := "/auth"
 	if appInfo.WebsiteBasePath != nil {
@@ -66,11 +66,11 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	}
 	return NormalisedAppinfo{
 		AppName:         appInfo.AppName,
-		APIGatewayPath:  *apiGatewayPath,
-		WebsiteDomain:   *websiteDomain,
-		APIDomain:       *apiDomain,
+		APIGatewayPath:  apiGatewayPath,
+		WebsiteDomain:   websiteDomain,
+		APIDomain:       apiDomain,
 		APIBasePath:     apiBasePath,
-		WebsiteBasePath: *websiteBasePath,
+		WebsiteBasePath: websiteBasePath,
 	}, nil
 }
 

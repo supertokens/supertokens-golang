@@ -96,7 +96,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
+	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		if data == nil {
 			data = map[string]interface{}{}
 		}
@@ -142,7 +142,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
+	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
@@ -176,7 +176,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]interface{}) (ma
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
+	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -211,7 +211,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(*nP, func(url string) (*http.Response, error) {
+	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err

@@ -75,12 +75,12 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}
 	return []supertokens.APIHandled{{
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *refreshAPIPathNormalised,
+		PathWithoutAPIBasePath: refreshAPIPathNormalised,
 		ID:                     refreshAPIPath,
 		Disabled:               r.APIImpl.RefreshPOST == nil,
 	}, {
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *signoutAPIPathNormalised,
+		PathWithoutAPIBasePath: signoutAPIPathNormalised,
 		ID:                     signoutAPIPath,
 		Disabled:               r.APIImpl.SignOutPOST == nil,
 	}}, nil

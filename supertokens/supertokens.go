@@ -38,11 +38,11 @@ func supertokensInit(config TypeInput) error {
 		hostList := strings.Split(config.Supertokens.ConnectionURI, ";")
 		var hosts []NormalisedURLDomain
 		for _, h := range hostList {
-			host, err := NewNormalisedURLDomain(h, false)
+			host, err := NewNormalisedURLDomain(h)
 			if err != nil {
 				return err
 			}
-			hosts = append(hosts, *host)
+			hosts = append(hosts, host)
 		}
 
 		initQuerier(hosts, config.Supertokens.APIKey)
@@ -137,7 +137,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			}
 			return
 		}
-		path := s.AppInfo.APIGatewayPath.AppendPath(*reqURL)
+		path := s.AppInfo.APIGatewayPath.AppendPath(reqURL)
 		method := r.Method
 
 		if !strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) {

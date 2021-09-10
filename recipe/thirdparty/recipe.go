@@ -93,12 +93,12 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}
 	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *signInUpAPI,
+		PathWithoutAPIBasePath: signInUpAPI,
 		ID:                     SignInUpAPI,
 		Disabled:               r.APIImpl.SignInUpPOST == nil,
 	}, {
 		Method:                 http.MethodGet,
-		PathWithoutAPIBasePath: *authorisationAPI,
+		PathWithoutAPIBasePath: authorisationAPI,
 		ID:                     AuthorisationAPI,
 		Disabled:               r.APIImpl.AuthorisationUrlGET == nil,
 	}}, emailverificationAPIhandled...), nil

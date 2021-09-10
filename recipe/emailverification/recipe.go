@@ -78,17 +78,17 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 
 	return []supertokens.APIHandled{{
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *generateEmailVerifyTokenAPINormalised,
+		PathWithoutAPIBasePath: generateEmailVerifyTokenAPINormalised,
 		ID:                     generateEmailVerifyTokenAPI,
 		Disabled:               r.APIImpl.GenerateEmailVerifyTokenPOST == nil,
 	}, {
 		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: *emailVerifyAPINormalised,
+		PathWithoutAPIBasePath: emailVerifyAPINormalised,
 		ID:                     emailVerifyAPI,
 		Disabled:               r.APIImpl.VerifyEmailPOST == nil,
 	}, {
 		Method:                 http.MethodGet,
-		PathWithoutAPIBasePath: *emailVerifyAPINormalised,
+		PathWithoutAPIBasePath: emailVerifyAPINormalised,
 		ID:                     emailVerifyAPI,
 		Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,
 	}}, nil

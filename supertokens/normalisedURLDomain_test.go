@@ -12,7 +12,6 @@ type NormalisedURLDomainTest struct {
 }
 
 func TestNormaliseURLDomainOrThrowError(t *testing.T) {
-	// TODO: check if we have covered all test cases
 	input := []NormalisedURLDomainTest{{
 		Input:  "http://api.example.com",
 		Output: "http://api.example.com",
@@ -36,9 +35,6 @@ func TestNormaliseURLDomainOrThrowError(t *testing.T) {
 		Output: "http://api.example.com",
 	}, {
 		Input:  "api.example.com/",
-		Output: "https://api.example.com",
-	}, {
-		Input:  "api.example.com",
 		Output: "https://api.example.com",
 	}, {
 		Input:  "api.example.com#random",
@@ -97,9 +93,22 @@ func TestNormaliseURLDomainOrThrowError(t *testing.T) {
 	}, {
 		Input:  "https://127.0.0.1:80",
 		Output: "https://127.0.0.1:80",
+	}, {
+		Input:  "https://127.0.0.1:80/",
+		Output: "https://127.0.0.1:80",
 	}}
 	for _, val := range input {
-		domain, _ := normaliseURLDomainOrThrowError(val.Input, false)
-		assert.Equal(t, val.Output, domain, val.Input)
+		domain, _ := NewNormalisedURLDomain(val.Input)
+		assert.Equal(t, val.Output, domain.value)
+	}
+
+	{
+		_, err := NewNormalisedURLDomain("/one/two")
+		assert.Equal(t, err.Error(), "please provide a valid domain name")
+	}
+
+	{
+		_, err := NewNormalisedURLDomain("/.netlify/functions/api")
+		assert.Equal(t, err.Error(), "please provide a valid domain name")
 	}
 }
