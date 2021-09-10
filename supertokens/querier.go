@@ -69,7 +69,7 @@ func (q *Querier) getQuerierAPIVersion() (string, error) {
 }
 
 func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
-	// TODO: Why do we have locking here?
+	// TODO: For Piyushh: Why do we have locking here?
 	querierLock.Lock()
 	defer querierLock.Unlock()
 	if !querierInitCalled {
@@ -79,7 +79,7 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 }
 
 func initQuerier(hosts []NormalisedURLDomain, APIKey *string) {
-	// TODO: Why do we have locking here?
+	// TODO: For Piyushh: Why do we have locking here?
 	querierLock.Lock()
 	defer querierLock.Unlock()
 	if !querierInitCalled {
@@ -100,7 +100,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 		if data == nil {
 			data = map[string]interface{}{}
 		}
-		// TODO: what is the need to do this - since this is not being done in DELETE or any other place.
+		// TODO: For Piyushh:  what is the need to do this - since this is not being done in DELETE or any other place.
 		for key, value := range data {
 			switch value.(type) {
 			case map[string]interface{}:
@@ -242,13 +242,12 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 
 type httpRequestFunction func(url string) (*http.Response, error)
 
-// TODO: Add tests
 func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int) (map[string]interface{}, error) {
 	if numberOfTries == 0 {
 		return nil, errors.New("no SuperTokens core available to query")
 	}
 	currentHost := querierHosts[querierLastTriedIndex].GetAsStringDangerous()
-	// TODO: won't we need to apply some sort of locking here when updating querierLastTriedIndex?
+	// TODO: For Piyushh: won't we need to apply some sort of locking here when updating querierLastTriedIndex?
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(querierHosts)
 	resp, err := httpRequest(currentHost + path.GetAsStringDangerous())
 

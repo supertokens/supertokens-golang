@@ -47,11 +47,7 @@ func supertokensInit(config TypeInput) error {
 
 		initQuerier(hosts, config.Supertokens.APIKey)
 	} else {
-		// TODO: here we don't want to initialise the querier since there is
-		// no info about SuperTokens core - so why are we doing this?
-
 		// TODO: Add tests for init without supertokens core.
-		initQuerier(nil, nil)
 	}
 
 	if config.RecipeList == nil || len(config.RecipeList) == 0 {
@@ -126,8 +122,10 @@ func sendTelemetry() {
 	client.Do(req)
 }
 
-// TODO: accept theirHandler being nil
 func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
+	if theirHandler == nil {
+		theirHandler = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
+	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
