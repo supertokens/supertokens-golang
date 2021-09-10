@@ -7,7 +7,6 @@ import (
 
 func EmailExists(apiImplementation models.APIInterface, options models.APIOptions) error {
 	if apiImplementation.EmailExistsGET == nil {
-		// TODO: add tests - does their actual API get called?
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}

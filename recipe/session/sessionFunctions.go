@@ -21,16 +21,16 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 		"userDataInJWT":      JWTPayload,
 		"userDataInDatabase": sessionData,
 	}
-	handShakeInfo, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier, false)
+	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
 	}
-	requestBody["enableAntiCsrf"] = handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN
+	requestBody["enableAntiCsrf"] = recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN
 	response, err := querier.SendPostRequest("/recipe/session", requestBody)
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
 	}
-	updateJwtSigningPublicKeyInfo(&handShakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+	updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 
 	delete(response, "status")
 	delete(response, "jwtSigningPublicKey")
@@ -49,13 +49,13 @@ func createNewSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, confi
 }
 
 func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (models.GetSessionResponse, error) {
-	handShakeInfo, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier, false)
+	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return models.GetSessionResponse{}, err
 	}
 
-	if handShakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() {
-		accessTokenInfo, err := getInfoFromAccessToken(accessToken, handShakeInfo.JWTSigningPublicKey, handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+	if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() && false {
+		accessTokenInfo, err := getInfoFromAccessToken(accessToken, recipeImplHandshakeInfo.JWTSigningPublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 		if err != nil {
 			if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 				return models.GetSessionResponse{}, err
@@ -75,13 +75,13 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 				return models.GetSessionResponse{}, err
 			}
 
-			if handShakeInfo.SigningKeyLastUpdated > timeCreated {
+			if recipeImplHandshakeInfo.SigningKeyLastUpdated > timeCreated {
 				return models.GetSessionResponse{}, err
 			}
 		}
 
 		if doAntiCsrfCheck {
-			if handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN {
+			if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN {
 				if accessTokenInfo != nil {
 					if antiCsrfToken == nil || *antiCsrfToken == *accessTokenInfo.antiCsrfToken {
 						if antiCsrfToken == nil {
@@ -91,7 +91,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 						}
 					}
 				}
-			} else if handShakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
+			} else if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 				if !containsCustomHeader {
 					return models.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
 				}
@@ -99,7 +99,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 		}
 
 		if accessTokenInfo != nil &&
-			!handShakeInfo.AccessTokenBlacklistingEnabled &&
+			!recipeImplHandshakeInfo.AccessTokenBlacklistingEnabled &&
 			accessTokenInfo.parentRefreshTokenHash1 == nil {
 			return models.GetSessionResponse{
 				Session: models.SessionStruct{
@@ -113,7 +113,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 	requestBody := map[string]interface{}{
 		"accessToken":     accessToken,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
-		"enableAntiCsrf":  handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf":  recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken
@@ -126,7 +126,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 
 	status := response["status"]
 	if status.(string) == "OK" {
-		updateJwtSigningPublicKeyInfo(&handShakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 		delete(response, "status")
 		delete(response, "jwtSigningPublicKey")
 		delete(response, "jwtSigningPublicKeyExpiryTime")
@@ -146,9 +146,10 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 		jwtSigningPublicKey, jwtSigningPublicKeyExist := response["jwtSigningPublicKey"]
 		jwtSigningPublicKeyExpiryTime, jwtSigningPublicKeyExpiryTimeExist := response["jwtSigningPublicKeyExpiryTime"]
 		if jwtSigningPublicKeyExist && jwtSigningPublicKeyExpiryTimeExist {
-			updateJwtSigningPublicKeyInfo(&handShakeInfo, jwtSigningPublicKey.(string), uint64(jwtSigningPublicKeyExpiryTime.(float64)))
+			updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, jwtSigningPublicKey.(string), uint64(jwtSigningPublicKeyExpiryTime.(float64)))
 		} else {
-			getHandshakeInfo(recipeImplHandshakeInfo, config, querier, true)
+			// we ignore any errors produced by this function..
+			getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, true)
 		}
 		return models.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
@@ -176,12 +177,12 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 }
 
 func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (models.CreateOrRefreshAPIResponse, error) {
-	handShakeInfo, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier, false)
+	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return models.CreateOrRefreshAPIResponse{}, err
 	}
 
-	if handShakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
+	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 		if !containsCustomHeader {
 			clearCookies := false
 			return models.CreateOrRefreshAPIResponse{}, errors.UnauthorizedError{
@@ -193,7 +194,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config 
 
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
-		"enableAntiCsrf": handShakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf": recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken

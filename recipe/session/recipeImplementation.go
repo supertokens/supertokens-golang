@@ -16,7 +16,7 @@ var handshakeInfoLock sync.Mutex
 func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeInterface {
 
 	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
-	getHandshakeInfo(recipeImplHandshakeInfo, config, querier, false)
+	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
 	return models.RecipeInterface{
 		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (models.SessionContainer, error) {
@@ -135,41 +135,40 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 		},
 
 		GetAccessTokenLifeTimeMS: func() (uint64, error) {
-			handShake, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier, false)
+			err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 			if err != nil {
 				return 0, err
 			}
-			return handShake.AccessTokenValidity, nil
+			return recipeImplHandshakeInfo.AccessTokenValidity, nil
 		},
 
 		GetRefreshTokenLifeTimeMS: func() (uint64, error) {
-			handShake, err := getHandshakeInfo(recipeImplHandshakeInfo, config, querier, false)
+			err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 			if err != nil {
 				return 0, err
 			}
-			return handShake.RefreshTokenValidity, nil
+			return recipeImplHandshakeInfo.RefreshTokenValidity, nil
 		},
 	}
 }
 
-func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) (models.HandshakeInfo, error) {
+func getHandshakeInfo(recipeImplHandshakeInfo **models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) error {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
-	if recipeImplHandshakeInfo == nil || forceFetch {
+	if *recipeImplHandshakeInfo == nil || forceFetch {
 		response, err := querier.SendPostRequest("/recipe/handshake", nil)
 		if err != nil {
-			return models.HandshakeInfo{}, err
+			return err
 		}
 		signingKeyLastUpdated := getCurrTimeInMS()
-		if recipeImplHandshakeInfo != nil {
-			if uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)) == recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime &&
-				response["jwtSigningPublicKey"].(string) == recipeImplHandshakeInfo.JWTSigningPublicKey {
-				signingKeyLastUpdated = recipeImplHandshakeInfo.SigningKeyLastUpdated
+		if *recipeImplHandshakeInfo != nil {
+			if uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)) == (**recipeImplHandshakeInfo).JWTSigningPublicKeyExpiryTime &&
+				response["jwtSigningPublicKey"].(string) == (**recipeImplHandshakeInfo).JWTSigningPublicKey {
+				signingKeyLastUpdated = (**recipeImplHandshakeInfo).SigningKeyLastUpdated
 			}
 		}
 
-		// TODO: check that this is actually updated in place
-		recipeImplHandshakeInfo = &models.HandshakeInfo{
+		*recipeImplHandshakeInfo = &models.HandshakeInfo{
 			SigningKeyLastUpdated:          signingKeyLastUpdated,
 			JWTSigningPublicKey:            response["jwtSigningPublicKey"].(string),
 			AntiCsrf:                       config.AntiCsrf,
@@ -179,18 +178,19 @@ func getHandshakeInfo(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 			RefreshTokenValidity:           uint64(response["refreshTokenValidity"].(float64)),
 		}
 	}
-	return *recipeImplHandshakeInfo, nil
+	return nil
 }
 
-func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo *models.HandshakeInfo, newKey string, newExpiry uint64) {
+func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **models.HandshakeInfo, newKey string, newExpiry uint64) {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
-	if recipeImplHandshakeInfo == nil {
-		if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime != newExpiry ||
-			recipeImplHandshakeInfo.JWTSigningPublicKey != newKey {
-			recipeImplHandshakeInfo.SigningKeyLastUpdated = getCurrTimeInMS()
+	if *recipeImplHandshakeInfo != nil {
+		if (**recipeImplHandshakeInfo).JWTSigningPublicKeyExpiryTime != newExpiry ||
+			(**recipeImplHandshakeInfo).JWTSigningPublicKey != newKey {
+			(**recipeImplHandshakeInfo).SigningKeyLastUpdated = getCurrTimeInMS()
 		}
-		recipeImplHandshakeInfo.JWTSigningPublicKey = newKey
-		recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime = newExpiry
+		(**recipeImplHandshakeInfo).JWTSigningPublicKey = newKey
+		(**recipeImplHandshakeInfo).JWTSigningPublicKeyExpiryTime = newExpiry
 	}
+
 }
