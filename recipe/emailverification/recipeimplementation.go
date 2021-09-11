@@ -50,7 +50,7 @@ func makeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 		},
 
 		IsEmailVerified: func(userID, email string) (bool, error) {
-			response, err := querier.SendGetRequest("/recipe/user/email/verify", map[string]interface{}{
+			response, err := querier.SendGetRequest("/recipe/user/email/verify", map[string]string{
 				"userId": userID,
 				"email":  email,
 			})

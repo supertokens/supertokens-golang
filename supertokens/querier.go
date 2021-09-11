@@ -171,7 +171,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 	}, len(querierHosts))
 }
 
-func (q *Querier) SendGetRequest(path string, params map[string]interface{}) (map[string]interface{}, error) {
+func (q *Querier) SendGetRequest(path string, params map[string]string) (map[string]interface{}, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -185,7 +185,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]interface{}) (ma
 		query := req.URL.Query()
 
 		for k, v := range params {
-			query.Add(k, v.(string))
+			query.Add(k, v)
 		}
 		req.URL.RawQuery = query.Encode()
 

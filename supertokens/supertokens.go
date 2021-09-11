@@ -6,6 +6,7 @@ import (
 	"errors"
 	"flag"
 	"net/http"
+	"strconv"
 	"strings"
 )
 
@@ -240,28 +241,27 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 	return originalError
 }
 
-// TODO: make this an array of users.
 type UserPaginationResult struct {
-	Users struct {
-		recipeId string
-		user     map[string]interface{}
+	Users []struct {
+		RecipeId string
+		User     map[string]interface{}
 	}
 	NextPaginationToken *string
 }
 
 // TODO: Add tests
-func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
+func getUsers(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
-		return nil, err
+		return UserPaginationResult{}, err
 	}
 
-	requestBody := map[string]interface{}{
+	requestBody := map[string]string{
 		"timeJoinedOrder": timeJoinedOrder,
 	}
 	if limit != nil {
-		requestBody["limit"] = *limit
+		requestBody["limit"] = strconv.Itoa(*limit)
 	}
 	if paginationToken != nil {
 		requestBody["paginationToken"] = *paginationToken
@@ -273,14 +273,12 @@ func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, inclu
 	resp, err := querier.SendGetRequest("/users", requestBody)
 
 	if err != nil {
-		return nil, err
+		return UserPaginationResult{}, err
 	}
 
-	// TODO: try not to do marshal and unmarshal
-	// TODO: Also, Unmarshal is slow, so try and use something else.
 	temporaryVariable, err := json.Marshal(resp)
 	if err != nil {
-		return nil, err
+		return UserPaginationResult{}, err
 	}
 
 	var result = UserPaginationResult{}
@@ -288,21 +286,21 @@ func getUsers(timeJoinedOrder string, limit *int, paginationToken *string, inclu
 	err = json.Unmarshal(temporaryVariable, &result)
 
 	if err != nil {
-		return nil, err
+		return UserPaginationResult{}, err
 	}
 
-	return &result, nil
+	return result, nil
 }
 
 // TODO: Add tests
-func getUserCount(includeRecipeIds *[]string) (int, error) {
+func getUserCount(includeRecipeIds *[]string) (float64, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return -1, err
 	}
 
-	requestBody := map[string]interface{}{}
+	requestBody := map[string]string{}
 
 	if includeRecipeIds != nil {
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
@@ -314,5 +312,5 @@ func getUserCount(includeRecipeIds *[]string) (int, error) {
 		return -1, err
 	}
 
-	return resp["count"].(int), nil
+	return resp["count"].(float64), nil
 }

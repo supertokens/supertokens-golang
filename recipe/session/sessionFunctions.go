@@ -157,7 +157,7 @@ func getSessionHelper(recipeImplHandshakeInfo *models.HandshakeInfo, config mode
 
 func getSessionInformationHelper(querier supertokens.Querier, sessionHandle string) (models.SessionInformation, error) {
 	response, err := querier.SendGetRequest("/recipe/session",
-		map[string]interface{}{
+		map[string]string{
 			"sessionHandle": sessionHandle,
 		})
 	if err != nil {
@@ -240,7 +240,7 @@ func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string) 
 }
 
 func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
-	response, err := querier.SendGetRequest("/recipe/session/user", map[string]interface{}{
+	response, err := querier.SendGetRequest("/recipe/session/user", map[string]string{
 		"userId": userID,
 	})
 	if err != nil {

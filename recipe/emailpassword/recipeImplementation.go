@@ -54,7 +54,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 		},
 
 		GetUserByID: func(userID string) (*models.User, error) {
-			response, err := querier.SendGetRequest("/recipe/user", map[string]interface{}{
+			response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 				"userId": userID,
 			})
 			if err != nil {
@@ -72,7 +72,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 		},
 
 		GetUserByEmail: func(email string) (*models.User, error) {
-			response, err := querier.SendGetRequest("/recipe/user", map[string]interface{}{
+			response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 				"email": email,
 			})
 			if err != nil {

@@ -32,14 +32,14 @@ func GetAllCORSHeaders() []string {
 	return instance.getAllCORSHeaders()
 }
 
-func GetUserCount(includeRecipeIds *[]string) (int, error) {
+func GetUserCount(includeRecipeIds *[]string) (float64, error) {
 	return getUserCount(includeRecipeIds)
 }
 
-func GetUsersOldestFirst(limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
-	return getUsers("ASC", limit, paginationToken, includeRecipeIds)
+func GetUsersOldestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
+	return getUsers("ASC", paginationToken, limit, includeRecipeIds)
 }
 
-func GetUsersNewestFirst(limit *int, paginationToken *string, includeRecipeIds *[]string) (*UserPaginationResult, error) {
-	return getUsers("DESC", limit, paginationToken, includeRecipeIds)
+func GetUsersNewestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
+	return getUsers("DESC", paginationToken, limit, includeRecipeIds)
 }
