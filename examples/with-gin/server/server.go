@@ -61,7 +61,7 @@ func verifySession(options *models.VerifySessionOptions) gin.HandlerFunc {
 }
 
 func sessioninfo(c *gin.Context) {
-	sessionContainer := session.GetSessionFromRequest(c.Request)
+	sessionContainer := session.GetSessionFromRequestContext(c.Request.Context())
 	if sessionContainer == nil {
 		c.JSON(500, "no session found")
 		return

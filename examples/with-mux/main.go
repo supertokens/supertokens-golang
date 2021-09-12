@@ -44,7 +44,7 @@ func main() {
 }
 
 func sessioninfo(w http.ResponseWriter, r *http.Request) {
-	sessionContainer := session.GetSessionFromRequest(r)
+	sessionContainer := session.GetSessionFromRequestContext(r.Context())
 
 	if sessionContainer == nil {
 		w.WriteHeader(500)

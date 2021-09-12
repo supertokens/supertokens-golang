@@ -1,6 +1,7 @@
 package session
 
 import (
+	"context"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
@@ -100,8 +101,9 @@ func VerifySession(options *models.VerifySessionOptions, otherHandler http.Handl
 	return api.VerifySession(*instance, options, otherHandler)
 }
 
-func GetSessionFromRequest(r *http.Request) *models.SessionContainer {
-	value := r.Context().Value(models.SessionContext)
+// TODO: change to request context instead of request?
+func GetSessionFromRequestContext(ctx context.Context) *models.SessionContainer {
+	value := ctx.Value(models.SessionContext)
 	if value == nil {
 		return nil
 	}
