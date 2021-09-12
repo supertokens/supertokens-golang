@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
 
-type TypeThirdPartyProviderFacebookConfig struct {
+type FacebookConfig struct {
 	ClientID     string
 	ClientSecret string
 	Scope        []string
@@ -16,7 +16,7 @@ type TypeThirdPartyProviderFacebookConfig struct {
 
 const facebookID = "facebook"
 
-func Facebook(config TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
+func Facebook(config FacebookConfig) models.TypeProvider {
 	return models.TypeProvider{
 		ID: facebookID,
 		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {

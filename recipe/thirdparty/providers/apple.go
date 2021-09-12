@@ -7,7 +7,7 @@ package providers
 // 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 // )
 
-// type TypeThirdPartyProviderAppleConfig struct {
+// type AppleConfig struct {
 // 	ClientID              string
 // 	ClientSecret          ClientSecret
 // 	Scope                 []string
@@ -24,7 +24,7 @@ package providers
 
 // const appleID = "apple"
 
-// func Apple(config TypeThirdPartyProviderAppleConfig) models.TypeProvider {
+// func Apple(config AppleConfig) models.TypeProvider {
 // 	return models.TypeProvider{
 // 		ID: appleID,
 // 		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {

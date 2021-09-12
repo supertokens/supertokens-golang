@@ -150,18 +150,18 @@ func UnverifyEmail(userID string) (envModels.UnverifyEmailResponse, error) {
 	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }
 
-func Google(config providers.TypeThirdPartyProviderGoogleConfig) tpm.TypeProvider {
+func Google(config providers.GoogleConfig) tpm.TypeProvider {
 	return providers.Google(config)
 }
 
-func Github(config providers.TypeThirdPartyProviderGithubConfig) tpm.TypeProvider {
+func Github(config providers.GithubConfig) tpm.TypeProvider {
 	return providers.Github(config)
 }
 
-func Facebook(config providers.TypeThirdPartyProviderFacebookConfig) tpm.TypeProvider {
+func Facebook(config providers.FacebookConfig) tpm.TypeProvider {
 	return providers.Facebook(config)
 }
 
-// func Apple(config providers.TypeThirdPartyProviderAppleConfig) tpm.TypeProvider {
+// func Apple(config providers.AppleConfig) tpm.TypeProvider {
 // 	return providers.Apple(config)
 // }

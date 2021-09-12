@@ -27,7 +27,7 @@ func Init() {
 
 	// TODO: tidy up example
 	// thirdpartyemailpasswordConfig := &models.TypeInput{
-	// 	Providers: []tpm.TypeProvider{thirdparty.Github(providers.TypeThirdPartyProviderGithubConfig{
+	// 	Providers: []tpm.TypeProvider{thirdparty.Github(providers.GithubConfig{
 	// 		ClientID:     config.GetString("GITHUB_CLIENT_ID"),
 	// 		ClientSecret: config.GetString("GITHUB_CLIENT_SECRET"),
 	// 	}),
@@ -36,7 +36,7 @@ func Init() {
 
 	// thirdpartyConfig := &tpm.TypeInput{
 	// 	SignInAndUpFeature: tpm.TypeInputSignInAndUp{
-	// 		Providers: []tpm.TypeProvider{thirdparty.Github(providers.TypeThirdPartyProviderGithubConfig{
+	// 		Providers: []tpm.TypeProvider{thirdparty.Github(providers.GithubConfig{
 	// 			ClientID:     config.GetString("GITHUB_CLIENT_ID"),
 	// 			ClientSecret: config.GetString("GITHUB_CLIENT_SECRET"),
 	// 		}),

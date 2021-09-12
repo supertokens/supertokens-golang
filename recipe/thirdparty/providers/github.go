@@ -9,7 +9,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
 
-type TypeThirdPartyProviderGithubConfig struct {
+type GithubConfig struct {
 	ClientID              string
 	ClientSecret          string
 	Scope                 []string
@@ -20,7 +20,7 @@ type TypeThirdPartyProviderGithubConfig struct {
 
 const githubID = "github"
 
-func Github(config TypeThirdPartyProviderGithubConfig) models.TypeProvider {
+func Github(config GithubConfig) models.TypeProvider {
 	return models.TypeProvider{
 		ID: githubID,
 		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {

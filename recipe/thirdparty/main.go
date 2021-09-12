@@ -113,18 +113,18 @@ func UnverifyEmail(userID string) (envModels.UnverifyEmailResponse, error) {
 	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }
 
-// func Apple(config providers.TypeThirdPartyProviderAppleConfig) models.TypeProvider {
+// func Apple(config providers.AppleConfig) models.TypeProvider {
 // 	return providers.Apple(config)
 // }
 
-func Facebook(config providers.TypeThirdPartyProviderFacebookConfig) models.TypeProvider {
+func Facebook(config providers.FacebookConfig) models.TypeProvider {
 	return providers.Facebook(config)
 }
 
-func Github(config providers.TypeThirdPartyProviderGithubConfig) models.TypeProvider {
+func Github(config providers.GithubConfig) models.TypeProvider {
 	return providers.Github(config)
 }
 
-func Google(config providers.TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
+func Google(config providers.GoogleConfig) models.TypeProvider {
 	return providers.Google(config)
 }

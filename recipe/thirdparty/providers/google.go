@@ -10,7 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
 )
 
-type TypeThirdPartyProviderGoogleConfig struct {
+type GoogleConfig struct {
 	ClientID              string
 	ClientSecret          string
 	Scope                 []string
@@ -21,7 +21,7 @@ type TypeThirdPartyProviderGoogleConfig struct {
 
 const googleID = "google"
 
-func Google(config TypeThirdPartyProviderGoogleConfig) models.TypeProvider {
+func Google(config GoogleConfig) models.TypeProvider {
 	return models.TypeProvider{
 		ID: googleID,
 		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {
