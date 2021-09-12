@@ -50,6 +50,7 @@ func main() {
 
 	hook := hooks.LoggingHooks(os.Stderr)
 	service := haberdasherserver.New()
+	// TODO: need to add error handler for supertokens, using with interceptor.
 	server := haberdasher.NewHaberdasherServer(service, hook)
 	sessionRequired := false
 	log.Fatal(http.ListenAndServe(":3001", handlers.CORS(

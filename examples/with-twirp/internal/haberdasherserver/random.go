@@ -41,6 +41,11 @@ func (h *randomHaberdasher) MakeHat(ctx context.Context, size *haberdasher.Size)
 	} else {
 		// session exists!
 		fmt.Println(sessionContainer.GetUserID())
+		sessionData, err := sessionContainer.GetSessionData()
+		if err != nil {
+			return nil, err
+		}
+		fmt.Println(sessionData)
 	}
 	// When returning an error, it's best to use the error constructors defined in
 	// the Twirp package so that the client gets a well-structured error response.
