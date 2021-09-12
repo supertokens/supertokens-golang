@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GeneratePasswordResetToken(apiImplementation models.APIInterface, options models.APIOptions) error {
+func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
 	if apiImplementation.GeneratePasswordResetTokenPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil

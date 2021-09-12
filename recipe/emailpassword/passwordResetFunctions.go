@@ -6,19 +6,19 @@ import (
 	"flag"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ models.User) string {
-	return func(_ models.User) string {
+func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ epmodels.User) string {
+	return func(_ epmodels.User) string {
 		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/reset-password"
 	}
 }
 
 // TODO: add test to see query
-func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, passwordResetURLWithToken string) {
-	return func(user models.User, passwordResetURLWithToken string) {
+func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user epmodels.User, passwordResetURLWithToken string) {
+	return func(user epmodels.User, passwordResetURLWithToken string) {
 		if flag.Lookup("test.v") != nil {
 			// if running in test mode, we do not want to send this.
 			return

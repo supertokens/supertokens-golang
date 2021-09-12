@@ -1,4 +1,4 @@
-package models
+package sessmodels
 
 type APIInterface struct {
 	RefreshPOST   func(options APIOptions) error

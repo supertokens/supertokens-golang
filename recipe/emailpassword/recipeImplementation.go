@@ -1,59 +1,59 @@
 package emailpassword
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterface {
-	return models.RecipeInterface{
-		SignUp: func(email, password string) (models.SignUpResponse, error) {
+func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterface {
+	return epmodels.RecipeInterface{
+		SignUp: func(email, password string) (epmodels.SignUpResponse, error) {
 			response, err := querier.SendPostRequest("/recipe/signup", map[string]interface{}{
 				"email":    email,
 				"password": password,
 			})
 			if err != nil {
-				return models.SignUpResponse{}, err
+				return epmodels.SignUpResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return models.SignUpResponse{}, err
+					return epmodels.SignUpResponse{}, err
 				}
-				return models.SignUpResponse{
-					OK: &struct{ User models.User }{User: *user},
+				return epmodels.SignUpResponse{
+					OK: &struct{ User epmodels.User }{User: *user},
 				}, nil
 			}
-			return models.SignUpResponse{
+			return epmodels.SignUpResponse{
 				EmailAlreadyExistsError: &struct{}{},
 			}, nil
 		},
 
-		SignIn: func(email, password string) (models.SignInResponse, error) {
+		SignIn: func(email, password string) (epmodels.SignInResponse, error) {
 			response, err := querier.SendPostRequest("/recipe/signin", map[string]interface{}{
 				"email":    email,
 				"password": password,
 			})
 			if err != nil {
-				return models.SignInResponse{}, err
+				return epmodels.SignInResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
 				user, err := parseUser(response["user"])
 				if err != nil {
-					return models.SignInResponse{}, err
+					return epmodels.SignInResponse{}, err
 				}
-				return models.SignInResponse{
-					OK: &struct{ User models.User }{User: *user},
+				return epmodels.SignInResponse{
+					OK: &struct{ User epmodels.User }{User: *user},
 				}, nil
 			}
-			return models.SignInResponse{
+			return epmodels.SignInResponse{
 				WrongCredentialsError: &struct{}{},
 			}, nil
 		},
 
-		GetUserByID: func(userID string) (*models.User, error) {
+		GetUserByID: func(userID string) (*epmodels.User, error) {
 			response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 				"userId": userID,
 			})
@@ -71,7 +71,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 			return nil, nil
 		},
 
-		GetUserByEmail: func(email string) (*models.User, error) {
+		GetUserByEmail: func(email string) (*epmodels.User, error) {
 			response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 				"email": email,
 			})
@@ -89,46 +89,46 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 			return nil, nil
 		},
 
-		CreateResetPasswordToken: func(userID string) (models.CreateResetPasswordTokenResponse, error) {
+		CreateResetPasswordToken: func(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
 			response, err := querier.SendPostRequest("/recipe/user/password/reset/token", map[string]interface{}{
 				"userId": userID,
 			})
 			if err != nil {
-				return models.CreateResetPasswordTokenResponse{}, err
+				return epmodels.CreateResetPasswordTokenResponse{}, err
 			}
 			status, ok := response["status"]
 			if ok && status.(string) == "OK" {
-				return models.CreateResetPasswordTokenResponse{
+				return epmodels.CreateResetPasswordTokenResponse{
 					OK: &struct{ Token string }{Token: response["token"].(string)},
 				}, nil
 			}
-			return models.CreateResetPasswordTokenResponse{
+			return epmodels.CreateResetPasswordTokenResponse{
 				UnknownUserIdError: &struct{}{},
 			}, nil
 		},
 
-		ResetPasswordUsingToken: func(token, newPassword string) (models.ResetPasswordUsingTokenResponse, error) {
+		ResetPasswordUsingToken: func(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
 			response, err := querier.SendPostRequest("/recipe/user/password/reset", map[string]interface{}{
 				"method":      "token",
 				"token":       token,
 				"newPassword": newPassword,
 			})
 			if err != nil {
-				return models.ResetPasswordUsingTokenResponse{}, nil
+				return epmodels.ResetPasswordUsingTokenResponse{}, nil
 			}
 
 			if response["status"].(string) == "OK" {
-				return models.ResetPasswordUsingTokenResponse{
+				return epmodels.ResetPasswordUsingTokenResponse{
 					OK: &struct{}{},
 				}, nil
 			} else {
-				return models.ResetPasswordUsingTokenResponse{
+				return epmodels.ResetPasswordUsingTokenResponse{
 					ResetPasswordInvalidTokenError: &struct{}{},
 				}, nil
 			}
 		},
 
-		UpdateEmailOrPassword: func(userId string, email, password *string) (models.UpdateEmailOrPasswordResponse, error) {
+		UpdateEmailOrPassword: func(userId string, email, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
 			requestBody := map[string]interface{}{
 				"userId": userId,
 			}
@@ -140,19 +140,19 @@ func MakeRecipeImplementation(querier supertokens.Querier) models.RecipeInterfac
 			}
 			response, err := querier.SendPutRequest("/recipe/user", requestBody)
 			if err != nil {
-				return models.UpdateEmailOrPasswordResponse{}, nil
+				return epmodels.UpdateEmailOrPasswordResponse{}, nil
 			}
 
 			if response["status"].(string) == "OK" {
-				return models.UpdateEmailOrPasswordResponse{
+				return epmodels.UpdateEmailOrPasswordResponse{
 					OK: &struct{}{},
 				}, nil
 			} else if response["status"].(string) == "EMAIL_ALREADY_EXISTS_ERROR" {
-				return models.UpdateEmailOrPasswordResponse{
+				return epmodels.UpdateEmailOrPasswordResponse{
 					EmailAlreadyExistsError: &struct{}{},
 				}, nil
 			} else {
-				return models.UpdateEmailOrPasswordResponse{
+				return epmodels.UpdateEmailOrPasswordResponse{
 					UnknownUserIdError: &struct{}{},
 				}, nil
 			}

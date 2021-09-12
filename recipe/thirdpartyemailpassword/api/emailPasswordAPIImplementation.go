@@ -3,14 +3,14 @@ package api
 import (
 	"errors"
 
-	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 )
 
-func GetEmailPasswordIterfaceImpl(apiImplmentation models.APIInterface) epm.APIInterface {
+func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmodels.APIInterface {
 	signInUpPOST := apiImplmentation.SignInUpPOST
 	if signInUpPOST == nil {
-		return epm.APIInterface{
+		return epmodels.APIInterface{
 			EmailExistsGET:                 apiImplmentation.EmailExistsGET,
 			GeneratePasswordResetTokenPOST: apiImplmentation.GeneratePasswordResetTokenPOST,
 			PasswordResetPOST:              apiImplmentation.PasswordResetPOST,
@@ -18,27 +18,27 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation models.APIInterface) epm.APII
 			SignUpPOST:                     nil,
 		}
 	}
-	return epm.APIInterface{
+	return epmodels.APIInterface{
 		EmailExistsGET:                 apiImplmentation.EmailExistsGET,
 		GeneratePasswordResetTokenPOST: apiImplmentation.GeneratePasswordResetTokenPOST,
 		PasswordResetPOST:              apiImplmentation.PasswordResetPOST,
-		SignInPOST: func(formFields []epm.TypeFormField, options epm.APIOptions) (epm.SignInResponse, error) {
-			resp, err := signInUpPOST(models.SignInUpAPIInput{
-				EmailpasswordInput: &models.EmailpasswordInput{
+		SignInPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
+			resp, err := signInUpPOST(tpepmodels.SignInUpAPIInput{
+				EmailpasswordInput: &tpepmodels.EmailpasswordInput{
 					FormFields: formFields,
 					Options:    options,
 					IsSignIn:   true,
 				},
 			})
 			if err != nil {
-				return epm.SignInResponse{}, err
+				return epmodels.SignInResponse{}, err
 			}
 			result := resp.EmailpasswordOutput
 			if result != nil {
 				if result.OK != nil {
-					return epm.SignInResponse{
-						OK: &struct{ User epm.User }{
-							User: epm.User{
+					return epmodels.SignInResponse{
+						OK: &struct{ User epmodels.User }{
+							User: epmodels.User{
 								ID:         result.OK.User.ID,
 								Email:      result.OK.User.Email,
 								TimeJoined: result.OK.User.TimeJoined,
@@ -46,30 +46,30 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation models.APIInterface) epm.APII
 						},
 					}, nil
 				} else if result.WrongCredentialsError != nil {
-					return epm.SignInResponse{
+					return epmodels.SignInResponse{
 						WrongCredentialsError: &struct{}{},
 					}, nil
 				}
 			}
-			return epm.SignInResponse{}, errors.New("should never come here")
+			return epmodels.SignInResponse{}, errors.New("should never come here")
 		},
-		SignUpPOST: func(formFields []epm.TypeFormField, options epm.APIOptions) (epm.SignUpResponse, error) {
-			resp, err := signInUpPOST(models.SignInUpAPIInput{
-				EmailpasswordInput: &models.EmailpasswordInput{
+		SignUpPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
+			resp, err := signInUpPOST(tpepmodels.SignInUpAPIInput{
+				EmailpasswordInput: &tpepmodels.EmailpasswordInput{
 					FormFields: formFields,
 					Options:    options,
 					IsSignIn:   false,
 				},
 			})
 			if err != nil {
-				return epm.SignUpResponse{}, err
+				return epmodels.SignUpResponse{}, err
 			}
 			result := resp.EmailpasswordOutput
 			if result != nil {
 				if result.OK != nil {
-					return epm.SignUpResponse{
-						OK: &struct{ User epm.User }{
-							User: epm.User{
+					return epmodels.SignUpResponse{
+						OK: &struct{ User epmodels.User }{
+							User: epmodels.User{
 								ID:         result.OK.User.ID,
 								Email:      result.OK.User.Email,
 								TimeJoined: result.OK.User.TimeJoined,
@@ -77,12 +77,12 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation models.APIInterface) epm.APII
 						},
 					}, nil
 				} else if result.EmailAlreadyExistsError != nil {
-					return epm.SignUpResponse{
+					return epmodels.SignUpResponse{
 						EmailAlreadyExistsError: &struct{}{},
 					}, nil
 				}
 			}
-			return epm.SignUpResponse{}, errors.New("should never come here")
+			return epmodels.SignUpResponse{}, errors.New("should never come here")
 		},
 	}
 }

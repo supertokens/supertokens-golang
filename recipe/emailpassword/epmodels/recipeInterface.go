@@ -1,4 +1,4 @@
-package models
+package epmodels
 
 type RecipeInterface struct {
 	SignUp                   func(email string, password string) (SignUpResponse, error)

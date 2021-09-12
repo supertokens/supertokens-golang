@@ -7,29 +7,29 @@ import (
 	"sync"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 var handshakeInfoLock sync.Mutex
 
-func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNormalisedInput) models.RecipeInterface {
+func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput) sessmodels.RecipeInterface {
 
-	var recipeImplHandshakeInfo *models.HandshakeInfo = nil
+	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
-	return models.RecipeInterface{
-		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (models.SessionContainer, error) {
+	return sessmodels.RecipeInterface{
+		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (sessmodels.SessionContainer, error) {
 			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
 			if err != nil {
-				return models.SessionContainer{}, err
+				return sessmodels.SessionContainer{}, err
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, response)
 			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
 			return newSessionContainer(querier, config, &sessionContainerInput), nil
 		},
 
-		GetSession: func(req *http.Request, res http.ResponseWriter, options *models.VerifySessionOptions) (*models.SessionContainer, error) {
+		GetSession: func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
 			var doAntiCsrfCheck *bool = nil
 			if options != nil {
 				doAntiCsrfCheck = options.AntiCsrfCheck
@@ -68,7 +68,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				return nil, err
 			}
 
-			if !reflect.DeepEqual(response.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
+			if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
 				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
 				attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
 				accessToken = &response.AccessToken.Token
@@ -78,20 +78,20 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 			return &sessionContainer, nil
 		},
 
-		GetSessionInformation: func(sessionHandle string) (models.SessionInformation, error) {
+		GetSessionInformation: func(sessionHandle string) (sessmodels.SessionInformation, error) {
 			return getSessionInformationHelper(querier, sessionHandle)
 		},
 
-		RefreshSession: func(req *http.Request, res http.ResponseWriter) (models.SessionContainer, error) {
+		RefreshSession: func(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
 			inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 			if inputIdRefreshToken == nil {
-				return models.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+				return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 			}
 
 			inputRefreshToken := getRefreshTokenFromCookie(req)
 			if inputRefreshToken == nil {
 				clearSessionFromCookie(config, res)
-				return models.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
+				return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 			}
 
 			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
@@ -102,7 +102,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 				if (defaultErrors.As(err, &errors.UnauthorizedError{}) && (err.(errors.UnauthorizedError).ClearCookies == nil || *err.(errors.UnauthorizedError).ClearCookies)) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 					clearSessionFromCookie(config, res)
 				}
-				return models.SessionContainer{}, err
+				return sessmodels.SessionContainer{}, err
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, response)
 			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
@@ -152,7 +152,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config models.TypeNor
 	}
 }
 
-func getHandshakeInfo(recipeImplHandshakeInfo **models.HandshakeInfo, config models.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) error {
+func getHandshakeInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) error {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
 	if *recipeImplHandshakeInfo == nil || forceFetch {
@@ -168,7 +168,7 @@ func getHandshakeInfo(recipeImplHandshakeInfo **models.HandshakeInfo, config mod
 			}
 		}
 
-		*recipeImplHandshakeInfo = &models.HandshakeInfo{
+		*recipeImplHandshakeInfo = &sessmodels.HandshakeInfo{
 			SigningKeyLastUpdated:          signingKeyLastUpdated,
 			JWTSigningPublicKey:            response["jwtSigningPublicKey"].(string),
 			AntiCsrf:                       config.AntiCsrf,
@@ -181,7 +181,7 @@ func getHandshakeInfo(recipeImplHandshakeInfo **models.HandshakeInfo, config mod
 	return nil
 }
 
-func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **models.HandshakeInfo, newKey string, newExpiry uint64) {
+func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, newKey string, newExpiry uint64) {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
 	if *recipeImplHandshakeInfo != nil {

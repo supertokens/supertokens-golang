@@ -4,11 +4,11 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
+func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *tpepmodels.TypeInput) (tpepmodels.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
 	if config != nil && config.SignUpFeature != nil {
@@ -40,17 +40,17 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	return typeNormalisedInput, nil
 }
 
-func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput {
-	return models.TypeNormalisedInput{
+func makeTypeNormalisedInput(recipeInstance *Recipe) tpepmodels.TypeNormalisedInput {
+	return tpepmodels.TypeNormalisedInput{
 		SignUpFeature:                  nil,
 		Providers:                      nil,
 		ResetPasswordUsingTokenFeature: nil,
 		EmailVerificationFeature:       validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
-		Override: models.OverrideStruct{
-			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
+		Override: tpepmodels.OverrideStruct{
+			Functions: func(originalImplementation tpepmodels.RecipeInterface) tpepmodels.RecipeInterface {
 				return originalImplementation
 			},
-			APIs: func(originalImplementation models.APIInterface) models.APIInterface {
+			APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
 				return originalImplementation
 			},
 			EmailVerificationFeature: nil,
@@ -58,7 +58,7 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput 
 	}
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evmodels.TypeInput {
+func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *tpepmodels.TypeInput) evmodels.TypeInput {
 	emailverificationTypeInput := evmodels.TypeInput{
 		GetEmailForUserID: recipeInstance.getEmailForUserId,
 		Override:          nil,

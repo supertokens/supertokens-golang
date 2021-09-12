@@ -6,12 +6,12 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) models.TypeNormalisedInput {
+func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *epmodels.TypeInput) epmodels.TypeNormalisedInput {
 
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
@@ -43,18 +43,18 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	return typeNormalisedInput
 }
 
-func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput {
+func makeTypeNormalisedInput(recipeInstance *Recipe) epmodels.TypeNormalisedInput {
 	signUpConfig := validateAndNormaliseSignupConfig(nil)
-	return models.TypeNormalisedInput{
+	return epmodels.TypeNormalisedInput{
 		SignUpFeature:                  signUpConfig,
 		SignInFeature:                  validateAndNormaliseSignInConfig(signUpConfig),
 		ResetPasswordUsingTokenFeature: validateAndNormaliseResetPasswordUsingTokenConfig(recipeInstance.RecipeModule.GetAppInfo(), signUpConfig, nil),
 		EmailVerificationFeature:       validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
-		Override: models.OverrideStruct{
-			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
+		Override: epmodels.OverrideStruct{
+			Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 				return originalImplementation
 			},
-			APIs: func(originalImplementation models.APIInterface) models.APIInterface {
+			APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 				return originalImplementation
 			},
 			EmailVerificationFeature: nil,
@@ -62,7 +62,7 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput 
 	}
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evmodels.TypeInput {
+func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *epmodels.TypeInput) evmodels.TypeInput {
 	emailverificationTypeInput := evmodels.TypeInput{
 		GetEmailForUserID: recipeInstance.getEmailForUserId,
 		Override:          nil,
@@ -104,8 +104,8 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 	return emailverificationTypeInput
 }
 
-func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.NormalisedAppinfo, signUpConfig models.TypeNormalisedInputSignUp, config *models.TypeInputResetPasswordUsingTokenFeature) models.TypeNormalisedInputResetPasswordUsingTokenFeature {
-	normalisedInputResetPasswordUsingTokenFeature := models.TypeNormalisedInputResetPasswordUsingTokenFeature{
+func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.NormalisedAppinfo, signUpConfig epmodels.TypeNormalisedInputSignUp, config *epmodels.TypeInputResetPasswordUsingTokenFeature) epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature {
+	normalisedInputResetPasswordUsingTokenFeature := epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature{
 		FormFieldsForGenerateTokenForm: nil,
 		FormFieldsForPasswordResetForm: nil,
 		GetResetPasswordURL:            defaultGetResetPasswordURL(appInfo),
@@ -114,8 +114,8 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 
 	if len(signUpConfig.FormFields) > 0 {
 		var (
-			formFieldsForPasswordResetForm []models.NormalisedFormField
-			formFieldsForGenerateTokenForm []models.NormalisedFormField
+			formFieldsForPasswordResetForm []epmodels.NormalisedFormField
+			formFieldsForGenerateTokenForm []epmodels.NormalisedFormField
 		)
 		for _, FormField := range signUpConfig.FormFields {
 			if FormField.ID == "password" {
@@ -138,14 +138,14 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 
 	return normalisedInputResetPasswordUsingTokenFeature
 }
-func validateAndNormaliseSignInConfig(signUpConfig models.TypeNormalisedInputSignUp) models.TypeNormalisedInputSignIn {
-	return models.TypeNormalisedInputSignIn{
+func validateAndNormaliseSignInConfig(signUpConfig epmodels.TypeNormalisedInputSignUp) epmodels.TypeNormalisedInputSignIn {
+	return epmodels.TypeNormalisedInputSignIn{
 		FormFields: normaliseSignInFormFields(signUpConfig.FormFields),
 	}
 }
 
-func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models.NormalisedFormField {
-	normalisedFormFields := make([]models.NormalisedFormField, 0)
+func normaliseSignInFormFields(formFields []epmodels.NormalisedFormField) []epmodels.NormalisedFormField {
+	normalisedFormFields := make([]epmodels.NormalisedFormField, 0)
 	if len(formFields) > 0 {
 		for _, formField := range formFields {
 			var (
@@ -157,7 +157,7 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 			} else if formField.ID == "email" {
 				validate = defaultEmailValidator
 			}
-			normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
+			normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 				ID:       formField.ID,
 				Validate: validate,
 				Optional: optional,
@@ -167,20 +167,20 @@ func normaliseSignInFormFields(formFields []models.NormalisedFormField) []models
 	return normalisedFormFields
 }
 
-func validateAndNormaliseSignupConfig(config *models.TypeInputSignUp) models.TypeNormalisedInputSignUp {
+func validateAndNormaliseSignupConfig(config *epmodels.TypeInputSignUp) epmodels.TypeNormalisedInputSignUp {
 	if config == nil {
-		return models.TypeNormalisedInputSignUp{
+		return epmodels.TypeNormalisedInputSignUp{
 			FormFields: NormaliseSignUpFormFields(nil),
 		}
 	}
-	return models.TypeNormalisedInputSignUp{
+	return epmodels.TypeNormalisedInputSignUp{
 		FormFields: NormaliseSignUpFormFields(config.FormFields),
 	}
 }
 
-func NormaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.NormalisedFormField {
+func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmodels.NormalisedFormField {
 	var (
-		normalisedFormFields     []models.NormalisedFormField
+		normalisedFormFields     []epmodels.NormalisedFormField
 		formFieldPasswordIDCount = 0
 		formFieldEmailIDCount    = 0
 	)
@@ -212,7 +212,7 @@ func NormaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.
 					optional = *formField.Optional
 				}
 			}
-			normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
+			normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 				ID:       formField.ID,
 				Validate: validate,
 				Optional: optional,
@@ -220,14 +220,14 @@ func NormaliseSignUpFormFields(formFields []models.TypeInputFormField) []models.
 		}
 	}
 	if formFieldPasswordIDCount == 0 {
-		normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
+		normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 			ID:       "password",
 			Validate: defaultPasswordValidator,
 			Optional: false,
 		})
 	}
 	if formFieldEmailIDCount == 0 {
-		normalisedFormFields = append(normalisedFormFields, models.NormalisedFormField{
+		normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 			ID:       "email",
 			Validate: defaultEmailValidator,
 			Optional: false,
@@ -282,12 +282,12 @@ func defaultEmailValidator(value interface{}) *string {
 	return nil
 }
 
-func parseUser(value interface{}) (*models.User, error) {
+func parseUser(value interface{}) (*epmodels.User, error) {
 	respJSON, err := json.Marshal(value)
 	if err != nil {
 		return nil, err
 	}
-	var user models.User
+	var user epmodels.User
 	err = json.Unmarshal(respJSON, &user)
 	if err != nil {
 		return nil, err

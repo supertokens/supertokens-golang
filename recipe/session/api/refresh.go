@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func HandleRefreshAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
+func HandleRefreshAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions) error {
 	if apiImplementation.RefreshPOST == nil {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil

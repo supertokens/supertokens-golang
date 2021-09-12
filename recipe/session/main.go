@@ -5,23 +5,23 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *models.TypeInput) supertokens.RecipeListFunction {
+func Init(config *sessmodels.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }
 
-func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (models.SessionContainer, error) {
+func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.SessionContainer{}, err
+		return sessmodels.SessionContainer{}, err
 	}
 	return instance.RecipeImpl.CreateNewSession(res, userID, jwtPayload, sessionData)
 }
 
-func GetSession(req *http.Request, res http.ResponseWriter, options *models.VerifySessionOptions) (*models.SessionContainer, error) {
+func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -29,18 +29,18 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *models.Veri
 	return instance.RecipeImpl.GetSession(req, res, options)
 }
 
-func GetSessionInformation(sessionHandle string) (models.SessionInformation, error) {
+func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.SessionInformation{}, err
+		return sessmodels.SessionInformation{}, err
 	}
 	return instance.RecipeImpl.GetSessionInformation(sessionHandle)
 }
 
-func RefreshSession(req *http.Request, res http.ResponseWriter) (models.SessionContainer, error) {
+func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.SessionContainer{}, err
+		return sessmodels.SessionContainer{}, err
 	}
 	return instance.RecipeImpl.RefreshSession(req, res)
 }
@@ -93,7 +93,7 @@ func UpdateJWTPayload(sessionHandle string, newJWTPayload interface{}) error {
 	return instance.RecipeImpl.UpdateJWTPayload(sessionHandle, newJWTPayload)
 }
 
-func VerifySession(options *models.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
+func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		panic("can't fetch instance")
@@ -101,11 +101,11 @@ func VerifySession(options *models.VerifySessionOptions, otherHandler http.Handl
 	return api.VerifySession(*instance, options, otherHandler)
 }
 
-func GetSessionFromRequestContext(ctx context.Context) *models.SessionContainer {
-	value := ctx.Value(models.SessionContext)
+func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContainer {
+	value := ctx.Value(sessmodels.SessionContext)
 	if value == nil {
 		return nil
 	}
-	temp := value.(*models.SessionContainer)
+	temp := value.(*sessmodels.SessionContainer)
 	return temp
 }

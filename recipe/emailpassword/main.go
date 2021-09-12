@@ -3,32 +3,32 @@ package emailpassword
 import (
 	"errors"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *models.TypeInput) supertokens.RecipeListFunction {
+func Init(config *epmodels.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }
 
-func SignUp(email string, password string) (models.SignUpResponse, error) {
+func SignUp(email string, password string) (epmodels.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.SignUpResponse{}, err
+		return epmodels.SignUpResponse{}, err
 	}
 	return instance.RecipeImpl.SignUp(email, password)
 }
 
-func SignIn(email string, password string) (models.SignInResponse, error) {
+func SignIn(email string, password string) (epmodels.SignInResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.SignInResponse{}, err
+		return epmodels.SignInResponse{}, err
 	}
 	return instance.RecipeImpl.SignIn(email, password)
 }
 
-func GetUserByID(userID string) (*models.User, error) {
+func GetUserByID(userID string) (*epmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -36,7 +36,7 @@ func GetUserByID(userID string) (*models.User, error) {
 	return instance.RecipeImpl.GetUserByID(userID)
 }
 
-func GetUserByEmail(email string) (*models.User, error) {
+func GetUserByEmail(email string) (*epmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -44,26 +44,26 @@ func GetUserByEmail(email string) (*models.User, error) {
 	return instance.RecipeImpl.GetUserByEmail(email)
 }
 
-func CreateResetPasswordToken(userID string) (models.CreateResetPasswordTokenResponse, error) {
+func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.CreateResetPasswordTokenResponse{}, err
+		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
 	return instance.RecipeImpl.CreateResetPasswordToken(userID)
 }
 
-func ResetPasswordUsingToken(token string, newPassword string) (models.ResetPasswordUsingTokenResponse, error) {
+func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.ResetPasswordUsingTokenResponse{}, nil
+		return epmodels.ResetPasswordUsingTokenResponse{}, nil
 	}
 	return instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
 }
 
-func UpdateEmailOrPassword(userId string, email *string, password *string) (models.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.UpdateEmailOrPasswordResponse{}, nil
+		return epmodels.UpdateEmailOrPasswordResponse{}, nil
 	}
 	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
 }
@@ -80,7 +80,7 @@ func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificati
 	return instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken(userID, email)
 }
 
-func VerifyEmailUsingToken(token string) (*models.User, error) {
+func VerifyEmailUsingToken(token string) (*epmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err

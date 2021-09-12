@@ -1,7 +1,7 @@
-package models
+package tpepmodels
 
 import (
-	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
@@ -17,7 +17,7 @@ type User struct {
 }
 
 type TypeContext struct {
-	FormFields                 []epm.TypeFormField
+	FormFields                 []epmodels.TypeFormField
 	ThirdPartyAuthCodeResponse interface{}
 }
 
@@ -27,17 +27,17 @@ type TypeInputEmailVerificationFeature struct {
 }
 
 type TypeInput struct {
-	SignUpFeature                  *epm.TypeInputSignUp
+	SignUpFeature                  *epmodels.TypeInputSignUp
 	Providers                      []tpmodels.TypeProvider
-	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
+	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
 	Override                       *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
-	SignUpFeature                  *epm.TypeInputSignUp
+	SignUpFeature                  *epmodels.TypeInputSignUp
 	Providers                      []tpmodels.TypeProvider
-	ResetPasswordUsingTokenFeature *epm.TypeInputResetPasswordUsingTokenFeature
+	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
 }

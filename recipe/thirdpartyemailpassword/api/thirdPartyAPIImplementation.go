@@ -4,10 +4,10 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 )
 
-func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpmodels.APIInterface {
+func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodels.APIInterface {
 	signInUpPOST := apiImplmentation.SignInUpPOST
 	if signInUpPOST == nil {
 		return tpmodels.APIInterface{
@@ -20,8 +20,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpmodels.AP
 		AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
 
 		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
-			resp, err := signInUpPOST(models.SignInUpAPIInput{
-				ThirdPartyInput: &models.ThirdPartyInput{
+			resp, err := signInUpPOST(tpepmodels.SignInUpAPIInput{
+				ThirdPartyInput: &tpepmodels.ThirdPartyInput{
 					Provider:    provider,
 					Code:        code,
 					RedirectURI: redirectURI,

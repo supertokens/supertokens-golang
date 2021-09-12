@@ -24,7 +24,7 @@ import (
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/hooks"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -58,7 +58,7 @@ func main() {
 		handlers.AllowedMethods([]string{"GET", "POST", "PUT", "HEAD", "OPTIONS"}),
 		handlers.AllowedOrigins([]string{"http://localhost:3000"}),
 		handlers.AllowCredentials(),
-	)(supertokens.Middleware(session.VerifySession(&models.VerifySessionOptions{
+	)(supertokens.Middleware(session.VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &sessionRequired,
 	}, server.ServeHTTP)))))
 }

@@ -1,15 +1,15 @@
-package models
+package tpepmodels
 
 import (
-	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
 type APIInterface struct {
 	AuthorisationUrlGET            func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error)
-	EmailExistsGET                 func(email string, options epm.APIOptions) (epm.EmailExistsGETResponse, error)
-	GeneratePasswordResetTokenPOST func(formFields []epm.TypeFormField, options epm.APIOptions) (epm.GeneratePasswordResetTokenPOSTResponse, error)
-	PasswordResetPOST              func(formFields []epm.TypeFormField, token string, options epm.APIOptions) (epm.ResetPasswordUsingTokenResponse, error)
+	EmailExistsGET                 func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error)
+	GeneratePasswordResetTokenPOST func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error)
+	PasswordResetPOST              func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error)
 	SignInUpPOST                   func(input SignInUpAPIInput) (SignInUpAPIOutput, error)
 }
 
@@ -20,8 +20,8 @@ type SignInUpAPIInput struct {
 
 type EmailpasswordInput struct {
 	IsSignIn   bool
-	FormFields []epm.TypeFormField
-	Options    epm.APIOptions
+	FormFields []epmodels.TypeFormField
+	Options    epmodels.APIOptions
 }
 
 type ThirdPartyInput struct {

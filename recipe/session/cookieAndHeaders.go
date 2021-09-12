@@ -10,7 +10,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 )
 
 const (
@@ -36,7 +36,7 @@ type TokenInfo struct {
 	Up  interface{} `json:"up"`
 }
 
-func clearSessionFromCookie(config models.TypeNormalisedInput, res http.ResponseWriter) {
+func clearSessionFromCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter) {
 	setCookie(config, res, accessTokenCookieKey, "", 0, "accessTokenPath")
 	setCookie(config, res, refreshTokenCookieKey, "", 0, "refreshTokenPath")
 	setCookie(config, res, idRefreshTokenCookieKey, "", 0, "accessTokenPath")
@@ -44,11 +44,11 @@ func clearSessionFromCookie(config models.TypeNormalisedInput, res http.Response
 	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
 }
 
-func attachAccessTokenToCookie(config models.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
+func attachAccessTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
 	setCookie(config, res, accessTokenCookieKey, token, expiry, "accessTokenPath")
 }
 
-func attachRefreshTokenToCookie(config models.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
+func attachRefreshTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
 	setCookie(config, res, refreshTokenCookieKey, token, expiry, "refreshTokenPath")
 }
 
@@ -77,7 +77,7 @@ func setAntiCsrfTokenInHeaders(res http.ResponseWriter, antiCsrfToken string) {
 	setHeader(res, "Access-Control-Expose-Headers", antiCsrfHeaderKey, true)
 }
 
-func setIDRefreshTokenInHeaderAndCookie(config models.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
+func setIDRefreshTokenInHeaderAndCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
 	setHeader(res, idRefreshTokenHeaderKey, idRefreshToken+";"+fmt.Sprint(expiry), false)
 	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
 
@@ -113,14 +113,14 @@ func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey boo
 	}
 }
 
-func setCookie(config models.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
+func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
 	var domain string
 	if config.CookieDomain != nil {
 		domain = *config.CookieDomain
 	}
 	secure := config.CookieSecure
 	sameSite := config.CookieSameSite
-	
+
 	path := ""
 	if pathType == "refreshTokenPath" {
 		path = config.RefreshTokenPath.GetAsStringDangerous()
@@ -176,7 +176,7 @@ func getCookieValue(request *http.Request, key string) *string {
 	if len(cookies) == 0 {
 		return nil
 	}
-	
+
 	for _, cookie := range cookies {
 		if cookie.Name == key {
 			val, err := url.QueryUnescape(cookie.Value)

@@ -5,13 +5,13 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
-	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/api"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/recipeimplementation"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -19,17 +19,17 @@ const RECIPE_ID = "thirdpartyemailpassword"
 
 type Recipe struct {
 	RecipeModule            supertokens.RecipeModule
-	Config                  models.TypeNormalisedInput
+	Config                  tpepmodels.TypeNormalisedInput
 	EmailVerificationRecipe emailverification.Recipe
 	emailPasswordRecipe     *emailpassword.Recipe
 	thirdPartyRecipe        *thirdparty.Recipe
-	RecipeImpl              models.RecipeInterface
-	APIImpl                 models.APIInterface
+	RecipeImpl              tpepmodels.RecipeInterface
+	APIImpl                 tpepmodels.APIInterface
 }
 
 var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpepmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe) (Recipe, error) {
 	r = &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
@@ -65,14 +65,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	var emailPasswordRecipe emailpassword.Recipe
 	if emailPasswordInstance == nil {
-		emailPasswordConfig := &epm.TypeInput{
+		emailPasswordConfig := &epmodels.TypeInput{
 			SignUpFeature:                  verifiedConfig.SignUpFeature,
 			ResetPasswordUsingTokenFeature: verifiedConfig.ResetPasswordUsingTokenFeature,
-			Override: &epm.OverrideStruct{
-				Functions: func(_ epm.RecipeInterface) epm.RecipeInterface {
+			Override: &epmodels.OverrideStruct{
+				Functions: func(_ epmodels.RecipeInterface) epmodels.RecipeInterface {
 					return recipeimplementation.MakeEmailPasswordRecipeImplementation(r.RecipeImpl)
 				},
-				APIs: func(_ epm.APIInterface) epm.APIInterface {
+				APIs: func(_ epmodels.APIInterface) epmodels.APIInterface {
 					return api.GetEmailPasswordIterfaceImpl(r.APIImpl)
 				},
 				EmailVerificationFeature: nil,
@@ -116,7 +116,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	return *r, nil
 }
 
-func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *tpepmodels.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil)

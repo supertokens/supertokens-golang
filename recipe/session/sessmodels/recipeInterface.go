@@ -1,4 +1,4 @@
-package models
+package sessmodels
 
 import "net/http"
 

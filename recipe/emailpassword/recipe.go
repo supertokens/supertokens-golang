@@ -6,8 +6,8 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -16,15 +16,15 @@ const RECIPE_ID = "emailpassword"
 
 type Recipe struct {
 	RecipeModule            supertokens.RecipeModule
-	Config                  models.TypeNormalisedInput
-	RecipeImpl              models.RecipeInterface
-	APIImpl                 models.APIInterface
+	Config                  epmodels.TypeNormalisedInput
+	RecipeImpl              epmodels.RecipeInterface
+	APIImpl                 epmodels.APIInterface
 	EmailVerificationRecipe emailverification.Recipe
 }
 
 var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *epmodels.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
 	r = &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 
@@ -51,7 +51,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	return *r, nil
 }
 
-func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *epmodels.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil)
@@ -128,7 +128,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 }
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
-	options := models.APIOptions{
+	options := epmodels.APIOptions{
 		Config:                                r.Config,
 		OtherHandler:                          theirHandler,
 		RecipeID:                              r.RecipeModule.GetRecipeID(),

@@ -1,4 +1,4 @@
-package models
+package epmodels
 
 import (
 	"net/http"

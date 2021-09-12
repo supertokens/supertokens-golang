@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/supertokens/supertokens-golang/examples/with-gin/config"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -49,7 +49,7 @@ func Init() {
 
 // This is a function that wraps the supertokens verification function
 // to work the gin
-func verifySession(options *models.VerifySessionOptions) gin.HandlerFunc {
+func verifySession(options *sessmodels.VerifySessionOptions) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.Request = c.Request.WithContext(r.Context())

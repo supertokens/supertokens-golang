@@ -1,11 +1,11 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailExists(apiImplementation models.APIInterface, options models.APIOptions) error {
+func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
 	if apiImplementation.EmailExistsGET == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil

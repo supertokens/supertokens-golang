@@ -6,26 +6,26 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const RECIPE_ID = "session"
 
-var r *models.SessionRecipe
+var r *sessmodels.SessionRecipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.SessionRecipe, error) {
-	r = &models.SessionRecipe{}
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.SessionRecipe, error) {
+	r = &sessmodels.SessionRecipe{}
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
-		return models.SessionRecipe{}, configError
+		return sessmodels.SessionRecipe{}, configError
 	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
-		return models.SessionRecipe{}, err
+		return sessmodels.SessionRecipe{}, err
 	}
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
@@ -33,7 +33,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
 	r.RecipeModule = recipeModuleInstance
 
-	return models.SessionRecipe{
+	return sessmodels.SessionRecipe{
 		RecipeModule: recipeModuleInstance,
 		Config:       verifiedConfig,
 		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),
@@ -41,14 +41,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}, nil
 }
 
-func getRecipeInstanceOrThrowError() (*models.SessionRecipe, error) {
+func getRecipeInstanceOrThrowError() (*sessmodels.SessionRecipe, error) {
 	if r != nil {
 		return r, nil
 	}
 	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *sessmodels.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
@@ -87,7 +87,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 }
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
-	options := models.APIOptions{
+	options := sessmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,

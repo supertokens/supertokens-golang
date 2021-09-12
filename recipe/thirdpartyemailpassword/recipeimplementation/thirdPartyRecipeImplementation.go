@@ -2,10 +2,10 @@ package recipeimplementation
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 )
 
-func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterface) tpmodels.RecipeInterface {
+func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) tpmodels.RecipeInterface {
 	return tpmodels.RecipeInterface{
 
 		GetUserByThirdPartyInfo: func(thirdPartyID string, thirdPartyUserID string) (*tpmodels.User, error) {
@@ -25,7 +25,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterf
 		},
 
 		SignInUp: func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
-			result, err := recipeImplementation.SignInUp(thirdPartyID, thirdPartyUserID, models.EmailStruct{
+			result, err := recipeImplementation.SignInUp(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
 				ID:         email.ID,
 				IsVerified: email.IsVerified,
 			})

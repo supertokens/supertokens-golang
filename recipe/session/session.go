@@ -7,7 +7,7 @@ import (
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
-	"github.com/supertokens/supertokens-golang/recipe/session/models"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -29,9 +29,9 @@ func makeSessionContainerInput(accessToken string, sessionHandle string, userID 
 	}
 }
 
-func newSessionContainer(querier supertokens.Querier, config models.TypeNormalisedInput, session *SessionContainerInput) models.SessionContainer {
+func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
-	return models.SessionContainer{
+	return sessmodels.SessionContainer{
 		RevokeSession: func() error {
 			success, err := revokeSessionHelper(querier, session.sessionHandle)
 			if err != nil {
@@ -85,14 +85,14 @@ func newSessionContainer(querier supertokens.Querier, config models.TypeNormalis
 			if err != nil {
 				return err
 			}
-			var resp models.GetSessionResponse
+			var resp sessmodels.GetSessionResponse
 			err = json.Unmarshal(responseByte, &resp)
 			if err != nil {
 				return err
 			}
 
 			session.userDataInJWT = resp.Session.UserDataInJWT
-			if !reflect.DeepEqual(resp.AccessToken, models.CreateOrRefreshAPIResponseToken{}) {
+			if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
 				session.accessToken = resp.AccessToken.Token
 				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInJWT)
 				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)

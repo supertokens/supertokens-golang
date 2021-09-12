@@ -4,12 +4,12 @@ import (
 	"encoding/json"
 	"io/ioutil"
 
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SignUpAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
+func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
 	if apiImplementation.SignUpPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil

@@ -1,25 +1,25 @@
 package recipeimplementation
 
 import (
-	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 )
 
-func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInterface) epm.RecipeInterface {
-	return epm.RecipeInterface{
-		SignUp: func(email, password string) (epm.SignUpResponse, error) {
+func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) epmodels.RecipeInterface {
+	return epmodels.RecipeInterface{
+		SignUp: func(email, password string) (epmodels.SignUpResponse, error) {
 			response, err := recipeImplementation.SignUp(email, password)
 			if err != nil {
-				return epm.SignUpResponse{}, err
+				return epmodels.SignUpResponse{}, err
 			}
 			if response.EmailAlreadyExistsError != nil {
-				return epm.SignUpResponse{
+				return epmodels.SignUpResponse{
 					EmailAlreadyExistsError: &struct{}{},
 				}, nil
 			}
-			return epm.SignUpResponse{
-				OK: &struct{ User epm.User }{
-					User: epm.User{
+			return epmodels.SignUpResponse{
+				OK: &struct{ User epmodels.User }{
+					User: epmodels.User{
 						ID:         response.OK.User.ID,
 						Email:      response.OK.User.Email,
 						TimeJoined: response.OK.User.TimeJoined,
@@ -28,19 +28,19 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInt
 			}, nil
 		},
 
-		SignIn: func(email, password string) (epm.SignInResponse, error) {
+		SignIn: func(email, password string) (epmodels.SignInResponse, error) {
 			response, err := recipeImplementation.SignIn(email, password)
 			if err != nil {
-				return epm.SignInResponse{}, err
+				return epmodels.SignInResponse{}, err
 			}
 			if response.WrongCredentialsError != nil {
-				return epm.SignInResponse{
+				return epmodels.SignInResponse{
 					WrongCredentialsError: &struct{}{},
 				}, nil
 			}
-			return epm.SignInResponse{
-				OK: &struct{ User epm.User }{
-					User: epm.User{
+			return epmodels.SignInResponse{
+				OK: &struct{ User epmodels.User }{
+					User: epmodels.User{
 						ID:         response.OK.User.ID,
 						Email:      response.OK.User.Email,
 						TimeJoined: response.OK.User.TimeJoined,
@@ -49,7 +49,7 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInt
 			}, nil
 		},
 
-		GetUserByID: func(userId string) (*epm.User, error) {
+		GetUserByID: func(userId string) (*epmodels.User, error) {
 			user, err := recipeImplementation.GetUserByID(userId)
 			if err != nil {
 				return nil, err
@@ -57,14 +57,14 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInt
 			if user == nil || user.ThirdParty != nil {
 				return nil, nil
 			}
-			return &epm.User{
+			return &epmodels.User{
 				ID:         user.ID,
 				Email:      user.Email,
 				TimeJoined: user.TimeJoined,
 			}, nil
 		},
 
-		GetUserByEmail: func(email string) (*epm.User, error) {
+		GetUserByEmail: func(email string) (*epmodels.User, error) {
 			users, err := recipeImplementation.GetUsersByEmail(email)
 			if err != nil {
 				return nil, err
@@ -72,7 +72,7 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInt
 
 			for _, user := range users {
 				if user.ThirdParty == nil {
-					return &epm.User{
+					return &epmodels.User{
 						ID:         user.ID,
 						Email:      user.Email,
 						TimeJoined: user.TimeJoined,
@@ -82,13 +82,13 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation models.RecipeInt
 			return nil, nil
 		},
 
-		CreateResetPasswordToken: func(userID string) (epm.CreateResetPasswordTokenResponse, error) {
+		CreateResetPasswordToken: func(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
 			return recipeImplementation.CreateResetPasswordToken(userID)
 		},
-		ResetPasswordUsingToken: func(token, newPassword string) (epm.ResetPasswordUsingTokenResponse, error) {
+		ResetPasswordUsingToken: func(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
 			return recipeImplementation.ResetPasswordUsingToken(token, newPassword)
 		},
-		UpdateEmailOrPassword: func(userId string, email, password *string) (epm.UpdateEmailOrPasswordResponse, error) {
+		UpdateEmailOrPassword: func(userId string, email, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
 			return recipeImplementation.UpdateEmailOrPassword(userId, email, password)
 		},
 	}

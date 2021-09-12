@@ -1,4 +1,4 @@
-package models
+package epmodels
 
 import "github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 
