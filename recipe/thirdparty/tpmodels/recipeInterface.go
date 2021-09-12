@@ -1,4 +1,4 @@
-package models
+package tpmodels
 
 type RecipeInterface struct {
 	GetUserByID             func(userID string) (*User, error)

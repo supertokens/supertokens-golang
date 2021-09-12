@@ -4,7 +4,7 @@ import (
 	epapi "github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	tpapi "github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
@@ -125,7 +125,7 @@ func MakeAPIImplementation() models.APIInterface {
 			}
 		},
 
-		AuthorisationUrlGET: func(provider tpm.TypeProvider, options tpm.APIOptions) (tpm.AuthorisationUrlGETResponse, error) {
+		AuthorisationUrlGET: func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
 			return thirdPartyImplementation.AuthorisationUrlGET(provider, options)
 		},
 	}

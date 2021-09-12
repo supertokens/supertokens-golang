@@ -6,11 +6,11 @@ import (
 	"net/http"
 	"reflect"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailVerify(apiImplementation models.APIInterface, options models.APIOptions) error {
+func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
 	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
 		if apiImplementation.VerifyEmailPOST == nil {

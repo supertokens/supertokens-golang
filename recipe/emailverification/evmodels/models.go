@@ -1,4 +1,4 @@
-package models
+package evmodels
 
 type TypeInput struct {
 	GetEmailForUserID        func(userID string) (string, error)

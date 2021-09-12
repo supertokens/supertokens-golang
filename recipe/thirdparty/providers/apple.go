@@ -4,7 +4,7 @@ package providers
 // 	"encoding/json"
 // 	"strings"
 
-// 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+// 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 // )
 
 // type AppleConfig struct {

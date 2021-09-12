@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -13,14 +13,14 @@ const RECIPE_ID = "emailverification"
 
 type Recipe struct {
 	RecipeModule supertokens.RecipeModule
-	Config       models.TypeNormalisedInput
-	RecipeImpl   models.RecipeInterface
-	APIImpl      models.APIInterface
+	Config       evmodels.TypeNormalisedInput
+	RecipeImpl   evmodels.RecipeInterface
+	APIImpl      evmodels.APIInterface
 }
 
 var r = &Recipe{}
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *evmodels.TypeInput) (Recipe, error) {
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
@@ -50,7 +50,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *evmodels.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
@@ -95,7 +95,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 }
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
-	options := models.APIOptions{
+	options := evmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,

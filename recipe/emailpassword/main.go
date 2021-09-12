@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	envModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -68,14 +68,14 @@ func UpdateEmailOrPassword(userId string, email *string, password *string) (mode
 	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
 }
 
-func CreateEmailVerificationToken(userID string) (envModels.CreateEmailVerificationTokenResponse, error) {
+func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return envModels.CreateEmailVerificationTokenResponse{}, err
+		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return envModels.CreateEmailVerificationTokenResponse{}, err
+		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken(userID, email)
 }
@@ -107,26 +107,26 @@ func IsEmailVerified(userID string) (bool, error) {
 	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
 }
 
-func RevokeEmailVerificationTokens(userID string) (envModels.RevokeEmailVerificationTokensResponse, error) {
+func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return envModels.RevokeEmailVerificationTokensResponse{}, err
+		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return envModels.RevokeEmailVerificationTokensResponse{}, err
+		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
 }
 
-func UnverifyEmail(userID string) (envModels.UnverifyEmailResponse, error) {
+func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return envModels.UnverifyEmailResponse{}, err
+		return evmodels.UnverifyEmailResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return envModels.UnverifyEmailResponse{}, err
+		return evmodels.UnverifyEmailResponse{}, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }

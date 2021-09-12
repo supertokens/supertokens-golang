@@ -1,4 +1,4 @@
-package models
+package evmodels
 
 import "net/http"
 

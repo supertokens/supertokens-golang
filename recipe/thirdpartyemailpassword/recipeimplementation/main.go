@@ -6,14 +6,14 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier) models.RecipeInterface {
 	emailPasswordImplementation := emailpassword.MakeRecipeImplementation(emailPasswordQuerier)
-	var thirdPartyImplementation *tpm.RecipeInterface
+	var thirdPartyImplementation *tpmodels.RecipeInterface
 	if thirdPartyQuerier != nil {
 		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier)
 		thirdPartyImplementation = &thirdPartyImplementationTemp
@@ -67,7 +67,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 			if thirdPartyImplementation == nil {
 				return models.SignInUpResponse{}, errors.New("no thirdparty provider configured")
 			}
-			result, err := (*thirdPartyImplementation).SignInUp(thirdPartyID, thirdPartyUserID, tpm.EmailStruct{
+			result, err := (*thirdPartyImplementation).SignInUp(thirdPartyID, thirdPartyUserID, tpmodels.EmailStruct{
 				ID:         email.ID,
 				IsVerified: email.IsVerified,
 			})
@@ -136,7 +136,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				return []models.User{}, err
 			}
 
-			fromTP := []tpm.User{}
+			fromTP := []tpmodels.User{}
 			if thirdPartyImplementation != nil {
 				fromTP, err = (*thirdPartyImplementation).GetUsersByEmail(email)
 				if err != nil {

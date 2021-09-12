@@ -1,21 +1,19 @@
 package models
 
-import (
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
-)
+import "github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 
 type TypeNormalisedInput struct {
 	SignUpFeature                  TypeNormalisedInputSignUp
 	SignInFeature                  TypeNormalisedInputSignIn
 	ResetPasswordUsingTokenFeature TypeNormalisedInputResetPasswordUsingTokenFeature
-	EmailVerificationFeature       models.TypeInput
+	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
 }
 
 type OverrideStruct struct {
 	Functions                func(originalImplementation RecipeInterface) RecipeInterface
 	APIs                     func(originalImplementation APIInterface) APIInterface
-	EmailVerificationFeature *models.OverrideStruct
+	EmailVerificationFeature *evmodels.OverrideStruct
 }
 
 type TypeInputEmailVerificationFeature struct {

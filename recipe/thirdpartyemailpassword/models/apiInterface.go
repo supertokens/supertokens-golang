@@ -2,11 +2,11 @@ package models
 
 import (
 	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET            func(provider tpm.TypeProvider, options tpm.APIOptions) (tpm.AuthorisationUrlGETResponse, error)
+	AuthorisationUrlGET            func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error)
 	EmailExistsGET                 func(email string, options epm.APIOptions) (epm.EmailExistsGETResponse, error)
 	GeneratePasswordResetTokenPOST func(formFields []epm.TypeFormField, options epm.APIOptions) (epm.GeneratePasswordResetTokenPOSTResponse, error)
 	PasswordResetPOST              func(formFields []epm.TypeFormField, token string, options epm.APIOptions) (epm.ResetPasswordUsingTokenResponse, error)
@@ -25,10 +25,10 @@ type EmailpasswordInput struct {
 }
 
 type ThirdPartyInput struct {
-	Provider    tpm.TypeProvider
+	Provider    tpmodels.TypeProvider
 	Code        string
 	RedirectURI string
-	Options     tpm.APIOptions
+	Options     tpmodels.APIOptions
 }
 
 type SignInUpAPIOutput struct {

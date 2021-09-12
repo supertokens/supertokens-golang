@@ -3,11 +3,11 @@ package emailverification
 import (
 	"errors"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config models.TypeInput) models.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput) evmodels.TypeNormalisedInput {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
 	if config.GetEmailVerificationURL != nil {
@@ -33,16 +33,16 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	return typeNormalisedInput
 }
 
-func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) models.TypeNormalisedInput {
-	return models.TypeNormalisedInput{
+func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) evmodels.TypeNormalisedInput {
+	return evmodels.TypeNormalisedInput{
 		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.New("not defined by user") },
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
 		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
-		Override: models.OverrideStruct{
-			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
+		Override: evmodels.OverrideStruct{
+			Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 				return originalImplementation
 			},
-			APIs: func(originalImplementation models.APIInterface) models.APIInterface {
+			APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 				return originalImplementation
 			},
 		},

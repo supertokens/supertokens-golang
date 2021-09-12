@@ -1,4 +1,4 @@
-package models
+package evmodels
 
 type RecipeInterface struct {
 	CreateEmailVerificationToken  func(userID, email string) (CreateEmailVerificationTokenResponse, error)

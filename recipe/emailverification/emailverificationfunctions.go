@@ -6,19 +6,19 @@ import (
 	"flag"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(models.User) (string, error) {
-	return func(user models.User) (string, error) {
+func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(evmodels.User) (string, error) {
+	return func(user evmodels.User) (string, error) {
 		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/verify-email", nil
 	}
 }
 
 // TODO: add test to see query
-func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user models.User, emailVerifyURLWithToken string) {
-	return func(user models.User, emailVerifyURLWithToken string) {
+func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user evmodels.User, emailVerifyURLWithToken string) {
+	return func(user evmodels.User, emailVerifyURLWithToken string) {
 		if flag.Lookup("test.v") != nil {
 			// if running in test mode, we do not want to send this.
 			return

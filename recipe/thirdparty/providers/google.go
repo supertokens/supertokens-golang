@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
 type GoogleConfig struct {
@@ -21,10 +21,10 @@ type GoogleConfig struct {
 
 const googleID = "google"
 
-func Google(config GoogleConfig) models.TypeProvider {
-	return models.TypeProvider{
+func Google(config GoogleConfig) tpmodels.TypeProvider {
+	return tpmodels.TypeProvider{
 		ID: googleID,
-		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -60,43 +60,43 @@ func Google(config GoogleConfig) models.TypeProvider {
 				authorizationRedirectParams[key] = value
 			}
 
-			return models.TypeProviderGetResponse{
-				AccessTokenAPI: models.AccessTokenAPI{
+			return tpmodels.TypeProviderGetResponse{
+				AccessTokenAPI: tpmodels.AccessTokenAPI{
 					URL:    accessTokenAPIURL,
 					Params: accessTokenAPIParams,
 				},
-				AuthorisationRedirect: models.AuthorisationRedirect{
+				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					var accessTokenAPIResponse googleGetProfileInfoInput
 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					accessToken := accessTokenAPIResponse.AccessToken
 					authHeader := "Bearer " + accessToken
 					response, err := getGoogleAuthRequest(authHeader)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					userInfo := response.(map[string]interface{})
 					ID := userInfo["id"].(string)
 					email := userInfo["email"].(string)
 					if email == "" {
-						return models.UserInfo{
+						return tpmodels.UserInfo{
 							ID: ID,
 						}, nil
 					}
 					isVerified := userInfo["verified_email"].(bool)
-					return models.UserInfo{
+					return tpmodels.UserInfo{
 						ID: ID,
-						Email: &models.EmailStruct{
+						Email: &tpmodels.EmailStruct{
 							ID:         email,
 							IsVerified: isVerified,
 						},

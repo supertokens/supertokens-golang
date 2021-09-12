@@ -1,26 +1,26 @@
 package emailverification
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *models.TypeInput) supertokens.RecipeListFunction {
+func Init(config *evmodels.TypeInput) supertokens.RecipeListFunction {
 	return recipeInit(config)
 }
 
-func CreateEmailVerificationToken(userID, email string) (models.CreateEmailVerificationTokenResponse, error) {
+func CreateEmailVerificationToken(userID, email string) (evmodels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.CreateEmailVerificationTokenResponse{}, err
+		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
 	return instance.RecipeImpl.CreateEmailVerificationToken(userID, email)
 }
 
-func VerifyEmailUsingToken(token string) (models.VerifyEmailUsingTokenResponse, error) {
+func VerifyEmailUsingToken(token string) (evmodels.VerifyEmailUsingTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.VerifyEmailUsingTokenResponse{}, err
+		return evmodels.VerifyEmailUsingTokenResponse{}, err
 	}
 	return instance.RecipeImpl.VerifyEmailUsingToken(token)
 }
@@ -33,18 +33,18 @@ func IsEmailVerified(userID, email string) (bool, error) {
 	return instance.RecipeImpl.IsEmailVerified(userID, email)
 }
 
-func RevokeEmailVerificationTokens(userID, email string) (models.RevokeEmailVerificationTokensResponse, error) {
+func RevokeEmailVerificationTokens(userID, email string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.RevokeEmailVerificationTokensResponse{}, err
+		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
 	return instance.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
 }
 
-func UnverifyEmail(userID, email string) (models.UnverifyEmailResponse, error) {
+func UnverifyEmail(userID, email string) (evmodels.UnverifyEmailResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return models.UnverifyEmailResponse{}, err
+		return evmodels.UnverifyEmailResponse{}, err
 	}
 	return instance.RecipeImpl.UnverifyEmail(userID, email)
 }

@@ -3,7 +3,7 @@ package thirdpartyemailpassword
 import (
 	"errors"
 
-	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -58,8 +58,8 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput 
 	}
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evm.TypeInput {
-	emailverificationTypeInput := evm.TypeInput{
+func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evmodels.TypeInput {
+	emailverificationTypeInput := evmodels.TypeInput{
 		GetEmailForUserID: recipeInstance.getEmailForUserId,
 		Override:          nil,
 	}
@@ -70,7 +70,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 		}
 		if config.EmailVerificationFeature != nil {
 			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) {
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string) {
 					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
 					if err != nil {
 						return
@@ -83,7 +83,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 			}
 
 			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
-				emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
+				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User) (string, error) {
 					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
 					if err != nil {
 						return "", err

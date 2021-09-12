@@ -4,17 +4,17 @@ import (
 	"encoding/json"
 	"errors"
 
-	evm "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput) (models.TypeNormalisedInput, error) {
+func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput) (tpmodels.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
 	signInAndUpFeature, err := validateAndNormaliseSignInAndUpConfig(config.SignInAndUpFeature)
 	if err != nil {
-		return models.TypeNormalisedInput{}, err
+		return tpmodels.TypeNormalisedInput{}, err
 	}
 	typeNormalisedInput.SignInAndUpFeature = signInAndUpFeature
 
@@ -35,15 +35,15 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	return typeNormalisedInput, nil
 }
 
-func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput {
-	return models.TypeNormalisedInput{
-		SignInAndUpFeature:       models.TypeNormalisedInputSignInAndUp{},
+func makeTypeNormalisedInput(recipeInstance *Recipe) tpmodels.TypeNormalisedInput {
+	return tpmodels.TypeNormalisedInput{
+		SignInAndUpFeature:       tpmodels.TypeNormalisedInputSignInAndUp{},
 		EmailVerificationFeature: validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
-		Override: models.OverrideStruct{
-			Functions: func(originalImplementation models.RecipeInterface) models.RecipeInterface {
+		Override: tpmodels.OverrideStruct{
+			Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
 				return originalImplementation
 			},
-			APIs: func(originalImplementation models.APIInterface) models.APIInterface {
+			APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
 				return originalImplementation
 			},
 			EmailVerificationFeature: nil,
@@ -51,8 +51,8 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) models.TypeNormalisedInput 
 	}
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *models.TypeInput) evm.TypeInput {
-	emailverificationTypeInput := evm.TypeInput{
+func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *tpmodels.TypeInput) evmodels.TypeInput {
+	emailverificationTypeInput := evmodels.TypeInput{
 		GetEmailForUserID: recipeInstance.getEmailForUserId,
 		Override:          nil,
 	}
@@ -63,7 +63,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 		}
 		if config.EmailVerificationFeature != nil {
 			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evm.User, link string) {
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string) {
 					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
 					if err != nil {
 						return
@@ -76,7 +76,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 			}
 
 			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
-				emailverificationTypeInput.GetEmailVerificationURL = func(user evm.User) (string, error) {
+				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User) (string, error) {
 					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
 					if err != nil {
 						return "", err
@@ -93,22 +93,22 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 	return emailverificationTypeInput
 }
 
-func validateAndNormaliseSignInAndUpConfig(config models.TypeInputSignInAndUp) (models.TypeNormalisedInputSignInAndUp, error) {
+func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp) (tpmodels.TypeNormalisedInputSignInAndUp, error) {
 	providers := config.Providers
 	if len(providers) == 0 {
-		return models.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config"}
+		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config"}
 	}
-	return models.TypeNormalisedInputSignInAndUp{
+	return tpmodels.TypeNormalisedInputSignInAndUp{
 		Providers: providers,
 	}, nil
 }
 
-func parseUser(value interface{}) (*models.User, error) {
+func parseUser(value interface{}) (*tpmodels.User, error) {
 	respJSON, err := json.Marshal(value)
 	if err != nil {
 		return nil, err
 	}
-	var user models.User
+	var user tpmodels.User
 	err = json.Unmarshal(respJSON, &user)
 	if err != nil {
 		return nil, err
@@ -116,12 +116,12 @@ func parseUser(value interface{}) (*models.User, error) {
 	return &user, nil
 }
 
-func parseUsers(value interface{}) ([]models.User, error) {
+func parseUsers(value interface{}) ([]tpmodels.User, error) {
 	respJSON, err := json.Marshal(value)
 	if err != nil {
 		return nil, err
 	}
-	var user []models.User
+	var user []tpmodels.User
 	err = json.Unmarshal(respJSON, &user)
 	if err != nil {
 		return nil, err

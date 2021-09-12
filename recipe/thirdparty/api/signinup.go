@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"reflect"
 
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -15,7 +15,7 @@ type bodyParams struct {
 	RedirectURI  string `json:"redirectURI"`
 }
 
-func SignInUpAPI(apiImplementation models.APIInterface, options models.APIOptions) error {
+func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
 	if apiImplementation.SignInUpPOST == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -43,14 +43,14 @@ func SignInUpAPI(apiImplementation models.APIInterface, options models.APIOption
 		return supertokens.BadInputError{Msg: "Please provide the redirectURI in request body"}
 	}
 
-	var provider models.TypeProvider
+	var provider tpmodels.TypeProvider
 	for _, prov := range options.Providers {
 		if prov.ID == bodyParams.ThirdPartyId {
 			provider = prov
 		}
 	}
 
-	if reflect.DeepEqual(provider, models.TypeProvider{}) {
+	if reflect.DeepEqual(provider, tpmodels.TypeProvider{}) {
 		return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
 	}
 

@@ -6,7 +6,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -14,16 +14,16 @@ const RECIPE_ID = "thirdparty"
 
 type Recipe struct {
 	RecipeModule            supertokens.RecipeModule
-	Config                  models.TypeNormalisedInput
-	RecipeImpl              models.RecipeInterface
-	APIImpl                 models.APIInterface
+	Config                  tpmodels.TypeNormalisedInput
+	RecipeImpl              tpmodels.RecipeInterface
+	APIImpl                 tpmodels.APIInterface
 	EmailVerificationRecipe emailverification.Recipe
-	Providers               []models.TypeProvider
+	Providers               []tpmodels.TypeProvider
 }
 
 var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *models.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput, emailVerificationInstance *emailverification.Recipe) (Recipe, error) {
 	r = &Recipe{}
 
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
@@ -55,7 +55,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	return *r, nil
 }
 
-func recipeInit(config *models.TypeInput) supertokens.RecipeListFunction {
+func recipeInit(config *tpmodels.TypeInput) supertokens.RecipeListFunction {
 	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
 		if r == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil)
@@ -105,7 +105,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 }
 
 func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
-	options := models.APIOptions{
+	options := tpmodels.APIOptions{
 		Config:                                r.Config,
 		OtherHandler:                          theirHandler,
 		RecipeID:                              r.RecipeModule.GetRecipeID(),

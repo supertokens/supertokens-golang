@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
 type GithubConfig struct {
@@ -20,10 +20,10 @@ type GithubConfig struct {
 
 const githubID = "github"
 
-func Github(config GithubConfig) models.TypeProvider {
-	return models.TypeProvider{
+func Github(config GithubConfig) tpmodels.TypeProvider {
+	return tpmodels.TypeProvider{
 		ID: githubID,
-		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://github.com/login/oauth/access_token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -55,35 +55,35 @@ func Github(config GithubConfig) models.TypeProvider {
 				authorizationRedirectParams[key] = value
 			}
 
-			return models.TypeProviderGetResponse{
-				AccessTokenAPI: models.AccessTokenAPI{
+			return tpmodels.TypeProviderGetResponse{
+				AccessTokenAPI: tpmodels.AccessTokenAPI{
 					URL:    accessTokenAPIURL,
 					Params: accessTokenAPIParams,
 				},
-				AuthorisationRedirect: models.AuthorisationRedirect{
+				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					var accessTokenAPIResponse githubGetProfileInfoInput
 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					accessToken := accessTokenAPIResponse.AccessToken
 					authHeader := "Bearer " + accessToken
 					response, err := getGithubAuthRequest(authHeader)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					userInfo := response.(map[string]interface{})
 					emailsInfoResponse, err := getGithubEmailsInfo(authHeader)
 					if err != nil {
-						return models.UserInfo{}, err
+						return tpmodels.UserInfo{}, err
 					}
 					emailsInfo := emailsInfoResponse.([]interface{})
 					ID := fmt.Sprintf("%f", userInfo["id"].(float64)) // github userId will be a number
@@ -99,7 +99,7 @@ func Github(config GithubConfig) models.TypeProvider {
 						}
 					}
 					if emailInfo == nil {
-						return models.UserInfo{
+						return tpmodels.UserInfo{
 							ID: ID,
 						}, nil
 					}
@@ -107,9 +107,9 @@ func Github(config GithubConfig) models.TypeProvider {
 					if emailInfo != nil {
 						isVerified = emailInfo["verified"].(bool)
 					}
-					return models.UserInfo{
+					return tpmodels.UserInfo{
 						ID: ID,
-						Email: &models.EmailStruct{
+						Email: &tpmodels.EmailStruct{
 							ID:         emailInfo["email"].(string),
 							IsVerified: isVerified,
 						},

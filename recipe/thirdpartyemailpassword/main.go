@@ -4,9 +4,9 @@ import (
 	"errors"
 
 	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
-	envModels "github.com/supertokens/supertokens-golang/recipe/emailverification/models"
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -23,7 +23,7 @@ func SignInUp(thirdPartyID string, thirdPartyUserID string, email models.EmailSt
 	return instance.RecipeImpl.SignInUp(thirdPartyID, thirdPartyUserID, email)
 }
 
-func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpm.EmailStruct) (*models.User, error) {
+func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (*models.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -87,14 +87,14 @@ func UpdateEmailOrPassword(userId string, email *string, password *string) (epm.
 	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
 }
 
-func CreateEmailVerificationToken(userID string) (envModels.CreateEmailVerificationTokenResponse, error) {
+func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return envModels.CreateEmailVerificationTokenResponse{}, err
+		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return envModels.CreateEmailVerificationTokenResponse{}, err
+		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken(userID, email)
 }
@@ -126,39 +126,39 @@ func IsEmailVerified(userID string) (bool, error) {
 	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
 }
 
-func RevokeEmailVerificationTokens(userID string) (envModels.RevokeEmailVerificationTokensResponse, error) {
+func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return envModels.RevokeEmailVerificationTokensResponse{}, err
+		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return envModels.RevokeEmailVerificationTokensResponse{}, err
+		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
 }
 
-func UnverifyEmail(userID string) (envModels.UnverifyEmailResponse, error) {
+func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return envModels.UnverifyEmailResponse{}, err
+		return evmodels.UnverifyEmailResponse{}, err
 	}
 	email, err := instance.getEmailForUserId(userID)
 	if err != nil {
-		return envModels.UnverifyEmailResponse{}, err
+		return evmodels.UnverifyEmailResponse{}, err
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }
 
-func Google(config providers.GoogleConfig) tpm.TypeProvider {
+func Google(config providers.GoogleConfig) tpmodels.TypeProvider {
 	return providers.Google(config)
 }
 
-func Github(config providers.GithubConfig) tpm.TypeProvider {
+func Github(config providers.GithubConfig) tpmodels.TypeProvider {
 	return providers.Github(config)
 }
 
-func Facebook(config providers.FacebookConfig) tpm.TypeProvider {
+func Facebook(config providers.FacebookConfig) tpmodels.TypeProvider {
 	return providers.Facebook(config)
 }
 

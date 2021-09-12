@@ -3,23 +3,23 @@ package api
 import (
 	"errors"
 
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpm.APIInterface {
+func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpmodels.APIInterface {
 	signInUpPOST := apiImplmentation.SignInUpPOST
 	if signInUpPOST == nil {
-		return tpm.APIInterface{
+		return tpmodels.APIInterface{
 			AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
 			SignInUpPOST:        nil,
 		}
 	}
-	return tpm.APIInterface{
+	return tpmodels.APIInterface{
 
 		AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
 
-		SignInUpPOST: func(provider tpm.TypeProvider, code, redirectURI string, options tpm.APIOptions) (tpm.SignInUpPOSTResponse, error) {
+		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
 			resp, err := signInUpPOST(models.SignInUpAPIInput{
 				ThirdPartyInput: &models.ThirdPartyInput{
 					Provider:    provider,
@@ -29,19 +29,19 @@ func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpm.APIInte
 				},
 			})
 			if err != nil {
-				return tpm.SignInUpPOSTResponse{}, err
+				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 			result := resp.ThirdPartyOutput
 			if result != nil {
 				if result.OK != nil {
-					return tpm.SignInUpPOSTResponse{
+					return tpmodels.SignInUpPOSTResponse{
 						OK: &struct {
 							CreatedNewUser   bool
-							User             tpm.User
+							User             tpmodels.User
 							AuthCodeResponse interface{}
 						}{
 							CreatedNewUser: result.OK.CreatedNewUser,
-							User: tpm.User{
+							User: tpmodels.User{
 								ID:         result.OK.User.ID,
 								TimeJoined: result.OK.User.TimeJoined,
 								Email:      result.OK.User.Email,
@@ -50,18 +50,18 @@ func GetThirdPartyIterfaceImpl(apiImplmentation models.APIInterface) tpm.APIInte
 						},
 					}, nil
 				} else if result.NoEmailGivenByProviderError != nil {
-					return tpm.SignInUpPOSTResponse{
+					return tpmodels.SignInUpPOSTResponse{
 						NoEmailGivenByProviderError: &struct{}{},
 					}, nil
 				} else if result.FieldError != nil {
-					return tpm.SignInUpPOSTResponse{
+					return tpmodels.SignInUpPOSTResponse{
 						FieldError: &struct{ Error string }{
 							Error: result.FieldError.Error,
 						},
 					}, nil
 				}
 			}
-			return tpm.SignInUpPOSTResponse{}, errors.New("should never come here")
+			return tpmodels.SignInUpPOSTResponse{}, errors.New("should never come here")
 		},
 	}
 }

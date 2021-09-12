@@ -10,12 +10,12 @@ import (
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
-func MakeAPIImplementation() models.APIInterface {
-	return models.APIInterface{
-		AuthorisationUrlGET: func(provider models.TypeProvider, options models.APIOptions) (models.AuthorisationUrlGETResponse, error) {
+func MakeAPIImplementation() tpmodels.APIInterface {
+	return tpmodels.APIInterface{
+		AuthorisationUrlGET: func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
 			providerInfo := provider.Get(nil, nil)
 			params := map[string]string{}
 			for key, value := range providerInfo.AuthorisationRedirect.Params {
@@ -26,49 +26,49 @@ func MakeAPIImplementation() models.APIInterface {
 					if ok {
 						params[key] = call(options.Req)
 					} else {
-						return models.AuthorisationUrlGETResponse{}, errors.New("type of value in params must be a string or a function")
+						return tpmodels.AuthorisationUrlGETResponse{}, errors.New("type of value in params must be a string or a function")
 					}
 				}
 			}
 			paramsString, err := getParamString(params)
 			if err != nil {
-				return models.AuthorisationUrlGETResponse{}, err
+				return tpmodels.AuthorisationUrlGETResponse{}, err
 			}
 			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
-			return models.AuthorisationUrlGETResponse{
+			return tpmodels.AuthorisationUrlGETResponse{
 				OK: &struct{ Url string }{
 					Url: url,
 				},
 			}, nil
 		},
 
-		SignInUpPOST: func(provider models.TypeProvider, code, redirectURI string, options models.APIOptions) (models.SignInUpPOSTResponse, error) {
+		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
 			providerInfo := provider.Get(&redirectURI, &code)
 
 			accessTokenAPIResponse, err := postRequest(providerInfo)
 
 			if err != nil {
-				return models.SignInUpPOSTResponse{}, err
+				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 
 			userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
 			if err != nil {
-				return models.SignInUpPOSTResponse{}, err
+				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 
 			emailInfo := userInfo.Email
 			if emailInfo == nil {
-				return models.SignInUpPOSTResponse{
+				return tpmodels.SignInUpPOSTResponse{
 					NoEmailGivenByProviderError: &struct{}{},
 				}, nil
 			}
 
 			response, err := options.RecipeImplementation.SignInUp(provider.ID, userInfo.ID, *emailInfo)
 			if err != nil {
-				return models.SignInUpPOSTResponse{}, err
+				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 			if response.FieldError != nil {
-				return models.SignInUpPOSTResponse{
+				return tpmodels.SignInUpPOSTResponse{
 					FieldError: &struct{ Error string }{
 						Error: response.FieldError.Error,
 					},
@@ -78,24 +78,24 @@ func MakeAPIImplementation() models.APIInterface {
 			if emailInfo.IsVerified {
 				tokenResponse, err := options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken(response.OK.User.ID, response.OK.User.Email)
 				if err != nil {
-					return models.SignInUpPOSTResponse{}, err
+					return tpmodels.SignInUpPOSTResponse{}, err
 				}
 				if tokenResponse.OK != nil {
 					_, err := options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken(tokenResponse.OK.Token)
 					if err != nil {
-						return models.SignInUpPOSTResponse{}, err
+						return tpmodels.SignInUpPOSTResponse{}, err
 					}
 				}
 			}
 
 			_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil)
 			if err != nil {
-				return models.SignInUpPOSTResponse{}, err
+				return tpmodels.SignInUpPOSTResponse{}, err
 			}
-			return models.SignInUpPOSTResponse{
+			return tpmodels.SignInUpPOSTResponse{
 				OK: &struct {
 					CreatedNewUser   bool
-					User             models.User
+					User             tpmodels.User
 					AuthCodeResponse interface{}
 				}{
 					CreatedNewUser:   response.OK.CreatedNewUser,
@@ -107,7 +107,7 @@ func MakeAPIImplementation() models.APIInterface {
 	}
 }
 
-func postRequest(providerInfo models.TypeProviderGetResponse) (map[string]interface{}, error) {
+func postRequest(providerInfo tpmodels.TypeProviderGetResponse) (map[string]interface{}, error) {
 	querystring, err := getParamString(providerInfo.AccessTokenAPI.Params)
 	if err != nil {
 		return nil, err

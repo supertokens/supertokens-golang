@@ -1,9 +1,9 @@
-package models
+package tpmodels
 
 import (
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 )
 
 type APIInterface struct {
@@ -27,7 +27,7 @@ type SignInUpPOSTResponse struct {
 
 type APIOptions struct {
 	RecipeImplementation                  RecipeInterface
-	EmailVerificationRecipeImplementation models.RecipeInterface
+	EmailVerificationRecipeImplementation evmodels.RecipeInterface
 	Config                                TypeNormalisedInput
 	RecipeID                              string
 	Providers                             []TypeProvider

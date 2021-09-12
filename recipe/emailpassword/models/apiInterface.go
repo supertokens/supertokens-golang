@@ -3,12 +3,12 @@ package models
 import (
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/models"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 )
 
 type APIOptions struct {
 	RecipeImplementation                  RecipeInterface
-	EmailVerificationRecipeImplementation models.RecipeInterface
+	EmailVerificationRecipeImplementation evmodels.RecipeInterface
 	Config                                TypeNormalisedInput
 	RecipeID                              string
 	Req                                   *http.Request

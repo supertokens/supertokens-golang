@@ -1,14 +1,14 @@
 package recipeimplementation
 
 import (
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 )
 
-func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterface) tpm.RecipeInterface {
-	return tpm.RecipeInterface{
+func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterface) tpmodels.RecipeInterface {
+	return tpmodels.RecipeInterface{
 
-		GetUserByThirdPartyInfo: func(thirdPartyID string, thirdPartyUserID string) (*tpm.User, error) {
+		GetUserByThirdPartyInfo: func(thirdPartyID string, thirdPartyUserID string) (*tpmodels.User, error) {
 			user, err := recipeImplementation.GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID)
 			if err != nil {
 				return nil, err
@@ -16,7 +16,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterf
 			if user == nil || user.ThirdParty == nil {
 				return nil, nil
 			}
-			return &tpm.User{
+			return &tpmodels.User{
 				ID:         user.ID,
 				Email:      user.Email,
 				TimeJoined: user.TimeJoined,
@@ -24,29 +24,29 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterf
 			}, nil
 		},
 
-		SignInUp: func(thirdPartyID string, thirdPartyUserID string, email tpm.EmailStruct) (tpm.SignInUpResponse, error) {
+		SignInUp: func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
 			result, err := recipeImplementation.SignInUp(thirdPartyID, thirdPartyUserID, models.EmailStruct{
 				ID:         email.ID,
 				IsVerified: email.IsVerified,
 			})
 			if err != nil {
-				return tpm.SignInUpResponse{}, err
+				return tpmodels.SignInUpResponse{}, err
 			}
 			if result.FieldError != nil {
-				return tpm.SignInUpResponse{
+				return tpmodels.SignInUpResponse{
 					FieldError: &struct{ Error string }{
 						Error: result.FieldError.Error,
 					},
 				}, nil
 			}
 
-			return tpm.SignInUpResponse{
+			return tpmodels.SignInUpResponse{
 				OK: &struct {
 					CreatedNewUser bool
-					User           tpm.User
+					User           tpmodels.User
 				}{
 					CreatedNewUser: result.OK.CreatedNewUser,
-					User: tpm.User{
+					User: tpmodels.User{
 						ID:         result.OK.User.ID,
 						Email:      result.OK.User.Email,
 						TimeJoined: result.OK.User.TimeJoined,
@@ -56,7 +56,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterf
 			}, nil
 		},
 
-		GetUserByID: func(userID string) (*tpm.User, error) {
+		GetUserByID: func(userID string) (*tpmodels.User, error) {
 			user, err := recipeImplementation.GetUserByID(userID)
 			if err != nil {
 				return nil, err
@@ -64,7 +64,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation models.RecipeInterf
 			if user == nil || user.ThirdParty == nil {
 				return nil, nil
 			}
-			return &tpm.User{
+			return &tpmodels.User{
 				ID:         user.ID,
 				Email:      user.Email,
 				TimeJoined: user.TimeJoined,

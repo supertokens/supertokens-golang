@@ -8,7 +8,7 @@ import (
 	epm "github.com/supertokens/supertokens-golang/recipe/emailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
-	tpm "github.com/supertokens/supertokens-golang/recipe/thirdparty/models"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/models"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/recipeimplementation"
@@ -89,15 +89,15 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	if len(verifiedConfig.Providers) > 0 {
 		if thirdPartyInstance == nil {
-			thirdPartyConfig := &tpm.TypeInput{
-				SignInAndUpFeature: tpm.TypeInputSignInAndUp{
+			thirdPartyConfig := &tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 					Providers: verifiedConfig.Providers,
 				},
-				Override: &tpm.OverrideStruct{
-					Functions: func(_ tpm.RecipeInterface) tpm.RecipeInterface {
+				Override: &tpmodels.OverrideStruct{
+					Functions: func(_ tpmodels.RecipeInterface) tpmodels.RecipeInterface {
 						return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
 					},
-					APIs: func(_ tpm.APIInterface) tpm.APIInterface {
+					APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
 						return api.GetThirdPartyIterfaceImpl(r.APIImpl)
 					},
 					EmailVerificationFeature: nil,
