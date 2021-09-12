@@ -9,18 +9,9 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
-type GithubConfig struct {
-	ClientID              string
-	ClientSecret          string
-	Scope                 []string
-	AuthorisationRedirect *struct {
-		Params map[string]interface{}
-	}
-}
-
 const githubID = "github"
 
-func Github(config GithubConfig) tpmodels.TypeProvider {
+func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: githubID,
 		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {

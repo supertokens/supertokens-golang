@@ -10,18 +10,9 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
-type GoogleConfig struct {
-	ClientID              string
-	ClientSecret          string
-	Scope                 []string
-	AuthorisationRedirect *struct {
-		Params map[string]interface{}
-	}
-}
-
 const googleID = "google"
 
-func Google(config GoogleConfig) tpmodels.TypeProvider {
+func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: googleID,
 		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {

@@ -7,27 +7,12 @@ package providers
 // 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 // )
 
-// type AppleConfig struct {
-// 	ClientID              string
-// 	ClientSecret          ClientSecret
-// 	Scope                 []string
-// 	AuthorisationRedirect *struct {
-// 		Params map[string]interface{}
-// 	}
-// }
-
-// type ClientSecret struct {
-// 	KeyId      string
-// 	PrivateKey string
-// 	TeamId     string
-// }
-
 // const appleID = "apple"
 
-// func Apple(config AppleConfig) models.TypeProvider {
-// 	return models.TypeProvider{
+// func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
+// 	return tpmodels.TypeProvider{
 // 		ID: appleID,
-// 		Get: func(redirectURI, authCodeFromRequest *string) models.TypeProviderGetResponse {
+// 		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
 // 			accessTokenAPIURL := "https://appleid.apple.com/auth/token"
 // 			clientSecret, _ := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
 // 			accessTokenAPIParams := map[string]string{
@@ -63,26 +48,26 @@ package providers
 // 				authorizationRedirectParams[key] = value
 // 			}
 
-// 			return models.TypeProviderGetResponse{
-// 				AccessTokenAPI: models.AccessTokenAPI{
+// 			return tpmodels.TypeProviderGetResponse{
+// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
 // 					URL:    accessTokenAPIURL,
 // 					Params: accessTokenAPIParams,
 // 				},
-// 				AuthorisationRedirect: models.AuthorisationRedirect{
+// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
 // 					URL:    authorisationRedirectURL,
 // 					Params: authorizationRedirectParams,
 // 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}) (models.UserInfo, error) {
+// 				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
 // 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
 // 					if err != nil {
-// 						return models.UserInfo{}, err
+// 						return tpmodels.UserInfo{}, err
 // 					}
 // 					var accessTokenAPIResponse appleGetProfileInfoInput
 // 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
 // 					if err != nil {
-// 						return models.UserInfo{}, err
+// 						return tpmodels.UserInfo{}, err
 // 					}
-// 					return models.UserInfo{}, nil
+// 					return tpmodels.UserInfo{}, nil
 // 				},
 // 			}
 // 		},

@@ -8,15 +8,9 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
-type FacebookConfig struct {
-	ClientID     string
-	ClientSecret string
-	Scope        []string
-}
-
 const facebookID = "facebook"
 
-func Facebook(config FacebookConfig) tpmodels.TypeProvider {
+func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: facebookID,
 		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
