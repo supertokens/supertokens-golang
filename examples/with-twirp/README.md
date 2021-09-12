@@ -2,5 +2,5 @@ This is an example of how to integrate [Twirp](https://github.com/twitchtv/twirp
 
 To start this server, run:
 ```
-go run main.go
+go run cmd/server/main.go
 ```
