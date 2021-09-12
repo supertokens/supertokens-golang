@@ -59,8 +59,5 @@ func main() {
 		handlers.AllowCredentials(),
 	)(supertokens.Middleware(session.VerifySession(&models.VerifySessionOptions{
 		SessionRequired: &sessionRequired,
-	}, http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-		server.ServeHTTP(rw, r)
-	}))))))
-	// TODO: make veriySession take a http.Handler as well as opposed to http.HandlerFunc?
+	}, server.ServeHTTP)))))
 }

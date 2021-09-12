@@ -101,7 +101,6 @@ func VerifySession(options *models.VerifySessionOptions, otherHandler http.Handl
 	return api.VerifySession(*instance, options, otherHandler)
 }
 
-// TODO: change to request context instead of request?
 func GetSessionFromRequestContext(ctx context.Context) *models.SessionContainer {
 	value := ctx.Value(models.SessionContext)
 	if value == nil {
