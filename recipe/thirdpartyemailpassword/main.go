@@ -5,7 +5,6 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -149,19 +148,3 @@ func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	}
 	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
 }
-
-func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-	return providers.Google(config)
-}
-
-func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-	return providers.Github(config)
-}
-
-func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-	return providers.Facebook(config)
-}
-
-// func Apple(config providers.AppleConfig) tpm.TypeProvider {
-// 	return providers.Apple(config)
-// }
