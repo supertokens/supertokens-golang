@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *epmodels.TypeInput) supertokens.RecipeListFunction {
+func Init(config *epmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 

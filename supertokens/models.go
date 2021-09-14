@@ -21,12 +21,12 @@ type AppInfo struct {
 }
 
 // TODO: change this to a better name.
-type RecipeListFunction func(appInfo NormalisedAppinfo) (*RecipeModule, error)
+type Recipe func(appInfo NormalisedAppinfo) (*RecipeModule, error)
 
 type TypeInput struct {
 	Supertokens    *SupertokenTypeInput
 	AppInfo        AppInfo
-	RecipeList     []RecipeListFunction
+	RecipeList     []Recipe
 	Telemetry      *bool
 	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }

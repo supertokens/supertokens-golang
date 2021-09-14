@@ -20,7 +20,7 @@ func main() {
 			APIDomain:     "http://localhost:3001",
 			WebsiteDomain: "http://localhost:3000",
 		},
-		RecipeList: []supertokens.RecipeListFunction{
+		RecipeList: []supertokens.Recipe{
 			emailpassword.Init(nil),
 			session.Init(nil),
 		},

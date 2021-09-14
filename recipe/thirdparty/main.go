@@ -14,7 +14,7 @@ type signInUpResponse struct {
 	User           tpmodels.User
 }
 
-func Init(config *tpmodels.TypeInput) supertokens.RecipeListFunction {
+func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 

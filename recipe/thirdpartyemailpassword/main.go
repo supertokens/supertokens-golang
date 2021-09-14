@@ -10,7 +10,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *tpepmodels.TypeInput) supertokens.RecipeListFunction {
+func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 

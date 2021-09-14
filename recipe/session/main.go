@@ -9,7 +9,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *sessmodels.TypeInput) supertokens.RecipeListFunction {
+func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 

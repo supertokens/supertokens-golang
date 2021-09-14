@@ -53,7 +53,7 @@ func Init() {
 			APIDomain:     "http://localhost" + config.GetString("server.apiPort"),
 			WebsiteDomain: "http://localhost" + config.GetString("server.websitePort"),
 		},
-		RecipeList: []supertokens.RecipeListFunction{
+		RecipeList: []supertokens.Recipe{
 			emailpassword.Init(nil),
 			session.Init(nil),
 			// thirdparty.Init(thirdpartyConfig),
