@@ -47,11 +47,13 @@ type TypeInput struct {
 	SessionExpiredStatusCode *int
 	CookieDomain             *string
 	AntiCsrf                 *string
-	Override                 *struct {
-		Functions func(originalImplementation RecipeInterface) RecipeInterface
-		APIs      func(originalImplementation APIInterface) APIInterface
-	}
-	ErrorHandlers *ErrorHandlers
+	Override                 *OverrideStruct
+	ErrorHandlers            *ErrorHandlers
+}
+
+type OverrideStruct struct {
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
 }
 
 type ErrorHandlers struct {
@@ -66,11 +68,8 @@ type TypeNormalisedInput struct {
 	CookieSecure             bool
 	SessionExpiredStatusCode int
 	AntiCsrf                 string
-	Override                 struct {
-		Functions func(originalImplementation RecipeInterface) RecipeInterface
-		APIs      func(originalImplementation APIInterface) APIInterface
-	}
-	ErrorHandlers NormalisedErrorHandlers
+	Override                 OverrideStruct
+	ErrorHandlers            NormalisedErrorHandlers
 }
 
 type VerifySessionOptions struct {

@@ -137,14 +137,12 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
-		Override: struct {
-			Functions func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface
-			APIs      func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface
-		}{Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-			return originalImplementation
-		}, APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
-			return originalImplementation
-		}},
+		Override: sessmodels.OverrideStruct{
+			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+				return originalImplementation
+			}, APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
+				return originalImplementation
+			}},
 	}
 
 	if config != nil && config.Override != nil {
