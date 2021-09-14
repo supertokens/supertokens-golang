@@ -64,10 +64,10 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 		} else {
 			err := field.Validate(input.Value)
 			if err != nil {
-				validationErrors = append(validationErrors, struct {
-					ID    string
-					Error string
-				}{ID: field.ID, Error: *err})
+				validationErrors = append(validationErrors, errors.ErrorPayload{
+					ID:    field.ID,
+					Error: *err,
+				})
 			}
 		}
 	}
