@@ -19,7 +19,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
 	return sessmodels.RecipeInterface{
-		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (sessmodels.SessionContainer, error) {
+		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
 			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
@@ -126,11 +126,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return revokeMultipleSessionsHelper(querier, sessionHandles)
 		},
 
-		UpdateSessionData: func(sessionHandle string, newSessionData interface{}) error {
+		UpdateSessionData: func(sessionHandle string, newSessionData map[string]interface{}) error {
 			return updateSessionDataHelper(querier, sessionHandle, newSessionData)
 		},
 
-		UpdateJWTPayload: func(sessionHandle string, newJWTPayload interface{}) error {
+		UpdateJWTPayload: func(sessionHandle string, newJWTPayload map[string]interface{}) error {
 			return updateJWTPayloadHelper(querier, sessionHandle, newJWTPayload)
 		},
 

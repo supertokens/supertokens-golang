@@ -13,7 +13,7 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload interface{}, sessionData interface{}) (sessmodels.SessionContainer, error) {
+func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
@@ -77,7 +77,7 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 	return instance.RecipeImpl.RevokeMultipleSessions(sessionHandles)
 }
 
-func UpdateSessionData(sessionHandle string, newSessionData interface{}) error {
+func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
@@ -85,7 +85,7 @@ func UpdateSessionData(sessionHandle string, newSessionData interface{}) error {
 	return instance.RecipeImpl.UpdateSessionData(sessionHandle, newSessionData)
 }
 
-func UpdateJWTPayload(sessionHandle string, newJWTPayload interface{}) error {
+func UpdateJWTPayload(sessionHandle string, newJWTPayload map[string]interface{}) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err

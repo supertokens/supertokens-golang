@@ -9,7 +9,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, JWTPayload, sessionData interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, JWTPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if JWTPayload == nil {
 		JWTPayload = map[string]interface{}{}
 	}
@@ -271,9 +271,9 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	return response["sessionHandlesRevoked"].([]string), nil
 }
 
-func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData interface{}) error {
+func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) error {
 	if newSessionData == nil {
-		newSessionData = map[string]string{}
+		newSessionData = map[string]interface{}{}
 	}
 	response, err := querier.SendPutRequest("/recipe/session/data",
 		map[string]interface{}{
@@ -289,9 +289,9 @@ func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, 
 	return nil
 }
 
-func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, newJWTPayload interface{}) error {
+func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, newJWTPayload map[string]interface{}) error {
 	if newJWTPayload == nil {
-		newJWTPayload = map[string]string{}
+		newJWTPayload = map[string]interface{}{}
 	}
 	response, err := querier.SendPutRequest("/recipe/jwt/data", map[string]interface{}{
 		"sessionHandle": sessionHandle,

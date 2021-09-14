@@ -14,12 +14,12 @@ import (
 type SessionContainerInput struct {
 	sessionHandle string
 	userID        string
-	userDataInJWT interface{}
+	userDataInJWT map[string]interface{}
 	res           http.ResponseWriter
 	accessToken   string
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT interface{}, res http.ResponseWriter) SessionContainerInput {
+func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT map[string]interface{}, res http.ResponseWriter) SessionContainerInput {
 	return SessionContainerInput{
 		sessionHandle: sessionHandle,
 		userID:        userID,
@@ -43,7 +43,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return nil
 		},
 
-		GetSessionData: func() (interface{}, error) {
+		GetSessionData: func() (map[string]interface{}, error) {
 			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
@@ -54,7 +54,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return sessionInformation.SessionData, nil
 		},
 
-		UpdateSessionData: func(newSessionData interface{}) error {
+		UpdateSessionData: func(newSessionData map[string]interface{}) error {
 			err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
@@ -65,7 +65,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return nil
 		},
 
-		UpdateJWTPayload: func(newJWTPayload interface{}) error {
+		UpdateJWTPayload: func(newJWTPayload map[string]interface{}) error {
 			if newJWTPayload == nil {
 				newJWTPayload = map[string]interface{}{}
 			}
@@ -102,7 +102,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 		GetUserID: func() string {
 			return session.userID
 		},
-		GetJWTPayload: func() interface{} {
+		GetJWTPayload: func() map[string]interface{} {
 			return session.userDataInJWT
 		},
 		GetHandle: func() string {

@@ -25,9 +25,9 @@ type CreateOrRefreshAPIResponse struct {
 }
 
 type SessionStruct struct {
-	Handle        string      `json:"handle"`
-	UserID        string      `json:"userId"`
-	UserDataInJWT interface{} `json:"userDataInJWT"`
+	Handle        string                 `json:"handle"`
+	UserID        string                 `json:"userId"`
+	UserDataInJWT map[string]interface{} `json:"userDataInJWT"`
 }
 
 type CreateOrRefreshAPIResponseToken struct {
@@ -101,13 +101,13 @@ type NormalisedErrorHandlers struct {
 
 type SessionContainer struct {
 	RevokeSession     func() error
-	GetSessionData    func() (interface{}, error)
-	UpdateSessionData func(newSessionData interface{}) error
+	GetSessionData    func() (map[string]interface{}, error)
+	UpdateSessionData func(newSessionData map[string]interface{}) error
 	GetUserID         func() string
-	GetJWTPayload     func() interface{}
+	GetJWTPayload     func() map[string]interface{}
 	GetHandle         func() string
 	GetAccessToken    func() string
-	UpdateJWTPayload  func(newJWTPayload interface{}) error
+	UpdateJWTPayload  func(newJWTPayload map[string]interface{}) error
 	GetTimeCreated    func() (uint64, error)
 	GetExpiry         func() (uint64, error)
 }
@@ -115,9 +115,9 @@ type SessionContainer struct {
 type SessionInformation struct {
 	SessionHandle string
 	UserId        string
-	SessionData   interface{}
+	SessionData   map[string]interface{}
 	Expiry        uint64
-	JwtPayload    interface{}
+	JwtPayload    map[string]interface{}
 	TimeCreated   uint64
 }
 
