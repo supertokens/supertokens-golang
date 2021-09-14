@@ -78,14 +78,16 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func initQuerier(hosts []NormalisedURLDomain, APIKey *string) {
+func initQuerier(hosts []NormalisedURLDomain, APIKey string) {
 	// TODO: For Piyushh: Why do we have locking here?
 	querierLock.Lock()
 	defer querierLock.Unlock()
 	if !querierInitCalled {
 		querierInitCalled = true
 		querierHosts = hosts
-		querierAPIKey = APIKey
+		if APIKey != "" {
+			querierAPIKey = &APIKey
+		}
 		querierAPIVersion = ""
 		querierLastTriedIndex = 0
 	}

@@ -20,6 +20,7 @@ type AppInfo struct {
 	APIGatewayPath  *string
 }
 
+// TODO: change this to a better name.
 type RecipeListFunction func(appInfo NormalisedAppinfo) (*RecipeModule, error)
 
 type TypeInput struct {
@@ -32,7 +33,7 @@ type TypeInput struct {
 
 type SupertokenTypeInput struct {
 	ConnectionURI string
-	APIKey        *string
+	APIKey        string
 }
 
 type APIHandled struct {
