@@ -22,10 +22,12 @@ import (
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/haberdasher"
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/haberdasherserver"
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/hooks"
+	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/interceptor"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/twitchtv/twirp"
 )
 
 func main() {
@@ -50,8 +52,8 @@ func main() {
 
 	hook := hooks.LoggingHooks(os.Stderr)
 	service := haberdasherserver.New()
-	// TODO: need to add error handler for supertokens, using with interceptor.
-	server := haberdasher.NewHaberdasherServer(service, hook)
+	server := haberdasher.NewHaberdasherServer(service,
+		twirp.WithServerInterceptors(interceptor.NewSuperTokensErrorHandlerInterceptor()), hook)
 	sessionRequired := false
 	log.Fatal(http.ListenAndServe(":3001", handlers.CORS(
 		handlers.AllowedHeaders(append([]string{"Content-Type"}, supertokens.GetAllCORSHeaders()...)),
