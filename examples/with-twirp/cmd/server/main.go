@@ -30,7 +30,7 @@ import (
 
 func main() {
 	err := supertokens.Init(supertokens.TypeInput{
-		Supertokens: &supertokens.SupertokenTypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "https://try.supertokens.io",
 		},
 		AppInfo: supertokens.AppInfo{

@@ -24,14 +24,14 @@ type AppInfo struct {
 type Recipe func(appInfo NormalisedAppinfo) (*RecipeModule, error)
 
 type TypeInput struct {
-	Supertokens    *SupertokenTypeInput
+	Supertokens    *ConnectionInfo
 	AppInfo        AppInfo
 	RecipeList     []Recipe
 	Telemetry      *bool
 	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
-type SupertokenTypeInput struct {
+type ConnectionInfo struct {
 	ConnectionURI string
 	APIKey        string
 }
