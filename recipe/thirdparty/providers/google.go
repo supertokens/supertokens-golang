@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
@@ -30,9 +29,9 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 			}
 
 			authorisationRedirectURL := "https://accounts.google.com/o/oauth2/v2/auth"
-			scopes := []string{"https://www.googleapis.com/auth/userinfo.profile", "https://www.googleapis.com/auth/userinfo.email"}
+			scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
 			if config.Scope != nil {
-				scopes = append(scopes, config.Scope...)
+				scopes = config.Scope
 			}
 
 			var additionalParams map[string]interface{} = nil
@@ -99,15 +98,8 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 }
 
 func getGoogleAuthRequest(authHeader string) (interface{}, error) {
-	params := map[string]string{
-		"alt": "json",
-	}
-	paramsJson, err := json.Marshal(params)
-	if err != nil {
-		return nil, err
-	}
-	url := "https://www.googleapis.com/oauth2/v1/userinfo"
-	req, err := http.NewRequest("GET", url, bytes.NewBuffer([]byte(paramsJson)))
+	url := "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}

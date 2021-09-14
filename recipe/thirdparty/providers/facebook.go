@@ -29,7 +29,7 @@ func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 			authorisationRedirectURL := "https://www.facebook.com/v9.0/dialog/oauth"
 			scopes := []string{"email"}
 			if config.Scope != nil {
-				scopes = append(scopes, config.Scope...)
+				scopes = config.Scope
 			}
 
 			authorizationRedirectParams := map[string]interface{}{

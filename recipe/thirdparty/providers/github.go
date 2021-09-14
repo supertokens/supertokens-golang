@@ -28,9 +28,9 @@ func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 			}
 
 			authorisationRedirectURL := "https://github.com/login/oauth/authorize"
-			scopes := []string{"user"}
+			scopes := []string{"read:user", "user:email"}
 			if config.Scope != nil {
-				scopes = append(scopes, config.Scope...)
+				scopes = config.Scope
 			}
 
 			var additionalParams map[string]interface{} = nil
