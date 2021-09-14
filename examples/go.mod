@@ -16,6 +16,7 @@ require (
 	github.com/supertokens/supertokens-golang v0.0.0-20210909070424-b13c10ce5994
 	github.com/twitchtv/twirp v8.1.0+incompatible
 	github.com/twitchtv/twirp-example v0.0.0-20210311193855-b2a0c1c7da00
+	google.golang.org/protobuf v1.27.1
 )
 
 replace github.com/supertokens/supertokens-golang => ../

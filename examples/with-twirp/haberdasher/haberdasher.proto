@@ -1,7 +1,7 @@
 syntax = "proto3";
 
 package twitch.twirp.example.haberdasher;
-option go_package = "github.com/twitchtv/twirp-example/rpc/haberdasher;haberdasher";
+option go_package = "github.com/supertokens/supertokens-golang/examples/with-twirp/haberdasher;haberdasher";
 
 // A Hat is a piece of headwear made by a Haberdasher.
 message Hat {
