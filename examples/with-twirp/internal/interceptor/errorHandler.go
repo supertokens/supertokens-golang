@@ -15,13 +15,13 @@ func NewSuperTokensErrorHandlerInterceptor() twirp.Interceptor {
 		return func(ctx context.Context, req interface{}) (interface{}, error) {
 			resp, err := next(ctx, req)
 			if err != nil {
+				var sessionErr sessionError.TokenTheftDetectedError
 				if errors.As(err, &sessionError.TryRefreshTokenError{}) {
 					return resp, twirp.NewError(twirp.Unauthenticated, "try refresh token")
 				} else if errors.As(err, &sessionError.UnauthorizedError{}) {
-					fmt.Println("in unauth!!")
 					return resp, twirp.NewError(twirp.Unauthenticated, "unauthorized")
-				} else if errors.As(err, &sessionError.TokenTheftDetectedError{}) {
-					_, err = session.RevokeSession(err.(sessionError.TokenTheftDetectedError).Payload.SessionHandle)
+				} else if errors.As(err, &sessionErr) {
+					_, err = session.RevokeSession(sessionErr.Payload.SessionHandle)
 					if err != nil {
 						return resp, err
 					}
