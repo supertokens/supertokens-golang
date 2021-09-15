@@ -47,7 +47,7 @@ type User struct {
 
 type TypeInputEmailVerificationFeature struct {
 	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
 }
 
 type TypeInputSignInAndUp struct {

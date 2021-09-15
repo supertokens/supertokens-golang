@@ -18,7 +18,7 @@ type OverrideStruct struct {
 
 type TypeInputEmailVerificationFeature struct {
 	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string) error
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
 }
 
 type TypeInputFormField struct {
