@@ -46,12 +46,12 @@ type TypeNormalisedInputSignIn struct {
 }
 
 type TypeInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL      func(user User) string
+	GetResetPasswordURL      func(user User) (string, error)
 	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string)
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL            func(user User) string
+	GetResetPasswordURL            func(user User) (string, error)
 	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField

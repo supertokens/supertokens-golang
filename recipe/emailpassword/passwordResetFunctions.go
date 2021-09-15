@@ -10,9 +10,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ epmodels.User) string {
-	return func(_ epmodels.User) string {
-		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/reset-password"
+func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ epmodels.User) (string, error) {
+	return func(_ epmodels.User) (string, error) {
+		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/reset-password", nil
 	}
 }
 

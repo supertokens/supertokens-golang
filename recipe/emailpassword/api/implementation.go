@@ -46,7 +46,13 @@ func MakeAPIImplementation() epmodels.APIInterface {
 				}, nil
 			}
 
-			passwordResetLink := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user) + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
+			passwordResetLink, err := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user)
+
+			if err != nil {
+				return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
+			}
+
+			passwordResetLink = passwordResetLink + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
 			options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
 
