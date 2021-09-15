@@ -3,7 +3,6 @@ package interceptor
 import (
 	"context"
 	"errors"
-	"fmt"
 
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	sessionError "github.com/supertokens/supertokens-golang/recipe/session/errors"
