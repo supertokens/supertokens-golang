@@ -62,7 +62,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 
 		result = map[string]interface{}{
 			"status":     "OK",
-			"isVerified": isVerified,
+			"isVerified": isVerified.OK.IsVerified,
 		}
 	}
 
