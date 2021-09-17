@@ -16,12 +16,12 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 
 	body, err := ioutil.ReadAll(options.Req.Body)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	var formFieldsRaw map[string]interface{}
 	err = json.Unmarshal(body, &formFieldsRaw)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	formFields, err := validateFormFieldsOrThrowError(options.Config.SignInFeature.FormFields, formFieldsRaw["formFields"].([]interface{}))

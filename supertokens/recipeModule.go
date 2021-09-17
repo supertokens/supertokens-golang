@@ -19,6 +19,7 @@ func MakeRecipeModule(
 	getAPIsHandled func() ([]APIHandled, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error)) RecipeModule {
 	if handleError == nil {
+		// Execution will come here only if there is a bug in the code
 		panic("nil passed for handleError in recipe")
 	}
 	return RecipeModule{

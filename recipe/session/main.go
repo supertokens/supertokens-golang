@@ -96,7 +96,7 @@ func UpdateJWTPayload(sessionHandle string, newJWTPayload map[string]interface{}
 func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		panic("can't fetch instance")
+		panic("can't fetch supertokens instance. You should call the supertokens.Init function before using the VerifySession function.")
 	}
 	return api.VerifySession(*instance, options, otherHandler)
 }

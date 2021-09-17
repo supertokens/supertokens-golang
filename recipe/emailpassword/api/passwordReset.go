@@ -22,7 +22,7 @@ func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.API
 	var formFieldsRaw map[string]interface{}
 	err = json.Unmarshal(body, &formFieldsRaw)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm, formFieldsRaw["formFields"].([]interface{}))

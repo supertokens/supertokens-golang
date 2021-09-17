@@ -11,7 +11,7 @@ func Init(config TypeInput) error {
 func Middleware(theirHandler http.Handler) http.Handler {
 	instance, err := getInstanceOrThrowError()
 	if err != nil {
-		panic("Please call SupertokensInit before using the middleware")
+		panic("Please call supertokens.Init function before using the Middleware")
 	}
 	return instance.middleware(theirHandler)
 }
@@ -27,7 +27,7 @@ func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) error {
 func GetAllCORSHeaders() []string {
 	instance, err := getInstanceOrThrowError()
 	if err != nil {
-		panic("Please call SupertokensInit before using the GetAllCORSHeaders function")
+		panic("Please call supertokens.Init before using the GetAllCORSHeaders function")
 	}
 	return instance.getAllCORSHeaders()
 }
