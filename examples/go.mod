@@ -3,6 +3,7 @@ module github.com/supertokens/supertokens-golang/examples
 go 1.15
 
 require (
+	github.com/derekstavis/go-qs v0.0.0-20180720192143-9eef69e6c4e7
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-chi/chi v1.5.4
