@@ -285,3 +285,7 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	}
 	return finalResult, nil
 }
+
+func ResetQuerierForTest() {
+	querierInitCalled = false
+}

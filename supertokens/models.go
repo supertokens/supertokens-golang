@@ -35,8 +35,7 @@ type AppInfo struct {
 	APIGatewayPath  *string
 }
 
-// TODO: change this to a better name.
-type Recipe func(appInfo NormalisedAppinfo) (*RecipeModule, error)
+type Recipe func(appInfo NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*RecipeModule, error)
 
 type TypeInput struct {
 	Supertokens    *ConnectionInfo

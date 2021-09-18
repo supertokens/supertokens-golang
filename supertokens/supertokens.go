@@ -31,6 +31,9 @@ type superTokens struct {
 	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
+// this will be set to true if this is used in a test app environment
+var IsTestFlag = false
+
 var superTokensInstance *superTokens
 
 func supertokensInit(config TypeInput) error {
@@ -70,7 +73,7 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	for _, elem := range config.RecipeList {
-		recipeModule, err := elem(superTokens.AppInfo)
+		recipeModule, err := elem(superTokens.AppInfo, superTokens.OnGeneralError)
 		if err != nil {
 			return err
 		}
@@ -98,7 +101,7 @@ func getInstanceOrThrowError() (*superTokens, error) {
 
 // TODO: add test to see query
 func sendTelemetry() {
-	if flag.Lookup("test.v") != nil {
+	if IsRunningInTestMode() {
 		// if running in test mode, we do not want to send this.
 		return
 	}
@@ -327,4 +330,13 @@ func getUserCount(includeRecipeIds *[]string) (float64, error) {
 	}
 
 	return resp["count"].(float64), nil
+}
+
+func ResetForTest() {
+	ResetQuerierForTest()
+	superTokensInstance = nil
+}
+
+func IsRunningInTestMode() bool {
+	return flag.Lookup("test.v") != nil || IsTestFlag
 }

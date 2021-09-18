@@ -29,7 +29,7 @@ const RECIPE_ID = "session"
 
 var r *sessmodels.SessionRecipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.SessionRecipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (sessmodels.SessionRecipe, error) {
 	r = &sessmodels.SessionRecipe{}
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
@@ -45,7 +45,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError, onGeneralError)
 	r.RecipeModule = recipeModuleInstance
 
 	return sessmodels.SessionRecipe{
@@ -64,9 +64,9 @@ func getRecipeInstanceOrThrowError() (*sessmodels.SessionRecipe, error) {
 }
 
 func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
@@ -131,4 +131,8 @@ func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, e
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	}
 	return false, nil
+}
+
+func ResetForTest() {
+	r = nil
 }

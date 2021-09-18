@@ -34,7 +34,10 @@ func VerifySession(recipeInstance sessmodels.SessionRecipe, options *sessmodels.
 			RecipeImplementation: recipeInstance.RecipeImpl,
 		})
 		if err != nil {
-			supertokens.ErrorHandler(err, r, w)
+			err = supertokens.ErrorHandler(err, r, w)
+			if err != nil {
+				recipeInstance.RecipeModule.OnGeneralError(err, r, w)
+			}
 			return
 		}
 		if session != nil {

@@ -44,9 +44,9 @@ type Recipe struct {
 
 var r *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpepmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpepmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r = &Recipe{}
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError, onGeneralError)
 
 	verifiedConfig, err := validateAndNormaliseUserInput(r, appInfo, config)
 	if err != nil {
@@ -68,7 +68,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
 	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -93,7 +93,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				EmailVerificationFeature: nil,
 			},
 		}
-		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe)
+		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -118,7 +118,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 					EmailVerificationFeature: nil,
 				},
 			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe)
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, onGeneralError)
 			if err != nil {
 				return Recipe{}, err
 			}
@@ -132,9 +132,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 }
 
 func recipeInit(config *tpepmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, onGeneralError)
 			if err != nil {
 				return nil, err
 			}

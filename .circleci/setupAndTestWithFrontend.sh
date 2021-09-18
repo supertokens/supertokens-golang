@@ -49,11 +49,9 @@ git clone git@github.com:supertokens/supertokens-website.git
 cd supertokens-website
 git checkout $2
 cd ../project/test/frontendIntegration/
-# TODO: start on port 8080
 go run main.go &
 pid=$!
-# TODO: start on port 8082
-go run main.go &
+go run main.go 8082 &
 pid2=$!
 cd ../../../supertokens-website/test/server
 npm i -d

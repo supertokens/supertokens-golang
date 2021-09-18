@@ -35,7 +35,7 @@ type Recipe struct {
 
 var r = &Recipe{}
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *evmodels.TypeInput) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *evmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
@@ -47,7 +47,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError, onGeneralError)
 	r.RecipeModule = recipeModuleInstance
 
 	return Recipe{
@@ -66,9 +66,9 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 }
 
 func recipeInit(config *evmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if r == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
