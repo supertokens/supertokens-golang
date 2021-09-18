@@ -24,6 +24,7 @@ type RecipeModule struct {
 	GetAllCORSHeaders func() []string
 	GetAPIsHandled    func() ([]APIHandled, error)
 	HandleError       func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
+	OnGeneralError    func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 func MakeRecipeModule(
@@ -32,10 +33,15 @@ func MakeRecipeModule(
 	handleAPIRequest func(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
-	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error)) RecipeModule {
+	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
+	onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
 		// Execution will come here only if there is a bug in the code
 		panic("nil passed for handleError in recipe")
+	}
+	if onGeneralError == nil {
+		// Execution will come here only if there is a bug in the code
+		panic("nil passed for onGeneralError in recipe")
 	}
 	return RecipeModule{
 		recipeID:          recipeId,
@@ -44,6 +50,7 @@ func MakeRecipeModule(
 		GetAllCORSHeaders: getAllCORSHeaders,
 		GetAPIsHandled:    getAPIsHandled,
 		HandleError:       handleError,
+		OnGeneralError:    onGeneralError,
 	}
 }
 
