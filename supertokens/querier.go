@@ -26,8 +26,6 @@ import (
 	"sync"
 )
 
-var querierLock sync.Mutex
-
 type Querier struct {
 	RIDToCore string
 }
@@ -38,6 +36,7 @@ var (
 	querierAPIKey         *string
 	querierAPIVersion     string
 	querierLastTriedIndex int
+	querierLock           sync.Mutex
 )
 
 func (q *Querier) getQuerierAPIVersion() (string, error) {
@@ -84,9 +83,6 @@ func (q *Querier) getQuerierAPIVersion() (string, error) {
 }
 
 func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
-	// TODO: For Piyushh: Why do we have locking here?
-	querierLock.Lock()
-	defer querierLock.Unlock()
 	if !querierInitCalled {
 		return nil, errors.New("please call the supertokens.init function before using SuperTokens")
 	}
@@ -94,9 +90,6 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 }
 
 func initQuerier(hosts []NormalisedURLDomain, APIKey string) {
-	// TODO: For Piyushh: Why do we have locking here?
-	querierLock.Lock()
-	defer querierLock.Unlock()
 	if !querierInitCalled {
 		querierInitCalled = true
 		querierHosts = hosts
@@ -116,15 +109,6 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		if data == nil {
 			data = map[string]interface{}{}
-		}
-		// TODO: For Piyushh:  what is the need to do this - since this is not being done in DELETE or any other place.
-		for key, value := range data {
-			switch value.(type) {
-			case map[string]interface{}:
-				if len(value.(map[string]interface{})) == 0 {
-					data[key] = map[string]interface{}{}
-				}
-			}
 		}
 		jsonData, err := json.Marshal(data)
 		if err != nil {
@@ -263,9 +247,12 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	if numberOfTries == 0 {
 		return nil, errors.New("no SuperTokens core available to query")
 	}
+
+	querierLock.Lock()
 	currentHost := querierHosts[querierLastTriedIndex].GetAsStringDangerous()
-	// TODO: For Piyushh: won't we need to apply some sort of locking here when updating querierLastTriedIndex?
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(querierHosts)
+	querierLock.Unlock()
+
 	resp, err := httpRequest(currentHost + path.GetAsStringDangerous())
 
 	if err != nil {
