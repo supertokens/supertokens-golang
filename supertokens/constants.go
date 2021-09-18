@@ -18,8 +18,10 @@ package supertokens
 const (
 	HeaderRID = "rid"
 	HeaderFDI = "fdi-version"
-	version   = "0.0.1"
 )
+
+// VERSION current version of the lib
+const VERSION = "0.0.1"
 
 var (
 	cdiSupported = []string{"2.8"}
