@@ -21,7 +21,7 @@ then
    git stash push -k -u -- $files_to_stash >/dev/null 2>/dev/null
 fi
 
-npm run build-check >/dev/null 2>/dev/null
+go build ./...
 compiles=$?
 
 echo "$(tput setaf 3)* Compiles?$(tput sgr 0)"
@@ -33,7 +33,7 @@ else
    echo "$(tput setaf 1)* No$(tput sgr 0)"
 fi
 
-npm run pretty-check >/dev/null 2>/dev/null
+# TODO: check for code formatting errors:
 formatted=$?
 
 echo "$(tput setaf 3)* Properly formatted?$(tput sgr 0)"
@@ -43,7 +43,7 @@ then
    echo "$(tput setaf 2)* Yes$(tput sgr 0)"
 else
    echo "$(tput setaf 1)* No$(tput sgr 0)"
-    echo "$(tput setaf 1)Please run 'npm run pretty' to format the code.$(tput sgr 0)"
+    echo "$(tput setaf 1)Please format the code.$(tput sgr 0)"
     echo ""
 fi
 
@@ -76,37 +76,17 @@ else
 fi
 
 # get current version----------
-version=`cat package.json | grep -e '"version":'`
+version=`cat ./supertokens/core/constants.go | grep -e 'const VERSION'`
 while IFS='"' read -ra ADDR; do
     counter=0
     for i in "${ADDR[@]}"; do
-        if [ $counter == 3 ]
+        if [ $counter == 1 ]
         then
             version=$i
         fi
         counter=$(($counter+1))
     done
 done <<< "$version"
-
-codeversion=`cat ./lib/build/version.js | grep -e 'version'`
-while IFS='"' read -ra ADDR; do
-    counter=0
-    for i in "${ADDR[@]}"; do
-        if [ $counter == 1 ]
-        then
-            codeversion=$i
-        fi
-        counter=$(($counter+1))
-    done
-done <<< "$codeversion"
-
-if [ $version != $codeversion ]
-then
-    RED='\033[0;31m'
-    NC='\033[0m' # No Color
-    printf "${RED}Version codes in version.ts and package.json are not the same${NC}\n"
-    exit 1
-fi
 
 # get git branch name-----------
 
