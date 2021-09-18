@@ -17,3 +17,6 @@ vendor/
 gin/
 
 .DS_Store
+
+apiPassword
+releasePassword
