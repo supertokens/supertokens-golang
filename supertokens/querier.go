@@ -125,7 +125,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 			return nil, querierAPIVersionError
 		}
 
-		req.Header.Set("content-type", "application/json")
+		req.Header.Set("content-type", "application/json; charset=utf-8")
 		req.Header.Set("cdi-version", apiVerion)
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
@@ -159,7 +159,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 			return nil, querierAPIVersionError
 		}
 
-		req.Header.Set("content-type", "application/json")
+		req.Header.Set("content-type", "application/json; charset=utf-8")
 		req.Header.Set("cdi-version", apiVerion)
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
@@ -228,7 +228,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 			return nil, querierAPIVersionError
 		}
 
-		req.Header.Set("content-type", "application/json")
+		req.Header.Set("content-type", "application/json; charset=utf-8")
 		req.Header.Set("cdi-version", apiVerion)
 		if querierAPIKey != nil {
 			req.Header.Set("api-key", *querierAPIKey)
