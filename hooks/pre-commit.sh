@@ -76,7 +76,7 @@ else
 fi
 
 # get current version----------
-version=`cat ./supertokens/core/constants.go | grep -e 'const VERSION'`
+version=`cat ./supertokens/constants.go | grep -e 'const VERSION'`
 while IFS='"' read -ra ADDR; do
     counter=0
     for i in "${ADDR[@]}"; do
