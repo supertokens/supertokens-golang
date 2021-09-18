@@ -37,6 +37,7 @@ var (
 	querierAPIVersion     string
 	querierLastTriedIndex int
 	querierLock           sync.Mutex
+	querierHostLock       sync.Mutex
 )
 
 func (q *Querier) getQuerierAPIVersion() (string, error) {
@@ -248,10 +249,10 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		return nil, errors.New("no SuperTokens core available to query")
 	}
 
-	querierLock.Lock()
+	querierHostLock.Lock()
 	currentHost := querierHosts[querierLastTriedIndex].GetAsStringDangerous()
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(querierHosts)
-	querierLock.Unlock()
+	querierHostLock.Unlock()
 
 	resp, err := httpRequest(currentHost + path.GetAsStringDangerous())
 

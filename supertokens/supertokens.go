@@ -60,7 +60,6 @@ func supertokensInit(config TypeInput) error {
 			}
 			hosts = append(hosts, host)
 		}
-
 		initQuerier(hosts, config.Supertokens.APIKey)
 	} else {
 		// TODO: Add tests for init without supertokens core.
