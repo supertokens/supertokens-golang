@@ -39,7 +39,7 @@ func callSTInit(enableAntiCsrf bool) {
 		port = os.Args[1]
 	}
 	antiCsrf := "NONE"
-	if !enableAntiCsrf {
+	if enableAntiCsrf {
 		antiCsrf = "VIA_TOKEN"
 	}
 	err := supertokens.Init(supertokens.TypeInput{
@@ -223,9 +223,9 @@ func updateJwt(response http.ResponseWriter, request *http.Request) {
 func checkRID(response http.ResponseWriter, request *http.Request) {
 	rid := request.Header.Get("rid")
 	if rid == "" {
-		response.Write([]byte("success"))
-	} else {
 		response.Write([]byte("fail"))
+	} else {
+		response.Write([]byte("success"))
 	}
 }
 
