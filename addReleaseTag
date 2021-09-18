@@ -2,11 +2,11 @@
 # Expects a releasePassword file to be ./
 
 # get version------------
-version=`cat package.json | grep -e '"version":'`
+version=`cat ./supertokens/constants.go | grep -e 'const VERSION'`
 while IFS='"' read -ra ADDR; do
     counter=0
     for i in "${ADDR[@]}"; do
-        if [ $counter == 3 ]
+        if [ $counter == 1 ]
         then
             version=$i
         fi
@@ -26,7 +26,7 @@ password=`cat ./apiPassword`
 
 # we get from the server is the tests have passed or not.
 testPassedJson=`curl -s -X GET \
-"https://api.supertokens.io/0/driver?password=$password&version=$version&name=node" \
+"https://api.supertokens.io/0/driver?password=$password&version=$version&name=golang" \
 -H 'api-version: 0'`
 
 
@@ -49,7 +49,7 @@ fi
 if [[ $1 != "--forced" ]]
 then
   canReleaseSafelyResponse=`curl -s -X GET \
-    "https://api.supertokens.io/0/driver/release/check?password=$password&version=$version&name=node" \
+    "https://api.supertokens.io/0/driver/release/check?password=$password&version=$version&name=golang" \
     -H 'api-version: 0'`
 
   if [[ `echo $canReleaseSafelyResponse | jq .canRelease` == "null"  ]]
@@ -103,7 +103,7 @@ responseStatus=`curl -s -o /dev/null -w "%{http_code}" -X PATCH \
     -H 'api-version: 0' \
     -d "{
         \"password\": \"$releasePassword\",
-        \"name\":\"node\",
+        \"name\":\"golang\",
         \"version\":\"$version\",
         \"release\": true
     }"`
@@ -124,7 +124,7 @@ git push --tags
 
 
 response=`curl -s -X GET \
-"https://api.supertokens.io/0/driver/latest/check?password=$password&version=$version&name=node" \
+"https://api.supertokens.io/0/driver/latest/check?password=$password&version=$version&name=golang" \
 -H 'api-version: 0'`
 response=`echo $response | jq .isLatest`
 

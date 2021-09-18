@@ -7,39 +7,17 @@ if [[ $(git log master ^HEAD) ]]; then
 fi
 
 # get version------------
-version=`cat package.json | grep -e '"version":'`
+version=`cat ./supertokens/constants.go | grep -e 'const VERSION'`
 while IFS='"' read -ra ADDR; do
     counter=0
     for i in "${ADDR[@]}"; do
-        if [ $counter == 3 ]
+        if [ $counter == 1 ]
         then
             version=$i
         fi
         counter=$(($counter+1))
     done
 done <<< "$version"
-
-versionLock=`head -n 3 package-lock.json | grep -e '"version":'`
-
-while IFS='"' read -ra ADDR; do
-    counter=0
-    for i in "${ADDR[@]}"; do
-        if [ $counter == 3 ]
-        then
-            versionLock=$i
-        fi
-        counter=$(($counter+1))
-    done
-done <<< "$versionLock"
-
-# check if package and package-lock versions are similar.-----------
-if ! [[ $version == $versionLock ]]
-then
-    RED='\033[0;31m'
-    NC='\033[0m' # No Color
-    printf "${RED}Difference between package-lock and package version. Please run npm install. Stopping process${NC}\n"
-    exit 1
-fi
 
 branch_name="$(git symbolic-ref HEAD 2>/dev/null)" ||
 branch_name="(unnamed branch)"     # detached HEAD
@@ -91,16 +69,6 @@ then
     NC='\033[0m'
     printf "${RED}The released version of this tag already exists${NC}\n"
     exit 1
-fi
-
-# add an empty commit if the user has not given a commit hash so that we are sure it's built------------
-if [ $# -eq 0 ]
-then
-    npm run build-pretty
-    git add --all
-    git commit --allow-empty -m"adding dev-v$version tag to this commit to ensure building"
-    git push
-	commit_hash=`git log --pretty=format:'%H' -n 1`
 fi
 
 
