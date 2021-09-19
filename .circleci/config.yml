@@ -8,9 +8,6 @@ jobs:
             - image: rishabhpoddar/supertokens_go_driver_testing
         resource_class: large
         steps:
-            - add_ssh_keys:
-                  fingerprints:
-                      - "b3:da:ef:15:52:aa:a3:69:c3:6b:14:0c:be:23:b7:c7"
             - checkout
             - run: go version
             - run: go get ./...
