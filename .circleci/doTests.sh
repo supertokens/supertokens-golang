@@ -9,11 +9,11 @@ frontendDriverArray=`echo $frontendDriverJson | jq ".versions"`
 echo "got frontend driver relations"
 
 # get driver version
-version=`cat ../package.json | grep -e '"version":'`
+version=`cat ../supertokens/constants.go | grep -e 'const VERSION'`
 while IFS='"' read -ra ADDR; do
     counter=0
     for i in "${ADDR[@]}"; do
-        if [ $counter == 3 ]
+        if [ $counter == 1 ]
         then
             version=$i
         fi
