@@ -163,7 +163,7 @@ func main() {
 
 	http.ListenAndServe("0.0.0.0:"+apiPort, corsMiddleware(
 		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/sessioninfo" && r.Method == "GET" {
+			if r.URL.Path == "/sessionInfo" && r.Method == "GET" {
 				session.VerifySession(nil, sessioninfo).ServeHTTP(rw, r)
 			} else if r.URL.Path == "/token" && r.Method == "GET" {
 				rw.WriteHeader(200)
