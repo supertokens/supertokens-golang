@@ -250,15 +250,15 @@ func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedI
 	}
 }
 
-func sendTryRefreshTokenResponse(recipeInstance sessmodels.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+func sendTryRefreshTokenResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
 	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
-func sendUnauthorisedResponse(recipeInstance sessmodels.SessionRecipe, _ string, _ *http.Request, response http.ResponseWriter) error {
+func sendUnauthorisedResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
 	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
-func sendTokenTheftDetectedResponse(recipeInstance sessmodels.SessionRecipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
+func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
 	_, err := recipeInstance.RecipeImpl.RevokeSession(sessionHandle)
 	if err != nil {
 		return err

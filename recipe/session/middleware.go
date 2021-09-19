@@ -13,7 +13,7 @@
  * under the License.
  */
 
-package api
+package session
 
 import (
 	"context"
@@ -23,7 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func VerifySession(recipeInstance sessmodels.SessionRecipe, options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
+func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		session, err := recipeInstance.APIImpl.VerifySession(options, sessmodels.APIOptions{
 			Config:               recipeInstance.Config,

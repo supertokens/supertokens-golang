@@ -36,12 +36,12 @@ type Recipe struct {
 	Providers               []tpmodels.TypeProvider
 }
 
-var r *Recipe
+var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
-	r = &Recipe{}
+	r := &Recipe{}
 
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError, onGeneralError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
@@ -72,28 +72,28 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 func recipeInit(config *tpmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
-		if r == nil {
+		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
-			r = &recipe
-			return &r.RecipeModule, nil
+			singletonInstance = &recipe
+			return &singletonInstance.RecipeModule, nil
 		}
 		return nil, errors.New("ThirdParty recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
 func getRecipeInstanceOrThrowError() (*Recipe, error) {
-	if r != nil {
-		return r, nil
+	if singletonInstance != nil {
+		return singletonInstance, nil
 	}
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 // implement RecipeModule
 
-func getAPIsHandled() ([]supertokens.APIHandled, error) {
+func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	signInUpAPI, err := supertokens.NewNormalisedURLPath(SignInUpAPI)
 	if err != nil {
 		return nil, err
@@ -119,7 +119,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, emailverificationAPIhandled...), nil
 }
 
-func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
 	options := tpmodels.APIOptions{
 		Config:                                r.Config,
 		OtherHandler:                          theirHandler,
@@ -138,11 +138,11 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
 }
 
-func getAllCORSHeaders() []string {
+func (r *Recipe) getAllCORSHeaders() []string {
 	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
 }
 

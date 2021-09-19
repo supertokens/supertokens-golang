@@ -25,53 +25,55 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+type Recipe struct {
+	RecipeModule supertokens.RecipeModule
+	Config       sessmodels.TypeNormalisedInput
+	RecipeImpl   sessmodels.RecipeInterface
+	APIImpl      sessmodels.APIInterface
+}
+
 const RECIPE_ID = "session"
 
-var r *sessmodels.SessionRecipe
+var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (sessmodels.SessionRecipe, error) {
-	r = &sessmodels.SessionRecipe{}
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+	r := &Recipe{}
+
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
+
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
-		return sessmodels.SessionRecipe{}, configError
+		return Recipe{}, configError
 	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
-		return sessmodels.SessionRecipe{}, err
+		return Recipe{}, err
 	}
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError, onGeneralError)
-	r.RecipeModule = recipeModuleInstance
-
-	return sessmodels.SessionRecipe{
-		RecipeModule: recipeModuleInstance,
-		Config:       verifiedConfig,
-		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),
-		APIImpl:      verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-	}, nil
+	return *r, nil
 }
 
-func getRecipeInstanceOrThrowError() (*sessmodels.SessionRecipe, error) {
-	if r != nil {
-		return r, nil
+func getRecipeInstanceOrThrowError() (*Recipe, error) {
+	if singletonInstance != nil {
+		return singletonInstance, nil
 	}
 	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
-		if r == nil {
+		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
-			r = &recipe
-			return &r.RecipeModule, nil
+			singletonInstance = &recipe
+			return &singletonInstance.RecipeModule, nil
 		}
 		return nil, defaultErrors.New("Session recipe has already been initialised. Please check your code for bugs.")
 	}
@@ -79,7 +81,7 @@ func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
 
 // Implement RecipeModule
 
-func getAPIsHandled() ([]supertokens.APIHandled, error) {
+func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	refreshAPIPathNormalised, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
 	if err != nil {
 		return nil, err
@@ -101,7 +103,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := sessmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -117,11 +119,11 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 	}
 }
 
-func getAllCORSHeaders() []string {
+func (r *Recipe) getAllCORSHeaders() []string {
 	return getCORSAllowedHeaders()
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
@@ -134,5 +136,5 @@ func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, e
 }
 
 func ResetForTest() {
-	r = nil
+	singletonInstance = nil
 }

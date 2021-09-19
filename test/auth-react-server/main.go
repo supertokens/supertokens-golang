@@ -142,6 +142,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 		if r.Method == "OPTIONS" {
 			response.Header().Set("Access-Control-Allow-Headers", strings.Join(append([]string{"Content-Type"}, supertokens.GetAllCORSHeaders()...), ","))
 			response.Header().Set("Access-Control-Allow-Methods", "*")
+			response.WriteHeader(204)
 			response.Write([]byte(""))
 		} else {
 			next.ServeHTTP(response, r)

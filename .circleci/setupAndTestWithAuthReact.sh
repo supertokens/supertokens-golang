@@ -51,11 +51,10 @@ git checkout $2
 npm run init
 (cd ./examples/for-tests && npm run link) # this is there because in linux machine, postinstall in npm doesn't work..
 cd ../project/test/auth-react-server
-# TODO: start with some test flag to switch off telemetry
 go run main.go &
 pid=$!
 cd ../../../supertokens-auth-react/
-SKIP_OAUTH=true npm run test
+SKIP_OAUTH=true npm run test-with-non-node
 if [[ $? -ne 0 ]]
 then
     echo "test failed... exiting!"
