@@ -19,7 +19,6 @@ import (
 	"context"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -113,7 +112,7 @@ func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.H
 	if err != nil {
 		panic("can't fetch supertokens instance. You should call the supertokens.Init function before using the VerifySession function.")
 	}
-	return api.VerifySession(*instance, options, otherHandler)
+	return VerifySessionHelper(*instance, options, otherHandler)
 }
 
 func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContainer {

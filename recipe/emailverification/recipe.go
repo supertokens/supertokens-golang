@@ -33,9 +33,10 @@ type Recipe struct {
 	APIImpl      evmodels.APIInterface
 }
 
-var r = &Recipe{}
+var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *evmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
@@ -47,33 +48,28 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, handleAPIRequest, getAllCORSHeaders, getAPIsHandled, handleError, onGeneralError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
 	r.RecipeModule = recipeModuleInstance
 
-	return Recipe{
-		RecipeModule: recipeModuleInstance,
-		Config:       verifiedConfig,
-		RecipeImpl:   verifiedConfig.Override.Functions(recipeImplementation),
-		APIImpl:      verifiedConfig.Override.APIs(api.MakeAPIImplementation()),
-	}, nil
+	return *r, nil
 }
 
 func getRecipeInstanceOrThrowError() (*Recipe, error) {
-	if r != nil {
-		return r, nil
+	if singletonInstance != nil {
+		return singletonInstance, nil
 	}
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
 func recipeInit(config *evmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
-		if r == nil {
+		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
-			r = &recipe
-			return &r.RecipeModule, nil
+			singletonInstance = &recipe
+			return &singletonInstance.RecipeModule, nil
 		}
 		return nil, errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
 	}
@@ -81,7 +77,7 @@ func recipeInit(config *evmodels.TypeInput) supertokens.Recipe {
 
 // implement RecipeModule
 
-func getAPIsHandled() ([]supertokens.APIHandled, error) {
+func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	generateEmailVerifyTokenAPINormalised, err := supertokens.NewNormalisedURLPath(generateEmailVerifyTokenAPI)
 	if err != nil {
 		return nil, err
@@ -109,7 +105,7 @@ func getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := evmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -125,10 +121,10 @@ func handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, the
 	}
 }
 
-func getAllCORSHeaders() []string {
+func (r *Recipe) getAllCORSHeaders() []string {
 	return []string{}
 }
 
-func handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	return false, nil
 }

@@ -101,13 +101,6 @@ type APIOptions struct {
 	OtherHandler         http.HandlerFunc
 }
 
-type SessionRecipe struct {
-	RecipeModule supertokens.RecipeModule
-	Config       TypeNormalisedInput
-	RecipeImpl   RecipeInterface
-	APIImpl      APIInterface
-}
-
 type NormalisedErrorHandlers struct {
 	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
 	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter) error
