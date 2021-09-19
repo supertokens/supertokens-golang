@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"os"
 	"strconv"
@@ -35,7 +36,7 @@ import (
 )
 
 var latestURLWithToken string = ""
-var apiPort string = "8080"
+var apiPort string = "8083"
 var webPort string = "3031"
 
 func callSTInit() {
@@ -77,11 +78,13 @@ func callSTInit() {
 				},
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
+						fmt.Println(passwordResetURLWithToken)
 						latestURLWithToken = passwordResetURLWithToken
 					},
 				},
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+						fmt.Println(emailVerificationURLWithToken)
 						latestURLWithToken = emailVerificationURLWithToken
 					},
 				},
@@ -155,13 +158,9 @@ func main() {
 		webPort = os.Args[2]
 	}
 	supertokens.IsTestFlag = true
-	port := "8080"
-	if len(os.Args) >= 2 {
-		port = os.Args[1]
-	}
 	callSTInit()
 
-	http.ListenAndServe(":"+port, corsMiddleware(
+	http.ListenAndServe("0.0.0.0:"+apiPort, corsMiddleware(
 		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/sessioninfo" && r.Method == "GET" {
 				session.VerifySession(nil, sessioninfo).ServeHTTP(rw, r)

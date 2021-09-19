@@ -35,6 +35,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, nil)
 	}
 
+	// we must call this after validateAndNormaliseSignupConfig
 	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)
 
 	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
@@ -163,19 +164,19 @@ func normaliseSignInFormFields(formFields []epmodels.NormalisedFormField) []epmo
 	normalisedFormFields := make([]epmodels.NormalisedFormField, 0)
 	if len(formFields) > 0 {
 		for _, formField := range formFields {
-			var (
-				validate func(value interface{}) *string
-				optional bool = false
-			)
+			if formField.ID != "password" && formField.ID != "email" {
+				continue
+			}
+			var validate func(value interface{}) *string
 			if formField.ID == "password" {
-				validate = formField.Validate
+				validate = defaultValidator
 			} else if formField.ID == "email" {
-				validate = defaultEmailValidator
+				validate = formField.Validate
 			}
 			normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 				ID:       formField.ID,
 				Validate: validate,
-				Optional: optional,
+				Optional: false,
 			})
 		}
 	}
