@@ -164,11 +164,11 @@ while [ $i -lt $frontendDriverLength ]; do
         continue
     else
         # TODO: ./setupAndTestWithAuthReact.sh $coreFree $frontendAuthReactTag $nodeTag
-        if [[ $? -ne 0 ]]
-        then
-            echo "test failed for auth-react tests... exiting!"
-            exit 1
-        fi
+        # if [[ $? -ne 0 ]]
+        # then
+        #     echo "test failed for auth-react tests... exiting!"
+        #     exit 1
+        # fi
 
         rm -rf ../../supertokens-root
     fi
