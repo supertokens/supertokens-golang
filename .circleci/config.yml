@@ -9,6 +9,7 @@ jobs:
         resource_class: large
         steps:
             - checkout
+            - run: apt-get install lsof
             - run: go version
             - run: go get ./...
             - run: (cd .circleci/ && ./doTests.sh)

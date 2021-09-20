@@ -129,7 +129,7 @@ while [ $i -lt $frontendDriverLength ]; do
     nodeTag=$(echo $nodeInfo | jq .tag | tr -d '"')
 
     someFrontendTestsRan=true
-    # TODO: ./setupAndTestWithFrontend.sh $coreFree $frontendTag $nodeTag
+    ./setupAndTestWithFrontend.sh $coreFree $frontendTag $nodeTag
     if [[ $? -ne 0 ]]
     then
         echo "test failed for website tests... exiting!"
