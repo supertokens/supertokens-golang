@@ -53,7 +53,7 @@ npm run init
 cd ../project/test/auth-react-server
 go run main.go &
 cd ../../../supertokens-auth-react/
-SKIP_OAUTH=true npm run test-with-non-node
+# SKIP_OAUTH=true npm run test-with-non-node
 if [[ $? -ne 0 ]]
 then
     echo "test failed... exiting!"
