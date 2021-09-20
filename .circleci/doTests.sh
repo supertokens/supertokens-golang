@@ -132,7 +132,7 @@ while [ $i -lt $frontendDriverLength ]; do
     # TODO: ./setupAndTestWithFrontend.sh $coreFree $frontendTag $nodeTag
     if [[ $? -ne 0 ]]
     then
-        echo "test failed... exiting!"
+        echo "test failed for website tests... exiting!"
         exit 1
     fi
 
@@ -166,7 +166,7 @@ while [ $i -lt $frontendDriverLength ]; do
         # TODO: ./setupAndTestWithAuthReact.sh $coreFree $frontendAuthReactTag $nodeTag
         if [[ $? -ne 0 ]]
         then
-            echo "test failed... exiting!"
+            echo "test failed for auth-react tests... exiting!"
             exit 1
         fi
 
