@@ -80,11 +80,12 @@ func supertokensInit(config TypeInput) error {
 		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
 	}
 
-	if config.Telemetry != nil && *config.Telemetry {
+	superTokensInstance = superTokens
+
+	if config.Telemetry == nil || *config.Telemetry {
 		sendTelemetry()
 	}
 
-	superTokensInstance = superTokens
 	return nil
 }
 
@@ -99,7 +100,6 @@ func getInstanceOrThrowError() (*superTokens, error) {
 	return nil, errors.New("initialisation not done. Did you forget to call the SuperTokens.init function?")
 }
 
-// TODO: add test to see query
 func sendTelemetry() {
 	if IsRunningInTestMode() {
 		// if running in test mode, we do not want to send this.
@@ -134,6 +134,7 @@ func sendTelemetry() {
 	if err != nil {
 		return
 	}
+	req.Header.Set("content-type", "application/json; charset=utf-8")
 	req.Header.Set("api-version", "2")
 
 	client := &http.Client{}
