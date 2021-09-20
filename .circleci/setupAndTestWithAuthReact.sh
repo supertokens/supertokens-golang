@@ -52,7 +52,6 @@ npm run init
 (cd ./examples/for-tests && npm run link) # this is there because in linux machine, postinstall in npm doesn't work..
 cd ../project/test/auth-react-server
 go run main.go &
-pid=$!
 cd ../../../supertokens-auth-react/
 SKIP_OAUTH=true npm run test-with-non-node
 if [[ $? -ne 0 ]]
@@ -60,6 +59,6 @@ then
     echo "test failed... exiting!"
     exit 1
 fi
+pkill -KILL go && pkill -KILL main
 rm -rf ./test/server/node_modules/supertokens-node
 git checkout HEAD -- ./test/server/package.json
-kill -15 $pid
