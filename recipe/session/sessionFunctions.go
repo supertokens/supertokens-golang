@@ -98,7 +98,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		if doAntiCsrfCheck {
 			if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN {
 				if accessTokenInfo != nil {
-					if antiCsrfToken == nil || *antiCsrfToken == *accessTokenInfo.antiCsrfToken {
+					if antiCsrfToken == nil || *antiCsrfToken != *accessTokenInfo.antiCsrfToken {
 						if antiCsrfToken == nil {
 							return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
 						} else {
