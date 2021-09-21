@@ -167,6 +167,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 }
 
+// updates recipeImplHandshakeInfo in place.
 func getHandshakeInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) error {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()

@@ -69,7 +69,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		return sessmodels.GetSessionResponse{}, err
 	}
 
-	if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() && false {
+	if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() {
 		accessTokenInfo, err := getInfoFromAccessToken(accessToken, recipeImplHandshakeInfo.JWTSigningPublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 		if err != nil {
 			if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
