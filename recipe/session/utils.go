@@ -275,11 +275,11 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 
 	_, ok := response["jwtSigningPublicKeyList"]
 	if ok {
-		for _, k := range response["jwtSigningPublicKeyList"].([]map[string]interface{}) {
+		for _, k := range response["jwtSigningPublicKeyList"].([]interface{}) {
 			keyList = append(keyList, sessmodels.KeyInfo{
-				PublicKey:  k["publicKey"].(string),
-				ExpiryTime: uint64(k["expiryTime"].(float64)),
-				CreatedAt:  uint64(k["createdAt"].(float64)),
+				PublicKey:  (k.((map[string]interface{})))["publicKey"].(string),
+				ExpiryTime: uint64((k.((map[string]interface{})))["expiryTime"].(float64)),
+				CreatedAt:  uint64((k.((map[string]interface{})))["createdAt"].(float64)),
 			})
 		}
 	}
