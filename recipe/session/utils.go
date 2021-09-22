@@ -269,3 +269,20 @@ func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string,
 func frontendHasInterceptor(req *http.Request) bool {
 	return getRidFromHeader(req) != nil
 }
+
+func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
+	keyList := []sessmodels.KeyInfo{}
+
+	_, ok := response["jwtSigningPublicKeyList"]
+	if ok {
+		for _, k := range response["jwtSigningPublicKeyList"].([]map[string]interface{}) {
+			keyList = append(keyList, sessmodels.KeyInfo{
+				PublicKey:  k["publicKey"].(string),
+				ExpiryTime: uint64(k["expiryTime"].(float64)),
+				CreatedAt:  uint64(k["createdAt"].(float64)),
+			})
+		}
+	}
+
+	return keyList
+}
