@@ -19,7 +19,7 @@
 
 -   [ ] Changelog has been updated
 -   [ ] `coreDriverInterfaceSupported.json` file has been updated (if needed)
-    -   Along with the associated array in `lib/ts/version.ts`
+    -   Along with the associated array in `supertokens/constants.go`
 -   [ ] `frontendDriverInterfaceSupported.json` file has been updated (if needed)
 -   [ ] Changes to the version if needed
     -   In `supertokens/constants.go > version variable`
