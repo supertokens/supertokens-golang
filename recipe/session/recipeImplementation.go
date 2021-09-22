@@ -186,15 +186,13 @@ func getHandshakeInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, config
 			RefreshTokenValidity:           uint64(response["refreshTokenValidity"].(float64)),
 		}
 
-		updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+		updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 
 	}
 	return nil
 }
 
-func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
-	handshakeInfoLock.Lock()
-	defer handshakeInfoLock.Unlock()
+func updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
 	if len(keyList) == 0 {
 		// means we are using an older CDI version
 		keyList = []sessmodels.KeyInfo{
@@ -209,5 +207,12 @@ func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.Handshak
 	if *recipeImplHandshakeInfo != nil {
 		(*recipeImplHandshakeInfo).SetJwtSigningPublicKeyList(keyList)
 	}
+
+}
+
+func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
+	handshakeInfoLock.Lock()
+	defer handshakeInfoLock.Unlock()
+	updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, keyList, newKey, newExpiry)
 
 }
