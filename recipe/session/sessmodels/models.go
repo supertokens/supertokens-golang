@@ -17,18 +17,41 @@ package sessmodels
 
 import (
 	"net/http"
+	"time"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type HandshakeInfo struct {
-	JWTSigningPublicKey            string
+	rawJwtSigningPublicKeyList     []KeyInfo
 	AntiCsrf                       string
 	AccessTokenBlacklistingEnabled bool
-	JWTSigningPublicKeyExpiryTime  uint64
 	AccessTokenValidity            uint64
 	RefreshTokenValidity           uint64
-	SigningKeyLastUpdated          uint64
+}
+
+func (h *HandshakeInfo) GetJwtSigningPublicKeyList() []KeyInfo {
+	result := []KeyInfo{}
+	for _, key := range h.rawJwtSigningPublicKeyList {
+		if key.ExpiryTime > getCurrTimeInMS() {
+			result = append(result, key)
+		}
+	}
+	return result
+}
+
+func (h *HandshakeInfo) SetJwtSigningPublicKeyList(updatedList []KeyInfo) {
+	h.rawJwtSigningPublicKeyList = updatedList
+}
+
+func getCurrTimeInMS() uint64 {
+	return uint64(time.Now().UnixNano() / 1000000)
+}
+
+type KeyInfo struct {
+	PublicKey  string
+	ExpiryTime uint64
+	CreatedAt  uint64
 }
 
 type CreateOrRefreshAPIResponse struct {

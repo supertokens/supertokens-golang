@@ -45,11 +45,12 @@ func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, c
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
-	updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+	updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 
 	delete(response, "status")
 	delete(response, "jwtSigningPublicKey")
 	delete(response, "jwtSigningPublicKeyExpiryTime")
+	delete(response, "jwtSigningPublicKeyList")
 
 	responseByte, err := json.Marshal(response)
 	if err != nil {
@@ -69,8 +70,11 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		return sessmodels.GetSessionResponse{}, err
 	}
 
-	if recipeImplHandshakeInfo.JWTSigningPublicKeyExpiryTime > getCurrTimeInMS() {
-		accessTokenInfo, err := getInfoFromAccessToken(accessToken, recipeImplHandshakeInfo.JWTSigningPublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+	var accessTokenInfo *accessTokenInfoStruct = nil
+	foundASigningKeyThatIsOlderThanTheAccessToken := false
+	for _, key := range recipeImplHandshakeInfo.GetJwtSigningPublicKeyList() {
+
+		accessTokenInfo, err = getInfoFromAccessToken(accessToken, key.PublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 		if err != nil {
 			if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 				return sessmodels.GetSessionResponse{}, err
@@ -90,40 +94,49 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 				return sessmodels.GetSessionResponse{}, err
 			}
 
-			if recipeImplHandshakeInfo.SigningKeyLastUpdated > timeCreated {
-				return sessmodels.GetSessionResponse{}, err
+			if timeCreated >= key.CreatedAt {
+				foundASigningKeyThatIsOlderThanTheAccessToken = true
+				break
 			}
+		} else {
+			foundASigningKeyThatIsOlderThanTheAccessToken = true
 		}
+	}
 
-		if doAntiCsrfCheck {
-			if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN {
-				if accessTokenInfo != nil {
-					if antiCsrfToken == nil || *antiCsrfToken != *accessTokenInfo.antiCsrfToken {
-						if antiCsrfToken == nil {
-							return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
-						} else {
-							return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed"}
-						}
+	if !foundASigningKeyThatIsOlderThanTheAccessToken {
+		return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{
+			Msg: "Access token has expired. Please call the refresh API",
+		}
+	}
+
+	if doAntiCsrfCheck {
+		if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN {
+			if accessTokenInfo != nil {
+				if antiCsrfToken == nil || *antiCsrfToken != *accessTokenInfo.antiCsrfToken {
+					if antiCsrfToken == nil {
+						return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
+					} else {
+						return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed"}
 					}
 				}
-			} else if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
-				if !containsCustomHeader {
-					return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
-				}
+			}
+		} else if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
+			if !containsCustomHeader {
+				return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
 			}
 		}
+	}
 
-		if accessTokenInfo != nil &&
-			!recipeImplHandshakeInfo.AccessTokenBlacklistingEnabled &&
-			accessTokenInfo.parentRefreshTokenHash1 == nil {
-			return sessmodels.GetSessionResponse{
-				Session: sessmodels.SessionStruct{
-					Handle:        accessTokenInfo.sessionHandle,
-					UserID:        accessTokenInfo.userID,
-					UserDataInJWT: accessTokenInfo.userData,
-				},
-			}, nil
-		}
+	if accessTokenInfo != nil &&
+		!recipeImplHandshakeInfo.AccessTokenBlacklistingEnabled &&
+		accessTokenInfo.parentRefreshTokenHash1 == nil {
+		return sessmodels.GetSessionResponse{
+			Session: sessmodels.SessionStruct{
+				Handle:        accessTokenInfo.sessionHandle,
+				UserID:        accessTokenInfo.userID,
+				UserDataInJWT: accessTokenInfo.userData,
+			},
+		}, nil
 	}
 	requestBody := map[string]interface{}{
 		"accessToken":     accessToken,
@@ -141,7 +154,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 
 	status := response["status"]
 	if status.(string) == "OK" {
-		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 		delete(response, "status")
 		delete(response, "jwtSigningPublicKey")
 		delete(response, "jwtSigningPublicKeyExpiryTime")
@@ -158,14 +171,8 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
 		return sessmodels.GetSessionResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
-		jwtSigningPublicKey, jwtSigningPublicKeyExist := response["jwtSigningPublicKey"]
-		jwtSigningPublicKeyExpiryTime, jwtSigningPublicKeyExpiryTimeExist := response["jwtSigningPublicKeyExpiryTime"]
-		if jwtSigningPublicKeyExist && jwtSigningPublicKeyExpiryTimeExist {
-			updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, jwtSigningPublicKey.(string), uint64(jwtSigningPublicKeyExpiryTime.(float64)))
-		} else {
-			// we ignore any errors produced by this function..
-			getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, true)
-		}
+		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+
 		return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
 }

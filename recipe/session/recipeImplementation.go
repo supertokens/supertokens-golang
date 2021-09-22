@@ -171,42 +171,48 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 func getHandshakeInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) error {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
-	if *recipeImplHandshakeInfo == nil || forceFetch {
+	if *recipeImplHandshakeInfo == nil ||
+		len((*recipeImplHandshakeInfo).GetJwtSigningPublicKeyList()) == 0 ||
+		forceFetch {
 		response, err := querier.SendPostRequest("/recipe/handshake", nil)
 		if err != nil {
 			return err
 		}
-		signingKeyLastUpdated := getCurrTimeInMS()
-		if *recipeImplHandshakeInfo != nil {
-			if uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)) == (**recipeImplHandshakeInfo).JWTSigningPublicKeyExpiryTime &&
-				response["jwtSigningPublicKey"].(string) == (**recipeImplHandshakeInfo).JWTSigningPublicKey {
-				signingKeyLastUpdated = (**recipeImplHandshakeInfo).SigningKeyLastUpdated
-			}
-		}
 
 		*recipeImplHandshakeInfo = &sessmodels.HandshakeInfo{
-			SigningKeyLastUpdated:          signingKeyLastUpdated,
-			JWTSigningPublicKey:            response["jwtSigningPublicKey"].(string),
 			AntiCsrf:                       config.AntiCsrf,
 			AccessTokenBlacklistingEnabled: response["accessTokenBlacklistingEnabled"].(bool),
-			JWTSigningPublicKeyExpiryTime:  uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)),
 			AccessTokenValidity:            uint64(response["accessTokenValidity"].(float64)),
 			RefreshTokenValidity:           uint64(response["refreshTokenValidity"].(float64)),
 		}
+
+		updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
+
 	}
 	return nil
 }
 
-func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, newKey string, newExpiry uint64) {
+func updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
+	if len(keyList) == 0 {
+		// means we are using an older CDI version
+		keyList = []sessmodels.KeyInfo{
+			{
+				PublicKey:  newKey,
+				ExpiryTime: newExpiry,
+				CreatedAt:  getCurrTimeInMS(),
+			},
+		}
+	}
+
+	if *recipeImplHandshakeInfo != nil {
+		(*recipeImplHandshakeInfo).SetJwtSigningPublicKeyList(keyList)
+	}
+
+}
+
+func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
-	if *recipeImplHandshakeInfo != nil {
-		if (**recipeImplHandshakeInfo).JWTSigningPublicKeyExpiryTime != newExpiry ||
-			(**recipeImplHandshakeInfo).JWTSigningPublicKey != newKey {
-			(**recipeImplHandshakeInfo).SigningKeyLastUpdated = getCurrTimeInMS()
-		}
-		(**recipeImplHandshakeInfo).JWTSigningPublicKey = newKey
-		(**recipeImplHandshakeInfo).JWTSigningPublicKeyExpiryTime = newExpiry
-	}
+	updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, keyList, newKey, newExpiry)
 
 }

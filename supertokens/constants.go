@@ -21,8 +21,8 @@ const (
 )
 
 // VERSION current version of the lib
-const VERSION = "0.0.1"
+const VERSION = "0.0.2"
 
 var (
-	cdiSupported = []string{"2.8"}
+	cdiSupported = []string{"2.8", "2.9"}
 )
