@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Support for FDI 1.9
 - JWT Recipe
 
+### Fixed
+- Sets response content-type as JSON
+
 ## [0.0.2] - 2021-09-22
 
 ### Added
