@@ -20,14 +20,15 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config jwtmodels.TypeInput) jwtmodels.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *jwtmodels.TypeInput) jwtmodels.TypeNormalisedInput {
+
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if config.JwtValiditySeconds != nil {
+	if config != nil && config.JwtValiditySeconds != nil {
 		typeNormalisedInput.JwtValiditySeconds = *config.JwtValiditySeconds
 	}
 
-	if config.Override != nil {
+	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
 			typeNormalisedInput.Override.Functions = config.Override.Functions
 		}

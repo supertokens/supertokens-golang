@@ -59,9 +59,23 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 			if err != nil {
 				return jwtmodels.GetJWKSResponse{}, err
 			}
+
+			keys := []jwtmodels.JsonWebKeys{}
+
+			for _, v := range response["keys"].([]interface{}) {
+				keys = append(keys, jwtmodels.JsonWebKeys{
+					Kty: (v.(map[string]interface{}))["kty"].(string),
+					Kid: (v.(map[string]interface{}))["kid"].(string),
+					N:   (v.(map[string]interface{}))["n"].(string),
+					E:   (v.(map[string]interface{}))["e"].(string),
+					Alg: (v.(map[string]interface{}))["alg"].(string),
+					Use: (v.(map[string]interface{}))["use"].(string),
+				})
+			}
+
 			return jwtmodels.GetJWKSResponse{
 				OK: &struct{ Keys []jwtmodels.JsonWebKeys }{
-					Keys: response["keys"].([]jwtmodels.JsonWebKeys),
+					Keys: keys,
 				},
 			}, nil
 		},

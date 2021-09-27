@@ -35,9 +35,9 @@ type Recipe struct {
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *evmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
-	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
+	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
@@ -61,7 +61,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func recipeInit(config *evmodels.TypeInput) supertokens.Recipe {
+func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)

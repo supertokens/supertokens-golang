@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config *evmodels.TypeInput) supertokens.Recipe {
+func Init(config evmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 

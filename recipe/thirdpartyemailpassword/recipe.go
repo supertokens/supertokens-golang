@@ -68,7 +68,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
 	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, &verifiedConfig.EmailVerificationFeature, onGeneralError)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}

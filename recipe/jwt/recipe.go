@@ -37,7 +37,7 @@ var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *jwtmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
-	verifiedConfig := validateAndNormaliseUserInput(appInfo, *config)
+	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 

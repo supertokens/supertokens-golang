@@ -137,8 +137,8 @@ func getRIDFromRequest(r *http.Request) string {
 }
 
 func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(200)
-	res.Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(responseJson)
 	if err != nil {
 		return err
@@ -152,8 +152,8 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 	if statusCode < 300 {
 		return errors.New("Calling sendNon200Response with status code < 300")
 	}
+	res.Header().Set("Content-Type", "application/json; charset=utf-8")
 	res.WriteHeader(statusCode)
-	res.Header().Add("content-type", "application/json")
 	response := map[string]interface{}{
 		"message": message,
 	}
