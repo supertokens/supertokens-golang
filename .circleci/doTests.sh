@@ -159,8 +159,10 @@ while [ $i -lt $frontendDriverLength ]; do
     frontendAuthReactTag=$(echo $frontendAuthReactInfo | jq .tag | tr -d '"')
     frontendAuthReactVersion=$(echo $frontendAuthReactInfo | jq .version | tr -d '"')
 
-    if [[ $frontendDriverVersion == '1.3' ]]; then
+    if [[ $frontendDriverVersion == '1.3' || $frontendDriverVersion == '1.8' ]]; then
         # we skip this since the tests for auth-react here are not reliable due to race conditions...
+
+        # we skip 1.8 since the SDK with just 1.8 doesn't have the right scripts
         continue
     else
         ./setupAndTestWithAuthReact.sh $coreFree $frontendAuthReactTag $nodeTag
