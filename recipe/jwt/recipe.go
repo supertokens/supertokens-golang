@@ -13,29 +13,29 @@
  * under the License.
  */
 
-package emailverification
+package jwt
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/jwt/api"
+	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const RECIPE_ID = "emailverification"
+const RECIPE_ID = "jwt"
 
 type Recipe struct {
 	RecipeModule supertokens.RecipeModule
-	Config       evmodels.TypeNormalisedInput
-	RecipeImpl   evmodels.RecipeInterface
-	APIImpl      evmodels.APIInterface
+	Config       jwtmodels.TypeNormalisedInput
+	RecipeImpl   jwtmodels.RecipeInterface
+	APIImpl      jwtmodels.APIInterface
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *jwtmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -45,7 +45,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
@@ -61,7 +61,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
-func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
+func recipeInit(config *jwtmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)
@@ -71,42 +71,28 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 			singletonInstance = &recipe
 			return &singletonInstance.RecipeModule, nil
 		}
-		return nil, errors.New("Emailverification recipe has already been initialised. Please check your code for bugs.")
+		return nil, errors.New("JWT recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
 // implement RecipeModule
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	generateEmailVerifyTokenAPINormalised, err := supertokens.NewNormalisedURLPath(generateEmailVerifyTokenAPI)
-	if err != nil {
-		return nil, err
-	}
-	emailVerifyAPINormalised, err := supertokens.NewNormalisedURLPath(emailVerifyAPI)
+	getJWKSAPINormalised, err := supertokens.NewNormalisedURLPath(getJWKSAPI)
 	if err != nil {
 		return nil, err
 	}
 
 	return []supertokens.APIHandled{{
-		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: generateEmailVerifyTokenAPINormalised,
-		ID:                     generateEmailVerifyTokenAPI,
-		Disabled:               r.APIImpl.GenerateEmailVerifyTokenPOST == nil,
-	}, {
-		Method:                 http.MethodPost,
-		PathWithoutAPIBasePath: emailVerifyAPINormalised,
-		ID:                     emailVerifyAPI,
-		Disabled:               r.APIImpl.VerifyEmailPOST == nil,
-	}, {
 		Method:                 http.MethodGet,
-		PathWithoutAPIBasePath: emailVerifyAPINormalised,
-		ID:                     emailVerifyAPI,
-		Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,
+		PathWithoutAPIBasePath: getJWKSAPINormalised,
+		ID:                     getJWKSAPI,
+		Disabled:               r.APIImpl.GetJWKSGET == nil,
 	}}, nil
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
-	options := evmodels.APIOptions{
+	options := jwtmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
@@ -114,11 +100,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Res:                  res,
 		OtherHandler:         theirHandler,
 	}
-	if id == generateEmailVerifyTokenAPI {
-		return api.GenerateEmailVerifyToken(r.APIImpl, options)
-	} else {
-		return api.EmailVerify(r.APIImpl, options)
-	}
+	return api.GetJWKS(r.APIImpl, options)
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {

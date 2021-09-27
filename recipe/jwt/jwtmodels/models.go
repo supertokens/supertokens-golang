@@ -13,16 +13,28 @@
  * under the License.
  */
 
-package supertokens
+package jwtmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+type JsonWebKeys struct {
+	Kty string `json:"kty"`
+	Kid string `json:"kid"`
+	N   string `json:"n"`
+	E   string `json:"e"`
+	Alg string `json:"alg"`
+	Use string `json:"use"`
+}
 
-// VERSION current version of the lib
-const VERSION = "0.0.3"
+type TypeInput struct {
+	JwtValiditySeconds *uint64
+	Override           *OverrideStruct
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9"}
-)
+type TypeNormalisedInput struct {
+	JwtValiditySeconds uint64
+	Override           OverrideStruct
+}
+
+type OverrideStruct struct {
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
+}

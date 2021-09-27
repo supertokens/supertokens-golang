@@ -13,16 +13,19 @@
  * under the License.
  */
 
-package supertokens
+package jwtmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+import "net/http"
 
-// VERSION current version of the lib
-const VERSION = "0.0.3"
+type APIOptions struct {
+	RecipeImplementation RecipeInterface
+	Config               TypeNormalisedInput
+	RecipeID             string
+	Req                  *http.Request
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9"}
-)
+type APIInterface struct {
+	GetJWKSGET func(options APIOptions) (GetJWKSResponse, error)
+}

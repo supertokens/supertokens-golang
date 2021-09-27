@@ -13,16 +13,25 @@
  * under the License.
  */
 
-package supertokens
+package api
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.0.3"
+func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOptions) error {
+	if apiImplementation.GetJWKSGET == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
 
-var (
-	cdiSupported = []string{"2.8", "2.9"}
-)
+	response, err := apiImplementation.GetJWKSGET(options)
+	if err != nil {
+		return err
+	}
+
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
+		"keys": response.OK.Keys,
+	})
+}

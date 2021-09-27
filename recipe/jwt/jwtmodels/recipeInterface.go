@@ -13,16 +13,22 @@
  * under the License.
  */
 
-package supertokens
+package jwtmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+type RecipeInterface struct {
+	CreateJWT func(payload map[string]interface{}, validitySeconds *uint64) (CreateJWTResponse, error)
+	GetJWKS   func() (GetJWKSResponse, error)
+}
 
-// VERSION current version of the lib
-const VERSION = "0.0.3"
+type CreateJWTResponse struct {
+	OK *struct {
+		Jwt string
+	}
+	UnsupportedAlgorithmError *struct{}
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9"}
-)
+type GetJWKSResponse struct {
+	OK *struct {
+		Keys []JsonWebKeys
+	}
+}
