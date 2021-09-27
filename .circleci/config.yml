@@ -11,6 +11,8 @@ jobs:
             - checkout
             - run: apt-get install lsof
             - run: go version
+            - run: rm -rf /etc/alternatives/java
+            - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
             - run: go get ./...
             - run: (cd .circleci/ && ./doTests.sh)
             - slack/status
