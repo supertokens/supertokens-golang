@@ -137,6 +137,7 @@ while [ $i -lt $frontendDriverLength ]; do
     fi
 
     rm -rf ../../supertokens-root
+    rm -rf ../../supertokens-website
 
     frontendAuthReactVersionXY=`curl -s -X GET \
     "https://api.supertokens.io/0/frontend-driver-interface/dependency/frontend/latest?password=$SUPERTOKENS_API_KEY&frontendName=auth-react&mode=DEV&version=$frontendDriverVersion" \
@@ -173,6 +174,7 @@ while [ $i -lt $frontendDriverLength ]; do
         fi
 
         rm -rf ../../supertokens-root
+        rm -rf ../../supertokens-auth-react
     fi
 
 done
