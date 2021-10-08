@@ -30,7 +30,7 @@ fi
 pluginInterfaceTag=$(echo $pluginInterfaceInfo | jq .tag | tr -d '"')
 pluginInterfaceVersion=$(echo $pluginInterfaceInfo | jq .version | tr -d '"')
 
-echo "Testing with frontend auth-react: $2, golang tag: $3, FREE core: $coreVersion, plugin-interface: $pluginInterfaceVersion"
+echo "Testing with frontend auth-react: $2, node tag: $3, FREE core: $coreVersion, plugin-interface: $pluginInterfaceVersion"
 
 cd ../../
 git clone git@github.com:supertokens/supertokens-root.git
@@ -50,6 +50,10 @@ cd supertokens-auth-react
 git checkout $2
 npm run init
 (cd ./examples/for-tests && npm run link) # this is there because in linux machine, postinstall in npm doesn't work..
+cd ./test/server/
+npm i -d
+npm i git+https://github.com:supertokens/supertokens-node.git#$3
+cd ../../
 cd ../project/test/auth-react-server
 go run main.go &
 cd ../../../supertokens-auth-react/
