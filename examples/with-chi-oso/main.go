@@ -15,7 +15,7 @@ import (
 
 func main() {
 	svc := service.NewService(service.Opts{
-		Database: database.NewDb("database"),
+		Database: database.NewDb(),
 		Auth:     NewAuth(),
 	})
 
