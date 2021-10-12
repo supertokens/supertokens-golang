@@ -177,9 +177,11 @@ func getParamString(paramsMap map[string]string) (string, error) {
 	return qs.Marshal(params)
 }
 
-// If Third Party login is used with one of the following development keys, then the dev authorization url and the redirect url will be used.
-// When adding or changing client id's they should be in the following order: Google and Facebook
 func isUsingDevelopmentKey(key string) bool {
-
-	return DevOauthClientIds[key]
+	for _, devId := range DevOauthClientIds {
+		if devId == key {
+			return true
+		}
+	}
+	return false
 }
