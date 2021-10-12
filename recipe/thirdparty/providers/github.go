@@ -121,6 +121,9 @@ func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
+				GetClientId: func() string {
+					return config.ClientID
+				},
 			}
 		},
 	}
