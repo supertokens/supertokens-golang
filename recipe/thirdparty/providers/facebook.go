@@ -94,6 +94,9 @@ func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
+				GetClientId: func() string {
+					return config.ClientID
+				},
 			}
 		},
 	}

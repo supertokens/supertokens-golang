@@ -33,6 +33,7 @@ type TypeProviderGetResponse struct {
 	AccessTokenAPI        AccessTokenAPI
 	AuthorisationRedirect AuthorisationRedirect
 	GetProfileInfo        func(authCodeResponse interface{}) (UserInfo, error)
+	GetClientId           func() string
 }
 
 type AccessTokenAPI struct {

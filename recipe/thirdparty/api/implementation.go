@@ -45,11 +45,21 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 					}
 				}
 			}
+
+			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+				params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
+			}
+
 			paramsString, err := getParamString(params)
 			if err != nil {
 				return tpmodels.AuthorisationUrlGETResponse{}, err
 			}
 			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
+
+			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+				url = DevOauthAuthorisationUrl + "?" + paramsString
+			}
+
 			return tpmodels.AuthorisationUrlGETResponse{
 				OK: &struct{ Url string }{
 					Url: url,
@@ -58,6 +68,13 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		},
 
 		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
+			{
+				providerInfo := provider.Get(nil, nil)
+				if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+					redirectURI = DevOauthRedirectUrl
+				}
+			}
+
 			providerInfo := provider.Get(&redirectURI, &code)
 
 			accessTokenAPIResponse, err := postRequest(providerInfo)
@@ -158,4 +175,13 @@ func getParamString(paramsMap map[string]string) (string, error) {
 		params[key] = value
 	}
 	return qs.Marshal(params)
+}
+
+func isUsingDevelopmentKey(key string) bool {
+	for _, devId := range DevOauthClientIds {
+		if devId == key {
+			return true
+		}
+	}
+	return false
 }

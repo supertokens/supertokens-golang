@@ -107,6 +107,9 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
+				GetClientId: func() string {
+					return config.ClientID
+				},
 			}
 		},
 	}
