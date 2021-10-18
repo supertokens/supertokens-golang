@@ -49,8 +49,20 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, err
 	}
 
+	apiDomainScheme, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
+	if err != nil {
+		return sessmodels.TypeNormalisedInput{}, err
+	}
+	websiteDomainScheme, err := GetURLScheme(appInfo.WebsiteDomain.GetAsStringDangerous())
+	if err != nil {
+		return sessmodels.TypeNormalisedInput{}, err
+	}
+
 	cookieSameSite := cookieSameSite_LAX
 	if topLevelAPIDomain != topLevelWebsiteDomain {
+		cookieSameSite = cookieSameSite_NONE
+	}
+	if apiDomainScheme != websiteDomainScheme {
 		cookieSameSite = cookieSameSite_NONE
 	}
 
@@ -198,6 +210,14 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
 	}
 	return parsedURL, nil
+}
+
+func GetURLScheme(URL string) (string, error) {
+	urlObj, err := url.Parse(URL)
+	if err != nil {
+		return "", err
+	}
+	return urlObj.Scheme, nil
 }
 
 func normaliseSessionScopeOrThrowError(sessionScope string) (*string, error) {
