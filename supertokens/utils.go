@@ -56,7 +56,7 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
-	apiDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain)
+	apiDomain, err := NewNormalisedURLDomain(appInfo.APIDomain)
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
