@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -48,6 +49,16 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
 				params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
+
+				if strings.HasPrefix(providerInfo.GetClientId(), DevKeyIdentifier) {
+
+					for key, value := range params {
+						if value == providerInfo.GetClientId() {
+							params[key] = getClientIdFromDevelopmentKey(providerInfo.GetClientId())
+						}
+					}
+				}
+
 			}
 
 			paramsString, err := getParamString(params)
@@ -76,6 +87,15 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 
 			providerInfo := provider.Get(&redirectURI, &code)
+
+			if strings.HasPrefix(providerInfo.GetClientId(), DevKeyIdentifier) {
+
+				for key, value := range providerInfo.AccessTokenAPI.Params {
+					if value == providerInfo.GetClientId() {
+						providerInfo.AccessTokenAPI.Params[key] = getClientIdFromDevelopmentKey(providerInfo.GetClientId())
+					}
+				}
+			}
 
 			accessTokenAPIResponse, err := postRequest(providerInfo)
 
@@ -177,11 +197,34 @@ func getParamString(paramsMap map[string]string) (string, error) {
 	return qs.Marshal(params)
 }
 
+// If Third Party login is used with one of the following development keys, then the dev authorization url and the redirect url will be used.
+
+var DevOauthClientIds = [...]string{
+	"1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com", // google
+	"467101b197249757c71f", // github
+}
+
+const (
+	DevOauthAuthorisationUrl = "https://supertokens.io/dev/oauth/redirect-to-provider"
+	DevOauthRedirectUrl      = "https://supertokens.io/dev/oauth/redirect-to-app"
+	DevKeyIdentifier         = "4398792-"
+)
+
 func isUsingDevelopmentKey(key string) bool {
-	for _, devId := range DevOauthClientIds {
-		if devId == key {
-			return true
+
+	if strings.HasPrefix(key, DevKeyIdentifier) {
+		return true
+	} else {
+		for _, devId := range DevOauthClientIds {
+			if devId == key {
+				return true
+			}
 		}
+		return false
 	}
-	return false
+}
+
+func getClientIdFromDevelopmentKey(key string) string {
+
+	return strings.Split(key, DevKeyIdentifier)[1]
 }
