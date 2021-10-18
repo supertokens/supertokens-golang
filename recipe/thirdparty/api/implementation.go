@@ -47,15 +47,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 				}
 			}
 
-			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 				params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
 
-				if strings.HasPrefix(providerInfo.GetClientId(), DevKeyIdentifier) {
-
-					for key, value := range params {
-						if value == providerInfo.GetClientId() {
-							params[key] = getClientIdFromDevelopmentKey(providerInfo.GetClientId())
-						}
+				for key, value := range params {
+					if value == providerInfo.GetClientId() {
+						params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 					}
 				}
 
@@ -67,7 +64,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
 
-			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 				url = DevOauthAuthorisationUrl + "?" + paramsString
 			}
 
@@ -81,18 +78,18 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
 			{
 				providerInfo := provider.Get(nil, nil)
-				if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+				if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 					redirectURI = DevOauthRedirectUrl
 				}
 			}
 
 			providerInfo := provider.Get(&redirectURI, &code)
 
-			if strings.HasPrefix(providerInfo.GetClientId(), DevKeyIdentifier) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 
 				for key, value := range providerInfo.AccessTokenAPI.Params {
 					if value == providerInfo.GetClientId() {
-						providerInfo.AccessTokenAPI.Params[key] = getClientIdFromDevelopmentKey(providerInfo.GetClientId())
+						providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 					}
 				}
 			}
@@ -210,13 +207,13 @@ const (
 	DevKeyIdentifier         = "4398792-"
 )
 
-func isUsingDevelopmentKey(key string) bool {
+func isUsingDevelopmentClientId(clientId string) bool {
 
-	if strings.HasPrefix(key, DevKeyIdentifier) {
+	if strings.HasPrefix(clientId, DevKeyIdentifier) {
 		return true
 	} else {
-		for _, devId := range DevOauthClientIds {
-			if devId == key {
+		for _, devClientId := range DevOauthClientIds {
+			if devClientId == clientId {
 				return true
 			}
 		}
@@ -224,7 +221,9 @@ func isUsingDevelopmentKey(key string) bool {
 	}
 }
 
-func getClientIdFromDevelopmentKey(key string) string {
-
-	return strings.Split(key, DevKeyIdentifier)[1]
+func getActualClientIdFromDevelopmentClientId(clientId string) string {
+	if strings.HasPrefix(clientId, DevKeyIdentifier) {
+		return strings.Split(clientId, DevKeyIdentifier)[1]
+	}
+	return clientId
 }
