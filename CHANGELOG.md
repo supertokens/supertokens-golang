@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -  Changes implementation such that actual client IDs are not in the SDK, removes imports for OAuth dev related code.
 
+## [0.0.5] - 2021-10-18
+
+### Fixed
+
+- URL protocol is being taken into account when determining the value of cookie same site: https://github.com/supertokens/supertokens-golang/issues/36
+
 ## [0.0.4] - 2021-10-12
 
 ### Added
