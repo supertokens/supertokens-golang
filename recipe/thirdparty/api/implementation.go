@@ -22,6 +22,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"reflect"
+	"strings"
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -46,8 +47,15 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 				}
 			}
 
-			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 				params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
+
+				for key, value := range params {
+					if value == providerInfo.GetClientId() {
+						params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					}
+				}
+
 			}
 
 			paramsString, err := getParamString(params)
@@ -56,7 +64,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
 
-			if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 				url = DevOauthAuthorisationUrl + "?" + paramsString
 			}
 
@@ -70,12 +78,21 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
 			{
 				providerInfo := provider.Get(nil, nil)
-				if isUsingDevelopmentKey(providerInfo.GetClientId()) {
+				if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 					redirectURI = DevOauthRedirectUrl
 				}
 			}
 
 			providerInfo := provider.Get(&redirectURI, &code)
+
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+
+				for key, value := range providerInfo.AccessTokenAPI.Params {
+					if value == providerInfo.GetClientId() {
+						providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					}
+				}
+			}
 
 			accessTokenAPIResponse, err := postRequest(providerInfo)
 
@@ -177,11 +194,36 @@ func getParamString(paramsMap map[string]string) (string, error) {
 	return qs.Marshal(params)
 }
 
-func isUsingDevelopmentKey(key string) bool {
-	for _, devId := range DevOauthClientIds {
-		if devId == key {
-			return true
+// If Third Party login is used with one of the following development keys, then the dev authorization url and the redirect url will be used.
+
+var DevOauthClientIds = [...]string{
+	"1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com", // google
+	"467101b197249757c71f", // github
+}
+
+const (
+	DevOauthAuthorisationUrl = "https://supertokens.io/dev/oauth/redirect-to-provider"
+	DevOauthRedirectUrl      = "https://supertokens.io/dev/oauth/redirect-to-app"
+	DevKeyIdentifier         = "4398792-"
+)
+
+func isUsingDevelopmentClientId(clientId string) bool {
+
+	if strings.HasPrefix(clientId, DevKeyIdentifier) {
+		return true
+	} else {
+		for _, devClientId := range DevOauthClientIds {
+			if devClientId == clientId {
+				return true
+			}
 		}
+		return false
 	}
-	return false
+}
+
+func getActualClientIdFromDevelopmentClientId(clientId string) string {
+	if strings.HasPrefix(clientId, DevKeyIdentifier) {
+		return strings.Split(clientId, DevKeyIdentifier)[1]
+	}
+	return clientId
 }
