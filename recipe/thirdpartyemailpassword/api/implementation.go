@@ -39,104 +39,86 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 			return emailPasswordImplementation.PasswordResetPOST(formFields, token, options)
 		},
 
-		SignInUpPOST: func(input tpepmodels.SignInUpAPIInput) (tpepmodels.SignInUpAPIOutput, error) {
-			if input.EmailpasswordInput != nil {
-				if input.EmailpasswordInput.IsSignIn {
-					response, err := emailPasswordImplementation.SignInPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
-					if err != nil {
-						return tpepmodels.SignInUpAPIOutput{}, err
-					}
-					if response.OK != nil {
-						return tpepmodels.SignInUpAPIOutput{
-							EmailpasswordOutput: &tpepmodels.EmailpasswordOutput{
-								OK: &struct {
-									User           tpepmodels.User
-									CreatedNewUser bool
-								}{
-									User: tpepmodels.User{
-										ID:         response.OK.User.ID,
-										Email:      response.OK.User.Email,
-										TimeJoined: response.OK.User.TimeJoined,
-										ThirdParty: nil,
-									},
-									CreatedNewUser: false,
-								},
-							},
-						}, nil
-					} else {
-						return tpepmodels.SignInUpAPIOutput{
-							EmailpasswordOutput: &tpepmodels.EmailpasswordOutput{
-								WrongCredentialsError: &struct{}{},
-							},
-						}, nil
-					}
-				} else {
-					response, err := emailPasswordImplementation.SignUpPOST(input.EmailpasswordInput.FormFields, input.EmailpasswordInput.Options)
-					if err != nil {
-						return tpepmodels.SignInUpAPIOutput{}, err
-					}
-					if response.OK != nil {
-						return tpepmodels.SignInUpAPIOutput{
-							EmailpasswordOutput: &tpepmodels.EmailpasswordOutput{
-								OK: &struct {
-									User           tpepmodels.User
-									CreatedNewUser bool
-								}{
-									User: tpepmodels.User{
-										ID:         response.OK.User.ID,
-										Email:      response.OK.User.Email,
-										TimeJoined: response.OK.User.TimeJoined,
-										ThirdParty: nil,
-									},
-									CreatedNewUser: true,
-								},
-							},
-						}, nil
-					} else {
-						return tpepmodels.SignInUpAPIOutput{
-							EmailpasswordOutput: &tpepmodels.EmailpasswordOutput{
-								EmailAlreadyExistsError: &struct{}{},
-							},
-						}, nil
-					}
-				}
+		EmailPasswordSignInPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (tpepmodels.SignInResponse, error) {
+			response, err := emailPasswordImplementation.SignInPOST(formFields, options)
+			if err != nil {
+				return tpepmodels.SignInResponse{}, err
+			}
+			if response.OK != nil {
+				return tpepmodels.SignInResponse{
+					OK: &struct {
+						User tpepmodels.User
+					}{
+						User: tpepmodels.User{
+							ID:         response.OK.User.ID,
+							Email:      response.OK.User.Email,
+							TimeJoined: response.OK.User.TimeJoined,
+							ThirdParty: nil,
+						},
+					},
+				}, nil
 			} else {
-				response, err := thirdPartyImplementation.SignInUpPOST(input.ThirdPartyInput.Provider, input.ThirdPartyInput.Code, input.ThirdPartyInput.RedirectURI, input.ThirdPartyInput.Options)
-				if err != nil {
-					return tpepmodels.SignInUpAPIOutput{}, err
-				}
-				if response.FieldError != nil {
-					return tpepmodels.SignInUpAPIOutput{
-						ThirdPartyOutput: &tpepmodels.ThirdPartyOutput{
-							FieldError: &struct{ Error string }{},
+				return tpepmodels.SignInResponse{
+					WrongCredentialsError: &struct{}{},
+				}, nil
+			}
+		},
+
+		EmailPasswordSignUpPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (tpepmodels.SignUpResponse, error) {
+			response, err := emailPasswordImplementation.SignUpPOST(formFields, options)
+			if err != nil {
+				return tpepmodels.SignUpResponse{}, err
+			}
+			if response.OK != nil {
+				return tpepmodels.SignUpResponse{
+					OK: &struct {
+						User tpepmodels.User
+					}{
+						User: tpepmodels.User{
+							ID:         response.OK.User.ID,
+							Email:      response.OK.User.Email,
+							TimeJoined: response.OK.User.TimeJoined,
+							ThirdParty: nil,
 						},
-					}, nil
-				} else if response.NoEmailGivenByProviderError != nil {
-					return tpepmodels.SignInUpAPIOutput{
-						ThirdPartyOutput: &tpepmodels.ThirdPartyOutput{
-							NoEmailGivenByProviderError: &struct{}{},
+					},
+				}, nil
+			} else {
+				return tpepmodels.SignUpResponse{
+					EmailAlreadyExistsError: &struct{}{},
+				}, nil
+			}
+		},
+
+		ThirdPartySignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpepmodels.ThirdPartyOutput, error) {
+			response, err := thirdPartyImplementation.SignInUpPOST(provider, code, redirectURI, options)
+			if err != nil {
+				return tpepmodels.ThirdPartyOutput{}, err
+			}
+			if response.FieldError != nil {
+				return tpepmodels.ThirdPartyOutput{
+					FieldError: &struct{ Error string }{},
+				}, nil
+			} else if response.NoEmailGivenByProviderError != nil {
+				return tpepmodels.ThirdPartyOutput{
+					NoEmailGivenByProviderError: &struct{}{},
+				}, nil
+			} else {
+				return tpepmodels.ThirdPartyOutput{
+					OK: &struct {
+						CreatedNewUser   bool
+						User             tpepmodels.User
+						AuthCodeResponse interface{}
+					}{
+						CreatedNewUser:   response.OK.CreatedNewUser,
+						AuthCodeResponse: response.OK.AuthCodeResponse,
+						User: tpepmodels.User{
+							ID:         response.OK.User.ID,
+							TimeJoined: response.OK.User.TimeJoined,
+							Email:      response.OK.User.Email,
+							ThirdParty: &response.OK.User.ThirdParty,
 						},
-					}, nil
-				} else {
-					return tpepmodels.SignInUpAPIOutput{
-						ThirdPartyOutput: &tpepmodels.ThirdPartyOutput{
-							OK: &struct {
-								CreatedNewUser   bool
-								User             tpepmodels.User
-								AuthCodeResponse interface{}
-							}{
-								CreatedNewUser:   response.OK.CreatedNewUser,
-								AuthCodeResponse: response.OK.AuthCodeResponse,
-								User: tpepmodels.User{
-									ID:         response.OK.User.ID,
-									TimeJoined: response.OK.User.TimeJoined,
-									Email:      response.OK.User.Email,
-									ThirdParty: &response.OK.User.ThirdParty,
-								},
-							},
-						},
-					}, nil
-				}
+					},
+				}, nil
 			}
 		},
 
