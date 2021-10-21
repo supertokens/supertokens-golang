@@ -27,20 +27,20 @@ import (
 )
 
 type SessionContainerInput struct {
-	sessionHandle string
-	userID        string
-	userDataInJWT map[string]interface{}
-	res           http.ResponseWriter
-	accessToken   string
+	sessionHandle         string
+	userID                string
+	userDataInAccessToken map[string]interface{}
+	res                   http.ResponseWriter
+	accessToken           string
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInJWT map[string]interface{}, res http.ResponseWriter) SessionContainerInput {
+func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter) SessionContainerInput {
 	return SessionContainerInput{
-		sessionHandle: sessionHandle,
-		userID:        userID,
-		userDataInJWT: userDataInJWT,
-		res:           res,
-		accessToken:   accessToken,
+		sessionHandle:         sessionHandle,
+		userID:                userID,
+		userDataInAccessToken: userDataInAccessToken,
+		res:                   res,
+		accessToken:           accessToken,
 	}
 }
 
@@ -80,20 +80,20 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return nil
 		},
 
-		UpdateJWTPayload: func(newJWTPayload map[string]interface{}) error {
-			if newJWTPayload == nil {
-				newJWTPayload = map[string]interface{}{}
+		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
+			if newAccessTokenPayload == nil {
+				newAccessTokenPayload = map[string]interface{}{}
 			}
 			response, err := querier.SendPostRequest("/recipe/session/regenerate", map[string]interface{}{
 				"accessToken":   session.accessToken,
-				"userDataInJWT": newJWTPayload,
+				"userDataInJWT": newAccessTokenPayload,
 			})
 			if err != nil {
 				return err
 			}
 			if response["status"].(string) == errors.UnauthorizedErrorStr {
 				clearSessionFromCookie(config, session.res)
-				return errors.UnauthorizedError{Msg: "Session has probably been revoked while updating JWT payload"}
+				return errors.UnauthorizedError{Msg: "Session has probably been revoked while updating AccessToken payload"}
 			}
 
 			responseByte, err := json.Marshal(response)
@@ -106,10 +106,10 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 				return err
 			}
 
-			session.userDataInJWT = resp.Session.UserDataInJWT
+			session.userDataInAccessToken = resp.Session.UserDataInAccessToken
 			if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
 				session.accessToken = resp.AccessToken.Token
-				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInJWT)
+				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
 				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
 			}
 			return nil
@@ -117,8 +117,8 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 		GetUserID: func() string {
 			return session.userID
 		},
-		GetJWTPayload: func() map[string]interface{} {
-			return session.userDataInJWT
+		GetAccessTokenPayload: func() map[string]interface{} {
+			return session.userDataInAccessToken
 		},
 		GetHandle: func() string {
 			return session.sessionHandle

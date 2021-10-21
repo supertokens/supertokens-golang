@@ -60,10 +60,10 @@ func (s *service) Sessioninfo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	w.Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(map[string]interface{}{
-		"sessionHandle": sessionContainer.GetHandle(),
-		"userId":        sessionContainer.GetUserID(),
-		"jwtPayload":    sessionContainer.GetJWTPayload(),
-		"sessionData":   sessionData,
+		"sessionHandle":      sessionContainer.GetHandle(),
+		"userId":             sessionContainer.GetUserID(),
+		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
+		"sessionData":        sessionData,
 	})
 	if err != nil {
 		w.WriteHeader(500)

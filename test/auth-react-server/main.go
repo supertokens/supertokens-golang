@@ -198,7 +198,7 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 	bytes, err := json.Marshal(map[string]interface{}{
 		"sessionHandle": sessionContainer.GetHandle(),
 		"userId":        sessionContainer.GetUserID(),
-		"jwtPayload":    sessionContainer.GetJWTPayload(),
+		"jwtPayload":    sessionContainer.GetAccessTokenPayload(),
 		"sessionData":   sessionData,
 	})
 	if err != nil {

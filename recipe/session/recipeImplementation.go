@@ -34,13 +34,13 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
 	return sessmodels.RecipeInterface{
-		CreateNewSession: func(res http.ResponseWriter, userID string, jwtPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
-			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, jwtPayload, sessionData)
+		CreateNewSession: func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, accessTokenPayload, sessionData)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, response)
-			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
+			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
 			return newSessionContainer(querier, config, &sessionContainerInput), nil
 		},
 
@@ -84,11 +84,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			}
 
 			if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
+				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
 				attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
 				accessToken = &response.AccessToken.Token
 			}
-			sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
+			sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
 			sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
 			return &sessionContainer, nil
 		},
@@ -120,7 +120,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 				return sessmodels.SessionContainer{}, err
 			}
 			attachCreateOrRefreshSessionResponseToRes(config, res, response)
-			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInJWT, res)
+			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
 			sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
 			return sessionContainer, nil
 		},
@@ -145,8 +145,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return updateSessionDataHelper(querier, sessionHandle, newSessionData)
 		},
 
-		UpdateJWTPayload: func(sessionHandle string, newJWTPayload map[string]interface{}) error {
-			return updateJWTPayloadHelper(querier, sessionHandle, newJWTPayload)
+		UpdateAccessTokenPayload: func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+			return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
 		},
 
 		GetAccessTokenLifeTimeMS: func() (uint64, error) {

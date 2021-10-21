@@ -63,9 +63,9 @@ type CreateOrRefreshAPIResponse struct {
 }
 
 type SessionStruct struct {
-	Handle        string                 `json:"handle"`
-	UserID        string                 `json:"userId"`
-	UserDataInJWT map[string]interface{} `json:"userDataInJWT"`
+	Handle                string                 `json:"handle"`
+	UserID                string                 `json:"userId"`
+	UserDataInAccessToken map[string]interface{} `json:"userDataInJWT"`
 }
 
 type CreateOrRefreshAPIResponseToken struct {
@@ -131,25 +131,25 @@ type NormalisedErrorHandlers struct {
 }
 
 type SessionContainer struct {
-	RevokeSession     func() error
-	GetSessionData    func() (map[string]interface{}, error)
-	UpdateSessionData func(newSessionData map[string]interface{}) error
-	GetUserID         func() string
-	GetJWTPayload     func() map[string]interface{}
-	GetHandle         func() string
-	GetAccessToken    func() string
-	UpdateJWTPayload  func(newJWTPayload map[string]interface{}) error
-	GetTimeCreated    func() (uint64, error)
-	GetExpiry         func() (uint64, error)
+	RevokeSession            func() error
+	GetSessionData           func() (map[string]interface{}, error)
+	UpdateSessionData        func(newSessionData map[string]interface{}) error
+	GetUserID                func() string
+	GetAccessTokenPayload    func() map[string]interface{}
+	GetHandle                func() string
+	GetAccessToken           func() string
+	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error
+	GetTimeCreated           func() (uint64, error)
+	GetExpiry                func() (uint64, error)
 }
 
 type SessionInformation struct {
-	SessionHandle string
-	UserId        string
-	SessionData   map[string]interface{}
-	Expiry        uint64
-	JwtPayload    map[string]interface{}
-	TimeCreated   uint64
+	SessionHandle      string
+	UserId             string
+	SessionData        map[string]interface{}
+	Expiry             uint64
+	AccessTokenPayload map[string]interface{}
+	TimeCreated        uint64
 }
 
 const SessionContext int = iota

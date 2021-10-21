@@ -27,12 +27,12 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateNewSession(res http.ResponseWriter, userID string, jwtPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
-	return instance.RecipeImpl.CreateNewSession(res, userID, jwtPayload, sessionData)
+	return instance.RecipeImpl.CreateNewSession(res, userID, accessTokenPayload, sessionData)
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
@@ -99,12 +99,12 @@ func UpdateSessionData(sessionHandle string, newSessionData map[string]interface
 	return instance.RecipeImpl.UpdateSessionData(sessionHandle, newSessionData)
 }
 
-func UpdateJWTPayload(sessionHandle string, newJWTPayload map[string]interface{}) error {
+func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return instance.RecipeImpl.UpdateJWTPayload(sessionHandle, newJWTPayload)
+	return instance.RecipeImpl.UpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload)
 }
 
 func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {

@@ -76,9 +76,9 @@ func sessioninfo(c *gin.Context) {
 		return
 	}
 	c.JSON(200, map[string]interface{}{
-		"sessionHandle": sessionContainer.GetHandle(),
-		"userId":        sessionContainer.GetUserID(),
-		"jwtPayload":    sessionContainer.GetJWTPayload(),
-		"sessionData":   sessionData,
+		"sessionHandle":      sessionContainer.GetHandle(),
+		"userId":             sessionContainer.GetUserID(),
+		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
+		"sessionData":        sessionData,
 	})
 }

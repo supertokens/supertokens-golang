@@ -95,10 +95,10 @@ func sessioninfo(c echo.Context) error {
 	c.Response().WriteHeader(200)
 	c.Response().Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(map[string]interface{}{
-		"sessionHandle": sessionContainer.GetHandle(),
-		"userId":        sessionContainer.GetUserID(),
-		"jwtPayload":    sessionContainer.GetJWTPayload(),
-		"sessionData":   sessionData,
+		"sessionHandle":      sessionContainer.GetHandle(),
+		"userId":             sessionContainer.GetUserID(),
+		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
+		"sessionData":        sessionData,
 	})
 	if err != nil {
 		c.Response().WriteHeader(500)

@@ -261,7 +261,7 @@ func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedI
 	accessToken := response.AccessToken
 	refreshToken := response.RefreshToken
 	idRefreshToken := response.IDRefreshToken
-	setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInJWT)
+	setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
 	attachAccessTokenToCookie(config, res, accessToken.Token, accessToken.Expiry)
 	attachRefreshTokenToCookie(config, res, refreshToken.Token, refreshToken.Expiry)
 	setIDRefreshTokenInHeaderAndCookie(config, res, idRefreshToken.Token, idRefreshToken.Expiry)

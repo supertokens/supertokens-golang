@@ -24,16 +24,16 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, JWTPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
-	if JWTPayload == nil {
-		JWTPayload = map[string]interface{}{}
+func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, AccessTokenPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
+	if AccessTokenPayload == nil {
+		AccessTokenPayload = map[string]interface{}{}
 	}
 	if sessionData == nil {
 		sessionData = map[string]interface{}{}
 	}
 	requestBody := map[string]interface{}{
 		"userId":             userID,
-		"userDataInJWT":      JWTPayload,
+		"userDataInJWT":      AccessTokenPayload,
 		"userDataInDatabase": sessionData,
 	}
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
@@ -132,9 +132,9 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		accessTokenInfo.parentRefreshTokenHash1 == nil {
 		return sessmodels.GetSessionResponse{
 			Session: sessmodels.SessionStruct{
-				Handle:        accessTokenInfo.sessionHandle,
-				UserID:        accessTokenInfo.userID,
-				UserDataInJWT: accessTokenInfo.userData,
+				Handle:                accessTokenInfo.sessionHandle,
+				UserID:                accessTokenInfo.userID,
+				UserDataInAccessToken: accessTokenInfo.userData,
 			},
 		}, nil
 	}
@@ -187,12 +187,12 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	}
 	if response["status"] == "OK" {
 		return sessmodels.SessionInformation{
-			SessionHandle: response["sessionHandle"].(string),
-			UserId:        response["userId"].(string),
-			SessionData:   response["userDataInDatabase"].(map[string]interface{}),
-			Expiry:        uint64(response["expiry"].(float64)),
-			TimeCreated:   uint64(response["timeCreated"].(float64)),
-			JwtPayload:    response["userDataInJWT"].(map[string]interface{}),
+			SessionHandle:      response["sessionHandle"].(string),
+			UserId:             response["userId"].(string),
+			SessionData:        response["userDataInDatabase"].(map[string]interface{}),
+			Expiry:             uint64(response["expiry"].(float64)),
+			TimeCreated:        uint64(response["timeCreated"].(float64)),
+			AccessTokenPayload: response["userDataInJWT"].(map[string]interface{}),
 		}, nil
 	}
 	return sessmodels.SessionInformation{}, errors.UnauthorizedError{Msg: response["message"].(string)}
@@ -311,13 +311,13 @@ func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, 
 	return nil
 }
 
-func updateJWTPayloadHelper(querier supertokens.Querier, sessionHandle string, newJWTPayload map[string]interface{}) error {
-	if newJWTPayload == nil {
-		newJWTPayload = map[string]interface{}{}
+func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+	if newAccessTokenPayload == nil {
+		newAccessTokenPayload = map[string]interface{}{}
 	}
 	response, err := querier.SendPutRequest("/recipe/jwt/data", map[string]interface{}{
 		"sessionHandle": sessionHandle,
-		"userDataInJWT": newJWTPayload,
+		"userDataInJWT": newAccessTokenPayload,
 	})
 	if err != nil {
 		return err

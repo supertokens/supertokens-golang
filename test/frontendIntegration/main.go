@@ -211,15 +211,15 @@ func testing(response http.ResponseWriter, request *http.Request) {
 
 func getJWT(response http.ResponseWriter, request *http.Request) {
 	session := session.GetSessionFromRequestContext(request.Context())
-	json.NewEncoder(response).Encode(session.GetJWTPayload())
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
 }
 
 func updateJwt(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	session := session.GetSessionFromRequestContext(request.Context())
-	session.UpdateJWTPayload(body)
-	json.NewEncoder(response).Encode(session.GetJWTPayload())
+	session.UpdateAccessTokenPayload(body)
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
 }
 
 func checkRID(response http.ResponseWriter, request *http.Request) {
