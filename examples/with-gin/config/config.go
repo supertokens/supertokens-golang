@@ -4,8 +4,11 @@ import (
 	"log"
 
 	"github.com/spf13/viper"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -25,25 +28,6 @@ func Init() {
 		log.Fatal("error on parsing configuration file")
 	}
 
-	// TODO: tidy up example
-	// thirdpartyemailpasswordConfig := &models.TypeInput{
-	// 	Providers: []tpm.TypeProvider{thirdparty.Github(providers.GithubConfig{
-	// 		ClientID:     config.GetString("GITHUB_CLIENT_ID"),
-	// 		ClientSecret: config.GetString("GITHUB_CLIENT_SECRET"),
-	// 	}),
-	// 	},
-	// }
-
-	// thirdpartyConfig := &tpm.TypeInput{
-	// 	SignInAndUpFeature: tpm.TypeInputSignInAndUp{
-	// 		Providers: []tpm.TypeProvider{thirdparty.Github(providers.GithubConfig{
-	// 			ClientID:     config.GetString("GITHUB_CLIENT_ID"),
-	// 			ClientSecret: config.GetString("GITHUB_CLIENT_SECRET"),
-	// 		}),
-	// 		},
-	// 	},
-	// }
-
 	err = supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "https://try.supertokens.io",
@@ -54,7 +38,20 @@ func Init() {
 			WebsiteDomain: "http://localhost" + config.GetString("server.websitePort"),
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+				Providers: []tpmodels.TypeProvider{
+					// We have provided you with development keys which you can use for testsing.
+					// IMPORTANT: Please replace them with your own OAuth keys for production use.
+					thirdparty.Google(tpmodels.GoogleConfig{
+						ClientID:     "1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com",
+						ClientSecret: "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",
+					}),
+					thirdparty.Github(tpmodels.GithubConfig{
+						ClientID:     "467101b197249757c71f",
+						ClientSecret: "e97051221f4b6426e8fe8d51486396703012f5bd",
+					}),
+				},
+			}),
 			session.Init(nil),
 			// thirdparty.Init(thirdpartyConfig),
 		},
