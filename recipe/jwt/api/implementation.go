@@ -20,9 +20,10 @@ import (
 )
 
 func MakeAPIImplementation() jwtmodels.APIInterface {
+	getJWKSGET := func(options jwtmodels.APIOptions) (jwtmodels.GetJWKSResponse, error) {
+		return (*options.RecipeImplementation.GetJWKS)()
+	}
 	return jwtmodels.APIInterface{
-		GetJWKSGET: func(options jwtmodels.APIOptions) (jwtmodels.GetJWKSResponse, error) {
-			return options.RecipeImplementation.GetJWKS()
-		},
+		GetJWKSGET: &getJWKSGET,
 	}
 }

@@ -29,7 +29,7 @@ func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
-	return instance.RecipeImpl.CreateJWT(payload, validitySecondsPointer)
+	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer)
 }
 
 func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
@@ -37,5 +37,5 @@ func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
 	}
-	return instance.RecipeImpl.GetJWKS()
+	return (*instance.RecipeImpl.GetJWKS)()
 }
