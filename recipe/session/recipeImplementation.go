@@ -33,138 +33,152 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
-	return sessmodels.RecipeInterface{
-		CreateNewSession: func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
-			response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, accessTokenPayload, sessionData)
-			if err != nil {
-				return sessmodels.SessionContainer{}, err
-			}
-			attachCreateOrRefreshSessionResponseToRes(config, res, response)
-			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
-			return newSessionContainer(querier, config, &sessionContainerInput), nil
-		},
+	createNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+		response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, accessTokenPayload, sessionData)
+		if err != nil {
+			return sessmodels.SessionContainer{}, err
+		}
+		attachCreateOrRefreshSessionResponseToRes(config, res, response)
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
+		return newSessionContainer(querier, config, &sessionContainerInput), nil
+	}
 
-		GetSession: func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
-			var doAntiCsrfCheck *bool = nil
-			if options != nil {
-				doAntiCsrfCheck = options.AntiCsrfCheck
-			}
+	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
+		var doAntiCsrfCheck *bool = nil
+		if options != nil {
+			doAntiCsrfCheck = options.AntiCsrfCheck
+		}
 
-			idRefreshToken := getIDRefreshTokenFromCookie(req)
-			if idRefreshToken == nil {
-				if options != nil && options.SessionRequired != nil &&
-					!(*options.SessionRequired) {
-					return nil, nil
-				}
-				return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
-			}
-
-			accessToken := getAccessTokenFromCookie(req)
-			if accessToken == nil {
-				if options == nil || (options.SessionRequired != nil && *options.SessionRequired) || frontendHasInterceptor(req) || req.Method == http.MethodGet {
-					return nil, errors.TryRefreshTokenError{
-						Msg: "Access token has expired. Please call the refresh API",
-					}
-				}
+		idRefreshToken := getIDRefreshTokenFromCookie(req)
+		if idRefreshToken == nil {
+			if options != nil && options.SessionRequired != nil &&
+				!(*options.SessionRequired) {
 				return nil, nil
 			}
+			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+		}
 
-			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-			if doAntiCsrfCheck == nil {
-				doAntiCsrfCheckBool := req.Method != http.MethodGet
-				doAntiCsrfCheck = &doAntiCsrfCheckBool
-			}
-
-			response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, res)
+		accessToken := getAccessTokenFromCookie(req)
+		if accessToken == nil {
+			if options == nil || (options.SessionRequired != nil && *options.SessionRequired) || frontendHasInterceptor(req) || req.Method == http.MethodGet {
+				return nil, errors.TryRefreshTokenError{
+					Msg: "Access token has expired. Please call the refresh API",
 				}
-				return nil, err
 			}
+			return nil, nil
+		}
 
-			if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
-				attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
-				accessToken = &response.AccessToken.Token
-			}
-			sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
-			sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
-			return &sessionContainer, nil
-		},
+		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
+		if doAntiCsrfCheck == nil {
+			doAntiCsrfCheckBool := req.Method != http.MethodGet
+			doAntiCsrfCheck = &doAntiCsrfCheckBool
+		}
 
-		GetSessionInformation: func(sessionHandle string) (sessmodels.SessionInformation, error) {
-			return getSessionInformationHelper(querier, sessionHandle)
-		},
-
-		RefreshSession: func(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
-			inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
-			if inputIdRefreshToken == nil {
-				return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
-			}
-
-			inputRefreshToken := getRefreshTokenFromCookie(req)
-			if inputRefreshToken == nil {
+		response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
+		if err != nil {
+			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 				clearSessionFromCookie(config, res)
-				return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 			}
+			return nil, err
+		}
 
-			antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-			response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
-			if err != nil {
-				// we clear cookies if it is UnauthorizedError & ClearCookies in it is nil or true
-				// we clear cookies if it is TokenTheftDetectedError
-				if (defaultErrors.As(err, &errors.UnauthorizedError{}) && (err.(errors.UnauthorizedError).ClearCookies == nil || *err.(errors.UnauthorizedError).ClearCookies)) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
-					clearSessionFromCookie(config, res)
-				}
-				return sessmodels.SessionContainer{}, err
-			}
-			attachCreateOrRefreshSessionResponseToRes(config, res, response)
-			sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
-			sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
-			return sessionContainer, nil
-		},
-
-		RevokeAllSessionsForUser: func(userID string) ([]string, error) {
-			return revokeAllSessionsForUserHelper(querier, userID)
-		},
-
-		GetAllSessionHandlesForUser: func(userID string) ([]string, error) {
-			return getAllSessionHandlesForUserHelper(querier, userID)
-		},
-
-		RevokeSession: func(sessionHandle string) (bool, error) {
-			return revokeSessionHelper(querier, sessionHandle)
-		},
-
-		RevokeMultipleSessions: func(sessionHandles []string) ([]string, error) {
-			return revokeMultipleSessionsHelper(querier, sessionHandles)
-		},
-
-		UpdateSessionData: func(sessionHandle string, newSessionData map[string]interface{}) error {
-			return updateSessionDataHelper(querier, sessionHandle, newSessionData)
-		},
-
-		UpdateAccessTokenPayload: func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
-		},
-
-		GetAccessTokenLifeTimeMS: func() (uint64, error) {
-			err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-			if err != nil {
-				return 0, err
-			}
-			return recipeImplHandshakeInfo.AccessTokenValidity, nil
-		},
-
-		GetRefreshTokenLifeTimeMS: func() (uint64, error) {
-			err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-			if err != nil {
-				return 0, err
-			}
-			return recipeImplHandshakeInfo.RefreshTokenValidity, nil
-		},
+		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+			setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
+			attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
+			accessToken = &response.AccessToken.Token
+		}
+		sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
+		sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
+		return &sessionContainer, nil
 	}
+
+	getSessionInformation := func(sessionHandle string) (sessmodels.SessionInformation, error) {
+		return getSessionInformationHelper(querier, sessionHandle)
+	}
+
+	refreshSession := func(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
+		inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
+		if inputIdRefreshToken == nil {
+			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+		}
+
+		inputRefreshToken := getRefreshTokenFromCookie(req)
+		if inputRefreshToken == nil {
+			clearSessionFromCookie(config, res)
+			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
+		}
+
+		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
+		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
+		if err != nil {
+			// we clear cookies if it is UnauthorizedError & ClearCookies in it is nil or true
+			// we clear cookies if it is TokenTheftDetectedError
+			if (defaultErrors.As(err, &errors.UnauthorizedError{}) && (err.(errors.UnauthorizedError).ClearCookies == nil || *err.(errors.UnauthorizedError).ClearCookies)) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
+				clearSessionFromCookie(config, res)
+			}
+			return sessmodels.SessionContainer{}, err
+		}
+		attachCreateOrRefreshSessionResponseToRes(config, res, response)
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
+		sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
+		return sessionContainer, nil
+	}
+
+	revokeAllSessionsForUser := func(userID string) ([]string, error) {
+		return revokeAllSessionsForUserHelper(querier, userID)
+	}
+
+	getAllSessionHandlesForUser := func(userID string) ([]string, error) {
+		return getAllSessionHandlesForUserHelper(querier, userID)
+	}
+
+	revokeSession := func(sessionHandle string) (bool, error) {
+		return revokeSessionHelper(querier, sessionHandle)
+	}
+
+	revokeMultipleSessions := func(sessionHandles []string) ([]string, error) {
+		return revokeMultipleSessionsHelper(querier, sessionHandles)
+	}
+
+	updateSessionData := func(sessionHandle string, newSessionData map[string]interface{}) error {
+		return updateSessionDataHelper(querier, sessionHandle, newSessionData)
+	}
+
+	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
+	}
+
+	getAccessTokenLifeTimeMS := func() (uint64, error) {
+		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
+		if err != nil {
+			return 0, err
+		}
+		return recipeImplHandshakeInfo.AccessTokenValidity, nil
+	}
+
+	getRefreshTokenLifeTimeMS := func() (uint64, error) {
+		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
+		if err != nil {
+			return 0, err
+		}
+		return recipeImplHandshakeInfo.RefreshTokenValidity, nil
+	}
+
+	return sessmodels.RecipeInterface{
+		CreateNewSession:            &createNewSession,
+		GetSession:                  &getSession,
+		RefreshSession:              &refreshSession,
+		GetSessionInformation:       &getSessionInformation,
+		RevokeAllSessionsForUser:    &revokeAllSessionsForUser,
+		GetAllSessionHandlesForUser: &getAllSessionHandlesForUser,
+		RevokeSession:               &revokeSession,
+		RevokeMultipleSessions:      &revokeMultipleSessions,
+		UpdateSessionData:           &updateSessionData,
+		UpdateAccessTokenPayload:    &updateAccessTokenPayload,
+		GetAccessTokenLifeTimeMS:    &getAccessTokenLifeTimeMS,
+		GetRefreshTokenLifeTimeMS:   &getRefreshTokenLifeTimeMS,
+	}
+
 }
 
 // updates recipeImplHandshakeInfo in place.

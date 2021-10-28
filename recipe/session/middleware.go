@@ -25,7 +25,7 @@ import (
 
 func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		session, err := recipeInstance.APIImpl.VerifySession(options, sessmodels.APIOptions{
+		session, err := (*recipeInstance.APIImpl.VerifySession)(options, sessmodels.APIOptions{
 			Config:               recipeInstance.Config,
 			OtherHandler:         otherHandler,
 			Req:                  r,
