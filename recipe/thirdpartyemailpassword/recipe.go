@@ -217,7 +217,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 }
 
 func (r *Recipe) getEmailForUserId(userID string) (string, error) {
-	userInfo, err := r.RecipeImpl.GetUserByID(userID)
+	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID)
 	if err != nil {
 		return "", err
 	}

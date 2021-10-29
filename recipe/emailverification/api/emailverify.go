@@ -28,7 +28,8 @@ import (
 func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
 	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
-		if apiImplementation.VerifyEmailPOST == nil {
+		if apiImplementation.VerifyEmailPOST == nil ||
+			(*apiImplementation.VerifyEmailPOST) == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
 		}
@@ -50,7 +51,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := apiImplementation.VerifyEmailPOST(token.(string), options)
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options)
 		if err != nil {
 			return err
 		}
@@ -65,12 +66,13 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			}
 		}
 	} else {
-		if apiImplementation.IsEmailVerifiedGET == nil {
+		if apiImplementation.IsEmailVerifiedGET == nil ||
+			(*apiImplementation.IsEmailVerifiedGET) == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
 		}
 
-		isVerified, err := apiImplementation.IsEmailVerifiedGET(options)
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options)
 		if err != nil {
 			return err
 		}

@@ -24,7 +24,7 @@ import (
 )
 
 func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
-	if apiImplementation.SignInPOST == nil {
+	if apiImplementation.SignInPOST == nil || (*apiImplementation.SignInPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -44,7 +44,7 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 
-	result, err := apiImplementation.SignInPOST(formFields, options)
+	result, err := (*apiImplementation.SignInPOST)(formFields, options)
 	if err != nil {
 		return err
 	}

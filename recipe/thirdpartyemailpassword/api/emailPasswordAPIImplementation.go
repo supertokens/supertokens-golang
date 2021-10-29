@@ -30,9 +30,9 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 		SignUpPOST:                     nil,
 	}
 
-	if apiImplmentation.EmailPasswordSignInPOST != nil {
-		result.SignInPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
-			result, err := apiImplmentation.EmailPasswordSignInPOST(formFields, options)
+	if apiImplmentation.EmailPasswordSignInPOST != nil && (*apiImplmentation.EmailPasswordSignInPOST) != nil {
+		signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
+			result, err := (*apiImplmentation.EmailPasswordSignInPOST)(formFields, options)
 			if err != nil {
 				return epmodels.SignInResponse{}, err
 			}
@@ -52,11 +52,12 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 				}, nil
 			}
 		}
+		result.SignInPOST = &signInPOST
 	}
 
-	if apiImplmentation.EmailPasswordSignUpPOST != nil {
-		result.SignUpPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
-			result, err := apiImplmentation.EmailPasswordSignUpPOST(formFields, options)
+	if apiImplmentation.EmailPasswordSignUpPOST != nil && (*apiImplmentation.EmailPasswordSignUpPOST) != nil {
+		signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
+			result, err := (*apiImplmentation.EmailPasswordSignUpPOST)(formFields, options)
 			if err != nil {
 				return epmodels.SignUpResponse{}, err
 			}
@@ -76,6 +77,7 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 				}, nil
 			}
 		}
+		result.SignUpPOST = &signUpPOST
 	}
 
 	return result

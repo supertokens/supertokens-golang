@@ -16,8 +16,8 @@
 package jwtmodels
 
 type RecipeInterface struct {
-	CreateJWT func(payload map[string]interface{}, validitySeconds *uint64) (CreateJWTResponse, error)
-	GetJWKS   func() (GetJWKSResponse, error)
+	CreateJWT *func(payload map[string]interface{}, validitySeconds *uint64) (CreateJWTResponse, error)
+	GetJWKS   *func() (GetJWKSResponse, error)
 }
 
 type CreateJWTResponse struct {

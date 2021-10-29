@@ -21,12 +21,13 @@ import (
 )
 
 func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
-	if apiImplementation.GenerateEmailVerifyTokenPOST == nil {
+	if apiImplementation.GenerateEmailVerifyTokenPOST == nil ||
+		(*apiImplementation.GenerateEmailVerifyTokenPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
 
-	response, err := apiImplementation.GenerateEmailVerifyTokenPOST(options)
+	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(options)
 	if err != nil {
 		return err
 	}

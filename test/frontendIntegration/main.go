@@ -64,11 +64,8 @@ func callSTInit(enableAntiCsrf bool) {
 				AntiCsrf: &antiCsrf,
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
-						newImpl := originalImplementation
-
-						newImpl.RefreshPOST = nil
-
-						return newImpl
+						originalImplementation.RefreshPOST = nil
+						return originalImplementation
 					},
 				},
 			}),

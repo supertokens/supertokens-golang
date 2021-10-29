@@ -32,7 +32,7 @@ func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
-	return instance.RecipeImpl.CreateNewSession(res, userID, accessTokenPayload, sessionData)
+	return (*instance.RecipeImpl.CreateNewSession)(res, userID, accessTokenPayload, sessionData)
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
@@ -40,7 +40,7 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetSession(req, res, options)
+	return (*instance.RecipeImpl.GetSession)(req, res, options)
 }
 
 func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation, error) {
@@ -48,7 +48,7 @@ func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation,
 	if err != nil {
 		return sessmodels.SessionInformation{}, err
 	}
-	return instance.RecipeImpl.GetSessionInformation(sessionHandle)
+	return (*instance.RecipeImpl.GetSessionInformation)(sessionHandle)
 }
 
 func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
@@ -56,7 +56,7 @@ func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.Sess
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
-	return instance.RecipeImpl.RefreshSession(req, res)
+	return (*instance.RecipeImpl.RefreshSession)(req, res)
 }
 
 func RevokeAllSessionsForUser(userID string) ([]string, error) {
@@ -64,7 +64,7 @@ func RevokeAllSessionsForUser(userID string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.RevokeAllSessionsForUser(userID)
+	return (*instance.RecipeImpl.RevokeAllSessionsForUser)(userID)
 }
 
 func GetAllSessionHandlesForUser(userID string) ([]string, error) {
@@ -72,7 +72,7 @@ func GetAllSessionHandlesForUser(userID string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetAllSessionHandlesForUser(userID)
+	return (*instance.RecipeImpl.GetAllSessionHandlesForUser)(userID)
 }
 
 func RevokeSession(sessionHandle string) (bool, error) {
@@ -80,7 +80,7 @@ func RevokeSession(sessionHandle string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return instance.RecipeImpl.RevokeSession(sessionHandle)
+	return (*instance.RecipeImpl.RevokeSession)(sessionHandle)
 }
 
 func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
@@ -88,7 +88,7 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.RevokeMultipleSessions(sessionHandles)
+	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles)
 }
 
 func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) error {
@@ -96,7 +96,7 @@ func UpdateSessionData(sessionHandle string, newSessionData map[string]interface
 	if err != nil {
 		return err
 	}
-	return instance.RecipeImpl.UpdateSessionData(sessionHandle, newSessionData)
+	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData)
 }
 
 func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
@@ -104,7 +104,7 @@ func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[st
 	if err != nil {
 		return err
 	}
-	return instance.RecipeImpl.UpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload)
+	return (*instance.RecipeImpl.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload)
 }
 
 func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {

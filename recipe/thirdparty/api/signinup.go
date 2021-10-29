@@ -31,7 +31,7 @@ type bodyParams struct {
 }
 
 func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
-	if apiImplementation.SignInUpPOST == nil {
+	if apiImplementation.SignInUpPOST == nil || (*apiImplementation.SignInUpPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -69,7 +69,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
 	}
 
-	result, err := apiImplementation.SignInUpPOST(provider, bodyParams.Code, bodyParams.RedirectURI, options)
+	result, err := (*apiImplementation.SignInUpPOST)(provider, bodyParams.Code, bodyParams.RedirectURI, options)
 
 	if err != nil {
 		return err

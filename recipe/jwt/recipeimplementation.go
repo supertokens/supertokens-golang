@@ -21,63 +21,66 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) jwtmodels.RecipeInterface {
-	return jwtmodels.RecipeInterface{
-		CreateJWT: func(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
-			validitySeconds := config.JwtValiditySeconds
-			if validitySecondsPointer != nil {
-				validitySeconds = *validitySecondsPointer
-			}
-			if payload == nil {
-				payload = map[string]interface{}{}
-			}
+	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+		validitySeconds := config.JwtValiditySeconds
+		if validitySecondsPointer != nil {
+			validitySeconds = *validitySecondsPointer
+		}
+		if payload == nil {
+			payload = map[string]interface{}{}
+		}
 
-			response, err := querier.SendPostRequest("/recipe/jwt", map[string]interface{}{
-				"payload":    payload,
-				"validity":   validitySeconds,
-				"algorithm":  "RS256",
-				"jwksDomain": appInfo.APIDomain.GetAsStringDangerous(),
-			})
-			if err != nil {
-				return jwtmodels.CreateJWTResponse{}, err
-			}
+		response, err := querier.SendPostRequest("/recipe/jwt", map[string]interface{}{
+			"payload":    payload,
+			"validity":   validitySeconds,
+			"algorithm":  "RS256",
+			"jwksDomain": appInfo.APIDomain.GetAsStringDangerous(),
+		})
+		if err != nil {
+			return jwtmodels.CreateJWTResponse{}, err
+		}
 
-			status, ok := response["status"]
-			if ok && status == "OK" {
-				return jwtmodels.CreateJWTResponse{
-					OK: &struct{ Jwt string }{
-						Jwt: response["jwt"].(string),
-					},
-				}, nil
-			} else {
-				return jwtmodels.CreateJWTResponse{
-					UnsupportedAlgorithmError: &struct{}{},
-				}, nil
-			}
-		},
-		GetJWKS: func() (jwtmodels.GetJWKSResponse, error) {
-			response, err := querier.SendGetRequest("/recipe/jwt/jwks", map[string]string{})
-			if err != nil {
-				return jwtmodels.GetJWKSResponse{}, err
-			}
-
-			keys := []jwtmodels.JsonWebKeys{}
-
-			for _, v := range response["keys"].([]interface{}) {
-				keys = append(keys, jwtmodels.JsonWebKeys{
-					Kty: (v.(map[string]interface{}))["kty"].(string),
-					Kid: (v.(map[string]interface{}))["kid"].(string),
-					N:   (v.(map[string]interface{}))["n"].(string),
-					E:   (v.(map[string]interface{}))["e"].(string),
-					Alg: (v.(map[string]interface{}))["alg"].(string),
-					Use: (v.(map[string]interface{}))["use"].(string),
-				})
-			}
-
-			return jwtmodels.GetJWKSResponse{
-				OK: &struct{ Keys []jwtmodels.JsonWebKeys }{
-					Keys: keys,
+		status, ok := response["status"]
+		if ok && status == "OK" {
+			return jwtmodels.CreateJWTResponse{
+				OK: &struct{ Jwt string }{
+					Jwt: response["jwt"].(string),
 				},
 			}, nil
-		},
+		} else {
+			return jwtmodels.CreateJWTResponse{
+				UnsupportedAlgorithmError: &struct{}{},
+			}, nil
+		}
+	}
+	getJWKS := func() (jwtmodels.GetJWKSResponse, error) {
+		response, err := querier.SendGetRequest("/recipe/jwt/jwks", map[string]string{})
+		if err != nil {
+			return jwtmodels.GetJWKSResponse{}, err
+		}
+
+		keys := []jwtmodels.JsonWebKeys{}
+
+		for _, v := range response["keys"].([]interface{}) {
+			keys = append(keys, jwtmodels.JsonWebKeys{
+				Kty: (v.(map[string]interface{}))["kty"].(string),
+				Kid: (v.(map[string]interface{}))["kid"].(string),
+				N:   (v.(map[string]interface{}))["n"].(string),
+				E:   (v.(map[string]interface{}))["e"].(string),
+				Alg: (v.(map[string]interface{}))["alg"].(string),
+				Use: (v.(map[string]interface{}))["use"].(string),
+			})
+		}
+
+		return jwtmodels.GetJWKSResponse{
+			OK: &struct{ Keys []jwtmodels.JsonWebKeys }{
+				Keys: keys,
+			},
+		}, nil
+	}
+
+	return jwtmodels.RecipeInterface{
+		CreateJWT: &createJWT,
+		GetJWKS:   &getJWKS,
 	}
 }

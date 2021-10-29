@@ -21,11 +21,11 @@ import (
 )
 
 func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions) error {
-	if apiImplementation.SignOutPOST == nil {
+	if apiImplementation.SignOutPOST == nil || (*apiImplementation.SignOutPOST == nil) {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	_, err := apiImplementation.SignOutPOST(options)
+	_, err := (*apiImplementation.SignOutPOST)(options)
 	if err != nil {
 		return err
 	}

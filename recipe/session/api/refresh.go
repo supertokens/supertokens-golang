@@ -21,11 +21,11 @@ import (
 )
 
 func HandleRefreshAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions) error {
-	if apiImplementation.RefreshPOST == nil {
+	if apiImplementation.RefreshPOST == nil || (*apiImplementation.RefreshPOST) == nil {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	err := apiImplementation.RefreshPOST(options)
+	err := (*apiImplementation.RefreshPOST)(options)
 	if err != nil {
 		return err
 	}

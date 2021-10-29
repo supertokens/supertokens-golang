@@ -21,12 +21,12 @@ import (
 )
 
 func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOptions) error {
-	if apiImplementation.GetJWKSGET == nil {
+	if apiImplementation.GetJWKSGET == nil || (*apiImplementation.GetJWKSGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
 
-	response, err := apiImplementation.GetJWKSGET(options)
+	response, err := (*apiImplementation.GetJWKSGET)(options)
 	if err != nil {
 		return err
 	}

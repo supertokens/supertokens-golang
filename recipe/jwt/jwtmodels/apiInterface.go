@@ -27,5 +27,5 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	GetJWKSGET func(options APIOptions) (GetJWKSResponse, error)
+	GetJWKSGET *func(options APIOptions) (GetJWKSResponse, error)
 }

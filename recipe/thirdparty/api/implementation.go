@@ -30,129 +30,131 @@ import (
 )
 
 func MakeAPIImplementation() tpmodels.APIInterface {
-	return tpmodels.APIInterface{
-		AuthorisationUrlGET: func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
-			providerInfo := provider.Get(nil, nil)
-			params := map[string]string{}
-			for key, value := range providerInfo.AuthorisationRedirect.Params {
-				if reflect.ValueOf(value).Kind() == reflect.String {
-					params[key] = value.(string)
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
+		providerInfo := provider.Get(nil, nil)
+		params := map[string]string{}
+		for key, value := range providerInfo.AuthorisationRedirect.Params {
+			if reflect.ValueOf(value).Kind() == reflect.String {
+				params[key] = value.(string)
+			} else {
+				call, ok := value.(func(req *http.Request) string)
+				if ok {
+					params[key] = call(options.Req)
 				} else {
-					call, ok := value.(func(req *http.Request) string)
-					if ok {
-						params[key] = call(options.Req)
-					} else {
-						return tpmodels.AuthorisationUrlGETResponse{}, errors.New("type of value in params must be a string or a function")
-					}
+					return tpmodels.AuthorisationUrlGETResponse{}, errors.New("type of value in params must be a string or a function")
+				}
+			}
+		}
+
+		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
+
+			for key, value := range params {
+				if value == providerInfo.GetClientId() {
+					params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 				}
 			}
 
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
-				params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
+		}
 
-				for key, value := range params {
-					if value == providerInfo.GetClientId() {
-						params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
-					}
+		paramsString, err := getParamString(params)
+		if err != nil {
+			return tpmodels.AuthorisationUrlGETResponse{}, err
+		}
+		url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
+
+		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			url = DevOauthAuthorisationUrl + "?" + paramsString
+		}
+
+		return tpmodels.AuthorisationUrlGETResponse{
+			OK: &struct{ Url string }{
+				Url: url,
+			},
+		}, nil
+	}
+
+	signInUpPOST := func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
+		{
+			providerInfo := provider.Get(nil, nil)
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+				redirectURI = DevOauthRedirectUrl
+			}
+		}
+
+		providerInfo := provider.Get(&redirectURI, &code)
+
+		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+
+			for key, value := range providerInfo.AccessTokenAPI.Params {
+				if value == providerInfo.GetClientId() {
+					providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 				}
-
 			}
+		}
 
-			paramsString, err := getParamString(params)
-			if err != nil {
-				return tpmodels.AuthorisationUrlGETResponse{}, err
-			}
-			url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
+		accessTokenAPIResponse, err := postRequest(providerInfo)
 
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
-				url = DevOauthAuthorisationUrl + "?" + paramsString
-			}
+		if err != nil {
+			return tpmodels.SignInUpPOSTResponse{}, err
+		}
 
-			return tpmodels.AuthorisationUrlGETResponse{
-				OK: &struct{ Url string }{
-					Url: url,
+		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
+		if err != nil {
+			return tpmodels.SignInUpPOSTResponse{}, err
+		}
+
+		emailInfo := userInfo.Email
+		if emailInfo == nil {
+			return tpmodels.SignInUpPOSTResponse{
+				NoEmailGivenByProviderError: &struct{}{},
+			}, nil
+		}
+
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo)
+		if err != nil {
+			return tpmodels.SignInUpPOSTResponse{}, err
+		}
+		if response.FieldError != nil {
+			return tpmodels.SignInUpPOSTResponse{
+				FieldError: &struct{ Error string }{
+					Error: response.FieldError.Error,
 				},
 			}, nil
-		},
+		}
 
-		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
-			{
-				providerInfo := provider.Get(nil, nil)
-				if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
-					redirectURI = DevOauthRedirectUrl
-				}
-			}
-
-			providerInfo := provider.Get(&redirectURI, &code)
-
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
-
-				for key, value := range providerInfo.AccessTokenAPI.Params {
-					if value == providerInfo.GetClientId() {
-						providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
-					}
-				}
-			}
-
-			accessTokenAPIResponse, err := postRequest(providerInfo)
-
+		if emailInfo.IsVerified {
+			tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
-
-			userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
-			if err != nil {
-				return tpmodels.SignInUpPOSTResponse{}, err
-			}
-
-			emailInfo := userInfo.Email
-			if emailInfo == nil {
-				return tpmodels.SignInUpPOSTResponse{
-					NoEmailGivenByProviderError: &struct{}{},
-				}, nil
-			}
-
-			response, err := options.RecipeImplementation.SignInUp(provider.ID, userInfo.ID, *emailInfo)
-			if err != nil {
-				return tpmodels.SignInUpPOSTResponse{}, err
-			}
-			if response.FieldError != nil {
-				return tpmodels.SignInUpPOSTResponse{
-					FieldError: &struct{ Error string }{
-						Error: response.FieldError.Error,
-					},
-				}, nil
-			}
-
-			if emailInfo.IsVerified {
-				tokenResponse, err := options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken(response.OK.User.ID, response.OK.User.Email)
+			if tokenResponse.OK != nil {
+				_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
-				if tokenResponse.OK != nil {
-					_, err := options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken(tokenResponse.OK.Token)
-					if err != nil {
-						return tpmodels.SignInUpPOSTResponse{}, err
-					}
-				}
 			}
+		}
 
-			_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil)
-			if err != nil {
-				return tpmodels.SignInUpPOSTResponse{}, err
-			}
-			return tpmodels.SignInUpPOSTResponse{
-				OK: &struct {
-					CreatedNewUser   bool
-					User             tpmodels.User
-					AuthCodeResponse interface{}
-				}{
-					CreatedNewUser:   response.OK.CreatedNewUser,
-					User:             response.OK.User,
-					AuthCodeResponse: accessTokenAPIResponse,
-				},
-			}, nil
-		},
+		_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil)
+		if err != nil {
+			return tpmodels.SignInUpPOSTResponse{}, err
+		}
+		return tpmodels.SignInUpPOSTResponse{
+			OK: &struct {
+				CreatedNewUser   bool
+				User             tpmodels.User
+				AuthCodeResponse interface{}
+			}{
+				CreatedNewUser:   response.OK.CreatedNewUser,
+				User:             response.OK.User,
+				AuthCodeResponse: accessTokenAPIResponse,
+			},
+		}, nil
+	}
+	return tpmodels.APIInterface{
+		AuthorisationUrlGET: &authorisationUrlGET,
+		SignInUpPOST:        &signInUpPOST,
 	}
 }
 

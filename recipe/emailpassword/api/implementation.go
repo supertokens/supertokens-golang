@@ -21,138 +21,143 @@ import (
 )
 
 func MakeAPIImplementation() epmodels.APIInterface {
-	return epmodels.APIInterface{
-		EmailExistsGET: func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error) {
-			user, err := options.RecipeImplementation.GetUserByEmail(email)
-			if err != nil {
-				return epmodels.EmailExistsGETResponse{}, err
+	emailExistsGET := func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error) {
+		user, err := (*options.RecipeImplementation.GetUserByEmail)(email)
+		if err != nil {
+			return epmodels.EmailExistsGETResponse{}, err
+		}
+		return epmodels.EmailExistsGETResponse{
+			OK: &struct{ Exists bool }{Exists: user != nil},
+		}, nil
+	}
+
+	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+		var email string
+		for _, formField := range formFields {
+			if formField.ID == "email" {
+				email = formField.Value
 			}
-			return epmodels.EmailExistsGETResponse{
-				OK: &struct{ Exists bool }{Exists: user != nil},
-			}, nil
-		},
+		}
 
-		GeneratePasswordResetTokenPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-			var email string
-			for _, formField := range formFields {
-				if formField.ID == "email" {
-					email = formField.Value
-				}
-			}
+		user, err := (*options.RecipeImplementation.GetUserByEmail)(email)
+		if err != nil {
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
+		}
 
-			user, err := options.RecipeImplementation.GetUserByEmail(email)
-			if err != nil {
-				return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
-			}
-
-			if user == nil {
-				return epmodels.GeneratePasswordResetTokenPOSTResponse{
-					OK: &struct{}{},
-				}, nil
-			}
-
-			response, err := options.RecipeImplementation.CreateResetPasswordToken(user.ID)
-			if err != nil {
-				return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
-			}
-			if response.UnknownUserIdError != nil {
-				return epmodels.GeneratePasswordResetTokenPOSTResponse{
-					OK: &struct{}{},
-				}, nil
-			}
-
-			passwordResetLink, err := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user)
-
-			if err != nil {
-				return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
-			}
-
-			passwordResetLink = passwordResetLink + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
-
-			options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
-
+		if user == nil {
 			return epmodels.GeneratePasswordResetTokenPOSTResponse{
 				OK: &struct{}{},
 			}, nil
-		},
+		}
 
-		PasswordResetPOST: func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error) {
-			var newPassword string
-			for _, formField := range formFields {
-				if formField.ID == "password" {
-					newPassword = formField.Value
-				}
+		response, err := (*options.RecipeImplementation.CreateResetPasswordToken)(user.ID)
+		if err != nil {
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
+		}
+		if response.UnknownUserIdError != nil {
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{
+				OK: &struct{}{},
+			}, nil
+		}
+
+		passwordResetLink, err := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user)
+
+		if err != nil {
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
+		}
+
+		passwordResetLink = passwordResetLink + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
+
+		options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink)
+
+		return epmodels.GeneratePasswordResetTokenPOSTResponse{
+			OK: &struct{}{},
+		}, nil
+	}
+
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error) {
+		var newPassword string
+		for _, formField := range formFields {
+			if formField.ID == "password" {
+				newPassword = formField.Value
 			}
+		}
 
-			response, err := options.RecipeImplementation.ResetPasswordUsingToken(token, newPassword)
-			if err != nil {
-				return epmodels.ResetPasswordUsingTokenResponse{}, err
+		response, err := (*options.RecipeImplementation.ResetPasswordUsingToken)(token, newPassword)
+		if err != nil {
+			return epmodels.ResetPasswordUsingTokenResponse{}, err
+		}
+
+		return response, nil
+	}
+
+	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
+		var email string
+		for _, formField := range formFields {
+			if formField.ID == "email" {
+				email = formField.Value
 			}
+		}
+		var password string
+		for _, formField := range formFields {
+			if formField.ID == "password" {
+				password = formField.Value
+			}
+		}
 
+		response, err := (*options.RecipeImplementation.SignIn)(email, password)
+		if err != nil {
+			return epmodels.SignInResponse{}, err
+		}
+		if response.WrongCredentialsError != nil {
 			return response, nil
-		},
+		}
 
-		SignInPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
-			var email string
-			for _, formField := range formFields {
-				if formField.ID == "email" {
-					email = formField.Value
-				}
-			}
-			var password string
-			for _, formField := range formFields {
-				if formField.ID == "password" {
-					password = formField.Value
-				}
-			}
+		user := response.OK.User
+		_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
+		if err != nil {
+			return epmodels.SignInResponse{}, err
+		}
 
-			response, err := options.RecipeImplementation.SignIn(email, password)
-			if err != nil {
-				return epmodels.SignInResponse{}, err
-			}
-			if response.WrongCredentialsError != nil {
-				return response, nil
-			}
+		return response, nil
+	}
 
-			user := response.OK.User
-			_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
-			if err != nil {
-				return epmodels.SignInResponse{}, err
+	signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
+		var email string
+		for _, formField := range formFields {
+			if formField.ID == "email" {
+				email = formField.Value
 			}
+		}
+		var password string
+		for _, formField := range formFields {
+			if formField.ID == "password" {
+				password = formField.Value
+			}
+		}
 
+		response, err := (*options.RecipeImplementation.SignUp)(email, password)
+		if err != nil {
+			return epmodels.SignUpResponse{}, err
+		}
+		if response.EmailAlreadyExistsError != nil {
 			return response, nil
-		},
+		}
 
-		SignUpPOST: func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
-			var email string
-			for _, formField := range formFields {
-				if formField.ID == "email" {
-					email = formField.Value
-				}
-			}
-			var password string
-			for _, formField := range formFields {
-				if formField.ID == "password" {
-					password = formField.Value
-				}
-			}
+		user := response.OK.User
 
-			response, err := options.RecipeImplementation.SignUp(email, password)
-			if err != nil {
-				return epmodels.SignUpResponse{}, err
-			}
-			if response.EmailAlreadyExistsError != nil {
-				return response, nil
-			}
+		_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
+		if err != nil {
+			return epmodels.SignUpResponse{}, err
+		}
 
-			user := response.OK.User
-
-			_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
-			if err != nil {
-				return epmodels.SignUpResponse{}, err
-			}
-
-			return response, nil
-		},
+		return response, nil
+	}
+	return epmodels.APIInterface{
+		EmailExistsGET:                 &emailExistsGET,
+		GeneratePasswordResetTokenPOST: &generatePasswordResetTokenPOST,
+		PasswordResetPOST:              &passwordResetPOST,
+		SignInPOST:                     &signInPOST,
+		SignUpPOST:                     &signUpPOST,
 	}
 }
