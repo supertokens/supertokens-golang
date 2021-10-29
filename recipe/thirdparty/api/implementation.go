@@ -125,12 +125,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 
 			if emailInfo.IsVerified {
-				tokenResponse, err := options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken(response.OK.User.ID, response.OK.User.Email)
+				tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
 				if tokenResponse.OK != nil {
-					_, err := options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken(tokenResponse.OK.Token)
+					_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token)
 					if err != nil {
 						return tpmodels.SignInUpPOSTResponse{}, err
 					}

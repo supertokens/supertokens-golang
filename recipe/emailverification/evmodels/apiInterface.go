@@ -27,9 +27,9 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	VerifyEmailPOST              func(token string, options APIOptions) (VerifyEmailUsingTokenResponse, error)
-	IsEmailVerifiedGET           func(options APIOptions) (IsEmailVerifiedGETResponse, error)
-	GenerateEmailVerifyTokenPOST func(options APIOptions) (GenerateEmailVerifyTokenPOSTResponse, error)
+	VerifyEmailPOST              *func(token string, options APIOptions) (VerifyEmailUsingTokenResponse, error)
+	IsEmailVerifiedGET           *func(options APIOptions) (IsEmailVerifiedGETResponse, error)
+	GenerateEmailVerifyTokenPOST *func(options APIOptions) (GenerateEmailVerifyTokenPOSTResponse, error)
 }
 
 type IsEmailVerifiedGETResponse struct {

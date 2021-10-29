@@ -110,7 +110,7 @@ func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificati
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
-	return instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email)
 }
 
 func VerifyEmailUsingToken(token string) (*tpepmodels.User, error) {
@@ -118,7 +118,7 @@ func VerifyEmailUsingToken(token string) (*tpepmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	response, err := instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken(token)
+	response, err := (*instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken)(token)
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,7 @@ func IsEmailVerified(userID string) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email)
 }
 
 func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
@@ -149,7 +149,7 @@ func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificat
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
-	return instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email)
 }
 
 func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
@@ -161,5 +161,5 @@ func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}
-	return instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email)
 }
