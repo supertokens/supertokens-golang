@@ -21,49 +21,50 @@ import (
 )
 
 func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodels.APIInterface {
-	if apiImplmentation.ThirdPartySignInUpPOST == nil {
+	if apiImplmentation.ThirdPartySignInUpPOST == nil || (*apiImplmentation.ThirdPartySignInUpPOST) == nil {
 		return tpmodels.APIInterface{
 			AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
 			SignInUpPOST:        nil,
 		}
 	}
+
+	signInUpPOST := func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
+		result, err := (*apiImplmentation.ThirdPartySignInUpPOST)(provider, code, redirectURI, options)
+		if err != nil {
+			return tpmodels.SignInUpPOSTResponse{}, err
+		}
+
+		if result.OK != nil {
+			return tpmodels.SignInUpPOSTResponse{
+				OK: &struct {
+					CreatedNewUser   bool
+					User             tpmodels.User
+					AuthCodeResponse interface{}
+				}{
+					CreatedNewUser: result.OK.CreatedNewUser,
+					User: tpmodels.User{
+						ID:         result.OK.User.ID,
+						TimeJoined: result.OK.User.TimeJoined,
+						Email:      result.OK.User.Email,
+						ThirdParty: *result.OK.User.ThirdParty,
+					},
+				},
+			}, nil
+		} else if result.NoEmailGivenByProviderError != nil {
+			return tpmodels.SignInUpPOSTResponse{
+				NoEmailGivenByProviderError: &struct{}{},
+			}, nil
+		} else {
+			return tpmodels.SignInUpPOSTResponse{
+				FieldError: &struct{ Error string }{
+					Error: result.FieldError.Error,
+				},
+			}, nil
+		}
+	}
+
 	return tpmodels.APIInterface{
-
 		AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
-
-		SignInUpPOST: func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
-			result, err := apiImplmentation.ThirdPartySignInUpPOST(provider, code, redirectURI, options)
-			if err != nil {
-				return tpmodels.SignInUpPOSTResponse{}, err
-			}
-
-			if result.OK != nil {
-				return tpmodels.SignInUpPOSTResponse{
-					OK: &struct {
-						CreatedNewUser   bool
-						User             tpmodels.User
-						AuthCodeResponse interface{}
-					}{
-						CreatedNewUser: result.OK.CreatedNewUser,
-						User: tpmodels.User{
-							ID:         result.OK.User.ID,
-							TimeJoined: result.OK.User.TimeJoined,
-							Email:      result.OK.User.Email,
-							ThirdParty: *result.OK.User.ThirdParty,
-						},
-					},
-				}, nil
-			} else if result.NoEmailGivenByProviderError != nil {
-				return tpmodels.SignInUpPOSTResponse{
-					NoEmailGivenByProviderError: &struct{}{},
-				}, nil
-			} else {
-				return tpmodels.SignInUpPOSTResponse{
-					FieldError: &struct{ Error string }{
-						Error: result.FieldError.Error,
-					},
-				}, nil
-			}
-		},
+		SignInUpPOST:        &signInUpPOST,
 	}
 }

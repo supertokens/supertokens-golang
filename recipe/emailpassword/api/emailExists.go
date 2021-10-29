@@ -21,7 +21,7 @@ import (
 )
 
 func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
-	if apiImplementation.EmailExistsGET == nil {
+	if apiImplementation.EmailExistsGET == nil || (*apiImplementation.EmailExistsGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -29,7 +29,7 @@ func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOp
 	if email == "" {
 		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
 	}
-	result, err := apiImplementation.EmailExistsGET(email, options)
+	result, err := (*apiImplementation.EmailExistsGET)(email, options)
 	if err != nil {
 		return err
 	}

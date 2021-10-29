@@ -32,11 +32,11 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	EmailExistsGET                 func(email string, options APIOptions) (EmailExistsGETResponse, error)
-	GeneratePasswordResetTokenPOST func(formFields []TypeFormField, options APIOptions) (GeneratePasswordResetTokenPOSTResponse, error)
-	PasswordResetPOST              func(formFields []TypeFormField, token string, options APIOptions) (ResetPasswordUsingTokenResponse, error)
-	SignInPOST                     func(formFields []TypeFormField, options APIOptions) (SignInResponse, error)
-	SignUpPOST                     func(formFields []TypeFormField, options APIOptions) (SignUpResponse, error)
+	EmailExistsGET                 *func(email string, options APIOptions) (EmailExistsGETResponse, error)
+	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, options APIOptions) (GeneratePasswordResetTokenPOSTResponse, error)
+	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions) (ResetPasswordUsingTokenResponse, error)
+	SignInPOST                     *func(formFields []TypeFormField, options APIOptions) (SignInResponse, error)
+	SignUpPOST                     *func(formFields []TypeFormField, options APIOptions) (SignUpResponse, error)
 }
 
 type EmailExistsGETResponse struct {

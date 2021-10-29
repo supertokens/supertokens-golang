@@ -23,7 +23,7 @@ import (
 )
 
 func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
-	if apiImplementation.AuthorisationUrlGET == nil {
+	if apiImplementation.AuthorisationUrlGET == nil || (*apiImplementation.AuthorisationUrlGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -45,7 +45,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
 	}
 
-	result, err := apiImplementation.AuthorisationUrlGET(provider, options)
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, options)
 	if err != nil {
 		return err
 	}

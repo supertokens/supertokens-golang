@@ -21,70 +21,96 @@ import (
 )
 
 func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) tpmodels.RecipeInterface {
-	return tpmodels.RecipeInterface{
 
-		GetUserByThirdPartyInfo: func(thirdPartyID string, thirdPartyUserID string) (*tpmodels.User, error) {
-			user, err := recipeImplementation.GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID)
-			if err != nil {
-				return nil, err
-			}
-			if user == nil || user.ThirdParty == nil {
-				return nil, nil
-			}
-			return &tpmodels.User{
-				ID:         user.ID,
-				Email:      user.Email,
-				TimeJoined: user.TimeJoined,
-				ThirdParty: *user.ThirdParty,
-			}, nil
-		},
+	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string) (*tpmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID)
+		if err != nil {
+			return nil, err
+		}
+		if user == nil || user.ThirdParty == nil {
+			return nil, nil
+		}
+		return &tpmodels.User{
+			ID:         user.ID,
+			Email:      user.Email,
+			TimeJoined: user.TimeJoined,
+			ThirdParty: *user.ThirdParty,
+		}, nil
+	}
 
-		SignInUp: func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
-			result, err := recipeImplementation.SignInUp(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
-				ID:         email.ID,
-				IsVerified: email.IsVerified,
-			})
-			if err != nil {
-				return tpmodels.SignInUpResponse{}, err
-			}
-			if result.FieldError != nil {
-				return tpmodels.SignInUpResponse{
-					FieldError: &struct{ Error string }{
-						Error: result.FieldError.Error,
-					},
-				}, nil
-			}
-
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
+		result, err := (*recipeImplementation.SignInUp)(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
+			ID:         email.ID,
+			IsVerified: email.IsVerified,
+		})
+		if err != nil {
+			return tpmodels.SignInUpResponse{}, err
+		}
+		if result.FieldError != nil {
 			return tpmodels.SignInUpResponse{
-				OK: &struct {
-					CreatedNewUser bool
-					User           tpmodels.User
-				}{
-					CreatedNewUser: result.OK.CreatedNewUser,
-					User: tpmodels.User{
-						ID:         result.OK.User.ID,
-						Email:      result.OK.User.Email,
-						TimeJoined: result.OK.User.TimeJoined,
-						ThirdParty: *result.OK.User.ThirdParty,
-					},
+				FieldError: &struct{ Error string }{
+					Error: result.FieldError.Error,
 				},
 			}, nil
-		},
+		}
 
-		GetUserByID: func(userID string) (*tpmodels.User, error) {
-			user, err := recipeImplementation.GetUserByID(userID)
-			if err != nil {
-				return nil, err
+		return tpmodels.SignInUpResponse{
+			OK: &struct {
+				CreatedNewUser bool
+				User           tpmodels.User
+			}{
+				CreatedNewUser: result.OK.CreatedNewUser,
+				User: tpmodels.User{
+					ID:         result.OK.User.ID,
+					Email:      result.OK.User.Email,
+					TimeJoined: result.OK.User.TimeJoined,
+					ThirdParty: *result.OK.User.ThirdParty,
+				},
+			},
+		}, nil
+	}
+
+	getUserByID := func(userID string) (*tpmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByID)(userID)
+		if err != nil {
+			return nil, err
+		}
+		if user == nil || user.ThirdParty == nil {
+			return nil, nil
+		}
+		return &tpmodels.User{
+			ID:         user.ID,
+			Email:      user.Email,
+			TimeJoined: user.TimeJoined,
+			ThirdParty: *user.ThirdParty,
+		}, nil
+	}
+
+	getUserByEmail := func(email string) ([]tpmodels.User, error) {
+		users, err := (*recipeImplementation.GetUsersByEmail)(email)
+		if err != nil {
+			return nil, err
+		}
+
+		finalResult := []tpmodels.User{}
+
+		for _, tpepUser := range users {
+			if tpepUser.ThirdParty != nil {
+				finalResult = append(finalResult, tpmodels.User{
+					ID:         tpepUser.ID,
+					TimeJoined: tpepUser.TimeJoined,
+					Email:      tpepUser.Email,
+					ThirdParty: *tpepUser.ThirdParty,
+				})
 			}
-			if user == nil || user.ThirdParty == nil {
-				return nil, nil
-			}
-			return &tpmodels.User{
-				ID:         user.ID,
-				Email:      user.Email,
-				TimeJoined: user.TimeJoined,
-				ThirdParty: *user.ThirdParty,
-			}, nil
-		},
+		}
+		return finalResult, nil
+	}
+
+	return tpmodels.RecipeInterface{
+		GetUserByID:             &getUserByID,
+		GetUsersByEmail:         &getUserByEmail,
+		GetUserByThirdPartyInfo: &getUserByThirdPartyInfo,
+		SignInUp:                &signInUp,
 	}
 }

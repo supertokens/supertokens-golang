@@ -38,7 +38,7 @@ func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpmodels.Email
 	if err != nil {
 		return tpmodels.SignInUpResponse{}, err
 	}
-	return instance.RecipeImpl.SignInUp(thirdPartyID, thirdPartyUserID, email)
+	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email)
 }
 
 func GetUserByID(userID string) (*tpmodels.User, error) {
@@ -46,7 +46,7 @@ func GetUserByID(userID string) (*tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByID(userID)
+	return (*instance.RecipeImpl.GetUserByID)(userID)
 }
 
 func GetUsersByEmail(email string) ([]tpmodels.User, error) {
@@ -54,7 +54,7 @@ func GetUsersByEmail(email string) ([]tpmodels.User, error) {
 	if err != nil {
 		return []tpmodels.User{}, err
 	}
-	return instance.RecipeImpl.GetUsersByEmail(email)
+	return (*instance.RecipeImpl.GetUsersByEmail)(email)
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
@@ -62,7 +62,7 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID)
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID)
 }
 
 func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
@@ -89,7 +89,7 @@ func VerifyEmailUsingToken(token string) (*tpmodels.User, error) {
 	if response.EmailVerificationInvalidTokenError != nil {
 		return nil, errors.New("email verification token is invalid")
 	}
-	return instance.RecipeImpl.GetUserByID(response.OK.User.ID)
+	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID)
 }
 
 func IsEmailVerified(userID string) (bool, error) {

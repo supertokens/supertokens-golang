@@ -32,7 +32,7 @@ func SignUp(email string, password string) (epmodels.SignUpResponse, error) {
 	if err != nil {
 		return epmodels.SignUpResponse{}, err
 	}
-	return instance.RecipeImpl.SignUp(email, password)
+	return (*instance.RecipeImpl.SignUp)(email, password)
 }
 
 func SignIn(email string, password string) (epmodels.SignInResponse, error) {
@@ -40,7 +40,7 @@ func SignIn(email string, password string) (epmodels.SignInResponse, error) {
 	if err != nil {
 		return epmodels.SignInResponse{}, err
 	}
-	return instance.RecipeImpl.SignIn(email, password)
+	return (*instance.RecipeImpl.SignIn)(email, password)
 }
 
 func GetUserByID(userID string) (*epmodels.User, error) {
@@ -48,7 +48,7 @@ func GetUserByID(userID string) (*epmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByID(userID)
+	return (*instance.RecipeImpl.GetUserByID)(userID)
 }
 
 func GetUserByEmail(email string) (*epmodels.User, error) {
@@ -56,7 +56,7 @@ func GetUserByEmail(email string) (*epmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByEmail(email)
+	return (*instance.RecipeImpl.GetUserByEmail)(email)
 }
 
 func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
@@ -64,7 +64,7 @@ func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenR
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
-	return instance.RecipeImpl.CreateResetPasswordToken(userID)
+	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID)
 }
 
 func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
@@ -72,7 +72,7 @@ func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPa
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, nil
 	}
-	return instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
+	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword)
 }
 
 func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
@@ -80,7 +80,7 @@ func UpdateEmailOrPassword(userId string, email *string, password *string) (epmo
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, nil
 	}
-	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password)
 }
 
 func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
@@ -107,7 +107,7 @@ func VerifyEmailUsingToken(token string) (*epmodels.User, error) {
 	if response.EmailVerificationInvalidTokenError != nil {
 		return nil, errors.New("email verification token is invalid")
 	}
-	return instance.RecipeImpl.GetUserByID(response.OK.User.ID)
+	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID)
 }
 
 func IsEmailVerified(userID string) (bool, error) {

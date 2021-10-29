@@ -34,7 +34,7 @@ func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.Ema
 	if err != nil {
 		return tpepmodels.SignInUpResponse{}, err
 	}
-	return instance.RecipeImpl.SignInUp(thirdPartyID, thirdPartyUserID, email)
+	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email)
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (*tpepmodels.User, error) {
@@ -42,7 +42,7 @@ func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID)
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID)
 }
 
 func SignUp(email, password string) (tpepmodels.SignUpResponse, error) {
@@ -50,7 +50,7 @@ func SignUp(email, password string) (tpepmodels.SignUpResponse, error) {
 	if err != nil {
 		return tpepmodels.SignUpResponse{}, err
 	}
-	return instance.RecipeImpl.SignUp(email, password)
+	return (*instance.RecipeImpl.SignUp)(email, password)
 }
 
 func SignIn(email, password string) (tpepmodels.SignInResponse, error) {
@@ -58,7 +58,7 @@ func SignIn(email, password string) (tpepmodels.SignInResponse, error) {
 	if err != nil {
 		return tpepmodels.SignInResponse{}, err
 	}
-	return instance.RecipeImpl.SignIn(email, password)
+	return (*instance.RecipeImpl.SignIn)(email, password)
 }
 
 func GetUserById(userID string) (*tpepmodels.User, error) {
@@ -66,7 +66,7 @@ func GetUserById(userID string) (*tpepmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUserByID(userID)
+	return (*instance.RecipeImpl.GetUserByID)(userID)
 }
 
 func GetUsersByEmail(email string) ([]tpepmodels.User, error) {
@@ -74,7 +74,7 @@ func GetUsersByEmail(email string) ([]tpepmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	return instance.RecipeImpl.GetUsersByEmail(email)
+	return (*instance.RecipeImpl.GetUsersByEmail)(email)
 }
 
 func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
@@ -82,7 +82,7 @@ func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenR
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
-	return instance.RecipeImpl.CreateResetPasswordToken(userID)
+	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID)
 }
 
 func ResetPasswordUsingToken(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
@@ -90,7 +90,7 @@ func ResetPasswordUsingToken(token, newPassword string) (epmodels.ResetPasswordU
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, err
 	}
-	return instance.RecipeImpl.ResetPasswordUsingToken(token, newPassword)
+	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword)
 }
 
 func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
@@ -98,7 +98,7 @@ func UpdateEmailOrPassword(userId string, email *string, password *string) (epmo
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
 	}
-	return instance.RecipeImpl.UpdateEmailOrPassword(userId, email, password)
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password)
 }
 
 func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
@@ -125,7 +125,7 @@ func VerifyEmailUsingToken(token string) (*tpepmodels.User, error) {
 	if response.EmailVerificationInvalidTokenError != nil {
 		return nil, errors.New("email verification token is invalid")
 	}
-	return instance.RecipeImpl.GetUserByID(response.OK.User.ID)
+	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID)
 }
 
 func IsEmailVerified(userID string) (bool, error) {

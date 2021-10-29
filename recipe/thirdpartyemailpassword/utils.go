@@ -86,7 +86,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 		if config.EmailVerificationFeature != nil {
 			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
 				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string) {
-					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
+					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID)
 					if err != nil {
 						return
 					}
@@ -99,7 +99,7 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 
 			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
 				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User) (string, error) {
-					userInfo, err := recipeInstance.RecipeImpl.GetUserByID(user.ID)
+					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID)
 					if err != nil {
 						return "", err
 					}

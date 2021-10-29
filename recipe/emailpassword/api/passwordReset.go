@@ -25,7 +25,7 @@ import (
 )
 
 func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
-	if apiImplementation.PasswordResetPOST == nil {
+	if apiImplementation.PasswordResetPOST == nil || (*apiImplementation.PasswordResetPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -53,7 +53,7 @@ func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.API
 		return supertokens.BadInputError{Msg: "The password reset token must be a string"}
 	}
 
-	result, err := apiImplementation.PasswordResetPOST(formFields, token.(string), options)
+	result, err := (*apiImplementation.PasswordResetPOST)(formFields, token.(string), options)
 	if err != nil {
 		return err
 	}

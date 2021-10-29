@@ -24,7 +24,8 @@ import (
 )
 
 func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
-	if apiImplementation.GeneratePasswordResetTokenPOST == nil {
+	if apiImplementation.GeneratePasswordResetTokenPOST == nil ||
+		(*apiImplementation.GeneratePasswordResetTokenPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -44,7 +45,7 @@ func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options
 		return err
 	}
 
-	_, err = apiImplementation.GeneratePasswordResetTokenPOST(formFields, options)
+	_, err = (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, options)
 	if err != nil {
 		return err
 	}

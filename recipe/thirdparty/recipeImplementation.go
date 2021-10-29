@@ -21,78 +21,83 @@ import (
 )
 
 func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterface {
-	return tpmodels.RecipeInterface{
-		SignInUp: func(thirdPartyID, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
-			response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
-				"thirdPartyId":     thirdPartyID,
-				"thirdPartyUserId": thirdPartyUserID,
-				"email":            email,
-			})
-			if err != nil {
-				return tpmodels.SignInUpResponse{}, err
-			}
+	signInUp := func(thirdPartyID, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
+		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
+			"thirdPartyId":     thirdPartyID,
+			"thirdPartyUserId": thirdPartyUserID,
+			"email":            email,
+		})
+		if err != nil {
+			return tpmodels.SignInUpResponse{}, err
+		}
+		user, err := parseUser(response["user"])
+		if err != nil {
+			return tpmodels.SignInUpResponse{}, err
+		}
+		return tpmodels.SignInUpResponse{
+			OK: &struct {
+				CreatedNewUser bool
+				User           tpmodels.User
+			}{
+				CreatedNewUser: response["createdNewUser"].(bool),
+				User:           *user,
+			},
+		}, nil
+	}
+
+	getUserByID := func(userID string) (*tpmodels.User, error) {
+		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+			"userId": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if response["status"] == "OK" {
 			user, err := parseUser(response["user"])
 			if err != nil {
-				return tpmodels.SignInUpResponse{}, err
+				return nil, err
 			}
-			return tpmodels.SignInUpResponse{
-				OK: &struct {
-					CreatedNewUser bool
-					User           tpmodels.User
-				}{
-					CreatedNewUser: response["createdNewUser"].(bool),
-					User:           *user,
-				},
-			}, nil
-		},
+			return user, nil
+		}
+		return nil, nil
+	}
 
-		GetUserByID: func(userID string) (*tpmodels.User, error) {
-			response, err := querier.SendGetRequest("/recipe/user", map[string]string{
-				"userId": userID,
-			})
+	getUserByThirdPartyInfo := func(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
+		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+			"thirdPartyId":     thirdPartyID,
+			"thirdPartyUserId": thirdPartyUserID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		if response["status"] == "OK" {
+			user, err := parseUser(response["user"])
 			if err != nil {
 				return nil, err
 			}
-			if response["status"] == "OK" {
-				user, err := parseUser(response["user"])
-				if err != nil {
-					return nil, err
-				}
-				return user, nil
-			}
-			return nil, nil
-		},
+			return user, nil
+		}
+		return nil, nil
+	}
 
-		GetUserByThirdPartyInfo: func(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
-			response, err := querier.SendGetRequest("/recipe/user", map[string]string{
-				"thirdPartyId":     thirdPartyID,
-				"thirdPartyUserId": thirdPartyUserID,
-			})
-			if err != nil {
-				return nil, err
-			}
-			if response["status"] == "OK" {
-				user, err := parseUser(response["user"])
-				if err != nil {
-					return nil, err
-				}
-				return user, nil
-			}
-			return nil, nil
-		},
+	getUsersByEmail := func(email string) ([]tpmodels.User, error) {
+		response, err := querier.SendGetRequest("/recipe/users/by-email", map[string]string{
+			"email": email,
+		})
+		if err != nil {
+			return []tpmodels.User{}, err
+		}
+		users, err := parseUsers(response["users"])
+		if err != nil {
+			return []tpmodels.User{}, err
+		}
+		return users, nil
+	}
 
-		GetUsersByEmail: func(email string) ([]tpmodels.User, error) {
-			response, err := querier.SendGetRequest("/recipe/users/by-email", map[string]string{
-				"email": email,
-			})
-			if err != nil {
-				return []tpmodels.User{}, err
-			}
-			users, err := parseUsers(response["users"])
-			if err != nil {
-				return []tpmodels.User{}, err
-			}
-			return users, nil
-		},
+	return tpmodels.RecipeInterface{
+		GetUserByID:             &getUserByID,
+		GetUsersByEmail:         &getUsersByEmail,
+		GetUserByThirdPartyInfo: &getUserByThirdPartyInfo,
+		SignInUp:                &signInUp,
 	}
 }
