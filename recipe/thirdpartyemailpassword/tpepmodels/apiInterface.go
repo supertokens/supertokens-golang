@@ -25,7 +25,7 @@ type APIInterface struct {
 	EmailExistsGET                 *func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error)
 	GeneratePasswordResetTokenPOST *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error)
 	PasswordResetPOST              *func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error)
-	ThirdPartySignInUpPOST         *func(provider tpmodels.TypeProvider, code string, redirectURI string, options tpmodels.APIOptions) (ThirdPartyOutput, error)
+	ThirdPartySignInUpPOST         *func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions) (ThirdPartyOutput, error)
 	EmailPasswordSignInPOST        *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (SignInResponse, error)
 	EmailPasswordSignUpPOST        *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (SignUpResponse, error)
 }

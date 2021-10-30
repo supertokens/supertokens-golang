@@ -74,7 +74,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
+	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
 		{
 			providerInfo := provider.Get(nil, nil)
 			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
@@ -84,19 +84,25 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 		providerInfo := provider.Get(&redirectURI, &code)
 
-		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		var accessTokenAPIResponse map[string]interface{} = nil
 
-			for key, value := range providerInfo.AccessTokenAPI.Params {
-				if value == providerInfo.GetClientId() {
-					providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+		if authCodeResponse != nil {
+			accessTokenAPIResponse = authCodeResponse.(map[string]interface{})
+		} else {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+
+				for key, value := range providerInfo.AccessTokenAPI.Params {
+					if value == providerInfo.GetClientId() {
+						providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					}
 				}
 			}
-		}
 
-		accessTokenAPIResponse, err := postRequest(providerInfo)
-
-		if err != nil {
-			return tpmodels.SignInUpPOSTResponse{}, err
+			accessTokenAPIResponseTemp, err := postRequest(providerInfo)
+			if err != nil {
+				return tpmodels.SignInUpPOSTResponse{}, err
+			}
+			accessTokenAPIResponse = accessTokenAPIResponseTemp
 		}
 
 		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)

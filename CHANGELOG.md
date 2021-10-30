@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking changes:
 - Makes recipe and API interface have pointers to functions to fix https://github.com/supertokens/supertokens-node/issues/199
+- Compatible with FDI 1.10: Adds `authCodeResponse` as an optional input param to third party signinup API: https://github.com/supertokens/frontend-driver-interface/issues/24
 
 ## [0.1.0] - 2021-10-21
 
