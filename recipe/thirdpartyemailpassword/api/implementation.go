@@ -27,21 +27,25 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	emailPasswordImplementation := epapi.MakeAPIImplementation()
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
+	ogEmailExistsGET := *emailPasswordImplementation.EmailExistsGET
 	emailExistsGET := func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error) {
-		return (*emailPasswordImplementation.EmailExistsGET)(email, options)
+		return ogEmailExistsGET(email, options)
 
 	}
 
+	ogGeneratePasswordResetTokenPOST := *emailPasswordImplementation.GeneratePasswordResetTokenPOST
 	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-		return (*emailPasswordImplementation.GeneratePasswordResetTokenPOST)(formFields, options)
+		return ogGeneratePasswordResetTokenPOST(formFields, options)
 	}
 
+	ogPasswordResetPOST := *emailPasswordImplementation.PasswordResetPOST
 	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error) {
-		return (*emailPasswordImplementation.PasswordResetPOST)(formFields, token, options)
+		return ogPasswordResetPOST(formFields, token, options)
 	}
 
+	ogSignInPOST := *emailPasswordImplementation.SignInPOST
 	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (tpepmodels.SignInResponse, error) {
-		response, err := (*emailPasswordImplementation.SignInPOST)(formFields, options)
+		response, err := ogSignInPOST(formFields, options)
 		if err != nil {
 			return tpepmodels.SignInResponse{}, err
 		}
@@ -65,8 +69,9 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		}
 	}
 
+	ogSignUpPOST := *emailPasswordImplementation.SignUpPOST
 	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (tpepmodels.SignUpResponse, error) {
-		response, err := (*emailPasswordImplementation.SignUpPOST)(formFields, options)
+		response, err := ogSignUpPOST(formFields, options)
 		if err != nil {
 			return tpepmodels.SignUpResponse{}, err
 		}
@@ -90,8 +95,9 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		}
 	}
 
+	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
 	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpepmodels.ThirdPartyOutput, error) {
-		response, err := (*thirdPartyImplementation.SignInUpPOST)(provider, code, redirectURI, options)
+		response, err := ogSignInUpPOST(provider, code, redirectURI, options)
 		if err != nil {
 			return tpepmodels.ThirdPartyOutput{}, err
 		}
@@ -123,11 +129,12 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		}
 	}
 
+	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
 	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return (*thirdPartyImplementation.AuthorisationUrlGET)(provider, options)
+		return ogAuthorisationUrlGET(provider, options)
 	}
 
-	return tpepmodels.APIInterface{
+	result := tpepmodels.APIInterface{
 		AuthorisationUrlGET:            &authorisationUrlGET,
 		EmailExistsGET:                 &emailExistsGET,
 		GeneratePasswordResetTokenPOST: &generatePasswordResetTokenPOST,
@@ -136,4 +143,17 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		EmailPasswordSignInPOST:        &emailPasswordSignInPOST,
 		EmailPasswordSignUpPOST:        &emailPasswordSignUpPOST,
 	}
+
+	modifiedEP := GetEmailPasswordIterfaceImpl(result)
+	(*emailPasswordImplementation.EmailExistsGET) = *modifiedEP.EmailExistsGET
+	(*emailPasswordImplementation.GeneratePasswordResetTokenPOST) = *modifiedEP.GeneratePasswordResetTokenPOST
+	(*emailPasswordImplementation.PasswordResetPOST) = *modifiedEP.PasswordResetPOST
+	(*emailPasswordImplementation.SignInPOST) = *modifiedEP.SignInPOST
+	(*emailPasswordImplementation.SignUpPOST) = *modifiedEP.SignUpPOST
+
+	modifiedTP := GetThirdPartyIterfaceImpl(result)
+	(*thirdPartyImplementation.AuthorisationUrlGET) = *modifiedTP.AuthorisationUrlGET
+	(*thirdPartyImplementation.SignInUpPOST) = *modifiedTP.SignInUpPOST
+
+	return result
 }

@@ -33,8 +33,10 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier)
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
+
+	ogSignUp := *emailPasswordImplementation.SignUp
 	signUp := func(email, password string) (tpepmodels.SignUpResponse, error) {
-		response, err := (*emailPasswordImplementation.SignUp)(email, password)
+		response, err := ogSignUp(email, password)
 		if err != nil {
 			return tpepmodels.SignUpResponse{}, err
 		}
@@ -55,8 +57,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
+	ogSignIn := *emailPasswordImplementation.SignIn
 	signIn := func(email, password string) (tpepmodels.SignInResponse, error) {
-		response, err := (*emailPasswordImplementation.SignIn)(email, password)
+		response, err := ogSignIn(email, password)
 		if err != nil {
 			return tpepmodels.SignInResponse{}, err
 		}
@@ -77,11 +80,15 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) = nil
+	if thirdPartyImplementation != nil {
+		ogSignInUp = *thirdPartyImplementation.SignInUp
+	}
 	signInUp := func(thirdPartyID, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
-		if thirdPartyImplementation == nil {
+		if ogSignInUp == nil {
 			return tpepmodels.SignInUpResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := (*thirdPartyImplementation.SignInUp)(thirdPartyID, thirdPartyUserID, tpmodels.EmailStruct{
+		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, tpmodels.EmailStruct{
 			ID:         email.ID,
 			IsVerified: email.IsVerified,
 		})
@@ -111,8 +118,13 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
+	ogEPGetUserByID := *emailPasswordImplementation.GetUserByID
+	var ogTPGetUserById func(userID string) (*tpmodels.User, error) = nil
+	if thirdPartyImplementation != nil {
+		ogTPGetUserById = *thirdPartyImplementation.GetUserByID
+	}
 	getUserByID := func(userID string) (*tpepmodels.User, error) {
-		user, err := (*emailPasswordImplementation.GetUserByID)(userID)
+		user, err := ogEPGetUserByID(userID)
 		if err != nil {
 			return nil, err
 		}
@@ -124,11 +136,11 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				ThirdParty: nil,
 			}, nil
 		}
-		if thirdPartyImplementation == nil {
+		if ogTPGetUserById == nil {
 			return nil, nil
 		}
 
-		userinfo, err := (*thirdPartyImplementation.GetUserByID)(userID)
+		userinfo, err := ogTPGetUserById(userID)
 		if err != nil {
 			return nil, err
 		}
@@ -144,15 +156,20 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		return nil, nil
 	}
 
+	ogEPGetUserByEmail := *emailPasswordImplementation.GetUserByEmail
+	var ogTPGetUsersByEmail func(email string) ([]tpmodels.User, error) = nil
+	if thirdPartyImplementation != nil {
+		ogTPGetUsersByEmail = *thirdPartyImplementation.GetUsersByEmail
+	}
 	getUsersByEmail := func(email string) ([]tpepmodels.User, error) {
-		fromEP, err := (*emailPasswordImplementation.GetUserByEmail)(email)
+		fromEP, err := ogEPGetUserByEmail(email)
 		if err != nil {
 			return []tpepmodels.User{}, err
 		}
 
 		fromTP := []tpmodels.User{}
-		if thirdPartyImplementation != nil {
-			fromTP, err = (*thirdPartyImplementation.GetUsersByEmail)(email)
+		if ogTPGetUsersByEmail != nil {
+			fromTP, err = ogTPGetUsersByEmail(email)
 			if err != nil {
 				return []tpepmodels.User{}, err
 			}
@@ -180,12 +197,16 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		return finalResult, nil
 	}
 
+	var ogGetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string) (*tpmodels.User, error) = nil
+	if thirdPartyImplementation != nil {
+		ogGetUserByThirdPartyInfo = *thirdPartyImplementation.GetUserByThirdPartyInfo
+	}
 	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string) (*tpepmodels.User, error) {
-		if thirdPartyImplementation == nil {
+		if ogGetUserByThirdPartyInfo == nil {
 			return nil, nil
 		}
 
-		userinfo, err := (*thirdPartyImplementation.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID)
+		userinfo, err := ogGetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID)
 		if err != nil {
 			return nil, err
 		}
@@ -201,19 +222,22 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		return nil, nil
 	}
 
+	ogCreateResetPasswordToken := *emailPasswordImplementation.CreateResetPasswordToken
 	createResetPasswordToken := func(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
-		return (*emailPasswordImplementation.CreateResetPasswordToken)(userID)
+		return ogCreateResetPasswordToken(userID)
 	}
 
+	ogResetPasswordUsingToken := *emailPasswordImplementation.ResetPasswordUsingToken
 	resetPasswordUsingToken := func(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
-		return (*emailPasswordImplementation.ResetPasswordUsingToken)(token, newPassword)
+		return ogResetPasswordUsingToken(token, newPassword)
 	}
 
+	ogUpdateEmailOrPassword := *emailPasswordImplementation.UpdateEmailOrPassword
 	updateEmailOrPassword := func(userId string, email, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
-		return (*emailPasswordImplementation.UpdateEmailOrPassword)(userId, email, password)
+		return ogUpdateEmailOrPassword(userId, email, password)
 	}
 
-	return tpepmodels.RecipeInterface{
+	result := tpepmodels.RecipeInterface{
 		GetUserByID:              &getUserByID,
 		GetUsersByEmail:          &getUsersByEmail,
 		GetUserByThirdPartyInfo:  &getUserByThirdPartyInfo,
@@ -224,4 +248,23 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		ResetPasswordUsingToken:  &resetPasswordUsingToken,
 		UpdateEmailOrPassword:    &updateEmailOrPassword,
 	}
+
+	modifiedEp := MakeEmailPasswordRecipeImplementation(result)
+	(*emailPasswordImplementation.CreateResetPasswordToken) = *modifiedEp.CreateResetPasswordToken
+	(*emailPasswordImplementation.GetUserByEmail) = *modifiedEp.GetUserByEmail
+	(*emailPasswordImplementation.GetUserByID) = *modifiedEp.GetUserByID
+	(*emailPasswordImplementation.ResetPasswordUsingToken) = *modifiedEp.ResetPasswordUsingToken
+	(*emailPasswordImplementation.SignIn) = *modifiedEp.SignIn
+	(*emailPasswordImplementation.SignUp) = *modifiedEp.SignUp
+	(*emailPasswordImplementation.UpdateEmailOrPassword) = *modifiedEp.UpdateEmailOrPassword
+
+	if thirdPartyImplementation != nil {
+		modifiedTp := MakeThirdPartyRecipeImplementation(result)
+		(*thirdPartyImplementation.GetUserByID) = *modifiedTp.GetUserByID
+		(*thirdPartyImplementation.GetUserByThirdPartyInfo) = *modifiedTp.GetUserByThirdPartyInfo
+		(*thirdPartyImplementation.GetUsersByEmail) = *modifiedTp.GetUsersByEmail
+		(*thirdPartyImplementation.SignInUp) = *modifiedTp.SignInUp
+	}
+
+	return result
 }
