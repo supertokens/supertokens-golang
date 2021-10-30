@@ -96,8 +96,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code, redirectURI string, options tpmodels.APIOptions) (tpepmodels.ThirdPartyOutput, error) {
-		response, err := ogSignInUpPOST(provider, code, redirectURI, options)
+	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions) (tpepmodels.ThirdPartyOutput, error) {
+		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options)
 		if err != nil {
 			return tpepmodels.ThirdPartyOutput{}, err
 		}

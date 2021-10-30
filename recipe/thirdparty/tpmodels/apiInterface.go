@@ -23,7 +23,7 @@ import (
 
 type APIInterface struct {
 	AuthorisationUrlGET *func(provider TypeProvider, options APIOptions) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST        *func(provider TypeProvider, code string, redirectURI string, options APIOptions) (SignInUpPOSTResponse, error)
+	SignInUpPOST        *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions) (SignInUpPOSTResponse, error)
 }
 
 type AuthorisationUrlGETResponse struct {

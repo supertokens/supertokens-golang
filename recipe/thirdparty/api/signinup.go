@@ -25,9 +25,10 @@ import (
 )
 
 type bodyParams struct {
-	ThirdPartyId string `json:"thirdPartyId"`
-	Code         string `json:"code"`
-	RedirectURI  string `json:"redirectURI"`
+	ThirdPartyId     string                 `json:"thirdPartyId"`
+	Code             string                 `json:"code"`
+	RedirectURI      string                 `json:"redirectURI"`
+	AuthCodeResponse map[string]interface{} `json:"authCodeResponse"`
 }
 
 func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
@@ -50,8 +51,12 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId in request body"}
 	}
 
-	if bodyParams.Code == "" {
-		return supertokens.BadInputError{Msg: "Please provide the code in request body"}
+	if bodyParams.Code == "" && bodyParams.AuthCodeResponse == nil {
+		return supertokens.BadInputError{Msg: "Please provide one of code or authCodeResponse in the request body"}
+	}
+
+	if bodyParams.AuthCodeResponse != nil && bodyParams.AuthCodeResponse["access_token"] == nil {
+		return supertokens.BadInputError{Msg: "Please provide the access_token inside the authCodeResponse request param"}
 	}
 
 	if bodyParams.RedirectURI == "" {
@@ -69,7 +74,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
 	}
 
-	result, err := (*apiImplementation.SignInUpPOST)(provider, bodyParams.Code, bodyParams.RedirectURI, options)
+	result, err := (*apiImplementation.SignInUpPOST)(provider, bodyParams.Code, bodyParams.AuthCodeResponse, bodyParams.RedirectURI, options)
 
 	if err != nil {
 		return err
