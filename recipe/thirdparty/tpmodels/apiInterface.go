@@ -19,11 +19,13 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET *func(provider TypeProvider, options APIOptions) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST        *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions) (SignInUpPOSTResponse, error)
+	AuthorisationUrlGET      *func(provider TypeProvider, options APIOptions) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions) (SignInUpPOSTResponse, error)
+	AppleRedirectHandlerPOST *func(code string, state string, options APIOptions) error
 }
 
 type AuthorisationUrlGETResponse struct {
@@ -49,4 +51,5 @@ type APIOptions struct {
 	Req                                   *http.Request
 	Res                                   http.ResponseWriter
 	OtherHandler                          http.HandlerFunc
+	AppInfo                               supertokens.NormalisedAppinfo
 }

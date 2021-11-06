@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -158,9 +159,21 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			},
 		}, nil
 	}
+
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions) error {
+		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
+			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?state=" + state + "&code=" + code
+
+		options.Res.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		fmt.Fprint(options.Res, "<html><head><script>window.location.replace(\""+redirectURL+"\");</script></head></html>")
+		return nil
+	}
+
 	return tpmodels.APIInterface{
-		AuthorisationUrlGET: &authorisationUrlGET,
-		SignInUpPOST:        &signInUpPOST,
+		AuthorisationUrlGET:      &authorisationUrlGET,
+		SignInUpPOST:             &signInUpPOST,
+		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
 	}
 }
 

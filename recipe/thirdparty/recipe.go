@@ -102,6 +102,10 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	appleRedirectHandlerAPI, err := supertokens.NewNormalisedURLPath(AppleRedirectHandlerAPI)
+	if err != nil {
+		return nil, err
+	}
 	emailverificationAPIhandled, err := r.EmailVerificationRecipe.RecipeModule.GetAPIsHandled()
 	if err != nil {
 		return nil, err
@@ -116,6 +120,11 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: authorisationAPI,
 		ID:                     AuthorisationAPI,
 		Disabled:               r.APIImpl.AuthorisationUrlGET == nil,
+	}, {
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: appleRedirectHandlerAPI,
+		ID:                     AppleRedirectHandlerAPI,
+		Disabled:               r.APIImpl.AppleRedirectHandlerPOST == nil,
 	}}, emailverificationAPIhandled...), nil
 }
 
@@ -129,11 +138,14 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Providers:                             r.Providers,
 		Req:                                   req,
 		Res:                                   res,
+		AppInfo:                               r.RecipeModule.GetAppInfo(),
 	}
 	if id == SignInUpAPI {
 		return api.SignInUpAPI(r.APIImpl, options)
 	} else if id == AuthorisationAPI {
 		return api.AuthorisationUrlAPI(r.APIImpl, options)
+	} else if id == AppleRedirectHandlerAPI {
+		return api.AppleRedirectHandler(r.APIImpl, options)
 	}
 	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
 }

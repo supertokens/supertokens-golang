@@ -39,17 +39,17 @@ type FacebookConfig struct {
 	Scope        []string
 }
 
-// type AppleConfig struct {
-// 	ClientID              string
-// 	ClientSecret          AppleClientSecret
-// 	Scope                 []string
-// 	AuthorisationRedirect *struct {
-// 		Params map[string]interface{}
-// 	}
-// }
+type AppleConfig struct {
+	ClientID              string
+	ClientSecret          AppleClientSecret
+	Scope                 []string
+	AuthorisationRedirect *struct {
+		Params map[string]interface{}
+	}
+}
 
-// type AppleClientSecret struct {
-// 	KeyId      string
-// 	PrivateKey string
-// 	TeamId     string
-// }
+type AppleClientSecret struct {
+	KeyId      string
+	PrivateKey string
+	TeamId     string
+}
