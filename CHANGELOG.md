@@ -9,7 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking changes:
 - Makes recipe and API interface have pointers to functions to fix https://github.com/supertokens/supertokens-node/issues/199
-- Compatible with FDI 1.10: Adds `authCodeResponse` as an optional input param to third party signinup API: https://github.com/supertokens/frontend-driver-interface/issues/24
+-   Support for FDI 1.10:
+    -   Allow thirdparty `/signinup POST` API to take `authCodeResponse` XOR `code` so that it can supprt OAuth via PKCE
+    -   Adds apple sign in callback API
+-   Optional `getRedirectURI` function added to social providers in case we set the `redirect_uri` on the backend.
+-   Adds optional `IsDefault` param to auth providers so that they can be reused with different credentials.
 
 ## [0.1.0] - 2021-10-21
 
