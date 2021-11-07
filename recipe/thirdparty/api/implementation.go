@@ -47,6 +47,21 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
+		if providerInfo.GetRedirectURI != nil && !isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			// the backend wants to set the redirectURI - so we set that here.
+
+			// we add the not development keys because the oauth provider will
+			// redirect to supertokens.io's URL which will redirect the app
+			// to the the user's website, which will handle the callback as usual.
+			// If we add this, then instead, the supertokens' site will redirect
+			// the user to this API layer, which is not needed.
+			rU, err := providerInfo.GetRedirectURI()
+			if err != nil {
+				return tpmodels.AuthorisationUrlGETResponse{}, err
+			}
+			params["redirect_uri"] = rU
+		}
+
 		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 			params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
 
@@ -80,6 +95,14 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			providerInfo := provider.Get(nil, nil)
 			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 				redirectURI = DevOauthRedirectUrl
+			} else if providerInfo.GetRedirectURI != nil {
+				// we overwrite the redirectURI provided by the frontend
+				// since the backend wants to take charge of setting this.
+				rU, err := providerInfo.GetRedirectURI()
+				if err != nil {
+					return tpmodels.SignInUpPOSTResponse{}, err
+				}
+				redirectURI = rU
 			}
 		}
 
