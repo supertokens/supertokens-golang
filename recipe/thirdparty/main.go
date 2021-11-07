@@ -128,9 +128,9 @@ func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email)
 }
 
-// func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
-// 	return providers.Apple(config)
-// }
+func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
+	return providers.Apple(config)
+}
 
 func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 	return providers.Facebook(config)

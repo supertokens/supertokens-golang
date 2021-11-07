@@ -110,7 +110,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 		var accessTokenAPIResponse map[string]interface{} = nil
 
-		if authCodeResponse != nil {
+		if authCodeResponse != nil && len(authCodeResponse.(map[string]interface{})) != 0 {
 			accessTokenAPIResponse = authCodeResponse.(map[string]interface{})
 		} else {
 			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {

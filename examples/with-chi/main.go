@@ -37,6 +37,14 @@ func main() {
 						ClientID:     "467101b197249757c71f",
 						ClientSecret: "e97051221f4b6426e8fe8d51486396703012f5bd",
 					}),
+					thirdparty.Apple(tpmodels.AppleConfig{
+						ClientID: "4398792-io.supertokens.example.service",
+						ClientSecret: tpmodels.AppleClientSecret{
+							KeyId:      "7M48Y4RYDL",
+							PrivateKey: "-----BEGIN PRIVATE KEY-----\nMIGTAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBHkwdwIBAQQgu8gXs+XYkqXD6Ala9Sf/iJXzhbwcoG5dMh1OonpdJUmgCgYIKoZIzj0DAQehRANCAASfrvlFbFCYqn3I2zeknYXLwtH30JuOKestDbSfZYxZNMqhF/OzdZFTV0zc5u5s3eN+oCWbnvl0hM+9IW0UlkdA\n-----END PRIVATE KEY-----",
+							TeamId:     "YWQCXGJRJL",
+						},
+					}),
 				},
 			}),
 			session.Init(nil),
