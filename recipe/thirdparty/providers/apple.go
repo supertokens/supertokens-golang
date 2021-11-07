@@ -20,7 +20,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -85,9 +84,8 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					Params: authorizationRedirectParams,
 				},
 				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
-					claims, err := verifyAndGetClaimsAppleIdToken(authCodeResponse.(map[string]interface{})["id_token"].(string))
+					claims, err := verifyAndGetClaimsAppleIdToken(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
 					if err != nil {
-						fmt.Println(err)
 						return tpmodels.UserInfo{}, err
 					}
 
@@ -169,7 +167,12 @@ func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 	return ecdsaPrivateKey, nil
 }
 
-func verifyAndGetClaimsAppleIdToken(idToken string) (jwt.MapClaims, error) {
+func verifyAndGetClaimsAppleIdToken(idToken string, clientId string) (jwt.MapClaims, error) {
+	/*
+	   - Verify the JWS E256 signature using the server’s public key
+	   - Verify that the iss field contains https://appleid.apple.com
+	   - Verify that the aud field is the developer’s client_id
+	   - Verify that the time is earlier than the exp value of the token */
 	claims := jwt.MapClaims{}
 	// Get the JWKS URL.
 	jwksURL := "https://appleid.apple.com/auth/keys"
@@ -195,6 +198,14 @@ func verifyAndGetClaimsAppleIdToken(idToken string) (jwt.MapClaims, error) {
 	// Check if the token is valid.
 	if !token.Valid {
 		return claims, errors.New("invalid id_token supplied")
+	}
+
+	if claims["iss"].(string) != "https://appleid.apple.com" {
+		return claims, errors.New("invalid iss field in apple token")
+	}
+
+	if claims["aud"].(string) != clientId {
+		return claims, errors.New("the client for whom this key is for is different than the one provided")
 	}
 
 	return claims, nil
