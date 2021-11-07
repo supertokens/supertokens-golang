@@ -163,6 +163,9 @@ func TestNormaliseURLPathOrThrowError(t *testing.T) {
 		Input:  "/",
 		Output: "",
 	}, {
+		Input:  "",
+		Output: "",
+	}, {
 		Input:  "/.netlify/functions/api",
 		Output: "/.netlify/functions/api",
 	}, {
