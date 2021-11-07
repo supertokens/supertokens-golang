@@ -18,8 +18,12 @@ package providers
 import (
 	"encoding/json"
 	"strings"
+	"time"
 
+	"github.com/dgrijalva/jwt-go"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const appleID = "apple"
@@ -43,7 +47,7 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 			}
 
 			authorisationRedirectURL := "https://appleid.apple.com/auth/authorize"
-			scopes := []string{"name", "email"}
+			scopes := []string{"email"}
 			if config.Scope != nil {
 				scopes = append(scopes, config.Scope...)
 			}
@@ -84,13 +88,33 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					}
 					return tpmodels.UserInfo{}, nil
 				},
+				GetClientId: func() string {
+					return config.ClientID
+				},
+				GetRedirectURI: func() (string, error) {
+					supertokens, err := supertokens.GetInstanceOrThrowError()
+					if err != nil {
+						return "", err
+					}
+					return supertokens.AppInfo.APIDomain.GetAsStringDangerous() + "/callback/apple", nil
+				},
 			}
 		},
+		IsDefault: config.IsDefault,
 	}
 }
 
 func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error) {
-	return "", nil
+	claims := jwt.StandardClaims{
+		ExpiresAt: time.Now().Unix() + 86400*180,
+		IssuedAt:  time.Now().Unix(),
+		Audience:  "https://appleid.apple.com",
+		Id:        keyId,
+		Subject:   api.GetActualClientIdFromDevelopmentClientId(clientId),
+		Issuer:    teamId,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	return token.SignedString([]byte(privateKey))
 }
 
 type appleGetProfileInfoInput struct {

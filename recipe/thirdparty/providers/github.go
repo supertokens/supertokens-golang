@@ -126,6 +126,7 @@ func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 				},
 			}
 		},
+		IsDefault: config.IsDefault,
 	}
 }
 

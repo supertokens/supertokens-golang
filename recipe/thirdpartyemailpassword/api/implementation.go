@@ -134,6 +134,10 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		return ogAuthorisationUrlGET(provider, options)
 	}
 
+	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions) error {
+		return ogAppleRedirectHandlerPOST(code, state, options)
+	}
 	result := tpepmodels.APIInterface{
 		AuthorisationUrlGET:            &authorisationUrlGET,
 		EmailExistsGET:                 &emailExistsGET,
@@ -142,6 +146,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		ThirdPartySignInUpPOST:         &thirdPartySignInUpPOST,
 		EmailPasswordSignInPOST:        &emailPasswordSignInPOST,
 		EmailPasswordSignUpPOST:        &emailPasswordSignUpPOST,
+		AppleRedirectHandlerPOST:       &appleRedirectHandlerPOST,
 	}
 
 	modifiedEP := GetEmailPasswordIterfaceImpl(result)
@@ -154,6 +159,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	modifiedTP := GetThirdPartyIterfaceImpl(result)
 	(*thirdPartyImplementation.AuthorisationUrlGET) = *modifiedTP.AuthorisationUrlGET
 	(*thirdPartyImplementation.SignInUpPOST) = *modifiedTP.SignInUpPOST
+	(*thirdPartyImplementation.AppleRedirectHandlerPOST) = *modifiedTP.AppleRedirectHandlerPOST
 
 	return result
 }
