@@ -166,11 +166,3 @@ func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 	}
 	return ecdsaPrivateKey, nil
 }
-
-type appleGetProfileInfoInput struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
-	RefreshToken string `json:"refresh_token"`
-	IDToken      string `json:"id_token"`
-}
