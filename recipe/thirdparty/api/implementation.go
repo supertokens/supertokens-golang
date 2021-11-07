@@ -52,7 +52,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 			for key, value := range params {
 				if value == providerInfo.GetClientId() {
-					params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 				}
 			}
 
@@ -94,7 +94,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 				for key, value := range providerInfo.AccessTokenAPI.Params {
 					if value == providerInfo.GetClientId() {
-						providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+						providerInfo.AccessTokenAPI.Params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 					}
 				}
 			}
@@ -242,7 +242,7 @@ func isUsingDevelopmentClientId(clientId string) bool {
 	}
 }
 
-func getActualClientIdFromDevelopmentClientId(clientId string) string {
+func GetActualClientIdFromDevelopmentClientId(clientId string) string {
 	if strings.HasPrefix(clientId, DevKeyIdentifier) {
 		return strings.Split(clientId, DevKeyIdentifier)[1]
 	}
