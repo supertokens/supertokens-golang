@@ -5,9 +5,10 @@ go 1.16
 // TODO: add go mod tidy in a build process
 
 require (
+	github.com/MicahParks/keyfunc v0.9.0
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/derekstavis/go-qs v0.0.0-20180720192143-9eef69e6c4e7
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/golang-jwt/jwt/v4 v4.1.0
 	github.com/joho/godotenv v1.3.0
 	github.com/kr/pretty v0.1.0 // indirect
 	github.com/stretchr/testify v1.7.0

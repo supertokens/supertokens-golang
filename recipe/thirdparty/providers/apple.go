@@ -20,10 +20,12 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
+	"github.com/MicahParks/keyfunc"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -83,9 +85,9 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					Params: authorizationRedirectParams,
 				},
 				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
-					claims := jwt.MapClaims{}
-					_, _, err := new(jwt.Parser).ParseUnverified(authCodeResponse.(map[string]interface{})["id_token"].(string), claims)
+					claims, err := verifyAndGetClaimsAppleIdToken(authCodeResponse.(map[string]interface{})["id_token"].(string))
 					if err != nil {
+						fmt.Println(err)
 						return tpmodels.UserInfo{}, err
 					}
 
@@ -165,4 +167,35 @@ func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 		return nil, errors.New("not ecdsa private key")
 	}
 	return ecdsaPrivateKey, nil
+}
+
+func verifyAndGetClaimsAppleIdToken(idToken string) (jwt.MapClaims, error) {
+	claims := jwt.MapClaims{}
+	// Get the JWKS URL.
+	jwksURL := "https://appleid.apple.com/auth/keys"
+
+	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
+	refreshInterval := time.Hour
+	options := keyfunc.Options{
+		RefreshInterval: &refreshInterval,
+	}
+
+	// Create the JWKS from the resource at the given URL.
+	jwks, err := keyfunc.Get(jwksURL, options)
+	if err != nil {
+		return claims, err
+	}
+
+	// Parse the JWT.
+	token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
+	if err != nil {
+		return claims, err
+	}
+
+	// Check if the token is valid.
+	if !token.Valid {
+		return claims, errors.New("invalid id_token supplied")
+	}
+
+	return claims, nil
 }
