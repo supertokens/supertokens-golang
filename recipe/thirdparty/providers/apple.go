@@ -16,7 +16,10 @@
 package providers
 
 import (
-	"encoding/json"
+	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"strings"
 	"time"
 
@@ -33,7 +36,10 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 		ID: appleID,
 		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://appleid.apple.com/auth/token"
-			clientSecret, _ := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
+			clientSecret, err := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
+			if err != nil {
+				panic(err)
+			}
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
 				"client_secret": clientSecret,
@@ -49,7 +55,7 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 			authorisationRedirectURL := "https://appleid.apple.com/auth/authorize"
 			scopes := []string{"email"}
 			if config.Scope != nil {
-				scopes = append(scopes, config.Scope...)
+				scopes = config.Scope
 			}
 
 			var additionalParams map[string]interface{} = nil
@@ -77,16 +83,31 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					Params: authorizationRedirectParams,
 				},
 				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
-					authCodeResponseJson, err := json.Marshal(authCodeResponse)
+					claims := jwt.MapClaims{}
+					_, _, err := new(jwt.Parser).ParseUnverified(authCodeResponse.(map[string]interface{})["id_token"].(string), claims)
 					if err != nil {
 						return tpmodels.UserInfo{}, err
 					}
-					var accessTokenAPIResponse appleGetProfileInfoInput
-					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
+
+					var email string
+					var isVerified bool
+					var id string
+					for key, val := range claims {
+						if key == "sub" {
+							id = val.(string)
+						} else if key == "email" {
+							email = val.(string)
+						} else if key == "email_verified" {
+							isVerified = val.(string) == "true"
+						}
 					}
-					return tpmodels.UserInfo{}, nil
+					return tpmodels.UserInfo{
+						ID: id,
+						Email: &tpmodels.EmailStruct{
+							ID:         email,
+							IsVerified: isVerified,
+						},
+					}, nil
 				},
 				GetClientId: func() string {
 					return config.ClientID
@@ -114,7 +135,36 @@ func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error)
 		Issuer:    teamId,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	return token.SignedString([]byte(privateKey))
+
+	ecdsaPrivateKey, err := getECDSPrivateKey(privateKey)
+	if err != nil {
+		return "", err
+	}
+
+	// Finally sign the token with the value of type *ecdsa.PrivateKey
+	return token.SignedString(ecdsaPrivateKey)
+}
+
+func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(privateKey))
+	// Check if it's a private key
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, errors.New("failed to decode PEM block containing private key")
+	}
+	// Get the encoded bytes
+	x509Encoded := block.Bytes
+
+	// Now you need an instance of *ecdsa.PrivateKey
+	parsedKey, err := x509.ParsePKCS8PrivateKey(x509Encoded) // EDIT to x509Encoded from p8bytes
+	if err != nil {
+		return nil, err
+	}
+
+	ecdsaPrivateKey, ok := parsedKey.(*ecdsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("not ecdsa private key")
+	}
+	return ecdsaPrivateKey, nil
 }
 
 type appleGetProfileInfoInput struct {
