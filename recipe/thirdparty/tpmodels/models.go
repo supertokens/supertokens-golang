@@ -34,6 +34,7 @@ type TypeProviderGetResponse struct {
 	AuthorisationRedirect AuthorisationRedirect
 	GetProfileInfo        func(authCodeResponse interface{}) (UserInfo, error)
 	GetClientId           func() string
+	GetRedirectURI        func() (string, error)
 }
 
 type AccessTokenAPI struct {
@@ -47,8 +48,9 @@ type AuthorisationRedirect struct {
 }
 
 type TypeProvider struct {
-	ID  string
-	Get func(redirectURI *string, authCodeFromRequest *string) TypeProviderGetResponse
+	ID        string
+	Get       func(redirectURI *string, authCodeFromRequest *string) TypeProviderGetResponse
+	IsDefault bool
 }
 
 type User struct {

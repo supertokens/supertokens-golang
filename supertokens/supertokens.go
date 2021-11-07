@@ -93,7 +93,7 @@ func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter
 	http.Error(res, err.Error(), 500)
 }
 
-func getInstanceOrThrowError() (*superTokens, error) {
+func GetInstanceOrThrowError() (*superTokens, error) {
 	if superTokensInstance != nil {
 		return superTokensInstance, nil
 	}

@@ -22,6 +22,7 @@ type GoogleConfig struct {
 	AuthorisationRedirect *struct {
 		Params map[string]interface{}
 	}
+	IsDefault bool
 }
 
 type GithubConfig struct {
@@ -31,25 +32,28 @@ type GithubConfig struct {
 	AuthorisationRedirect *struct {
 		Params map[string]interface{}
 	}
+	IsDefault bool
 }
 
 type FacebookConfig struct {
 	ClientID     string
 	ClientSecret string
 	Scope        []string
+	IsDefault    bool
 }
 
-// type AppleConfig struct {
-// 	ClientID              string
-// 	ClientSecret          AppleClientSecret
-// 	Scope                 []string
-// 	AuthorisationRedirect *struct {
-// 		Params map[string]interface{}
-// 	}
-// }
+type AppleConfig struct {
+	ClientID              string
+	ClientSecret          AppleClientSecret
+	Scope                 []string
+	AuthorisationRedirect *struct {
+		Params map[string]interface{}
+	}
+	IsDefault bool
+}
 
-// type AppleClientSecret struct {
-// 	KeyId      string
-// 	PrivateKey string
-// 	TeamId     string
-// }
+type AppleClientSecret struct {
+	KeyId      string
+	PrivateKey string
+	TeamId     string
+}

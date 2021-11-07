@@ -13,10 +13,21 @@
  * under the License.
  */
 
-package thirdparty
+package api
 
-const (
-	AuthorisationAPI        = "/authorisationurl"
-	SignInUpAPI             = "/signinup"
-	AppleRedirectHandlerAPI = "/callback/apple"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
+
+func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+	if apiImplementation.AppleRedirectHandlerPOST == nil || (*apiImplementation.AppleRedirectHandlerPOST) == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
+
+	options.Req.ParseMultipartForm(0)
+	state := options.Req.FormValue("state")
+	code := options.Req.FormValue("code")
+
+	return (*apiImplementation.AppleRedirectHandlerPOST)(code, state, options)
+}

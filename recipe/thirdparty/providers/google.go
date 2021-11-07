@@ -112,6 +112,7 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 				},
 			}
 		},
+		IsDefault: config.IsDefault,
 	}
 }
 

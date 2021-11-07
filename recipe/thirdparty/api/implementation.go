@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"reflect"
@@ -46,12 +47,27 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
+		if providerInfo.GetRedirectURI != nil && !isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			// the backend wants to set the redirectURI - so we set that here.
+
+			// we add the not development keys because the oauth provider will
+			// redirect to supertokens.io's URL which will redirect the app
+			// to the the user's website, which will handle the callback as usual.
+			// If we add this, then instead, the supertokens' site will redirect
+			// the user to this API layer, which is not needed.
+			rU, err := providerInfo.GetRedirectURI()
+			if err != nil {
+				return tpmodels.AuthorisationUrlGETResponse{}, err
+			}
+			params["redirect_uri"] = rU
+		}
+
 		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 			params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
 
 			for key, value := range params {
 				if value == providerInfo.GetClientId() {
-					params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 				}
 			}
 
@@ -79,6 +95,14 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			providerInfo := provider.Get(nil, nil)
 			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 				redirectURI = DevOauthRedirectUrl
+			} else if providerInfo.GetRedirectURI != nil {
+				// we overwrite the redirectURI provided by the frontend
+				// since the backend wants to take charge of setting this.
+				rU, err := providerInfo.GetRedirectURI()
+				if err != nil {
+					return tpmodels.SignInUpPOSTResponse{}, err
+				}
+				redirectURI = rU
 			}
 		}
 
@@ -86,14 +110,14 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 		var accessTokenAPIResponse map[string]interface{} = nil
 
-		if authCodeResponse != nil {
+		if authCodeResponse != nil && len(authCodeResponse.(map[string]interface{})) != 0 {
 			accessTokenAPIResponse = authCodeResponse.(map[string]interface{})
 		} else {
 			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
 
 				for key, value := range providerInfo.AccessTokenAPI.Params {
 					if value == providerInfo.GetClientId() {
-						providerInfo.AccessTokenAPI.Params[key] = getActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+						providerInfo.AccessTokenAPI.Params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
 					}
 				}
 			}
@@ -158,9 +182,21 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			},
 		}, nil
 	}
+
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions) error {
+		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
+			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?state=" + state + "&code=" + code
+
+		options.Res.Header().Set("Content-Type", "text/html; charset=utf-8")
+
+		fmt.Fprint(options.Res, "<html><head><script>window.location.replace(\""+redirectURL+"\");</script></head></html>")
+		return nil
+	}
+
 	return tpmodels.APIInterface{
-		AuthorisationUrlGET: &authorisationUrlGET,
-		SignInUpPOST:        &signInUpPOST,
+		AuthorisationUrlGET:      &authorisationUrlGET,
+		SignInUpPOST:             &signInUpPOST,
+		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
 	}
 }
 
@@ -229,7 +265,7 @@ func isUsingDevelopmentClientId(clientId string) bool {
 	}
 }
 
-func getActualClientIdFromDevelopmentClientId(clientId string) string {
+func GetActualClientIdFromDevelopmentClientId(clientId string) string {
 	if strings.HasPrefix(clientId, DevKeyIdentifier) {
 		return strings.Split(clientId, DevKeyIdentifier)[1]
 	}

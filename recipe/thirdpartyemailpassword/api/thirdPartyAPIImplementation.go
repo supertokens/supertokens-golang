@@ -23,8 +23,9 @@ import (
 func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodels.APIInterface {
 	if apiImplmentation.ThirdPartySignInUpPOST == nil || (*apiImplmentation.ThirdPartySignInUpPOST) == nil {
 		return tpmodels.APIInterface{
-			AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
-			SignInUpPOST:        nil,
+			AuthorisationUrlGET:      apiImplmentation.AuthorisationUrlGET,
+			AppleRedirectHandlerPOST: apiImplmentation.AppleRedirectHandlerPOST,
+			SignInUpPOST:             nil,
 		}
 	}
 
@@ -64,7 +65,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 	}
 
 	return tpmodels.APIInterface{
-		AuthorisationUrlGET: apiImplmentation.AuthorisationUrlGET,
-		SignInUpPOST:        &signInUpPOST,
+		AuthorisationUrlGET:      apiImplmentation.AuthorisationUrlGET,
+		AppleRedirectHandlerPOST: apiImplmentation.AppleRedirectHandlerPOST,
+		SignInUpPOST:             &signInUpPOST,
 	}
 }

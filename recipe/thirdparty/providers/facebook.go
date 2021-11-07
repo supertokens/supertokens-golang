@@ -99,6 +99,7 @@ func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 				},
 			}
 		},
+		IsDefault: config.IsDefault,
 	}
 }
 

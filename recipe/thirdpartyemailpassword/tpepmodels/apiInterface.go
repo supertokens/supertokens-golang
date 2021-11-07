@@ -22,6 +22,7 @@ import (
 
 type APIInterface struct {
 	AuthorisationUrlGET            *func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error)
+	AppleRedirectHandlerPOST       *func(code string, state string, options tpmodels.APIOptions) error
 	EmailExistsGET                 *func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error)
 	GeneratePasswordResetTokenPOST *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error)
 	PasswordResetPOST              *func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error)
