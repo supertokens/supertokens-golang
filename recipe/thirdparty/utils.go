@@ -113,6 +113,27 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 	if len(providers) == 0 {
 		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config"}
 	}
+
+	isDefaultProvidersSet := map[string]bool{}
+	allProvidersSet := map[string]bool{}
+
+	for i := 0; i < len(providers); i++ {
+		id := providers[i].ID
+		allProvidersSet[id] = true
+		isDefault := providers[i].IsDefault
+
+		if isDefault {
+			if isDefaultProvidersSet[id] {
+				return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "You have provided multiple third party providers that have the id: " + providers[i].ID + " and are marked as 'IsDefault: true'. Please only mark one of them as isDefault"}
+			}
+			isDefaultProvidersSet[id] = true
+		}
+	}
+
+	if len(isDefaultProvidersSet) != len(allProvidersSet) {
+		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "The providers array has multiple entries for the same third party provider. Please mark one of them as the default one by using 'IsDefault: true'"}
+	}
+
 	return tpmodels.TypeNormalisedInputSignInAndUp{
 		Providers: providers,
 	}, nil

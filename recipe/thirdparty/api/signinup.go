@@ -18,7 +18,6 @@ package api
 import (
 	"encoding/json"
 	"io/ioutil"
-	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -29,6 +28,7 @@ type bodyParams struct {
 	Code             string                 `json:"code"`
 	RedirectURI      string                 `json:"redirectURI"`
 	AuthCodeResponse map[string]interface{} `json:"authCodeResponse"`
+	ClientId         string                 `json:"clientId"`
 }
 
 func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
@@ -47,6 +47,11 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return err
 	}
 
+	var clientId *string = nil
+	if bodyParams.ClientId != "" {
+		clientId = &bodyParams.ClientId
+	}
+
 	if bodyParams.ThirdPartyId == "" {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId in request body"}
 	}
@@ -63,18 +68,17 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "Please provide the redirectURI in request body"}
 	}
 
-	var provider tpmodels.TypeProvider
-	for _, prov := range options.Providers {
-		if prov.ID == bodyParams.ThirdPartyId {
-			provider = prov
+	var provider *tpmodels.TypeProvider = findRightProvider(options.Providers, bodyParams.ThirdPartyId, clientId)
+
+	if provider == nil {
+		if clientId == nil {
+			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be missing from the backend configs"}
+		} else {
+			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
 		}
 	}
 
-	if reflect.DeepEqual(provider, tpmodels.TypeProvider{}) {
-		return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
-	}
-
-	result, err := (*apiImplementation.SignInUpPOST)(provider, bodyParams.Code, bodyParams.AuthCodeResponse, bodyParams.RedirectURI, options)
+	result, err := (*apiImplementation.SignInUpPOST)(*provider, bodyParams.Code, bodyParams.AuthCodeResponse, bodyParams.RedirectURI, options)
 
 	if err != nil {
 		return err
