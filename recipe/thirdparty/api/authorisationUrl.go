@@ -16,8 +16,6 @@
 package api
 
 import (
-	"reflect"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -35,17 +33,13 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
 
-	var provider tpmodels.TypeProvider
-	for _, prov := range options.Providers {
-		if prov.ID == thirdPartyId {
-			provider = prov
-		}
-	}
-	if reflect.DeepEqual(provider, tpmodels.TypeProvider{}) {
-		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to not be configured on the backend. Please check your frontend and backend configs."}
+	var provider *tpmodels.TypeProvider = findRightProvider(options.Providers, thirdPartyId, nil)
+
+	if provider == nil {
+		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to not be missing from the backend configs"}
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, options)
+	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, options)
 	if err != nil {
 		return err
 	}
