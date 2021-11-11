@@ -162,6 +162,10 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			return
 		}
 		requestRID := getRIDFromRequest(r)
+		if requestRID == "anti-csrf" {
+			// See https://github.com/supertokens/supertokens-node/issues/202
+			requestRID = ""
+		}
 		if requestRID != "" {
 			var matchedRecipe *RecipeModule
 			for _, recipeModule := range s.RecipeModules {
