@@ -56,3 +56,13 @@ type APIHandled struct {
 	ID                     string
 	Disabled               bool
 }
+
+type DoneWriter struct {
+	http.ResponseWriter
+	done bool
+}
+
+func (w *DoneWriter) Write(b []byte) (int, error) {
+	w.done = true
+	return w.ResponseWriter.Write(b)
+}

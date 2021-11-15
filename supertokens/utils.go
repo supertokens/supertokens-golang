@@ -137,31 +137,37 @@ func getRIDFromRequest(r *http.Request) string {
 }
 
 func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
-	res.Header().Set("Content-Type", "application/json; charset=utf-8")
-	res.WriteHeader(200)
-	bytes, err := json.Marshal(responseJson)
-	if err != nil {
-		return err
-	} else {
-		res.Write(bytes)
+	dw := res.(*DoneWriter)
+	if !dw.done {
+		res.Header().Set("Content-Type", "application/json; charset=utf-8")
+		res.WriteHeader(200)
+		bytes, err := json.Marshal(responseJson)
+		if err != nil {
+			return err
+		} else {
+			res.Write(bytes)
+		}
 	}
 	return nil
 }
 
 func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
-	if statusCode < 300 {
-		return errors.New("Calling sendNon200Response with status code < 300")
-	}
-	res.Header().Set("Content-Type", "text/html; charset=utf-8")
-	res.WriteHeader(statusCode)
-	response := map[string]interface{}{
-		"message": message,
-	}
-	bytes, err := json.Marshal(response)
-	if err != nil {
-		return err
-	} else {
-		res.Write(bytes)
+	dw := res.(*DoneWriter)
+	if !dw.done {
+		if statusCode < 300 {
+			return errors.New("Calling sendNon200Response with status code < 300")
+		}
+		res.Header().Set("Content-Type", "text/html; charset=utf-8")
+		res.WriteHeader(statusCode)
+		response := map[string]interface{}{
+			"message": message,
+		}
+		bytes, err := json.Marshal(response)
+		if err != nil {
+			return err
+		} else {
+			res.Write(bytes)
+		}
 	}
 	return nil
 }
