@@ -146,11 +146,12 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		theirHandler = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		dw := &DoneWriter{ResponseWriter: w}
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
-			err = s.errorHandler(err, r, w)
+			err = s.errorHandler(err, r, dw)
 			if err != nil {
-				s.OnGeneralError(err, r, w)
+				s.OnGeneralError(err, r, dw)
 			}
 			return
 		}
@@ -158,7 +159,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		method := r.Method
 
 		if !strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) {
-			theirHandler.ServeHTTP(w, r)
+			theirHandler.ServeHTTP(dw, r)
 			return
 		}
 		requestRID := getRIDFromRequest(r)
@@ -175,28 +176,28 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				}
 			}
 			if matchedRecipe == nil {
-				theirHandler.ServeHTTP(w, r)
+				theirHandler.ServeHTTP(dw, r)
 				return
 			}
 			id, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
 
 			if err != nil {
-				err = s.errorHandler(err, r, w)
+				err = s.errorHandler(err, r, dw)
 				if err != nil {
-					s.OnGeneralError(err, r, w)
+					s.OnGeneralError(err, r, dw)
 				}
 				return
 			}
 
 			if id == nil {
-				theirHandler.ServeHTTP(w, r)
+				theirHandler.ServeHTTP(dw, r)
 				return
 			}
-			apiErr := matchedRecipe.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
+			apiErr := matchedRecipe.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
 			if apiErr != nil {
-				apiErr = s.errorHandler(apiErr, r, w)
+				apiErr = s.errorHandler(apiErr, r, dw)
 				if apiErr != nil {
-					s.OnGeneralError(apiErr, r, w)
+					s.OnGeneralError(apiErr, r, dw)
 				}
 				return
 			}
@@ -204,25 +205,25 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			for _, recipeModule := range s.RecipeModules {
 				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 				if err != nil {
-					err = s.errorHandler(err, r, w)
+					err = s.errorHandler(err, r, dw)
 					if err != nil {
-						s.OnGeneralError(err, r, w)
+						s.OnGeneralError(err, r, dw)
 					}
 					return
 				}
 
 				if id != nil {
-					err := recipeModule.HandleAPIRequest(*id, r, w, theirHandler.ServeHTTP, path, method)
+					err := recipeModule.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
 					if err != nil {
-						err = s.errorHandler(err, r, w)
+						err = s.errorHandler(err, r, dw)
 						if err != nil {
-							s.OnGeneralError(err, r, w)
+							s.OnGeneralError(err, r, dw)
 						}
 					}
 					return
 				}
 			}
-			theirHandler.ServeHTTP(w, r)
+			theirHandler.ServeHTTP(dw, r)
 		}
 	})
 }
