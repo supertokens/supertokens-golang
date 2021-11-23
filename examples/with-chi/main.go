@@ -84,6 +84,14 @@ func main() {
 							TeamId:     "YWQCXGJRJL",
 						},
 					}),
+					thirdparty.Discord(tpmodels.DiscordConfig{
+						ClientID:     "4398792-907871294886928395",
+						ClientSecret: "His4yXGEovVp5TZkZhEAt0ZXGh8uOVDm",
+					}),
+					thirdparty.GoogleWorkspaces(tpmodels.GoogleWorkspacesConfig{
+						ClientID:     "1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com",
+						ClientSecret: "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",
+					}),
 				},
 			}),
 			session.Init(nil),

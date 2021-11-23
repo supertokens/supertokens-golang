@@ -97,7 +97,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 	} else {
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "FIELD_ERROR",
-			"error":  result.FieldError.Error,
+			"error":  result.FieldError.ErrorMsg,
 		})
 	}
 }

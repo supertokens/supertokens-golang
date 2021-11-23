@@ -58,8 +58,8 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return errors.FieldError{
 			Msg: "Error in input formFields",
 			Payload: []errors.ErrorPayload{{
-				ID:    "email",
-				Error: "This email already exists. Please sign in instead.",
+				ID:       "email",
+				ErrorMsg: "This email already exists. Please sign in instead.",
 			}},
 		}
 	}
