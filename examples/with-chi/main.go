@@ -84,6 +84,10 @@ func main() {
 							TeamId:     "YWQCXGJRJL",
 						},
 					}),
+					thirdparty.Discord(tpmodels.DiscordConfig{
+						ClientID:     "4398792-907871294886928395",
+						ClientSecret: "His4yXGEovVp5TZkZhEAt0ZXGh8uOVDm",
+					}),
 				},
 			}),
 			session.Init(nil),

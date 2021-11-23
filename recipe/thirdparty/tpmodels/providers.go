@@ -35,6 +35,16 @@ type GithubConfig struct {
 	IsDefault bool
 }
 
+type DiscordConfig struct {
+	ClientID              string
+	ClientSecret          string
+	Scope                 []string
+	AuthorisationRedirect *struct {
+		Params map[string]interface{}
+	}
+	IsDefault bool
+}
+
 type FacebookConfig struct {
 	ClientID     string
 	ClientSecret string

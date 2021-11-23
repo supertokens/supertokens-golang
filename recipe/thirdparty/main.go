@@ -140,6 +140,10 @@ func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 	return providers.Github(config)
 }
 
+func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
+	return providers.Discord(config)
+}
+
 func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 	return providers.Google(config)
 }
