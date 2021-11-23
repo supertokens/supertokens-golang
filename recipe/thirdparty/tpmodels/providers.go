@@ -25,6 +25,17 @@ type GoogleConfig struct {
 	IsDefault bool
 }
 
+type GoogleWorkspacesConfig struct {
+	ClientID              string
+	ClientSecret          string
+	Scope                 []string
+	Domain                *string
+	AuthorisationRedirect *struct {
+		Params map[string]interface{}
+	}
+	IsDefault bool
+}
+
 type GithubConfig struct {
 	ClientID              string
 	ClientSecret          string

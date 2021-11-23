@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.0] - 2021-11-23
+
+### Breaking changes:
+- Changes `FIELD_ERROR` type in sign in up response from `Error` to `ErrorMsg`
+
+### Addition
+- Sign in with google workspaces and discord
+
+### Changes
+- If getting profile info from third party provider throws an error, that is propagated a `FIELD_ERROR` to the client.
+
 ## [0.2.2] - 2021-11-15
 
 ### Changes

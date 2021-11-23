@@ -48,8 +48,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}
 		if result.FieldError != nil {
 			return tpmodels.SignInUpResponse{
-				FieldError: &struct{ Error string }{
-					Error: result.FieldError.Error,
+				FieldError: &struct{ ErrorMsg string }{
+					ErrorMsg: result.FieldError.ErrorMsg,
 				},
 			}, nil
 		}

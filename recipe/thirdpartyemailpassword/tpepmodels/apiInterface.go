@@ -58,5 +58,5 @@ type ThirdPartyOutput struct {
 		AuthCodeResponse interface{}
 	}
 	NoEmailGivenByProviderError *struct{}
-	FieldError                  *struct{ Error string }
+	FieldError                  *struct{ ErrorMsg string }
 }

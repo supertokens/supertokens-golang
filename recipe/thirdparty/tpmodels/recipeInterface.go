@@ -27,5 +27,5 @@ type SignInUpResponse struct {
 		CreatedNewUser bool
 		User           User
 	}
-	FieldError *struct{ Error string }
+	FieldError *struct{ ErrorMsg string }
 }

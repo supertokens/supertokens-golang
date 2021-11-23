@@ -103,7 +103,9 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		}
 		if response.FieldError != nil {
 			return tpepmodels.ThirdPartyOutput{
-				FieldError: &struct{ Error string }{},
+				FieldError: &struct{ ErrorMsg string }{
+					ErrorMsg: response.FieldError.ErrorMsg,
+				},
 			}, nil
 		} else if response.NoEmailGivenByProviderError != nil {
 			return tpepmodels.ThirdPartyOutput{

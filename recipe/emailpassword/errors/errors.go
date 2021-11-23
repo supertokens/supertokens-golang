@@ -21,8 +21,8 @@ type FieldError struct {
 }
 
 type ErrorPayload struct {
-	ID    string `json:"id"`
-	Error string `json:"error"`
+	ID       string `json:"id"`
+	ErrorMsg string `json:"error"`
 }
 
 func (err FieldError) Error() string {

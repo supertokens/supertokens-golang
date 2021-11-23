@@ -57,8 +57,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 			}, nil
 		} else {
 			return tpmodels.SignInUpPOSTResponse{
-				FieldError: &struct{ Error string }{
-					Error: result.FieldError.Error,
+				FieldError: &struct{ ErrorMsg string }{
+					ErrorMsg: result.FieldError.ErrorMsg,
 				},
 			}, nil
 		}

@@ -75,13 +75,13 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 			}
 		}
 		if input.Value == "" && !field.Optional {
-			validationErrors = append(validationErrors, errors.ErrorPayload{ID: field.ID, Error: "Field is not optional"})
+			validationErrors = append(validationErrors, errors.ErrorPayload{ID: field.ID, ErrorMsg: "Field is not optional"})
 		} else {
 			err := field.Validate(input.Value)
 			if err != nil {
 				validationErrors = append(validationErrors, errors.ErrorPayload{
-					ID:    field.ID,
-					Error: *err,
+					ID:       field.ID,
+					ErrorMsg: *err,
 				})
 			}
 		}
