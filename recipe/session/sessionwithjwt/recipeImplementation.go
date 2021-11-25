@@ -30,31 +30,59 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	// Time difference between JWT expiry and access token expiry (JWT expiry = access token expiry + EXPIRY_OFFSET_SECONDS)
 	var EXPIRY_OFFSET_SECONDS uint64 = 30
 
-	originalCreateNewSession := *originalImplementation.CreateNewSession
+	{
+		originalCreateNewSession := *originalImplementation.CreateNewSession
 
-	(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
-		accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)()
-		if err != nil {
-			return sessmodels.SessionContainer{}, err
+		(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)()
+			if err != nil {
+				return sessmodels.SessionContainer{}, err
+			}
+			accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
+
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, userID, config.Jwt.PropertyNameInAccessTokenPayload, appInfo, jwtRecipeImplementation)
+
+			if err != nil {
+				return sessmodels.SessionContainer{}, err
+			}
+
+			sessionContainer, err := originalCreateNewSession(res, userID, accessTokenPayload, sessionData)
+
+			if err != nil {
+				return sessionContainer, err
+			}
+
+			return newSessionWithJWTContainer(sessionContainer, jwtRecipeImplementation, appInfo), nil
 		}
-		accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
-
-		accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, userID, config.Jwt.PropertyNameInAccessTokenPayload, appInfo, jwtRecipeImplementation)
-
-		if err != nil {
-			return sessmodels.SessionContainer{}, err
-		}
-
-		sessionContainer, err := originalCreateNewSession(res, userID, accessTokenPayload, sessionData)
-
-		if err != nil {
-			return sessionContainer, err
-		}
-
-		return newSessionWithJWTContainer(sessionContainer, jwtRecipeImplementation, appInfo), nil
 	}
 
-	// TODO: more implementations..
+	{
+		originalGetSession := *originalImplementation.GetSession
+
+		(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
+			sessionContainer, err := originalGetSession(req, res, options)
+
+			if err != nil {
+				return nil, err
+			}
+
+			if sessionContainer == nil {
+				return nil, nil
+			}
+
+			result := newSessionWithJWTContainer(*sessionContainer, jwtRecipeImplementation, appInfo)
+
+			return &result, nil
+		}
+	}
+
+	{
+		// TODO: refresh session
+	}
+
+	{
+		// TODO: update session
+	}
 
 	return originalImplementation
 }
