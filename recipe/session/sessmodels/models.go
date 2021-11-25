@@ -87,6 +87,12 @@ type TypeInput struct {
 	AntiCsrf                 *string
 	Override                 *OverrideStruct
 	ErrorHandlers            *ErrorHandlers
+	Jwt                      *JWTInputConfig
+}
+
+type JWTInputConfig struct {
+	Enable                           bool
+	PropertyNameInAccessTokenPayload *string
 }
 
 type OverrideStruct struct {
@@ -108,6 +114,12 @@ type TypeNormalisedInput struct {
 	AntiCsrf                 string
 	Override                 OverrideStruct
 	ErrorHandlers            NormalisedErrorHandlers
+	Jwt                      JWTNormalisedConfig
+}
+
+type JWTNormalisedConfig struct {
+	Enable                           bool
+	PropertyNameInAccessTokenPayload string
 }
 
 type VerifySessionOptions struct {
