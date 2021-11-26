@@ -37,6 +37,9 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 		originalCreateNewSession := *originalImplementation.CreateNewSession
 
 		(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+			if accessTokenPayload == nil {
+				accessTokenPayload = map[string]interface{}{}
+			}
 			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)()
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
