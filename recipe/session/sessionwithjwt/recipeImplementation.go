@@ -18,7 +18,9 @@ package sessionwithjwt
 import (
 	"math"
 	"net/http"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -77,11 +79,83 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	}
 
 	{
-		// TODO: refresh session
+		originalRefreshSession := *originalImplementation.RefreshSession
+
+		(*originalImplementation.RefreshSession) = func(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
+			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)()
+			if err != nil {
+				return sessmodels.SessionContainer{}, err
+			}
+			accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
+
+			// Refresh session first because this will create a new access token
+			newSession, err := originalRefreshSession(req, res)
+			if err != nil {
+				return sessmodels.SessionContainer{}, err
+			}
+			accessTokenPayload := newSession.GetAccessTokenPayload()
+
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserID(), config.Jwt.PropertyNameInAccessTokenPayload, appInfo, jwtRecipeImplementation)
+
+			if err != nil {
+				return sessmodels.SessionContainer{}, err
+			}
+
+			err = newSession.UpdateAccessTokenPayload(accessTokenPayload)
+			if err != nil {
+				return sessmodels.SessionContainer{}, err
+			}
+
+			return newSessionWithJWTContainer(newSession, jwtRecipeImplementation, appInfo), nil
+		}
 	}
 
 	{
-		// TODO: update session
+		originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
+
+		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+			sessionInformation, err := (*originalImplementation.GetSessionInformation)(sessionHandle)
+			if err != nil {
+				return err
+			}
+			accessTokenPayload := sessionInformation.AccessTokenPayload
+			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
+
+			if !ok {
+				return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload)
+			}
+
+			existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
+
+			currentTimeInSeconds := uint64(time.Now().UnixNano() / 1000000000) // time in seconds
+
+			claims := jwt.MapClaims{}
+			decodedPayload := map[string]interface{}{}
+			_, _, err = new(jwt.Parser).ParseUnverified(existingJWT, claims)
+			if err != nil {
+				return err
+			}
+			for key, val := range claims {
+				decodedPayload[key] = val
+			}
+
+			jwtExpiry := decodedPayload["exp"].(uint64) - currentTimeInSeconds
+
+			if jwtExpiry <= 0 {
+				// it can come here if someone calls this function well after
+				// the access token and the jwt payload have expired (which can happen if an API takes a VERY long time). In this case, we still want the jwt payload to update, but the resulting JWT should
+				// not be alive for too long (since it's expired already). So we set it to
+				// 1 second lifetime.
+				jwtExpiry = 1
+			}
+
+			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), appInfo, jwtRecipeImplementation)
+			if err != nil {
+				return err
+			}
+
+			return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload)
+		}
 	}
 
 	return originalImplementation
