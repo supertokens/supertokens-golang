@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -96,8 +97,9 @@ type JWTInputConfig struct {
 }
 
 type OverrideStruct struct {
-	Functions func(originalImplementation RecipeInterface) RecipeInterface
-	APIs      func(originalImplementation APIInterface) APIInterface
+	Functions  func(originalImplementation RecipeInterface) RecipeInterface
+	APIs       func(originalImplementation APIInterface) APIInterface
+	JwtFeature *jwtmodels.OverrideStruct
 }
 
 type ErrorHandlers struct {

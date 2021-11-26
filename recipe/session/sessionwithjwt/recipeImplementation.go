@@ -16,6 +16,7 @@
 package sessionwithjwt
 
 import (
+	"errors"
 	"math"
 	"net/http"
 	"time"
@@ -162,6 +163,35 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 }
 
 func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtExpiry uint64, userId string, jwtPropertyName string, appInfo supertokens.NormalisedAppinfo, jwtRecipeImplementation jwtmodels.RecipeInterface) (map[string]interface{}, error) {
-	// TODO:
-	return map[string]interface{}{}, nil
+
+	// If jwtPropertyName is not undefined it means that the JWT was added to the access token payload already
+	existingJwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
+
+	if ok {
+		delete(accessTokenPayload, existingJwtPropertyName.(string))
+		delete(accessTokenPayload, ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY)
+	}
+
+	newAccessTokenPayload := map[string]interface{}{
+		"sub": userId,
+		"iss": appInfo.APIDomain.GetAsStringDangerous(),
+	}
+	for k, v := range accessTokenPayload {
+		newAccessTokenPayload[k] = v
+	}
+
+	jwtResponse, err := (*jwtRecipeImplementation.CreateJWT)(newAccessTokenPayload, &jwtExpiry)
+	if err != nil {
+		return map[string]interface{}{}, err
+	}
+
+	if jwtResponse.UnsupportedAlgorithmError != nil {
+		// Should never come here
+		return map[string]interface{}{}, errors.New("JWT Signing key algorithm not supported")
+	}
+
+	newAccessTokenPayload[jwtPropertyName] = jwtResponse.OK.Jwt
+	newAccessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY] = jwtPropertyName
+
+	return newAccessTokenPayload, nil
 }

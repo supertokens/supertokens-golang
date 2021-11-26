@@ -19,8 +19,11 @@ import (
 	defaultErrors "errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/jwt"
+	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -29,6 +32,7 @@ type Recipe struct {
 	RecipeModule supertokens.RecipeModule
 	Config       sessmodels.TypeNormalisedInput
 	RecipeImpl   sessmodels.RecipeInterface
+	JwtRecipe    *jwt.Recipe
 	APIImpl      sessmodels.APIInterface
 }
 
@@ -53,7 +57,19 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, err
 	}
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
-	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+
+	if verifiedConfig.Jwt.Enable {
+		jwtRecipe, err := jwt.MakeRecipe(recipeId, appInfo, &jwtmodels.TypeInput{
+			Override: verifiedConfig.Override.JwtFeature,
+		}, onGeneralError)
+		if err != nil {
+			return Recipe{}, err
+		}
+		r.RecipeImpl = verifiedConfig.Override.Functions(sessionwithjwt.MakeRecipeImplementation(recipeImplementation, jwtRecipe.RecipeImpl, verifiedConfig, appInfo))
+		r.JwtRecipe = &jwtRecipe
+	} else {
+		r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+	}
 
 	return *r, nil
 }
@@ -90,7 +106,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	return []supertokens.APIHandled{{
+	resp := []supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: refreshAPIPathNormalised,
 		ID:                     refreshAPIPath,
@@ -100,10 +116,20 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: signoutAPIPathNormalised,
 		ID:                     signoutAPIPath,
 		Disabled:               r.APIImpl.SignOutPOST == nil,
-	}}, nil
+	}}
+
+	if r.JwtRecipe != nil {
+		jwtAPIs, err := r.getAPIsHandled()
+		if err != nil {
+			return nil, err
+		}
+		resp = append(resp, jwtAPIs...)
+	}
+
+	return resp, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
 	options := sessmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -114,13 +140,20 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 	}
 	if id == refreshAPIPath {
 		return api.HandleRefreshAPI(r.APIImpl, options)
-	} else {
+	} else if id == signoutAPIPath {
 		return api.SignOutAPI(r.APIImpl, options)
+	} else if r.JwtRecipe != nil {
+		return r.JwtRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirhandler, path, method)
 	}
+	return nil
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
-	return getCORSAllowedHeaders()
+	resp := getCORSAllowedHeaders()
+	if r.JwtRecipe != nil {
+		resp = append(resp, r.JwtRecipe.RecipeModule.GetAllCORSHeaders()...)
+	}
+	return resp
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
@@ -131,6 +164,8 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
+	} else if r.JwtRecipe != nil {
+		return r.JwtRecipe.RecipeModule.HandleError(err, req, res)
 	}
 	return false, nil
 }

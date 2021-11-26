@@ -182,7 +182,8 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 				return originalImplementation
 			}, APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 				return originalImplementation
-			}},
+			},
+			JwtFeature: nil},
 	}
 
 	if config != nil && config.Override != nil {
@@ -192,6 +193,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
 		}
+		typeNormalisedInput.Override.JwtFeature = config.Override.JwtFeature
 	}
 
 	return typeNormalisedInput, nil
