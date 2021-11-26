@@ -115,6 +115,9 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 		originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
 
 		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+			if newAccessTokenPayload == nil {
+				newAccessTokenPayload = map[string]interface{}{}
+			}
 			sessionInformation, err := (*originalImplementation.GetSessionInformation)(sessionHandle)
 			if err != nil {
 				return err

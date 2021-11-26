@@ -57,6 +57,9 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 			return originalSessionClass.GetExpiry()
 		},
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
+			if newAccessTokenPayload == nil {
+				newAccessTokenPayload = map[string]interface{}{}
+			}
 			accessTokenPayload := originalSessionClass.GetAccessTokenPayload()
 			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
