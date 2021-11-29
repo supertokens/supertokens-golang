@@ -81,7 +81,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 				decodedPayload[key] = val
 			}
 
-			jwtExpiry := decodedPayload["exp"].(uint64) - currentTimeInSeconds
+			jwtExpiry := uint64(decodedPayload["exp"].(float64)) - currentTimeInSeconds
 
 			if jwtExpiry <= 0 {
 				// it can come here if someone calls this function well after
