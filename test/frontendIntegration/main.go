@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -32,48 +33,132 @@ import (
 var noOfTimesGetSessionCalledDuringTest int = 0
 var noOfTimesRefreshCalledDuringTest int = 0
 var noOfTimesRefreshAttemptedDuringTest int = 0
+var lastAntiCsrfSetting bool
 
-func callSTInit(enableAntiCsrf bool) {
-	port := "8080"
-	if len(os.Args) == 2 {
-		port = os.Args[1]
+func maxVersion(version1 string, version2 string) string {
+	var splittedv1 = strings.Split(version1, ".")
+	var splittedv2 = strings.Split(version2, ".")
+	var minLength = len(splittedv1)
+	if minLength > len(splittedv2) {
+		minLength = len(splittedv2)
 	}
-	antiCsrf := "NONE"
-	if enableAntiCsrf {
-		antiCsrf = "VIA_TOKEN"
+	for i := 0; i < minLength; i++ {
+		var v1, _ = strconv.Atoi(splittedv1[i])
+		var v2, _ = strconv.Atoi(splittedv2[i])
+		if v1 > v2 {
+			return version1
+		} else if v2 > v1 {
+			return version2
+		}
 	}
-	err := supertokens.Init(supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:9000",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:       "SuperTokens",
-			APIDomain:     "0.0.0.0:" + port,
-			WebsiteDomain: "http://localhost.org:8080",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				ErrorHandlers: &sessmodels.ErrorHandlers{
-					OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
-						res.Header().Set("Content-Type", "text/html; charset=utf-8")
-						res.WriteHeader(401)
-						res.Write([]byte(""))
-						return nil
-					},
-				},
-				AntiCsrf: &antiCsrf,
-				Override: &sessmodels.OverrideStruct{
-					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
-						originalImplementation.RefreshPOST = nil
-						return originalImplementation
-					},
-				},
-			}),
-		},
-	})
+	if len(splittedv1) >= len(splittedv2) {
+		return version1
+	}
+	return version2
+}
 
-	if err != nil {
-		panic(err.Error())
+func callSTInit(enableAntiCsrf bool, jwtPropertyName string) {
+	lastAntiCsrfSetting = enableAntiCsrf
+	if maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION {
+		port := "8080"
+		if len(os.Args) == 2 {
+			port = os.Args[1]
+		}
+		antiCsrf := "NONE"
+		if enableAntiCsrf {
+			antiCsrf = "VIA_TOKEN"
+		}
+		err := supertokens.Init(supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: "http://localhost:9000",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:       "SuperTokens",
+				APIDomain:     "0.0.0.0:" + port,
+				WebsiteDomain: "http://localhost.org:8080",
+			},
+			RecipeList: []supertokens.Recipe{
+				session.Init(&sessmodels.TypeInput{
+					Jwt: &sessmodels.JWTInputConfig{
+						Enable:                           true,
+						PropertyNameInAccessTokenPayload: &jwtPropertyName,
+					},
+					ErrorHandlers: &sessmodels.ErrorHandlers{
+						OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
+							res.Header().Set("Content-Type", "text/html; charset=utf-8")
+							res.WriteHeader(401)
+							res.Write([]byte(""))
+							return nil
+						},
+					},
+					AntiCsrf: &antiCsrf,
+					Override: &sessmodels.OverrideStruct{
+						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+							ogCNS := *originalImplementation.CreateNewSession
+							(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+								if accessTokenPayload == nil {
+									accessTokenPayload = map[string]interface{}{}
+								}
+								accessTokenPayload["customClaim"] = "customValue"
+
+								return ogCNS(res, userID, accessTokenPayload, sessionData)
+							}
+							return originalImplementation
+						},
+						APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
+							originalImplementation.RefreshPOST = nil
+							return originalImplementation
+						},
+					},
+				}),
+			},
+		})
+
+		if err != nil {
+			panic(err.Error())
+		}
+	} else {
+		port := "8080"
+		if len(os.Args) == 2 {
+			port = os.Args[1]
+		}
+		antiCsrf := "NONE"
+		if enableAntiCsrf {
+			antiCsrf = "VIA_TOKEN"
+		}
+		err := supertokens.Init(supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: "http://localhost:9000",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:       "SuperTokens",
+				APIDomain:     "0.0.0.0:" + port,
+				WebsiteDomain: "http://localhost.org:8080",
+			},
+			RecipeList: []supertokens.Recipe{
+				session.Init(&sessmodels.TypeInput{
+					ErrorHandlers: &sessmodels.ErrorHandlers{
+						OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
+							res.Header().Set("Content-Type", "text/html; charset=utf-8")
+							res.WriteHeader(401)
+							res.Write([]byte(""))
+							return nil
+						},
+					},
+					AntiCsrf: &antiCsrf,
+					Override: &sessmodels.OverrideStruct{
+						APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
+							originalImplementation.RefreshPOST = nil
+							return originalImplementation
+						},
+					},
+				}),
+			},
+		})
+
+		if err != nil {
+			panic(err.Error())
+		}
 	}
 }
 
@@ -98,8 +183,8 @@ func main() {
 	if len(os.Args) >= 2 {
 		port = os.Args[1]
 	}
-	callSTInit(true)
-	http.ListenAndServe(":"+port, corsMiddleware(
+	callSTInit(true, "jwt")
+	err := http.ListenAndServe(":"+port, corsMiddleware(
 		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/setAntiCsrf" && r.Method == "POST" {
 				setAntiCsrf(rw, r)
@@ -141,13 +226,40 @@ func main() {
 				rw.Write([]byte(strconv.FormatBool(r.Header.Get("allow-credentials") != "")))
 			} else if r.URL.Path == "/index.html" && r.Method == "GET" {
 				index(rw, r)
+			} else if r.URL.Path == "/featureFlags" && r.Method == "GET" {
+				featureFlag(rw, r)
 			} else if r.URL.Path == "/testError" && r.Method == "GET" {
 				rw.WriteHeader(http.StatusInternalServerError)
 				rw.Write([]byte("test error message"))
+			} else if r.URL.Path == "/reinitialiseBackendConfig" && r.Method == "POST" {
+				reinitialiseBackendConfig(rw, r)
 			} else {
 				fail(rw, r)
 			}
 		}))))
+	if err != nil {
+		fmt.Println(err.Error())
+	}
+}
+
+func reinitialiseBackendConfig(w http.ResponseWriter, r *http.Request) {
+	var body map[string]interface{}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	var jwtPropertyName string
+	if val, ok := body["jwtPropertyName"]; ok {
+		jwtPropertyName = val.(string)
+	}
+	supertokens.ResetForTest()
+	session.ResetForTest()
+	callSTInit(lastAntiCsrfSetting, jwtPropertyName)
+	w.Write([]byte(""))
+}
+
+func featureFlag(response http.ResponseWriter, request *http.Request) {
+	json.NewEncoder(response).Encode(map[string]interface{}{
+		"sessionJwt": maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION,
+	})
 }
 
 func index(w http.ResponseWriter, r *http.Request) {
@@ -238,7 +350,7 @@ func setAntiCsrf(w http.ResponseWriter, r *http.Request) {
 	}
 	supertokens.ResetForTest()
 	session.ResetForTest()
-	callSTInit(enableAntiCsrf)
+	callSTInit(enableAntiCsrf, "jwt")
 	w.Write([]byte("success"))
 }
 
@@ -246,8 +358,8 @@ func login(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userID := body["userId"].(string)
-	session.CreateNewSession(response, userID, nil, nil)
-	response.Write([]byte(userID))
+	sess, _ := session.CreateNewSession(response, userID, nil, nil)
+	response.Write([]byte(sess.GetUserID()))
 }
 
 func fail(w http.ResponseWriter, r *http.Request) {

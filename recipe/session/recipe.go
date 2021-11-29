@@ -119,7 +119,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}
 
 	if r.JwtRecipe != nil {
-		jwtAPIs, err := r.getAPIsHandled()
+		jwtAPIs, err := r.JwtRecipe.RecipeModule.GetAPIsHandled()
 		if err != nil {
 			return nil, err
 		}
