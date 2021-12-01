@@ -34,6 +34,7 @@ var noOfTimesGetSessionCalledDuringTest int = 0
 var noOfTimesRefreshCalledDuringTest int = 0
 var noOfTimesRefreshAttemptedDuringTest int = 0
 var lastAntiCsrfSetting bool
+var lastEnableJWTSetting bool
 
 func maxVersion(version1 string, version2 string) string {
 	var splittedv1 = strings.Split(version1, ".")
@@ -57,9 +58,8 @@ func maxVersion(version1 string, version2 string) string {
 	return version2
 }
 
-func callSTInit(enableAntiCsrf bool, jwtPropertyName string) {
-	lastAntiCsrfSetting = enableAntiCsrf
-	if maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION {
+func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
+	if maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION && enableJWT {
 		port := "8080"
 		if len(os.Args) == 2 {
 			port = os.Args[1]
@@ -183,11 +183,13 @@ func main() {
 	if len(os.Args) >= 2 {
 		port = os.Args[1]
 	}
-	callSTInit(true, "jwt")
+	callSTInit(true, false, "jwt")
 	err := http.ListenAndServe(":"+port, corsMiddleware(
 		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
 			if r.URL.Path == "/setAntiCsrf" && r.Method == "POST" {
 				setAntiCsrf(rw, r)
+			} else if r.URL.Path == "/setEnableJWT" && r.Method == "POST" {
+				setEnableJWT(rw, r)
 			} else if r.URL.Path == "/login" && r.Method == "POST" {
 				login(rw, r)
 			} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
@@ -252,13 +254,13 @@ func reinitialiseBackendConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	supertokens.ResetForTest()
 	session.ResetForTest()
-	callSTInit(lastAntiCsrfSetting, jwtPropertyName)
+	callSTInit(lastAntiCsrfSetting, lastEnableJWTSetting, jwtPropertyName)
 	w.Write([]byte(""))
 }
 
 func featureFlag(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(map[string]interface{}{
-		"sessionJwt": maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION,
+		"sessionJwt": maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION && lastEnableJWTSetting,
 	})
 }
 
@@ -348,9 +350,27 @@ func setAntiCsrf(w http.ResponseWriter, r *http.Request) {
 	if val, ok := body["enableAntiCsrf"]; ok {
 		enableAntiCsrf = val.(bool)
 	}
+	lastAntiCsrfSetting = enableAntiCsrf
 	supertokens.ResetForTest()
 	session.ResetForTest()
-	callSTInit(enableAntiCsrf, "jwt")
+	callSTInit(enableAntiCsrf, lastEnableJWTSetting, "jwt")
+	w.Write([]byte("success"))
+}
+
+func setEnableJWT(w http.ResponseWriter, r *http.Request) {
+	var body map[string]interface{}
+	_ = json.NewDecoder(r.Body).Decode(&body)
+
+	enableJWT := false
+	if val, ok := body["enableJWT"]; ok {
+		enableJWT = val.(bool)
+	}
+	lastEnableJWTSetting = enableJWT
+	if enableJWT {
+		supertokens.ResetForTest()
+		session.ResetForTest()
+		callSTInit(lastAntiCsrfSetting, enableJWT, "jwt")
+	}
 	w.Write([]byte("success"))
 }
 
