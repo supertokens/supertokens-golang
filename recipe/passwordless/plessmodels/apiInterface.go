@@ -15,35 +15,73 @@
 
 package plessmodels
 
-// import (
-// 	"net/http"
+import (
+	"net/http"
 
-// 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-// )
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
-// TODO:
 type APIOptions struct {
-	// 	RecipeImplementation                  RecipeInterface
-	// 	EmailVerificationRecipeImplementation evmodels.RecipeInterface
-	// 	Config                                TypeNormalisedInput
-	// 	RecipeID                              string
-	// 	Req                                   *http.Request
-	// 	Res                                   http.ResponseWriter
-	// 	OtherHandler                          http.HandlerFunc
+	RecipeImplementation RecipeInterface
+	Config               TypeNormalisedInput
+	RecipeID             string
+	Req                  *http.Request
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
 }
 
 type APIInterface struct {
-	// 	EmailExistsGET                 *func(email string, options APIOptions) (EmailExistsGETResponse, error)
-	// 	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, options APIOptions) (GeneratePasswordResetTokenPOSTResponse, error)
-	// 	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions) (ResetPasswordUsingTokenResponse, error)
-	// 	SignInPOST                     *func(formFields []TypeFormField, options APIOptions) (SignInResponse, error)
-	// 	SignUpPOST                     *func(formFields []TypeFormField, options APIOptions) (SignUpResponse, error)
+	CreateCodePOST       *func(email *string, phoneNumber *string, options APIOptions, userContext supertokens.UserContext) (CreateCodePOSTResponse, error)
+	ResendCodePOST       *func(deviceID string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ResendCodePOSTResponse, error)
+	ConsumeCodePOST      *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ConsumeCodePOSTResponse, error)
+	EmailExistsGET       *func(email string, options APIOptions) (EmailExistsGETResponse, error)
+	PhoneNumberExistsGET *func(email string, options APIOptions) (PhoneNumberExistsGETResponse, error)
 }
 
-// type EmailExistsGETResponse struct {
-// 	OK *struct{ Exists bool }
-// }
+type ConsumeCodePOSTResponse struct {
+	OK *struct {
+		CreatedNewUser bool
+		User           User
+		Session        sessmodels.SessionContainer
+	}
+	IncorrectUserInputCodeError *struct {
+		FailedCodeInputAttemptCount int
+		MaximumCodeInputAttempts    int
+	}
+	ExpiredUserInputCodeError *struct {
+		FailedCodeInputAttemptCount int
+		MaximumCodeInputAttempts    int
+	}
+	RestartFlowError *struct{}
+	GeneralError     *struct {
+		message string
+	}
+}
 
-// type GeneratePasswordResetTokenPOSTResponse struct {
-// 	OK *struct{}
-// }
+type ResendCodePOSTResponse struct {
+	OK             *struct{}
+	ResetFlowError *struct{}
+	GeneralError   *struct {
+		message string
+	}
+}
+
+type CreateCodePOSTResponse struct {
+	OK *struct {
+		deviceID         string
+		PreAuthSessionID string
+		FlowType         string
+	}
+	GeneralError *struct {
+		message string
+	}
+}
+
+type EmailExistsGETResponse struct {
+	OK *struct{ Exists bool }
+}
+
+type PhoneNumberExistsGETResponse struct {
+	OK *struct{ Exists bool }
+}

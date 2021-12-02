@@ -24,7 +24,7 @@ type RecipeInterface struct {
 
 	ResendCode *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (ResendCodeResponse, error)
 
-	ConsumeCode *func(userInputCode *UserInputCodeWithDeviceID, linkeCode *string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
+	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkeCode *string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
 
 	GetUserByID *func(userID string, userContext supertokens.UserContext) (*User, error)
 
@@ -79,8 +79,8 @@ type ConsumeCodeResponse struct {
 }
 
 type UserInputCodeWithDeviceID struct {
-	UserInputCode string
-	DeviceID      string
+	Code     string
+	DeviceID string
 }
 
 type ResendCodeResponse struct {
