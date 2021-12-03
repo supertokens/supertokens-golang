@@ -19,6 +19,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/api"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -39,15 +40,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
 
-	// TODO:
-	// r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
-	// querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
-	// if err != nil {
-	// 	return Recipe{}, err
-	// }
-	// recipeImplementation := makeRecipeImplementation(*querierInstance)
-	// r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return Recipe{}, err
+	}
+	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
 	r.RecipeModule = recipeModuleInstance
@@ -79,50 +79,75 @@ func recipeInit(config plessmodels.TypeInput) supertokens.Recipe {
 // implement RecipeModule
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	// generateEmailVerifyTokenAPINormalised, err := supertokens.NewNormalisedURLPath(generateEmailVerifyTokenAPI)
-	// if err != nil {
-	// 	return nil, err
-	// }
-	// emailVerifyAPINormalised, err := supertokens.NewNormalisedURLPath(emailVerifyAPI)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	consumeCodeAPINormalised, err := supertokens.NewNormalisedURLPath(consumeCodeAPI)
+	if err != nil {
+		return nil, err
+	}
+	createCodeAPINormalised, err := supertokens.NewNormalisedURLPath(createCodeAPI)
+	if err != nil {
+		return nil, err
+	}
+	doesEmailExistsAPINormalised, err := supertokens.NewNormalisedURLPath(doesEmailExistAPI)
+	if err != nil {
+		return nil, err
+	}
+	doesPhoneNumberExistsAPINormalised, err := supertokens.NewNormalisedURLPath(doesPhoneNumberExistAPI)
+	if err != nil {
+		return nil, err
+	}
+	resendCodeAPINormalised, err := supertokens.NewNormalisedURLPath(resendCodeAPI)
+	if err != nil {
+		return nil, err
+	}
 
-	return []supertokens.APIHandled{
-		// 	{
-		// 	Method:                 http.MethodPost,
-		// 	PathWithoutAPIBasePath: generateEmailVerifyTokenAPINormalised,
-		// 	ID:                     generateEmailVerifyTokenAPI,
-		// 	Disabled:               r.APIImpl.GenerateEmailVerifyTokenPOST == nil,
-		// }, {
-		// 	Method:                 http.MethodPost,
-		// 	PathWithoutAPIBasePath: emailVerifyAPINormalised,
-		// 	ID:                     emailVerifyAPI,
-		// 	Disabled:               r.APIImpl.VerifyEmailPOST == nil,
-		// }, {
-		// 	Method:                 http.MethodGet,
-		// 	PathWithoutAPIBasePath: emailVerifyAPINormalised,
-		// 	ID:                     emailVerifyAPI,
-		// 	Disabled:               r.APIImpl.IsEmailVerifiedGET == nil,
-		// }
-	}, nil
+	return []supertokens.APIHandled{{
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: consumeCodeAPINormalised,
+		ID:                     consumeCodeAPI,
+		Disabled:               r.APIImpl.ConsumeCodePOST == nil,
+	}, {
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: createCodeAPINormalised,
+		ID:                     createCodeAPI,
+		Disabled:               r.APIImpl.CreateCodePOST == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: doesEmailExistsAPINormalised,
+		ID:                     doesEmailExistAPI,
+		Disabled:               r.APIImpl.EmailExistsGET == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: doesPhoneNumberExistsAPINormalised,
+		ID:                     doesPhoneNumberExistAPI,
+		Disabled:               r.APIImpl.PhoneNumberExistsGET == nil,
+	}, {
+		Method:                 http.MethodPost,
+		PathWithoutAPIBasePath: resendCodeAPINormalised,
+		ID:                     resendCodeAPI,
+		Disabled:               r.APIImpl.ResendCodePOST == nil,
+	}}, nil
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
-	// options := plessmodels.APIOptions{
-	// 	Config:               r.Config,
-	// 	RecipeID:             r.RecipeModule.GetRecipeID(),
-	// 	RecipeImplementation: r.RecipeImpl,
-	// 	Req:                  req,
-	// 	Res:                  res,
-	// 	OtherHandler:         theirHandler,
-	// }
-	// if id == generateEmailVerifyTokenAPI {
-	// 	return api.GenerateEmailVerifyToken(r.APIImpl, options)
-	// } else {
-	// 	return api.EmailVerify(r.APIImpl, options)
-	// }
-	return nil
+	options := plessmodels.APIOptions{
+		Config:               r.Config,
+		RecipeID:             r.RecipeModule.GetRecipeID(),
+		RecipeImplementation: r.RecipeImpl,
+		Req:                  req,
+		Res:                  res,
+		OtherHandler:         theirHandler,
+	}
+	if id == consumeCodeAPI {
+		return api.ConsumeCode(r.APIImpl, options)
+	} else if id == createCodeAPI {
+		return api.ConsumeCode(r.APIImpl, options)
+	} else if id == doesEmailExistAPI {
+		return api.DoesEmailExist(r.APIImpl, options)
+	} else if id == doesPhoneNumberExistAPI {
+		return api.DoesPhoneNumberExist(r.APIImpl, options)
+	} else {
+		return api.ResendCode(r.APIImpl, options)
+	}
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
