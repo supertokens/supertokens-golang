@@ -58,8 +58,62 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}, nil
 	}
 
+	createCodePOST := func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+
+		var userInputCodeInput *string
+		if options.Config.GetCustomUserInputCode != nil {
+			c, err := options.Config.GetCustomUserInputCode(userContext)
+			if err != nil {
+				return plessmodels.CreateCodePOSTResponse{}, err
+			}
+			userInputCodeInput = &c
+		}
+
+		response, err := (*options.RecipeImplementation.CreateCode)(email, phoneNumber, userInputCodeInput, userContext)
+		if err != nil {
+			return plessmodels.CreateCodePOSTResponse{}, err
+		}
+
+		// now we will send an email / text message
+		var magicLink *string
+		var userInputCode *string
+		flowType := options.Config.FlowType
+		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
+			link, err := options.Config.GetLinkDomainAndPath(email, phoneNumber, userContext)
+			if err != nil {
+				return plessmodels.CreateCodePOSTResponse{}, err
+			}
+			link = link + "?rid=" + options.RecipeID + "&preAuthSessionId=" + response.OK.PreAuthSessionID + "#" + response.OK.LinkCode
+
+			magicLink = &link
+		}
+
+		if flowType == "USER_INPUT_CODE" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
+			userInputCode = &response.OK.UserInputCode
+		}
+
+		if options.Config.ContactMethodPhone.Enabled {
+			options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*phoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+		} else {
+			options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+		}
+
+		return plessmodels.CreateCodePOSTResponse{
+			OK: &struct {
+				DeviceID         string
+				PreAuthSessionID string
+				FlowType         string
+			}{
+				DeviceID:         response.OK.DeviceID,
+				PreAuthSessionID: response.OK.PreAuthSessionID,
+				FlowType:         options.Config.FlowType,
+			},
+		}, nil
+	}
+
 	return plessmodels.APIInterface{
 		ConsumeCodePOST: &consumeCodePOST,
+		CreateCodePOST:  &createCodePOST,
 		// TODO:
 	}
 }

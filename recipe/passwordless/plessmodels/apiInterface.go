@@ -69,7 +69,7 @@ type ResendCodePOSTResponse struct {
 
 type CreateCodePOSTResponse struct {
 	OK *struct {
-		deviceID         string
+		DeviceID         string
 		PreAuthSessionID string
 		FlowType         string
 	}
