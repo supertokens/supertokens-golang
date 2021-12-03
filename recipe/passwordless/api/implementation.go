@@ -111,9 +111,115 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}, nil
 	}
 
+	emailExistsGET := func(email string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
+		response, err := (*options.RecipeImplementation.GetUserByEmail)(email, userContext)
+		if err != nil {
+			return plessmodels.EmailExistsGETResponse{}, err
+		}
+
+		return plessmodels.EmailExistsGETResponse{
+			OK: &struct{ Exists bool }{
+				Exists: response != nil,
+			},
+		}, nil
+	}
+
+	phoneNumberExistsGET := func(phoneNumber string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error) {
+		response, err := (*options.RecipeImplementation.GetUserByPhoneNumber)(phoneNumber, userContext)
+		if err != nil {
+			return plessmodels.PhoneNumberExistsGETResponse{}, err
+		}
+
+		return plessmodels.PhoneNumberExistsGETResponse{
+			OK: &struct{ Exists bool }{
+				Exists: response != nil,
+			},
+		}, nil
+	}
+
+	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+		for numberOfTriesToCreateNewCode := 0; numberOfTriesToCreateNewCode < 3; numberOfTriesToCreateNewCode++ {
+			var userInputCodeInput *string
+			if options.Config.GetCustomUserInputCode != nil {
+				c, err := options.Config.GetCustomUserInputCode(userContext)
+				if err != nil {
+					return plessmodels.ResendCodePOSTResponse{}, err
+				}
+				userInputCodeInput = &c
+			}
+			response, err := (*options.RecipeImplementation.ResendCode)(deviceID, userInputCodeInput, userContext)
+			if err != nil {
+				return plessmodels.ResendCodePOSTResponse{}, err
+			}
+
+			if response.UserInputCodeAlreadyUsedError != nil {
+				continue
+			}
+
+			if response.RestartFlowError != nil {
+				return plessmodels.ResendCodePOSTResponse{
+					ResetFlowError: response.RestartFlowError,
+				}, nil
+			}
+
+			deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(response.OK.DeviceID, userContext)
+			if err != nil {
+				return plessmodels.ResendCodePOSTResponse{}, err
+			}
+
+			if deviceInfo == nil {
+				return plessmodels.ResendCodePOSTResponse{
+					ResetFlowError: &struct{}{},
+				}, nil
+			}
+
+			if (options.Config.ContactMethodEmail.Enabled && deviceInfo.Email == nil) || (options.Config.ContactMethodPhone.Enabled && deviceInfo.PhoneNumber == nil) {
+				return plessmodels.ResendCodePOSTResponse{
+					ResetFlowError: &struct{}{},
+				}, nil
+			}
+
+			var magicLink *string
+			var userInputCode *string
+			flowType := options.Config.FlowType
+			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
+				link, err := options.Config.GetLinkDomainAndPath(deviceInfo.Email, deviceInfo.PhoneNumber, userContext)
+				if err != nil {
+					return plessmodels.ResendCodePOSTResponse{}, err
+				}
+				link = link + "?rid=" + options.RecipeID + "&preAuthSessionId=" + response.OK.PreAuthSessionID + "#" + response.OK.LinkCode
+
+				magicLink = &link
+			}
+
+			if flowType == "USER_INPUT_CODE" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
+				userInputCode = &response.OK.UserInputCode
+			}
+
+			if options.Config.ContactMethodPhone.Enabled {
+				options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*deviceInfo.PhoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+			} else {
+				options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+			}
+
+			return plessmodels.ResendCodePOSTResponse{
+				OK: &struct{}{},
+			}, nil
+
+		}
+
+		return plessmodels.ResendCodePOSTResponse{
+			GeneralError: &struct{ Message string }{
+				Message: "Failed to generate a one time code. Please try again",
+			},
+		}, nil
+	}
+
 	return plessmodels.APIInterface{
-		ConsumeCodePOST: &consumeCodePOST,
-		CreateCodePOST:  &createCodePOST,
-		// TODO:
+		ConsumeCodePOST:      &consumeCodePOST,
+		CreateCodePOST:       &createCodePOST,
+		EmailExistsGET:       &emailExistsGET,
+		PhoneNumberExistsGET: &phoneNumberExistsGET,
+		ResendCodePOST:       &resendCodePOST,
 	}
 }

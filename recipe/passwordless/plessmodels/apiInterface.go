@@ -35,8 +35,8 @@ type APIInterface struct {
 	CreateCodePOST       *func(email *string, phoneNumber *string, options APIOptions, userContext supertokens.UserContext) (CreateCodePOSTResponse, error)
 	ResendCodePOST       *func(deviceID string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ResendCodePOSTResponse, error)
 	ConsumeCodePOST      *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ConsumeCodePOSTResponse, error)
-	EmailExistsGET       *func(email string, options APIOptions) (EmailExistsGETResponse, error)
-	PhoneNumberExistsGET *func(email string, options APIOptions) (PhoneNumberExistsGETResponse, error)
+	EmailExistsGET       *func(email string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
+	PhoneNumberExistsGET *func(email string, options APIOptions, userContext supertokens.UserContext) (PhoneNumberExistsGETResponse, error)
 }
 
 type ConsumeCodePOSTResponse struct {
@@ -55,7 +55,7 @@ type ConsumeCodePOSTResponse struct {
 	}
 	RestartFlowError *struct{}
 	GeneralError     *struct {
-		message string
+		Message string
 	}
 }
 
@@ -63,7 +63,7 @@ type ResendCodePOSTResponse struct {
 	OK             *struct{}
 	ResetFlowError *struct{}
 	GeneralError   *struct {
-		message string
+		Message string
 	}
 }
 
@@ -74,7 +74,7 @@ type CreateCodePOSTResponse struct {
 		FlowType         string
 	}
 	GeneralError *struct {
-		message string
+		Message string
 	}
 }
 
