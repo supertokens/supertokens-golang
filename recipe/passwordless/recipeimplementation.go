@@ -21,7 +21,202 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
+	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+		body := map[string]interface{}{}
+		if email != nil {
+			body["email"] = *email
+		} else if phoneNumber != nil {
+			body["phoneNumber"] = *phoneNumber
+		}
+		if userInputCode != nil {
+			body["userInputCode"] = *userInputCode
+		}
+		response, err := querier.SendPostRequest("/recipe/signinup/code", body)
+		if err != nil {
+			return plessmodels.CreateCodeResponse{}, err
+		}
+		return plessmodels.CreateCodeResponse{
+			OK: &plessmodels.NewCode{
+				PreAuthSessionID: response["preAuthSessionId"].(string),
+				CodeID:           response["codeId"].(string),
+				DeviceID:         response["deviceId"].(string),
+				UserInputCode:    response["userInputCode"].(string),
+				LinkCode:         response["linkCode"].(string),
+				CodeLifetime:     uint64(response["codeLifetime"].(float64)),
+				TimeCreated:      uint64(response["timeCreated"].(float64)),
+			},
+		}, nil
+	}
+
+	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+		body := map[string]interface{}{}
+		if userInput != nil {
+			body["userInputCode"] = userInput.Code
+			body["deviceId"] = userInput.DeviceID
+		} else if linkCode != nil {
+			body["linkCode"] = *linkCode
+		}
+		response, err := querier.SendPostRequest("/recipe/signinup/code/consume", body)
+		if err != nil {
+			return plessmodels.ConsumeCodeResponse{}, err
+		}
+		status := response["status"].(string)
+		if status == "OK" {
+			return plessmodels.ConsumeCodeResponse{
+				OK: &struct {
+					PreAuthSessionID string
+					CreatedNewUser   bool
+					User             plessmodels.User
+				}{
+					PreAuthSessionID: response["preAuthSessionID"].(string),
+					CreatedNewUser:   response["createdNewUser"].(bool),
+					User:             getUserFromJSONResponse(response["user"].(map[string]interface{})),
+				},
+			}, nil
+		} else if status == "INCORRECT_USER_INPUT_CODE_ERROR" {
+			return plessmodels.ConsumeCodeResponse{
+				IncorrectUserInputCodeError: &struct {
+					FailedCodeInputAttemptCount int
+					MaximumCodeInputAttempts    int
+				}{
+					FailedCodeInputAttemptCount: int(response["failedCodeInputAttemptCount"].(float64)),
+					MaximumCodeInputAttempts:    int(response["maximumCodeInputAttempts"].(float64)),
+				},
+			}, nil
+
+		} else if status == "EXPIRED_USER_INPUT_CODE_ERROR" {
+			return plessmodels.ConsumeCodeResponse{
+				ExpiredUserInputCodeError: &struct {
+					FailedCodeInputAttemptCount int
+					MaximumCodeInputAttempts    int
+				}{
+					FailedCodeInputAttemptCount: int(response["failedCodeInputAttemptCount"].(float64)),
+					MaximumCodeInputAttempts:    int(response["maximumCodeInputAttempts"].(float64)),
+				},
+			}, nil
+		} else {
+			return plessmodels.ConsumeCodeResponse{
+				RestartFlowError: &struct{}{},
+			}, nil
+		}
+	}
+
+	resendCode := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+		body := map[string]interface{}{
+			"deviceId": deviceID,
+		}
+
+		if userInputCode != nil {
+			body["userInputCode"] = *userInputCode
+		}
+
+		response, err := querier.SendPostRequest("/recipe/signinup/code", body)
+		if err != nil {
+			return plessmodels.ResendCodeResponse{}, err
+		}
+
+		status := response["status"].(string)
+
+		if status == "OK" {
+			return plessmodels.ResendCodeResponse{
+				OK: &plessmodels.NewCode{
+					PreAuthSessionID: response["preAuthSessionId"].(string),
+					CodeID:           response["codeId"].(string),
+					DeviceID:         response["deviceId"].(string),
+					UserInputCode:    response["userInputCode"].(string),
+					LinkCode:         response["linkCode"].(string),
+					CodeLifetime:     uint64(response["codeLifetime"].(float64)),
+					TimeCreated:      uint64(response["timeCreated"].(float64)),
+				},
+			}, nil
+		} else if status == "USER_INPUT_CODE_ALREADY_USED_ERROR" {
+			return plessmodels.ResendCodeResponse{
+				UserInputCodeAlreadyUsedError: &struct{}{},
+			}, nil
+		} else {
+			return plessmodels.ResendCodeResponse{
+				RestartFlowError: &struct{}{},
+			}, nil
+		}
+	}
+
+	getUserByEmail := func(email string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+			"email": email,
+		})
+		if err != nil {
+			return nil, err
+		}
+		status := response["status"].(string)
+
+		if status == "OK" {
+			user := getUserFromJSONResponse(response["user"].(map[string]interface{}))
+			return &user, nil
+		}
+		return nil, nil
+	}
+
+	getUserByID := func(userID string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+			"userId": userID,
+		})
+		if err != nil {
+			return nil, err
+		}
+		status := response["status"].(string)
+
+		if status == "OK" {
+			user := getUserFromJSONResponse(response["user"].(map[string]interface{}))
+			return &user, nil
+		}
+		return nil, nil
+	}
+
+	getUserByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+			"phoneNumber": phoneNumber,
+		})
+		if err != nil {
+			return nil, err
+		}
+		status := response["status"].(string)
+
+		if status == "OK" {
+			user := getUserFromJSONResponse(response["user"].(map[string]interface{}))
+			return &user, nil
+		}
+		return nil, nil
+	}
+
 	return plessmodels.RecipeInterface{
+		CreateCode:           &createCode,
+		ConsumeCode:          &consumeCode,
+		ResendCode:           &resendCode,
+		GetUserByEmail:       &getUserByEmail,
+		GetUserByID:          &getUserByID,
+		GetUserByPhoneNumber: &getUserByPhoneNumber,
 		// TODO:
 	}
+}
+
+func getUserFromJSONResponse(userJSON map[string]interface{}) plessmodels.User {
+	user := plessmodels.User{
+		ID:         userJSON["id"].(string),
+		TimeJoined: uint64(userJSON["timeJoined"].(float64)),
+	}
+	{
+		email, ok := userJSON["email"]
+		if ok {
+			emailStr := email.(string)
+			user.Email = &emailStr
+		}
+	}
+	{
+		phoneNumber, ok := userJSON["phoneNumber"]
+		if ok {
+			phoneNumberStr := phoneNumber.(string)
+			user.PhoneNumber = &phoneNumberStr
+		}
+	}
+	return user
 }
