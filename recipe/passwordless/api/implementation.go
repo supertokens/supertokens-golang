@@ -17,10 +17,49 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() plessmodels.APIInterface {
+
+	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
+		response, err := (*options.RecipeImplementation.ConsumeCode)(userInput, linkCode, userContext)
+		if err != nil {
+			return plessmodels.ConsumeCodePOSTResponse{}, err
+		}
+
+		if response.OK == nil {
+			return plessmodels.ConsumeCodePOSTResponse{
+				IncorrectUserInputCodeError: response.IncorrectUserInputCodeError,
+				ExpiredUserInputCodeError:   response.ExpiredUserInputCodeError,
+				RestartFlowError:            response.RestartFlowError,
+			}, nil
+		}
+
+		user := response.OK.User
+
+		session, err := session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{})
+		if err != nil {
+			return plessmodels.ConsumeCodePOSTResponse{}, err
+		}
+
+		return plessmodels.ConsumeCodePOSTResponse{
+			OK: &struct {
+				CreatedNewUser bool
+				User           plessmodels.User
+				Session        sessmodels.SessionContainer
+			}{
+				CreatedNewUser: response.OK.CreatedNewUser,
+				User:           response.OK.User,
+				Session:        session,
+			},
+		}, nil
+	}
+
 	return plessmodels.APIInterface{
+		ConsumeCodePOST: &consumeCodePOST,
 		// TODO:
 	}
 }
