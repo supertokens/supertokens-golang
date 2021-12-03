@@ -20,7 +20,7 @@ import "github.com/supertokens/supertokens-golang/supertokens"
 type User struct {
 	ID          string  `json:"id"`
 	Email       *string `json:"email"`
-	PhoneNumber *string `json:phoneNumber`
+	PhoneNumber *string `json:"phoneNumber"`
 	TimeJoined  uint64  `json:"timejoined"`
 }
 

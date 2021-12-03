@@ -67,4 +67,4 @@ func (w *DoneWriter) Write(b []byte) (int, error) {
 	return w.ResponseWriter.Write(b)
 }
 
-type UserContext = *interface{}
+type UserContext = *map[string]interface{}
