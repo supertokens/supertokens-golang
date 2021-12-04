@@ -16,10 +16,110 @@
 package api
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"reflect"
+	"strings"
+
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
-	// TODO:
-	return nil
+	if apiImplementation.CreateCodePOST == nil || (*apiImplementation.CreateCodePOST) == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
+
+	body, err := ioutil.ReadAll(options.Req.Body)
+	if err != nil {
+		return err
+	}
+	var readBody map[string]interface{}
+	err = json.Unmarshal(body, &readBody)
+	if err != nil {
+		return err
+	}
+
+	email, okEmail := readBody["email"]
+	phoneNumber, okPhoneNumber := readBody["phoneNumber"]
+
+	if (!okEmail && !okPhoneNumber) || (okEmail && okPhoneNumber) {
+		return supertokens.BadInputError{Msg: "Please provide exactly one of email or phoneNumber"}
+	}
+
+	if okEmail && reflect.ValueOf(email).Kind() != reflect.String {
+		return supertokens.BadInputError{Msg: "Please make sure that email is a string"}
+	}
+
+	if okPhoneNumber && reflect.ValueOf(phoneNumber).Kind() != reflect.String {
+		return supertokens.BadInputError{Msg: "Please make sure that phoneNumber is a string"}
+	}
+
+	if !okEmail && options.Config.ContactMethodEmail.Enabled {
+		return supertokens.BadInputError{Msg: "Please provide an email since you enabled ContactMethodEmail"}
+	}
+
+	if !okPhoneNumber && options.Config.ContactMethodPhone.Enabled {
+		return supertokens.BadInputError{Msg: "Please provide a phoneNumber since you have enabled ContactMethodPhone"}
+	}
+
+	if okEmail {
+		// normalize and validate email
+		email = strings.TrimSpace(email.(string))
+		validateErr := options.Config.ContactMethodEmail.ValidateEmailAddress(email)
+		if validateErr != nil {
+			return supertokens.Send200Response(options.Res, map[string]interface{}{
+				"status":  "GENERAL_ERROR",
+				"message": *validateErr,
+			})
+		}
+	}
+
+	if okPhoneNumber {
+		// normalize and validate phoneNumber
+		phoneNumber = strings.TrimSpace(phoneNumber.(string))
+		// TODO: normalise phoneNumber?? how??
+		validateErr := options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber)
+		if validateErr != nil {
+			return supertokens.Send200Response(options.Res, map[string]interface{}{
+				"status":  "GENERAL_ERROR",
+				"message": *validateErr,
+			})
+		}
+	}
+
+	var emailStrPointer *string
+	var phoneNumberStrPointer *string
+	if okEmail {
+		t := email.(string)
+		emailStrPointer = &t
+	}
+	if okPhoneNumber {
+		t := phoneNumber.(string)
+		phoneNumberStrPointer = &t
+	}
+
+	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, options, &map[string]interface{}{})
+	if err != nil {
+		return err
+	}
+
+	var result map[string]interface{}
+
+	if response.OK != nil {
+		result = map[string]interface{}{
+			"status":           "OK",
+			"deviceId":         response.OK.DeviceID,
+			"preAuthSessionId": response.OK.PreAuthSessionID,
+			"flowType":         response.OK.FlowType,
+		}
+	} else {
+		result = map[string]interface{}{
+			"status":  "GENERAL_ERROR",
+			"message": response.GeneralError.Message,
+		}
+	}
+
+	return supertokens.Send200Response(options.Res, result)
 }
