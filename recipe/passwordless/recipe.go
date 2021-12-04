@@ -140,7 +140,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 	if id == consumeCodeAPI {
 		return api.ConsumeCode(r.APIImpl, options)
 	} else if id == createCodeAPI {
-		return api.ConsumeCode(r.APIImpl, options)
+		return api.CreateCode(r.APIImpl, options)
 	} else if id == doesEmailExistAPI {
 		return api.DoesEmailExist(r.APIImpl, options)
 	} else if id == doesPhoneNumberExistAPI {
