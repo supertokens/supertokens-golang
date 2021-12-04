@@ -159,4 +159,106 @@ func RevokeCode(codeID string, userContext supertokens.UserContext) error {
 	return (*instance.RecipeImpl.RevokeCode)(codeID, userContext)
 }
 
-// TODO:
+func ListCodesByEmail(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return []plessmodels.DeviceType{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.ListCodesByEmail)(email, userContext)
+}
+
+func ListCodesByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return []plessmodels.DeviceType{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.ListCodesByPhoneNumber)(phoneNumber, userContext)
+}
+
+func ListCodesByDeviceID(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.ListCodesByDeviceID)(deviceID, userContext)
+}
+
+func ListCodesByPreAuthSessionID(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.ListCodesByPreAuthSessionID)(preAuthSessionID, userContext)
+}
+
+func CreateMagicLinkByEmail(email string, userContext supertokens.UserContext) (string, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return "", err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return instance.createMagicLink(&email, nil, userContext)
+}
+
+func CreateMagicLinkByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (string, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return "", err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return instance.createMagicLink(nil, &phoneNumber, userContext)
+}
+
+func SignInUpByEmail(email string, userContext supertokens.UserContext) (struct {
+	PreAuthSessionID string
+	CreatedNewUser   bool
+	User             plessmodels.User
+}, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             plessmodels.User
+		}{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return instance.signInUp(&email, nil, userContext)
+}
+
+func SignInUpByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (struct {
+	PreAuthSessionID string
+	CreatedNewUser   bool
+	User             plessmodels.User
+}, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             plessmodels.User
+		}{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return instance.signInUp(nil, &phoneNumber, userContext)
+}

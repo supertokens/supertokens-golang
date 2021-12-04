@@ -157,3 +157,77 @@ func (r *Recipe) getAllCORSHeaders() []string {
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	return false, nil
 }
+
+func (r *Recipe) createMagicLink(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+	var userInputCodeInput *string
+	if r.Config.GetCustomUserInputCode != nil {
+		c, err := r.Config.GetCustomUserInputCode(userContext)
+		if err != nil {
+			return "", err
+		}
+		userInputCodeInput = &c
+	}
+
+	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, userContext)
+	if err != nil {
+		return "", err
+	}
+	link, err := r.Config.GetLinkDomainAndPath(email, phoneNumber, userContext)
+	if err != nil {
+		return "", err
+	}
+	link = link + "?rid=" + r.RecipeModule.GetRecipeID() + "&preAuthSessionId=" + response.OK.PreAuthSessionID + "#" + response.OK.LinkCode
+
+	return link, nil
+}
+
+func (r *Recipe) signInUp(email *string, phoneNumber *string, userContext supertokens.UserContext) (struct {
+	PreAuthSessionID string
+	CreatedNewUser   bool
+	User             plessmodels.User
+}, error) {
+	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, userContext)
+	if err != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             plessmodels.User
+		}{}, nil
+	}
+
+	var userInputCode *plessmodels.UserInputCodeWithDeviceID
+	var linkCode *string
+	if r.Config.FlowType == "MAGIC_LINK" {
+		linkCode = &codeInfo.OK.LinkCode
+	} else {
+		userInputCode = &plessmodels.UserInputCodeWithDeviceID{
+			Code:     codeInfo.OK.CodeID,
+			DeviceID: codeInfo.OK.DeviceID,
+		}
+	}
+	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, userContext)
+	if err != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             plessmodels.User
+		}{}, err
+	}
+	if consumeCodeResponse.OK != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             plessmodels.User
+		}{
+			PreAuthSessionID: consumeCodeResponse.OK.PreAuthSessionID,
+			CreatedNewUser:   consumeCodeResponse.OK.CreatedNewUser,
+			User:             consumeCodeResponse.OK.User,
+		}, nil
+	} else {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             plessmodels.User
+		}{}, errors.New("failed to create user. Please try again")
+	}
+}
