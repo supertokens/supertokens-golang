@@ -102,7 +102,7 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		}
 	}
 
-	resendCode := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+	createNewCodeForDevice := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
 		body := map[string]interface{}{
 			"deviceId": deviceID,
 		}
@@ -314,7 +314,7 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 	return plessmodels.RecipeInterface{
 		CreateCode:                  &createCode,
 		ConsumeCode:                 &consumeCode,
-		ResendCode:                  &resendCode,
+		CreateNewCodeForDevice:      &createNewCodeForDevice,
 		GetUserByEmail:              &getUserByEmail,
 		GetUserByID:                 &getUserByID,
 		GetUserByPhoneNumber:        &getUserByPhoneNumber,

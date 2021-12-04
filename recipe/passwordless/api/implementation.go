@@ -147,7 +147,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 				}
 				userInputCodeInput = &c
 			}
-			response, err := (*options.RecipeImplementation.ResendCode)(deviceID, userInputCodeInput, userContext)
+			response, err := (*options.RecipeImplementation.CreateNewCodeForDevice)(deviceID, userInputCodeInput, userContext)
 			if err != nil {
 				return plessmodels.ResendCodePOSTResponse{}, err
 			}

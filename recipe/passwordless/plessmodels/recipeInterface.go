@@ -22,7 +22,7 @@ import (
 type RecipeInterface struct {
 	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (CreateCodeResponse, error)
 
-	ResendCode *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (ResendCodeResponse, error)
+	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (ResendCodeResponse, error)
 
 	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkCode *string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
 
