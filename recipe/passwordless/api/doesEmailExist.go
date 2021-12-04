@@ -17,9 +17,24 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func DoesEmailExist(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
-	// TODO:
-	return nil
+	if apiImplementation.EmailExistsGET == nil || (*apiImplementation.EmailExistsGET) == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
+	email := options.Req.URL.Query().Get("email")
+	if email == "" {
+		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
+	}
+	result, err := (*apiImplementation.EmailExistsGET)(email, options, &map[string]interface{}{})
+	if err != nil {
+		return err
+	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
+		"status": "OK",
+		"exists": result.OK.Exists,
+	})
 }

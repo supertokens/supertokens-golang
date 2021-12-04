@@ -16,10 +16,70 @@
 package api
 
 import (
+	"encoding/json"
+	"io/ioutil"
+	"reflect"
+
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
-	// TODO:
-	return nil
+	if apiImplementation.ResendCodePOST == nil || (*apiImplementation.ResendCodePOST) == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
+
+	body, err := ioutil.ReadAll(options.Req.Body)
+	if err != nil {
+		return err
+	}
+	var readBody map[string]interface{}
+	err = json.Unmarshal(body, &readBody)
+	if err != nil {
+		return err
+	}
+
+	preAuthSessionID, okPreAuthSessionID := readBody["preAuthSessionId"]
+	deviceID, okDeviceID := readBody["deviceId"]
+
+	if !okPreAuthSessionID {
+		return supertokens.BadInputError{Msg: "Please provide preAuthSessionId"}
+	}
+
+	if !okDeviceID {
+		return supertokens.BadInputError{Msg: "Please provide deviceId"}
+	}
+
+	if reflect.ValueOf(preAuthSessionID).Kind() != reflect.String {
+		return supertokens.BadInputError{Msg: "Please make sure that preAuthSessionId is a string"}
+	}
+
+	if reflect.ValueOf(deviceID).Kind() != reflect.String {
+		return supertokens.BadInputError{Msg: "Please make sure that deviceId is a string"}
+	}
+
+	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), options, &map[string]interface{}{})
+	if err != nil {
+		return err
+	}
+
+	var result map[string]interface{}
+
+	if response.OK != nil {
+		result = map[string]interface{}{
+			"status": "OK",
+		}
+	} else if response.ResetFlowError != nil {
+		result = map[string]interface{}{
+			"status": "RESTART_FLOW_ERROR",
+		}
+	} else {
+		result = map[string]interface{}{
+			"status":  "GENERAL_ERROR",
+			"message": response.GeneralError.Message,
+		}
+	}
+
+	return supertokens.Send200Response(options.Res, result)
 }

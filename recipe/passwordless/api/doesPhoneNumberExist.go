@@ -17,9 +17,24 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func DoesPhoneNumberExist(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
-	// TODO:
-	return nil
+	if apiImplementation.PhoneNumberExistsGET == nil || (*apiImplementation.PhoneNumberExistsGET) == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
+	phoneNumber := options.Req.URL.Query().Get("phoneNumber")
+	if phoneNumber == "" {
+		return supertokens.BadInputError{Msg: "Please provide the phoneNumber as a GET param"}
+	}
+	result, err := (*apiImplementation.PhoneNumberExistsGET)(phoneNumber, options, &map[string]interface{}{})
+	if err != nil {
+		return err
+	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
+		"status": "OK",
+		"exists": result.OK.Exists,
+	})
 }
