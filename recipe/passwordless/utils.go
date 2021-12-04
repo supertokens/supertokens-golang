@@ -16,6 +16,9 @@
 package passwordless
 
 import (
+	"reflect"
+	"regexp"
+
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -88,7 +91,7 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 			ValidateEmailAddress:     defaultValidateEmailAddress,
 			CreateAndSendCustomEmail: defaultCreateAndSendCustomEmail,
 		},
-		GetLinkDomainAndPath:   defaultGetLinkDomainAndPath,
+		GetLinkDomainAndPath:   getDefaultGetLinkDomainAndPath(appInfo),
 		GetCustomUserInputCode: inputConfig.GetCustomUserInputCode,
 		Override: plessmodels.OverrideStruct{
 			Functions: func(originalImplementation plessmodels.RecipeInterface) plessmodels.RecipeInterface {
@@ -101,18 +104,35 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 	}
 }
 
-func defaultGetLinkDomainAndPath(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
-	// TODO:
-	return "", nil
+func getDefaultGetLinkDomainAndPath(appInfo supertokens.NormalisedAppinfo) func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+	return func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/verify", nil
+	}
 }
 
-func defaultValidateEmailAddress(email interface{}) *string {
-	// TODO:
+func defaultValidateEmailAddress(value interface{}) *string {
+	if reflect.TypeOf(value).Kind() != reflect.String {
+		msg := "Development bug: Please make sure the email field yields a string"
+		return &msg
+	}
+	check, err := regexp.Match(`^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$`, []byte(value.(string)))
+	if err != nil || !check {
+		msg := "Email is invalid"
+		return &msg
+	}
 	return nil
 }
 
-func defaultValidatePhoneNumber(phoneNumber interface{}) *string {
-	// TODO:
+func defaultValidatePhoneNumber(value interface{}) *string {
+	if reflect.TypeOf(value).Kind() != reflect.String {
+		msg := "Development bug: Please make sure the email field yields a string"
+		return &msg
+	}
+	check, err := regexp.Match(`^\+[1-9]\d{1,14}$`, []byte(value.(string)))
+	if err != nil || !check {
+		msg := "Phone number is invalid"
+		return &msg
+	}
 	return nil
 }
 
