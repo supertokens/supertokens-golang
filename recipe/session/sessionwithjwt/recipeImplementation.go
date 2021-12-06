@@ -178,15 +178,15 @@ func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtEx
 		delete(accessTokenPayload, ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY)
 	}
 
-	newAccessTokenPayload := map[string]interface{}{
+	payloadInJWT := map[string]interface{}{
 		"sub": userId,
 		"iss": appInfo.APIDomain.GetAsStringDangerous(),
 	}
 	for k, v := range accessTokenPayload {
-		newAccessTokenPayload[k] = v
+		payloadInJWT[k] = v
 	}
 
-	jwtResponse, err := (*jwtRecipeImplementation.CreateJWT)(newAccessTokenPayload, &jwtExpiry)
+	jwtResponse, err := (*jwtRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -196,8 +196,8 @@ func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtEx
 		return map[string]interface{}{}, errors.New("JWT Signing key algorithm not supported")
 	}
 
-	newAccessTokenPayload[jwtPropertyName] = jwtResponse.OK.Jwt
-	newAccessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY] = jwtPropertyName
+	accessTokenPayload[jwtPropertyName] = jwtResponse.OK.Jwt
+	accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY] = jwtPropertyName
 
-	return newAccessTokenPayload, nil
+	return accessTokenPayload, nil
 }
