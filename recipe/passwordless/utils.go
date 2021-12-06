@@ -19,6 +19,7 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/nyaruka/phonenumbers"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -128,8 +129,13 @@ func defaultValidatePhoneNumber(value interface{}) *string {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg
 	}
-	check, err := regexp.Match(`^\+[1-9]\d{1,14}$`, []byte(value.(string)))
-	if err != nil || !check {
+
+	parsedPhoneNumber, err := phonenumbers.Parse(value.(string), "")
+	if err != nil {
+		msg := "Phone number is invalid"
+		return &msg
+	}
+	if !phonenumbers.IsValidNumber(parsedPhoneNumber) {
 		msg := "Phone number is invalid"
 		return &msg
 	}

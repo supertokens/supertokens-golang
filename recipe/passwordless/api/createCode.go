@@ -17,10 +17,12 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
 
+	"github.com/nyaruka/phonenumbers"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -77,15 +79,22 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 	}
 
 	if okPhoneNumber {
-		// normalize and validate phoneNumber
-		phoneNumber = strings.TrimSpace(phoneNumber.(string))
-		// TODO: normalise phoneNumber?? how??
 		validateErr := options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber)
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, map[string]interface{}{
 				"status":  "GENERAL_ERROR",
 				"message": *validateErr,
 			})
+		}
+
+		parsedPhoneNumber, err := phonenumbers.Parse(phoneNumber.(string), "")
+		if err != nil {
+			// this can come here if the user has provided their own impl of ValidatePhoneNumber and
+			// the phone number is valid according to their impl, but not according to the phonenumbers lib.
+			phoneNumber = strings.TrimSpace(phoneNumber.(string))
+		} else {
+			phoneNumber = phonenumbers.Format(parsedPhoneNumber, phonenumbers.INTERNATIONAL)
+			fmt.Println(phoneNumber)
 		}
 	}
 
