@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"reflect"
 	"strings"
@@ -94,7 +93,6 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			phoneNumber = strings.TrimSpace(phoneNumber.(string))
 		} else {
 			phoneNumber = phonenumbers.Format(parsedPhoneNumber, phonenumbers.INTERNATIONAL)
-			fmt.Println(phoneNumber)
 		}
 	}
 
