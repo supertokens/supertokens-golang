@@ -180,7 +180,7 @@ func verifyAndGetClaimsAppleIdToken(idToken string, clientId string) (jwt.MapCla
 	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
 	refreshInterval := time.Hour
 	options := keyfunc.Options{
-		RefreshInterval: &refreshInterval,
+		RefreshInterval: refreshInterval,
 	}
 
 	// Create the JWKS from the resource at the given URL.
