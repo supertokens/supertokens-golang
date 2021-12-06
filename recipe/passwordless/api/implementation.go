@@ -138,6 +138,23 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 	}
 
 	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+		deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(deviceID, userContext)
+		if err != nil {
+			return plessmodels.ResendCodePOSTResponse{}, err
+		}
+
+		if deviceInfo == nil {
+			return plessmodels.ResendCodePOSTResponse{
+				ResetFlowError: &struct{}{},
+			}, nil
+		}
+
+		if (options.Config.ContactMethodEmail.Enabled && deviceInfo.Email == nil) || (options.Config.ContactMethodPhone.Enabled && deviceInfo.PhoneNumber == nil) {
+			return plessmodels.ResendCodePOSTResponse{
+				ResetFlowError: &struct{}{},
+			}, nil
+		}
+
 		for numberOfTriesToCreateNewCode := 0; numberOfTriesToCreateNewCode < 3; numberOfTriesToCreateNewCode++ {
 			var userInputCodeInput *string
 			if options.Config.GetCustomUserInputCode != nil {
@@ -159,23 +176,6 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			if response.RestartFlowError != nil {
 				return plessmodels.ResendCodePOSTResponse{
 					ResetFlowError: response.RestartFlowError,
-				}, nil
-			}
-
-			deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(response.OK.DeviceID, userContext)
-			if err != nil {
-				return plessmodels.ResendCodePOSTResponse{}, err
-			}
-
-			if deviceInfo == nil {
-				return plessmodels.ResendCodePOSTResponse{
-					ResetFlowError: &struct{}{},
-				}, nil
-			}
-
-			if (options.Config.ContactMethodEmail.Enabled && deviceInfo.Email == nil) || (options.Config.ContactMethodPhone.Enabled && deviceInfo.PhoneNumber == nil) {
-				return plessmodels.ResendCodePOSTResponse{
-					ResetFlowError: &struct{}{},
 				}, nil
 			}
 
