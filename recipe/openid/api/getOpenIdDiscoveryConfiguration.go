@@ -16,23 +16,24 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOptions) error {
-	if apiImplementation.GetJWKSGET == nil || (*apiImplementation.GetJWKSGET) == nil {
+func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface, options openidmodels.APIOptions) error {
+	if apiImplementation.GetOpenIdDiscoveryConfigurationGET == nil || (*apiImplementation.GetOpenIdDiscoveryConfigurationGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
 
-	response, err := (*apiImplementation.GetJWKSGET)(options)
+	response, err := (*apiImplementation.GetOpenIdDiscoveryConfigurationGET)(options)
 	if err != nil {
 		return err
 	}
 
 	options.Res.Header().Add("Access-Control-Allow-Origin", "*")
 	return supertokens.Send200Response(options.Res, map[string]interface{}{
-		"keys": response.OK.Keys,
+		"issuer":   response.OK.Issuer,
+		"jwks_uri": response.OK.Jwks_uri,
 	})
 }
