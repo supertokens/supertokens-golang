@@ -17,8 +17,11 @@ package session
 
 import (
 	"context"
+	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -122,4 +125,37 @@ func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContai
 	}
 	temp := value.(*sessmodels.SessionContainer)
 	return temp
+}
+
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return jwtmodels.CreateJWTResponse{}, err
+	}
+	if instance.OpenIdRecipe == nil {
+		return jwtmodels.CreateJWTResponse{}, errors.New("CreateJWT cannot be used without enabling the Jwt feature")
+	}
+	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer)
+}
+
+func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return jwtmodels.GetJWKSResponse{}, err
+	}
+	if instance.OpenIdRecipe == nil {
+		return jwtmodels.GetJWKSResponse{}, errors.New("GetJWKS cannot be used without enabling the Jwt feature")
+	}
+	return (*instance.OpenIdRecipe.RecipeImpl.GetJWKS)()
+}
+
+func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, err
+	}
+	if instance.OpenIdRecipe == nil {
+		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, errors.New("GetOpenIdDiscoveryConfiguration cannot be used without enabling the Jwt feature")
+	}
+	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)()
 }

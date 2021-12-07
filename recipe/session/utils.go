@@ -160,6 +160,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	Jwt := sessmodels.JWTNormalisedConfig{Enable: false, PropertyNameInAccessTokenPayload: "jwt"}
 	if config != nil && config.Jwt != nil {
 		Jwt.Enable = config.Jwt.Enable
+		Jwt.Issuer = config.Jwt.Issuer
 		if config.Jwt.PropertyNameInAccessTokenPayload != nil {
 			Jwt.PropertyNameInAccessTokenPayload = *config.Jwt.PropertyNameInAccessTokenPayload
 		}
@@ -183,7 +184,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}, APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 				return originalImplementation
 			},
-			JwtFeature: nil},
+			OpenIdFeature: nil},
 	}
 
 	if config != nil && config.Override != nil {
@@ -193,7 +194,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
 		}
-		typeNormalisedInput.Override.JwtFeature = config.Override.JwtFeature
+		typeNormalisedInput.Override.OpenIdFeature = config.Override.OpenIdFeature
 	}
 
 	return typeNormalisedInput, nil

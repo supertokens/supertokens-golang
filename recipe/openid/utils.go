@@ -51,6 +51,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.Override.APIs != nil {
 			result.Override.APIs = config.Override.APIs
 		}
+		result.Override.JwtFeature = config.Override.JwtFeature
 	}
 
 	return result, nil

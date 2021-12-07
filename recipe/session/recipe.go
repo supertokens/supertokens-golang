@@ -19,8 +19,8 @@ import (
 	defaultErrors "errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/jwt"
-	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/recipe/openid"
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
@@ -32,7 +32,7 @@ type Recipe struct {
 	RecipeModule supertokens.RecipeModule
 	Config       sessmodels.TypeNormalisedInput
 	RecipeImpl   sessmodels.RecipeInterface
-	JwtRecipe    *jwt.Recipe
+	OpenIdRecipe *openid.Recipe
 	APIImpl      sessmodels.APIInterface
 }
 
@@ -59,14 +59,15 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
 
 	if verifiedConfig.Jwt.Enable {
-		jwtRecipe, err := jwt.MakeRecipe(recipeId, appInfo, &jwtmodels.TypeInput{
-			Override: verifiedConfig.Override.JwtFeature,
+		openIdRecipe, err := openid.MakeRecipe(recipeId, appInfo, &openidmodels.TypeInput{
+			Issuer:   verifiedConfig.Jwt.Issuer,
+			Override: verifiedConfig.Override.OpenIdFeature,
 		}, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
-		r.RecipeImpl = verifiedConfig.Override.Functions(sessionwithjwt.MakeRecipeImplementation(recipeImplementation, jwtRecipe.RecipeImpl, verifiedConfig, appInfo))
-		r.JwtRecipe = &jwtRecipe
+		r.RecipeImpl = verifiedConfig.Override.Functions(sessionwithjwt.MakeRecipeImplementation(recipeImplementation, openIdRecipe.RecipeImpl, verifiedConfig))
+		r.OpenIdRecipe = &openIdRecipe
 	} else {
 		r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 	}
@@ -118,8 +119,8 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		Disabled:               r.APIImpl.SignOutPOST == nil,
 	}}
 
-	if r.JwtRecipe != nil {
-		jwtAPIs, err := r.JwtRecipe.RecipeModule.GetAPIsHandled()
+	if r.OpenIdRecipe != nil {
+		jwtAPIs, err := r.OpenIdRecipe.RecipeModule.GetAPIsHandled()
 		if err != nil {
 			return nil, err
 		}
@@ -142,16 +143,16 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		return api.HandleRefreshAPI(r.APIImpl, options)
 	} else if id == signoutAPIPath {
 		return api.SignOutAPI(r.APIImpl, options)
-	} else if r.JwtRecipe != nil {
-		return r.JwtRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirhandler, path, method)
+	} else if r.OpenIdRecipe != nil {
+		return r.OpenIdRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirhandler, path, method)
 	}
 	return nil
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
 	resp := getCORSAllowedHeaders()
-	if r.JwtRecipe != nil {
-		resp = append(resp, r.JwtRecipe.RecipeModule.GetAllCORSHeaders()...)
+	if r.OpenIdRecipe != nil {
+		resp = append(resp, r.OpenIdRecipe.RecipeModule.GetAllCORSHeaders()...)
 	}
 	return resp
 }
@@ -164,8 +165,8 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
-	} else if r.JwtRecipe != nil {
-		return r.JwtRecipe.RecipeModule.HandleError(err, req, res)
+	} else if r.OpenIdRecipe != nil {
+		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res)
 	}
 	return false, nil
 }

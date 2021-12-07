@@ -19,12 +19,11 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, jwtRecipeImplementation jwtmodels.RecipeInterface, appInfo supertokens.NormalisedAppinfo) sessmodels.SessionContainer {
+func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, openidRecipeImplementation openidmodels.RecipeInterface) sessmodels.SessionContainer {
 
 	return sessmodels.SessionContainer{
 		RevokeSession: func() error {
@@ -91,7 +90,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 				jwtExpiry = 1
 			}
 
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(), jwtPropertyName.(string), appInfo, jwtRecipeImplementation)
+			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(), jwtPropertyName.(string), openidRecipeImplementation)
 			if err != nil {
 				return err
 			}

@@ -22,13 +22,12 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
-	jwtRecipeImplementation jwtmodels.RecipeInterface, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
+	openidRecipeImplementation openidmodels.RecipeInterface, config sessmodels.TypeNormalisedInput) sessmodels.RecipeInterface {
 
 	// Time difference between JWT expiry and access token expiry (JWT expiry = access token expiry + EXPIRY_OFFSET_SECONDS)
 	var EXPIRY_OFFSET_SECONDS uint64 = 30
@@ -46,7 +45,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			}
 			accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
 
-			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, userID, config.Jwt.PropertyNameInAccessTokenPayload, appInfo, jwtRecipeImplementation)
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, userID, config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation)
 
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
@@ -58,7 +57,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				return sessionContainer, err
 			}
 
-			return newSessionWithJWTContainer(sessionContainer, jwtRecipeImplementation, appInfo), nil
+			return newSessionWithJWTContainer(sessionContainer, openidRecipeImplementation), nil
 		}
 	}
 
@@ -76,7 +75,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				return nil, nil
 			}
 
-			result := newSessionWithJWTContainer(*sessionContainer, jwtRecipeImplementation, appInfo)
+			result := newSessionWithJWTContainer(*sessionContainer, openidRecipeImplementation)
 
 			return &result, nil
 		}
@@ -99,7 +98,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			}
 			accessTokenPayload := newSession.GetAccessTokenPayload()
 
-			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserID(), config.Jwt.PropertyNameInAccessTokenPayload, appInfo, jwtRecipeImplementation)
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserID(), config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation)
 
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
@@ -110,7 +109,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				return sessmodels.SessionContainer{}, err
 			}
 
-			return newSessionWithJWTContainer(newSession, jwtRecipeImplementation, appInfo), nil
+			return newSessionWithJWTContainer(newSession, openidRecipeImplementation), nil
 		}
 	}
 
@@ -156,7 +155,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				jwtExpiry = 1
 			}
 
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), appInfo, jwtRecipeImplementation)
+			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), openidRecipeImplementation)
 			if err != nil {
 				return err
 			}
@@ -168,7 +167,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	return originalImplementation
 }
 
-func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtExpiry uint64, userId string, jwtPropertyName string, appInfo supertokens.NormalisedAppinfo, jwtRecipeImplementation jwtmodels.RecipeInterface) (map[string]interface{}, error) {
+func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtExpiry uint64, userId string, jwtPropertyName string, openidRecipeImplementation openidmodels.RecipeInterface) (map[string]interface{}, error) {
 
 	// If jwtPropertyName is not undefined it means that the JWT was added to the access token payload already
 	existingJwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
@@ -180,13 +179,12 @@ func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtEx
 
 	payloadInJWT := map[string]interface{}{
 		"sub": userId,
-		"iss": appInfo.APIDomain.GetAsStringDangerous(),
 	}
 	for k, v := range accessTokenPayload {
 		payloadInJWT[k] = v
 	}
 
-	jwtResponse, err := (*jwtRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry)
+	jwtResponse, err := (*openidRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
