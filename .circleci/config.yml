@@ -10,6 +10,7 @@ jobs:
         steps:
             - checkout
             - run: apt-get install lsof
+            - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
