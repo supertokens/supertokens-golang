@@ -117,7 +117,7 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					if err != nil {
 						return "", err
 					}
-					return supertokens.AppInfo.APIDomain.GetAsStringDangerous() + supertokens.AppInfo.APIGatewayPath.GetAsStringDangerous() + supertokens.AppInfo.APIBasePath.GetAsStringDangerous() + "/callback/apple", nil
+					return supertokens.AppInfo.APIDomain.GetAsStringDangerous() + supertokens.AppInfo.APIBasePath.GetAsStringDangerous() + "/callback/apple", nil
 				},
 			}
 		},
