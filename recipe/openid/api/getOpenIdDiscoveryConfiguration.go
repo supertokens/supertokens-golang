@@ -31,7 +31,7 @@ func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface
 		return err
 	}
 
-	options.Res.Header().Add("Access-Control-Allow-Origin", "*")
+	options.Res.Header().Set("Access-Control-Allow-Origin", "*")
 	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"issuer":   response.OK.Issuer,
 		"jwks_uri": response.OK.Jwks_uri,

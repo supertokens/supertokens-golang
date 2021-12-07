@@ -58,6 +58,8 @@ func maxVersion(version1 string, version2 string) string {
 	return version2
 }
 
+var routes *http.Handler
+
 func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 	if maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION && enableJWT {
 		port := "8080"
@@ -160,6 +162,63 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			panic(err.Error())
 		}
 	}
+
+	middleware := supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/setAntiCsrf" && r.Method == "POST" {
+			setAntiCsrf(rw, r)
+		} else if r.URL.Path == "/setEnableJWT" && r.Method == "POST" {
+			setEnableJWT(rw, r)
+		} else if r.URL.Path == "/login" && r.Method == "POST" {
+			login(rw, r)
+		} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
+			beforeeach(rw, r)
+		} else if r.URL.Path == "/testUserConfig" && r.Method == "POST" {
+			testUserConfig(rw, r)
+		} else if r.URL.Path == "/multipleInterceptors" && r.Method == "POST" {
+			multipleInterceptors(rw, r)
+		} else if r.URL.Path == "/" && r.Method == "GET" {
+			session.VerifySession(nil, simpleGet).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/check-rid" && r.Method == "GET" {
+			session.VerifySession(nil, checkRID).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/update-jwt" && r.Method == "GET" {
+			session.VerifySession(nil, getJWT).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/update-jwt" && r.Method == "POST" {
+			session.VerifySession(nil, updateJwt).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/testing" {
+			testing(rw, r)
+		} else if r.URL.Path == "/logout" && r.Method == "POST" {
+			session.VerifySession(nil, logout).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/revokeAll" && r.Method == "POST" {
+			session.VerifySession(nil, revokeAll).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/auth/session/refresh" && r.Method == "POST" {
+			refresh(rw, r)
+		} else if r.URL.Path == "/refreshCalledTime" && r.Method == "GET" {
+			rw.Write([]byte(strconv.Itoa(noOfTimesRefreshCalledDuringTest)))
+		} else if r.URL.Path == "/refreshAttemptedTime" && r.Method == "GET" {
+			rw.Write([]byte(strconv.Itoa(noOfTimesRefreshAttemptedDuringTest)))
+		} else if r.URL.Path == "/getSessionCalledTime" && r.Method == "GET" {
+			rw.Write([]byte(strconv.Itoa(noOfTimesGetSessionCalledDuringTest)))
+		} else if r.URL.Path == "/ping" && r.Method == "GET" {
+			rw.Write([]byte(""))
+		} else if r.URL.Path == "/testHeader" && r.Method == "GET" {
+			testHeader(rw, r)
+		} else if r.URL.Path == "/checkAllowCredentials" && r.Method == "POST" {
+			rw.Write([]byte(strconv.FormatBool(r.Header.Get("allow-credentials") != "")))
+		} else if r.URL.Path == "/index.html" && r.Method == "GET" {
+			index(rw, r)
+		} else if r.URL.Path == "/featureFlags" && r.Method == "GET" {
+			featureFlag(rw, r)
+		} else if r.URL.Path == "/testError" && r.Method == "GET" {
+			rw.WriteHeader(http.StatusInternalServerError)
+			rw.Write([]byte("test error message"))
+		} else if r.URL.Path == "/reinitialiseBackendConfig" && r.Method == "POST" {
+			reinitialiseBackendConfig(rw, r)
+		} else {
+			fail(rw, r)
+		}
+	}))
+
+	routes = &middleware
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -185,60 +244,9 @@ func main() {
 	}
 	callSTInit(true, false, "jwt")
 	err := http.ListenAndServe(":"+port, corsMiddleware(
-		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/setAntiCsrf" && r.Method == "POST" {
-				setAntiCsrf(rw, r)
-			} else if r.URL.Path == "/setEnableJWT" && r.Method == "POST" {
-				setEnableJWT(rw, r)
-			} else if r.URL.Path == "/login" && r.Method == "POST" {
-				login(rw, r)
-			} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
-				beforeeach(rw, r)
-			} else if r.URL.Path == "/testUserConfig" && r.Method == "POST" {
-				testUserConfig(rw, r)
-			} else if r.URL.Path == "/multipleInterceptors" && r.Method == "POST" {
-				multipleInterceptors(rw, r)
-			} else if r.URL.Path == "/" && r.Method == "GET" {
-				session.VerifySession(nil, simpleGet).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/check-rid" && r.Method == "GET" {
-				session.VerifySession(nil, checkRID).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/update-jwt" && r.Method == "GET" {
-				session.VerifySession(nil, getJWT).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/update-jwt" && r.Method == "POST" {
-				session.VerifySession(nil, updateJwt).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/testing" {
-				testing(rw, r)
-			} else if r.URL.Path == "/logout" && r.Method == "POST" {
-				session.VerifySession(nil, logout).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/revokeAll" && r.Method == "POST" {
-				session.VerifySession(nil, revokeAll).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/auth/session/refresh" && r.Method == "POST" {
-				refresh(rw, r)
-			} else if r.URL.Path == "/refreshCalledTime" && r.Method == "GET" {
-				rw.Write([]byte(strconv.Itoa(noOfTimesRefreshCalledDuringTest)))
-			} else if r.URL.Path == "/refreshAttemptedTime" && r.Method == "GET" {
-				rw.Write([]byte(strconv.Itoa(noOfTimesRefreshAttemptedDuringTest)))
-			} else if r.URL.Path == "/getSessionCalledTime" && r.Method == "GET" {
-				rw.Write([]byte(strconv.Itoa(noOfTimesGetSessionCalledDuringTest)))
-			} else if r.URL.Path == "/ping" && r.Method == "GET" {
-				rw.Write([]byte(""))
-			} else if r.URL.Path == "/testHeader" && r.Method == "GET" {
-				testHeader(rw, r)
-			} else if r.URL.Path == "/checkAllowCredentials" && r.Method == "POST" {
-				rw.Write([]byte(strconv.FormatBool(r.Header.Get("allow-credentials") != "")))
-			} else if r.URL.Path == "/index.html" && r.Method == "GET" {
-				index(rw, r)
-			} else if r.URL.Path == "/featureFlags" && r.Method == "GET" {
-				featureFlag(rw, r)
-			} else if r.URL.Path == "/testError" && r.Method == "GET" {
-				rw.WriteHeader(http.StatusInternalServerError)
-				rw.Write([]byte("test error message"))
-			} else if r.URL.Path == "/reinitialiseBackendConfig" && r.Method == "POST" {
-				reinitialiseBackendConfig(rw, r)
-			} else {
-				fail(rw, r)
-			}
-		}))))
+		http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			(*routes).ServeHTTP(rw, r)
+		})))
 	if err != nil {
 		fmt.Println(err.Error())
 	}

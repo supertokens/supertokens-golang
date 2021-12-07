@@ -31,7 +31,7 @@ func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOpti
 		return err
 	}
 
-	options.Res.Header().Add("Access-Control-Allow-Origin", "*")
+	options.Res.Header().Set("Access-Control-Allow-Origin", "*")
 	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"keys": response.OK.Keys,
 	})
