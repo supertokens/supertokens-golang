@@ -25,7 +25,7 @@ import (
 func MakeAPIImplementation() plessmodels.APIInterface {
 
 	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
-		response, err := (*options.RecipeImplementation.ConsumeCode)(userInput, linkCode, userContext)
+		response, err := (*options.RecipeImplementation.ConsumeCode)(userInput, linkCode, preAuthSessionID, userContext)
 		if err != nil {
 			return plessmodels.ConsumeCodePOSTResponse{}, err
 		}

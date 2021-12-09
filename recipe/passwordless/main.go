@@ -57,7 +57,7 @@ func CreateNewCodeForDevice(deviceID string, userInputCode *string, userContext 
 	return (*instance.RecipeImpl.CreateNewCodeForDevice)(deviceID, userInputCode, userContext)
 }
 
-func ConsumeCodeWithUserInputCode(deviceID string, userInputCode string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+func ConsumeCodeWithUserInputCode(deviceID string, userInputCode string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.ConsumeCodeResponse{}, err
@@ -68,10 +68,10 @@ func ConsumeCodeWithUserInputCode(deviceID string, userInputCode string, userCon
 	return (*instance.RecipeImpl.ConsumeCode)(&plessmodels.UserInputCodeWithDeviceID{
 		Code:     userInputCode,
 		DeviceID: deviceID,
-	}, nil, userContext)
+	}, nil, preAuthSessionID, userContext)
 }
 
-func ConsumeCodeWithLinkCode(linkCode string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+func ConsumeCodeWithLinkCode(linkCode string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.ConsumeCodeResponse{}, err
@@ -79,7 +79,7 @@ func ConsumeCodeWithLinkCode(linkCode string, userContext supertokens.UserContex
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.ConsumeCode)(nil, &linkCode, userContext)
+	return (*instance.RecipeImpl.ConsumeCode)(nil, &linkCode, preAuthSessionID, userContext)
 }
 
 func GetUserByID(userID string, userContext supertokens.UserContext) (*plessmodels.User, error) {

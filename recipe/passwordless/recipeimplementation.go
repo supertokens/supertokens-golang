@@ -49,8 +49,10 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		}, nil
 	}
 
-	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
-		body := map[string]interface{}{}
+	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+		body := map[string]interface{}{
+			"preAuthSessionId": preAuthSessionID,
+		}
 		if userInput != nil {
 			body["userInputCode"] = userInput.Code
 			body["deviceId"] = userInput.DeviceID
@@ -65,13 +67,11 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		if status == "OK" {
 			return plessmodels.ConsumeCodeResponse{
 				OK: &struct {
-					PreAuthSessionID string
-					CreatedNewUser   bool
-					User             plessmodels.User
+					CreatedNewUser bool
+					User           plessmodels.User
 				}{
-					PreAuthSessionID: response["preAuthSessionID"].(string),
-					CreatedNewUser:   response["createdNewUser"].(bool),
-					User:             getUserFromJSONResponse(response["user"].(map[string]interface{})),
+					CreatedNewUser: response["createdNewUser"].(bool),
+					User:           getUserFromJSONResponse(response["user"].(map[string]interface{})),
 				},
 			}, nil
 		} else if status == "INCORRECT_USER_INPUT_CODE_ERROR" {

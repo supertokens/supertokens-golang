@@ -205,7 +205,7 @@ func (r *Recipe) signInUp(email *string, phoneNumber *string, userContext supert
 			DeviceID: codeInfo.OK.DeviceID,
 		}
 	}
-	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, userContext)
+	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string
@@ -219,9 +219,8 @@ func (r *Recipe) signInUp(email *string, phoneNumber *string, userContext supert
 			CreatedNewUser   bool
 			User             plessmodels.User
 		}{
-			PreAuthSessionID: consumeCodeResponse.OK.PreAuthSessionID,
-			CreatedNewUser:   consumeCodeResponse.OK.CreatedNewUser,
-			User:             consumeCodeResponse.OK.User,
+			CreatedNewUser: consumeCodeResponse.OK.CreatedNewUser,
+			User:           consumeCodeResponse.OK.User,
 		}, nil
 	} else {
 		return struct {

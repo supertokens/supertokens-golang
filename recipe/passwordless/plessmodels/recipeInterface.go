@@ -24,7 +24,7 @@ type RecipeInterface struct {
 
 	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (ResendCodeResponse, error)
 
-	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkCode *string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
+	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
 
 	GetUserByID *func(userID string, userContext supertokens.UserContext) (*User, error)
 
@@ -63,9 +63,8 @@ type Code struct {
 
 type ConsumeCodeResponse struct {
 	OK *struct {
-		PreAuthSessionID string
-		CreatedNewUser   bool
-		User             User
+		CreatedNewUser bool
+		User           User
 	}
 	IncorrectUserInputCodeError *struct {
 		FailedCodeInputAttemptCount int
