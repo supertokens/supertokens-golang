@@ -230,3 +230,7 @@ func (r *Recipe) signInUp(email *string, phoneNumber *string, userContext supert
 		}{}, errors.New("failed to create user. Please try again")
 	}
 }
+
+func ResetForTest() {
+	singletonInstance = nil
+}

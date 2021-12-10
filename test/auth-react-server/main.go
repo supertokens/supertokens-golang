@@ -19,14 +19,18 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 
 	"github.com/joho/godotenv"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/jwt"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -57,7 +61,7 @@ func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLife
 	}
 
 	codes := device.Codes
-	codes = append(codes, CustomCode{
+	device.Codes = append(codes, CustomCode{
 		UrlWithLinkCode: urlWithLinkCode,
 		UserInputCode:   userInputCode,
 	})
@@ -68,9 +72,17 @@ var latestURLWithToken string = ""
 var apiPort string = "8083"
 var webPort string = "3031"
 var deviceStore map[string]CustomDevice
+var m *sync.Mutex = &sync.Mutex{}
 
 func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	supertokens.ResetForTest()
+	emailpassword.ResetForTest()
+	emailverification.ResetForTest()
+	jwt.ResetForTest()
+	passwordless.ResetForTest()
+	session.ResetForTest()
+	thirdparty.ResetForTest()
+	thirdpartyemailpassword.ResetForTest()
 
 	if passwordlessConfig == nil {
 		passwordlessConfig = &plessmodels.TypeInput{
@@ -176,10 +188,44 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	if err != nil {
 		panic(err.Error())
 	}
+
+	middleware := supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/sessionInfo" && r.Method == "GET" {
+			session.VerifySession(nil, sessioninfo).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/token" && r.Method == "GET" {
+			rw.WriteHeader(200)
+			rw.Header().Add("content-type", "application/json")
+			bytes, _ := json.Marshal(map[string]interface{}{
+				"latestURLWithToken": latestURLWithToken,
+			})
+			rw.Write(bytes)
+		} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
+			deviceStore = map[string]CustomDevice{}
+			rw.WriteHeader(200)
+			rw.Header().Add("content-type", "application/json")
+			bytes, _ := json.Marshal(map[string]interface{}{})
+			rw.Write(bytes)
+		} else if r.URL.Path == "/test/setFlow" && r.Method == "POST" {
+			reInitST(rw, r)
+		} else if r.URL.Path == "/test/getDevice" && r.Method == "GET" {
+			getDevice(rw, r)
+		} else if r.URL.Path == "/test/featureFlags" && r.Method == "GET" {
+			rw.WriteHeader(200)
+			rw.Header().Add("content-type", "application/json")
+			bytes, _ := json.Marshal(map[string]interface{}{
+				"available": []string{"passwordless"},
+			})
+			rw.Write(bytes)
+		}
+	}))
+
+	routes = &middleware
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, r *http.Request) {
+		m.Lock()
+		defer m.Unlock()
 		response.Header().Set("Access-Control-Allow-Origin", "http://localhost:"+webPort)
 		response.Header().Set("Access-Control-Allow-Credentials", "true")
 		if r.Method == "OPTIONS" {
@@ -192,6 +238,8 @@ func corsMiddleware(next http.Handler) http.Handler {
 		}
 	})
 }
+
+var routes *http.Handler
 
 func main() {
 	deviceStore = map[string]CustomDevice{}
@@ -206,43 +254,57 @@ func main() {
 	callSTInit(nil)
 
 	http.ListenAndServe("0.0.0.0:"+apiPort, corsMiddleware(
-		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			if r.URL.Path == "/sessionInfo" && r.Method == "GET" {
-				session.VerifySession(nil, sessioninfo).ServeHTTP(rw, r)
-			} else if r.URL.Path == "/token" && r.Method == "GET" {
-				rw.WriteHeader(200)
-				rw.Header().Add("content-type", "application/json")
-				bytes, _ := json.Marshal(map[string]interface{}{
-					"latestURLWithToken": latestURLWithToken,
-				})
-				rw.Write(bytes)
-			} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
-				deviceStore = map[string]CustomDevice{}
-				rw.WriteHeader(200)
-				rw.Header().Add("content-type", "application/json")
-				bytes, _ := json.Marshal(map[string]interface{}{})
-				rw.Write(bytes)
-			} else if r.URL.Path == "/test/setFlow" && r.Method == "POST" {
-				reInitST(rw, r)
-			} else if r.URL.Path == "/test/getDevice" && r.Method == "GET" {
-				getDevice(rw, r)
-			} else if r.URL.Path == "/test/featureFlags" && r.Method == "GET" {
-				rw.WriteHeader(200)
-				rw.Header().Add("content-type", "application/json")
-				bytes, _ := json.Marshal(map[string]interface{}{
-					"available": []string{"passwordless"},
-				})
-				rw.Write(bytes)
-			}
-		}))))
+		http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			(*routes).ServeHTTP(rw, r)
+		})))
 }
 
 func reInitST(w http.ResponseWriter, r *http.Request) {
-	// TODO:
+	body, _ := ioutil.ReadAll(r.Body)
+	var readBody map[string]interface{}
+	json.Unmarshal(body, &readBody)
+	config := &plessmodels.TypeInput{
+		FlowType: readBody["flowType"].(string),
+	}
+	if readBody["contactMethod"].(string) == "PHONE" {
+		config.ContactMethodPhone = plessmodels.ContactMethodPhoneConfig{
+			Enabled:                        true,
+			CreateAndSendCustomTextMessage: saveCode,
+		}
+	} else {
+		config.ContactMethodEmail = plessmodels.ContactMethodEmailConfig{
+			Enabled:                  true,
+			CreateAndSendCustomEmail: saveCode,
+		}
+	}
+	callSTInit(config)
+	w.WriteHeader(200)
+	w.Write([]byte("success"))
 }
 
 func getDevice(w http.ResponseWriter, r *http.Request) {
-	// TODO:
+	preAuthSessionId := r.URL.Query().Get("preAuthSessionId")
+	device, ok := deviceStore[preAuthSessionId]
+	if ok {
+		w.WriteHeader(200)
+		w.Header().Add("content-type", "application/json")
+		codes := []map[string]interface{}{}
+		for _, code := range device.Codes {
+			codes = append(codes, map[string]interface{}{
+				"urlWithLinkCode": code.UrlWithLinkCode,
+				"userInputCode":   code.UserInputCode,
+			})
+		}
+		result := map[string]interface{}{
+			"preAuthSessionId": device.PreAuthSessionID,
+			"codes":            codes,
+		}
+		bytes, _ := json.Marshal(result)
+		w.Write(bytes)
+	} else {
+		w.WriteHeader(200)
+		w.Write([]byte(""))
+	}
 }
 
 func sessioninfo(w http.ResponseWriter, r *http.Request) {

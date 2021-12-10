@@ -128,3 +128,7 @@ func (r *Recipe) getAllCORSHeaders() []string {
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	return false, nil
 }
+
+func ResetForTest() {
+	singletonInstance = nil
+}
