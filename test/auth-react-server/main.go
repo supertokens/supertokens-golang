@@ -24,7 +24,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"sync"
 
 	"github.com/joho/godotenv"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
@@ -72,7 +71,6 @@ var latestURLWithToken string = ""
 var apiPort string = "8083"
 var webPort string = "3031"
 var deviceStore map[string]CustomDevice
-var m *sync.Mutex = &sync.Mutex{}
 
 func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	supertokens.ResetForTest()
@@ -224,8 +222,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, r *http.Request) {
-		m.Lock()
-		defer m.Unlock()
 		response.Header().Set("Access-Control-Allow-Origin", "http://localhost:"+webPort)
 		response.Header().Set("Access-Control-Allow-Credentials", "true")
 		if r.Method == "OPTIONS" {
