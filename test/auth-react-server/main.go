@@ -27,6 +27,8 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -35,11 +37,51 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+type CustomDevice struct {
+	PreAuthSessionID string
+	Codes            []CustomCode
+}
+
+type CustomCode struct {
+	UrlWithLinkCode *string
+	UserInputCode   *string
+}
+
+func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+	device, ok := deviceStore[preAuthSessionId]
+	if !ok {
+		device = CustomDevice{
+			PreAuthSessionID: preAuthSessionId,
+			Codes:            []CustomCode{},
+		}
+	}
+
+	codes := device.Codes
+	codes = append(codes, CustomCode{
+		UrlWithLinkCode: urlWithLinkCode,
+		UserInputCode:   userInputCode,
+	})
+	deviceStore[preAuthSessionId] = device
+}
+
 var latestURLWithToken string = ""
 var apiPort string = "8083"
 var webPort string = "3031"
+var deviceStore map[string]CustomDevice
 
-func callSTInit() {
+func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
+	supertokens.ResetForTest()
+
+	if passwordlessConfig == nil {
+		passwordlessConfig = &plessmodels.TypeInput{
+			ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+				Enabled:                        true,
+				CreateAndSendCustomTextMessage: saveCode,
+			},
+			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		}
+	}
+
 	countryOptional := true
 	formFields := []epmodels.TypeInputFormField{
 		{
@@ -127,6 +169,7 @@ func callSTInit() {
 				},
 			}),
 			session.Init(nil),
+			passwordless.Init(*passwordlessConfig),
 		},
 	})
 
@@ -151,6 +194,7 @@ func corsMiddleware(next http.Handler) http.Handler {
 }
 
 func main() {
+	deviceStore = map[string]CustomDevice{}
 	godotenv.Load()
 	if len(os.Args) >= 2 {
 		apiPort = os.Args[1]
@@ -159,7 +203,7 @@ func main() {
 		webPort = os.Args[2]
 	}
 	supertokens.IsTestFlag = true
-	callSTInit()
+	callSTInit(nil)
 
 	http.ListenAndServe("0.0.0.0:"+apiPort, corsMiddleware(
 		supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
@@ -172,8 +216,33 @@ func main() {
 					"latestURLWithToken": latestURLWithToken,
 				})
 				rw.Write(bytes)
+			} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
+				deviceStore = map[string]CustomDevice{}
+				rw.WriteHeader(200)
+				rw.Header().Add("content-type", "application/json")
+				bytes, _ := json.Marshal(map[string]interface{}{})
+				rw.Write(bytes)
+			} else if r.URL.Path == "/test/setFlow" && r.Method == "POST" {
+				reInitST(rw, r)
+			} else if r.URL.Path == "/test/getDevice" && r.Method == "GET" {
+				getDevice(rw, r)
+			} else if r.URL.Path == "/test/featureFlags" && r.Method == "GET" {
+				rw.WriteHeader(200)
+				rw.Header().Add("content-type", "application/json")
+				bytes, _ := json.Marshal(map[string]interface{}{
+					"available": []string{"passwordless"},
+				})
+				rw.Write(bytes)
 			}
 		}))))
+}
+
+func reInitST(w http.ResponseWriter, r *http.Request) {
+	// TODO:
+}
+
+func getDevice(w http.ResponseWriter, r *http.Request) {
+	// TODO:
 }
 
 func sessioninfo(w http.ResponseWriter, r *http.Request) {
