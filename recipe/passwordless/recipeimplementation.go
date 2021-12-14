@@ -20,7 +20,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// TODO: test all of these manually
 func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
 	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
 		body := map[string]interface{}{}
@@ -198,7 +197,7 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 			return nil, err
 		}
 
-		devices := getDevicesFromResponse(response["devices"].([]map[string]interface{}))
+		devices := getDevicesFromResponse(response["devices"].([]interface{}))
 
 		if len(devices) == 1 {
 			return &devices[0], nil
@@ -216,7 +215,7 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 			return nil, err
 		}
 
-		return getDevicesFromResponse(response["devices"].([]map[string]interface{})), nil
+		return getDevicesFromResponse(response["devices"].([]interface{})), nil
 	}
 
 	listCodesByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
@@ -228,7 +227,7 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 			return nil, err
 		}
 
-		return getDevicesFromResponse(response["devices"].([]map[string]interface{})), nil
+		return getDevicesFromResponse(response["devices"].([]interface{})), nil
 	}
 
 	listCodesByPreAuthSessionID := func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
@@ -240,7 +239,7 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 			return nil, err
 		}
 
-		devices := getDevicesFromResponse(response["devices"].([]map[string]interface{}))
+		devices := getDevicesFromResponse(response["devices"].([]interface{}))
 
 		if len(devices) == 1 {
 			return &devices[0], nil
@@ -328,23 +327,23 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 	}
 }
 
-func getDevicesFromResponse(devicesJSON []map[string]interface{}) []plessmodels.DeviceType {
+func getDevicesFromResponse(devicesJSON []interface{}) []plessmodels.DeviceType {
 	result := []plessmodels.DeviceType{}
 	for _, deviceJSON := range devicesJSON {
 		device := plessmodels.DeviceType{
-			PreAuthSessionID:            deviceJSON["preAuthSessionId"].(string),
-			FailedCodeInputAttemptCount: int(deviceJSON["failedCodeInputAttemptCount"].(float64)),
-			Codes:                       getCodesFromDevicesResponse(deviceJSON["codes"].([]map[string]interface{})),
+			PreAuthSessionID:            (deviceJSON.(map[string]interface{}))["preAuthSessionId"].(string),
+			FailedCodeInputAttemptCount: int((deviceJSON.(map[string]interface{}))["failedCodeInputAttemptCount"].(float64)),
+			Codes:                       getCodesFromDevicesResponse((deviceJSON.(map[string]interface{}))["codes"].([]interface{})),
 		}
 		{
-			email, ok := deviceJSON["email"]
+			email, ok := (deviceJSON.(map[string]interface{}))["email"]
 			if ok {
 				emailStr := email.(string)
 				device.Email = &emailStr
 			}
 		}
 		{
-			phoneNumber, ok := deviceJSON["phoneNumber"]
+			phoneNumber, ok := (deviceJSON.(map[string]interface{}))["phoneNumber"]
 			if ok {
 				phoneNumberStr := phoneNumber.(string)
 				device.PhoneNumber = &phoneNumberStr
@@ -356,13 +355,13 @@ func getDevicesFromResponse(devicesJSON []map[string]interface{}) []plessmodels.
 	return result
 }
 
-func getCodesFromDevicesResponse(codesJSON []map[string]interface{}) []plessmodels.Code {
+func getCodesFromDevicesResponse(codesJSON []interface{}) []plessmodels.Code {
 	result := []plessmodels.Code{}
 	for _, codeJSON := range codesJSON {
 		code := plessmodels.Code{
-			CodeID:       codeJSON["codeId"].(string),
-			TimeCreated:  uint64(codeJSON["timeCreated"].(float64)),
-			CodeLifetime: uint64(codeJSON["codeLifetime"].(float64)),
+			CodeID:       codeJSON.(map[string]interface{})["codeId"].(string),
+			TimeCreated:  uint64(codeJSON.(map[string]interface{})["timeCreated"].(float64)),
+			CodeLifetime: uint64(codeJSON.(map[string]interface{})["codeLifetime"].(float64)),
 		}
 		result = append(result, code)
 	}
