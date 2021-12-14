@@ -13,16 +13,19 @@
  * under the License.
  */
 
-package supertokens
+package openidmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+import "net/http"
 
-// VERSION current version of the lib
-const VERSION = "0.3.2"
+type APIOptions struct {
+	RecipeImplementation RecipeInterface
+	Config               TypeNormalisedInput
+	RecipeID             string
+	Req                  *http.Request
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10"}
-)
+type APIInterface struct {
+	GetOpenIdDiscoveryConfigurationGET *func(options APIOptions) (GetOpenIdDiscoveryConfigurationResponse, error)
+}

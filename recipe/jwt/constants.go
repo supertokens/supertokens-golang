@@ -16,5 +16,5 @@
 package jwt
 
 const (
-	getJWKSAPI = "/jwt/jwks.json"
+	GetJWKSAPI = "/jwt/jwks.json"
 )

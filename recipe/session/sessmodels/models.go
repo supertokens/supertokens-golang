@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -87,11 +88,19 @@ type TypeInput struct {
 	AntiCsrf                 *string
 	Override                 *OverrideStruct
 	ErrorHandlers            *ErrorHandlers
+	Jwt                      *JWTInputConfig
+}
+
+type JWTInputConfig struct {
+	Issuer                           *string
+	Enable                           bool
+	PropertyNameInAccessTokenPayload *string
 }
 
 type OverrideStruct struct {
-	Functions func(originalImplementation RecipeInterface) RecipeInterface
-	APIs      func(originalImplementation APIInterface) APIInterface
+	Functions     func(originalImplementation RecipeInterface) RecipeInterface
+	APIs          func(originalImplementation APIInterface) APIInterface
+	OpenIdFeature *openidmodels.OverrideStruct
 }
 
 type ErrorHandlers struct {
@@ -108,6 +117,13 @@ type TypeNormalisedInput struct {
 	AntiCsrf                 string
 	Override                 OverrideStruct
 	ErrorHandlers            NormalisedErrorHandlers
+	Jwt                      JWTNormalisedConfig
+}
+
+type JWTNormalisedConfig struct {
+	Issuer                           *string
+	Enable                           bool
+	PropertyNameInAccessTokenPayload string
 }
 
 type VerifySessionOptions struct {

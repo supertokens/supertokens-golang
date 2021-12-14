@@ -13,16 +13,8 @@
  * under the License.
  */
 
-package supertokens
+package openid
 
 const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
-
-// VERSION current version of the lib
-const VERSION = "0.3.2"
-
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10"}
+	GetDiscoveryConfigUrl = "/.well-known/openid-configuration"
 )

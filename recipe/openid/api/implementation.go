@@ -13,16 +13,19 @@
  * under the License.
  */
 
-package supertokens
+package api
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.3.2"
+func MakeAPIImplementation() openidmodels.APIInterface {
 
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10"}
-)
+	getOpenIdDiscoveryConfigurationGET := func(options openidmodels.APIOptions) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+		return (*options.RecipeImplementation.GetOpenIdDiscoveryConfiguration)()
+	}
+
+	return openidmodels.APIInterface{
+		GetOpenIdDiscoveryConfigurationGET: &getOpenIdDiscoveryConfigurationGET,
+	}
+}

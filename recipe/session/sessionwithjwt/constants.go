@@ -13,16 +13,31 @@
  * under the License.
  */
 
-package supertokens
+package sessionwithjwt
+
+/*
+   This key is used to determine the property name used when adding the jwt to the access token payload
+   For example if the Session recipe is initialised with config
+   {
+       ...
+       jwt: {
+           enable: true,
+           propertyNameInAccessTokenPayload: "jwtKey",
+       },
+       ...
+   }
+
+   The access token payload after creating a session would look like
+   {
+       ...
+       jwtKey: "JWT_STRING",
+       _jwtPName: "jwtKey",
+   }
+
+   When trying to refresh the session or updating the access token payload, this key is used to determine and retrieve
+   the exsiting JWT from the access token payload.
+*/
 
 const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
-
-// VERSION current version of the lib
-const VERSION = "0.3.2"
-
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10"}
+	ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY = "_jwtPName"
 )
