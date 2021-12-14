@@ -16,6 +16,7 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -41,6 +42,7 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 				OK: &struct {
 					CreatedNewUser   bool
 					User             tpmodels.User
+					Session          sessmodels.SessionContainer
 					AuthCodeResponse interface{}
 				}{
 					CreatedNewUser: result.OK.CreatedNewUser,
@@ -50,6 +52,7 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 						Email:      result.OK.User.Email,
 						ThirdParty: *result.OK.User.ThirdParty,
 					},
+					Session: result.OK.Session,
 				},
 			}, nil
 		} else if result.NoEmailGivenByProviderError != nil {

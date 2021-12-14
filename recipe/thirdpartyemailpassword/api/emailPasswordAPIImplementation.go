@@ -17,6 +17,7 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -32,23 +33,28 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 	}
 
 	if apiImplmentation.EmailPasswordSignInPOST != nil && (*apiImplmentation.EmailPasswordSignInPOST) != nil {
-		signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+		signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 			result, err := (*apiImplmentation.EmailPasswordSignInPOST)(formFields, options, userContext)
 			if err != nil {
-				return epmodels.SignInResponse{}, err
+				return epmodels.SignInPOSTResponse{}, err
 			}
 			if result.OK != nil {
-				return epmodels.SignInResponse{
-					OK: &struct{ User epmodels.User }{
+				return epmodels.SignInPOSTResponse{
+					OK: &struct {
+						User    epmodels.User
+						Session sessmodels.SessionContainer
+					}{
+
 						User: epmodels.User{
 							ID:         result.OK.User.ID,
 							Email:      result.OK.User.Email,
 							TimeJoined: result.OK.User.TimeJoined,
 						},
+						Session: result.OK.Session,
 					},
 				}, nil
 			} else {
-				return epmodels.SignInResponse{
+				return epmodels.SignInPOSTResponse{
 					WrongCredentialsError: &struct{}{},
 				}, nil
 			}
@@ -57,23 +63,27 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 	}
 
 	if apiImplmentation.EmailPasswordSignUpPOST != nil && (*apiImplmentation.EmailPasswordSignUpPOST) != nil {
-		signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+		signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 			result, err := (*apiImplmentation.EmailPasswordSignUpPOST)(formFields, options, userContext)
 			if err != nil {
-				return epmodels.SignUpResponse{}, err
+				return epmodels.SignUpPOSTResponse{}, err
 			}
 			if result.OK != nil {
-				return epmodels.SignUpResponse{
-					OK: &struct{ User epmodels.User }{
+				return epmodels.SignUpPOSTResponse{
+					OK: &struct {
+						User    epmodels.User
+						Session sessmodels.SessionContainer
+					}{
 						User: epmodels.User{
 							ID:         result.OK.User.ID,
 							Email:      result.OK.User.Email,
 							TimeJoined: result.OK.User.TimeJoined,
 						},
+						Session: result.OK.Session,
 					},
 				}, nil
 			} else {
-				return epmodels.SignUpResponse{
+				return epmodels.SignUpPOSTResponse{
 					EmailAlreadyExistsError: &struct{}{},
 				}, nil
 			}

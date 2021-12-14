@@ -18,6 +18,7 @@ package api
 import (
 	epapi "github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	tpapi "github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
@@ -45,15 +46,16 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignInPOST := *emailPasswordImplementation.SignInPOST
-	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
+	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
 		response, err := ogSignInPOST(formFields, options, userContext)
 		if err != nil {
-			return tpepmodels.SignInResponse{}, err
+			return tpepmodels.SignInPOSTResponse{}, err
 		}
 		if response.OK != nil {
-			return tpepmodels.SignInResponse{
+			return tpepmodels.SignInPOSTResponse{
 				OK: &struct {
-					User tpepmodels.User
+					User    tpepmodels.User
+					Session sessmodels.SessionContainer
 				}{
 					User: tpepmodels.User{
 						ID:         response.OK.User.ID,
@@ -61,25 +63,27 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 						TimeJoined: response.OK.User.TimeJoined,
 						ThirdParty: nil,
 					},
+					Session: response.OK.Session,
 				},
 			}, nil
 		} else {
-			return tpepmodels.SignInResponse{
+			return tpepmodels.SignInPOSTResponse{
 				WrongCredentialsError: &struct{}{},
 			}, nil
 		}
 	}
 
 	ogSignUpPOST := *emailPasswordImplementation.SignUpPOST
-	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
+	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
 		response, err := ogSignUpPOST(formFields, options, userContext)
 		if err != nil {
-			return tpepmodels.SignUpResponse{}, err
+			return tpepmodels.SignUpPOSTResponse{}, err
 		}
 		if response.OK != nil {
-			return tpepmodels.SignUpResponse{
+			return tpepmodels.SignUpPOSTResponse{
 				OK: &struct {
-					User tpepmodels.User
+					User    tpepmodels.User
+					Session sessmodels.SessionContainer
 				}{
 					User: tpepmodels.User{
 						ID:         response.OK.User.ID,
@@ -87,10 +91,11 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 						TimeJoined: response.OK.User.TimeJoined,
 						ThirdParty: nil,
 					},
+					Session: response.OK.Session,
 				},
 			}, nil
 		} else {
-			return tpepmodels.SignUpResponse{
+			return tpepmodels.SignUpPOSTResponse{
 				EmailAlreadyExistsError: &struct{}{},
 			}, nil
 		}
@@ -118,6 +123,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 					CreatedNewUser   bool
 					User             tpepmodels.User
 					AuthCodeResponse interface{}
+					Session          sessmodels.SessionContainer
 				}{
 					CreatedNewUser:   response.OK.CreatedNewUser,
 					AuthCodeResponse: response.OK.AuthCodeResponse,
@@ -127,6 +133,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 						Email:      response.OK.User.Email,
 						ThirdParty: &response.OK.User.ThirdParty,
 					},
+					Session: response.OK.Session,
 				},
 			}, nil
 		}

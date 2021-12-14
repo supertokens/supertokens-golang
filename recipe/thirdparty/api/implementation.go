@@ -27,6 +27,7 @@ import (
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -172,7 +173,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil, userContext)
+		session, err := session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -180,10 +181,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			OK: &struct {
 				CreatedNewUser   bool
 				User             tpmodels.User
+				Session          sessmodels.SessionContainer
 				AuthCodeResponse interface{}
 			}{
 				CreatedNewUser:   response.OK.CreatedNewUser,
 				User:             response.OK.User,
+				Session:          session,
 				AuthCodeResponse: accessTokenAPIResponse,
 			},
 		}, nil

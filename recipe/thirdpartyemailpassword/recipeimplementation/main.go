@@ -46,7 +46,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 			}, nil
 		}
 		return tpepmodels.SignUpResponse{
-			OK: &struct{ User tpepmodels.User }{
+			OK: &struct {
+				User tpepmodels.User
+			}{
 				User: tpepmodels.User{
 					ID:         response.OK.User.ID,
 					Email:      response.OK.User.Email,

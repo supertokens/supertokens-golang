@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -36,6 +37,7 @@ type SignInUpPOSTResponse struct {
 	OK *struct {
 		CreatedNewUser   bool
 		User             User
+		Session          sessmodels.SessionContainer
 		AuthCodeResponse interface{}
 	}
 	NoEmailGivenByProviderError *struct{}

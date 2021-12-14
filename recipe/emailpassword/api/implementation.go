@@ -18,6 +18,7 @@ package api
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -92,7 +93,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		return response, nil
 	}
 
-	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 		var email string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
@@ -108,22 +109,32 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		response, err := (*options.RecipeImplementation.SignIn)(email, password, userContext)
 		if err != nil {
-			return epmodels.SignInResponse{}, err
+			return epmodels.SignInPOSTResponse{}, err
 		}
 		if response.WrongCredentialsError != nil {
-			return response, nil
+			return epmodels.SignInPOSTResponse{
+				WrongCredentialsError: &struct{}{},
+			}, nil
 		}
 
 		user := response.OK.User
-		_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
+		session, err := session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
-			return epmodels.SignInResponse{}, err
+			return epmodels.SignInPOSTResponse{}, err
 		}
 
-		return response, nil
+		return epmodels.SignInPOSTResponse{
+			OK: &struct {
+				User    epmodels.User
+				Session sessmodels.SessionContainer
+			}{
+				User:    response.OK.User,
+				Session: session,
+			},
+		}, nil
 	}
 
-	signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+	signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 		var email string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
@@ -139,20 +150,30 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		response, err := (*options.RecipeImplementation.SignUp)(email, password, userContext)
 		if err != nil {
-			return epmodels.SignUpResponse{}, err
+			return epmodels.SignUpPOSTResponse{}, err
 		}
 		if response.EmailAlreadyExistsError != nil {
-			return response, nil
+			return epmodels.SignUpPOSTResponse{
+				EmailAlreadyExistsError: &struct{}{},
+			}, nil
 		}
 
 		user := response.OK.User
 
-		_, err = session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
+		session, err := session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
-			return epmodels.SignUpResponse{}, err
+			return epmodels.SignUpPOSTResponse{}, err
 		}
 
-		return response, nil
+		return epmodels.SignUpPOSTResponse{
+			OK: &struct {
+				User    epmodels.User
+				Session sessmodels.SessionContainer
+			}{
+				User:    response.OK.User,
+				Session: session,
+			},
+		}, nil
 	}
 	return epmodels.APIInterface{
 		EmailExistsGET:                 &emailExistsGET,
