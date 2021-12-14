@@ -15,7 +15,11 @@
 
 package jwtmodels
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type APIOptions struct {
 	RecipeImplementation RecipeInterface
@@ -27,5 +31,5 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	GetJWKSGET *func(options APIOptions) (GetJWKSResponse, error)
+	GetJWKSGET *func(options APIOptions, userContext supertokens.UserContext) (GetJWKSResponse, error)
 }

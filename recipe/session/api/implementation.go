@@ -25,12 +25,12 @@ import (
 )
 
 func MakeAPIImplementation() sessmodels.APIInterface {
-	refreshPOST := func(options sessmodels.APIOptions) error {
-		_, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res)
+	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) error {
+		_, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
 		return err
 	}
 
-	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions) (*sessmodels.SessionContainer, error) {
+	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
 		method := options.Req.Method
 		if method == http.MethodOptions || method == http.MethodTrace {
 			return nil, nil
@@ -43,15 +43,15 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 
 		refreshTokenPath := options.Config.RefreshTokenPath
 		if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
-			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res)
+			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
 			return &session, err
 		} else {
-			return (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions)
+			return (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
 		}
 	}
 
-	signOutPOST := func(options sessmodels.APIOptions) (sessmodels.SignOutPOSTResponse, error) {
-		session, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, nil)
+	signOutPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+		session, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, nil, userContext)
 		if err != nil {
 			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 				return sessmodels.SignOutPOSTResponse{

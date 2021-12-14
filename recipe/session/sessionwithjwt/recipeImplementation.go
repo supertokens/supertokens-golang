@@ -24,6 +24,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
@@ -35,23 +36,23 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalCreateNewSession := *originalImplementation.CreateNewSession
 
-		(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+		(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 			if accessTokenPayload == nil {
 				accessTokenPayload = map[string]interface{}{}
 			}
-			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)()
+			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)(userContext)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
 			accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
 
-			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, userID, config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation)
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, userID, config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation, userContext)
 
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
 
-			sessionContainer, err := originalCreateNewSession(res, userID, accessTokenPayload, sessionData)
+			sessionContainer, err := originalCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 
 			if err != nil {
 				return sessionContainer, err
@@ -64,8 +65,8 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalGetSession := *originalImplementation.GetSession
 
-		(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
-			sessionContainer, err := originalGetSession(req, res, options)
+		(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+			sessionContainer, err := originalGetSession(req, res, options, userContext)
 
 			if err != nil {
 				return nil, err
@@ -84,21 +85,21 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalRefreshSession := *originalImplementation.RefreshSession
 
-		(*originalImplementation.RefreshSession) = func(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
-			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)()
+		(*originalImplementation.RefreshSession) = func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)(userContext)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
 			accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
 
 			// Refresh session first because this will create a new access token
-			newSession, err := originalRefreshSession(req, res)
+			newSession, err := originalRefreshSession(req, res, userContext)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
 			accessTokenPayload := newSession.GetAccessTokenPayload()
 
-			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserID(), config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation)
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserID(), config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation, userContext)
 
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
@@ -116,11 +117,11 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
 
-		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
 			}
-			sessionInformation, err := (*originalImplementation.GetSessionInformation)(sessionHandle)
+			sessionInformation, err := (*originalImplementation.GetSessionInformation)(sessionHandle, userContext)
 			if err != nil {
 				return err
 			}
@@ -128,7 +129,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
 			if !ok {
-				return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload)
+				return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload, userContext)
 			}
 
 			existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
@@ -155,19 +156,19 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				jwtExpiry = 1
 			}
 
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), openidRecipeImplementation)
+			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), openidRecipeImplementation, userContext)
 			if err != nil {
 				return err
 			}
 
-			return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload)
+			return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload, userContext)
 		}
 	}
 
 	return originalImplementation
 }
 
-func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtExpiry uint64, userId string, jwtPropertyName string, openidRecipeImplementation openidmodels.RecipeInterface) (map[string]interface{}, error) {
+func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtExpiry uint64, userId string, jwtPropertyName string, openidRecipeImplementation openidmodels.RecipeInterface, userContext supertokens.UserContext) (map[string]interface{}, error) {
 
 	// If jwtPropertyName is not undefined it means that the JWT was added to the access token payload already
 	existingJwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
@@ -184,7 +185,7 @@ func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtEx
 		payloadInJWT[k] = v
 	}
 
-	jwtResponse, err := (*openidRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry)
+	jwtResponse, err := (*openidRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry, userContext)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}

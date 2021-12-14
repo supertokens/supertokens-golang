@@ -50,7 +50,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) evmodels.TypeNormalisedInput {
 	return evmodels.TypeNormalisedInput{
-		GetEmailForUserID:        func(userID string) (string, error) { return "", errors.New("not defined by user") },
+		GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
+			return "", errors.New("not defined by user")
+		},
 		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
 		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
 		Override: evmodels.OverrideStruct{

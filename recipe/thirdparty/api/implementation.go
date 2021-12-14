@@ -28,10 +28,11 @@ import (
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() tpmodels.APIInterface {
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
 		providerInfo := provider.Get(nil, nil)
 		params := map[string]string{}
 		for key, value := range providerInfo.AuthorisationRedirect.Params {
@@ -90,7 +91,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
+	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		{
 			providerInfo := provider.Get(nil, nil)
 			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
@@ -122,7 +123,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 				}
 			}
 
-			accessTokenAPIResponseTemp, err := postRequest(providerInfo)
+			accessTokenAPIResponseTemp, err := postRequest(providerInfo, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
@@ -146,7 +147,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo)
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -159,19 +160,19 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 
 		if emailInfo.IsVerified {
-			tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email)
+			tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 			if tokenResponse.OK != nil {
-				_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token)
+				_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
 			}
 		}
 
-		_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil)
+		_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -188,7 +189,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions) error {
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?state=" + state + "&code=" + code
 
@@ -205,7 +206,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 }
 
-func postRequest(providerInfo tpmodels.TypeProviderGetResponse) (map[string]interface{}, error) {
+func postRequest(providerInfo tpmodels.TypeProviderGetResponse, userContext supertokens.UserContext) (map[string]interface{}, error) {
 	querystring, err := getParamString(providerInfo.AccessTokenAPI.Params)
 	if err != nil {
 		return nil, err

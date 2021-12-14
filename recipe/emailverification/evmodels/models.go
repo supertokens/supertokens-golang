@@ -15,17 +15,19 @@
 
 package evmodels
 
+import "github.com/supertokens/supertokens-golang/supertokens"
+
 type TypeInput struct {
-	GetEmailForUserID        func(userID string) (string, error)
-	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailForUserID        func(userID string, userContext supertokens.UserContext) (string, error)
+	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext)
 	Override                 *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
-	GetEmailForUserID        func(userID string) (string, error)
-	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailForUserID        func(userID string, userContext supertokens.UserContext) (string, error)
+	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext)
 	Override                 OverrideStruct
 }
 

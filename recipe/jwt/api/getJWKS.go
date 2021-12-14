@@ -26,7 +26,7 @@ func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOpti
 		return nil
 	}
 
-	response, err := (*apiImplementation.GetJWKSGET)(options)
+	response, err := (*apiImplementation.GetJWKSGET)(options, &map[string]interface{}{})
 	if err != nil {
 		return err
 	}

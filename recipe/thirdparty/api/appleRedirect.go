@@ -29,5 +29,5 @@ func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmod
 	state := options.Req.FormValue("state")
 	code := options.Req.FormValue("code")
 
-	return (*apiImplementation.AppleRedirectHandlerPOST)(code, state, options)
+	return (*apiImplementation.AppleRedirectHandlerPOST)(code, state, options, &map[string]interface{}{})
 }

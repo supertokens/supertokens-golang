@@ -15,7 +15,11 @@
 
 package openidmodels
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type APIOptions struct {
 	RecipeImplementation RecipeInterface
@@ -27,5 +31,5 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	GetOpenIdDiscoveryConfigurationGET *func(options APIOptions) (GetOpenIdDiscoveryConfigurationResponse, error)
+	GetOpenIdDiscoveryConfigurationGET *func(options APIOptions, userContext supertokens.UserContext) (GetOpenIdDiscoveryConfigurationResponse, error)
 }

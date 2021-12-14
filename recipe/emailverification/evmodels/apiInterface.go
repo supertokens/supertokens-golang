@@ -15,7 +15,11 @@
 
 package evmodels
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type APIOptions struct {
 	RecipeImplementation RecipeInterface
@@ -27,9 +31,9 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	VerifyEmailPOST              *func(token string, options APIOptions) (VerifyEmailUsingTokenResponse, error)
-	IsEmailVerifiedGET           *func(options APIOptions) (IsEmailVerifiedGETResponse, error)
-	GenerateEmailVerifyTokenPOST *func(options APIOptions) (GenerateEmailVerifyTokenPOSTResponse, error)
+	VerifyEmailPOST              *func(token string, options APIOptions, userContext supertokens.UserContext) (VerifyEmailUsingTokenResponse, error)
+	IsEmailVerifiedGET           *func(options APIOptions, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
+	GenerateEmailVerifyTokenPOST *func(options APIOptions, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
 }
 
 type IsEmailVerifiedGETResponse struct {

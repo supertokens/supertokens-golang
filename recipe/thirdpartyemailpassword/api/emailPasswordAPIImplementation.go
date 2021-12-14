@@ -18,6 +18,7 @@ package api
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmodels.APIInterface {
@@ -31,8 +32,8 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 	}
 
 	if apiImplmentation.EmailPasswordSignInPOST != nil && (*apiImplmentation.EmailPasswordSignInPOST) != nil {
-		signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
-			result, err := (*apiImplmentation.EmailPasswordSignInPOST)(formFields, options)
+		signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+			result, err := (*apiImplmentation.EmailPasswordSignInPOST)(formFields, options, userContext)
 			if err != nil {
 				return epmodels.SignInResponse{}, err
 			}
@@ -56,8 +57,8 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 	}
 
 	if apiImplmentation.EmailPasswordSignUpPOST != nil && (*apiImplmentation.EmailPasswordSignUpPOST) != nil {
-		signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
-			result, err := (*apiImplmentation.EmailPasswordSignUpPOST)(formFields, options)
+		signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+			result, err := (*apiImplmentation.EmailPasswordSignUpPOST)(formFields, options, userContext)
 			if err != nil {
 				return epmodels.SignUpResponse{}, err
 			}

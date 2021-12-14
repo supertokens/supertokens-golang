@@ -24,18 +24,18 @@ func Init(config *jwtmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer)
+	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, userContext)
 }
 
-func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
+func GetJWKS(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetJWKS)()
+	return (*instance.RecipeImpl.GetJWKS)(userContext)
 }

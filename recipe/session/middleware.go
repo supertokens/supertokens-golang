@@ -33,7 +33,7 @@ func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessio
 			Res:                  dw,
 			RecipeID:             recipeInstance.RecipeModule.GetRecipeID(),
 			RecipeImplementation: recipeInstance.RecipeImpl,
-		})
+		}, &map[string]interface{}{})
 		if err != nil {
 			err = supertokens.ErrorHandler(err, r, dw)
 			if err != nil {

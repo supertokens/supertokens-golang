@@ -53,7 +53,7 @@ func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.API
 		return supertokens.BadInputError{Msg: "The password reset token must be a string"}
 	}
 
-	result, err := (*apiImplementation.PasswordResetPOST)(formFields, token.(string), options)
+	result, err := (*apiImplementation.PasswordResetPOST)(formFields, token.(string), options, &map[string]interface{}{})
 	if err != nil {
 		return err
 	}

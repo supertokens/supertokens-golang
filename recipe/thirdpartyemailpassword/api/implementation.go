@@ -21,6 +21,7 @@ import (
 	tpapi "github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() tpepmodels.APIInterface {
@@ -28,24 +29,24 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
 	ogEmailExistsGET := *emailPasswordImplementation.EmailExistsGET
-	emailExistsGET := func(email string, options epmodels.APIOptions) (epmodels.EmailExistsGETResponse, error) {
-		return ogEmailExistsGET(email, options)
+	emailExistsGET := func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+		return ogEmailExistsGET(email, options, userContext)
 
 	}
 
 	ogGeneratePasswordResetTokenPOST := *emailPasswordImplementation.GeneratePasswordResetTokenPOST
-	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-		return ogGeneratePasswordResetTokenPOST(formFields, options)
+	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+		return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
 	}
 
 	ogPasswordResetPOST := *emailPasswordImplementation.PasswordResetPOST
-	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions) (epmodels.ResetPasswordUsingTokenResponse, error) {
-		return ogPasswordResetPOST(formFields, token, options)
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+		return ogPasswordResetPOST(formFields, token, options, userContext)
 	}
 
 	ogSignInPOST := *emailPasswordImplementation.SignInPOST
-	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (tpepmodels.SignInResponse, error) {
-		response, err := ogSignInPOST(formFields, options)
+	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
+		response, err := ogSignInPOST(formFields, options, userContext)
 		if err != nil {
 			return tpepmodels.SignInResponse{}, err
 		}
@@ -70,8 +71,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignUpPOST := *emailPasswordImplementation.SignUpPOST
-	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (tpepmodels.SignUpResponse, error) {
-		response, err := ogSignUpPOST(formFields, options)
+	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
+		response, err := ogSignUpPOST(formFields, options, userContext)
 		if err != nil {
 			return tpepmodels.SignUpResponse{}, err
 		}
@@ -96,8 +97,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions) (tpepmodels.ThirdPartyOutput, error) {
-		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options)
+	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
+		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
 		if err != nil {
 			return tpepmodels.ThirdPartyOutput{}, err
 		}
@@ -132,13 +133,13 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return ogAuthorisationUrlGET(provider, options)
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, options, userContext)
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions) error {
-		return ogAppleRedirectHandlerPOST(code, state, options)
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
 	}
 	result := tpepmodels.APIInterface{
 		AuthorisationUrlGET:            &authorisationUrlGET,

@@ -30,84 +30,84 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
-	return (*instance.RecipeImpl.CreateNewSession)(res, userID, accessTokenPayload, sessionData)
+	return (*instance.RecipeImpl.CreateNewSession)(res, userID, accessTokenPayload, sessionData, userContext)
 }
 
-func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
+func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetSession)(req, res, options)
+	return (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
 }
 
-func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation, error) {
+func GetSessionInformation(sessionHandle string, userContext supertokens.UserContext) (sessmodels.SessionInformation, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionInformation{}, err
 	}
-	return (*instance.RecipeImpl.GetSessionInformation)(sessionHandle)
+	return (*instance.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
 }
 
-func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
+func RefreshSession(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
-	return (*instance.RecipeImpl.RefreshSession)(req, res)
+	return (*instance.RecipeImpl.RefreshSession)(req, res, userContext)
 }
 
-func RevokeAllSessionsForUser(userID string) ([]string, error) {
+func RevokeAllSessionsForUser(userID string, userContext supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.RevokeAllSessionsForUser)(userID)
+	return (*instance.RecipeImpl.RevokeAllSessionsForUser)(userID, userContext)
 }
 
-func GetAllSessionHandlesForUser(userID string) ([]string, error) {
+func GetAllSessionHandlesForUser(userID string, userContext supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetAllSessionHandlesForUser)(userID)
+	return (*instance.RecipeImpl.GetAllSessionHandlesForUser)(userID, userContext)
 }
 
-func RevokeSession(sessionHandle string) (bool, error) {
+func RevokeSession(sessionHandle string, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
-	return (*instance.RecipeImpl.RevokeSession)(sessionHandle)
+	return (*instance.RecipeImpl.RevokeSession)(sessionHandle, userContext)
 }
 
-func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
+func RevokeMultipleSessions(sessionHandles []string, userContext supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles)
+	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles, userContext)
 }
 
-func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) error {
+func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData)
+	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData, userContext)
 }
 
-func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return (*instance.RecipeImpl.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload)
+	return (*instance.RecipeImpl.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
 }
 
 func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
@@ -127,7 +127,7 @@ func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContai
 	return temp
 }
 
-func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
@@ -135,10 +135,10 @@ func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (
 	if instance.OpenIdRecipe == nil {
 		return jwtmodels.CreateJWTResponse{}, errors.New("CreateJWT cannot be used without enabling the Jwt feature")
 	}
-	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer)
+	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, userContext)
 }
 
-func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
+func GetJWKS(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
@@ -146,10 +146,10 @@ func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
 	if instance.OpenIdRecipe == nil {
 		return jwtmodels.GetJWKSResponse{}, errors.New("GetJWKS cannot be used without enabling the Jwt feature")
 	}
-	return (*instance.OpenIdRecipe.RecipeImpl.GetJWKS)()
+	return (*instance.OpenIdRecipe.RecipeImpl.GetJWKS)(userContext)
 }
 
-func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+func GetOpenIdDiscoveryConfiguration(userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, err
@@ -157,5 +157,5 @@ func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigura
 	if instance.OpenIdRecipe == nil {
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, errors.New("GetOpenIdDiscoveryConfiguration cannot be used without enabling the Jwt feature")
 	}
-	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)()
+	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
 }
