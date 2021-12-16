@@ -13,16 +13,28 @@
  * under the License.
  */
 
-package supertokens
+package openidmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.3.2"
+type TypeInput struct {
+	Issuer             *string
+	JwtValiditySeconds *uint64
+	Override           *OverrideStruct
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9"}
-)
+type TypeNormalisedInput struct {
+	IssuerDomain       supertokens.NormalisedURLDomain
+	IssuerPath         supertokens.NormalisedURLPath
+	JwtValiditySeconds *uint64
+	Override           OverrideStruct
+}
+
+type OverrideStruct struct {
+	Functions  func(originalImplementation RecipeInterface) RecipeInterface
+	APIs       func(originalImplementation APIInterface) APIInterface
+	JwtFeature *jwtmodels.OverrideStruct
+}

@@ -13,16 +13,19 @@
  * under the License.
  */
 
-package supertokens
+package openidmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+import "github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 
-// VERSION current version of the lib
-const VERSION = "0.3.2"
+type RecipeInterface struct {
+	GetOpenIdDiscoveryConfiguration *func() (GetOpenIdDiscoveryConfigurationResponse, error)
+	CreateJWT                       *func(payload map[string]interface{}, validitySeconds *uint64) (jwtmodels.CreateJWTResponse, error)
+	GetJWKS                         *func() (jwtmodels.GetJWKSResponse, error)
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9"}
-)
+type GetOpenIdDiscoveryConfigurationResponse struct {
+	OK *struct {
+		Issuer   string
+		Jwks_uri string
+	}
+}

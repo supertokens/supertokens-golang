@@ -78,7 +78,7 @@ func recipeInit(config *jwtmodels.TypeInput) supertokens.Recipe {
 // implement RecipeModule
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	getJWKSAPINormalised, err := supertokens.NewNormalisedURLPath(getJWKSAPI)
+	getJWKSAPINormalised, err := supertokens.NewNormalisedURLPath(GetJWKSAPI)
 	if err != nil {
 		return nil, err
 	}
@@ -86,7 +86,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	return []supertokens.APIHandled{{
 		Method:                 http.MethodGet,
 		PathWithoutAPIBasePath: getJWKSAPINormalised,
-		ID:                     getJWKSAPI,
+		ID:                     GetJWKSAPI,
 		Disabled:               r.APIImpl.GetJWKSGET == nil,
 	}}, nil
 }
