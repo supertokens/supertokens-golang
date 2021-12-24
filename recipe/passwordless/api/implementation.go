@@ -92,7 +92,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			userInputCode = &response.OK.UserInputCode
 		}
 
-		if options.Config.ContactMethodPhone.Enabled {
+		if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && phoneNumber != nil) {
 			options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*phoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
 		} else {
 			options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
@@ -196,7 +196,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 				userInputCode = &response.OK.UserInputCode
 			}
 
-			if options.Config.ContactMethodPhone.Enabled {
+			if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && deviceInfo.PhoneNumber != nil) {
 				options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*deviceInfo.PhoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
 			} else {
 				options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)

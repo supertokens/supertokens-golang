@@ -68,7 +68,12 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 	if okEmail {
 		// normalize and validate email
 		email = strings.TrimSpace(email.(string))
-		validateErr := options.Config.ContactMethodEmail.ValidateEmailAddress(email)
+		var validateErr *string
+		if options.Config.ContactMethodEmail.Enabled {
+			validateErr = options.Config.ContactMethodEmail.ValidateEmailAddress(email)
+		} else {
+			validateErr = options.Config.ContactMethodEmailOrPhone.ValidateEmailAddress(email)
+		}
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, map[string]interface{}{
 				"status":  "GENERAL_ERROR",
@@ -78,7 +83,12 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 	}
 
 	if okPhoneNumber {
-		validateErr := options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber)
+		var validateErr *string
+		if options.Config.ContactMethodPhone.Enabled {
+			validateErr = options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber)
+		} else {
+			validateErr = options.Config.ContactMethodEmailOrPhone.ValidatePhoneNumber(phoneNumber)
+		}
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, map[string]interface{}{
 				"status":  "GENERAL_ERROR",

@@ -30,12 +30,22 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		panic("FlowType config must be provided and must be one of \"USER_INPUT_CODE\", \"MAGIC_LINK\" or \"USER_INPUT_CODE_AND_MAGIC_LINK\"")
 	}
 
-	if config.ContactMethodEmail.Enabled && config.ContactMethodPhone.Enabled {
-		panic("Please enable only one of ContactMethodEmail or ContactMethodPhone")
+	contactMethodEnabledCounter := 0
+
+	if config.ContactMethodEmail.Enabled {
+		contactMethodEnabledCounter++
 	}
 
-	if !config.ContactMethodEmail.Enabled && !config.ContactMethodPhone.Enabled {
-		panic("Please enable exactly one of ContactMethodEmail or ContactMethodPhone")
+	if config.ContactMethodPhone.Enabled {
+		contactMethodEnabledCounter++
+	}
+
+	if config.ContactMethodEmailOrPhone.Enabled {
+		contactMethodEnabledCounter++
+	}
+
+	if contactMethodEnabledCounter != 1 {
+		panic("Please enable only one of ContactMethodEmail, ContactMethodPhone or ContactMethodEmailOrPhone")
 	}
 
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo, config)
@@ -57,6 +67,22 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 		if config.ContactMethodEmail.ValidateEmailAddress != nil {
 			typeNormalisedInput.ContactMethodEmail.ValidateEmailAddress = config.ContactMethodEmail.ValidateEmailAddress
+		}
+	}
+
+	if config.ContactMethodEmailOrPhone.Enabled {
+		typeNormalisedInput.ContactMethodEmailOrPhone.Enabled = true
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
+			typeNormalisedInput.ContactMethodEmail.CreateAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
+		}
+		if config.ContactMethodEmailOrPhone.ValidateEmailAddress != nil {
+			typeNormalisedInput.ContactMethodEmail.ValidateEmailAddress = config.ContactMethodEmail.ValidateEmailAddress
+		}
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
+			typeNormalisedInput.ContactMethodPhone.CreateAndSendCustomTextMessage = config.ContactMethodPhone.CreateAndSendCustomTextMessage
+		}
+		if config.ContactMethodEmailOrPhone.ValidatePhoneNumber != nil {
+			typeNormalisedInput.ContactMethodPhone.ValidatePhoneNumber = config.ContactMethodPhone.ValidatePhoneNumber
 		}
 	}
 
@@ -82,6 +108,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig plessmodels.TypeInput) plessmodels.TypeNormalisedInput {
 	return plessmodels.TypeNormalisedInput{
 		FlowType: inputConfig.FlowType,
+		ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+			Enabled:                        false,
+			ValidateEmailAddress:           defaultValidateEmailAddress,
+			CreateAndSendCustomEmail:       defaultCreateAndSendCustomEmail,
+			ValidatePhoneNumber:            defaultValidatePhoneNumber,
+			CreateAndSendCustomTextMessage: defaultCreateAndSendCustomTextMessage,
+		},
 		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 			Enabled:                        false,
 			ValidatePhoneNumber:            defaultValidatePhoneNumber,
