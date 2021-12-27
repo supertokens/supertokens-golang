@@ -93,9 +93,23 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}
 
 		if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && phoneNumber != nil) {
-			options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*phoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+			err := options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*phoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+			if err != nil {
+				return plessmodels.CreateCodePOSTResponse{
+					GeneralError: &struct{ Message string }{
+						Message: err.Error(),
+					},
+				}, nil
+			}
 		} else {
-			options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+			err := options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+			if err != nil {
+				return plessmodels.CreateCodePOSTResponse{
+					GeneralError: &struct{ Message string }{
+						Message: err.Error(),
+					},
+				}, nil
+			}
 		}
 
 		return plessmodels.CreateCodePOSTResponse{
@@ -197,9 +211,23 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			}
 
 			if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && deviceInfo.PhoneNumber != nil) {
-				options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*deviceInfo.PhoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				err := options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*deviceInfo.PhoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				if err != nil {
+					return plessmodels.ResendCodePOSTResponse{
+						GeneralError: &struct{ Message string }{
+							Message: err.Error(),
+						},
+					}, nil
+				}
 			} else {
-				options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				err := options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				if err != nil {
+					return plessmodels.ResendCodePOSTResponse{
+						GeneralError: &struct{ Message string }{
+							Message: err.Error(),
+						},
+					}, nil
+				}
 			}
 
 			return plessmodels.ResendCodePOSTResponse{

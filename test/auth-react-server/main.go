@@ -50,7 +50,7 @@ type CustomCode struct {
 	UserInputCode   *string
 }
 
-func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 	device, ok := deviceStore[preAuthSessionId]
 	if !ok {
 		device = CustomDevice{
@@ -65,6 +65,7 @@ func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLife
 		UserInputCode:   userInputCode,
 	})
 	deviceStore[preAuthSessionId] = device
+	return nil
 }
 
 var latestURLWithToken string = ""

@@ -51,6 +51,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo, config)
 
 	if config.ContactMethodPhone.Enabled {
+		if config.ContactMethodPhone.CreateAndSendCustomTextMessage == nil {
+			panic("Please pass a function (ContactMethodPhone.CreateAndSendCustomTextMessage) to send text messages.")
+		}
 		typeNormalisedInput.ContactMethodPhone.Enabled = true
 		if config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
 			typeNormalisedInput.ContactMethodPhone.CreateAndSendCustomTextMessage = config.ContactMethodPhone.CreateAndSendCustomTextMessage
@@ -61,6 +64,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.ContactMethodEmail.Enabled {
+		if config.ContactMethodEmail.CreateAndSendCustomEmail == nil {
+			panic("Please pass a function (ContactMethodEmail.CreateAndSendCustomEmail) to send emails.")
+		}
 		typeNormalisedInput.ContactMethodEmail.Enabled = true
 		if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
 			typeNormalisedInput.ContactMethodEmail.CreateAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
@@ -71,6 +77,12 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.ContactMethodEmailOrPhone.Enabled {
+		if config.ContactMethodPhone.CreateAndSendCustomTextMessage == nil {
+			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage) to send text messages.")
+		}
+		if config.ContactMethodEmail.CreateAndSendCustomEmail == nil {
+			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomEmail) to send emails.")
+		}
 		typeNormalisedInput.ContactMethodEmailOrPhone.Enabled = true
 		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
 			typeNormalisedInput.ContactMethodEmail.CreateAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
@@ -111,19 +123,19 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 		ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 			Enabled:                        false,
 			ValidateEmailAddress:           defaultValidateEmailAddress,
-			CreateAndSendCustomEmail:       defaultCreateAndSendCustomEmail,
+			CreateAndSendCustomEmail:       inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomEmail,
 			ValidatePhoneNumber:            defaultValidatePhoneNumber,
-			CreateAndSendCustomTextMessage: defaultCreateAndSendCustomTextMessage,
+			CreateAndSendCustomTextMessage: inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage,
 		},
 		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 			Enabled:                        false,
 			ValidatePhoneNumber:            defaultValidatePhoneNumber,
-			CreateAndSendCustomTextMessage: defaultCreateAndSendCustomTextMessage,
+			CreateAndSendCustomTextMessage: inputConfig.ContactMethodPhone.CreateAndSendCustomTextMessage,
 		},
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled:                  false,
 			ValidateEmailAddress:     defaultValidateEmailAddress,
-			CreateAndSendCustomEmail: defaultCreateAndSendCustomEmail,
+			CreateAndSendCustomEmail: inputConfig.ContactMethodEmail.CreateAndSendCustomEmail,
 		},
 		GetLinkDomainAndPath:   getDefaultGetLinkDomainAndPath(appInfo),
 		GetCustomUserInputCode: inputConfig.GetCustomUserInputCode,
@@ -175,10 +187,10 @@ func defaultValidatePhoneNumber(value interface{}) *string {
 	return nil
 }
 
-func defaultCreateAndSendCustomEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
-	// TODO:
-}
+// func defaultCreateAndSendCustomEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+// 	// TODO:
+// }
 
-func defaultCreateAndSendCustomTextMessage(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
-	// TODO:
-}
+// func defaultCreateAndSendCustomTextMessage(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+// 	// TODO:
+// }

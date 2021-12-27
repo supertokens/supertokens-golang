@@ -52,19 +52,19 @@ type OverrideStruct struct {
 type ContactMethodEmailConfig struct {
 	Enabled                  bool
 	ValidateEmailAddress     func(email interface{}) *string
-	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext)
+	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
 }
 
 type ContactMethodEmailOrPhoneConfig struct {
 	Enabled                        bool
 	ValidateEmailAddress           func(email interface{}) *string
-	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext)
+	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext)
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
 }
 
 type ContactMethodPhoneConfig struct {
 	Enabled                        bool
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext)
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
 }
