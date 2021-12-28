@@ -102,7 +102,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			// the phone number is valid according to their impl, but not according to the phonenumbers lib.
 			phoneNumber = strings.TrimSpace(phoneNumber.(string))
 		} else {
-			phoneNumber = phonenumbers.Format(parsedPhoneNumber, phonenumbers.INTERNATIONAL)
+			phoneNumber = phonenumbers.Format(parsedPhoneNumber, phonenumbers.E164)
 		}
 	}
 
