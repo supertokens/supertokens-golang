@@ -155,9 +155,9 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 	dw := res.(*DoneWriter)
 	if !dw.done {
 		if statusCode < 300 {
-			return errors.New("Calling sendNon200Response with status code < 300")
+			return errors.New("calling sendNon200Response with status code < 300")
 		}
-		res.Header().Set("Content-Type", "text/html; charset=utf-8")
+		res.Header().Set("Content-Type", "application/json; charset=utf-8")
 		res.WriteHeader(statusCode)
 		response := map[string]interface{}{
 			"message": message,
