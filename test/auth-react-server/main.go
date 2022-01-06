@@ -19,6 +19,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"strconv"
@@ -124,6 +125,71 @@ func callSTInit() {
 						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
 						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
 					}),
+					{
+						ID: "auth0",
+						Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+							return tpmodels.TypeProviderGetResponse{
+								AccessTokenAPI: tpmodels.AccessTokenAPI{
+									// this contains info about the token endpoint which exchanges the auth code with the access token and profile info.
+									URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
+									Params: map[string]string{
+										// example post params
+										"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+										"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
+										"grant_type":    "authorization_code",
+										"redirect_uri":  *redirectURI,
+										"code":          *authCodeFromRequest,
+										//...
+									},
+								},
+								AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+									// this contains info about forming the authorisation redirect URL without the state params and without the redirect_uri param
+									URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize`",
+									Params: map[string]interface{}{
+										"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+										"scope":         "openid profile",
+										"response_type": "code",
+									},
+								},
+								GetClientId: func() string {
+									return os.Getenv("AUTH0_CLIENT_ID")
+								},
+								GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+									/* authCodeResponse is the JSON response from the AccessTokenAPI POST call. Using this, you need to return an object of the following type:*/
+									authCodeResponseJson, err := json.Marshal(authCodeResponse)
+									if err != nil {
+										return tpmodels.UserInfo{}, err
+									}
+									var accessTokenAPIResponse auth0GetProfileInfoInput
+									err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+									if err != nil {
+										return tpmodels.UserInfo{}, err
+									}
+									accessToken := accessTokenAPIResponse.AccessToken
+									authHeader := "Bearer " + accessToken
+
+									response, err := getAuth0AuthRequest(authHeader)
+
+									if err != nil {
+										return tpmodels.UserInfo{}, err
+									}
+
+									userInfo := response.(map[string]interface{})
+
+									ID := userInfo["sub"].(string)
+									email := userInfo["email"].(string)
+
+									return tpmodels.UserInfo{
+										ID: ID,
+										Email: &tpmodels.EmailStruct{
+											ID:         email,
+											IsVerified: true, // true if email is verified already
+										},
+									}, nil
+								},
+							}
+						},
+					},
 				},
 			}),
 			session.Init(nil),
@@ -133,6 +199,43 @@ func callSTInit() {
 	if err != nil {
 		panic(err.Error())
 	}
+}
+
+func getAuth0AuthRequest(authHeader string) (interface{}, error) {
+	url := "https://" + os.Getenv("AUTH0_DOMAIN") + "/userinfo"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	return doGetRequest(req)
+}
+
+func doGetRequest(req *http.Request) (interface{}, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type auth0GetProfileInfoInput struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"expires_in"`
+	IDToken      string `json:"id_token"`
+	TokenType    string `json:"token_type"`
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
