@@ -130,7 +130,6 @@ func callSTInit() {
 						Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
 							return tpmodels.TypeProviderGetResponse{
 								AccessTokenAPI: tpmodels.AccessTokenAPI{
-									// this contains info about the token endpoint which exchanges the auth code with the access token and profile info.
 									URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
 									Params: map[string]string{
 										// example post params
@@ -143,7 +142,6 @@ func callSTInit() {
 									},
 								},
 								AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-									// this contains info about forming the authorisation redirect URL without the state params and without the redirect_uri param
 									URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize`",
 									Params: map[string]interface{}{
 										"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
@@ -155,7 +153,6 @@ func callSTInit() {
 									return os.Getenv("AUTH0_CLIENT_ID")
 								},
 								GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
-									/* authCodeResponse is the JSON response from the AccessTokenAPI POST call. Using this, you need to return an object of the following type:*/
 									authCodeResponseJson, err := json.Marshal(authCodeResponse)
 									if err != nil {
 										return tpmodels.UserInfo{}, err
