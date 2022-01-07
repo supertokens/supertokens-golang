@@ -132,7 +132,6 @@ func callSTInit() {
 								AccessTokenAPI: tpmodels.AccessTokenAPI{
 									URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
 									Params: map[string]string{
-										// example post params
 										"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
 										"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
 										"grant_type":    "authorization_code",
@@ -153,15 +152,19 @@ func callSTInit() {
 									return os.Getenv("AUTH0_CLIENT_ID")
 								},
 								GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+
 									authCodeResponseJson, err := json.Marshal(authCodeResponse)
 									if err != nil {
 										return tpmodels.UserInfo{}, err
 									}
+
 									var accessTokenAPIResponse auth0GetProfileInfoInput
 									err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+
 									if err != nil {
 										return tpmodels.UserInfo{}, err
 									}
+
 									accessToken := accessTokenAPIResponse.AccessToken
 									authHeader := "Bearer " + accessToken
 
