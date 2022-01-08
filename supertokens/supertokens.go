@@ -146,7 +146,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		theirHandler = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dw := &DoneWriter{ResponseWriter: w}
+		dw := MakeDoneWriter(w)
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
 			err = s.errorHandler(err, r, dw)

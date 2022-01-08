@@ -15,7 +15,9 @@
 
 package supertokens
 
-import "net/http"
+import (
+	"net/http"
+)
 
 type NormalisedAppinfo struct {
 	AppName         string
@@ -55,14 +57,4 @@ type APIHandled struct {
 	Method                 string
 	ID                     string
 	Disabled               bool
-}
-
-type DoneWriter struct {
-	http.ResponseWriter
-	done bool
-}
-
-func (w *DoneWriter) Write(b []byte) (int, error) {
-	w.done = true
-	return w.ResponseWriter.Write(b)
 }
