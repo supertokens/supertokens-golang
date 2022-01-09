@@ -24,5 +24,5 @@ const (
 const VERSION = "0.3.1"
 
 var (
-	cdiSupported = []string{"2.8", "2.9", "2.10"}
+	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11"}
 )
