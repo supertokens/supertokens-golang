@@ -77,24 +77,24 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.ContactMethodEmailOrPhone.Enabled {
-		if config.ContactMethodPhone.CreateAndSendCustomTextMessage == nil {
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage == nil {
 			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage) to send text messages.")
 		}
-		if config.ContactMethodEmail.CreateAndSendCustomEmail == nil {
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail == nil {
 			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomEmail) to send emails.")
 		}
 		typeNormalisedInput.ContactMethodEmailOrPhone.Enabled = true
 		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
-			typeNormalisedInput.ContactMethodEmail.CreateAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
+			typeNormalisedInput.ContactMethodEmailOrPhone.CreateAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
 		}
 		if config.ContactMethodEmailOrPhone.ValidateEmailAddress != nil {
-			typeNormalisedInput.ContactMethodEmail.ValidateEmailAddress = config.ContactMethodEmail.ValidateEmailAddress
+			typeNormalisedInput.ContactMethodEmailOrPhone.ValidateEmailAddress = config.ContactMethodEmailOrPhone.ValidateEmailAddress
 		}
 		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
-			typeNormalisedInput.ContactMethodPhone.CreateAndSendCustomTextMessage = config.ContactMethodPhone.CreateAndSendCustomTextMessage
+			typeNormalisedInput.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
 		}
 		if config.ContactMethodEmailOrPhone.ValidatePhoneNumber != nil {
-			typeNormalisedInput.ContactMethodPhone.ValidatePhoneNumber = config.ContactMethodPhone.ValidatePhoneNumber
+			typeNormalisedInput.ContactMethodEmailOrPhone.ValidatePhoneNumber = config.ContactMethodEmailOrPhone.ValidatePhoneNumber
 		}
 	}
 

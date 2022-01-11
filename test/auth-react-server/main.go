@@ -18,7 +18,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -131,13 +130,11 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				},
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
-						fmt.Println(passwordResetURLWithToken)
 						latestURLWithToken = passwordResetURLWithToken
 					},
 				},
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
-						fmt.Println(emailVerificationURLWithToken)
 						latestURLWithToken = emailVerificationURLWithToken
 					},
 				},
@@ -268,10 +265,16 @@ func reInitST(w http.ResponseWriter, r *http.Request) {
 			Enabled:                        true,
 			CreateAndSendCustomTextMessage: saveCode,
 		}
-	} else {
+	} else if readBody["contactMethod"].(string) == "EMAIL" {
 		config.ContactMethodEmail = plessmodels.ContactMethodEmailConfig{
 			Enabled:                  true,
 			CreateAndSendCustomEmail: saveCode,
+		}
+	} else {
+		config.ContactMethodEmailOrPhone = plessmodels.ContactMethodEmailOrPhoneConfig{
+			Enabled:                        true,
+			CreateAndSendCustomEmail:       saveCode,
+			CreateAndSendCustomTextMessage: saveCode,
 		}
 	}
 	callSTInit(config)
