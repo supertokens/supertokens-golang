@@ -7,8 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.4.0] - 2022-01-14
+
 -   Adds passwordless recipe
--   Adds compatibility with FDI 1.11 and CDI 2.10
+-   Adds compatibility with FDI 1.11 and CDI 2.11
+
+## [0.3.5] - 2022-01-08
+
+### Fixes
+- Fixes issue of methods getting hidden due to DoneWriter wrapper around ResponseWriter: https://github.com/supertokens/supertokens-golang/issues/55
+
+## [0.3.4] - 2022-01-06
+
+### Fixes
+- Sends application/json content-type in `SendNon200Response` function: https://github.com/supertokens/supertokens-golang/issues/53
+
+## [0.3.3] - 2021-12-20
+
+### Added
+- Add DeleteUser function
+
+## [0.3.2] - 2021-12-06
+### Added
+-   The ability to enable JWT creation with session management, this allows easier integration with services that require JWT based authentication: https://github.com/supertokens/supertokens-core/issues/250
+
+## [0.3.1] - 2021-12-06
+### Changes
+- Upgrade `keyfunc` dependency to stable version.
+
+### Fixes
+- Removes use of apiGatewayPath from apple's redirect URI since that is already there in the apiBasePath
+
 
 ## [0.3.0] - 2021-11-23
 

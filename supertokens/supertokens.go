@@ -146,7 +146,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		theirHandler = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		dw := &DoneWriter{ResponseWriter: w}
+		dw := MakeDoneWriter(w)
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
 			err = s.errorHandler(err, r, dw)
@@ -336,6 +336,32 @@ func getUserCount(includeRecipeIds *[]string) (float64, error) {
 	}
 
 	return resp["count"].(float64), nil
+}
+
+func deleteUser(userId string) error {
+	querier, err := GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		return err
+	}
+
+	cdiVersion, err := querier.getQuerierAPIVersion()
+	if err != nil {
+		return err
+	}
+
+	if maxVersion(cdiVersion, "2.10") == cdiVersion {
+		_, err = querier.SendPostRequest("/user/remove", map[string]interface{}{
+			"userId": userId,
+		})
+
+		if err != nil {
+			return err
+		}
+
+		return nil
+	} else {
+		return errors.New("please upgrade the SuperTokens core to >= 3.7.0")
+	}
 }
 
 func ResetForTest() {

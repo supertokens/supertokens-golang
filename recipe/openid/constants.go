@@ -13,8 +13,8 @@
  * under the License.
  */
 
-package jwt
+package openid
 
 const (
-	GetJWKSAPI = "/jwt/jwks.json"
+	GetDiscoveryConfigUrl = "/.well-known/openid-configuration"
 )

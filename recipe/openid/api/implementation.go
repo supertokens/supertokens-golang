@@ -13,8 +13,19 @@
  * under the License.
  */
 
-package jwt
+package api
 
-const (
-	GetJWKSAPI = "/jwt/jwks.json"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 )
+
+func MakeAPIImplementation() openidmodels.APIInterface {
+
+	getOpenIdDiscoveryConfigurationGET := func(options openidmodels.APIOptions) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+		return (*options.RecipeImplementation.GetOpenIdDiscoveryConfiguration)()
+	}
+
+	return openidmodels.APIInterface{
+		GetOpenIdDiscoveryConfigurationGET: &getOpenIdDiscoveryConfigurationGET,
+	}
+}

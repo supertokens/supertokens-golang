@@ -22,6 +22,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/net/publicsuffix"
@@ -156,6 +157,18 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, err
 	}
 
+	Jwt := sessmodels.JWTNormalisedConfig{Enable: false, PropertyNameInAccessTokenPayload: "jwt"}
+	if config != nil && config.Jwt != nil {
+		Jwt.Enable = config.Jwt.Enable
+		Jwt.Issuer = config.Jwt.Issuer
+		if config.Jwt.PropertyNameInAccessTokenPayload != nil {
+			Jwt.PropertyNameInAccessTokenPayload = *config.Jwt.PropertyNameInAccessTokenPayload
+		}
+	}
+	if sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY == Jwt.PropertyNameInAccessTokenPayload {
+		return sessmodels.TypeNormalisedInput{}, errors.New(sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY + " is a reserved property name, please use a different key name for the jwt")
+	}
+
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
@@ -164,12 +177,14 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
+		Jwt:                      Jwt,
 		Override: sessmodels.OverrideStruct{
 			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 				return originalImplementation
 			}, APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 				return originalImplementation
-			}},
+			},
+			OpenIdFeature: nil},
 	}
 
 	if config != nil && config.Override != nil {
@@ -179,6 +194,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
 		}
+		typeNormalisedInput.Override.OpenIdFeature = config.Override.OpenIdFeature
 	}
 
 	return typeNormalisedInput, nil

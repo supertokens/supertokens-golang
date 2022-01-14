@@ -13,8 +13,31 @@
  * under the License.
  */
 
-package jwt
+package sessionwithjwt
+
+/*
+   This key is used to determine the property name used when adding the jwt to the access token payload
+   For example if the Session recipe is initialised with config
+   {
+       ...
+       jwt: {
+           enable: true,
+           propertyNameInAccessTokenPayload: "jwtKey",
+       },
+       ...
+   }
+
+   The access token payload after creating a session would look like
+   {
+       ...
+       jwtKey: "JWT_STRING",
+       _jwtPName: "jwtKey",
+   }
+
+   When trying to refresh the session or updating the access token payload, this key is used to determine and retrieve
+   the exsiting JWT from the access token payload.
+*/
 
 const (
-	GetJWKSAPI = "/jwt/jwks.json"
+	ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY = "_jwtPName"
 )

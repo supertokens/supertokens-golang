@@ -117,7 +117,7 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					if err != nil {
 						return "", err
 					}
-					return supertokens.AppInfo.APIDomain.GetAsStringDangerous() + supertokens.AppInfo.APIGatewayPath.GetAsStringDangerous() + supertokens.AppInfo.APIBasePath.GetAsStringDangerous() + "/callback/apple", nil
+					return supertokens.AppInfo.APIDomain.GetAsStringDangerous() + supertokens.AppInfo.APIBasePath.GetAsStringDangerous() + "/callback/apple", nil
 				},
 			}
 		},
@@ -180,7 +180,7 @@ func verifyAndGetClaimsAppleIdToken(idToken string, clientId string) (jwt.MapCla
 	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
 	refreshInterval := time.Hour
 	options := keyfunc.Options{
-		RefreshInterval: &refreshInterval,
+		RefreshInterval: refreshInterval,
 	}
 
 	// Create the JWKS from the resource at the given URL.
