@@ -13,16 +13,12 @@
  * under the License.
  */
 
-package supertokens
+package passwordless
 
 const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
-
-// VERSION current version of the lib
-const VERSION = "0.4.0"
-
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11"}
+	createCodeAPI           = "/signinup/code"
+	resendCodeAPI           = "/signinup/code/resend"
+	consumeCodeAPI          = "/signinup/code/consume"
+	doesEmailExistAPI       = "/signup/email/exists"
+	doesPhoneNumberExistAPI = "/signup/phonenumber/exists"
 )

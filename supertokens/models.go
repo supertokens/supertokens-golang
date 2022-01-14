@@ -58,3 +58,5 @@ type APIHandled struct {
 	ID                     string
 	Disabled               bool
 }
+
+type UserContext = *map[string]interface{}

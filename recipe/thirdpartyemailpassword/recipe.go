@@ -226,3 +226,7 @@ func (r *Recipe) getEmailForUserId(userID string) (string, error) {
 	}
 	return userInfo.Email, nil
 }
+
+func ResetForTest() {
+	singletonInstance = nil
+}
