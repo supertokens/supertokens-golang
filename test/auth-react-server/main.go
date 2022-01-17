@@ -18,7 +18,6 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -50,7 +49,7 @@ type CustomCode struct {
 	UserInputCode   *string
 }
 
-func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 	device, ok := deviceStore[preAuthSessionId]
 	if !ok {
 		device = CustomDevice{
@@ -65,6 +64,7 @@ func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLife
 		UserInputCode:   userInputCode,
 	})
 	deviceStore[preAuthSessionId] = device
+	return nil
 }
 
 var latestURLWithToken string = ""
@@ -130,13 +130,11 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				},
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-						fmt.Println(passwordResetURLWithToken)
 						latestURLWithToken = passwordResetURLWithToken
 					},
 				},
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-						fmt.Println(emailVerificationURLWithToken)
 						latestURLWithToken = emailVerificationURLWithToken
 					},
 				},
@@ -156,6 +154,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 							ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
 							ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
 						}),
+						customAuth0Provider(),
 					},
 				},
 			}),
@@ -176,6 +175,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
 						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
 					}),
+					customAuth0Provider(),
 				},
 			}),
 			session.Init(nil),
@@ -218,6 +218,124 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	}))
 
 	routes = &middleware
+}
+
+func customAuth0Provider() tpmodels.TypeProvider {
+
+	var response tpmodels.TypeProvider
+
+	response.ID = "auth0"
+	response.Get = func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		if redirectURI == nil {
+			temp := ""
+			redirectURI = &temp
+		}
+
+		if authCodeFromRequest == nil {
+			temp := ""
+			authCodeFromRequest = &temp
+		}
+
+		return tpmodels.TypeProviderGetResponse{
+
+			AccessTokenAPI: tpmodels.AccessTokenAPI{
+				URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
+				Params: map[string]string{
+					"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+					"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
+					"grant_type":    "authorization_code",
+					"redirect_uri":  *redirectURI,
+					"code":          *authCodeFromRequest,
+				},
+			},
+			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+				URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize",
+				Params: map[string]interface{}{
+					"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+					"scope":         "openid profile",
+					"response_type": "code",
+				},
+			},
+			GetClientId: func() string {
+				return os.Getenv("AUTH0_CLIENT_ID")
+			},
+			GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+
+				authCodeResponseJson, err := json.Marshal(authCodeResponse)
+				if err != nil {
+					return tpmodels.UserInfo{}, err
+				}
+
+				var accessTokenAPIResponse auth0GetProfileInfoInput
+				err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+
+				if err != nil {
+					return tpmodels.UserInfo{}, err
+				}
+
+				accessToken := accessTokenAPIResponse.AccessToken
+				authHeader := "Bearer " + accessToken
+
+				response, err := getAuth0AuthRequest(authHeader)
+
+				if err != nil {
+					return tpmodels.UserInfo{}, err
+				}
+
+				userInfo := response.(map[string]interface{})
+
+				ID := userInfo["sub"].(string)
+				email := userInfo["name"].(string)
+
+				return tpmodels.UserInfo{
+					ID: ID,
+					Email: &tpmodels.EmailStruct{
+						ID:         email,
+						IsVerified: true, // true if email is verified already
+					},
+				}, nil
+			},
+		}
+	}
+	return response
+
+}
+
+func getAuth0AuthRequest(authHeader string) (interface{}, error) {
+	url := "https://" + os.Getenv("AUTH0_DOMAIN") + "/userinfo"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	return doGetRequest(req)
+}
+
+func doGetRequest(req *http.Request) (interface{}, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
+type auth0GetProfileInfoInput struct {
+	AccessToken  string `json:"access_token"`
+	RefreshToken string `json:"refresh_token"`
+	IDToken      string `json:"id_token"`
+	TokenType    string `json:"token_type"`
 }
 
 func corsMiddleware(next http.Handler) http.Handler {
@@ -267,10 +385,16 @@ func reInitST(w http.ResponseWriter, r *http.Request) {
 			Enabled:                        true,
 			CreateAndSendCustomTextMessage: saveCode,
 		}
-	} else {
+	} else if readBody["contactMethod"].(string) == "EMAIL" {
 		config.ContactMethodEmail = plessmodels.ContactMethodEmailConfig{
 			Enabled:                  true,
 			CreateAndSendCustomEmail: saveCode,
+		}
+	} else {
+		config.ContactMethodEmailOrPhone = plessmodels.ContactMethodEmailOrPhoneConfig{
+			Enabled:                        true,
+			CreateAndSendCustomEmail:       saveCode,
+			CreateAndSendCustomTextMessage: saveCode,
 		}
 	}
 	callSTInit(config)

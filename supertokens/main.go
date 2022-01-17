@@ -58,3 +58,7 @@ func GetUsersOldestFirst(paginationToken *string, limit *int, includeRecipeIds *
 func GetUsersNewestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
 	return getUsers("DESC", paginationToken, limit, includeRecipeIds)
 }
+
+func DeleteUser(userId string) error {
+	return deleteUser(userId)
+}

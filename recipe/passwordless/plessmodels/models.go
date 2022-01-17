@@ -25,21 +25,23 @@ type User struct {
 }
 
 type TypeInput struct {
-	ContactMethodPhone     ContactMethodPhoneConfig
-	ContactMethodEmail     ContactMethodEmailConfig
-	FlowType               string
-	GetLinkDomainAndPath   func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
-	GetCustomUserInputCode func(userContext supertokens.UserContext) (string, error)
-	Override               *OverrideStruct
+	ContactMethodPhone        ContactMethodPhoneConfig
+	ContactMethodEmail        ContactMethodEmailConfig
+	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
+	FlowType                  string
+	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
+	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
+	Override                  *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
-	ContactMethodPhone     ContactMethodPhoneConfig
-	ContactMethodEmail     ContactMethodEmailConfig
-	FlowType               string
-	GetLinkDomainAndPath   func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
-	GetCustomUserInputCode func(userContext supertokens.UserContext) (string, error)
-	Override               OverrideStruct
+	ContactMethodPhone        ContactMethodPhoneConfig
+	ContactMethodEmail        ContactMethodEmailConfig
+	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
+	FlowType                  string
+	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
+	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
+	Override                  OverrideStruct
 }
 
 type OverrideStruct struct {
@@ -50,11 +52,19 @@ type OverrideStruct struct {
 type ContactMethodEmailConfig struct {
 	Enabled                  bool
 	ValidateEmailAddress     func(email interface{}) *string
-	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext)
+	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+}
+
+type ContactMethodEmailOrPhoneConfig struct {
+	Enabled                        bool
+	ValidateEmailAddress           func(email interface{}) *string
+	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	ValidatePhoneNumber            func(phoneNumber interface{}) *string
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
 }
 
 type ContactMethodPhoneConfig struct {
 	Enabled                        bool
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext)
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
 }

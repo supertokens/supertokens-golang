@@ -30,17 +30,30 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		panic("FlowType config must be provided and must be one of \"USER_INPUT_CODE\", \"MAGIC_LINK\" or \"USER_INPUT_CODE_AND_MAGIC_LINK\"")
 	}
 
-	if config.ContactMethodEmail.Enabled && config.ContactMethodPhone.Enabled {
-		panic("Please enable only one of ContactMethodEmail or ContactMethodPhone")
+	contactMethodEnabledCounter := 0
+
+	if config.ContactMethodEmail.Enabled {
+		contactMethodEnabledCounter++
 	}
 
-	if !config.ContactMethodEmail.Enabled && !config.ContactMethodPhone.Enabled {
-		panic("Please enable exactly one of ContactMethodEmail or ContactMethodPhone")
+	if config.ContactMethodPhone.Enabled {
+		contactMethodEnabledCounter++
+	}
+
+	if config.ContactMethodEmailOrPhone.Enabled {
+		contactMethodEnabledCounter++
+	}
+
+	if contactMethodEnabledCounter != 1 {
+		panic("Please enable only one of ContactMethodEmail, ContactMethodPhone or ContactMethodEmailOrPhone")
 	}
 
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo, config)
 
 	if config.ContactMethodPhone.Enabled {
+		if config.ContactMethodPhone.CreateAndSendCustomTextMessage == nil {
+			panic("Please pass a function (ContactMethodPhone.CreateAndSendCustomTextMessage) to send text messages.")
+		}
 		typeNormalisedInput.ContactMethodPhone.Enabled = true
 		if config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
 			typeNormalisedInput.ContactMethodPhone.CreateAndSendCustomTextMessage = config.ContactMethodPhone.CreateAndSendCustomTextMessage
@@ -51,12 +64,37 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.ContactMethodEmail.Enabled {
+		if config.ContactMethodEmail.CreateAndSendCustomEmail == nil {
+			panic("Please pass a function (ContactMethodEmail.CreateAndSendCustomEmail) to send emails.")
+		}
 		typeNormalisedInput.ContactMethodEmail.Enabled = true
 		if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
 			typeNormalisedInput.ContactMethodEmail.CreateAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
 		}
 		if config.ContactMethodEmail.ValidateEmailAddress != nil {
 			typeNormalisedInput.ContactMethodEmail.ValidateEmailAddress = config.ContactMethodEmail.ValidateEmailAddress
+		}
+	}
+
+	if config.ContactMethodEmailOrPhone.Enabled {
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage == nil {
+			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage) to send text messages.")
+		}
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail == nil {
+			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomEmail) to send emails.")
+		}
+		typeNormalisedInput.ContactMethodEmailOrPhone.Enabled = true
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
+			typeNormalisedInput.ContactMethodEmailOrPhone.CreateAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
+		}
+		if config.ContactMethodEmailOrPhone.ValidateEmailAddress != nil {
+			typeNormalisedInput.ContactMethodEmailOrPhone.ValidateEmailAddress = config.ContactMethodEmailOrPhone.ValidateEmailAddress
+		}
+		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
+			typeNormalisedInput.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
+		}
+		if config.ContactMethodEmailOrPhone.ValidatePhoneNumber != nil {
+			typeNormalisedInput.ContactMethodEmailOrPhone.ValidatePhoneNumber = config.ContactMethodEmailOrPhone.ValidatePhoneNumber
 		}
 	}
 
@@ -82,15 +120,22 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig plessmodels.TypeInput) plessmodels.TypeNormalisedInput {
 	return plessmodels.TypeNormalisedInput{
 		FlowType: inputConfig.FlowType,
+		ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+			Enabled:                        false,
+			ValidateEmailAddress:           defaultValidateEmailAddress,
+			CreateAndSendCustomEmail:       inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomEmail,
+			ValidatePhoneNumber:            defaultValidatePhoneNumber,
+			CreateAndSendCustomTextMessage: inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage,
+		},
 		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 			Enabled:                        false,
 			ValidatePhoneNumber:            defaultValidatePhoneNumber,
-			CreateAndSendCustomTextMessage: defaultCreateAndSendCustomTextMessage,
+			CreateAndSendCustomTextMessage: inputConfig.ContactMethodPhone.CreateAndSendCustomTextMessage,
 		},
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled:                  false,
 			ValidateEmailAddress:     defaultValidateEmailAddress,
-			CreateAndSendCustomEmail: defaultCreateAndSendCustomEmail,
+			CreateAndSendCustomEmail: inputConfig.ContactMethodEmail.CreateAndSendCustomEmail,
 		},
 		GetLinkDomainAndPath:   getDefaultGetLinkDomainAndPath(appInfo),
 		GetCustomUserInputCode: inputConfig.GetCustomUserInputCode,
@@ -142,10 +187,10 @@ func defaultValidatePhoneNumber(value interface{}) *string {
 	return nil
 }
 
-func defaultCreateAndSendCustomEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
-	// TODO:
-}
+// func defaultCreateAndSendCustomEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+// 	// TODO:
+// }
 
-func defaultCreateAndSendCustomTextMessage(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
-	// TODO:
-}
+// func defaultCreateAndSendCustomTextMessage(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) {
+// 	// TODO:
+// }
