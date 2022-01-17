@@ -129,12 +129,12 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					FormFields: formFields,
 				},
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 						latestURLWithToken = passwordResetURLWithToken
 					},
 				},
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						latestURLWithToken = emailVerificationURLWithToken
 					},
 				},

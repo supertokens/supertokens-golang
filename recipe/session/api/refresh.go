@@ -25,7 +25,7 @@ func HandleRefreshAPI(apiImplementation sessmodels.APIInterface, options sessmod
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	err := (*apiImplementation.RefreshPOST)(options)
+	err := (*apiImplementation.RefreshPOST)(options, &map[string]interface{}{})
 	if err != nil {
 		return err
 	}

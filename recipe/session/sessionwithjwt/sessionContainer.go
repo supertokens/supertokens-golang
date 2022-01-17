@@ -90,7 +90,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 				jwtExpiry = 1
 			}
 
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(), jwtPropertyName.(string), openidRecipeImplementation)
+			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(), jwtPropertyName.(string), openidRecipeImplementation, &map[string]interface{}{})
 			if err != nil {
 				return err
 			}

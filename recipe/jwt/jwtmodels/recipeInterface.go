@@ -15,9 +15,11 @@
 
 package jwtmodels
 
+import "github.com/supertokens/supertokens-golang/supertokens"
+
 type RecipeInterface struct {
-	CreateJWT *func(payload map[string]interface{}, validitySeconds *uint64) (CreateJWTResponse, error)
-	GetJWKS   *func() (GetJWKSResponse, error)
+	CreateJWT *func(payload map[string]interface{}, validitySeconds *uint64, userContext supertokens.UserContext) (CreateJWTResponse, error)
+	GetJWKS   *func(userContext supertokens.UserContext) (GetJWKSResponse, error)
 }
 
 type CreateJWTResponse struct {

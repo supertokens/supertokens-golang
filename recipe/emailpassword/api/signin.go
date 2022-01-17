@@ -44,7 +44,7 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 
-	result, err := (*apiImplementation.SignInPOST)(formFields, options)
+	result, err := (*apiImplementation.SignInPOST)(formFields, options, &map[string]interface{}{})
 	if err != nil {
 		return err
 	}

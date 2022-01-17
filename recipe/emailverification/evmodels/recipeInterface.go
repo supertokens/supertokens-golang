@@ -15,12 +15,14 @@
 
 package evmodels
 
+import "github.com/supertokens/supertokens-golang/supertokens"
+
 type RecipeInterface struct {
-	CreateEmailVerificationToken  *func(userID, email string) (CreateEmailVerificationTokenResponse, error)
-	VerifyEmailUsingToken         *func(token string) (VerifyEmailUsingTokenResponse, error)
-	IsEmailVerified               *func(userID, email string) (bool, error)
-	RevokeEmailVerificationTokens *func(userId, email string) (RevokeEmailVerificationTokensResponse, error)
-	UnverifyEmail                 *func(userId, email string) (UnverifyEmailResponse, error)
+	CreateEmailVerificationToken  *func(userID, email string, userContext supertokens.UserContext) (CreateEmailVerificationTokenResponse, error)
+	VerifyEmailUsingToken         *func(token string, userContext supertokens.UserContext) (VerifyEmailUsingTokenResponse, error)
+	IsEmailVerified               *func(userID, email string, userContext supertokens.UserContext) (bool, error)
+	RevokeEmailVerificationTokens *func(userId, email string, userContext supertokens.UserContext) (RevokeEmailVerificationTokensResponse, error)
+	UnverifyEmail                 *func(userId, email string, userContext supertokens.UserContext) (UnverifyEmailResponse, error)
 }
 
 type CreateEmailVerificationTokenResponse struct {

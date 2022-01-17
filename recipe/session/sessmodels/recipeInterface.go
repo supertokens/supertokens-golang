@@ -15,19 +15,23 @@
 
 package sessmodels
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type RecipeInterface struct {
-	CreateNewSession            *func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (SessionContainer, error)
-	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions) (*SessionContainer, error)
-	RefreshSession              *func(req *http.Request, res http.ResponseWriter) (SessionContainer, error)
-	GetSessionInformation       *func(sessionHandle string) (SessionInformation, error)
-	RevokeAllSessionsForUser    *func(userID string) ([]string, error)
-	GetAllSessionHandlesForUser *func(userID string) ([]string, error)
-	RevokeSession               *func(sessionHandle string) (bool, error)
-	RevokeMultipleSessions      *func(sessionHandles []string) ([]string, error)
-	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}) error
-	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error
-	GetAccessTokenLifeTimeMS    *func() (uint64, error)
-	GetRefreshTokenLifeTimeMS   *func() (uint64, error)
+	CreateNewSession            *func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (SessionContainer, error)
+	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (*SessionContainer, error)
+	RefreshSession              *func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (SessionContainer, error)
+	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (SessionInformation, error)
+	RevokeAllSessionsForUser    *func(userID string, userContext supertokens.UserContext) ([]string, error)
+	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)
+	RevokeSession               *func(sessionHandle string, userContext supertokens.UserContext) (bool, error)
+	RevokeMultipleSessions      *func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error)
+	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error
+	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
+	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)
+	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
 }

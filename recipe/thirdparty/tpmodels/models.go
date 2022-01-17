@@ -17,6 +17,7 @@ package tpmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type UserInfo struct {
@@ -64,8 +65,8 @@ type User struct {
 }
 
 type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext)
 }
 
 type TypeInputSignInAndUp struct {

@@ -29,137 +29,137 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
+func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInUpResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email)
+	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
-func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (*tpepmodels.User, error) {
+func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID)
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignUp(email, password string) (tpepmodels.SignUpResponse, error) {
+func SignUp(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignUpResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignUp)(email, password)
+	return (*instance.RecipeImpl.SignUp)(email, password, userContext)
 }
 
-func SignIn(email, password string) (tpepmodels.SignInResponse, error) {
+func SignIn(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignIn)(email, password)
+	return (*instance.RecipeImpl.SignIn)(email, password, userContext)
 }
 
-func GetUserById(userID string) (*tpepmodels.User, error) {
+func GetUserById(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID)
+	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
 }
 
-func GetUsersByEmail(email string) ([]tpepmodels.User, error) {
+func GetUsersByEmail(email string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUsersByEmail)(email)
+	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext)
 }
 
-func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
+func CreateResetPasswordToken(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID)
+	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, userContext)
 }
 
-func ResetPasswordUsingToken(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
+func ResetPasswordUsingToken(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, err
 	}
-	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword)
+	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext)
 }
 
-func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPassword(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
 	}
-	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password)
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, userContext)
 }
 
-func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
+func CreateEmailVerificationToken(userID string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
-	email, err := instance.getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID, userContext)
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email, userContext)
 }
 
-func VerifyEmailUsingToken(token string) (*tpepmodels.User, error) {
+func VerifyEmailUsingToken(token string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	response, err := (*instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken)(token)
+	response, err := (*instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken)(token, userContext)
 	if err != nil {
 		return nil, err
 	}
 	if response.EmailVerificationInvalidTokenError != nil {
 		return nil, errors.New("email verification token is invalid")
 	}
-	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID)
+	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID, userContext)
 }
 
-func IsEmailVerified(userID string) (bool, error) {
+func IsEmailVerified(userID string, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
-	email, err := instance.getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID, userContext)
 	if err != nil {
 		return false, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email, userContext)
 }
 
-func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
+func RevokeEmailVerificationTokens(userID string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
-	email, err := instance.getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID, userContext)
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email, userContext)
 }
 
-func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
+func UnverifyEmail(userID string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}
-	email, err := instance.getEmailForUserId(userID)
+	email, err := instance.getEmailForUserId(userID, userContext)
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email)
+	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
 }

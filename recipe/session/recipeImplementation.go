@@ -33,7 +33,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
-	createNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+	createNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, accessTokenPayload, sessionData)
 		if err != nil {
 			return sessmodels.SessionContainer{}, err
@@ -43,7 +43,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return newSessionContainer(querier, config, &sessionContainerInput), nil
 	}
 
-	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
+	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
 		var doAntiCsrfCheck *bool = nil
 		if options != nil {
 			doAntiCsrfCheck = options.AntiCsrfCheck
@@ -92,11 +92,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return &sessionContainer, nil
 	}
 
-	getSessionInformation := func(sessionHandle string) (sessmodels.SessionInformation, error) {
+	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (sessmodels.SessionInformation, error) {
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
-	refreshSession := func(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
+	refreshSession := func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 		if inputIdRefreshToken == nil {
 			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
@@ -124,31 +124,31 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return sessionContainer, nil
 	}
 
-	revokeAllSessionsForUser := func(userID string) ([]string, error) {
+	revokeAllSessionsForUser := func(userID string, userContext supertokens.UserContext) ([]string, error) {
 		return revokeAllSessionsForUserHelper(querier, userID)
 	}
 
-	getAllSessionHandlesForUser := func(userID string) ([]string, error) {
+	getAllSessionHandlesForUser := func(userID string, userContext supertokens.UserContext) ([]string, error) {
 		return getAllSessionHandlesForUserHelper(querier, userID)
 	}
 
-	revokeSession := func(sessionHandle string) (bool, error) {
+	revokeSession := func(sessionHandle string, userContext supertokens.UserContext) (bool, error) {
 		return revokeSessionHelper(querier, sessionHandle)
 	}
 
-	revokeMultipleSessions := func(sessionHandles []string) ([]string, error) {
+	revokeMultipleSessions := func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error) {
 		return revokeMultipleSessionsHelper(querier, sessionHandles)
 	}
 
-	updateSessionData := func(sessionHandle string, newSessionData map[string]interface{}) error {
+	updateSessionData := func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
 		return updateSessionDataHelper(querier, sessionHandle, newSessionData)
 	}
 
-	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
 	}
 
-	getAccessTokenLifeTimeMS := func() (uint64, error) {
+	getAccessTokenLifeTimeMS := func(userContext supertokens.UserContext) (uint64, error) {
 		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 		if err != nil {
 			return 0, err
@@ -156,7 +156,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return recipeImplHandshakeInfo.AccessTokenValidity, nil
 	}
 
-	getRefreshTokenLifeTimeMS := func() (uint64, error) {
+	getRefreshTokenLifeTimeMS := func(userContext supertokens.UserContext) (uint64, error) {
 		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 		if err != nil {
 			return 0, err

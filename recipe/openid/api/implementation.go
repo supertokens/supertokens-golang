@@ -17,12 +17,13 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() openidmodels.APIInterface {
 
-	getOpenIdDiscoveryConfigurationGET := func(options openidmodels.APIOptions) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
-		return (*options.RecipeImplementation.GetOpenIdDiscoveryConfiguration)()
+	getOpenIdDiscoveryConfigurationGET := func(options openidmodels.APIOptions, userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+		return (*options.RecipeImplementation.GetOpenIdDiscoveryConfiguration)(userContext)
 	}
 
 	return openidmodels.APIInterface{
