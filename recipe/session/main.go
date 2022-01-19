@@ -31,7 +31,7 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 }
 
 func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
@@ -39,7 +39,7 @@ func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.
 }
 
 func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionInformation{}, err
 	}
@@ -55,7 +55,7 @@ func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation,
 }
 
 func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
@@ -63,7 +63,7 @@ func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.Sess
 }
 
 func RevokeAllSessionsForUser(userID string) ([]string, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -71,7 +71,7 @@ func RevokeAllSessionsForUser(userID string) ([]string, error) {
 }
 
 func GetAllSessionHandlesForUser(userID string) ([]string, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func GetAllSessionHandlesForUser(userID string) ([]string, error) {
 }
 
 func RevokeSession(sessionHandle string) (bool, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
@@ -87,7 +87,7 @@ func RevokeSession(sessionHandle string) (bool, error) {
 }
 
 func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -95,7 +95,7 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 }
 
 func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) error {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
@@ -103,7 +103,7 @@ func UpdateSessionData(sessionHandle string, newSessionData map[string]interface
 }
 
 func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
@@ -111,7 +111,7 @@ func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[st
 }
 
 func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		panic("can't fetch supertokens instance. You should call the supertokens.Init function before using the VerifySession function.")
 	}
@@ -128,7 +128,7 @@ func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContai
 }
 
 func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
@@ -139,7 +139,7 @@ func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (
 }
 
 func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
 	}
@@ -150,7 +150,7 @@ func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
 }
 
 func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, err
 	}

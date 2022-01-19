@@ -75,7 +75,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	return *r, nil
 }
 
-func getRecipeInstanceOrThrowError() (*Recipe, error) {
+func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if singletonInstance != nil {
 		return singletonInstance, nil
 	}
