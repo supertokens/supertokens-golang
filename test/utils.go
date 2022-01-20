@@ -205,3 +205,24 @@ func KillAllST() {
 	}
 	ResetAll()
 }
+
+func startingHelper() {
+	KillAllST()
+	SetUpST()
+	StartUpST("localhost", "8080")
+}
+
+func endingHelper() {
+	ResetAll()
+	KillAllST()
+	CleanST()
+}
+
+func removeTrailingSlashFromTheEndOfString(input string) string {
+	if input[len(input)-1:] == "/" {
+		res := input[:len(input)-1] + ""
+		return res
+	} else {
+		return input
+	}
+}
