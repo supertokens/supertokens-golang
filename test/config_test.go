@@ -1,8 +1,26 @@
+/*
+ * Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+ *
+ * This software is licensed under the Apache License, Version 2.0 (the
+ * "License") as published by the Apache Software Foundation.
+ *
+ * You may not use this file except in compliance with the License. You may
+ * obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
+ */
+
 package testing
 
 import (
 	"fmt"
 	"log"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -1266,6 +1284,188 @@ func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
 	endingHelper()
 }
 
-// func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
+func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
+	customAPIGatewayPath := "/gateway"
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:      "api.supertokens.io",
+			AppName:        "SuperTokens",
+			WebsiteDomain:  "supertokens.io",
+			APIGatewayPath: &customAPIGatewayPath,
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	startingHelper()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		fmt.Println(err.Error())
+		// log.Fatal(err.Error())
+	}
+	testServer := httptest.NewServer(supertokens.Middleware(
+		http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			session.CreateNewSession(rw, "", nil, nil)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+		),
+	))
 
-// }
+	req, err := http.NewRequest(http.MethodGet, testServer.URL, nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := extractInfoFromResponse(res)
+
+	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
+	assert.NoError(t, err)
+
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+
+	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
+
+	res2, err := http.DefaultClient.Do(req2)
+	assert.NoError(t, err)
+	assert.Equal(t, res2.StatusCode, 200)
+	sp, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/gateway/auth")
+	defer endingHelper()
+	defer func() {
+		testServer.Close()
+	}()
+}
+
+func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
+	customAPIGatewayPath := "/gateway"
+	customAntiCsrfVal := "VIA_TOKEN"
+	customAPIBasePath := "hello"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:      "api.supertokens.io",
+			AppName:        "SuperTokens",
+			WebsiteDomain:  "supertokens.io",
+			APIBasePath:    &customAPIBasePath,
+			APIGatewayPath: &customAPIGatewayPath,
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	startingHelper()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	testServer := httptest.NewServer(supertokens.Middleware(
+		http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			session.CreateNewSession(rw, "", nil, nil)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+		),
+	))
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL, nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := extractInfoFromResponse(res)
+
+	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
+	assert.NoError(t, err)
+
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+
+	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
+
+	res2, err := http.DefaultClient.Do(req2)
+	assert.NoError(t, err)
+	assert.Equal(t, res2.StatusCode, 200)
+	sp, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/gateway/hello")
+	defer endingHelper()
+	defer func() {
+		testServer.Close()
+	}()
+}
+
+func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing.T) {
+	customAntiCsrfVal := "VIA_TOKEN"
+	customAPIBasePath := "hello"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIBasePath:   &customAPIBasePath,
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	startingHelper()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	testServer := httptest.NewServer(supertokens.Middleware(
+		http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
+			session.CreateNewSession(rw, "", nil, nil)
+			if err != nil {
+				fmt.Println(err.Error())
+			}
+		},
+		),
+	))
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL, nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := extractInfoFromResponse(res)
+
+	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
+	assert.NoError(t, err)
+
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+
+	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
+
+	res2, err := http.DefaultClient.Do(req2)
+	assert.NoError(t, err)
+	assert.Equal(t, res2.StatusCode, 200)
+	sp, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/hello")
+	defer endingHelper()
+	defer func() {
+		testServer.Close()
+	}()
+}

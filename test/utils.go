@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/jwt"
@@ -224,5 +226,27 @@ func removeTrailingSlashFromTheEndOfString(input string) string {
 		return res
 	} else {
 		return input
+	}
+}
+
+func extractInfoFromResponse(res *http.Response) map[string]string {
+	antiCsrf := res.Header["Anti-Csrf"]
+	cookies := res.Header["Set-Cookie"]
+	var refreshToken string
+	var idRefreshTokenFromCookie string
+	for _, cookie := range cookies {
+		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
+			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sIdRefreshToken" {
+			idRefreshTokenFromCookie = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+		} else {
+			continue
+		}
+	}
+
+	return map[string]string{
+		"antiCsrf":        antiCsrf[0],
+		"sRefreshToken":   refreshToken,
+		"sIdRefreshToken": idRefreshTokenFromCookie,
 	}
 }
