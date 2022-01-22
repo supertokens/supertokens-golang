@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package testing
+package unittesting
 
 import (
 	"fmt"
@@ -64,7 +64,8 @@ func TestSuperTokensInitWithAbsentOptionalFieldsInAppInfo(t *testing.T) {
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			fmt.Println("Failed to get a supertokens instance")
@@ -82,7 +83,7 @@ func TestSuperTokensInitWithAbsentOptionalFieldsInAppInfo(t *testing.T) {
 			assert.Equal(t, "/auth", supertokensInstance.AppInfo.APIBasePath.GetAsStringDangerous())
 			assert.Equal(t, "/auth", supertokensInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous())
 		}
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -126,7 +127,7 @@ func TestSuperTokensInitWithAbsenceOfCompulsoryInputInAppInfo(t *testing.T) {
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			errMessage := err.Error()
@@ -138,7 +139,7 @@ func TestSuperTokensInitWithAbsenceOfCompulsoryInputInAppInfo(t *testing.T) {
 				assert.Equal(t, errMessage, "Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
 			}
 		}
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -184,7 +185,7 @@ func TestSuperTokensInitWithDifferentLengthOfRecipeModules(t *testing.T) {
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			errorMessage := err.Error()
@@ -205,7 +206,7 @@ func TestSuperTokensInitWithDifferentLengthOfRecipeModules(t *testing.T) {
 
 		assert.Equal(t, len(configValue.RecipeList), len(supertokensInstance.RecipeModules))
 
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -232,7 +233,7 @@ func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
 			),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -245,7 +246,7 @@ func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
 	assert.Equal(t, *sessionSingletonInstance.Config.CookieDomain, "testdomain")
 	assert.Equal(t, sessionSingletonInstance.Config.SessionExpiredStatusCode, 111)
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithConfigForSessionModulesWithVariousSameSiteValues(t *testing.T) {
@@ -395,7 +396,7 @@ func TestSuperTokensInitWithConfigForSessionModulesWithVariousSameSiteValues(t *
 	}
 
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			errorMessage := err.Error()
@@ -411,7 +412,7 @@ func TestSuperTokensInitWithConfigForSessionModulesWithVariousSameSiteValues(t *
 			log.Fatalf(err.Error())
 		}
 		assert.Contains(t, []string{"lax", "strict", "none"}, sessionSingletonInstance.Config.CookieSameSite)
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -463,7 +464,7 @@ func TestSuperTokensWithVariousApiBasePath(t *testing.T) {
 	}
 
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatalf(err.Error())
@@ -473,12 +474,12 @@ func TestSuperTokensWithVariousApiBasePath(t *testing.T) {
 			log.Fatalf(err.Error())
 		}
 		if configValue.AppInfo.APIBasePath != nil {
-			checker := removeTrailingSlashFromTheEndOfString(*configValue.AppInfo.APIBasePath) + "/session/refresh"
+			checker := RemoveTrailingSlashFromTheEndOfString(*configValue.AppInfo.APIBasePath) + "/session/refresh"
 			assert.Equal(t, sessionSingletonInstance.Config.RefreshTokenPath.GetAsStringDangerous(), checker)
 		} else {
 			assert.Equal(t, sessionSingletonInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
 		}
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -497,13 +498,13 @@ func TestSuperTokensWithCustomApiKey(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatalf(err.Error())
 	}
 	assert.Equal(t, *supertokens.QuerierAPIKey, configValue.Supertokens.APIKey)
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T) {
@@ -527,7 +528,7 @@ func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T
 			),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -537,7 +538,7 @@ func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T
 		log.Fatalf(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.SessionExpiredStatusCode, 402)
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
@@ -554,7 +555,7 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatalf(err.Error())
@@ -565,7 +566,7 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 	assert.Equal(t, hosts[1].GetAsStringDangerous(), "https://try.supertokens.io")
 	assert.Equal(t, hosts[2].GetAsStringDangerous(), "https://try.supertokens.io:8080")
 	assert.Equal(t, hosts[3].GetAsStringDangerous(), "http://localhost:90")
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithNoneLaxTrueSessionConfigResults(t *testing.T) {
@@ -619,7 +620,7 @@ func TestSuperTokensInitWithNoneLaxTrueSessionConfigResults(t *testing.T) {
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -631,7 +632,7 @@ func TestSuperTokensInitWithNoneLaxTrueSessionConfigResults(t *testing.T) {
 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -656,7 +657,7 @@ func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -668,7 +669,7 @@ func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -696,7 +697,7 @@ func TestSuperTokensInitWithCustomHeaderLaxTrueSessionConfigResults(t *testing.T
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -708,7 +709,7 @@ func TestSuperTokensInitWithCustomHeaderLaxTrueSessionConfigResults(t *testing.T
 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -738,7 +739,7 @@ func TestSuperTokensInitWithCustomHeaderLaxFalseSessionConfigResults(t *testing.
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -750,7 +751,7 @@ func TestSuperTokensInitWithCustomHeaderLaxFalseSessionConfigResults(t *testing.
 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -790,7 +791,7 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResults(t *testing.
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -802,7 +803,7 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResults(t *testing.
 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -829,7 +830,7 @@ func TestSuperTokensWithAntiCSRFNone(t *testing.T) {
 			),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -839,7 +840,7 @@ func TestSuperTokensWithAntiCSRFNone(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.AntiCsrf, "NONE")
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
@@ -865,7 +866,7 @@ func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
 			),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -875,7 +876,7 @@ func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
 			log.Fatal(errorMessage)
 		}
 	}
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithDifferentWebAndApiDomain(t *testing.T) {
@@ -917,7 +918,7 @@ func TestSuperTokensInitWithDifferentWebAndApiDomain(t *testing.T) {
 		},
 	}
 	for _, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			errorMessage := err.Error()
@@ -927,7 +928,7 @@ func TestSuperTokensInitWithDifferentWebAndApiDomain(t *testing.T) {
 				log.Fatal(errorMessage)
 			}
 		}
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -946,7 +947,7 @@ func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -957,7 +958,7 @@ func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
 	}
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSecure, true)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSameSite, "none")
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
@@ -974,7 +975,7 @@ func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -984,7 +985,7 @@ func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
 			log.Fatal(errorMessage)
 		}
 	}
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithoutAPIDomain(t *testing.T) {
@@ -1002,7 +1003,7 @@ func TestSuperTokensInitWithoutAPIDomain(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -1012,7 +1013,7 @@ func TestSuperTokensInitWithoutAPIDomain(t *testing.T) {
 			log.Fatal(errorMessage)
 		}
 	}
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithoutAppName(t *testing.T) {
@@ -1030,7 +1031,7 @@ func TestSuperTokensInitWithoutAppName(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -1040,7 +1041,7 @@ func TestSuperTokensInitWithoutAppName(t *testing.T) {
 			log.Fatal(errorMessage)
 		}
 	}
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
@@ -1056,7 +1057,7 @@ func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
 			APIBasePath:   &customAPIBasePath,
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -1066,7 +1067,7 @@ func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
 			log.Fatal(errorMessage)
 		}
 	}
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensDefaultCookieConfig(t *testing.T) {
@@ -1083,7 +1084,7 @@ func TestSuperTokensDefaultCookieConfig(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -1097,7 +1098,7 @@ func TestSuperTokensDefaultCookieConfig(t *testing.T) {
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSecure, true)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.SessionExpiredStatusCode, 401)
-	endingHelper()
+	EndingHelper()
 }
 
 func TestJwtFeatureIsDisabledByDefault(t *testing.T) {
@@ -1114,7 +1115,7 @@ func TestJwtFeatureIsDisabledByDefault(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -1125,7 +1126,7 @@ func TestJwtFeatureIsDisabledByDefault(t *testing.T) {
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
-	endingHelper()
+	EndingHelper()
 }
 
 func TestJWTFeatureDisabledOrEnabledWhenExplicitlyStatedSo(t *testing.T) {
@@ -1166,7 +1167,7 @@ func TestJWTFeatureDisabledOrEnabledWhenExplicitlyStatedSo(t *testing.T) {
 		},
 	}
 	for index, configValue := range configValues {
-		startingHelper()
+		StartingHelper()
 		err := supertokens.Init(configValue)
 		if err != nil {
 			log.Fatal(err.Error())
@@ -1181,7 +1182,7 @@ func TestJWTFeatureDisabledOrEnabledWhenExplicitlyStatedSo(t *testing.T) {
 		} else {
 			assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
 		}
-		endingHelper()
+		EndingHelper()
 	}
 }
 
@@ -1205,7 +1206,7 @@ func TestJWTPropertyNameIsAccesedWhenSet(t *testing.T) {
 			}),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -1216,7 +1217,7 @@ func TestJWTPropertyNameIsAccesedWhenSet(t *testing.T) {
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "customJWTKey")
-	endingHelper()
+	EndingHelper()
 }
 
 func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
@@ -1237,7 +1238,7 @@ func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 			}),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -1248,7 +1249,7 @@ func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "jwt")
-	endingHelper()
+	EndingHelper()
 }
 
 func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
@@ -1271,7 +1272,7 @@ func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
 			}),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -1281,7 +1282,7 @@ func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
 			log.Fatal(err.Error())
 		}
 	}
-	endingHelper()
+	EndingHelper()
 }
 
 func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
@@ -1303,7 +1304,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 			}),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		fmt.Println(err.Error())
@@ -1323,7 +1324,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := extractInfoFromResponse(res)
+	cookieData := ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
@@ -1340,7 +1341,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/gateway/auth")
-	defer endingHelper()
+	defer EndingHelper()
 	defer func() {
 		testServer.Close()
 	}()
@@ -1367,7 +1368,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 			}),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -1386,7 +1387,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := extractInfoFromResponse(res)
+	cookieData := ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
@@ -1403,7 +1404,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 		log.Fatal(err.Error())
 	}
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/gateway/hello")
-	defer endingHelper()
+	defer EndingHelper()
 	defer func() {
 		testServer.Close()
 	}()
@@ -1428,7 +1429,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 			}),
 		},
 	}
-	startingHelper()
+	StartingHelper()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
@@ -1447,7 +1448,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := extractInfoFromResponse(res)
+	cookieData := ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
@@ -1464,7 +1465,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 		log.Fatal(err.Error())
 	}
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/hello")
-	defer endingHelper()
+	defer EndingHelper()
 	defer func() {
 		testServer.Close()
 	}()

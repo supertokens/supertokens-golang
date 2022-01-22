@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package testing
+package unittesting
 
 import (
 	"fmt"
@@ -36,7 +36,7 @@ import (
 )
 
 //*returns the list of all the pids inside all the running instance files inside the .started directory of the root
-func GetListOfPids() []string {
+func getListOfPids() []string {
 	os.Setenv("INSTALL_PATH", "../../supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
@@ -58,7 +58,7 @@ func GetListOfPids() []string {
 }
 
 //*this copies the config.yaml from temp folder of the root and puts it into the root level.
-func SetUpST() {
+func setUpST() {
 	os.Setenv("INSTALL_PATH", "../../supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
@@ -71,7 +71,7 @@ func SetUpST() {
 }
 
 //*this runs the java command to start the root in testing environemnt
-func StartUpST(host string, port string) {
+func startUpST(host string, port string) {
 	os.Setenv("INSTALL_PATH", "../../supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
@@ -121,11 +121,11 @@ func StartUpST(host string, port string) {
 }
 
 //*this kills a running instance of the root by taking it's pid
-func StopST(pid string) {
+func stopST(pid string) {
 	os.Setenv("INSTALL_PATH", "../../supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
-	pidsBefore := GetListOfPids()
+	pidsBefore := getListOfPids()
 	if len(pidsBefore) == 0 {
 		return
 	}
@@ -154,15 +154,15 @@ func StopST(pid string) {
 	// log.Fatalf(err.Error(), "error while stopping st with pid%s", pid)
 }
 
-func KillAllSTCoresOnly() {
-	pids := GetListOfPids()
+func killAllSTCoresOnly() {
+	pids := getListOfPids()
 	for i := 0; i < len(pids); i++ {
-		StopST(pids[i])
+		stopST(pids[i])
 	}
 }
 
 //*this function cleans up all the files that were required to run the root instance and should be called after closing the pid
-func CleanST() {
+func cleanST() {
 	os.Setenv("INSTALL_PATH", "../../supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
@@ -189,7 +189,7 @@ func CleanST() {
 }
 
 //*eliminates the signelton instance for all recipes
-func ResetAll() {
+func resetAll() {
 	supertokens.ResetForTest()
 	emailpassword.ResetForTest()
 	session.ResetForTest()
@@ -200,27 +200,27 @@ func ResetAll() {
 	jwt.ResetForTest()
 }
 
-func KillAllST() {
-	pids := GetListOfPids()
+func killAllST() {
+	pids := getListOfPids()
 	for i := 0; i < len(pids); i++ {
-		StopST(pids[i])
+		stopST(pids[i])
 	}
-	ResetAll()
+	resetAll()
 }
 
-func startingHelper() {
-	KillAllST()
-	SetUpST()
-	StartUpST("localhost", "8080")
+func StartingHelper() {
+	killAllST()
+	setUpST()
+	startUpST("localhost", "8080")
 }
 
-func endingHelper() {
-	ResetAll()
-	KillAllST()
-	CleanST()
+func EndingHelper() {
+	resetAll()
+	killAllST()
+	cleanST()
 }
 
-func removeTrailingSlashFromTheEndOfString(input string) string {
+func RemoveTrailingSlashFromTheEndOfString(input string) string {
 	if input[len(input)-1:] == "/" {
 		res := input[:len(input)-1] + ""
 		return res
@@ -229,7 +229,7 @@ func removeTrailingSlashFromTheEndOfString(input string) string {
 	}
 }
 
-func extractInfoFromResponse(res *http.Response) map[string]string {
+func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	antiCsrf := res.Header["Anti-Csrf"]
 	cookies := res.Header["Set-Cookie"]
 	var refreshToken string
