@@ -28,7 +28,7 @@ func Init(config *epmodels.TypeInput) supertokens.Recipe {
 }
 
 func SignUp(email string, password string) (epmodels.SignUpResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignUpResponse{}, err
 	}
@@ -36,7 +36,7 @@ func SignUp(email string, password string) (epmodels.SignUpResponse, error) {
 }
 
 func SignIn(email string, password string) (epmodels.SignInResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignInResponse{}, err
 	}
@@ -44,7 +44,7 @@ func SignIn(email string, password string) (epmodels.SignInResponse, error) {
 }
 
 func GetUserByID(userID string) (*epmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -52,7 +52,7 @@ func GetUserByID(userID string) (*epmodels.User, error) {
 }
 
 func GetUserByEmail(email string) (*epmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +60,7 @@ func GetUserByEmail(email string) (*epmodels.User, error) {
 }
 
 func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
@@ -68,7 +68,7 @@ func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenR
 }
 
 func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, nil
 	}
@@ -76,7 +76,7 @@ func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPa
 }
 
 func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, nil
 	}
@@ -84,7 +84,7 @@ func UpdateEmailOrPassword(userId string, email *string, password *string) (epmo
 }
 
 func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
@@ -96,7 +96,7 @@ func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificati
 }
 
 func VerifyEmailUsingToken(token string) (*epmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +111,7 @@ func VerifyEmailUsingToken(token string) (*epmodels.User, error) {
 }
 
 func IsEmailVerified(userID string) (bool, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
@@ -123,7 +123,7 @@ func IsEmailVerified(userID string) (bool, error) {
 }
 
 func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
@@ -135,7 +135,7 @@ func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificat
 }
 
 func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}

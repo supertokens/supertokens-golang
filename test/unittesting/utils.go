@@ -37,7 +37,8 @@ import (
 
 //*returns the list of all the pids inside all the running instance files inside the .started directory of the root
 func getListOfPids() []string {
-	os.Setenv("INSTALL_PATH", "../../supertokens-root")
+	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
 	pathOfDirToRead := installationPath + "/.started/"
@@ -59,7 +60,8 @@ func getListOfPids() []string {
 
 //*this copies the config.yaml from temp folder of the root and puts it into the root level.
 func setUpST() {
-	os.Setenv("INSTALL_PATH", "../../supertokens-root")
+	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
 	cmd := exec.Command("cp", "temp/config.yaml", "./config.yaml")
@@ -72,11 +74,10 @@ func setUpST() {
 
 //*this runs the java command to start the root in testing environemnt
 func startUpST(host string, port string) {
-	os.Setenv("INSTALL_PATH", "../../supertokens-root")
+	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
-	// pidsBefore := GetListOfPids()
-	// returned := false
 	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
 
 	cmd := exec.Command("bash", "-c", command)
@@ -85,44 +86,12 @@ func startUpST(host string, port string) {
 	if err != nil {
 		log.Fatalf(err.Error(), "could not initiate a supertokens instance")
 	}
-	// startTime := time.Now().Unix()
-	// for (time.Now().Unix() - startTime) < 3 {
-	// 	pidsAfter := GetListOfPids()
-	// 	if len(pidsAfter) <= len(pidsBefore) {
-	// 		time.Sleep(10 * time.Millisecond)
-	// 		continue
-	// 	}
-	// 	var nonIntersection = []string{""}
-	// 	for i := 0; i < len(pidsAfter); i++ {
-	// 		for j := 0; j < len(pidsBefore); j++ {
-	// 			if pidsAfter[i] != pidsBefore[j] {
-	// 				nonIntersection = append(nonIntersection, pidsAfter[i])
-	// 			}
-	// 		}
-	// 	}
-	// 	if len(nonIntersection) != 1 {
-	// 		if !returned {
-	// 			returned = true
-	// 			log.Fatalf("something went wrong while starting up the core")
-	// 		}
-	// 	} else {
-	// 		if !returned {
-	// 			returned = true
-	// 			if len(nonIntersection) != 0 {
-	// 				// return nonIntersection[0]
-	// 			}
-	// 		}
-	// 	}
-	// }
-	// if !returned {
-	// 	returned = true
-	// 	log.Fatalf("something went wrong while starting up the core")
-	// }
 }
 
 //*this kills a running instance of the root by taking it's pid
 func stopST(pid string) {
-	os.Setenv("INSTALL_PATH", "../../supertokens-root")
+	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
 	pidsBefore := getListOfPids()
@@ -135,23 +104,6 @@ func stopST(pid string) {
 	if err != nil {
 		log.Fatalf(err.Error(), "could not close the supertokens instance%s", pid)
 	}
-	// startTime := time.Now().Unix()
-	// for (time.Now().Unix() - startTime) < 3 {
-	// 	pidsAfter := GetListOfPids()
-	// 	includes := false
-	// 	for i := 0; i < len(pidsAfter); i++ {
-	// 		if pidsAfter[i] == pid {
-	// 			includes = true
-	// 		}
-	// 	}
-	// 	if includes {
-	// 		time.Sleep(10 * time.Millisecond)
-	// 		continue
-	// 	} else {
-	// 		return
-	// 	}
-	// }
-	// log.Fatalf(err.Error(), "error while stopping st with pid%s", pid)
 }
 
 func killAllSTCoresOnly() {
@@ -163,7 +115,8 @@ func killAllSTCoresOnly() {
 
 //*this function cleans up all the files that were required to run the root instance and should be called after closing the pid
 func cleanST() {
-	os.Setenv("INSTALL_PATH", "../../supertokens-root")
+	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
 	defer os.Unsetenv("INSTALL_PATH")
 	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
 	cmd := exec.Command("rm", "config.yaml")
@@ -218,6 +171,28 @@ func EndingHelper() {
 	resetAll()
 	killAllST()
 	cleanST()
+}
+
+//*returns "../../../../" if needed to go 4 levels up
+func returnNumberOfDirsToGoUpFromCurrentWorkingDir() string {
+	mydir, err := os.Getwd()
+	if err != nil {
+		fmt.Println(err)
+	}
+	arr := strings.Split(mydir, "/")
+	counter := 0
+	for i := 0; i < len(arr); i++ {
+		if arr[i] == "supertokens-golang" {
+			counter = i
+			break
+		}
+	}
+	numberOfElems := len(arr) - counter
+	var dirUpSlash string
+	for i := 0; i < numberOfElems; i++ {
+		dirUpSlash += "../"
+	}
+	return dirUpSlash
 }
 
 func RemoveTrailingSlashFromTheEndOfString(input string) string {

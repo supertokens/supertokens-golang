@@ -17,9 +17,10 @@
 package epunittesting
 
 import (
-	"fmt"
+	"log"
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -39,8 +40,16 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 			emailpassword.Init(nil),
 		},
 	}
-	fmt.Println(configValue)
 	unittesting.StartingHelper()
-
+	err := supertokens.Init(configValue)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
+	assert.Equal(t, len(signupFeature.FormFields), 2)
 	unittesting.EndingHelper()
 }
