@@ -47,7 +47,9 @@ type CreateResetPasswordTokenResponse struct {
 }
 
 type ResetPasswordUsingTokenResponse struct {
-	OK                             *struct{}
+	OK *struct {
+		UserId *string
+	}
 	ResetPasswordInvalidTokenError *struct{}
 }
 

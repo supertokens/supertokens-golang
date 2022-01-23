@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
+- Added userId as an optional property to the response of `recipe/user/password/reset`.
 
 ## [0.4.0] - 2022-01-14
 
