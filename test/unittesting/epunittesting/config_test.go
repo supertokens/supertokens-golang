@@ -51,5 +51,21 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 	}
 	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
 	assert.Equal(t, len(signupFeature.FormFields), 2)
+	for i := 0; i < len(signupFeature.FormFields); i++ {
+		assert.Equal(t, signupFeature.FormFields[i].Optional, false)
+		//*to add test for validate function
+	}
+
+	singInFeature := singletonEmailPasswordInstance.Config.SignInFeature
+	assert.Equal(t, len(singInFeature.FormFields), 2)
+	for i := 0; i < len(singInFeature.FormFields); i++ {
+		assert.Equal(t, singInFeature.FormFields[i].Optional, false)
+		//*to add test for validate function
+	}
+
+	resetPasswordUsingTokenFeature := singletonEmailPasswordInstance.Config.ResetPasswordUsingTokenFeature
+	assert.Equal(t, len(resetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm), 1)
+
 	unittesting.EndingHelper()
+
 }

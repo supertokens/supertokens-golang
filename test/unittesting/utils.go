@@ -35,12 +35,11 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-//*returns the list of all the pids inside all the running instance files inside the .started directory of the root
 func getListOfPids() []string {
-	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
-	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
-	defer os.Unsetenv("INSTALL_PATH")
-	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
+	// slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	// os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
+	// defer os.Unsetenv("INSTALL_PATH")
+	installationPath := getInstallationDir()
 	pathOfDirToRead := installationPath + "/.started/"
 	files, err := ioutil.ReadDir(pathOfDirToRead)
 	if err != nil {
@@ -58,12 +57,8 @@ func getListOfPids() []string {
 	return result
 }
 
-//*this copies the config.yaml from temp folder of the root and puts it into the root level.
 func setUpST() {
-	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
-	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
-	defer os.Unsetenv("INSTALL_PATH")
-	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
+	installationPath := getInstallationDir()
 	cmd := exec.Command("cp", "temp/config.yaml", "./config.yaml")
 	cmd.Dir = installationPath
 	err := cmd.Run()
@@ -72,12 +67,8 @@ func setUpST() {
 	}
 }
 
-//*this runs the java command to start the root in testing environemnt
 func startUpST(host string, port string) {
-	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
-	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
-	defer os.Unsetenv("INSTALL_PATH")
-	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
+	installationPath := getInstallationDir()
 	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
 
 	cmd := exec.Command("bash", "-c", command)
@@ -88,12 +79,8 @@ func startUpST(host string, port string) {
 	}
 }
 
-//*this kills a running instance of the root by taking it's pid
 func stopST(pid string) {
-	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
-	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
-	defer os.Unsetenv("INSTALL_PATH")
-	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
+	installationPath := getInstallationDir()
 	pidsBefore := getListOfPids()
 	if len(pidsBefore) == 0 {
 		return
@@ -106,19 +93,8 @@ func stopST(pid string) {
 	}
 }
 
-func killAllSTCoresOnly() {
-	pids := getListOfPids()
-	for i := 0; i < len(pids); i++ {
-		stopST(pids[i])
-	}
-}
-
-//*this function cleans up all the files that were required to run the root instance and should be called after closing the pid
 func cleanST() {
-	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
-	os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
-	defer os.Unsetenv("INSTALL_PATH")
-	installationPath := os.Getenv("INSTALL_PATH") //*---> ../supertokens-root
+	installationPath := getInstallationDir()
 	cmd := exec.Command("rm", "config.yaml")
 	cmd.Dir = installationPath
 	err := cmd.Run()
@@ -141,7 +117,6 @@ func cleanST() {
 	}
 }
 
-//*eliminates the signelton instance for all recipes
 func resetAll() {
 	supertokens.ResetForTest()
 	emailpassword.ResetForTest()
@@ -173,11 +148,10 @@ func EndingHelper() {
 	cleanST()
 }
 
-//*returns "../../../../" if needed to go 4 levels up
 func returnNumberOfDirsToGoUpFromCurrentWorkingDir() string {
 	mydir, err := os.Getwd()
 	if err != nil {
-		fmt.Println(err)
+		log.Fatal(err.Error())
 	}
 	arr := strings.Split(mydir, "/")
 	counter := 0
@@ -188,6 +162,27 @@ func returnNumberOfDirsToGoUpFromCurrentWorkingDir() string {
 		}
 	}
 	numberOfElems := len(arr) - counter
+	var dirUpSlash string
+	for i := 0; i < numberOfElems; i++ {
+		dirUpSlash += "../"
+	}
+	return dirUpSlash
+}
+
+func returnNumberOfSlashesRequiredToGoToRootOfTheProject() string {
+	mydir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	arr := strings.Split(mydir, "/")
+	counter := 0
+	for i := 0; i < len(arr); i++ {
+		if arr[i] == "supertokens-golang" {
+			counter = i
+			break
+		}
+	}
+	numberOfElems := len(arr) - counter - 1
 	var dirUpSlash string
 	for i := 0; i < numberOfElems; i++ {
 		dirUpSlash += "../"
@@ -224,4 +219,15 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 		"sRefreshToken":   refreshToken,
 		"sIdRefreshToken": idRefreshTokenFromCookie,
 	}
+}
+
+func getInstallationDir() string {
+	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
+	installationDir := os.Getenv("INSTALL_DIR")
+	if installationDir == "" {
+		installationDir = slashesNeededToGoUp + "supertokens-root"
+	} else {
+		installationDir = returnNumberOfSlashesRequiredToGoToRootOfTheProject() + installationDir
+	}
+	return installationDir
 }
