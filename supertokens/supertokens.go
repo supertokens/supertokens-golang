@@ -54,7 +54,6 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	if config.Supertokens != nil {
-		//*if pass an empty struct with no values inside that comes to this block
 		if len(config.Supertokens.ConnectionURI) != 0 {
 			hostList := strings.Split(config.Supertokens.ConnectionURI, ";")
 			var hosts []NormalisedURLDomain
