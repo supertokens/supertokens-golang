@@ -40,7 +40,7 @@ var (
 	querierHostLock       sync.Mutex
 )
 
-func (q *Querier) getQuerierAPIVersion() (string, error) {
+func (q *Querier) GetQuerierAPIVersion() (string, error) {
 	querierLock.Lock()
 	defer querierLock.Unlock()
 	if querierAPIVersion != "" {
@@ -120,7 +120,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
@@ -154,7 +154,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
@@ -191,7 +191,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
@@ -223,7 +223,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}

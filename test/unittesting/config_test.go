@@ -1325,7 +1325,6 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	cookieData := ExtractInfoFromResponse(res)
-
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 
@@ -1335,7 +1334,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
-	assert.Equal(t, res2.StatusCode, 200)
+	assert.Equal(t, 200, res2.StatusCode)
 	sp, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		log.Fatal(err.Error())

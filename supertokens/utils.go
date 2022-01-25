@@ -104,13 +104,13 @@ func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
 	}
 	maxVersionSoFar := intersection[0]
 	for i := 1; i < len(intersection); i++ {
-		maxVersionSoFar = maxVersion(intersection[i], maxVersionSoFar)
+		maxVersionSoFar = MaxVersion(intersection[i], maxVersionSoFar)
 	}
 	return &maxVersionSoFar
 }
 
 // MaxVersion returns max of v1 and v2
-func maxVersion(version1 string, version2 string) string {
+func MaxVersion(version1 string, version2 string) string {
 	var splittedv1 = strings.Split(version1, ".")
 	var splittedv2 = strings.Split(version2, ".")
 	var minLength = len(splittedv1)
@@ -153,6 +153,7 @@ func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
 
 func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
 	dw := MakeDoneWriter(res)
+
 	if !dw.IsDone() {
 		if statusCode < 300 {
 			return errors.New("calling sendNon200Response with status code < 300")
