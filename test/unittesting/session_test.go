@@ -338,5 +338,26 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 }
 
 func TestRevokingOfSessions(t *testing.T) {
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	StartingHelper()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 }
