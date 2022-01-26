@@ -66,7 +66,7 @@ func supertokensInit(config TypeInput) error {
 			}
 			initQuerier(hosts, config.Supertokens.APIKey)
 		} else {
-			return errors.New("please provide 'ConnectionURI' value")
+			return errors.New("please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
 		}
 	} else {
 		// TODO: Add tests for init without supertokens core.
