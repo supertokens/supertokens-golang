@@ -298,3 +298,24 @@ func getInstallationDir() string {
 	}
 	return installationDir
 }
+
+func SetKeyValueInConfig(key string, value string) {
+	installationPath := getInstallationDir()
+	pathToConfigYamlFile := installationPath + "/temp/config.yaml"
+	dataInBytes, err := ioutil.ReadFile(pathToConfigYamlFile)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	r := string(dataInBytes)
+	newStr := key + ": " + value + "\n"
+	r = strings.Replace(r, "api_keys:", newStr, -1)
+	err = ioutil.WriteFile(pathToConfigYamlFile, []byte(r), 0644)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	dataInBytesAfterChange, err := ioutil.ReadFile(pathToConfigYamlFile)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println(string(dataInBytesAfterChange))
+}

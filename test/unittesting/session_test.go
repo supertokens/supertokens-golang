@@ -240,12 +240,13 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	}()
 }
 
-func TestBasicUsageOfSession(t *testing.T) {
+//!NEED A BIT OF HELP
+func TestQuerringToTheCoreWithoutAPIKey(t *testing.T) {
+	SetKeyValueInConfig("api_keys", "shfo3h98308hOIHoei309saiho")
 	customAntiCsrfVal := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			APIKey:        "shfo3h98308hOIHoei309saiho",
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -259,10 +260,77 @@ func TestBasicUsageOfSession(t *testing.T) {
 		},
 	}
 	StartingHelper()
-	supertokens.Init(configValue)
 	err := supertokens.Init(configValue)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	// singletonRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	apiVersion, err := querrier.GetQuerierAPIVersion()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	fmt.Println(apiVersion)
+	EndingHelper()
+}
+
+func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	StartingHelper()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
+		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+	})
+
+	mux.HandleFunc("/getSession", func(rw http.ResponseWriter, r *http.Request) {
+		customValForAntiCsrfCheck := true
+		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+			AntiCsrfCheck: &customValForAntiCsrfCheck,
+		})
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := ExtractInfoFromResponse(res)
+
+	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
+	assert.NoError(t, err)
+	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	// req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
+	res1, err := http.DefaultClient.Do(req1)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res1.StatusCode)
+
+	fmt.Println(res1)
+
+	defer EndingHelper()
+	defer func() {
+		testServer.Close()
+	}()
 }
