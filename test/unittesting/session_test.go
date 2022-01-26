@@ -303,13 +303,17 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
 	})
-
-	mux.HandleFunc("/getSession", func(rw http.ResponseWriter, r *http.Request) {
-		customValForAntiCsrfCheck := true
+	customValForAntiCsrfCheck := true
+	customSessionRequiredValue := true
+	mux.HandleFunc("/getSession", session.VerifySession(&sessmodels.VerifySessionOptions{
+		SessionRequired: &customSessionRequiredValue,
+		AntiCsrfCheck:   &customValForAntiCsrfCheck,
+	}, func(rw http.ResponseWriter, r *http.Request) {
 		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
-			AntiCsrfCheck: &customValForAntiCsrfCheck,
+			SessionRequired: &customSessionRequiredValue,
+			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
-	})
+	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 
@@ -325,12 +329,14 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	// req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res1, err := http.DefaultClient.Do(req1)
 	assert.NoError(t, err)
-	assert.Equal(t, 200, res1.StatusCode)
-
-	fmt.Println(res1)
+	assert.Equal(t, 401, res1.StatusCode)
 
 	defer EndingHelper()
 	defer func() {
 		testServer.Close()
 	}()
+}
+
+func TestRevokingOfSessions(t *testing.T) {
+
 }
