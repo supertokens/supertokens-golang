@@ -7,11 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+-   Adds check to see if user has provided empty connectionInfo
+
 ## [0.4.0] - 2022-01-14
 
 -   Adds passwordless recipe
 -   Adds compatibility with FDI 1.11 and CDI 2.11
--   Adds check to see if user has provided empty connectionInfo
 
 ## [0.3.5] - 2022-01-08
 
