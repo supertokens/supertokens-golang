@@ -258,7 +258,16 @@ func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string) 
 	if err != nil {
 		return nil, err
 	}
-	return response["sessionHandlesRevoked"].([]string), nil
+
+	revokedSessionHandlesAsSliceOfInterfaces := response["sessionHandlesRevoked"].([]interface{})
+
+	var result []string
+
+	for _, val := range revokedSessionHandlesAsSliceOfInterfaces {
+		result = append(result, val.(string))
+	}
+
+	return result, nil
 }
 
 func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
@@ -268,7 +277,16 @@ func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID strin
 	if err != nil {
 		return nil, err
 	}
-	return response["sessionHandles"].([]string), nil
+
+	sessionHandlesAsSliceOfInterfaces := response["sessionHandles"].([]interface{})
+
+	var result []string
+
+	for _, val := range sessionHandlesAsSliceOfInterfaces {
+		result = append(result, val.(string))
+	}
+
+	return result, nil
 }
 
 func revokeSessionHelper(querier supertokens.Querier, sessionHandle string) (bool, error) {
@@ -290,7 +308,15 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	if err != nil {
 		return nil, err
 	}
-	return response["sessionHandlesRevoked"].([]string), nil
+	revokedSessionHandlesAsSliceOfInterfaces := response["sessionHandlesRevoked"].([]interface{})
+
+	var result []string
+
+	for _, val := range revokedSessionHandlesAsSliceOfInterfaces {
+		result = append(result, val.(string))
+	}
+
+	return result, nil
 }
 
 func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) error {
