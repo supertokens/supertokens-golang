@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Adds check to see if user has provided empty connectionInfo
 
--   Adds fixes to solve wrong casting of data in session-functions
+-   Adds fixes to solve casting of data in session-functions
 
 ## [0.4.0] - 2022-01-14
 
