@@ -268,7 +268,6 @@ func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string) 
 	}
 
 	return result, nil
-	// return response["sessionHandlesRevoked"].([]string), nil
 }
 
 func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
@@ -288,7 +287,6 @@ func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID strin
 	}
 
 	return result, nil
-	// return response["sessionHandles"].([]string), nil
 }
 
 func revokeSessionHelper(querier supertokens.Querier, sessionHandle string) (bool, error) {
@@ -319,7 +317,6 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	}
 
 	return result, nil
-	// return response["sessionHandlesRevoked"].([]string), nil
 }
 
 func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) error {
