@@ -27,6 +27,8 @@ import (
 )
 
 func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier) tpepmodels.RecipeInterface {
+	result := tpepmodels.RecipeInterface{}
+
 	emailPasswordImplementation := emailpassword.MakeRecipeImplementation(emailPasswordQuerier)
 	var thirdPartyImplementation *tpmodels.RecipeInterface
 	if thirdPartyQuerier != nil {
@@ -236,20 +238,31 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 
 	ogUpdateEmailOrPassword := *emailPasswordImplementation.UpdateEmailOrPassword
 	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+		user, err := (*result.GetUserByID)(userId, userContext)
+		if err != nil {
+			return epmodels.UpdateEmailOrPasswordResponse{}, err
+		}
+
+		if user == nil {
+			return epmodels.UpdateEmailOrPasswordResponse{
+				UnknownUserIdError: &struct{}{},
+			}, nil
+		} else if user.ThirdParty != nil {
+			return epmodels.UpdateEmailOrPasswordResponse{}, errors.New("cannot update email or password of a user who signed up using third party login")
+		}
+
 		return ogUpdateEmailOrPassword(userId, email, password, userContext)
 	}
 
-	result := tpepmodels.RecipeInterface{
-		GetUserByID:              &getUserByID,
-		GetUsersByEmail:          &getUsersByEmail,
-		GetUserByThirdPartyInfo:  &getUserByThirdPartyInfo,
-		SignInUp:                 &signInUp,
-		SignUp:                   &signUp,
-		SignIn:                   &signIn,
-		CreateResetPasswordToken: &createResetPasswordToken,
-		ResetPasswordUsingToken:  &resetPasswordUsingToken,
-		UpdateEmailOrPassword:    &updateEmailOrPassword,
-	}
+	result.GetUserByID = &getUserByID
+	result.GetUsersByEmail = &getUsersByEmail
+	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
+	result.SignInUp = &signInUp
+	result.SignUp = &signUp
+	result.SignIn = &signIn
+	result.CreateResetPasswordToken = &createResetPasswordToken
+	result.ResetPasswordUsingToken = &resetPasswordUsingToken
+	result.UpdateEmailOrPassword = &updateEmailOrPassword
 
 	modifiedEp := MakeEmailPasswordRecipeImplementation(result)
 	(*emailPasswordImplementation.CreateResetPasswordToken) = *modifiedEp.CreateResetPasswordToken
