@@ -32,8 +32,8 @@ type Querier struct {
 
 var (
 	querierInitCalled     bool                  = false
-	QuerierHosts          []NormalisedURLDomain = nil //*these are changed
-	QuerierAPIKey         *string                     //*these are changed
+	QuerierHosts          []NormalisedURLDomain = nil
+	QuerierAPIKey         *string
 	querierAPIVersion     string
 	querierLastTriedIndex int
 	querierLock           sync.Mutex

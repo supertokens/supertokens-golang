@@ -288,6 +288,93 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	}
 }
 
+func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]string {
+	cookies := res.Header["Set-Cookie"]
+	var refreshToken string
+	var refreshTokenExpiry string
+	var refreshTokenDomain string
+	var refreshTokenHttpOnly = "false"
+	var idRefreshTokenFromCookie string
+	var idRefreshTokenExpiry string
+	var idRefreshTokenDomain string
+	var idRefreshTokenHttpOnly = "false"
+	var accessToken string
+	var accessTokenExpiry string
+	var accessTokenDomain string
+	var accessTokenHttpOnly = "false"
+	for _, cookie := range cookies {
+		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
+			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
+				fmt.Println("need to be figured out")
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					refreshTokenHttpOnly = "true"
+					break
+				}
+			}
+		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sIdRefreshToken" {
+			idRefreshTokenFromCookie = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
+				fmt.Println("need to be figured out")
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					idRefreshTokenHttpOnly = "true"
+					break
+				}
+			}
+		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sAccessToken" {
+			accessToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
+				fmt.Println("need to be figured out")
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					accessTokenHttpOnly = "true"
+					break
+				}
+			}
+		}
+	}
+	return map[string]string{
+		"sAccessToken":           accessToken,
+		"sRefreshToken":          refreshToken,
+		"sIdRefreshToken":        idRefreshTokenFromCookie,
+		"refreshTokenExpiry":     refreshTokenExpiry,
+		"refreshTokenDomain":     refreshTokenDomain,
+		"refreshTokenHttpOnly":   refreshTokenHttpOnly,
+		"idRefreshTokenExpiry":   idRefreshTokenExpiry,
+		"idRefreshTokenDomain":   idRefreshTokenDomain,
+		"idRefreshTokenHttpOnly": idRefreshTokenHttpOnly,
+		"accessTokenExpiry":      accessTokenExpiry,
+		"accessTokenDomain":      accessTokenDomain,
+		"accessTokenHttpOnly":    accessTokenHttpOnly,
+	}
+}
+
 func getInstallationDir() string {
 	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
 	installationDir := os.Getenv("INSTALL_DIR")
