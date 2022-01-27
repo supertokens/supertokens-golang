@@ -5,8 +5,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
+## [0.4.1] - 2022-01-27
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
+-   Adds check to see if user has provided empty connectionInfo
+-   Adds fixes to solve casting of data in session-functions
 
 ## [0.4.0] - 2022-01-14
 
