@@ -54,16 +54,20 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	if config.Supertokens != nil {
-		hostList := strings.Split(config.Supertokens.ConnectionURI, ";")
-		var hosts []NormalisedURLDomain
-		for _, h := range hostList {
-			host, err := NewNormalisedURLDomain(h)
-			if err != nil {
-				return err
+		if len(config.Supertokens.ConnectionURI) != 0 {
+			hostList := strings.Split(config.Supertokens.ConnectionURI, ";")
+			var hosts []NormalisedURLDomain
+			for _, h := range hostList {
+				host, err := NewNormalisedURLDomain(h)
+				if err != nil {
+					return err
+				}
+				hosts = append(hosts, host)
 			}
-			hosts = append(hosts, host)
+			initQuerier(hosts, config.Supertokens.APIKey)
+		} else {
+			return errors.New("please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
 		}
-		initQuerier(hosts, config.Supertokens.APIKey)
 	} else {
 		// TODO: Add tests for init without supertokens core.
 	}
