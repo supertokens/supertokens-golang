@@ -6,9 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.4.2] - 2022-01-31
 - Adds ability to give a path for each of the hostnames in the connectionURI: https://github.com/supertokens/supertokens-node/issues/252
--   add workflow to verify if pr title follows conventional commits
-- Added userId as an optional property to the response of `recipe/user/password/reset`.
+- Adds workflow to verify if pr title follows conventional commits
+- Added userId as an optional property to the response of `recipe/user/password/reset` (Compatibility with CDI 2.12).
 
 ## [0.4.1] - 2022-01-27
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
