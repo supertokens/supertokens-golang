@@ -17,8 +17,6 @@
 package epunittesting
 
 import (
-	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -51,23 +49,26 @@ func TestEmailExistGetStopsWorkingWhenDisabled(t *testing.T) {
 			}),
 		},
 	}
-	unittesting.StartingHelper()
+
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
 	q := req.URL.Query()
 	q.Add("email", "random@gmail.com")
 	req.URL.RawQuery = q.Encode()
-	fmt.Println(req.URL.String())
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, res.StatusCode)
-	defer unittesting.EndingHelper()
+	defer unittesting.AfterEach()
 	defer func() {
 		testServer.Close()
 	}()

@@ -16,16 +16,12 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
-	fmt.Println("this is api implementation", &apiImplementation.EmailExistsGET)
 	if apiImplementation.EmailExistsGET == nil || (*apiImplementation.EmailExistsGET) == nil {
-		fmt.Println("this comes here")
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}

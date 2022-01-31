@@ -17,7 +17,6 @@
 package epunittesting
 
 import (
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,38 +40,39 @@ func TestDeleteUser(t *testing.T) {
 			emailpassword.Init(nil), session.Init(nil),
 		},
 	}
-	unittesting.StartingHelper()
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	cdiVersion, err := querrier.GetQuerierAPIVersion()
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	if supertokens.MaxVersion("2.10", cdiVersion) == cdiVersion {
 		res, err := emailpassword.SignUp("test@example.com", "1234abcd")
 		if err != nil {
-			log.Fatal(err.Error())
+			t.Error(err.Error())
 		}
 		reponseBeforeDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
 		if err != nil {
-			log.Fatal(err.Error())
+			t.Error(err.Error())
 		}
 		assert.Equal(t, 1, len(reponseBeforeDeletingUser.Users))
 		err = supertokens.DeleteUser(res.OK.User.ID)
 		if err != nil {
-			log.Fatal(err.Error())
+			t.Error(err.Error())
 		}
 		reponseAfterDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
 		if err != nil {
-			log.Fatal(err.Error())
+			t.Error(err.Error())
 		}
 		assert.Equal(t, 0, len(reponseAfterDeletingUser.Users))
 	}
-	unittesting.EndingHelper()
+	unittesting.AfterEach()
 }

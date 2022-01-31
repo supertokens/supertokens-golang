@@ -17,6 +17,7 @@
 package unittesting
 
 import (
+	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -24,6 +25,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/jwt"
@@ -67,16 +69,59 @@ func setUpST() {
 	}
 }
 
-func startUpST(host string, port string) {
-	installationPath := getInstallationDir()
+func StartUpST(host string, port string) string {
+	pidsBefore := getListOfPids()
 	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
-
-	cmd := exec.Command("bash", "-c", command)
-	cmd.Dir = installationPath
-	err := cmd.Run()
+	startTime := getCurrTimeInMS()
+	_, _, err := Shellout(command)
 	if err != nil {
-		log.Fatalf(err.Error(), "could not initiate a supertokens instance")
+		log.Printf("error: %v\n", err)
 	}
+	for getCurrTimeInMS()-startTime < 20000 {
+		pidsAfter := getListOfPids()
+		if len(pidsAfter) <= len(pidsBefore) {
+			time.Sleep(100 * time.Millisecond)
+			continue
+		}
+		nonIntersection := getNonIntersection(pidsAfter, pidsBefore)
+		if len(nonIntersection) < 1 {
+			panic("something went wrong while starting ST")
+		} else {
+			return nonIntersection[0]
+		}
+	}
+	panic("could not start ST process")
+}
+func getNonIntersection(a1 []string, a2 []string) []string {
+	var result = []string{}
+	for i := 0; i < len(a1); i++ {
+		there := false
+		for y := 0; y < len(a2); y++ {
+			if a1[i] == a2[y] {
+				there = true
+			}
+		}
+		if !there {
+			result = append(result, a1[i])
+		}
+	}
+	return result
+}
+
+func getCurrTimeInMS() uint64 {
+	return uint64(time.Now().UnixNano() / 1000000)
+}
+
+func Shellout(command string) (string, string, error) {
+	installationPath := getInstallationDir()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	cmd.Dir = installationPath
+	err := cmd.Start()
+	return stdout.String(), stderr.String(), err
 }
 
 func stopST(pid string) {
@@ -136,13 +181,12 @@ func killAllST() {
 	resetAll()
 }
 
-func StartingHelper() {
+func BeforeEach() {
 	killAllST()
 	setUpST()
-	startUpST("localhost", "8080")
 }
 
-func EndingHelper() {
+func AfterEach() {
 	resetAll()
 	killAllST()
 	cleanST()
@@ -225,7 +269,7 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-				fmt.Println("need to be figured out")
+
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
@@ -243,7 +287,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-				fmt.Println("need to be figured out")
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
@@ -261,7 +304,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-				fmt.Println("need to be figured out")
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
@@ -313,7 +355,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-				fmt.Println("need to be figured out")
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
@@ -331,7 +372,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-				fmt.Println("need to be figured out")
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
@@ -349,7 +389,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-				fmt.Println("need to be figured out")
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
@@ -388,21 +427,20 @@ func getInstallationDir() string {
 
 func SetKeyValueInConfig(key string, value string) {
 	installationPath := getInstallationDir()
-	pathToConfigYamlFile := installationPath + "/temp/config.yaml"
+	pathToConfigYamlFile := installationPath + "/config.yaml"
 	dataInBytes, err := ioutil.ReadFile(pathToConfigYamlFile)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
 	r := string(dataInBytes)
 	newStr := key + ": " + value + "\n"
-	r = strings.Replace(r, "api_keys:", newStr, -1)
+	r = strings.Replace(r, "# api_keys:", newStr, -1)
 	err = ioutil.WriteFile(pathToConfigYamlFile, []byte(r), 0644)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	dataInBytesAfterChange, err := ioutil.ReadFile(pathToConfigYamlFile)
+	_, err = ioutil.ReadFile(pathToConfigYamlFile)
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	fmt.Println(string(dataInBytesAfterChange))
 }

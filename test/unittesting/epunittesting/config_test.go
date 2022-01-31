@@ -17,7 +17,6 @@
 package epunittesting
 
 import (
-	"log"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,14 +40,15 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 			emailpassword.Init(nil),
 		},
 	}
-	unittesting.StartingHelper()
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
 	assert.Equal(t, len(signupFeature.FormFields), 2)
@@ -68,7 +68,7 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 	assert.Equal(t, resetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm[0].ID, "email")
 	assert.Equal(t, len(resetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm), 1)
 	assert.Equal(t, resetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm[0].ID, "password")
-	unittesting.EndingHelper()
+	unittesting.AfterEach()
 }
 
 func TestChangedConfigForEmailPasswordModule(t *testing.T) {
@@ -99,14 +99,15 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 			}),
 		},
 	}
-	unittesting.StartingHelper()
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
 	formFields := signupFeature.FormFields
@@ -120,7 +121,7 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 	assert.NotNil(t, testFormField)
 	assert.Equal(t, false, testFormField.Optional)
 	assert.Equal(t, "test", *testFormField.Validate(""))
-	unittesting.EndingHelper()
+	unittesting.AfterEach()
 }
 
 func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
@@ -148,20 +149,21 @@ func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
 			}),
 		},
 	}
-	unittesting.StartingHelper()
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
 	formFields := signupFeature.FormFields
 	assert.NotNil(t, *formFields[0].Validate(""))
 	assert.NotNil(t, *formFields[1].Validate(""))
-	unittesting.EndingHelper()
+	unittesting.AfterEach()
 }
 
 func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
@@ -178,14 +180,15 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 			emailpassword.Init(nil),
 		},
 	}
-	unittesting.StartingHelper()
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
 	formFields := signupFeature.FormFields
@@ -208,5 +211,5 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 	assert.Equal(t, "Password must contain at least one number", *passwordFormField.Validate("aaaaaaaaa"))
 	assert.Equal(t, "Password must contain at least one alphabet", *passwordFormField.Validate("1234*-56*789"))
 	assert.Nil(t, passwordFormField.Validate("validPass123"))
-	unittesting.EndingHelper()
+	unittesting.AfterEach()
 }

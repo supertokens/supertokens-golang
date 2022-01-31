@@ -18,8 +18,6 @@ package unittesting
 
 import (
 	"encoding/json"
-	"fmt"
-	"log"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -47,21 +45,21 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
-	testServer := httptest.NewServer(supertokens.Middleware(
-		http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-			session.CreateNewSession(rw, "", nil, nil)
-			if err != nil {
-				fmt.Println(err.Error())
-			}
-		},
-		),
-	))
-	req, err := http.NewRequest(http.MethodGet, testServer.URL, nil)
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
+		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
@@ -77,7 +75,7 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -100,10 +98,11 @@ func TestTokenTheftDetection(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	mux := http.NewServeMux()
@@ -157,13 +156,13 @@ func TestTokenTheftDetection(t *testing.T) {
 	var jsonResponse map[string]interface{}
 	err = json.NewDecoder(res3.Body).Decode(&jsonResponse)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	res3.Body.Close()
 	assert.Equal(t, "token theft detected", jsonResponse["message"])
 	assert.Equal(t, 401, res3.StatusCode)
 	assert.NoError(t, err)
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -187,10 +186,11 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	mux := http.NewServeMux()
@@ -243,25 +243,24 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	var jsonResponse map[string]interface{}
 	err = json.NewDecoder(res3.Body).Decode(&jsonResponse)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	res3.Body.Close()
 	assert.Equal(t, "token theft detected", jsonResponse["message"])
 	assert.Equal(t, 401, res3.StatusCode)
 	assert.NoError(t, err)
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
 }
 
-//!NEED TO FIGURED OUT
 func TestQuerringToTheCoreWithoutAPIKey(t *testing.T) {
-	// SetKeyValueInConfig("api_keys", "shfo3h98308hOIHoei309saiho")
 	customAntiCsrfVal := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
+			// APIKey:        "shfo3h98308hOIHoei309saiho",
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -274,26 +273,24 @@ func TestQuerringToTheCoreWithoutAPIKey(t *testing.T) {
 			}),
 		},
 	}
-	EndingHelper()
-	StartingHelper()
+	BeforeEach()
+	// SetKeyValueInConfig("api_keys", "shfo3h98308hOIHoei309saiho")
+	SetKeyValueInConfig("api_keys", `"shfo3h98308hOIHoei309saiho"`)
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
-	// querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
-	req, err := http.NewRequest(http.MethodGet, "http://localhost:8080/apiversion", nil)
-	assert.NoError(t, err)
-	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	fmt.Println(res)
+	_, err = querrier.GetQuerierAPIVersion()
 	if err != nil {
-		log.Fatal(err.Error())
+		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/apiversion' with status code: 401 and message: Invalid API key\n", err.Error())
 	}
-	// fmt.Println(apiVersion)
-	EndingHelper()
+
+	AfterEach()
 }
 
 func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
@@ -313,10 +310,11 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -351,7 +349,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 401, res1.StatusCode)
 
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -374,10 +372,11 @@ func TestRevokingOfSessions(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -395,12 +394,12 @@ func TestRevokingOfSessions(t *testing.T) {
 
 	_, err = session.RevokeAllSessionsForUser("someUniqueID")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	sessionHandlesAfterRevoke, err := session.GetAllSessionHandlesForUser("someUniqueID")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, 0, len(sessionHandlesAfterRevoke))
 
@@ -418,24 +417,24 @@ func TestRevokingOfSessions(t *testing.T) {
 
 	sessionHandlesBeforeRevoke1, err := session.GetAllSessionHandlesForUser("someUniqueID")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, 2, len(sessionHandlesBeforeRevoke1))
 
 	revokedSessions, err := session.RevokeAllSessionsForUser("someUniqueID")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	assert.Equal(t, 2, len(revokedSessions))
 
 	sessionHandlesAfterRevoke1, err := session.GetAllSessionHandlesForUser("someUniqueID")
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, 0, len(sessionHandlesAfterRevoke1))
 
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -458,10 +457,11 @@ func TestManipulatingSessionData(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -481,7 +481,7 @@ func TestManipulatingSessionData(t *testing.T) {
 	sessionHandles, err := session.GetAllSessionHandlesForUser("")
 
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	session.UpdateSessionData(sessionHandles[0], map[string]interface{}{
@@ -514,7 +514,7 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	assert.Equal(t, "Session does not exist.", err.Error())
 
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -537,10 +537,11 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -560,7 +561,7 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	sessionHandles, err := session.GetAllSessionHandlesForUser("uniqueId")
 
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	sessionInfo, err := session.GetSessionInformation(sessionHandles[0])
@@ -578,7 +579,7 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 
 	assert.Equal(t, "John", sessionInfo.SessionData["name"])
 
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -601,10 +602,11 @@ func TestManipulatingJWTpayload(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -624,7 +626,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	sessionHandles, err := session.GetAllSessionHandlesForUser("uniqueId")
 
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	err = session.UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
@@ -657,7 +659,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	assert.Error(t, err)
 
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -680,10 +682,11 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -702,7 +705,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 		if err != nil {
-			log.Fatal(err.Error())
+			t.Error(err.Error())
 		}
 		assert.NotNil(t, sess)
 	}))
@@ -718,7 +721,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 		})
 		if err != nil {
-			log.Fatal(err.Error())
+			t.Error(err.Error())
 		}
 		assert.NotNil(t, sess)
 	}))
@@ -747,7 +750,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res2.StatusCode)
 
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -773,13 +776,14 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 		},
 	}
 
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 
 	err := supertokens.Init(configValue)
 
 	assert.NoError(t, err)
 
-	EndingHelper()
+	AfterEach()
 }
 
 func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
@@ -802,13 +806,14 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 		},
 	}
 
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 
 	err := supertokens.Init(configValue)
 
 	assert.NoError(t, err)
 
-	EndingHelper()
+	AfterEach()
 }
 
 func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
@@ -831,13 +836,14 @@ func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 		},
 	}
 
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 
 	err := supertokens.Init(configValue)
 
 	assert.NoError(t, err)
 
-	EndingHelper()
+	AfterEach()
 }
 
 func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
@@ -857,10 +863,11 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -880,14 +887,14 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	sessionHandlers, err := session.GetAllSessionHandlesForUser("ronit")
 
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	sessionInfo, err := session.GetSessionInformation(sessionHandlers[0])
 	assert.NoError(t, err)
 
 	assert.Equal(t, "ronit", sessionInfo.UserId)
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
@@ -910,10 +917,11 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 			}),
 		},
 	}
-	StartingHelper()
+	BeforeEach()
+	StartUpST("localhost", "8080")
 	err := supertokens.Init(configValue)
 	if err != nil {
-		fmt.Println(err.Error())
+		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 
@@ -933,25 +941,19 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	sessionHandlers, err := session.GetAllSessionHandlesForUser("ronit")
 
 	if err != nil {
-		log.Fatal(err.Error())
+		t.Error(err.Error())
 	}
 
 	sessionInfo, err := session.GetSessionInformation(sessionHandlers[0])
 	assert.NoError(t, err)
 	assert.Equal(t, "ronit", sessionInfo.UserId)
-
-	te, err := session.RevokeMultipleSessions(sessionHandlers)
-
+	_, err = session.RevokeMultipleSessions(sessionHandlers)
 	assert.NoError(t, err)
-	fmt.Println(te)
-
 	_, err = session.RevokeAllSessionsForUser("ronit")
 	assert.NoError(t, err)
-
 	_, err = session.GetSessionInformation(sessionHandlers[0])
 	assert.Error(t, err)
-
-	defer EndingHelper()
+	defer AfterEach()
 	defer func() {
 		testServer.Close()
 	}()
