@@ -39,6 +39,7 @@ TODO:
 
 1. Before submitting a pull request make sure all tests have passed
 2. Reference the relevant issue or pull request and give a clear description of changes/features added when submitting a pull request
+3. Make sure the PR title follows [conventional commits](https://www.conventionalcommits.org/en/v1.0.0/) specification
 
 ## SuperTokens Community
 

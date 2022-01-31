@@ -132,9 +132,25 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 
 		if response["status"].(string) == "OK" {
-			return epmodels.ResetPasswordUsingTokenResponse{
-				OK: &struct{}{},
-			}, nil
+			userId, ok := response["userId"]
+			if ok {
+				// using CDI >= 2.12
+				userIdStr := userId.(string)
+				return epmodels.ResetPasswordUsingTokenResponse{
+					OK: &struct {
+						UserId *string
+					}{
+						UserId: &userIdStr,
+					},
+				}, nil
+			} else {
+				// using CDI < 2.12
+				return epmodels.ResetPasswordUsingTokenResponse{
+					OK: &struct {
+						UserId *string
+					}{},
+				}, nil
+			}
 		} else {
 			return epmodels.ResetPasswordUsingTokenResponse{
 				ResetPasswordInvalidTokenError: &struct{}{},
