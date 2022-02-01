@@ -47,7 +47,7 @@ func makeSessionContainerInput(accessToken string, sessionHandle string, userID 
 func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
 	return sessmodels.SessionContainer{
-		RevokeSession: func() error {
+		RevokeSession: func(userContext supertokens.UserContext) error {
 			success, err := revokeSessionHelper(querier, session.sessionHandle)
 			if err != nil {
 				return err
@@ -58,7 +58,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return nil
 		},
 
-		GetSessionData: func() (map[string]interface{}, error) {
+		GetSessionData: func(userContext supertokens.UserContext) (map[string]interface{}, error) {
 			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
@@ -69,7 +69,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return sessionInformation.SessionData, nil
 		},
 
-		UpdateSessionData: func(newSessionData map[string]interface{}) error {
+		UpdateSessionData: func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
 			err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
@@ -80,7 +80,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return nil
 		},
 
-		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
+		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
 			}
@@ -126,7 +126,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 		GetAccessToken: func() string {
 			return session.accessToken
 		},
-		GetTimeCreated: func() (uint64, error) {
+		GetTimeCreated: func(userContext supertokens.UserContext) (uint64, error) {
 			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
@@ -136,7 +136,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			}
 			return sessionInformation.TimeCreated, nil
 		},
-		GetExpiry: func() (uint64, error) {
+		GetExpiry: func(userContext supertokens.UserContext) (uint64, error) {
 			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
 			if err != nil {
 				if defaultErrors.As(err, &errors.UnauthorizedError{}) {

@@ -308,7 +308,7 @@ func revokeAll(response http.ResponseWriter, request *http.Request) {
 
 func logout(response http.ResponseWriter, request *http.Request) {
 	session := session.GetSessionFromRequestContext(request.Context())
-	err := session.RevokeSession()
+	err := session.RevokeSession(nil)
 	if err != nil {
 		err = supertokens.ErrorHandler(err, request, response)
 		if err != nil {
@@ -337,7 +337,7 @@ func updateJwt(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	session := session.GetSessionFromRequestContext(request.Context())
-	session.UpdateAccessTokenPayload(body)
+	session.UpdateAccessTokenPayload(body, nil)
 	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
 }
 

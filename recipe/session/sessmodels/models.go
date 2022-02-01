@@ -80,6 +80,11 @@ type GetSessionResponse struct {
 	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
 
+type RegenerateAccessTokenResponse struct {
+	Status             string `json:"status"`
+	GetSessionResponse GetSessionResponse
+}
+
 type TypeInput struct {
 	CookieSecure             *bool
 	CookieSameSite           *string
@@ -147,16 +152,16 @@ type NormalisedErrorHandlers struct {
 }
 
 type SessionContainer struct {
-	RevokeSession            func() error
-	GetSessionData           func() (map[string]interface{}, error)
-	UpdateSessionData        func(newSessionData map[string]interface{}) error
+	RevokeSession            func(userContext supertokens.UserContext) error
+	GetSessionData           func(userContext supertokens.UserContext) (map[string]interface{}, error)
+	UpdateSessionData        func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
 	GetUserID                func() string
 	GetAccessTokenPayload    func() map[string]interface{}
 	GetHandle                func() string
 	GetAccessToken           func() string
-	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error
-	GetTimeCreated           func() (uint64, error)
-	GetExpiry                func() (uint64, error)
+	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
+	GetTimeCreated           func(userContext supertokens.UserContext) (uint64, error)
+	GetExpiry                func(userContext supertokens.UserContext) (uint64, error)
 }
 
 type SessionInformation struct {

@@ -21,21 +21,22 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, openidRecipeImplementation openidmodels.RecipeInterface) sessmodels.SessionContainer {
 
 	return sessmodels.SessionContainer{
-		RevokeSession: func() error {
-			return originalSessionClass.RevokeSession()
+		RevokeSession: func(userContext supertokens.UserContext) error {
+			return originalSessionClass.RevokeSession(userContext)
 		},
 
-		GetSessionData: func() (map[string]interface{}, error) {
-			return originalSessionClass.GetSessionData()
+		GetSessionData: func(userContext supertokens.UserContext) (map[string]interface{}, error) {
+			return originalSessionClass.GetSessionData(userContext)
 		},
 
-		UpdateSessionData: func(newSessionData map[string]interface{}) error {
-			return originalSessionClass.UpdateSessionData(newSessionData)
+		UpdateSessionData: func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+			return originalSessionClass.UpdateSessionData(newSessionData, userContext)
 		},
 		GetUserID: func() string {
 			return originalSessionClass.GetUserID()
@@ -49,13 +50,13 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		GetAccessToken: func() string {
 			return originalSessionClass.GetAccessToken()
 		},
-		GetTimeCreated: func() (uint64, error) {
-			return originalSessionClass.GetTimeCreated()
+		GetTimeCreated: func(userContext supertokens.UserContext) (uint64, error) {
+			return originalSessionClass.GetTimeCreated(userContext)
 		},
-		GetExpiry: func() (uint64, error) {
-			return originalSessionClass.GetExpiry()
+		GetExpiry: func(userContext supertokens.UserContext) (uint64, error) {
+			return originalSessionClass.GetExpiry(userContext)
 		},
-		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
+		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
 			}
@@ -63,7 +64,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
 			if !ok {
-				return originalSessionClass.UpdateAccessTokenPayload(newAccessTokenPayload)
+				return originalSessionClass.UpdateAccessTokenPayload(newAccessTokenPayload, userContext)
 			}
 
 			existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
@@ -95,7 +96,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 				return err
 			}
 
-			return originalSessionClass.UpdateAccessTokenPayload(newAccessTokenPayload)
+			return originalSessionClass.UpdateAccessTokenPayload(newAccessTokenPayload, userContext)
 		},
 	}
 }

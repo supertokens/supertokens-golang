@@ -105,7 +105,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				return sessmodels.SessionContainer{}, err
 			}
 
-			err = newSession.UpdateAccessTokenPayload(accessTokenPayload)
+			err = newSession.UpdateAccessTokenPayload(accessTokenPayload, userContext)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}

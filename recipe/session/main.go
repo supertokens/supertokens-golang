@@ -159,3 +159,11 @@ func GetOpenIdDiscoveryConfiguration(userContext supertokens.UserContext) (openi
 	}
 	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
 }
+
+func RegenerateAccessToken(accessToken string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext, sessionHandle string) (sessmodels.RegenerateAccessTokenResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return sessmodels.RegenerateAccessTokenResponse{}, err
+	}
+	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, newAccessTokenPayload, userContext, sessionHandle)
+}
