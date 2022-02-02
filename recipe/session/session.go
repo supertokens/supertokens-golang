@@ -91,6 +91,7 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			}
 
 			session.userDataInAccessToken = resp.GetSessionResponse.Session.UserDataInAccessToken
+
 			if !reflect.DeepEqual(resp.GetSessionResponse.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
 				session.accessToken = resp.GetSessionResponse.AccessToken.Token
 				setFrontTokenInHeaders(session.res, resp.GetSessionResponse.Session.UserID, resp.GetSessionResponse.AccessToken.Expiry, resp.GetSessionResponse.Session.UserDataInAccessToken)
