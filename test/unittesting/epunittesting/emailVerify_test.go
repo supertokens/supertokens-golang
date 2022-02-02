@@ -18,7 +18,6 @@ package epunittesting
 
 import (
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -69,13 +68,22 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
-	var response map[string]map[string]interface{}
+	var response map[string]interface{}
 	_ = json.Unmarshal(data, &response)
 	assert.Equal(t, "OK", response["status"])
-	fmt.Println(response)
-	// response["user"]["id"]
 
-	// unittesting.EmailVerifyTokenRequest(testServer.URL, )
+	// fmt.Println(strings.)
+
+	// user := response["user"]
+
+	// res, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user..(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+
+	// if err != nil {
+	// 	t.Error(err.Error())
+	// }
+
+	// fmt.Println(res)
+
 	defer unittesting.AfterEach()
 	defer func() {
 		testServer.Close()
