@@ -72,20 +72,17 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 	_ = json.Unmarshal(data, &response)
 	assert.Equal(t, "OK", response["status"])
 
-	// fmt.Println(strings.)
+	// emailpassword.CreateEmailVerificationToken()
 
 	// user := response["user"]
+	// userstr := fmt.Sprintf("%v", user)
+	// fmt.Println(user.(map[string]string)["email"])
+	// userDataArr := strings.Split(userstr, ":")
+	// for _, v := range us {
 
-	// res, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user..(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
-
-	// if err != nil {
-	// 	t.Error(err.Error())
 	// }
-
-	// fmt.Println(res)
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
+	// defer unittesting.AfterEach()
+	// defer func() {
+	// 	testServer.Close()
+	// }()
 }
