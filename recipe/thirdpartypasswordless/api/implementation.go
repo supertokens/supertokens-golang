@@ -15,161 +15,154 @@
 
 package api
 
-// import (
-// 	epapi "github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
-// 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
-// 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-// 	tpapi "github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
-// 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-// 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
-// 	"github.com/supertokens/supertokens-golang/supertokens"
-// )
+import (
+	plessapi "github.com/supertokens/supertokens-golang/recipe/passwordless/api"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	tpapi "github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
-// func MakeAPIImplementation() tpepmodels.APIInterface {
-// 	emailPasswordImplementation := epapi.MakeAPIImplementation()
-// 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
+func MakeAPIImplementation() tplmodels.APIInterface {
+	passwordlessImplementation := plessapi.MakeAPIImplementation()
+	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
-// 	ogEmailExistsGET := *emailPasswordImplementation.EmailExistsGET
-// 	emailExistsGET := func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
-// 		return ogEmailExistsGET(email, options, userContext)
+	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
+	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
+		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+		if err != nil {
+			return tplmodels.ThirdPartySignInUpOutput{}, err
+		}
+		if response.FieldError != nil {
+			return tplmodels.ThirdPartySignInUpOutput{
+				FieldError: &struct{ ErrorMsg string }{
+					ErrorMsg: response.FieldError.ErrorMsg,
+				},
+			}, nil
+		} else if response.NoEmailGivenByProviderError != nil {
+			return tplmodels.ThirdPartySignInUpOutput{
+				NoEmailGivenByProviderError: &struct{}{},
+			}, nil
+		} else {
+			return tplmodels.ThirdPartySignInUpOutput{
+				OK: &struct {
+					CreatedNewUser   bool
+					User             tplmodels.User
+					AuthCodeResponse interface{}
+					Session          sessmodels.SessionContainer
+				}{
+					CreatedNewUser:   response.OK.CreatedNewUser,
+					AuthCodeResponse: response.OK.AuthCodeResponse,
+					User: tplmodels.User{
+						ID:          response.OK.User.ID,
+						TimeJoined:  response.OK.User.TimeJoined,
+						Email:       &response.OK.User.Email,
+						PhoneNumber: nil,
+						ThirdParty:  &response.OK.User.ThirdParty,
+					},
+					Session: response.OK.Session,
+				},
+			}, nil
+		}
+	}
 
-// 	}
+	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, options, userContext)
+	}
 
-// 	ogGeneratePasswordResetTokenPOST := *emailPasswordImplementation.GeneratePasswordResetTokenPOST
-// 	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-// 		return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
-// 	}
+	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
+	}
 
-// 	ogPasswordResetPOST := *emailPasswordImplementation.PasswordResetPOST
-// 	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
-// 		return ogPasswordResetPOST(formFields, token, options, userContext)
-// 	}
+	ogConsumeCodePOST := *passwordlessImplementation.ConsumeCodePOST
+	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
+		resp, err := ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, options, userContext)
+		if err != nil {
+			return tplmodels.ConsumeCodePOSTResponse{}, err
+		}
+		if resp.OK != nil {
+			return tplmodels.ConsumeCodePOSTResponse{
+				OK: &struct {
+					CreatedNewUser bool
+					User           tplmodels.User
+					Session        sessmodels.SessionContainer
+				}{
+					CreatedNewUser: resp.OK.CreatedNewUser,
+					Session:        resp.OK.Session,
+					User: tplmodels.User{
+						ID:          resp.OK.User.ID,
+						TimeJoined:  resp.OK.User.TimeJoined,
+						Email:       resp.OK.User.Email,
+						PhoneNumber: resp.OK.User.PhoneNumber,
+						ThirdParty:  nil,
+					},
+				},
+			}, nil
+		} else if resp.ExpiredUserInputCodeError != nil {
+			return tplmodels.ConsumeCodePOSTResponse{
+				ExpiredUserInputCodeError: resp.ExpiredUserInputCodeError,
+			}, nil
+		} else if resp.IncorrectUserInputCodeError != nil {
+			return tplmodels.ConsumeCodePOSTResponse{
+				IncorrectUserInputCodeError: resp.IncorrectUserInputCodeError,
+			}, nil
+		} else if resp.RestartFlowError != nil {
+			return tplmodels.ConsumeCodePOSTResponse{
+				RestartFlowError: &struct{}{},
+			}, nil
+		} else {
+			return tplmodels.ConsumeCodePOSTResponse{
+				GeneralError: resp.GeneralError,
+			}, nil
+		}
+	}
 
-// 	ogSignInPOST := *emailPasswordImplementation.SignInPOST
-// 	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
-// 		response, err := ogSignInPOST(formFields, options, userContext)
-// 		if err != nil {
-// 			return tpepmodels.SignInPOSTResponse{}, err
-// 		}
-// 		if response.OK != nil {
-// 			return tpepmodels.SignInPOSTResponse{
-// 				OK: &struct {
-// 					User    tpepmodels.User
-// 					Session sessmodels.SessionContainer
-// 				}{
-// 					User: tpepmodels.User{
-// 						ID:         response.OK.User.ID,
-// 						Email:      response.OK.User.Email,
-// 						TimeJoined: response.OK.User.TimeJoined,
-// 						ThirdParty: nil,
-// 					},
-// 					Session: response.OK.Session,
-// 				},
-// 			}, nil
-// 		} else {
-// 			return tpepmodels.SignInPOSTResponse{
-// 				WrongCredentialsError: &struct{}{},
-// 			}, nil
-// 		}
-// 	}
+	ogCreateCodePOST := *passwordlessImplementation.CreateCodePOST
+	createCodePOST := func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+		return ogCreateCodePOST(email, phoneNumber, options, userContext)
+	}
 
-// 	ogSignUpPOST := *emailPasswordImplementation.SignUpPOST
-// 	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
-// 		response, err := ogSignUpPOST(formFields, options, userContext)
-// 		if err != nil {
-// 			return tpepmodels.SignUpPOSTResponse{}, err
-// 		}
-// 		if response.OK != nil {
-// 			return tpepmodels.SignUpPOSTResponse{
-// 				OK: &struct {
-// 					User    tpepmodels.User
-// 					Session sessmodels.SessionContainer
-// 				}{
-// 					User: tpepmodels.User{
-// 						ID:         response.OK.User.ID,
-// 						Email:      response.OK.User.Email,
-// 						TimeJoined: response.OK.User.TimeJoined,
-// 						ThirdParty: nil,
-// 					},
-// 					Session: response.OK.Session,
-// 				},
-// 			}, nil
-// 		} else {
-// 			return tpepmodels.SignUpPOSTResponse{
-// 				EmailAlreadyExistsError: &struct{}{},
-// 			}, nil
-// 		}
-// 	}
+	ogEmailExistGET := *passwordlessImplementation.EmailExistsGET
+	passwordlessEmailExistsGET := func(email string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
+		return ogEmailExistGET(email, options, userContext)
+	}
 
-// 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-// 	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
-// 		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
-// 		if err != nil {
-// 			return tpepmodels.ThirdPartyOutput{}, err
-// 		}
-// 		if response.FieldError != nil {
-// 			return tpepmodels.ThirdPartyOutput{
-// 				FieldError: &struct{ ErrorMsg string }{
-// 					ErrorMsg: response.FieldError.ErrorMsg,
-// 				},
-// 			}, nil
-// 		} else if response.NoEmailGivenByProviderError != nil {
-// 			return tpepmodels.ThirdPartyOutput{
-// 				NoEmailGivenByProviderError: &struct{}{},
-// 			}, nil
-// 		} else {
-// 			return tpepmodels.ThirdPartyOutput{
-// 				OK: &struct {
-// 					CreatedNewUser   bool
-// 					User             tpepmodels.User
-// 					AuthCodeResponse interface{}
-// 					Session          sessmodels.SessionContainer
-// 				}{
-// 					CreatedNewUser:   response.OK.CreatedNewUser,
-// 					AuthCodeResponse: response.OK.AuthCodeResponse,
-// 					User: tpepmodels.User{
-// 						ID:         response.OK.User.ID,
-// 						TimeJoined: response.OK.User.TimeJoined,
-// 						Email:      response.OK.User.Email,
-// 						ThirdParty: &response.OK.User.ThirdParty,
-// 					},
-// 					Session: response.OK.Session,
-// 				},
-// 			}, nil
-// 		}
-// 	}
+	ogPhoneNumberExistsGET := *passwordlessImplementation.PhoneNumberExistsGET
+	passwordlessPhoneNumberExistsGET := func(phoneNumber string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error) {
+		return ogPhoneNumberExistsGET(phoneNumber, options, userContext)
+	}
 
-// 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-// 	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-// 		return ogAuthorisationUrlGET(provider, options, userContext)
-// 	}
+	ogResendCodePOST := *passwordlessImplementation.ResendCodePOST
+	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+		return ogResendCodePOST(deviceID, preAuthSessionID, options, userContext)
+	}
 
-// 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-// 	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-// 		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
-// 	}
-// 	result := tpepmodels.APIInterface{
-// 		AuthorisationUrlGET:            &authorisationUrlGET,
-// 		EmailExistsGET:                 &emailExistsGET,
-// 		GeneratePasswordResetTokenPOST: &generatePasswordResetTokenPOST,
-// 		PasswordResetPOST:              &passwordResetPOST,
-// 		ThirdPartySignInUpPOST:         &thirdPartySignInUpPOST,
-// 		EmailPasswordSignInPOST:        &emailPasswordSignInPOST,
-// 		EmailPasswordSignUpPOST:        &emailPasswordSignUpPOST,
-// 		AppleRedirectHandlerPOST:       &appleRedirectHandlerPOST,
-// 	}
+	result := tplmodels.APIInterface{
+		AuthorisationUrlGET:              &authorisationUrlGET,
+		ThirdPartySignInUpPOST:           &thirdPartySignInUpPOST,
+		AppleRedirectHandlerPOST:         &appleRedirectHandlerPOST,
+		CreateCodePOST:                   &createCodePOST,
+		ResendCodePOST:                   &resendCodePOST,
+		ConsumeCodePOST:                  &consumeCodePOST,
+		PasswordlessEmailExistsGET:       &passwordlessEmailExistsGET,
+		PasswordlessPhoneNumberExistsGET: &passwordlessPhoneNumberExistsGET,
+	}
 
-// 	modifiedEP := GetEmailPasswordIterfaceImpl(result)
-// 	(*emailPasswordImplementation.EmailExistsGET) = *modifiedEP.EmailExistsGET
-// 	(*emailPasswordImplementation.GeneratePasswordResetTokenPOST) = *modifiedEP.GeneratePasswordResetTokenPOST
-// 	(*emailPasswordImplementation.PasswordResetPOST) = *modifiedEP.PasswordResetPOST
-// 	(*emailPasswordImplementation.SignInPOST) = *modifiedEP.SignInPOST
-// 	(*emailPasswordImplementation.SignUpPOST) = *modifiedEP.SignUpPOST
+	modifiedPwdless := GetPasswordlessIterfaceImpl(result)
+	(*passwordlessImplementation.ConsumeCodePOST) = *modifiedPwdless.ConsumeCodePOST
+	(*passwordlessImplementation.CreateCodePOST) = *modifiedPwdless.CreateCodePOST
+	(*passwordlessImplementation.EmailExistsGET) = *modifiedPwdless.EmailExistsGET
+	(*passwordlessImplementation.PhoneNumberExistsGET) = *modifiedPwdless.PhoneNumberExistsGET
+	(*passwordlessImplementation.ResendCodePOST) = *modifiedPwdless.ResendCodePOST
 
-// 	modifiedTP := GetThirdPartyIterfaceImpl(result)
-// 	(*thirdPartyImplementation.AuthorisationUrlGET) = *modifiedTP.AuthorisationUrlGET
-// 	(*thirdPartyImplementation.SignInUpPOST) = *modifiedTP.SignInUpPOST
-// 	(*thirdPartyImplementation.AppleRedirectHandlerPOST) = *modifiedTP.AppleRedirectHandlerPOST
+	modifiedTP := GetThirdPartyIterfaceImpl(result)
+	(*thirdPartyImplementation.AuthorisationUrlGET) = *modifiedTP.AuthorisationUrlGET
+	(*thirdPartyImplementation.SignInUpPOST) = *modifiedTP.SignInUpPOST
+	(*thirdPartyImplementation.AppleRedirectHandlerPOST) = *modifiedTP.AppleRedirectHandlerPOST
 
-// 	return result
-// }
+	return result
+}

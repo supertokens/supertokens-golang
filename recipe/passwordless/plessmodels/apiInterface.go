@@ -36,7 +36,7 @@ type APIInterface struct {
 	ResendCodePOST       *func(deviceID string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ResendCodePOSTResponse, error)
 	ConsumeCodePOST      *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ConsumeCodePOSTResponse, error)
 	EmailExistsGET       *func(email string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
-	PhoneNumberExistsGET *func(email string, options APIOptions, userContext supertokens.UserContext) (PhoneNumberExistsGETResponse, error)
+	PhoneNumberExistsGET *func(phoneNumber string, options APIOptions, userContext supertokens.UserContext) (PhoneNumberExistsGETResponse, error)
 }
 
 type ConsumeCodePOSTResponse struct {
