@@ -18,6 +18,7 @@ package unittesting
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -443,4 +444,51 @@ func SetKeyValueInConfig(key string, value string) {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+}
+
+func SignupRequest(email string, password string, testUrl string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+			{
+				"id":    "password",
+				"value": password,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, idRefreshTokenFromCookie string, antiCsrf string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/user/email/verify/token", bytes.NewBuffer([]byte(userId)))
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Cookie", "sAccessToken="+accessToken+";"+"sIdRefreshToken="+idRefreshTokenFromCookie)
+	req.Header.Add("anti-csrf", antiCsrf)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	return resp, nil
 }
