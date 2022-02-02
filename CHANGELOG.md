@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 
 -   add workflow to verify if pr title follows conventional commits
+- Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
 
 ## [0.4.1] - 2022-01-27
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
