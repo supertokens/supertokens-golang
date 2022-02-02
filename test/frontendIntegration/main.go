@@ -301,14 +301,14 @@ func refresh(response http.ResponseWriter, request *http.Request) {
 
 func revokeAll(response http.ResponseWriter, request *http.Request) {
 	sessionContainer := session.GetSessionFromRequestContext(request.Context())
-	userID := sessionContainer.GetUserID(nil)
+	userID := sessionContainer.GetUserID()
 	session.RevokeAllSessionsForUser(userID, nil)
 	response.Write([]byte("success"))
 }
 
 func logout(response http.ResponseWriter, request *http.Request) {
 	session := session.GetSessionFromRequestContext(request.Context())
-	err := session.RevokeSession(nil)
+	err := session.RevokeSession()
 	if err != nil {
 		err = supertokens.ErrorHandler(err, request, response)
 		if err != nil {
@@ -330,15 +330,15 @@ func testing(response http.ResponseWriter, request *http.Request) {
 
 func getJWT(response http.ResponseWriter, request *http.Request) {
 	session := session.GetSessionFromRequestContext(request.Context())
-	json.NewEncoder(response).Encode(session.GetAccessTokenPayload(nil))
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
 }
 
 func updateJwt(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	session := session.GetSessionFromRequestContext(request.Context())
-	session.UpdateAccessTokenPayload(body, nil)
-	json.NewEncoder(response).Encode(session.GetAccessTokenPayload(nil))
+	session.UpdateAccessTokenPayload(body)
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
 }
 
 func checkRID(response http.ResponseWriter, request *http.Request) {
@@ -387,7 +387,7 @@ func login(response http.ResponseWriter, request *http.Request) {
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userID := body["userId"].(string)
 	sess, _ := session.CreateNewSession(response, userID, nil, nil, nil)
-	response.Write([]byte(sess.GetUserID(nil)))
+	response.Write([]byte(sess.GetUserID()))
 }
 
 func fail(w http.ResponseWriter, r *http.Request) {
@@ -422,5 +422,5 @@ func multipleInterceptors(response http.ResponseWriter, request *http.Request) {
 func simpleGet(response http.ResponseWriter, request *http.Request) {
 	sessionContainer := session.GetSessionFromRequestContext(request.Context())
 	noOfTimesGetSessionCalledDuringTest += 1
-	response.Write([]byte(sessionContainer.GetUserID(nil)))
+	response.Write([]byte(sessionContainer.GetUserID()))
 }

@@ -12,7 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 -   Added `regenerateAccessToken` as a new recipe function for the session recipe.
-
+-   Added a bunch of new functions inside the session container which gives user the ability to either call a       function with userContext or just call the function without it (for example: `RevokeSession` and `RevokeSessionWithContext`)
+ 
 ### Breaking changes:
 
 -   Allows passing of custom user context everywhere: https://github.com/supertokens/supertokens-golang/issues/64

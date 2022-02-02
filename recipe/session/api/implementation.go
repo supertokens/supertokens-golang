@@ -64,7 +64,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			return sessmodels.SignOutPOSTResponse{}, defaultErrors.New("session is nil. Should not come here")
 		}
 
-		err = session.RevokeSession(userContext)
+		err = session.RevokeSessionWithContext(userContext)
 		if err != nil {
 			return sessmodels.SignOutPOSTResponse{}, err
 		}

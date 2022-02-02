@@ -153,16 +153,27 @@ type NormalisedErrorHandlers struct {
 }
 
 type SessionContainer struct {
-	RevokeSession            func(userContext supertokens.UserContext) error
-	GetSessionData           func(userContext supertokens.UserContext) (map[string]interface{}, error)
-	UpdateSessionData        func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
-	GetUserID                func(userContext supertokens.UserContext) string
-	GetAccessTokenPayload    func(userContext supertokens.UserContext) map[string]interface{}
-	GetHandle                func(userContext supertokens.UserContext) string
-	GetAccessToken           func(userContext supertokens.UserContext) string
-	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
-	GetTimeCreated           func(userContext supertokens.UserContext) (uint64, error)
-	GetExpiry                func(userContext supertokens.UserContext) (uint64, error)
+	RevokeSession            func() error
+	GetSessionData           func() (map[string]interface{}, error)
+	UpdateSessionData        func(newSessionData map[string]interface{}) error
+	GetUserID                func() string
+	GetAccessTokenPayload    func() map[string]interface{}
+	GetHandle                func() string
+	GetAccessToken           func() string
+	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error
+	GetTimeCreated           func() (uint64, error)
+	GetExpiry                func() (uint64, error)
+
+	RevokeSessionWithContext            func(userContext supertokens.UserContext) error
+	GetSessionDataWithContext           func(userContext supertokens.UserContext) (map[string]interface{}, error)
+	UpdateSessionDataWithContext        func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
+	GetUserIDWithContext                func(userContext supertokens.UserContext) string
+	GetAccessTokenPayloadWithContext    func(userContext supertokens.UserContext) map[string]interface{}
+	GetHandleWithContext                func(userContext supertokens.UserContext) string
+	GetAccessTokenWithContext           func(userContext supertokens.UserContext) string
+	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
+	GetTimeCreatedWithContext           func(userContext supertokens.UserContext) (uint64, error)
+	GetExpiryWithContext                func(userContext supertokens.UserContext) (uint64, error)
 }
 
 type SessionInformation struct {

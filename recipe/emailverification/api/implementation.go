@@ -35,7 +35,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		userID := session.GetUserID(userContext)
+		userID := session.GetUserIDWithContext(userContext)
 
 		email, err := options.Config.GetEmailForUserID(userID, userContext)
 		if err != nil {
@@ -61,7 +61,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		userID := session.GetUserID(userContext)
+		userID := session.GetUserIDWithContext(userContext)
 		email, err := options.Config.GetEmailForUserID(userID, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
