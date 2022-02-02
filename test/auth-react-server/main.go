@@ -36,6 +36,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -81,6 +82,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	session.ResetForTest()
 	thirdparty.ResetForTest()
 	thirdpartyemailpassword.ResetForTest()
+	thirdpartypasswordless.ResetForTest()
 
 	if passwordlessConfig == nil {
 		passwordlessConfig = &plessmodels.TypeInput{
