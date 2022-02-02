@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
@@ -68,6 +69,45 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
 	if emailVerificationInstance == nil {
+		// we override the recipe function for email verification
+		// to return true for is email verified for passwordless users.
+		var apiInterfaceFunc func(originalImplementation evmodels.APIInterface) evmodels.APIInterface
+		var recipeInterfaceFunc func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface
+		if config.Override.EmailVerificationFeature != nil {
+			apiInterfaceFunc = config.Override.EmailVerificationFeature.APIs
+			recipeInterfaceFunc = config.Override.EmailVerificationFeature.Functions
+		}
+		verifiedConfig.EmailVerificationFeature.Override = &evmodels.OverrideStruct{
+			APIs: apiInterfaceFunc,
+			Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
+				ogIsEmailVerified := *originalImplementation.IsEmailVerified
+				(*originalImplementation.IsEmailVerified) = func(userID, email string, userContext supertokens.UserContext) (bool, error) {
+					user, err := (*(*r).RecipeImpl.GetUserByID)(userID, userContext)
+					if err != nil {
+						return false, err
+					}
+
+					if user == nil {
+						return false, nil
+					}
+
+					if user.ThirdParty != nil {
+						return ogIsEmailVerified(userID, email, userContext)
+					}
+					// this is a passwordless user, so we always want
+					// to return that their info / email is verified
+					return true, nil
+				}
+
+				if recipeInterfaceFunc != nil {
+					// we call the user's function override as well post our change.
+					return recipeInterfaceFunc(originalImplementation)
+				} else {
+					return originalImplementation
+				}
+			},
+		}
+
 		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
@@ -227,8 +267,11 @@ func (r *Recipe) getEmailForUserIdForEmailVerification(userID string, userContex
 	if userInfo == nil {
 		return "", errors.New("Unknown User ID provided")
 	}
-	if userInfo.Email == nil {
-		return "", errors.New("Should never come here")
+	if userInfo.ThirdParty == nil {
+		// this is a passwordless user.. so we always return some random email,
+		// and in the function for isEmailVerified, we will check if the user
+		// is a passwordless user, and if they are, we will return true in there
+		return "_____supertokens_passwordless_user@supertokens.com", nil
 	}
 	return *userInfo.Email, nil
 }
