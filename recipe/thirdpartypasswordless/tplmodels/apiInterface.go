@@ -16,60 +16,51 @@
 package tplmodels
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET            *func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
-	AppleRedirectHandlerPOST       *func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error
-	EmailExistsGET                 *func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error)
-	GeneratePasswordResetTokenPOST *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error)
-	PasswordResetPOST              *func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
-	ThirdPartySignInUpPOST         *func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (ThirdPartyOutput, error)
-	EmailPasswordSignInPOST        *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (SignInPOSTResponse, error)
-	EmailPasswordSignUpPOST        *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (SignUpPOSTResponse, error)
+	AuthorisationUrlGET *func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
+
+	AppleRedirectHandlerPOST *func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error
+
+	ThirdPartySignInUpPOST *func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (ThirdPartySignInUpOutput, error)
+
+	CreateCodePOST *func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error)
+
+	ResendCodePOST *func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error)
+
+	ConsumeCodePOST *func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (ConsumeCodePOSTResponse, error)
+
+	PasswordlessEmailExistsGET *func(email string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error)
+
+	PasswordlessPhoneNumberExistsGET *func(email string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error)
 }
 
-type SignUpPOSTResponse struct {
+type ConsumeCodePOSTResponse struct {
 	OK *struct {
-		User    User
-		Session sessmodels.SessionContainer
-	}
-	EmailAlreadyExistsError *struct{}
-}
-
-type SignInPOSTResponse struct {
-	OK *struct {
-		User    User
-		Session sessmodels.SessionContainer
-	}
-	WrongCredentialsError *struct{}
-}
-
-type EmailpasswordInput struct {
-	IsSignIn   bool
-	FormFields []epmodels.TypeFormField
-	Options    epmodels.APIOptions
-}
-
-type SignInUpAPIOutput struct {
-	EmailpasswordOutput *EmailpasswordOutput
-	ThirdPartyOutput    *ThirdPartyOutput
-}
-
-type EmailpasswordOutput struct {
-	OK *struct {
-		User           User
 		CreatedNewUser bool
+		User           User
+		Session        sessmodels.SessionContainer
 	}
-	EmailAlreadyExistsError *struct{}
-	WrongCredentialsError   *struct{}
+	IncorrectUserInputCodeError *struct {
+		FailedCodeInputAttemptCount int
+		MaximumCodeInputAttempts    int
+	}
+	ExpiredUserInputCodeError *struct {
+		FailedCodeInputAttemptCount int
+		MaximumCodeInputAttempts    int
+	}
+	RestartFlowError *struct{}
+	GeneralError     *struct {
+		Message string
+	}
 }
 
-type ThirdPartyOutput struct {
+type ThirdPartySignInUpOutput struct {
 	OK *struct {
 		CreatedNewUser   bool
 		User             User

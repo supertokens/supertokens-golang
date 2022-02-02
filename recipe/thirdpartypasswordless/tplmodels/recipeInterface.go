@@ -16,23 +16,55 @@
 package tplmodels
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type RecipeInterface struct {
-	GetUserByID              *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail          *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByThirdPartyInfo  *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	SignInUp                 *func(thirdPartyID string, thirdPartyUserID string, email EmailStruct, userContext supertokens.UserContext) (SignInUpResponse, error)
-	SignUp                   *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
-	SignIn                   *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
-	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
-	ResetPasswordUsingToken  *func(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
-	UpdateEmailOrPassword    *func(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error)
+	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUsersByPhoneNumber   *func(phoneNumber string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email EmailStruct, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+
+	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
+
+	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
+
+	ConsumeCode *func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
+
+	UpdatePasswordlessUser *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error)
+
+	RevokeAllCodes *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
+
+	RevokeCode *func(codeID string, userContext supertokens.UserContext) error
+
+	ListCodesByEmail *func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
+
+	ListCodesByPhoneNumber *func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
+
+	ListCodesByDeviceID *func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
+
+	ListCodesByPreAuthSessionID *func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
 }
 
-type SignInUpResponse struct {
+type ConsumeCodeResponse struct {
+	OK *struct {
+		CreatedNewUser bool
+		User           User
+	}
+	IncorrectUserInputCodeError *struct {
+		FailedCodeInputAttemptCount int
+		MaximumCodeInputAttempts    int
+	}
+	ExpiredUserInputCodeError *struct {
+		FailedCodeInputAttemptCount int
+		MaximumCodeInputAttempts    int
+	}
+	RestartFlowError *struct{}
+}
+
+type ThirdPartySignInUp struct {
 	OK *struct {
 		CreatedNewUser bool
 		User           User

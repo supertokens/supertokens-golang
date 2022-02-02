@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
+func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
 	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
 		body := map[string]interface{}{}
 		if email != nil {

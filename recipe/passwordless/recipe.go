@@ -46,7 +46,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
