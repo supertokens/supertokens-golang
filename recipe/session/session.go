@@ -16,7 +16,6 @@
 package session
 
 import (
-	"encoding/json"
 	defaultErrors "errors"
 	"net/http"
 	"reflect"
@@ -84,33 +83,18 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
 			}
-			response, err := querier.SendPostRequest("/recipe/session/regenerate", map[string]interface{}{
-				"accessToken":   session.accessToken,
-				"userDataInJWT": newAccessTokenPayload,
-			})
-			if err != nil {
-				return err
-			}
-			if response["status"].(string) == errors.UnauthorizedErrorStr {
-				clearSessionFromCookie(config, session.res)
-				return errors.UnauthorizedError{Msg: "Session has probably been revoked while updating AccessToken payload"}
-			}
 
-			responseByte, err := json.Marshal(response)
-			if err != nil {
-				return err
-			}
-			var resp sessmodels.GetSessionResponse
-			err = json.Unmarshal(responseByte, &resp)
+			resp, err := regenerateAccessTokenHelper(querier, session.sessionHandle, newAccessTokenPayload, session.accessToken)
+
 			if err != nil {
 				return err
 			}
 
-			session.userDataInAccessToken = resp.Session.UserDataInAccessToken
-			if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				session.accessToken = resp.AccessToken.Token
-				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
+			session.userDataInAccessToken = resp.GetSessionResponse.Session.UserDataInAccessToken
+			if !reflect.DeepEqual(resp.GetSessionResponse.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+				session.accessToken = resp.GetSessionResponse.AccessToken.Token
+				setFrontTokenInHeaders(session.res, resp.GetSessionResponse.Session.UserID, resp.GetSessionResponse.AccessToken.Expiry, resp.GetSessionResponse.Session.UserDataInAccessToken)
+				attachAccessTokenToCookie(config, session.res, resp.GetSessionResponse.AccessToken.Token, resp.GetSessionResponse.AccessToken.Expiry)
 			}
 			return nil
 		},
