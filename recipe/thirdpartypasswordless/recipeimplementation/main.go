@@ -19,6 +19,7 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
@@ -182,12 +183,151 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		return nil, nil
 	}
 
+	ogCreateCode := *passwordlessImplementation.CreateCode
+	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+		return ogCreateCode(email, phoneNumber, userInputCode, userContext)
+	}
+
+	ogConsumeCode := *passwordlessImplementation.ConsumeCode
+	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (tplmodels.ConsumeCodeResponse, error) {
+		response, err := ogConsumeCode(userInput, linkCode, preAuthSessionID, userContext)
+		if err != nil {
+			return tplmodels.ConsumeCodeResponse{}, err
+		}
+
+		if response.ExpiredUserInputCodeError != nil {
+			return tplmodels.ConsumeCodeResponse{
+				ExpiredUserInputCodeError: response.ExpiredUserInputCodeError,
+			}, nil
+		} else if response.IncorrectUserInputCodeError != nil {
+			return tplmodels.ConsumeCodeResponse{
+				IncorrectUserInputCodeError: response.IncorrectUserInputCodeError,
+			}, nil
+		} else if response.RestartFlowError != nil {
+			return tplmodels.ConsumeCodeResponse{
+				RestartFlowError: &struct{}{},
+			}, nil
+		}
+
+		return tplmodels.ConsumeCodeResponse{
+			OK: &struct {
+				CreatedNewUser bool
+				User           tplmodels.User
+			}{
+				CreatedNewUser: response.OK.CreatedNewUser,
+				User: tplmodels.User{
+					ID:          response.OK.User.ID,
+					TimeJoined:  response.OK.User.TimeJoined,
+					Email:       response.OK.User.Email,
+					PhoneNumber: response.OK.User.PhoneNumber,
+					ThirdParty:  nil,
+				},
+			},
+		}, nil
+	}
+
+	ogCreateNewCodeForDevice := *passwordlessImplementation.CreateNewCodeForDevice
+	createNewCodeForDevice := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+		return ogCreateNewCodeForDevice(deviceID, userInputCode, userContext)
+	}
+
+	ogGetUserByPhoneNumber := *passwordlessImplementation.GetUserByPhoneNumber
+	getUserByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+		resp, err := ogGetUserByPhoneNumber(phoneNumber, userContext)
+		if err != nil {
+			return &tplmodels.User{}, err
+		}
+
+		if resp == nil {
+			return nil, nil
+		}
+
+		return &tplmodels.User{
+			ID:          resp.ID,
+			TimeJoined:  resp.TimeJoined,
+			Email:       resp.Email,
+			PhoneNumber: resp.PhoneNumber,
+			ThirdParty:  nil,
+		}, nil
+	}
+
+	ogListCodesByDeviceID := *passwordlessImplementation.ListCodesByDeviceID
+	listCodesByDeviceID := func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		return ogListCodesByDeviceID(deviceID, userContext)
+	}
+
+	ogListCodesByEmail := *passwordlessImplementation.ListCodesByEmail
+	listCodesByEmail := func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		return ogListCodesByEmail(email, userContext)
+	}
+
+	ogListCodesByPhoneNumber := *passwordlessImplementation.ListCodesByPhoneNumber
+	listCodesByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		return ogListCodesByPhoneNumber(phoneNumber, userContext)
+	}
+
+	ogListCodesByPreAuthSessionID := *passwordlessImplementation.ListCodesByPreAuthSessionID
+	listCodesByPreAuthSessionID := func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		return ogListCodesByPreAuthSessionID(preAuthSessionID, userContext)
+	}
+
+	ogRevokeAllCodes := *passwordlessImplementation.RevokeAllCodes
+	revokeAllCodes := func(email *string, phoneNumber *string, userContext supertokens.UserContext) error {
+		return ogRevokeAllCodes(email, phoneNumber, userContext)
+	}
+
+	ogRevokeCode := *passwordlessImplementation.RevokeCode
+	revokeCode := func(codeID string, userContext supertokens.UserContext) error {
+		return ogRevokeCode(codeID, userContext)
+	}
+
+	ogUpdateUser := *passwordlessImplementation.UpdateUser
+	updatePasswordlessUser := func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error) {
+		user, err := (*result.GetUserByID)(userID, userContext)
+		if err != nil {
+			return plessmodels.UpdateUserResponse{}, err
+		}
+
+		if user == nil {
+			return plessmodels.UpdateUserResponse{
+				UnknownUserIdError: &struct{}{},
+			}, nil
+		} else if user.ThirdParty != nil {
+			return plessmodels.UpdateUserResponse{}, errors.New("cannot update passwordless user info for those who signed up using third party login")
+		}
+		return ogUpdateUser(userID, email, phoneNumber, userContext)
+	}
+
 	result.GetUserByID = &getUserByID
 	result.GetUsersByEmail = &getUsersByEmail
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
 	result.ThirdPartySignInUp = &thirPartySignInUp
+	result.ConsumeCode = &consumeCode
+	result.CreateCode = &createCode
+	result.CreateNewCodeForDevice = &createNewCodeForDevice
+	result.GetUserByPhoneNumber = &getUserByPhoneNumber
+	result.ListCodesByDeviceID = &listCodesByDeviceID
+	result.ListCodesByEmail = &listCodesByEmail
+	result.ListCodesByPhoneNumber = &listCodesByPhoneNumber
+	result.ListCodesByPreAuthSessionID = &listCodesByPreAuthSessionID
+	result.RevokeAllCodes = &revokeAllCodes
+	result.RevokeCode = &revokeCode
+	result.UpdatePasswordlessUser = &updatePasswordlessUser
 
-	// TODO: modified Passwordless
+	modifiedPwdless := MakePasswordlessRecipeImplementation(result)
+	(*passwordlessImplementation.ConsumeCode) = *modifiedPwdless.ConsumeCode
+	(*passwordlessImplementation.CreateCode) = *modifiedPwdless.CreateCode
+	(*passwordlessImplementation.CreateNewCodeForDevice) = *modifiedPwdless.CreateNewCodeForDevice
+	(*passwordlessImplementation.GetUserByEmail) = *modifiedPwdless.GetUserByEmail
+	(*passwordlessImplementation.GetUserByID) = *modifiedPwdless.GetUserByID
+	(*passwordlessImplementation.GetUserByPhoneNumber) = *modifiedPwdless.GetUserByPhoneNumber
+	(*passwordlessImplementation.ListCodesByDeviceID) = *modifiedPwdless.ListCodesByDeviceID
+	(*passwordlessImplementation.ListCodesByEmail) = *modifiedPwdless.ListCodesByEmail
+	(*passwordlessImplementation.ListCodesByPhoneNumber) = *modifiedPwdless.ListCodesByPhoneNumber
+	(*passwordlessImplementation.ListCodesByPreAuthSessionID) = *modifiedPwdless.ListCodesByPreAuthSessionID
+	(*passwordlessImplementation.RevokeAllCodes) = *modifiedPwdless.RevokeAllCodes
+	(*passwordlessImplementation.RevokeCode) = *modifiedPwdless.RevokeCode
+	(*passwordlessImplementation.UpdateUser) = *modifiedPwdless.UpdateUser
 
 	if thirdPartyImplementation != nil {
 		modifiedTp := MakeThirdPartyRecipeImplementation(result)
