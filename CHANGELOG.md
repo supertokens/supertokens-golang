@@ -9,6 +9,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   add workflow to verify if pr title follows conventional commits
 
+### Added
+
+-   Added `regenerateAccessToken` as a new recipe function for the session recipe.
+
+### Breaking changes:
+
+-   Allows passing of custom user context everywhere: https://github.com/supertokens/supertokens-golang/issues/64
+
+
 ## [0.4.1] - 2022-01-27
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
 -   Adds check to see if user has provided empty connectionInfo
