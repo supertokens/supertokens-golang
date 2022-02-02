@@ -165,5 +165,5 @@ func RegenerateAccessToken(accessToken string, newAccessTokenPayload map[string]
 	if err != nil {
 		return sessmodels.RegenerateAccessTokenResponse{}, err
 	}
-	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, newAccessTokenPayload, userContext, sessionHandle)
+	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, &newAccessTokenPayload, userContext)
 }

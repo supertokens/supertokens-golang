@@ -164,8 +164,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return recipeImplHandshakeInfo.RefreshTokenValidity, nil
 	}
 
-	regenerateAccessToken := func(accessToken string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext, sessionHandle string) (sessmodels.RegenerateAccessTokenResponse, error) {
-		return regenerateAccessTokenHelper(querier, accessToken, newAccessTokenPayload, sessionHandle)
+	regenerateAccessToken := func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (sessmodels.RegenerateAccessTokenResponse, error) {
+		return regenerateAccessTokenHelper(querier, newAccessTokenPayload, accessToken)
 	}
 
 	return sessmodels.RecipeInterface{

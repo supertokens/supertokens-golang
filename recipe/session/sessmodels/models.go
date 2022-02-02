@@ -81,8 +81,9 @@ type GetSessionResponse struct {
 }
 
 type RegenerateAccessTokenResponse struct {
-	Status             string `json:"status"`
-	GetSessionResponse GetSessionResponse
+	Status      string                          `json:"status"`
+	Session     SessionStruct                   `json:"session"`
+	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
 
 type TypeInput struct {
@@ -155,10 +156,10 @@ type SessionContainer struct {
 	RevokeSession            func(userContext supertokens.UserContext) error
 	GetSessionData           func(userContext supertokens.UserContext) (map[string]interface{}, error)
 	UpdateSessionData        func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
-	GetUserID                func() string
-	GetAccessTokenPayload    func() map[string]interface{}
-	GetHandle                func() string
-	GetAccessToken           func() string
+	GetUserID                func(userContext supertokens.UserContext) string
+	GetAccessTokenPayload    func(userContext supertokens.UserContext) map[string]interface{}
+	GetHandle                func(userContext supertokens.UserContext) string
+	GetAccessToken           func(userContext supertokens.UserContext) string
 	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
 	GetTimeCreated           func(userContext supertokens.UserContext) (uint64, error)
 	GetExpiry                func(userContext supertokens.UserContext) (uint64, error)

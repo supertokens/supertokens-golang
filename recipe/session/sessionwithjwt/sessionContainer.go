@@ -38,17 +38,17 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		UpdateSessionData: func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
 			return originalSessionClass.UpdateSessionData(newSessionData, userContext)
 		},
-		GetUserID: func() string {
-			return originalSessionClass.GetUserID()
+		GetUserID: func(userContext supertokens.UserContext) string {
+			return originalSessionClass.GetUserID(userContext)
 		},
-		GetAccessTokenPayload: func() map[string]interface{} {
-			return originalSessionClass.GetAccessTokenPayload()
+		GetAccessTokenPayload: func(userContext supertokens.UserContext) map[string]interface{} {
+			return originalSessionClass.GetAccessTokenPayload(userContext)
 		},
-		GetHandle: func() string {
-			return originalSessionClass.GetHandle()
+		GetHandle: func(userContext supertokens.UserContext) string {
+			return originalSessionClass.GetHandle(userContext)
 		},
-		GetAccessToken: func() string {
-			return originalSessionClass.GetAccessToken()
+		GetAccessToken: func(userContext supertokens.UserContext) string {
+			return originalSessionClass.GetAccessToken(userContext)
 		},
 		GetTimeCreated: func(userContext supertokens.UserContext) (uint64, error) {
 			return originalSessionClass.GetTimeCreated(userContext)
@@ -60,7 +60,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
 			}
-			accessTokenPayload := originalSessionClass.GetAccessTokenPayload()
+			accessTokenPayload := originalSessionClass.GetAccessTokenPayload(userContext)
 			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
 			if !ok {
@@ -91,7 +91,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 				jwtExpiry = 1
 			}
 
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(), jwtPropertyName.(string), openidRecipeImplementation, &map[string]interface{}{})
+			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(userContext), jwtPropertyName.(string), openidRecipeImplementation, &map[string]interface{}{})
 			if err != nil {
 				return err
 			}

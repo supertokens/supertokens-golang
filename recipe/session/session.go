@@ -84,31 +84,31 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 				newAccessTokenPayload = map[string]interface{}{}
 			}
 
-			resp, err := regenerateAccessTokenHelper(querier, session.sessionHandle, newAccessTokenPayload, session.accessToken)
+			resp, err := regenerateAccessTokenHelper(querier, &newAccessTokenPayload, session.accessToken)
 
 			if err != nil {
 				return err
 			}
 
-			session.userDataInAccessToken = resp.GetSessionResponse.Session.UserDataInAccessToken
+			session.userDataInAccessToken = resp.Session.UserDataInAccessToken
 
-			if !reflect.DeepEqual(resp.GetSessionResponse.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				session.accessToken = resp.GetSessionResponse.AccessToken.Token
-				setFrontTokenInHeaders(session.res, resp.GetSessionResponse.Session.UserID, resp.GetSessionResponse.AccessToken.Expiry, resp.GetSessionResponse.Session.UserDataInAccessToken)
-				attachAccessTokenToCookie(config, session.res, resp.GetSessionResponse.AccessToken.Token, resp.GetSessionResponse.AccessToken.Expiry)
+			if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+				session.accessToken = resp.AccessToken.Token
+				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
+				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
 			}
 			return nil
 		},
-		GetUserID: func() string {
+		GetUserID: func(userContext supertokens.UserContext) string {
 			return session.userID
 		},
-		GetAccessTokenPayload: func() map[string]interface{} {
+		GetAccessTokenPayload: func(userContext supertokens.UserContext) map[string]interface{} {
 			return session.userDataInAccessToken
 		},
-		GetHandle: func() string {
+		GetHandle: func(userContext supertokens.UserContext) string {
 			return session.sessionHandle
 		},
-		GetAccessToken: func() string {
+		GetAccessToken: func(userContext supertokens.UserContext) string {
 			return session.accessToken
 		},
 		GetTimeCreated: func(userContext supertokens.UserContext) (uint64, error) {

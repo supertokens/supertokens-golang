@@ -447,9 +447,9 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(200)
 	w.Header().Add("content-type", "application/json")
 	bytes, err := json.Marshal(map[string]interface{}{
-		"sessionHandle":      sessionContainer.GetHandle(),
-		"userId":             sessionContainer.GetUserID(),
-		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
+		"sessionHandle":      sessionContainer.GetHandle(nil),
+		"userId":             sessionContainer.GetUserID(nil),
+		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(nil),
 		"sessionData":        sessionData,
 	})
 	if err != nil {

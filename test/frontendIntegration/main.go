@@ -301,7 +301,7 @@ func refresh(response http.ResponseWriter, request *http.Request) {
 
 func revokeAll(response http.ResponseWriter, request *http.Request) {
 	sessionContainer := session.GetSessionFromRequestContext(request.Context())
-	userID := sessionContainer.GetUserID()
+	userID := sessionContainer.GetUserID(nil)
 	session.RevokeAllSessionsForUser(userID, nil)
 	response.Write([]byte("success"))
 }
@@ -330,7 +330,7 @@ func testing(response http.ResponseWriter, request *http.Request) {
 
 func getJWT(response http.ResponseWriter, request *http.Request) {
 	session := session.GetSessionFromRequestContext(request.Context())
-	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload(nil))
 }
 
 func updateJwt(response http.ResponseWriter, request *http.Request) {
@@ -338,7 +338,7 @@ func updateJwt(response http.ResponseWriter, request *http.Request) {
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	session := session.GetSessionFromRequestContext(request.Context())
 	session.UpdateAccessTokenPayload(body, nil)
-	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload(nil))
 }
 
 func checkRID(response http.ResponseWriter, request *http.Request) {
@@ -387,7 +387,7 @@ func login(response http.ResponseWriter, request *http.Request) {
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userID := body["userId"].(string)
 	sess, _ := session.CreateNewSession(response, userID, nil, nil, nil)
-	response.Write([]byte(sess.GetUserID()))
+	response.Write([]byte(sess.GetUserID(nil)))
 }
 
 func fail(w http.ResponseWriter, r *http.Request) {
@@ -422,5 +422,5 @@ func multipleInterceptors(response http.ResponseWriter, request *http.Request) {
 func simpleGet(response http.ResponseWriter, request *http.Request) {
 	sessionContainer := session.GetSessionFromRequestContext(request.Context())
 	noOfTimesGetSessionCalledDuringTest += 1
-	response.Write([]byte(sessionContainer.GetUserID()))
+	response.Write([]byte(sessionContainer.GetUserID(nil)))
 }

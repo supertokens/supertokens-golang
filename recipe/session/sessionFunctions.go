@@ -354,9 +354,9 @@ func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle s
 	return nil
 }
 
-func regenerateAccessTokenHelper(querier supertokens.Querier, sessionHandle string, newAccessTokenPayload map[string]interface{}, accessToken string) (sessmodels.RegenerateAccessTokenResponse, error) {
+func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayload *map[string]interface{}, accessToken string) (sessmodels.RegenerateAccessTokenResponse, error) {
 	if newAccessTokenPayload == nil {
-		newAccessTokenPayload = map[string]interface{}{}
+		newAccessTokenPayload = &map[string]interface{}{}
 	}
 	response, err := querier.SendPostRequest("/recipe/session/regenerate", map[string]interface{}{
 		"accessToken":   accessToken,
