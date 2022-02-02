@@ -211,7 +211,7 @@ func CreateMagicLinkByEmail(email string, userContext supertokens.UserContext) (
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.createMagicLink(&email, nil, userContext)
+	return instance.CreateMagicLink(&email, nil, userContext)
 }
 
 func CreateMagicLinkByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (string, error) {
@@ -222,7 +222,7 @@ func CreateMagicLinkByPhoneNumber(phoneNumber string, userContext supertokens.Us
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.createMagicLink(nil, &phoneNumber, userContext)
+	return instance.CreateMagicLink(nil, &phoneNumber, userContext)
 }
 
 func SignInUpByEmail(email string, userContext supertokens.UserContext) (struct {
@@ -241,7 +241,7 @@ func SignInUpByEmail(email string, userContext supertokens.UserContext) (struct 
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.signInUp(&email, nil, userContext)
+	return instance.SignInUp(&email, nil, userContext)
 }
 
 func SignInUpByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (struct {
@@ -260,5 +260,5 @@ func SignInUpByPhoneNumber(phoneNumber string, userContext supertokens.UserConte
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.signInUp(nil, &phoneNumber, userContext)
+	return instance.SignInUp(nil, &phoneNumber, userContext)
 }

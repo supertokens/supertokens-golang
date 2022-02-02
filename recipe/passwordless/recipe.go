@@ -158,7 +158,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func (r *Recipe) createMagicLink(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
 	var userInputCodeInput *string
 	if r.Config.GetCustomUserInputCode != nil {
 		c, err := r.Config.GetCustomUserInputCode(userContext)
@@ -181,7 +181,7 @@ func (r *Recipe) createMagicLink(email *string, phoneNumber *string, userContext
 	return link, nil
 }
 
-func (r *Recipe) signInUp(email *string, phoneNumber *string, userContext supertokens.UserContext) (struct {
+func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
