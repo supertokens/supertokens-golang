@@ -87,16 +87,28 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 						return false, err
 					}
 
-					if user == nil {
-						return false, nil
-					}
-
-					if user.ThirdParty != nil {
+					if user == nil || user.ThirdParty != nil {
 						return ogIsEmailVerified(userID, email, userContext)
 					}
 					// this is a passwordless user, so we always want
 					// to return that their info / email is verified
 					return true, nil
+				}
+
+				ogCreateEmailVerificationToken := *originalImplementation.CreateEmailVerificationToken
+				(*originalImplementation.CreateEmailVerificationToken) = func(userID, email string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
+					user, err := (*(*r).RecipeImpl.GetUserByID)(userID, userContext)
+					if err != nil {
+						return evmodels.CreateEmailVerificationTokenResponse{}, err
+					}
+
+					if user == nil || user.ThirdParty != nil {
+						return ogCreateEmailVerificationToken(userID, email, userContext)
+					}
+
+					return evmodels.CreateEmailVerificationTokenResponse{
+						EmailAlreadyVerifiedError: &struct{}{},
+					}, nil
 				}
 
 				if recipeInterfaceFunc != nil {
