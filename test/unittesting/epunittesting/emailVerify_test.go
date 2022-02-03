@@ -64,7 +64,6 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.NoError(t, err)
-	// cookieData := unittesting.ExtractInfoFromResponse(resp)
 	assert.Equal(t, 200, resp.StatusCode)
 	data, _ := io.ReadAll(resp.Body)
 	resp.Body.Close()
@@ -72,17 +71,139 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 	_ = json.Unmarshal(data, &response)
 	assert.Equal(t, "OK", response["status"])
 
-	// emailpassword.CreateEmailVerificationToken()
+	userId := response["user"].(map[string]interface{})["id"]
+	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	// user := response["user"]
-	// userstr := fmt.Sprintf("%v", user)
-	// fmt.Println(user.(map[string]string)["email"])
-	// userDataArr := strings.Split(userstr, ":")
-	// for _, v := range us {
+	verifyToken, err := emailpassword.CreateEmailVerificationToken(userId.(string))
+	if err != nil {
+		t.Error(err.Error())
+	}
+	emailpassword.VerifyEmailUsingToken(verifyToken.OK.Token)
 
-	// }
-	// defer unittesting.AfterEach()
-	// defer func() {
-	// 	testServer.Close()
-	// }()
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp1.StatusCode)
+	data1, _ := io.ReadAll(resp1.Body)
+	resp1.Body.Close()
+	var response1 map[string]interface{}
+	_ = json.Unmarshal(data1, &response1)
+
+	assert.Equal(t, "EMAIL_ALREADY_VERIFIED_ERROR", response1["status"])
+
+	defer unittesting.AfterEach()
+	defer func() {
+		testServer.Close()
+	}()
 }
+
+func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			emailpassword.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+
+	unittesting.BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+
+	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/user/email/verify/token", nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	assert.Equal(t, 401, resp.StatusCode)
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	var response map[string]interface{}
+	err = json.Unmarshal(data, &response)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "unauthorised", response["message"])
+	defer unittesting.AfterEach()
+	defer func() {
+		testServer.Close()
+	}()
+}
+
+// func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
+// 	customAntiCsrfVal := "VIA_TOKEN"
+// 	configValue := supertokens.TypeInput{
+// 		Supertokens: &supertokens.ConnectionInfo{
+// 			ConnectionURI: "http://localhost:8080",
+// 		},
+// 		AppInfo: supertokens.AppInfo{
+// 			APIDomain:     "api.supertokens.io",
+// 			AppName:       "SuperTokens",
+// 			WebsiteDomain: "supertokens.io",
+// 		},
+// 		RecipeList: []supertokens.Recipe{
+// 			emailpassword.Init(nil),
+// 			session.Init(&sessmodels.TypeInput{
+// 				AntiCsrf: &customAntiCsrfVal,
+// 			}),
+// 		},
+// 	}
+
+// 	unittesting.BeforeEach()
+// 	unittesting.SetKeyValueInConfig("access_token_validity", 2)
+// 	unittesting.StartUpST("localhost", "8080")
+// 	err := supertokens.Init(configValue)
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	mux := http.NewServeMux()
+// 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+
+// 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/user/email/verify/token", nil)
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	assert.NoError(t, err)
+// 	resp, err := http.DefaultClient.Do(req)
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, 401, resp.StatusCode)
+// 	data, _ := io.ReadAll(resp.Body)
+// 	resp.Body.Close()
+// 	var response map[string]interface{}
+// 	err = json.Unmarshal(data, &response)
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	assert.Equal(t, "unauthorised", response["message"])
+// 	defer unittesting.AfterEach()
+// 	defer func() {
+// 		testServer.Close()
+// 	}()
+// }
