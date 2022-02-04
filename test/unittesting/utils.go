@@ -25,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
@@ -429,21 +430,34 @@ func getInstallationDir() string {
 func SetKeyValueInConfig(key string, value string) {
 	installationPath := getInstallationDir()
 	pathToConfigYamlFile := installationPath + "/config.yaml"
-	dataInBytes, err := ioutil.ReadFile(pathToConfigYamlFile)
+	f, err := os.OpenFile(pathToConfigYamlFile, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		log.Fatal(err.Error())
+		panic(err)
 	}
-	r := string(dataInBytes)
-	newStr := key + ": " + value + "\n"
-	r = strings.Replace(r, "# api_keys:", newStr, -1)
-	err = ioutil.WriteFile(pathToConfigYamlFile, []byte(r), 0644)
+
+	defer f.Close()
+
+	f.Write([]byte("\n" + key + ": " + value))
+
+	if _, err = f.WriteString(key + ": " + value + "\n"); err != nil {
+		panic(err)
+	}
+}
+
+func SetKeyAndNumberValueInConfig(key string, value int) {
+	installationPath := getInstallationDir()
+	pathToConfigYamlFile := installationPath + "/config.yaml"
+	f, err := os.OpenFile(pathToConfigYamlFile, os.O_APPEND|os.O_WRONLY, 0600)
 	if err != nil {
-		log.Fatal(err.Error())
+		panic(err)
 	}
-	_, err = ioutil.ReadFile(pathToConfigYamlFile)
-	if err != nil {
-		log.Fatal(err.Error())
+
+	defer f.Close()
+	val := strconv.Itoa(value)
+	if _, err = f.WriteString(key + ": " + val + "\n"); err != nil {
+		panic(err)
 	}
+
 }
 
 func SignupRequest(email string, password string, testUrl string) (*http.Response, error) {
