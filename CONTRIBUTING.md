@@ -25,15 +25,25 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
 
 ### Project Setup
 
-TODO:
+1. Fork the [supertokens-golang](https://github.com/supertokens/supertokens-golang) repository
+2. Clone the forked repository in the parent directory of the previously setup `supertokens-root`.  
+   `supertokens-node` and `supertokens-root` should exist side by side within the same parent directory
+3. `cd supertokens-node`
+4. You should have a go setup on your local machine
 
 ## Modifying Code
 
-TODO:
+1. Open the `supertokens-golang` project in your IDE and you can start modifying the code
 
 ## Testing
 
-TODO:
+1. Navigate to the `supertokens-root` repository
+2. Start the testing environment  
+   `./startTestingEnv --wait`
+3. Navigate to the `supertokens-golang` repository  
+   `cd ../supertokens-node/`
+4. Run all tests  
+   `INSTALL_PATH=../supertokens-root go test ./... -v`
 
 ## Pull Request
 
