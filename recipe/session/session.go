@@ -45,59 +45,94 @@ func makeSessionContainerInput(accessToken string, sessionHandle string, userID 
 
 func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
-	return sessmodels.SessionContainer{
-		RevokeSessionWithContext: func(userContext supertokens.UserContext) error {
-			success, err := revokeSessionHelper(querier, session.sessionHandle)
-			if err != nil {
-				return err
-			}
-			if success {
+	revokeSession := func(userContext supertokens.UserContext) error {
+		success, err := revokeSessionHelper(querier, session.sessionHandle)
+		if err != nil {
+			return err
+		}
+		if success {
+			clearSessionFromCookie(config, session.res)
+		}
+		return nil
+	}
+
+	getSessionData := func(userContext supertokens.UserContext) (map[string]interface{}, error) {
+		sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
+		if err != nil {
+			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 				clearSessionFromCookie(config, session.res)
 			}
-			return nil
-		},
+			return nil, err
+		}
+		return sessionInformation.SessionData, nil
+	}
 
+	updateSessionData := func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+		err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
+		if err != nil {
+			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+				clearSessionFromCookie(config, session.res)
+			}
+			return err
+		}
+		return nil
+	}
+
+	updateAccessTokenPayload := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+		if newAccessTokenPayload == nil {
+			newAccessTokenPayload = map[string]interface{}{}
+		}
+
+		resp, err := regenerateAccessTokenHelper(querier, &newAccessTokenPayload, session.accessToken)
+
+		if err != nil {
+			return err
+		}
+
+		session.userDataInAccessToken = resp.Session.UserDataInAccessToken
+
+		if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+			session.accessToken = resp.AccessToken.Token
+			setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
+			attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
+		}
+		return nil
+	}
+
+	getTimeCreated := func(userContext supertokens.UserContext) (uint64, error) {
+		sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
+		if err != nil {
+			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+				clearSessionFromCookie(config, session.res)
+			}
+			return 0, err
+		}
+		return sessionInformation.TimeCreated, nil
+	}
+
+	getExpiry := func(userContext supertokens.UserContext) (uint64, error) {
+		sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
+		if err != nil {
+			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+				clearSessionFromCookie(config, session.res)
+			}
+			return 0, err
+		}
+		return sessionInformation.Expiry, nil
+	}
+
+	return sessmodels.SessionContainer{
+		RevokeSessionWithContext: func(userContext supertokens.UserContext) error {
+			return revokeSession(userContext)
+		},
 		GetSessionDataWithContext: func(userContext supertokens.UserContext) (map[string]interface{}, error) {
-			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return nil, err
-			}
-			return sessionInformation.SessionData, nil
+			return getSessionData(userContext)
 		},
-
 		UpdateSessionDataWithContext: func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
-			err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return err
-			}
-			return nil
+			return updateSessionData(newSessionData, userContext)
 		},
-
 		UpdateAccessTokenPayloadWithContext: func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
-			if newAccessTokenPayload == nil {
-				newAccessTokenPayload = map[string]interface{}{}
-			}
-
-			resp, err := regenerateAccessTokenHelper(querier, &newAccessTokenPayload, session.accessToken)
-
-			if err != nil {
-				return err
-			}
-
-			session.userDataInAccessToken = resp.Session.UserDataInAccessToken
-
-			if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				session.accessToken = resp.AccessToken.Token
-				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
-			}
-			return nil
+			return updateAccessTokenPayload(newAccessTokenPayload, userContext)
 		},
 		GetUserIDWithContext: func(userContext supertokens.UserContext) string {
 			return session.userID
@@ -112,77 +147,22 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return session.accessToken
 		},
 		GetTimeCreatedWithContext: func(userContext supertokens.UserContext) (uint64, error) {
-			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return 0, err
-			}
-			return sessionInformation.TimeCreated, nil
+			return getTimeCreated(userContext)
 		},
 		GetExpiryWithContext: func(userContext supertokens.UserContext) (uint64, error) {
-			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return 0, err
-			}
-			return sessionInformation.Expiry, nil
+			return getExpiry(userContext)
 		},
 		RevokeSession: func() error {
-			success, err := revokeSessionHelper(querier, session.sessionHandle)
-			if err != nil {
-				return err
-			}
-			if success {
-				clearSessionFromCookie(config, session.res)
-			}
-			return nil
+			return revokeSession(nil)
 		},
-
 		GetSessionData: func() (map[string]interface{}, error) {
-			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return nil, err
-			}
-			return sessionInformation.SessionData, nil
+			return getSessionData(nil)
 		},
-
 		UpdateSessionData: func(newSessionData map[string]interface{}) error {
-			err := updateSessionDataHelper(querier, session.sessionHandle, newSessionData)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return err
-			}
-			return nil
+			return updateSessionData(newSessionData, nil)
 		},
-
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			if newAccessTokenPayload == nil {
-				newAccessTokenPayload = map[string]interface{}{}
-			}
-
-			resp, err := regenerateAccessTokenHelper(querier, &newAccessTokenPayload, session.accessToken)
-
-			if err != nil {
-				return err
-			}
-
-			session.userDataInAccessToken = resp.Session.UserDataInAccessToken
-
-			if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				session.accessToken = resp.AccessToken.Token
-				setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-				attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
-			}
-			return nil
+			return updateAccessTokenPayload(newAccessTokenPayload, nil)
 		},
 		GetUserID: func() string {
 			return session.userID
@@ -197,24 +177,10 @@ func newSessionContainer(querier supertokens.Querier, config sessmodels.TypeNorm
 			return session.accessToken
 		},
 		GetTimeCreated: func() (uint64, error) {
-			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return 0, err
-			}
-			return sessionInformation.TimeCreated, nil
+			return getTimeCreated(nil)
 		},
 		GetExpiry: func() (uint64, error) {
-			sessionInformation, err := getSessionInformationHelper(querier, session.sessionHandle)
-			if err != nil {
-				if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-					clearSessionFromCookie(config, session.res)
-				}
-				return 0, err
-			}
-			return sessionInformation.Expiry, nil
+			return getExpiry(nil)
 		},
 	}
 }
