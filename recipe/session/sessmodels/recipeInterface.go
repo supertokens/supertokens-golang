@@ -34,4 +34,5 @@ type RecipeInterface struct {
 	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
 	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)
 	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
+	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (RegenerateAccessTokenResponse, error)
 }

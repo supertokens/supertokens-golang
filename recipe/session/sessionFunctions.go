@@ -353,3 +353,29 @@ func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle s
 	}
 	return nil
 }
+
+func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayload *map[string]interface{}, accessToken string) (sessmodels.RegenerateAccessTokenResponse, error) {
+	if newAccessTokenPayload == nil {
+		newAccessTokenPayload = &map[string]interface{}{}
+	}
+	response, err := querier.SendPostRequest("/recipe/session/regenerate", map[string]interface{}{
+		"accessToken":   accessToken,
+		"userDataInJWT": newAccessTokenPayload,
+	})
+	if err != nil {
+		return sessmodels.RegenerateAccessTokenResponse{}, err
+	}
+	if response["status"].(string) == errors.UnauthorizedErrorStr {
+		return sessmodels.RegenerateAccessTokenResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
+	}
+	responseByte, err := json.Marshal(response)
+	if err != nil {
+		return sessmodels.RegenerateAccessTokenResponse{}, err
+	}
+	var resp sessmodels.RegenerateAccessTokenResponse
+	err = json.Unmarshal(responseByte, &resp)
+	if err != nil {
+		return sessmodels.RegenerateAccessTokenResponse{}, err
+	}
+	return resp, nil
+}
