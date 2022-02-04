@@ -26,7 +26,7 @@ import (
 
 func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, openidRecipeImplementation openidmodels.RecipeInterface) sessmodels.SessionContainer {
 
-	updateAccessTokenPayloadHelper := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+	updateAccessTokenPayloadWithContext := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 		if newAccessTokenPayload == nil {
 			newAccessTokenPayload = map[string]interface{}{}
 		}
@@ -69,47 +69,27 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 	}
 	return sessmodels.SessionContainer{
-		RevokeSessionWithContext: func(userContext supertokens.UserContext) error {
-			return originalSessionClass.RevokeSessionWithContext(userContext)
-		},
-		GetSessionDataWithContext: func(userContext supertokens.UserContext) (map[string]interface{}, error) {
-			return originalSessionClass.GetSessionDataWithContext(userContext)
-		},
-		UpdateSessionDataWithContext: func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
-			return originalSessionClass.UpdateSessionDataWithContext(newSessionData, userContext)
-		},
-		GetUserIDWithContext: func(userContext supertokens.UserContext) string {
-			return originalSessionClass.GetUserIDWithContext(userContext)
-		},
-		GetAccessTokenPayloadWithContext: func(userContext supertokens.UserContext) map[string]interface{} {
-			return originalSessionClass.GetAccessTokenPayloadWithContext(userContext)
-		},
-		GetHandleWithContext: func(userContext supertokens.UserContext) string {
-			return originalSessionClass.GetHandleWithContext(userContext)
-		},
-		GetAccessTokenWithContext: func(userContext supertokens.UserContext) string {
-			return originalSessionClass.GetAccessTokenWithContext(userContext)
-		},
-		GetTimeCreatedWithContext: func(userContext supertokens.UserContext) (uint64, error) {
-			return originalSessionClass.GetTimeCreatedWithContext(userContext)
-		},
-		GetExpiryWithContext: func(userContext supertokens.UserContext) (uint64, error) {
-			return originalSessionClass.GetExpiryWithContext(userContext)
-		},
-		UpdateAccessTokenPayloadWithContext: func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
-			return updateAccessTokenPayloadHelper(newAccessTokenPayload, userContext)
-		},
-		RevokeSession:         originalSessionClass.RevokeSession,
-		GetSessionData:        originalSessionClass.GetSessionData,
-		UpdateSessionData:     originalSessionClass.UpdateSessionData,
-		GetUserID:             originalSessionClass.GetUserID,
-		GetAccessTokenPayload: originalSessionClass.GetAccessTokenPayload,
-		GetHandle:             originalSessionClass.GetHandle,
-		GetAccessToken:        originalSessionClass.GetAccessToken,
-		GetTimeCreated:        originalSessionClass.GetTimeCreated,
-		GetExpiry:             originalSessionClass.GetExpiry,
+		RevokeSessionWithContext:            originalSessionClass.RevokeSessionWithContext,
+		GetSessionDataWithContext:           originalSessionClass.GetSessionDataWithContext,
+		UpdateSessionDataWithContext:        originalSessionClass.UpdateSessionDataWithContext,
+		GetUserIDWithContext:                originalSessionClass.GetUserIDWithContext,
+		GetAccessTokenPayloadWithContext:    originalSessionClass.GetAccessTokenPayloadWithContext,
+		GetHandleWithContext:                originalSessionClass.GetHandleWithContext,
+		GetAccessTokenWithContext:           originalSessionClass.GetAccessTokenWithContext,
+		GetTimeCreatedWithContext:           originalSessionClass.GetTimeCreatedWithContext,
+		GetExpiryWithContext:                originalSessionClass.GetExpiryWithContext,
+		RevokeSession:                       originalSessionClass.RevokeSession,
+		GetSessionData:                      originalSessionClass.GetSessionData,
+		UpdateSessionData:                   originalSessionClass.UpdateSessionData,
+		GetUserID:                           originalSessionClass.GetUserID,
+		GetAccessTokenPayload:               originalSessionClass.GetAccessTokenPayload,
+		GetHandle:                           originalSessionClass.GetHandle,
+		GetAccessToken:                      originalSessionClass.GetAccessToken,
+		GetTimeCreated:                      originalSessionClass.GetTimeCreated,
+		GetExpiry:                           originalSessionClass.GetExpiry,
+		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadHelper(newAccessTokenPayload, nil)
+			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, nil)
 		},
 	}
 }
