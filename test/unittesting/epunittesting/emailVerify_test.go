@@ -19,7 +19,6 @@ package epunittesting
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"log"
 	"net/http"
@@ -27,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
@@ -161,7 +161,6 @@ func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
 	}()
 }
 
-//!THIS NEEDS TO FIGURED OUT
 func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
@@ -197,29 +196,78 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 	}
 	assert.NoError(t, err)
 	assert.Equal(t, 200, resp.StatusCode)
-	data, _ := io.ReadAll(resp.Body)
+
+	data, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	resp.Body.Close()
+
 	var response map[string]interface{}
-	_ = json.Unmarshal(data, &response)
+	err = json.Unmarshal(data, &response)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
 	assert.Equal(t, "OK", response["status"])
 
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
+
+	time.Sleep(5 * time.Second)
 
 	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
 	}
-	fmt.Println(resp1)
-	// assert.NoError(t, err)
-	// assert.Equal(t, 200, resp1.StatusCode)
-	// data1, _ := io.ReadAll(resp1.Body)
-	// resp1.Body.Close()
-	// var response1 map[string]interface{}
-	// _ = json.Unmarshal(data1, &response1)
 
-	// assert.Equal(t, "EMAIL_ALREADY_VERIFIED_ERROR", response1["status"])
+	assert.NoError(t, err)
+	assert.Equal(t, 401, resp1.StatusCode)
+	data1, err := io.ReadAll(resp1.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp1.Body.Close()
+	var response1 map[string]interface{}
+	err = json.Unmarshal(data1, &response1)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "try refresh token", response1["message"])
+
+	res, err := unittesting.SessionRefresh(testServer.URL, cookieData["sRefreshToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	cookieData2 := unittesting.ExtractInfoFromResponse(res)
+
+	res1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData2["sAccessToken"], cookieData2["sIdRefreshToken"], cookieData2["antiCsrf"])
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res1.StatusCode)
+
+	data2, err := io.ReadAll(res1.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	res1.Body.Close()
+
+	var response2 map[string]interface{}
+	err = json.Unmarshal(data2, &response2)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", response2["status"])
 
 	defer unittesting.AfterEach()
 	defer func() {
@@ -697,7 +745,6 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 	var response3 map[string]interface{}
 	_ = json.Unmarshal(datainBytes1, &response3)
 	assert.Equal(t, "OK", response3["status"])
-	fmt.Println(response3)
 	assert.Equal(t, true, response3["isVerified"])
 	defer unittesting.AfterEach()
 	defer func() {
@@ -754,11 +801,6 @@ func TestVerifySessionWithNoSessionUsingTheGetMethod(t *testing.T) {
 	defer func() {
 		testServer.Close()
 	}()
-}
-
-//!needs to figured out
-func TestTheEmailVerifyWithAnExpiredAccessTokenUsingTheGetMethod(t *testing.T) {
-
 }
 
 func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {

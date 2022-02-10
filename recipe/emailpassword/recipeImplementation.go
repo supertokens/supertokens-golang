@@ -31,7 +31,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 		status, ok := response["status"]
 		if ok && status.(string) == "OK" {
-			user, err := parseUser(response["user"])
+			user, err := ParseUser(response["user"])
 			if err != nil {
 				return epmodels.SignUpResponse{}, err
 			}
@@ -54,7 +54,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 		status, ok := response["status"]
 		if ok && status.(string) == "OK" {
-			user, err := parseUser(response["user"])
+			user, err := ParseUser(response["user"])
 			if err != nil {
 				return epmodels.SignInResponse{}, err
 			}
@@ -76,7 +76,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 		status, ok := response["status"]
 		if ok && status.(string) == "OK" {
-			user, err := parseUser(response["user"])
+			user, err := ParseUser(response["user"])
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +94,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 		status, ok := response["status"]
 		if ok && status.(string) == "OK" {
-			user, err := parseUser(response["user"])
+			user, err := ParseUser(response["user"])
 			if err != nil {
 				return nil, err
 			}

@@ -260,7 +260,6 @@ func TestQuerringToTheCoreWithoutAPIKey(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			// APIKey:        "shfo3h98308hOIHoei309saiho",
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -274,13 +273,16 @@ func TestQuerringToTheCoreWithoutAPIKey(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	// SetKeyValueInConfig("api_keys", "shfo3h98308hOIHoei309saiho")
+
 	SetKeyValueInConfig("api_keys", `"shfo3h98308hOIHoei309saiho"`)
+
 	StartUpST("localhost", "8080")
+
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
+
 	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())

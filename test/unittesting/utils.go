@@ -35,14 +35,12 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func getListOfPids() []string {
-	// slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
-	// os.Setenv("INSTALL_PATH", slashesNeededToGoUp+"supertokens-root")
-	// defer os.Unsetenv("INSTALL_PATH")
 	installationPath := getInstallationDir()
 	pathOfDirToRead := installationPath + "/.started/"
 	files, err := ioutil.ReadDir(pathOfDirToRead)
@@ -94,6 +92,7 @@ func StartUpST(host string, port string) string {
 	}
 	panic("could not start ST process")
 }
+
 func getNonIntersection(a1 []string, a2 []string) []string {
 	var result = []string{}
 	for i := 0; i < len(a1); i++ {
@@ -457,7 +456,6 @@ func SetKeyAndNumberValueInConfig(key string, value int) {
 	if _, err = f.WriteString(key + ": " + val + "\n"); err != nil {
 		panic(err)
 	}
-
 }
 
 func SignupRequest(email string, password string, testUrl string) (*http.Response, error) {
@@ -490,6 +488,36 @@ func SignupRequest(email string, password string, testUrl string) (*http.Respons
 	return resp, nil
 }
 
+func SignInRequest(email string, password string, testUrl string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+			{
+				"id":    "password",
+				"value": password,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/signin", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, idRefreshTokenFromCookie string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/user/email/verify/token", bytes.NewBuffer([]byte(userId)))
 	if err != nil {
@@ -505,4 +533,101 @@ func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, 
 		return nil, err
 	}
 	return resp, nil
+}
+
+func SignoutRequest(testUrl string, accessToken string, idRefreshTokenFromCookie string, antiCsrf string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/signout", nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Cookie", "sAccessToken="+accessToken+";"+"sIdRefreshToken="+idRefreshTokenFromCookie)
+	req.Header.Add("anti-csrf", antiCsrf)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	return resp, nil
+}
+
+func SessionRefresh(testUrl string, refreshToken string, idRefreshToken string, antiCsrf string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/session/refresh", nil)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Add("Cookie", "sRefreshToken="+refreshToken+";"+"sIdRefreshToken="+idRefreshToken)
+	req.Header.Add("anti-csrf", antiCsrf)
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+	return resp, nil
+}
+
+func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
+	return tpmodels.TypeProvider{
+		ID: "custom",
+		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+			return tpmodels.TypeProviderGetResponse{
+				AccessTokenAPI: tpmodels.AccessTokenAPI{
+					URL: "https://test.com/oauth/token",
+				},
+				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+					URL: "https://test.com/oauth/auth",
+					Params: map[string]interface{}{
+						"scope":     "test",
+						"client_id": "supertokens",
+						"dynamic": func(req *http.Request) string {
+							return req.URL.Query().Get("dynamic")
+						},
+					},
+				},
+				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+					return tpmodels.UserInfo{
+						ID: "user",
+						Email: &tpmodels.EmailStruct{
+							ID:         "email@test.com",
+							IsVerified: true,
+						},
+					}, nil
+				},
+				GetClientId: func() string {
+					return "supertokens"
+				},
+			}
+		},
+	}
+}
+
+func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
+	return tpmodels.TypeProvider{
+		ID: "custom",
+		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+			return tpmodels.TypeProviderGetResponse{
+				AccessTokenAPI: tpmodels.AccessTokenAPI{
+					URL: "https://test.com/oauth/token",
+				},
+				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+					URL: "https://test.com/oauth/auth",
+				},
+				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+					return tpmodels.UserInfo{
+						ID: "user",
+						Email: &tpmodels.EmailStruct{
+							ID:         "email@test.com",
+							IsVerified: true,
+						},
+					}, nil
+				},
+				GetClientId: func() string {
+					return "supertokens"
+				},
+			}
+		},
+	}
 }

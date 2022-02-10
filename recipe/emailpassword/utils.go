@@ -209,13 +209,13 @@ func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmod
 			)
 			if formField.ID == "password" {
 				formFieldPasswordIDCount++
-				validate = defaultPasswordValidator
+				validate = DefaultPasswordValidator
 				if formField.Validate != nil {
 					validate = formField.Validate
 				}
 			} else if formField.ID == "email" {
 				formFieldEmailIDCount++
-				validate = defaultEmailValidator
+				validate = DefaultEmailValidator
 				if formField.Validate != nil {
 					validate = formField.Validate
 				}
@@ -238,14 +238,14 @@ func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmod
 	if formFieldPasswordIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 			ID:       "password",
-			Validate: defaultPasswordValidator,
+			Validate: DefaultPasswordValidator,
 			Optional: false,
 		})
 	}
 	if formFieldEmailIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 			ID:       "email",
-			Validate: defaultEmailValidator,
+			Validate: DefaultEmailValidator,
 			Optional: false,
 		})
 	}
@@ -256,7 +256,7 @@ func defaultValidator(_ interface{}) *string {
 	return nil
 }
 
-func defaultPasswordValidator(value interface{}) *string {
+func DefaultPasswordValidator(value interface{}) *string {
 	// length >= 8 && < 100
 	// must have a number and a character
 
@@ -285,7 +285,7 @@ func defaultPasswordValidator(value interface{}) *string {
 	return nil
 }
 
-func defaultEmailValidator(value interface{}) *string {
+func DefaultEmailValidator(value interface{}) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg
@@ -298,7 +298,7 @@ func defaultEmailValidator(value interface{}) *string {
 	return nil
 }
 
-func parseUser(value interface{}) (*epmodels.User, error) {
+func ParseUser(value interface{}) (*epmodels.User, error) {
 	respJSON, err := json.Marshal(value)
 	if err != nil {
 		return nil, err
