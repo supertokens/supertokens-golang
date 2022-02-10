@@ -255,46 +255,6 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	}()
 }
 
-func TestQuerringToTheCoreWithoutAPIKey(t *testing.T) {
-	customAntiCsrfVal := "VIA_TOKEN"
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-			APIDomain:     "api.supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				AntiCsrf: &customAntiCsrfVal,
-			}),
-		},
-	}
-	BeforeEach()
-
-	SetKeyValueInConfig("api_keys", `"shfo3h98308hOIHoei309saiho"`)
-
-	StartUpST("localhost", "8080")
-
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	_, err = querrier.GetQuerierAPIVersion()
-	if err != nil {
-		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/apiversion' with status code: 401 and message: Invalid API key\n", err.Error())
-	}
-
-	AfterEach()
-}
-
 func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{

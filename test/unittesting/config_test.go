@@ -569,10 +569,11 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 	}
 	hosts := supertokens.QuerierHosts
 
-	assert.Equal(t, hosts[0].GetAsStringDangerous(), "http://localhost:8080")
-	assert.Equal(t, hosts[1].GetAsStringDangerous(), "https://try.supertokens.io")
-	assert.Equal(t, hosts[2].GetAsStringDangerous(), "https://try.supertokens.io:8080")
-	assert.Equal(t, hosts[3].GetAsStringDangerous(), "http://localhost:90")
+	assert.Equal(t, hosts[0].Domain.GetAsStringDangerous(), "http://localhost:8080")
+	assert.Equal(t, hosts[1].Domain.GetAsStringDangerous(), "https://try.supertokens.io")
+	assert.Equal(t, hosts[2].Domain.GetAsStringDangerous(), "https://try.supertokens.io:8080")
+	assert.Equal(t, hosts[3].Domain.GetAsStringDangerous(), "http://localhost:90")
+
 	AfterEach()
 }
 

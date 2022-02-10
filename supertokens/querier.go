@@ -30,9 +30,14 @@ type Querier struct {
 	RIDToCore string
 }
 
+type QuerierHost struct {
+	Domain   NormalisedURLDomain
+	BasePath NormalisedURLPath
+}
+
 var (
-	querierInitCalled     bool                  = false
-	QuerierHosts          []NormalisedURLDomain = nil
+	querierInitCalled     bool          = false
+	QuerierHosts          []QuerierHost = nil
 	QuerierAPIKey         *string
 	querierAPIVersion     string
 	querierLastTriedIndex int
@@ -90,7 +95,7 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func initQuerier(hosts []NormalisedURLDomain, APIKey string) {
+func initQuerier(hosts []QuerierHost, APIKey string) {
 	if !querierInitCalled {
 		querierInitCalled = true
 		QuerierHosts = hosts
@@ -250,11 +255,12 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	}
 
 	querierHostLock.Lock()
-	currentHost := QuerierHosts[querierLastTriedIndex].GetAsStringDangerous()
+	currentDomain := QuerierHosts[querierLastTriedIndex].Domain.GetAsStringDangerous()
+	currentBasePath := QuerierHosts[querierLastTriedIndex].BasePath.GetAsStringDangerous()
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(QuerierHosts)
 	querierHostLock.Unlock()
 
-	resp, err := httpRequest(currentHost + path.GetAsStringDangerous())
+	resp, err := httpRequest(currentDomain + currentBasePath + path.GetAsStringDangerous())
 
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {
