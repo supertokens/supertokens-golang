@@ -135,8 +135,27 @@ func stopST(pid string) {
 	cmd.Dir = installationPath
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalf(err.Error(), "could not close the supertokens instance%s", pid)
+		log.Fatal(err.Error())
 	}
+	startTime := getCurrTimeInMS()
+	for getCurrTimeInMS()-startTime < 10000 {
+		pidsAfter := getListOfPids()
+		if itemExists(pidsAfter, pid) {
+			time.Sleep(100 * time.Millisecond)
+		} else {
+			return
+		}
+	}
+	panic("Could not stop ST")
+}
+
+func itemExists(arr []string, item string) bool {
+	for i := 0; i < len(arr); i++ {
+		if arr[i] == item {
+			return true
+		}
+	}
+	return false
 }
 
 func cleanST() {

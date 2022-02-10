@@ -22,7 +22,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -143,72 +142,31 @@ func TestSuperTokensInitWithAbsenceOfCompulsoryInputInAppInfo(t *testing.T) {
 	}
 }
 
-func TestSuperTokensInitWithDifferentLengthOfRecipeModules(t *testing.T) {
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-				APIDomain:     "api.supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{},
+func TestSuperTokensInitWith0RecipeModules(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-				APIDomain:     "api.supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-				APIDomain:     "api.supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-				emailpassword.Init(nil),
-			},
-		},
+		RecipeList: []supertokens.Recipe{},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			errorMessage := err.Error()
-			if errorMessage != "please provide at least one recipe to the supertokens.init function call" {
-				t.Error(errorMessage)
-				t.Errorf(err.Error())
-			} else {
-				assert.Equal(t, errorMessage, "please provide at least one recipe to the supertokens.init function call")
-			}
-			continue
-		}
-		supertokensInstance, err := supertokens.GetInstanceOrThrowError()
-
-		if err != nil {
-			t.Error("could not find a supertokens instance")
+	BeforeEach()
+	StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
+		errorMessage := err.Error()
+		if errorMessage != "please provide at least one recipe to the supertokens.init function call" {
 			t.Errorf(err.Error())
+		} else {
+			assert.Equal(t, errorMessage, "please provide at least one recipe to the supertokens.init function call")
 		}
-
-		assert.Equal(t, len(configValue.RecipeList), len(supertokensInstance.RecipeModules))
-
-		AfterEach()
 	}
+
+	defer AfterEach()
 }
 
 func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
@@ -251,172 +209,119 @@ func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
 	AfterEach()
 }
 
-func TestSuperTokensInitWithConfigForSessionModulesWithVariousSameSiteValues(t *testing.T) {
+func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsLax(t *testing.T) {
 	cookieSameSite0 := " Lax "
-	cookieSameSite1 := "None "
-	cookieSameSite2 := " STRICT "
-	cookieSameSite3 := "random "
-	cookieSameSite4 := " "
-	cookieSameSite5 := "lax"
-	cookieSameSite6 := "none"
-	cookieSameSite7 := "strict"
-
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite0,
-				}),
-			},
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite1,
-				}),
-			},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite2,
-				}),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite3,
-				}),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite4,
-				}),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite5,
-				}),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite6,
-				}),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSameSite: &cookieSameSite7,
-				}),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				CookieSameSite: &cookieSameSite0,
+			}),
 		},
 	}
+	BeforeEach()
+	StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
+	defer AfterEach()
+}
+
+func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsNone(t *testing.T) {
+	cookieSameSite0 := "None "
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				CookieSameSite: &cookieSameSite0,
+			}),
+		},
+	}
+	BeforeEach()
+	StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	defer AfterEach()
+}
+
+func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsStrict(t *testing.T) {
+	cookieSameSite0 := " STRICT "
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				CookieSameSite: &cookieSameSite0,
+			}),
+		},
+	}
+	BeforeEach()
+	StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+
+	defer AfterEach()
+}
+
+func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsRandom(t *testing.T) {
+	cookieSameSite0 := " random "
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				CookieSameSite: &cookieSameSite0,
+			}),
+		},
+	}
+	BeforeEach()
+	StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
 		if err != nil {
 			errorMessage := err.Error()
 			if errorMessage != `cookie same site must be one of "strict", "lax", or "none"` {
 				t.Errorf(err.Error())
 			} else {
 				assert.Equal(t, errorMessage, `cookie same site must be one of "strict", "lax", or "none"`)
-				continue
 			}
 		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		assert.Contains(t, []string{"lax", "strict", "none"}, sessionSingletonInstance.Config.CookieSameSite)
-		AfterEach()
 	}
+
+	defer AfterEach()
 }
 
 func TestSuperTokensWithVariousApiBasePath(t *testing.T) {
@@ -997,10 +902,10 @@ func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
-		if errorMessage == "please provide 'ConnectionURI' value" {
-			assert.Equal(t, errorMessage, "please provide 'ConnectionURI' value")
+		if errorMessage == "please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil" {
+			assert.Equal(t, errorMessage, "please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
 		} else {
-			t.Error(errorMessage)
+			t.Error(err.Error())
 		}
 	}
 	AfterEach()
@@ -1341,7 +1246,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -1465,7 +1370,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))

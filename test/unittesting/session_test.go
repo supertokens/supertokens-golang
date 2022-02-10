@@ -55,7 +55,7 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "rope", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -108,7 +108,7 @@ func TestTokenTheftDetection(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	customValForAntiCsrfCheck := true
@@ -196,7 +196,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "userId", map[string]interface{}{}, map[string]interface{}{})
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
@@ -281,7 +281,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "someId", map[string]interface{}{}, map[string]interface{}{})
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
@@ -428,7 +428,7 @@ func TestManipulatingSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "rp", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -440,7 +440,7 @@ func TestManipulatingSessionData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := session.GetAllSessionHandlesForUser("")
+	sessionHandles, err := session.GetAllSessionHandlesForUser("rp")
 
 	if err != nil {
 		t.Error(err.Error())
@@ -573,7 +573,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "", map[string]interface{}{}, map[string]interface{}{})
+		session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
