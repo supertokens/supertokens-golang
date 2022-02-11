@@ -482,73 +482,73 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 	AfterEach()
 }
 
-func TestSuperTokensInitWithNoneLaxTrueSessionConfigResults(t *testing.T) {
-	apiBasePath0 := "test/"
-	websiteBasePath0 := "test1/"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "https://api.supertokens.io",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "supertokens.io",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "api.supertokens.io",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "supertokens.io",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "api.supertokens.co.uk",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "supertokens.co.uk",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
-		},
-	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-		AfterEach()
-	}
-}
+// func TestSuperTokensInitWithNoneLaxTrueSessionConfigResults(t *testing.T) {
+// 	apiBasePath0 := "test/"
+// 	websiteBasePath0 := "test1/"
+// 	configValues := []supertokens.TypeInput{
+// 		{
+// 			Supertokens: &supertokens.ConnectionInfo{
+// 				ConnectionURI: "http://localhost:8080",
+// 			},
+// 			AppInfo: supertokens.AppInfo{
+// 				APIDomain:       "https://api.supertokens.io",
+// 				AppName:         "SuperTokens",
+// 				WebsiteDomain:   "supertokens.io",
+// 				APIBasePath:     &apiBasePath0,
+// 				WebsiteBasePath: &websiteBasePath0,
+// 			},
+// 			RecipeList: []supertokens.Recipe{
+// 				session.Init(nil),
+// 			},
+// 		},
+// 		{
+// 			Supertokens: &supertokens.ConnectionInfo{
+// 				ConnectionURI: "http://localhost:8080",
+// 			},
+// 			AppInfo: supertokens.AppInfo{
+// 				APIDomain:       "api.supertokens.io",
+// 				AppName:         "SuperTokens",
+// 				WebsiteDomain:   "supertokens.io",
+// 				APIBasePath:     &apiBasePath0,
+// 				WebsiteBasePath: &websiteBasePath0,
+// 			},
+// 			RecipeList: []supertokens.Recipe{
+// 				session.Init(nil),
+// 			},
+// 		},
+// 		{
+// 			Supertokens: &supertokens.ConnectionInfo{
+// 				ConnectionURI: "http://localhost:8080",
+// 			},
+// 			AppInfo: supertokens.AppInfo{
+// 				APIDomain:       "api.supertokens.co.uk",
+// 				AppName:         "SuperTokens",
+// 				WebsiteDomain:   "supertokens.co.uk",
+// 				APIBasePath:     &apiBasePath0,
+// 				WebsiteBasePath: &websiteBasePath0,
+// 			},
+// 			RecipeList: []supertokens.Recipe{
+// 				session.Init(nil),
+// 			},
+// 		},
+// 	}
+// 	for _, configValue := range configValues {
+// 		BeforeEach()
+// 		StartUpST("localhost", "8080")
+// 		err := supertokens.Init(configValue)
+// 		if err != nil {
+// 			t.Error(err.Error())
+// 		}
+// 		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
+// 		if err != nil {
+// 			t.Errorf(err.Error())
+// 		}
+// 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
+// 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+// 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
+// AfterEach()
+// 	}
+// }
 
 func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 	apiBasePath0 := "test/"
