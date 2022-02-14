@@ -21,6 +21,7 @@ import (
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const facebookID = "facebook"
@@ -28,7 +29,7 @@ const facebookID = "facebook"
 func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: facebookID,
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -62,7 +63,7 @@ func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
 					if err != nil {
 						return tpmodels.UserInfo{}, err
@@ -94,7 +95,7 @@ func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext supertokens.UserContext) string {
 					return config.ClientID
 				},
 			}

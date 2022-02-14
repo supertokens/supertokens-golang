@@ -225,7 +225,7 @@ func customAuth0Provider() tpmodels.TypeProvider {
 	var response tpmodels.TypeProvider
 
 	response.ID = "auth0"
-	response.Get = func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+	response.Get = func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 		if redirectURI == nil {
 			temp := ""
 			redirectURI = &temp
@@ -256,10 +256,10 @@ func customAuth0Provider() tpmodels.TypeProvider {
 					"response_type": "code",
 				},
 			},
-			GetClientId: func() string {
+			GetClientId: func(userContext supertokens.UserContext) string {
 				return os.Getenv("AUTH0_CLIENT_ID")
 			},
-			GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 
 				authCodeResponseJson, err := json.Marshal(authCodeResponse)
 				if err != nil {

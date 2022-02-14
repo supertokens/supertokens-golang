@@ -34,7 +34,7 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		providerInfo := provider.Get(nil, nil)
+		providerInfo := provider.Get(nil, nil, userContext)
 		params := map[string]string{}
 		for key, value := range providerInfo.AuthorisationRedirect.Params {
 			if reflect.ValueOf(value).Kind() == reflect.String {
@@ -49,7 +49,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		if providerInfo.GetRedirectURI != nil && !isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		if providerInfo.GetRedirectURI != nil && !isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 			// the backend wants to set the redirectURI - so we set that here.
 
 			// we add the not development keys because the oauth provider will
@@ -57,19 +57,19 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			// to the the user's website, which will handle the callback as usual.
 			// If we add this, then instead, the supertokens' site will redirect
 			// the user to this API layer, which is not needed.
-			rU, err := providerInfo.GetRedirectURI()
+			rU, err := providerInfo.GetRedirectURI(userContext)
 			if err != nil {
 				return tpmodels.AuthorisationUrlGETResponse{}, err
 			}
 			params["redirect_uri"] = rU
 		}
 
-		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 			params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
 
 			for key, value := range params {
-				if value == providerInfo.GetClientId() {
-					params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+				if value == providerInfo.GetClientId(userContext) {
+					params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId(userContext))
 				}
 			}
 
@@ -81,7 +81,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 		url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
 
-		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 			url = DevOauthAuthorisationUrl + "?" + paramsString
 		}
 
@@ -94,13 +94,13 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		{
-			providerInfo := provider.Get(nil, nil)
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			providerInfo := provider.Get(nil, nil, userContext)
+			if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 				redirectURI = DevOauthRedirectUrl
 			} else if providerInfo.GetRedirectURI != nil {
 				// we overwrite the redirectURI provided by the frontend
 				// since the backend wants to take charge of setting this.
-				rU, err := providerInfo.GetRedirectURI()
+				rU, err := providerInfo.GetRedirectURI(userContext)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
@@ -108,18 +108,18 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		providerInfo := provider.Get(&redirectURI, &code)
+		providerInfo := provider.Get(&redirectURI, &code, userContext)
 
 		var accessTokenAPIResponse map[string]interface{} = nil
 
 		if authCodeResponse != nil && len(authCodeResponse.(map[string]interface{})) != 0 {
 			accessTokenAPIResponse = authCodeResponse.(map[string]interface{})
 		} else {
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 
 				for key, value := range providerInfo.AccessTokenAPI.Params {
-					if value == providerInfo.GetClientId() {
-						providerInfo.AccessTokenAPI.Params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					if value == providerInfo.GetClientId(userContext) {
+						providerInfo.AccessTokenAPI.Params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId(userContext))
 					}
 				}
 			}
@@ -131,7 +131,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			accessTokenAPIResponse = accessTokenAPIResponseTemp
 		}
 
-		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
+		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse, userContext)
 		if err != nil {
 			errMsg := err.Error()
 			return tpmodels.SignInUpPOSTResponse{
