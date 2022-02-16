@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -37,11 +36,12 @@ func TestDeleteUser(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil), session.Init(nil),
+			Init(nil), session.Init(nil),
 		},
 	}
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -55,7 +55,7 @@ func TestDeleteUser(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if supertokens.MaxVersion("2.10", cdiVersion) == cdiVersion {
-		res, err := emailpassword.SignUp("test@example.com", "1234abcd")
+		res, err := SignUp("test@example.com", "1234abcd")
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -74,5 +74,4 @@ func TestDeleteUser(t *testing.T) {
 		}
 		assert.Equal(t, 0, len(reponseAfterDeletingUser.Users))
 	}
-	unittesting.AfterEach()
 }

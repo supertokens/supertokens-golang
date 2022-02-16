@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package unittesting
+package session
 
 import (
 	"encoding/json"
@@ -25,9 +25,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
@@ -42,7 +42,7 @@ func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						*originalImplementation.RefreshPOST = nil
@@ -54,7 +54,8 @@ func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -62,15 +63,13 @@ func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 404, res.StatusCode)
-
-	defer AfterEach()
-	defer testServer.Close()
 }
 
 func TestSessionVerifyMiddleware(t *testing.T) {
@@ -85,7 +84,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -104,7 +103,8 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -113,7 +113,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -127,8 +127,8 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		rw.Write(jsonResp)
 	})
 
-	mux.HandleFunc("/user/id", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/user/id", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		userId := sessionContainer.GetUserID()
 		resp := make(map[string]string)
 		resp["userId"] = userId
@@ -142,21 +142,21 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/verifySession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/verifySession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	customAntiCsrfCheck := true
-	mux.HandleFunc("/user/handleV0", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/user/handleV0", VerifySession(&sessmodels.VerifySessionOptions{
 		AntiCsrfCheck: &customAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		handle := sessionContainer.GetHandle()
 		resp := make(map[string]string)
 		resp["handle"] = handle
@@ -169,10 +169,10 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	}))
 
 	customSessionRequiredVal := false
-	mux.HandleFunc("/user/handleOptional", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/user/handleOptional", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredVal,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		resp := make(map[string]bool)
 		if sessionContainer == nil {
 			resp["message"] = false
@@ -187,8 +187,8 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		rw.Write(jsonResp)
 	}))
 
-	mux.HandleFunc("/logout", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/logout", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		err := sessionContainer.RevokeSession()
 		if err != nil {
 			rw.WriteHeader(500)
@@ -204,7 +204,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	}))
 
 	//this is never used. Rather the default api is used
-	mux.HandleFunc("/auth/session/refresh", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/auth/session/refresh", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
 		resp := make(map[string]bool)
 		resp["message"] = true
 		jsonResp, err := json.Marshal(resp)
@@ -213,17 +213,17 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		}
 		rw.WriteHeader(200)
 		rw.Write(jsonResp)
-
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/id", nil)
 	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
@@ -322,7 +322,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
-	cookieData2 := ExtractInfoFromResponse(res6)
+	cookieData2 := unittesting.ExtractInfoFromResponse(res6)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res6.StatusCode)
 
@@ -359,7 +359,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	res9, err := http.DefaultClient.Do(req9)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res9.StatusCode)
-	cookieData3 := ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
+	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
 	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
@@ -378,9 +378,6 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	}
 	assert.Equal(t, true, result9["message"])
 	res9.Body.Close()
-
-	defer AfterEach()
-	defer testServer.Close()
 }
 
 func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
@@ -395,7 +392,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -414,7 +411,8 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -423,7 +421,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -437,8 +435,8 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		rw.Write(jsonResp)
 	})
 
-	mux.HandleFunc("/user/id", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/user/id", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		userId := sessionContainer.GetUserID()
 		resp := make(map[string]string)
 		resp["userId"] = userId
@@ -452,21 +450,21 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/verifySession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/verifySession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	customAntiCsrfCheck := true
-	mux.HandleFunc("/user/handleV0", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/user/handleV0", VerifySession(&sessmodels.VerifySessionOptions{
 		AntiCsrfCheck: &customAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		handle := sessionContainer.GetHandle()
 		resp := make(map[string]string)
 		resp["handle"] = handle
@@ -479,10 +477,10 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	}))
 
 	customSessionRequiredVal := false
-	mux.HandleFunc("/user/handleOptional", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/user/handleOptional", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredVal,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		resp := make(map[string]bool)
 		if sessionContainer == nil {
 			resp["message"] = false
@@ -497,8 +495,8 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		rw.Write(jsonResp)
 	}))
 
-	mux.HandleFunc("/logout", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/logout", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		err := sessionContainer.RevokeSession()
 		if err != nil {
 			rw.WriteHeader(500)
@@ -514,13 +512,14 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/id", nil)
 	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
@@ -619,7 +618,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
-	cookieData2 := ExtractInfoFromResponse(res6)
+	cookieData2 := unittesting.ExtractInfoFromResponse(res6)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res6.StatusCode)
 
@@ -656,7 +655,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	res9, err := http.DefaultClient.Do(req9)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res9.StatusCode)
-	cookieData3 := ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
+	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
 	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
@@ -675,9 +674,6 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	}
 	assert.Equal(t, true, result9["message"])
 	res9.Body.Close()
-
-	defer AfterEach()
-	defer testServer.Close()
 }
 
 func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
@@ -694,7 +690,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 			APIBasePath:   &customapiBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -713,7 +709,8 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -722,7 +719,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -736,8 +733,8 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		rw.Write(jsonResp)
 	})
 
-	mux.HandleFunc("/custom/user/id", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/custom/user/id", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		userId := sessionContainer.GetUserID()
 		resp := make(map[string]string)
 		resp["userId"] = userId
@@ -751,21 +748,21 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/custom/verifySession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/custom/verifySession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	customAntiCsrfCheck := true
-	mux.HandleFunc("/custom/user/handleV0", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/custom/user/handleV0", VerifySession(&sessmodels.VerifySessionOptions{
 		AntiCsrfCheck: &customAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		handle := sessionContainer.GetHandle()
 		resp := make(map[string]string)
 		resp["handle"] = handle
@@ -778,10 +775,10 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	}))
 
 	customSessionRequiredVal := false
-	mux.HandleFunc("/custom/user/handleOptional", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/custom/user/handleOptional", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredVal,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		resp := make(map[string]bool)
 		if sessionContainer == nil {
 			resp["message"] = false
@@ -796,8 +793,8 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		rw.Write(jsonResp)
 	}))
 
-	mux.HandleFunc("/custom/logout", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/custom/logout", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		err := sessionContainer.RevokeSession()
 		if err != nil {
 			rw.WriteHeader(500)
@@ -813,7 +810,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	}))
 
 	//this is never used. Rather the default api is used
-	mux.HandleFunc("/custom/session/refresh", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/custom/session/refresh", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
 		resp := make(map[string]bool)
 		resp["message"] = true
 		jsonResp, err := json.Marshal(resp)
@@ -826,13 +823,14 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/id", nil)
 	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
@@ -931,7 +929,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
-	cookieData2 := ExtractInfoFromResponse(res6)
+	cookieData2 := unittesting.ExtractInfoFromResponse(res6)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res6.StatusCode)
 
@@ -968,7 +966,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	res9, err := http.DefaultClient.Do(req9)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res9.StatusCode)
-	cookieData3 := ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
+	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
 	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
@@ -987,9 +985,6 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	}
 	assert.Equal(t, true, result9["message"])
 	res9.Body.Close()
-
-	defer AfterEach()
-	defer testServer.Close()
 }
 
 func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
@@ -1006,7 +1001,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 			APIBasePath:   &customapiBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -1025,7 +1020,8 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1034,7 +1030,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -1048,8 +1044,8 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		rw.Write(jsonResp)
 	})
 
-	mux.HandleFunc("/custom/user/id", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/custom/user/id", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		userId := sessionContainer.GetUserID()
 		resp := make(map[string]string)
 		resp["userId"] = userId
@@ -1063,21 +1059,21 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/custom/verifySession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/custom/verifySession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	customAntiCsrfCheck := true
-	mux.HandleFunc("/custom/user/handleV0", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/custom/user/handleV0", VerifySession(&sessmodels.VerifySessionOptions{
 		AntiCsrfCheck: &customAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		handle := sessionContainer.GetHandle()
 		resp := make(map[string]string)
 		resp["handle"] = handle
@@ -1090,10 +1086,10 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	}))
 
 	customSessionRequiredVal := false
-	mux.HandleFunc("/custom/user/handleOptional", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/custom/user/handleOptional", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredVal,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		resp := make(map[string]bool)
 		if sessionContainer == nil {
 			resp["message"] = false
@@ -1108,8 +1104,8 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		rw.Write(jsonResp)
 	}))
 
-	mux.HandleFunc("/custom/logout", session.VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
-		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+	mux.HandleFunc("/custom/logout", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
 		err := sessionContainer.RevokeSession()
 		if err != nil {
 			rw.WriteHeader(500)
@@ -1125,13 +1121,14 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/id", nil)
 	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
@@ -1230,7 +1227,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
-	cookieData2 := ExtractInfoFromResponse(res6)
+	cookieData2 := unittesting.ExtractInfoFromResponse(res6)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res6.StatusCode)
 
@@ -1267,7 +1264,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	res9, err := http.DefaultClient.Do(req9)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res9.StatusCode)
-	cookieData3 := ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
+	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
 	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
@@ -1286,7 +1283,4 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	}
 	assert.Equal(t, true, result9["message"])
 	res9.Body.Close()
-
-	defer AfterEach()
-	defer testServer.Close()
 }

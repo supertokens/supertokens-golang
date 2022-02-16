@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
 	"bytes"
@@ -26,7 +26,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -47,7 +46,7 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
 						resetURL = strings.Split(passwordResetURLWithToken, "?")[0]
@@ -60,14 +59,16 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	res, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
@@ -114,10 +115,6 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 	assert.True(t, strings.HasPrefix(tokenInfo, "token="))
 	assert.True(t, strings.HasPrefix(ridInfo, "rid=emailpassword"))
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestPasswordValidation(t *testing.T) {
@@ -131,18 +128,20 @@ func TestPasswordValidation(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	formFields := map[string][]map[string]interface{}{
 		"formFields": {
@@ -217,10 +216,6 @@ func TestPasswordValidation(t *testing.T) {
 	json.Unmarshal(dataInBytes1, &data3)
 
 	assert.Equal(t, "RESET_PASSWORD_INVALID_TOKEN_ERROR", data3["status"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTokenMissingFromInput(t *testing.T) {
@@ -234,18 +229,20 @@ func TestTokenMissingFromInput(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	formFields := map[string][]map[string]interface{}{
 		"formFields": {
@@ -278,10 +275,6 @@ func TestTokenMissingFromInput(t *testing.T) {
 
 	assert.Equal(t, "Please provide the password reset token", data1["message"])
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
@@ -296,7 +289,7 @@ func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
 						token = strings.Split(strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[0], "=")[1]
@@ -307,14 +300,16 @@ func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	res, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
@@ -430,17 +425,7 @@ func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	parsedUser, err := emailpassword.ParseUser(result3["user"])
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.NotNil(t, parsedUser)
-	assert.Equal(t, userInfo["id"], parsedUser.ID)
-	assert.Equal(t, userInfo["email"], parsedUser.Email)
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
+	assert.NotNil(t, result3["user"])
+	assert.Equal(t, userInfo["id"], result3["user"].(map[string]interface{})["id"].(string))
+	assert.Equal(t, userInfo["email"], result3["user"].(map[string]interface{})["email"].(string))
 }

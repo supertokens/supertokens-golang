@@ -14,9 +14,10 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"io"
@@ -29,7 +30,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -38,6 +38,378 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+//Email exists tests
+func TestEmailExistGetStopsWorkingWhenDisabled(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				Override: &epmodels.OverrideStruct{
+					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
+						*originalImplementation.EmailExistsGET = nil
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	q := req.URL.Query()
+	q.Add("email", "random@gmail.com")
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 404, res.StatusCode)
+
+}
+
+func TestGoodInputsEmailExists(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	passwordVal := "validPass123"
+
+	emailVal := "random@email.com"
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": emailVal,
+			},
+			{
+				"id":    "password",
+				"value": passwordVal,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	assert.Equal(t, 200, resp.StatusCode)
+
+	assert.NoError(t, err)
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	var response map[string]interface{}
+	_ = json.Unmarshal(data, &response)
+
+	assert.Equal(t, "OK", response["status"])
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	q := req.URL.Query()
+	q.Add("email", "random@email.com")
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	data2, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	res.Body.Close()
+	var response2 map[string]interface{}
+	_ = json.Unmarshal(data2, &response2)
+
+	assert.Equal(t, "OK", response2["status"])
+	assert.Equal(t, true, response2["exists"])
+
+}
+
+func TestGoodInputsEmailDoesNotExists(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	q := req.URL.Query()
+	q.Add("email", "random@gmail.com")
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	data, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	res.Body.Close()
+	var response map[string]interface{}
+	_ = json.Unmarshal(data, &response)
+
+	assert.Equal(t, "OK", response["status"])
+	assert.Equal(t, false, response["exists"])
+
+}
+
+func TestEmailExistsWithSyntacticallyInvalidEmail(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	passwordVal := "validPass123"
+
+	emailVal := "random@email.com"
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": emailVal,
+			},
+			{
+				"id":    "password",
+				"value": passwordVal,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	assert.Equal(t, 200, resp.StatusCode)
+
+	assert.NoError(t, err)
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	var response map[string]interface{}
+	_ = json.Unmarshal(data, &response)
+
+	assert.Equal(t, "OK", response["status"])
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	q := req.URL.Query()
+	q.Add("email", "randomemail.com")
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	data2, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	res.Body.Close()
+	var response2 map[string]interface{}
+	_ = json.Unmarshal(data2, &response2)
+
+	assert.Equal(t, "OK", response2["status"])
+	assert.Equal(t, false, response2["exists"])
+
+}
+
+func TestEmailExistsWithUnNormalizedEmail(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	passwordVal := "validPass123"
+
+	emailVal := "random@email.com"
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": emailVal,
+			},
+			{
+				"id":    "password",
+				"value": passwordVal,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	assert.Equal(t, 200, resp.StatusCode)
+
+	assert.NoError(t, err)
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	var response map[string]interface{}
+	_ = json.Unmarshal(data, &response)
+
+	assert.Equal(t, "OK", response["status"])
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	q := req.URL.Query()
+	q.Add("email", "RaNDom@email.com")
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	data2, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	res.Body.Close()
+	var response2 map[string]interface{}
+	_ = json.Unmarshal(data2, &response2)
+
+	assert.Equal(t, "OK", response2["status"])
+	assert.Equal(t, true, response2["exists"])
+
+}
+
+func TestEmailDoesExistsWithBadInput(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 400, res.StatusCode)
+}
+
+//email_verify tests
 func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
@@ -50,21 +422,23 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -81,11 +455,11 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	verifyToken, err := emailpassword.CreateEmailVerificationToken(userId.(string))
+	verifyToken, err := CreateEmailVerificationToken(userId.(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
-	emailpassword.VerifyEmailUsingToken(verifyToken.OK.Token)
+	VerifyEmailUsingToken(verifyToken.OK.Token)
 
 	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
 
@@ -102,10 +476,6 @@ func TestGenerateTokenAPIWithValidInputAndEmailNotVerified(t *testing.T) {
 
 	assert.Equal(t, "EMAIL_ALREADY_VERIFIED_ERROR", response1["status"])
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
@@ -120,21 +490,23 @@ func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/user/email/verify/token", nil)
 	if err != nil {
@@ -155,10 +527,6 @@ func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, "unauthorised", response["message"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
@@ -173,22 +541,24 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.SetKeyAndNumberValueInConfig("access_token_validity", 2)
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -269,10 +639,6 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 
 	assert.Equal(t, "OK", response2["status"])
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
@@ -289,7 +655,7 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						userInfo = user
@@ -303,14 +669,16 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -344,10 +712,6 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 	assert.Equal(t, userId, userInfo.ID)
 	assert.NotNil(t, emailToken)
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestEmailVerifyApiWithValidInput(t *testing.T) {
@@ -363,7 +727,7 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -376,14 +740,16 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -430,10 +796,6 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 	var response2 map[string]interface{}
 	_ = json.Unmarshal(datainBytes, &response2)
 	assert.Equal(t, "OK", response2["status"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTheEmailVerifyApiWithInvalidTokenAndCheckError(t *testing.T) {
@@ -448,21 +810,23 @@ func TestTheEmailVerifyApiWithInvalidTokenAndCheckError(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/user/email/verify", strings.NewReader(`{"method":"token","token":"randomToken"}`))
 	if err != nil {
@@ -481,10 +845,6 @@ func TestTheEmailVerifyApiWithInvalidTokenAndCheckError(t *testing.T) {
 	_ = json.Unmarshal(datainBytes, &response2)
 	assert.Equal(t, 200, res.StatusCode)
 	assert.Equal(t, "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR", response2["status"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestEmailVerifyAPIWithTokenOfNotTypeString(t *testing.T) {
@@ -499,21 +859,23 @@ func TestEmailVerifyAPIWithTokenOfNotTypeString(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/user/email/verify", strings.NewReader(`{"method":"token","token":`+strconv.Itoa(2000)+`}`))
 	if err != nil {
@@ -532,10 +894,6 @@ func TestEmailVerifyAPIWithTokenOfNotTypeString(t *testing.T) {
 	_ = json.Unmarshal(datainBytes, &response2)
 	assert.Equal(t, 400, res.StatusCode)
 	assert.Equal(t, "The email verification token must be a string", response2["message"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerificationIfGiven(t *testing.T) {
@@ -552,7 +910,7 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -581,14 +939,16 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -640,10 +1000,6 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 	assert.Equal(t, "test@gmail.com", userInfoFromCallback.Email)
 	assert.Equal(t, userId, userInfoFromCallback.ID)
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
@@ -659,7 +1015,7 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -672,14 +1028,16 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -746,10 +1104,6 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 	_ = json.Unmarshal(datainBytes1, &response3)
 	assert.Equal(t, "OK", response3["status"])
 	assert.Equal(t, true, response3["isVerified"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestVerifySessionWithNoSessionUsingTheGetMethod(t *testing.T) {
@@ -764,21 +1118,23 @@ func TestVerifySessionWithNoSessionUsingTheGetMethod(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/user/email/verify", nil)
 	if err != nil {
@@ -797,10 +1153,6 @@ func TestVerifySessionWithNoSessionUsingTheGetMethod(t *testing.T) {
 	_ = json.Unmarshal(datainBytes, &response2)
 	assert.Equal(t, 401, res.StatusCode)
 	assert.Equal(t, "unauthorised", response2["message"])
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
@@ -817,7 +1169,7 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -846,14 +1198,16 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -904,10 +1258,6 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 
 	assert.Equal(t, "test@gmail.com", user.Email)
 	assert.Equal(t, userId, user.ID)
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
@@ -924,7 +1274,7 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -953,14 +1303,16 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -1011,10 +1363,6 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 
 	assert.Equal(t, "test@gmail.com", user.Email)
 	assert.Equal(t, userId, user.ID)
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T) {
@@ -1031,7 +1379,7 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -1060,14 +1408,16 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -1116,10 +1466,6 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 	assert.Equal(t, "Verify Email Error\n", string(datainBytes))
 	assert.Equal(t, "test@gmail.com", user.Email)
 	assert.Equal(t, userId, user.ID)
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testing.T) {
@@ -1136,7 +1482,7 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
@@ -1165,14 +1511,16 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -1221,10 +1569,6 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 	assert.Equal(t, "Verify Email Error\n", string(datainBytes))
 	assert.Equal(t, "test@gmail.com", user.Email)
 	assert.Equal(t, userId, user.ID)
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
@@ -1239,21 +1583,23 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -1269,19 +1615,15 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 
 	userId := response["user"].(map[string]interface{})["id"]
 
-	res, err := emailpassword.CreateEmailVerificationToken(userId.(string))
+	res, err := CreateEmailVerificationToken(userId.(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
 	verifyToken := res.OK.Token
 
-	emailpassword.RevokeEmailVerificationTokens(userId.(string))
+	RevokeEmailVerificationTokens(userId.(string))
 
-	res1, err := emailpassword.VerifyEmailUsingToken(verifyToken)
+	res1, err := VerifyEmailUsingToken(verifyToken)
 	assert.Nil(t, res1)
 	assert.Equal(t, "email verification token is invalid", err.Error())
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }

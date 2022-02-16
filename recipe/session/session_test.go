@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package unittesting
+package session
 
 import (
 	"encoding/json"
@@ -23,9 +23,9 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
@@ -40,13 +40,14 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -55,15 +56,18 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "rope", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 	assert.Equal(t, []string{"front-token, id-refresh-token, anti-csrf"}, res.Header["Access-Control-Expose-Headers"])
 	assert.Equal(t, "", cookieData["refreshTokenDomain"])
 	assert.Equal(t, "", cookieData["idRefreshTokenDomain"])
@@ -75,10 +79,6 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTokenTheftDetection(t *testing.T) {
@@ -93,13 +93,14 @@ func TestTokenTheftDetection(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -108,35 +109,38 @@ func TestTokenTheftDetection(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/verifySession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/verifySession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res2, err := http.DefaultClient.Do(req2)
-	cookieData2 := ExtractInfoFromResponse(res2)
+	cookieData2 := unittesting.ExtractInfoFromResponse(res2)
 	assert.NoError(t, err)
 
 	reqV, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
@@ -162,10 +166,6 @@ func TestTokenTheftDetection(t *testing.T) {
 	assert.Equal(t, "token theft detected", jsonResponse["message"])
 	assert.Equal(t, 401, res3.StatusCode)
 	assert.NoError(t, err)
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
@@ -181,13 +181,14 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -196,34 +197,37 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "userId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "userId", map[string]interface{}{}, map[string]interface{}{})
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/verifySession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/verifySession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res2, err := http.DefaultClient.Do(req2)
-	cookieData2 := ExtractInfoFromResponse(res2)
+	cookieData2 := unittesting.ExtractInfoFromResponse(res2)
 	assert.NoError(t, err)
 
 	reqV, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
@@ -249,10 +253,6 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	assert.Equal(t, "token theft detected", jsonResponse["message"])
 	assert.Equal(t, 401, res3.StatusCode)
 	assert.NoError(t, err)
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
@@ -267,13 +267,14 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -281,40 +282,37 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "someId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "someId", map[string]interface{}{}, map[string]interface{}{})
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
-	mux.HandleFunc("/getSession", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/getSession", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
 	assert.NoError(t, err)
 	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
-	// req1.Header.Add("anti-csrf", cookieData["antiCsrf
 	res1, err := http.DefaultClient.Do(req1)
 	assert.NoError(t, err)
 	assert.Equal(t, 401, res1.StatusCode)
-
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestRevokingOfSessions(t *testing.T) {
@@ -329,13 +327,14 @@ func TestRevokingOfSessions(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -343,10 +342,13 @@ func TestRevokingOfSessions(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "someUniqueID", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "someUniqueID", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
@@ -354,12 +356,12 @@ func TestRevokingOfSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	_, err = session.RevokeAllSessionsForUser("someUniqueID")
+	_, err = RevokeAllSessionsForUser("someUniqueID")
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionHandlesAfterRevoke, err := session.GetAllSessionHandlesForUser("someUniqueID")
+	sessionHandlesAfterRevoke, err := GetAllSessionHandlesForUser("someUniqueID")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -377,29 +379,24 @@ func TestRevokingOfSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res2.StatusCode)
 
-	sessionHandlesBeforeRevoke1, err := session.GetAllSessionHandlesForUser("someUniqueID")
+	sessionHandlesBeforeRevoke1, err := GetAllSessionHandlesForUser("someUniqueID")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 2, len(sessionHandlesBeforeRevoke1))
 
-	revokedSessions, err := session.RevokeAllSessionsForUser("someUniqueID")
+	revokedSessions, err := RevokeAllSessionsForUser("someUniqueID")
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	assert.Equal(t, 2, len(revokedSessions))
 
-	sessionHandlesAfterRevoke1, err := session.GetAllSessionHandlesForUser("someUniqueID")
+	sessionHandlesAfterRevoke1, err := GetAllSessionHandlesForUser("someUniqueID")
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 0, len(sessionHandlesAfterRevoke1))
-
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestManipulatingSessionData(t *testing.T) {
@@ -414,13 +411,14 @@ func TestManipulatingSessionData(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -428,10 +426,13 @@ func TestManipulatingSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "rp", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "rp", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	//create a newSession
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
@@ -440,27 +441,27 @@ func TestManipulatingSessionData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := session.GetAllSessionHandlesForUser("rp")
+	sessionHandles, err := GetAllSessionHandlesForUser("rp")
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	session.UpdateSessionData(sessionHandles[0], map[string]interface{}{
+	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "John",
 	})
 
-	sessionInfo, err := session.GetSessionInformation(sessionHandles[0])
+	sessionInfo, err := GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, "John", sessionInfo.SessionData["name"])
 
-	session.UpdateSessionData(sessionHandles[0], map[string]interface{}{
+	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "Joel",
 	})
 
-	sessionInfo, err = session.GetSessionInformation(sessionHandles[0])
+	sessionInfo, err = GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
@@ -468,18 +469,13 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	//update session data with wrong session handle
 
-	err = session.UpdateSessionData("random", map[string]interface{}{
+	err = UpdateSessionData("random", map[string]interface{}{
 		"name": "Ronit",
 	})
 
 	assert.Error(t, err)
 
 	assert.Equal(t, "Session does not exist.", err.Error())
-
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestNilValuesPassedForSessionData(t *testing.T) {
@@ -494,13 +490,14 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -508,10 +505,13 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, nil)
+		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	//create a newSession
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
@@ -520,31 +520,26 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := session.GetAllSessionHandlesForUser("uniqueId")
+	sessionHandles, err := GetAllSessionHandlesForUser("uniqueId")
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionInfo, err := session.GetSessionInformation(sessionHandles[0])
+	sessionInfo, err := GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, map[string]interface{}{}, sessionInfo.SessionData)
 
-	session.UpdateSessionData(sessionHandles[0], map[string]interface{}{
+	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "John",
 	})
-	sessionInfo, err = session.GetSessionInformation(sessionHandles[0])
+	sessionInfo, err = GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, "John", sessionInfo.SessionData["name"])
-
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestManipulatingJWTpayload(t *testing.T) {
@@ -559,13 +554,14 @@ func TestManipulatingJWTpayload(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -573,10 +569,13 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	//create a newSession
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
@@ -585,46 +584,41 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := session.GetAllSessionHandlesForUser("uniqueId")
+	sessionHandles, err := GetAllSessionHandlesForUser("uniqueId")
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	err = session.UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
+	err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value",
 	})
 
 	assert.NoError(t, err)
 
-	sessionInfo, err := session.GetSessionInformation(sessionHandles[0])
+	sessionInfo, err := GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, "value", sessionInfo.AccessTokenPayload["key"])
 
-	err = session.UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
+	err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value2",
 	})
 
 	assert.NoError(t, err)
 
-	sessionInfo1, err := session.GetSessionInformation(sessionHandles[0])
+	sessionInfo1, err := GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
 	assert.Equal(t, "value2", sessionInfo1.AccessTokenPayload["key"])
 
-	err = session.UpdateAccessTokenPayload("random", map[string]interface{}{
+	err = UpdateAccessTokenPayload("random", map[string]interface{}{
 		"key": "value3",
 	})
 
 	assert.Error(t, err)
-
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFine(t *testing.T) {
@@ -639,13 +633,14 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -653,16 +648,16 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "supertokens", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "supertokens", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	customValForAntiCsrfCheck := false
 	customSessionRequiredValue := true
-	mux.HandleFunc("/getSessionWithAntiCsrfFalse", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/getSessionWithAntiCsrfFalse", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sess, err := session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -674,11 +669,11 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 
 	customValForAntiCsrfCheck1 := true
 	customSessionRequiredValue1 := true
-	mux.HandleFunc("/getSessionWithAntiCsrfTrue", session.VerifySession(&sessmodels.VerifySessionOptions{
+	mux.HandleFunc("/getSessionWithAntiCsrfTrue", VerifySession(&sessmodels.VerifySessionOptions{
 		SessionRequired: &customSessionRequiredValue1,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sess, err := session.GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue1,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 		})
@@ -689,6 +684,9 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	//create a newSession
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
@@ -696,7 +694,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	cookieDataWithoutAntiCsrf := ExtractInfoFromResponseWhenAntiCSRFisNone(res)
+	cookieDataWithoutAntiCsrf := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSessionWithAntiCsrfFalse", nil)
 	assert.NoError(t, err)
@@ -711,11 +709,6 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res2.StatusCode)
-
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
@@ -731,7 +724,7 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
 			}),
@@ -739,13 +732,12 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 	}
 
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 
 	err := supertokens.Init(configValue)
 
 	assert.NoError(t, err)
-
-	AfterEach()
 }
 
 func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
@@ -761,7 +753,7 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
 			}),
@@ -769,13 +761,10 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 	}
 
 	BeforeEach()
-	StartUpST("localhost", "8080")
-
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
-
 	assert.NoError(t, err)
-
-	AfterEach()
 }
 
 func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
@@ -791,7 +780,7 @@ func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
 			}),
@@ -799,13 +788,10 @@ func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 	}
 
 	BeforeEach()
-	StartUpST("localhost", "8080")
-
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
-
 	assert.NoError(t, err)
-
-	AfterEach()
 }
 
 func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
@@ -820,13 +806,14 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -834,10 +821,13 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	//create a newSession
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
@@ -846,20 +836,16 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandlers, err := session.GetAllSessionHandlesForUser("ronit")
+	sessionHandlers, err := GetAllSessionHandlesForUser("ronit")
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionInfo, err := session.GetSessionInformation(sessionHandlers[0])
+	sessionInfo, err := GetSessionInformation(sessionHandlers[0])
 	assert.NoError(t, err)
 
 	assert.Equal(t, "ronit", sessionInfo.UserId)
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testing.T) {
@@ -874,13 +860,14 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -888,10 +875,13 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	//create a newSession
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
@@ -900,23 +890,19 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandlers, err := session.GetAllSessionHandlesForUser("ronit")
+	sessionHandlers, err := GetAllSessionHandlesForUser("ronit")
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionInfo, err := session.GetSessionInformation(sessionHandlers[0])
+	sessionInfo, err := GetSessionInformation(sessionHandlers[0])
 	assert.NoError(t, err)
 	assert.Equal(t, "ronit", sessionInfo.UserId)
-	_, err = session.RevokeMultipleSessions(sessionHandlers)
+	_, err = RevokeMultipleSessions(sessionHandlers)
 	assert.NoError(t, err)
-	_, err = session.RevokeAllSessionsForUser("ronit")
+	_, err = RevokeAllSessionsForUser("ronit")
 	assert.NoError(t, err)
-	_, err = session.GetSessionInformation(sessionHandlers[0])
+	_, err = GetSessionInformation(sessionHandlers[0])
 	assert.Error(t, err)
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }

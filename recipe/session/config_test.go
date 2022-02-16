@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package unittesting
+package session
 
 import (
 	"net/http"
@@ -22,123 +22,127 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestSuperTokensInitWithAbsentOptionalFieldsInAppInfo(t *testing.T) {
-	apiBasePath := "test/"
-	websiteBasePath := "test1/"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:       "SuperTokens",
-				APIDomain:     "api.supertokens.io",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+func TestSuperTokensInitWithJustTheCompulsoryFields(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:         "SuperTokens",
-				APIDomain:       "api.supertokens.io",
-				WebsiteDomain:   "supertokens.io",
-				APIBasePath:     &apiBasePath,
-				WebsiteBasePath: &websiteBasePath,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
 		},
 	}
-	for _, configValue := range configValues {
+	BeforeEach()
 
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error("Failed to get a supertokens instance")
-		}
-		supertokensInstance, err := supertokens.GetInstanceOrThrowError()
+	unittesting.StartUpST("localhost", "8080")
 
-		if err != nil {
-			t.Error("could not find a supertokens instance")
-		}
+	defer AfterEach()
 
-		if configValue.AppInfo.APIBasePath != nil {
-			assert.Equal(t, "/test", supertokensInstance.AppInfo.APIBasePath.GetAsStringDangerous())
-			assert.Equal(t, "/test1", supertokensInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous())
-		} else {
-			assert.Equal(t, "/auth", supertokensInstance.AppInfo.APIBasePath.GetAsStringDangerous())
-			assert.Equal(t, "/auth", supertokensInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous())
-		}
-		AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
 	}
+
+	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "/auth", supertokensInstance.AppInfo.APIBasePath.GetAsStringDangerous())
+	assert.Equal(t, "/auth", supertokensInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous())
 }
 
-func TestSuperTokensInitWithAbsenceOfCompulsoryInputInAppInfo(t *testing.T) {
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+func TestSuperTokensInitWithOptionalFields(t *testing.T) {
+	apiBasePath := "test/"
+	websiteBasePath := "test1/"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+		AppInfo: supertokens.AppInfo{
+			AppName:         "SuperTokens",
+			APIDomain:       "api.supertokens.io",
+			WebsiteDomain:   "supertokens.io",
+			APIBasePath:     &apiBasePath,
+			WebsiteBasePath: &websiteBasePath,
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				AppName:   "SuperTokens",
-				APIDomain: "api.supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{}),
 		},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			errMessage := err.Error()
-			if configValue.AppInfo.AppName != "SuperTokens" {
-				assert.Equal(t, errMessage, "Please provide your appName inside the appInfo object when calling supertokens.init")
-			} else if configValue.AppInfo.APIDomain != "api.supertokens.io" {
-				assert.Equal(t, errMessage, "Please provide your apiDomain inside the appInfo object when calling supertokens.init")
-			} else if configValue.AppInfo.WebsiteDomain != "supertokens.io" {
-				assert.Equal(t, errMessage, "Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
-			}
-		}
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "/test", supertokensInstance.AppInfo.APIBasePath.GetAsStringDangerous())
+	assert.Equal(t, "/test1", supertokensInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous())
+}
+
+func TestSuperTokensInitWithoutApiDomain(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	err := supertokens.Init(configValue)
+	if err != nil {
+		assert.Equal(t, err.Error(), "Please provide your apiDomain inside the appInfo object when calling supertokens.init")
+	}
+	AfterEach()
+}
+
+func TestSuperTokensInitWithoutWebsiteDomain(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "SuperTokens",
+			APIDomain: "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		assert.Equal(t, err.Error(), "Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
 	}
 }
 
@@ -155,18 +159,12 @@ func TestSuperTokensInitWith0RecipeModules(t *testing.T) {
 		RecipeList: []supertokens.Recipe{},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage != "please provide at least one recipe to the supertokens.init function call" {
-			t.Errorf(err.Error())
-		} else {
-			assert.Equal(t, errorMessage, "please provide at least one recipe to the supertokens.init function call")
-		}
+		assert.Equal(t, err.Error(), "please provide at least one recipe to the supertokens.init function call")
 	}
-
-	defer AfterEach()
 }
 
 func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
@@ -183,7 +181,7 @@ func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(
+			Init(
 				&sessmodels.TypeInput{
 					CookieDomain:             &cookieDomain,
 					SessionExpiredStatusCode: &sessionExpiredStatusCode,
@@ -193,20 +191,20 @@ func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 
-	sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	assert.Equal(t, *sessionSingletonInstance.Config.CookieDomain, "testdomain")
 	assert.Equal(t, sessionSingletonInstance.Config.SessionExpiredStatusCode, 111)
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-	AfterEach()
 }
 
 func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsLax(t *testing.T) {
@@ -221,19 +219,18 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsLax(t *tes
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				CookieSameSite: &cookieSameSite0,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-
-	defer AfterEach()
 }
 
 func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsNone(t *testing.T) {
@@ -248,19 +245,18 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsNone(t *te
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				CookieSameSite: &cookieSameSite0,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-
-	defer AfterEach()
 }
 
 func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsStrict(t *testing.T) {
@@ -275,19 +271,18 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsStrict(t *
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				CookieSameSite: &cookieSameSite0,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-
-	defer AfterEach()
 }
 
 func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsRandom(t *testing.T) {
@@ -302,93 +297,17 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsRandom(t *
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				CookieSameSite: &cookieSameSite0,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		if err != nil {
-			errorMessage := err.Error()
-			if errorMessage != `cookie same site must be one of "strict", "lax", or "none"` {
-				t.Errorf(err.Error())
-			} else {
-				assert.Equal(t, errorMessage, `cookie same site must be one of "strict", "lax", or "none"`)
-			}
-		}
-	}
-
-	defer AfterEach()
-}
-
-func TestSuperTokensWithVariousApiBasePath(t *testing.T) {
-	apiBasePath0 := "/custom/a"
-	apiBasePath1 := "/"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-				APIBasePath:   &apiBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-				APIBasePath:   &apiBasePath1,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
-		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
-		},
-	}
-
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		if configValue.AppInfo.APIBasePath != nil {
-			checker := RemoveTrailingSlashFromTheEndOfString(*configValue.AppInfo.APIBasePath) + "/session/refresh"
-			assert.Equal(t, sessionSingletonInstance.Config.RefreshTokenPath.GetAsStringDangerous(), checker)
-		} else {
-			assert.Equal(t, sessionSingletonInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
-		}
-		AfterEach()
+		assert.Equal(t, err.Error(), `cookie same site must be one of "strict", "lax", or "none"`)
 	}
 }
 
@@ -404,17 +323,17 @@ func TestSuperTokensWithCustomApiKey(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	assert.Equal(t, *supertokens.QuerierAPIKey, configValue.Supertokens.APIKey)
-	AfterEach()
 }
 
 func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T) {
@@ -431,7 +350,7 @@ func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T
 			APIBasePath:   &customAPIBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(
+			Init(
 				&sessmodels.TypeInput{
 					SessionExpiredStatusCode: &customSessionExpiredCode,
 				},
@@ -439,17 +358,17 @@ func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
 	}
-	sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Errorf(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.SessionExpiredStatusCode, 402)
-	AfterEach()
 }
 
 func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
@@ -463,11 +382,12 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Errorf(err.Error())
@@ -478,251 +398,185 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 	assert.Equal(t, hosts[1].Domain.GetAsStringDangerous(), "https://try.supertokens.io")
 	assert.Equal(t, hosts[2].Domain.GetAsStringDangerous(), "https://try.supertokens.io:8080")
 	assert.Equal(t, hosts[3].Domain.GetAsStringDangerous(), "http://localhost:90")
-
-	AfterEach()
 }
-
-// func TestSuperTokensInitWithNoneLaxTrueSessionConfigResults(t *testing.T) {
-// 	apiBasePath0 := "test/"
-// 	websiteBasePath0 := "test1/"
-// 	configValues := []supertokens.TypeInput{
-// 		{
-// 			Supertokens: &supertokens.ConnectionInfo{
-// 				ConnectionURI: "http://localhost:8080",
-// 			},
-// 			AppInfo: supertokens.AppInfo{
-// 				APIDomain:       "https://api.supertokens.io",
-// 				AppName:         "SuperTokens",
-// 				WebsiteDomain:   "supertokens.io",
-// 				APIBasePath:     &apiBasePath0,
-// 				WebsiteBasePath: &websiteBasePath0,
-// 			},
-// 			RecipeList: []supertokens.Recipe{
-// 				session.Init(nil),
-// 			},
-// 		},
-// 		{
-// 			Supertokens: &supertokens.ConnectionInfo{
-// 				ConnectionURI: "http://localhost:8080",
-// 			},
-// 			AppInfo: supertokens.AppInfo{
-// 				APIDomain:       "api.supertokens.io",
-// 				AppName:         "SuperTokens",
-// 				WebsiteDomain:   "supertokens.io",
-// 				APIBasePath:     &apiBasePath0,
-// 				WebsiteBasePath: &websiteBasePath0,
-// 			},
-// 			RecipeList: []supertokens.Recipe{
-// 				session.Init(nil),
-// 			},
-// 		},
-// 		{
-// 			Supertokens: &supertokens.ConnectionInfo{
-// 				ConnectionURI: "http://localhost:8080",
-// 			},
-// 			AppInfo: supertokens.AppInfo{
-// 				APIDomain:       "api.supertokens.co.uk",
-// 				AppName:         "SuperTokens",
-// 				WebsiteDomain:   "supertokens.co.uk",
-// 				APIBasePath:     &apiBasePath0,
-// 				WebsiteBasePath: &websiteBasePath0,
-// 			},
-// 			RecipeList: []supertokens.Recipe{
-// 				session.Init(nil),
-// 			},
-// 		},
-// 	}
-// 	for _, configValue := range configValues {
-// 		BeforeEach()
-// 		StartUpST("localhost", "8080")
-// 		err := supertokens.Init(configValue)
-// 		if err != nil {
-// 			t.Error(err.Error())
-// 		}
-// 		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-// 		if err != nil {
-// 			t.Errorf(err.Error())
-// 		}
-// 		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
-// 		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
-// 		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-// AfterEach()
-// 	}
-// }
 
 func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 	apiBasePath0 := "test/"
 	websiteBasePath0 := "test1/"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "127.0.0.1:3000",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "127.0.0.1:9000",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:       "127.0.0.1:3000",
+			AppName:         "SuperTokens",
+			WebsiteDomain:   "127.0.0.1:9000",
+			APIBasePath:     &apiBasePath0,
+			WebsiteBasePath: &websiteBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
 		},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
 	}
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
 }
 
 func TestSuperTokensInitWithCustomHeaderLaxTrueSessionConfigResults(t *testing.T) {
 	apiBasePath0 := "/"
 	customAntiCsrf := "VIA_CUSTOM_HEADER"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-				APIBasePath:   &apiBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(
-					&sessmodels.TypeInput{
-						AntiCsrf: &customAntiCsrf,
-					},
-				),
-			},
+	configValue := supertokens.TypeInput{
+
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIBasePath:   &apiBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
+				&sessmodels.TypeInput{
+					AntiCsrf: &customAntiCsrf,
+				},
+			),
 		},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
 	}
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
 
 func TestSuperTokensInitWithCustomHeaderLaxFalseSessionConfigResults(t *testing.T) {
 	apiBasePath0 := "test/"
 	websiteBasePath0 := "test1/"
 	customAntiCsrf := "VIA_CUSTOM_HEADER"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "127.0.0.1:3000",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "127.0.0.1:9000",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(
-					&sessmodels.TypeInput{
-						AntiCsrf: &customAntiCsrf,
-					},
-				),
-			},
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:       "127.0.0.1:3000",
+			AppName:         "SuperTokens",
+			WebsiteDomain:   "127.0.0.1:9000",
+			APIBasePath:     &apiBasePath0,
+			WebsiteBasePath: &websiteBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
+				&sessmodels.TypeInput{
+					AntiCsrf: &customAntiCsrf,
+				},
+			),
 		},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
 	}
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
 }
 
-func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResults(t *testing.T) {
+func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithNormalWebsiteDomain(t *testing.T) {
 	apiBasePath0 := "test/"
 	websiteBasePath0 := "test1/"
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "api.supertokens.com",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "supertokens.io",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "api.supertokens.com",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "127.0.0.1:9000",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:       "api.supertokens.com",
+			AppName:         "SuperTokens",
+			WebsiteDomain:   "supertokens.io",
+			APIBasePath:     &apiBasePath0,
+			WebsiteBasePath: &websiteBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
 		},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		sessionSingletonInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Errorf(err.Error())
-		}
-		assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
-		assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
 	}
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
+}
+
+func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithLocalWebsiteDomain(t *testing.T) {
+	apiBasePath0 := "test/"
+	websiteBasePath0 := "test1/"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:       "api.supertokens.com",
+			AppName:         "SuperTokens",
+			WebsiteDomain:   "127.0.0.1:9000",
+			APIBasePath:     &apiBasePath0,
+			WebsiteBasePath: &websiteBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
+	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
 
 func TestSuperTokensWithAntiCSRFNone(t *testing.T) {
@@ -741,7 +595,7 @@ func TestSuperTokensWithAntiCSRFNone(t *testing.T) {
 			WebsiteBasePath: &websiteBasePath0,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(
+			Init(
 				&sessmodels.TypeInput{
 					AntiCsrf: &customAntiCsrfVal,
 				},
@@ -749,17 +603,17 @@ func TestSuperTokensWithAntiCSRFNone(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.AntiCsrf, "NONE")
-	AfterEach()
 }
 
 func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
@@ -778,7 +632,7 @@ func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
 			WebsiteBasePath: &websiteBasePath0,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(
+			Init(
 				&sessmodels.TypeInput{
 					AntiCsrf: &customAntiCsrfVal,
 				},
@@ -786,75 +640,71 @@ func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage == "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'" {
-			assert.Equal(t, errorMessage, "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
-		} else {
-			t.Error(errorMessage)
-		}
+		assert.Equal(t, err.Error(), "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
 	}
-	AfterEach()
 }
 
-func TestSuperTokensInitWithDifferentWebAndApiDomain(t *testing.T) {
+func TestSuperTokensInitWithDifferentWebAndApiDomainWithDefaultCookieSecure(t *testing.T) {
+	apiBasePath0 := "test/"
+	websiteBasePath0 := "test1/"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:       "http://api.test.com:3000",
+			AppName:         "SuperTokens",
+			WebsiteDomain:   "google.com",
+			APIBasePath:     &apiBasePath0,
+			WebsiteBasePath: &websiteBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+	}
+}
+func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFalse(t *testing.T) {
 	apiBasePath0 := "test/"
 	websiteBasePath0 := "test1/"
 	customCookieSecureVal := false
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "http://api.test.com:3000",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "google.com",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(nil),
-			},
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:       "https://api.test.com:3000",
-				AppName:         "SuperTokens",
-				WebsiteDomain:   "google.com",
-				APIBasePath:     &apiBasePath0,
-				WebsiteBasePath: &websiteBasePath0,
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					CookieSecure: &customCookieSecureVal,
-				}),
-			},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:       "http://api.test.com:3000",
+			AppName:         "SuperTokens",
+			WebsiteDomain:   "google.com",
+			APIBasePath:     &apiBasePath0,
+			WebsiteBasePath: &websiteBasePath0,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				CookieSecure: &customCookieSecureVal,
+			}),
 		},
 	}
-	for _, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			errorMessage := err.Error()
-			if errorMessage == "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false." {
-				assert.Equal(t, errorMessage, "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-			} else {
-				t.Error(errorMessage)
-			}
-		}
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
 	}
 }
 
 func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
-
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -865,22 +715,22 @@ func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
 			WebsiteDomain: "http://localhost:3000",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSecure, true)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSameSite, "none")
-	AfterEach()
 }
 
 func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
@@ -894,21 +744,16 @@ func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
 			APIBasePath:   &customAPIBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage == "please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil" {
-			assert.Equal(t, errorMessage, "please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
-		} else {
-			t.Error(err.Error())
-		}
+		assert.Equal(t, err.Error(), "please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
 	}
-	AfterEach()
 }
 
 func TestSuperTokensInitWithoutAPIDomain(t *testing.T) {
@@ -923,21 +768,16 @@ func TestSuperTokensInitWithoutAPIDomain(t *testing.T) {
 			APIBasePath:   &customAPIBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage == "Please provide your apiDomain inside the appInfo object when calling supertokens.init" {
-			assert.Equal(t, errorMessage, "Please provide your apiDomain inside the appInfo object when calling supertokens.init")
-		} else {
-			t.Error(errorMessage)
-		}
+		assert.Equal(t, err.Error(), "Please provide your apiDomain inside the appInfo object when calling supertokens.init")
 	}
-	AfterEach()
 }
 
 func TestSuperTokensInitWithoutAppName(t *testing.T) {
@@ -952,21 +792,16 @@ func TestSuperTokensInitWithoutAppName(t *testing.T) {
 			APIBasePath:   &customAPIBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage == "Please provide your appName inside the appInfo object when calling supertokens.init" {
-			assert.Equal(t, errorMessage, "Please provide your appName inside the appInfo object when calling supertokens.init")
-		} else {
-			t.Error(errorMessage)
-		}
+		assert.Equal(t, err.Error(), "Please provide your appName inside the appInfo object when calling supertokens.init")
 	}
-	AfterEach()
 }
 
 func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
@@ -983,7 +818,8 @@ func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		errorMessage := err.Error()
@@ -993,7 +829,6 @@ func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
 			t.Error(errorMessage)
 		}
 	}
-	AfterEach()
 }
 
 func TestSuperTokensDefaultCookieConfig(t *testing.T) {
@@ -1007,16 +842,17 @@ func TestSuperTokensDefaultCookieConfig(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1025,7 +861,6 @@ func TestSuperTokensDefaultCookieConfig(t *testing.T) {
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSecure, true)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.SessionExpiredStatusCode, 401)
-	AfterEach()
 }
 
 func TestJwtFeatureIsDisabledByDefault(t *testing.T) {
@@ -1039,80 +874,88 @@ func TestJwtFeatureIsDisabledByDefault(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
-	AfterEach()
 }
 
-func TestJWTFeatureDisabledOrEnabledWhenExplicitlyStatedSo(t *testing.T) {
-	configValues := []supertokens.TypeInput{
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					Jwt: &sessmodels.JWTInputConfig{
-						Enable: true,
-					},
-				}),
-			},
+func TestJwtFeatureEnabled(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
 		},
-		{
-			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
-			},
-			AppInfo: supertokens.AppInfo{
-				APIDomain:     "api.supertokens.io",
-				AppName:       "SuperTokens",
-				WebsiteDomain: "supertokens.io",
-			},
-			RecipeList: []supertokens.Recipe{
-				session.Init(&sessmodels.TypeInput{
-					Jwt: &sessmodels.JWTInputConfig{
-						Enable: false,
-					},
-				}),
-			},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Jwt: &sessmodels.JWTInputConfig{
+					Enable: true,
+				},
+			}),
 		},
 	}
-	for index, configValue := range configValues {
-		BeforeEach()
-		StartUpST("localhost", "8080")
-		err := supertokens.Init(configValue)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			t.Error(err.Error())
-		}
-		assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
-		if index == 0 {
-			assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, true)
-		} else {
-			assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
-		}
-		AfterEach()
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
 	}
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
+	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, true)
+}
+
+func TestJwtFeatureDisabled(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Jwt: &sessmodels.JWTInputConfig{
+					Enable: false,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
+	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
 }
 
 func TestJWTPropertyNameIsAccesedWhenSet(t *testing.T) {
@@ -1127,7 +970,7 @@ func TestJWTPropertyNameIsAccesedWhenSet(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				Jwt: &sessmodels.JWTInputConfig{
 					Enable:                           true,
 					PropertyNameInAccessTokenPayload: &customJWTKey,
@@ -1136,18 +979,18 @@ func TestJWTPropertyNameIsAccesedWhenSet(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "customJWTKey")
-	AfterEach()
 }
 
 func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
@@ -1161,7 +1004,7 @@ func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				Jwt: &sessmodels.JWTInputConfig{
 					Enable: true,
 				},
@@ -1169,18 +1012,18 @@ func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := session.GetRecipeInstanceOrThrowError()
+	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "jwt")
-	AfterEach()
 }
 
 func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
@@ -1195,7 +1038,7 @@ func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				Jwt: &sessmodels.JWTInputConfig{
 					Enable:                           true,
 					PropertyNameInAccessTokenPayload: &customJWTKey,
@@ -1204,17 +1047,12 @@ func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage == "_jwtPName is a reserved property name, please use a different key name for the jwt" {
-			assert.Equal(t, errorMessage, "_jwtPName is a reserved property name, please use a different key name for the jwt")
-		} else {
-			t.Error(err.Error())
-		}
+		assert.Equal(t, err.Error(), "_jwtPName is a reserved property name, please use a different key name for the jwt")
 	}
-	AfterEach()
 }
 
 func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
@@ -1231,13 +1069,14 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 			APIGatewayPath: &customAPIGatewayPath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1246,16 +1085,17 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
@@ -1272,10 +1112,6 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/gateway/auth")
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
@@ -1294,13 +1130,14 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 			APIGatewayPath: &customAPIGatewayPath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1309,16 +1146,17 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/hello/session/refresh", nil)
 	assert.NoError(t, err)
@@ -1335,10 +1173,6 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/gateway/hello")
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing.T) {
@@ -1355,13 +1189,14 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 			APIBasePath:   &customAPIBasePath,
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
+			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
 		},
 	}
 	BeforeEach()
-	StartUpST("localhost", "8080")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1370,16 +1205,17 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		session.CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
 	assert.NoError(t, err)
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
-	cookieData := ExtractInfoFromResponse(res)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/hello/session/refresh", nil)
 	assert.NoError(t, err)
@@ -1396,8 +1232,4 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 		t.Error(err.Error())
 	}
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/hello")
-	defer AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }

@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package tpunittesting
+package thirdparty
 
 import (
 	"encoding/json"
@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -42,11 +41,11 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Google(
+							Google(
 								tpmodels.GoogleConfig{
 									ClientID:     "4398792-test-id",
 									ClientSecret: "test-secret",
@@ -59,8 +58,9 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -69,6 +69,7 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google")
 	if err != nil {
@@ -96,11 +97,6 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 
 	assert.Equal(t, "supertokens.io", fetchedUrl.Host)
 	assert.Equal(t, "/dev/oauth/redirect-to-provider", fetchedUrl.Path)
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestMinimumConfigForThirdPartyModule(t *testing.T) {
@@ -114,7 +110,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
@@ -126,8 +122,9 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -136,6 +133,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=custom&dynamic=example.com")
 	if err != nil {
@@ -164,11 +162,6 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 	assert.Equal(t, "supertokens", fetchedUrl.Query()["client_id"][0])
 	assert.Equal(t, "test", fetchedUrl.Query()["scope"][0])
 	assert.Equal(t, "example.com", fetchedUrl.Query()["dynamic"][0])
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestThirdPartyProviderDoesnotExist(t *testing.T) {
@@ -182,7 +175,7 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
@@ -194,8 +187,9 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -204,6 +198,7 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google")
 	if err != nil {
@@ -225,11 +220,6 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	assert.Equal(t, "The third party provider google seems to not be missing from the backend configs", data["message"])
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
@@ -243,7 +233,7 @@ func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
@@ -255,8 +245,9 @@ func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -265,6 +256,7 @@ func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
 
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	resp, err := http.Get(testServer.URL + "/auth/authorisationurl")
 	if err != nil {
@@ -284,11 +276,5 @@ func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
 	}
 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
-
 	assert.Equal(t, "Please provide the thirdPartyId as a GET param", data["message"])
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }

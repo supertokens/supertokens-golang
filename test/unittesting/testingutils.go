@@ -29,15 +29,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/jwt"
-	"github.com/supertokens/supertokens-golang/recipe/openid"
-	"github.com/supertokens/supertokens-golang/recipe/passwordless"
-	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func getListOfPids() []string {
@@ -59,7 +51,7 @@ func getListOfPids() []string {
 	return result
 }
 
-func setUpST() {
+func SetUpST() {
 	installationPath := getInstallationDir()
 	cmd := exec.Command("cp", "temp/config.yaml", "./config.yaml")
 	cmd.Dir = installationPath
@@ -73,7 +65,7 @@ func StartUpST(host string, port string) string {
 	pidsBefore := getListOfPids()
 	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
 	startTime := getCurrTimeInMS()
-	_, _, err := Shellout(command)
+	_, _, err := shellout(command)
 	if err != nil {
 		log.Printf("error: %v\n", err)
 	}
@@ -113,7 +105,8 @@ func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
 }
 
-func Shellout(command string) (string, string, error) {
+//helper function to execute shell commands
+func shellout(command string) (string, string, error) {
 	installationPath := getInstallationDir()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -158,7 +151,7 @@ func itemExists(arr []string, item string) bool {
 	return false
 }
 
-func cleanST() {
+func CleanST() {
 	installationPath := getInstallationDir()
 	cmd := exec.Command("rm", "config.yaml")
 	cmd.Dir = installationPath
@@ -182,37 +175,15 @@ func cleanST() {
 	}
 }
 
-func resetAll() {
-	supertokens.ResetForTest()
-	emailpassword.ResetForTest()
-	session.ResetForTest()
-	thirdparty.ResetForTest()
-	thirdpartyemailpassword.ResetForTest()
-	openid.ResetForTest()
-	passwordless.ResetForTest()
-	jwt.ResetForTest()
-}
-
-func killAllST() {
+func KillAllST() {
 	pids := getListOfPids()
 	for i := 0; i < len(pids); i++ {
 		stopST(pids[i])
 	}
-	resetAll()
 }
 
-func BeforeEach() {
-	killAllST()
-	setUpST()
-}
-
-func AfterEach() {
-	resetAll()
-	killAllST()
-	cleanST()
-}
-
-func returnNumberOfDirsToGoUpFromCurrentWorkingDir() string {
+/*this returns the number of slashes required to reach the to supertokens root assuming it is in the same level as supertokens-golang form the current working directory*/
+func returnNumberOfDirsToGoUpFromCurrentWorkingDir(isPathProvided bool) string {
 	mydir, err := os.Getwd()
 	if err != nil {
 		log.Fatal(err.Error())
@@ -225,28 +196,12 @@ func returnNumberOfDirsToGoUpFromCurrentWorkingDir() string {
 			break
 		}
 	}
-	numberOfElems := len(arr) - counter
-	var dirUpSlash string
-	for i := 0; i < numberOfElems; i++ {
-		dirUpSlash += "../"
+	var numberOfElems int
+	if isPathProvided {
+		numberOfElems = len(arr) - counter - 1
+	} else {
+		numberOfElems = len(arr) - counter
 	}
-	return dirUpSlash
-}
-
-func returnNumberOfSlashesRequiredToGoToRootOfTheProject() string {
-	mydir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	arr := strings.Split(mydir, "/")
-	counter := 0
-	for i := 0; i < len(arr); i++ {
-		if arr[i] == "supertokens-golang" {
-			counter = i
-			break
-		}
-	}
-	numberOfElems := len(arr) - counter - 1
 	var dirUpSlash string
 	for i := 0; i < numberOfElems; i++ {
 		dirUpSlash += "../"
@@ -435,12 +390,11 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 }
 
 func getInstallationDir() string {
-	slashesNeededToGoUp := returnNumberOfDirsToGoUpFromCurrentWorkingDir()
 	installationDir := os.Getenv("INSTALL_DIR")
 	if installationDir == "" {
-		installationDir = slashesNeededToGoUp + "supertokens-root"
+		installationDir = returnNumberOfDirsToGoUpFromCurrentWorkingDir(false) + "supertokens-root"
 	} else {
-		installationDir = returnNumberOfSlashesRequiredToGoToRootOfTheProject() + installationDir
+		installationDir = returnNumberOfDirsToGoUpFromCurrentWorkingDir(true) + installationDir
 	}
 	return installationDir
 }

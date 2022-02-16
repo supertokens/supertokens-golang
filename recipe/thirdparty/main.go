@@ -34,7 +34,7 @@ func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 }
 
 func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.SignInUpResponse{}, err
 	}
@@ -42,7 +42,7 @@ func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpmodels.Email
 }
 
 func GetUserByID(userID string) (*tpmodels.User, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,7 @@ func GetUserByID(userID string) (*tpmodels.User, error) {
 }
 
 func GetUsersByEmail(email string) ([]tpmodels.User, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return []tpmodels.User{}, err
 	}
@@ -58,7 +58,7 @@ func GetUsersByEmail(email string) ([]tpmodels.User, error) {
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 }
 
 func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
@@ -78,7 +78,7 @@ func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificati
 }
 
 func VerifyEmailUsingToken(token string) (*tpmodels.User, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -93,7 +93,7 @@ func VerifyEmailUsingToken(token string) (*tpmodels.User, error) {
 }
 
 func IsEmailVerified(userID string) (bool, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
@@ -105,7 +105,7 @@ func IsEmailVerified(userID string) (bool, error) {
 }
 
 func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
@@ -117,7 +117,7 @@ func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificat
 }
 
 func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}

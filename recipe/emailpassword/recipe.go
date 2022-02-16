@@ -80,8 +80,7 @@ func recipeInit(config *epmodels.TypeInput) supertokens.Recipe {
 	}
 }
 
-//*needed for unit testing purposes
-func GetRecipeInstanceOrThrowError() (*Recipe, error) {
+func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if singletonInstance != nil {
 		return singletonInstance, nil
 	}

@@ -298,7 +298,7 @@ func DefaultEmailValidator(value interface{}) *string {
 	return nil
 }
 
-func ParseUser(value interface{}) (*epmodels.User, error) {
+func parseUser(value interface{}) (*epmodels.User, error) {
 	respJSON, err := json.Marshal(value)
 	if err != nil {
 		return nil, err

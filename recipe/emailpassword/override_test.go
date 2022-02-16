@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
 	"encoding/json"
@@ -25,7 +25,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -44,7 +43,7 @@ func TestOverridingFunctionCalls(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
 					Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 						originalSignup := *originalImplementation.SignUp
@@ -82,8 +81,9 @@ func TestOverridingFunctionCalls(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -91,7 +91,7 @@ func TestOverridingFunctionCalls(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/user", func(rw http.ResponseWriter, r *http.Request) {
 		userId := r.URL.Query().Get("userId")
-		fetchedUser, err := emailpassword.GetUserByID(userId)
+		fetchedUser, err := GetUserByID(userId)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -103,6 +103,9 @@ func TestOverridingFunctionCalls(t *testing.T) {
 		rw.Write(jsonResp)
 	})
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	res, err := unittesting.SignupRequest("user@test.com", "test123!", testServer.URL)
 
@@ -127,15 +130,9 @@ func TestOverridingFunctionCalls(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	parsedUser, err := emailpassword.ParseUser(result["user"])
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.NotNil(t, parsedUser)
-	assert.Equal(t, user.ID, parsedUser.ID)
-	assert.Equal(t, user.Email, parsedUser.Email)
-	assert.Equal(t, user.TimeJoined, parsedUser.TimeJoined)
+	assert.NotNil(t, result["user"])
+	assert.Equal(t, user.ID, result["user"].(map[string]interface{})["id"].(string))
+	assert.Equal(t, user.Email, result["user"].(map[string]interface{})["email"].(string))
 
 	user = nil
 
@@ -164,15 +161,9 @@ func TestOverridingFunctionCalls(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	parsedUser1, err := emailpassword.ParseUser(result1["user"])
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.NotNil(t, parsedUser1)
-	assert.Equal(t, user.ID, parsedUser1.ID)
-	assert.Equal(t, user.Email, parsedUser1.Email)
-	assert.Equal(t, user.TimeJoined, parsedUser1.TimeJoined)
+	assert.NotNil(t, result1["user"])
+	assert.Equal(t, user.ID, result1["user"].(map[string]interface{})["id"].(string))
+	assert.Equal(t, user.Email, result1["user"].(map[string]interface{})["email"].(string))
 
 	user = nil
 
@@ -186,7 +177,7 @@ func TestOverridingFunctionCalls(t *testing.T) {
 
 	assert.NoError(t, err)
 	q := req.URL.Query()
-	q.Add("userId", parsedUser1.ID)
+	q.Add("userId", result1["user"].(map[string]interface{})["id"].(string))
 	req.URL.RawQuery = q.Encode()
 	assert.NoError(t, err)
 	res2, err := http.DefaultClient.Do(req)
@@ -215,10 +206,6 @@ func TestOverridingFunctionCalls(t *testing.T) {
 	assert.Equal(t, user.Email, result2.Email)
 	assert.Equal(t, user.TimeJoined, result2.TimeJoined)
 
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestOverridingApiCalls(t *testing.T) {
@@ -234,7 +221,7 @@ func TestOverridingApiCalls(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignupPost := *originalImplementation.SignUpPOST
@@ -272,8 +259,9 @@ func TestOverridingApiCalls(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -281,7 +269,7 @@ func TestOverridingApiCalls(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/user", func(rw http.ResponseWriter, r *http.Request) {
 		userId := r.URL.Query().Get("userId")
-		fetchedUser, err := emailpassword.GetUserByID(userId)
+		fetchedUser, err := GetUserByID(userId)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -293,6 +281,9 @@ func TestOverridingApiCalls(t *testing.T) {
 		rw.Write(jsonResp)
 	})
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
 	if err != nil {
@@ -337,14 +328,10 @@ func TestOverridingApiCalls(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	parsedUser, err := emailpassword.ParseUser(result1["user"])
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.NotNil(t, parsedUser)
-	assert.Equal(t, user.ID, parsedUser.ID)
-	assert.Equal(t, user.Email, parsedUser.Email)
-	assert.Equal(t, user.TimeJoined, parsedUser.TimeJoined)
+
+	assert.NotNil(t, result1["user"])
+	assert.Equal(t, user.ID, result1["user"].(map[string]interface{})["id"].(string))
+	assert.Equal(t, user.Email, result1["user"].(map[string]interface{})["email"].(string))
 
 	req3, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
 	if err != nil {
@@ -398,19 +385,8 @@ func TestOverridingApiCalls(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	parsedUser2, err := emailpassword.ParseUser(result2["user"])
-	if err != nil {
-		t.Error(err.Error())
-	}
+	assert.NotNil(t, result2["user"])
+	assert.Equal(t, user.ID, result2["user"].(map[string]interface{})["id"].(string))
+	assert.Equal(t, user.Email, result2["user"].(map[string]interface{})["email"].(string))
 
-	assert.NotNil(t, parsedUser2)
-	assert.Equal(t, user.ID, parsedUser2.ID)
-	assert.Equal(t, user.Email, parsedUser2.Email)
-	assert.Equal(t, user.TimeJoined, parsedUser2.TimeJoined)
-
-	defer unittesting.AfterEach()
-
-	defer func() {
-		testServer.Close()
-	}()
 }

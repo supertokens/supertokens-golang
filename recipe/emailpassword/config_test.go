@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -37,16 +36,17 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 		},
 	}
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -68,7 +68,7 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 	assert.Equal(t, resetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm[0].ID, "email")
 	assert.Equal(t, len(resetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm), 1)
 	assert.Equal(t, resetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm[0].ID, "password")
-	unittesting.AfterEach()
+
 }
 
 func TestChangedConfigForEmailPasswordModule(t *testing.T) {
@@ -84,7 +84,7 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: []epmodels.TypeInputFormField{
 						{
@@ -99,13 +99,14 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 			}),
 		},
 	}
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -121,7 +122,7 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 	assert.NotNil(t, testFormField)
 	assert.Equal(t, false, testFormField.Optional)
 	assert.Equal(t, "test", *testFormField.Validate(""))
-	unittesting.AfterEach()
+
 }
 
 func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
@@ -135,7 +136,7 @@ func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(&epmodels.TypeInput{
+			Init(&epmodels.TypeInput{
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: []epmodels.TypeInputFormField{
 						{
@@ -149,13 +150,14 @@ func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
 			}),
 		},
 	}
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -163,7 +165,7 @@ func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
 	formFields := signupFeature.FormFields
 	assert.NotNil(t, *formFields[0].Validate(""))
 	assert.NotNil(t, *formFields[1].Validate(""))
-	unittesting.AfterEach()
+
 }
 
 func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
@@ -177,16 +179,17 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 		},
 	}
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := emailpassword.GetRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -211,5 +214,5 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 	assert.Equal(t, "Password must contain at least one number", *passwordFormField.Validate("aaaaaaaaa"))
 	assert.Equal(t, "Password must contain at least one alphabet", *passwordFormField.Validate("1234*-56*789"))
 	assert.Nil(t, passwordFormField.Validate("validPass123"))
-	unittesting.AfterEach()
+
 }

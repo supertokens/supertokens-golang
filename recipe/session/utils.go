@@ -105,21 +105,21 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
 		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error {
-			recipeInstance, err := GetRecipeInstanceOrThrowError()
+			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
 			return sendTokenTheftDetectedResponse(*recipeInstance, sessionHandle, userID, req, res)
 		},
 		OnTryRefreshToken: func(message string, req *http.Request, res http.ResponseWriter) error {
-			recipeInstance, err := GetRecipeInstanceOrThrowError()
+			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}
 			return sendTryRefreshTokenResponse(*recipeInstance, message, req, res)
 		},
 		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
-			recipeInstance, err := GetRecipeInstanceOrThrowError()
+			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
 			}

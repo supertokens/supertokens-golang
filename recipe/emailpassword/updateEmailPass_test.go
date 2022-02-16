@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
 	"encoding/json"
@@ -24,7 +24,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -41,13 +40,14 @@ func TestUpdateEmailPass(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(nil),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 
@@ -55,6 +55,7 @@ func TestUpdateEmailPass(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	_, err = unittesting.SignupRequest("testrandom@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
@@ -81,7 +82,7 @@ func TestUpdateEmailPass(t *testing.T) {
 	email := "test2@gmail.com"
 	password := "testPass"
 
-	emailpassword.UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password)
+	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password)
 
 	res1, err := unittesting.SignInRequest("testrandom@gmail.com", "validpass123", testServer.URL)
 
@@ -121,9 +122,4 @@ func TestUpdateEmailPass(t *testing.T) {
 
 	assert.Equal(t, "OK", data2["status"])
 	assert.Equal(t, email, data2["user"].(map[string]interface{})["email"])
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }

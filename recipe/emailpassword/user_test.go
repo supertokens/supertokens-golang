@@ -14,7 +14,7 @@
  * under the License.
  */
 
-package epunittesting
+package emailpassword
 
 import (
 	"net/http"
@@ -23,7 +23,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -40,13 +39,14 @@ func TestGetUsersOldestFirst(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(nil),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 
@@ -54,6 +54,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	_, err = unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -132,11 +133,6 @@ func TestGetUsersOldestFirst(t *testing.T) {
 			assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
 		}
 	}
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestGetUsersNewestFirst(t *testing.T) {
@@ -150,13 +146,14 @@ func TestGetUsersNewestFirst(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(nil),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 
@@ -164,6 +161,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	_, err = unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -242,11 +240,6 @@ func TestGetUsersNewestFirst(t *testing.T) {
 			assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
 		}
 	}
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }
 
 func TestGetUserCount(t *testing.T) {
@@ -260,13 +253,14 @@ func TestGetUserCount(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			emailpassword.Init(nil),
+			Init(nil),
 			session.Init(nil),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 
@@ -274,6 +268,7 @@ func TestGetUserCount(t *testing.T) {
 	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
 	_, err = unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
@@ -308,9 +303,4 @@ func TestGetUserCount(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, float64(5), userCount)
-
-	defer unittesting.AfterEach()
-	defer func() {
-		testServer.Close()
-	}()
 }

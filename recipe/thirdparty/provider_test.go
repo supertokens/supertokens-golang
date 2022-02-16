@@ -14,13 +14,12 @@
  * under the License.
  */
 
-package tpunittesting
+package thirdparty
 
 import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -37,11 +36,11 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Google(tpmodels.GoogleConfig{
+							Google(tpmodels.GoogleConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 							}),
@@ -52,15 +51,16 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -87,8 +87,6 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 		"response_type":          "code",
 		"scope":                  "https://www.googleapis.com/auth/userinfo.email",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing.T) {
@@ -102,11 +100,11 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Google(tpmodels.GoogleConfig{
+							Google(tpmodels.GoogleConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 								AuthorisationRedirect: &struct{ Params map[string]interface{} }{
@@ -123,15 +121,16 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -160,8 +159,6 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 		"key1":                   "value1",
 		"key2":                   "value2",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestPassingScopesInConfigForGoogle(t *testing.T) {
@@ -175,11 +172,11 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Google(tpmodels.GoogleConfig{
+							Google(tpmodels.GoogleConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 								Scope: []string{
@@ -193,15 +190,16 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -228,8 +226,6 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 		"response_type":          "code",
 		"scope":                  "test-scope-1 test-scope-2",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
@@ -243,11 +239,11 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Facebook(tpmodels.FacebookConfig{
+							Facebook(tpmodels.FacebookConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 							}),
@@ -258,15 +254,16 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -290,8 +287,6 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 		"response_type": "code",
 		"scope":         "email",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestPassingScopesInConfigForFacebook(t *testing.T) {
@@ -305,11 +300,11 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Facebook(tpmodels.FacebookConfig{
+							Facebook(tpmodels.FacebookConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 								Scope: []string{
@@ -323,15 +318,16 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -347,8 +343,6 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 		"response_type": "code",
 		"scope":         "test-scope-1 test-scope-2",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
@@ -362,11 +356,11 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Github(tpmodels.GithubConfig{
+							Github(tpmodels.GithubConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 							}),
@@ -377,15 +371,16 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -408,8 +403,6 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 		"client_id": "test",
 		"scope":     "read:user user:email",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing.T) {
@@ -423,11 +416,11 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Github(tpmodels.GithubConfig{
+							Github(tpmodels.GithubConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 								AuthorisationRedirect: &struct{ Params map[string]interface{} }{
@@ -444,15 +437,16 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -469,8 +463,6 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 		"key1":      "value1",
 		"key2":      "value2",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }
 
 func TestPassingScopesInConfigForGithub(t *testing.T) {
@@ -484,11 +476,11 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							thirdparty.Github(tpmodels.GithubConfig{
+							Github(tpmodels.GithubConfig{
 								ClientID:     "test",
 								ClientSecret: "test-secret",
 								Scope: []string{
@@ -502,15 +494,16 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := thirdparty.GetRecipeInstanceOrThrowError()
+	singletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -525,6 +518,4 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 		"client_id": "test",
 		"scope":     "test-scope-1 test-scope-2",
 	}, providerInfoGetResult.AuthorisationRedirect.Params)
-
-	defer unittesting.AfterEach()
 }

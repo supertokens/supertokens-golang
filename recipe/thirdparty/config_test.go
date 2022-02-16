@@ -14,19 +14,19 @@
  * under the License.
  */
 
-package tpunittesting
+package thirdparty
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
+func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -37,39 +37,22 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
-				&tpmodels.TypeInput{
-					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							{
-								ID: "mock",
-							},
-						},
-					},
-				},
-			),
+			Init(&tpmodels.TypeInput{}),
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
-		t.Error(err.Error())
+		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
 	}
 
-	users, err := thirdparty.GetUsersByEmail("john.doe@example.com")
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, 0, len(users))
-	defer unittesting.AfterEach()
 }
 
-func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
+func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -80,15 +63,67 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdparty.Init(
+			Init(
+				&tpmodels.TypeInput{
+					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+						Providers: []tpmodels.TypeProvider{},
+					},
+				},
+			),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		if !strings.Contains(err.Error(), "at least 1 provider") {
+			t.Error(err.Error())
+		} else {
+			assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
+		}
+	}
+
+}
+
+func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
 							{
-								ID: "mock",
-							},
-							{
-								ID: "mock2",
+								ID: "custom",
+								Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+									return tpmodels.TypeProviderGetResponse{
+										AccessTokenAPI: tpmodels.AccessTokenAPI{
+											URL: "test.com/oauth/token",
+										},
+										AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+											URL: "test.com/oauth/auth",
+										},
+										GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+											return tpmodels.UserInfo{
+												ID: "user",
+												Email: &tpmodels.EmailStruct{
+													ID:         "email@test.com",
+													IsVerified: true,
+												},
+											}, nil
+										},
+									}
+								},
 							},
 						},
 					},
@@ -97,38 +132,12 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		},
 	}
 
-	unittesting.BeforeEach()
+	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
-
-	thirdparty.SignInUp("mock", "thirdPartyJohnDoe", tpmodels.EmailStruct{
-		ID:         "john.doe@example.com",
-		IsVerified: true,
-	})
-
-	thirdparty.SignInUp("mock2", "thirdPartyDaveDoe", tpmodels.EmailStruct{
-		ID:         "john.doe@example.com",
-		IsVerified: false,
-	})
-
-	users, err := thirdparty.GetUsersByEmail("john.doe@example.com")
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, 2, len(users))
-
-	for _, user := range users {
-		assert.NotNil(t, user.ThirdParty.ID)
-		assert.NotNil(t, user.ID)
-		assert.NotNil(t, user.TimeJoined)
-		assert.Equal(t, "john.doe@example.com", user.Email)
-	}
-
-	defer unittesting.AfterEach()
 }
