@@ -45,6 +45,7 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
 4. Run all tests, [count=1 ensures tests are not cached]
    `go test  ./... -p 1 -v count=1`
 5. If all tests pass the output should be:
+![golang tests passing](https://github.com/supertokens/supertokens-logo/blob/master/images/supertokens-golang-test.png)
 
 ## Pull Request
 
