@@ -44,9 +44,11 @@ func getListOfPids() []string {
 		pathOfFileToBeRead := installationPath + "/.started/" + file.Name()
 		data, err := ioutil.ReadFile(pathOfFileToBeRead)
 		if err != nil {
-			log.Fatalf(err.Error())
+			log.Fatalf(err.Error(), "THIS IS GET-LIST-OF-PIDS")
 		}
-		result = append(result, string(data))
+		if string(data) != "" {
+			result = append(result, string(data))
+		}
 	}
 	return result
 }
@@ -57,7 +59,7 @@ func SetUpST() {
 	cmd.Dir = installationPath
 	err := cmd.Run()
 	if err != nil {
-		log.Fatalf(err.Error())
+		log.Fatalf(err.Error(), "THIS IS SETUP-ST")
 	}
 }
 
@@ -65,11 +67,8 @@ func StartUpST(host string, port string) string {
 	pidsBefore := getListOfPids()
 	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
 	startTime := getCurrTimeInMS()
-	_, _, err := shellout(command)
-	if err != nil {
-		log.Printf("error: %v\n", err)
-	}
-	for getCurrTimeInMS()-startTime < 20000 {
+	shellout(command)
+	for getCurrTimeInMS()-startTime < 30000 {
 		pidsAfter := getListOfPids()
 		if len(pidsAfter) <= len(pidsBefore) {
 			time.Sleep(100 * time.Millisecond)
@@ -106,7 +105,7 @@ func getCurrTimeInMS() uint64 {
 }
 
 //helper function to execute shell commands
-func shellout(command string) (string, string, error) {
+func shellout(command string) {
 	installationPath := getInstallationDir()
 	var stdout bytes.Buffer
 	var stderr bytes.Buffer
@@ -115,20 +114,37 @@ func shellout(command string) (string, string, error) {
 	cmd.Stderr = &stderr
 	cmd.Dir = installationPath
 	err := cmd.Start()
-	return stdout.String(), stderr.String(), err
+	fmt.Println(stdout.String(), "THIS IS THE OUTPUT IN SHELLOUT")
+	fmt.Println(stderr.String(), "THIS IS THE ERROR IN SHELLOUT")
+	if err != nil {
+		log.Fatal(err.Error(), "THIS IS SHELLOUT")
+	}
 }
 
 func stopST(pid string) {
 	installationPath := getInstallationDir()
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
 	pidsBefore := getListOfPids()
 	if len(pidsBefore) == 0 {
 		return
 	}
+	if len(pidsBefore) == 1 {
+		if pidsBefore[0] == "" {
+			return
+		}
+	}
 	cmd := exec.Command("kill", pid)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
 	cmd.Dir = installationPath
 	err := cmd.Run()
+
 	if err != nil {
-		log.Fatal(err.Error())
+		fmt.Println(pid, "THIS IS THE PID THAT IS TRYING TO BE KILLED")
+		fmt.Println(stdout.String(), "THIS IS THE OUTPUT IN CASE OF ERROR")
+		fmt.Println(stderr.String(), "THIS IS THE ERROR IN CASE OF ERROR")
+		log.Fatal(err.Error(), "THIS IS STOP-ST")
 	}
 	startTime := getCurrTimeInMS()
 	for getCurrTimeInMS()-startTime < 10000 {
@@ -153,30 +169,45 @@ func itemExists(arr []string, item string) bool {
 
 func CleanST() {
 	installationPath := getInstallationDir()
+
 	cmd := exec.Command("rm", "config.yaml")
 	cmd.Dir = installationPath
+
 	err := cmd.Run()
+
 	if err != nil {
-		log.Fatalf(err.Error(), "could not delete the config yaml file")
+		log.Fatalf(err.Error(), "could not delete the config yaml file [THIS IS CLEAN-ST]")
 	}
 
 	cmd = exec.Command("rm", "-rf", ".webserver-temp-*")
 	cmd.Dir = installationPath
 	err = cmd.Run()
+
 	if err != nil {
-		log.Fatalf(err.Error(), "could not delete the webserver-temp files")
+		log.Fatalf(err.Error(), "could not delete the webserver-temp files [THIS IS CLEAN-ST]")
 	}
 
 	cmd = exec.Command("rm", "-rf", ".started")
 	cmd.Dir = installationPath
 	err = cmd.Run()
+
 	if err != nil {
-		log.Fatalf(err.Error(), "could not delete the .started file")
+		log.Fatalf(err.Error(), "could not delete the .started file [THIS IS CLEAN-ST]")
 	}
+
 }
 
 func KillAllST() {
 	pids := getListOfPids()
+	fmt.Println("THESE ARE THE PIDS INISDE KILL ALL ST", pids)
+	fmt.Println("THIS IS THE LEN OF PIDS", len(pids))
+
+	// if len(pids) == 1 {
+	// 	if pids[0] == "" {
+	// 		return
+	// 	}
+	// }
+
 	for i := 0; i < len(pids); i++ {
 		stopST(pids[i])
 	}
@@ -186,7 +217,7 @@ func KillAllST() {
 func returnNumberOfDirsToGoUpFromCurrentWorkingDir(isPathProvided bool) string {
 	mydir, err := os.Getwd()
 	if err != nil {
-		log.Fatal(err.Error())
+		log.Fatal(err.Error(), "THIS IS RETURN-NUMBER-OF-DIRS-TO-GO-UP-FROM-CURRENT-WORKING-DIR")
 	}
 	arr := strings.Split(mydir, "/")
 	counter := 0

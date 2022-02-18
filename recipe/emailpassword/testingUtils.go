@@ -34,7 +34,6 @@ func BeforeEach() {
 }
 
 func AfterEach() {
-	resetAll()
 	unittesting.KillAllST()
 	resetAll()
 	unittesting.CleanST()

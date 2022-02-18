@@ -17,6 +17,7 @@
 package emailpassword
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -29,6 +30,7 @@ import (
 )
 
 func TestGetUsersOldestFirst(t *testing.T) {
+	fmt.Println("this test is running")
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -156,7 +158,6 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
@@ -263,7 +264,6 @@ func TestGetUserCount(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()

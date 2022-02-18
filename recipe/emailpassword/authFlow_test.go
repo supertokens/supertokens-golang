@@ -19,6 +19,7 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -62,10 +63,10 @@ func TestDisablingAPIDefaultSigninDoesNotWork(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
+	fmt.Println("this is cahnged again again")
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
@@ -236,13 +237,11 @@ func TestSigninAPIThrowsErrorWhenPasswordIsIncorrect(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
@@ -285,7 +284,6 @@ func TestSigninAPIThrowsErrorWhenPasswordIsIncorrect(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, "WRONG_CREDENTIALS_ERROR", data1["status"])
-
 }
 
 func TestBadInputNoPostBodyToSignInAPI(t *testing.T) {
