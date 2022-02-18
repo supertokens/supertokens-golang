@@ -19,7 +19,7 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
 
 ### Prerequisites
 
--   OS: Linux or macOS
+-   OS: Linux, macOS or [WSL](https://docs.microsoft.com/en-us/windows/wsl/about)
 -   Go
 -   IDE: [VSCode](https://code.visualstudio.com/download)(recommended) or equivalent IDE
 
@@ -42,8 +42,9 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
    `./startTestingEnv --wait`
 3. Navigate to the `supertokens-golang` repository  
    `cd ../supertokens-golang/`
-4. Run all tests  
-   `INSTALL_PATH=../supertokens-root go test ./... -v`
+4. Run all tests, [count=1 ensures tests are not cached]
+   `go test  ./... -p 1 -v count=1`
+5. If all tests pass the output should be:
 
 ## Pull Request
 
