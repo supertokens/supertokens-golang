@@ -56,13 +56,20 @@ func supertokensInit(config TypeInput) error {
 	if config.Supertokens != nil {
 		if len(config.Supertokens.ConnectionURI) != 0 {
 			hostList := strings.Split(config.Supertokens.ConnectionURI, ";")
-			var hosts []NormalisedURLDomain
+			hosts := []QuerierHost{}
 			for _, h := range hostList {
-				host, err := NewNormalisedURLDomain(h)
+				domain, err := NewNormalisedURLDomain(h)
 				if err != nil {
 					return err
 				}
-				hosts = append(hosts, host)
+				basePath, err := NewNormalisedURLPath(h)
+				if err != nil {
+					return err
+				}
+				hosts = append(hosts, QuerierHost{
+					Domain:   domain,
+					BasePath: basePath,
+				})
 			}
 			initQuerier(hosts, config.Supertokens.APIKey)
 		} else {
