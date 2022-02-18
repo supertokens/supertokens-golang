@@ -17,7 +17,6 @@
 package emailpassword
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -30,7 +29,6 @@ import (
 )
 
 func TestGetUsersOldestFirst(t *testing.T) {
-	fmt.Println("this test is running")
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",

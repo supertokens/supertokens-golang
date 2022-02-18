@@ -195,12 +195,12 @@ func TestSuperTokensInitWithConfigForSessionModules(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, *sessionSingletonInstance.Config.CookieDomain, "testdomain")
 	assert.Equal(t, sessionSingletonInstance.Config.SessionExpiredStatusCode, 111)
@@ -229,7 +229,7 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsLax(t *tes
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }
 
@@ -255,7 +255,7 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsNone(t *te
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }
 
@@ -281,7 +281,7 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsStrict(t *
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 }
 
@@ -331,7 +331,7 @@ func TestSuperTokensWithCustomApiKey(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, *supertokens.QuerierAPIKey, configValue.Supertokens.APIKey)
 }
@@ -362,11 +362,11 @@ func TestSuperTokensInitWithCustomSessionExpiredCodeInSessionRecipe(t *testing.T
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.SessionExpiredStatusCode, 402)
 }
@@ -390,7 +390,7 @@ func TestSuperTokensInitWithMultipleHosts(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	hosts := supertokens.QuerierHosts
 
@@ -427,7 +427,7 @@ func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 	}
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
@@ -465,7 +465,7 @@ func TestSuperTokensInitWithCustomHeaderLaxTrueSessionConfigResults(t *testing.T
 	}
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
@@ -504,7 +504,7 @@ func TestSuperTokensInitWithCustomHeaderLaxFalseSessionConfigResults(t *testing.
 	}
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
@@ -538,7 +538,7 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithNormalWe
 	}
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
@@ -572,7 +572,7 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithLocalWeb
 	}
 	sessionSingletonInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Error(err.Error())
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")

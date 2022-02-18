@@ -19,7 +19,6 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -66,7 +65,6 @@ func TestDisablingAPIDefaultSigninDoesNotWork(t *testing.T) {
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
-	fmt.Println("this is cahnged again again")
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
@@ -176,7 +174,6 @@ func TestSigninAPIthrowsAnErrorWhenEmailDoesNotMatch(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
@@ -219,7 +216,6 @@ func TestSigninAPIthrowsAnErrorWhenEmailDoesNotMatch(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, "WRONG_CREDENTIALS_ERROR", data1["status"])
-
 }
 
 func TestSigninAPIThrowsErrorWhenPasswordIsIncorrect(t *testing.T) {
@@ -307,7 +303,6 @@ func TestBadInputNoPostBodyToSignInAPI(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
@@ -347,7 +342,6 @@ func TestBadInputNoPostBodyToSignInAPI(t *testing.T) {
 
 	assert.Equal(t, 500, resp.StatusCode)
 	assert.Equal(t, "unexpected end of JSON input\n", string(dataInBytes1))
-
 }
 
 func TestSuccessfullSigInYieldsSession(t *testing.T) {
@@ -374,7 +368,6 @@ func TestSuccessfullSigInYieldsSession(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
@@ -438,7 +431,6 @@ func TestSuccessfullSigInYieldsSession(t *testing.T) {
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenDomain"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
-
 }
 
 func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testing.T) {
@@ -477,7 +469,6 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-
 		t.Error(err.Error())
 	}
 	mux := http.NewServeMux()
@@ -524,7 +515,6 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 
 	assert.Equal(t, "email does not start with test", data1["formFields"].([]interface{})[0].(map[string]interface{})["error"])
 	assert.Equal(t, "email", data1["formFields"].([]interface{})[0].(map[string]interface{})["id"])
-
 }
 
 func TestCustomPasswordValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testing.T) {
@@ -615,7 +605,6 @@ func TestCustomPasswordValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *te
 	assert.Equal(t, "WRONG_CREDENTIALS_ERROR", data1["status"])
 	assert.Equal(t, 1, passesValidatorCtr)
 	assert.Equal(t, 0, failsValidatorCtr)
-
 }
 
 func TestPasswordFieldValidationError(t *testing.T) {
@@ -681,9 +670,7 @@ func TestPasswordFieldValidationError(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-
 	assert.Equal(t, "WRONG_CREDENTIALS_ERROR", data1["status"])
-
 }
 
 func TestEmailFieldValidationError(t *testing.T) {

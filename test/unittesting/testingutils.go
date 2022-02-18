@@ -114,10 +114,8 @@ func shellout(command string) {
 	cmd.Stderr = &stderr
 	cmd.Dir = installationPath
 	err := cmd.Start()
-	fmt.Println(stdout.String(), "THIS IS THE OUTPUT IN SHELLOUT")
-	fmt.Println(stderr.String(), "THIS IS THE ERROR IN SHELLOUT")
 	if err != nil {
-		log.Fatal(err.Error(), "THIS IS SHELLOUT")
+		log.Fatal(err.Error())
 	}
 }
 
@@ -141,11 +139,9 @@ func stopST(pid string) {
 	err := cmd.Run()
 
 	if err != nil {
-		fmt.Println(pid, "THIS IS THE PID THAT IS TRYING TO BE KILLED")
-		fmt.Println(stdout.String(), "THIS IS THE OUTPUT IN CASE OF ERROR")
-		fmt.Println(stderr.String(), "THIS IS THE ERROR IN CASE OF ERROR")
-		log.Fatal(err.Error(), "THIS IS STOP-ST")
+		log.Fatal(err.Error(), "error in killSt")
 	}
+
 	startTime := getCurrTimeInMS()
 	for getCurrTimeInMS()-startTime < 10000 {
 		pidsAfter := getListOfPids()
@@ -199,15 +195,6 @@ func CleanST() {
 
 func KillAllST() {
 	pids := getListOfPids()
-	fmt.Println("THESE ARE THE PIDS INISDE KILL ALL ST", pids)
-	fmt.Println("THIS IS THE LEN OF PIDS", len(pids))
-
-	// if len(pids) == 1 {
-	// 	if pids[0] == "" {
-	// 		return
-	// 	}
-	// }
-
 	for i := 0; i < len(pids); i++ {
 		stopST(pids[i])
 	}
