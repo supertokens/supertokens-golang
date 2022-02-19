@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.0] - 2022-02-20
+### Breaking Change
+
+-   Adds user context to all functions exposed to the user, and to API and Recipe interface functions.
+-   Returns session from API interface functions that create a session
+
+### Change:
+
+-   Uses recipe interface inside session class so that any modification to those get reflected in the session class functions too.
+
 ## [0.4.2] - 2022-01-31
 - Adds ability to give a path for each of the hostnames in the connectionURI: https://github.com/supertokens/supertokens-node/issues/252
 - Adds workflow to verify if pr title follows conventional commits
