@@ -19,13 +19,14 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET      *func(provider TypeProvider, options APIOptions) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST             *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions) (SignInUpPOSTResponse, error)
-	AppleRedirectHandlerPOST *func(code string, state string, options APIOptions) error
+	AuthorisationUrlGET      *func(provider TypeProvider, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+	AppleRedirectHandlerPOST *func(code string, state string, options APIOptions, userContext supertokens.UserContext) error
 }
 
 type AuthorisationUrlGETResponse struct {
@@ -36,6 +37,7 @@ type SignInUpPOSTResponse struct {
 	OK *struct {
 		CreatedNewUser   bool
 		User             User
+		Session          sessmodels.SessionContainer
 		AuthCodeResponse interface{}
 	}
 	NoEmailGivenByProviderError *struct{}

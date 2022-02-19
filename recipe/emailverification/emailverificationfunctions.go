@@ -24,15 +24,15 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(evmodels.User) (string, error) {
-	return func(user evmodels.User) (string, error) {
+func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(evmodels.User, supertokens.UserContext) (string, error) {
+	return func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
 		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/verify-email", nil
 	}
 }
 
 // TODO: add test to see query
-func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user evmodels.User, emailVerifyURLWithToken string) {
-	return func(user evmodels.User, emailVerifyURLWithToken string) {
+func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
+	return func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
 			return

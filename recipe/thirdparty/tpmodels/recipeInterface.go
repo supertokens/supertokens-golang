@@ -15,11 +15,13 @@
 
 package tpmodels
 
+import "github.com/supertokens/supertokens-golang/supertokens"
+
 type RecipeInterface struct {
-	GetUserByID             *func(userID string) (*User, error)
-	GetUsersByEmail         *func(email string) ([]User, error)
-	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string) (*User, error)
-	SignInUp                *func(thirdPartyID string, thirdPartyUserID string, email EmailStruct) (SignInUpResponse, error)
+	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	SignInUp                *func(thirdPartyID string, thirdPartyUserID string, email EmailStruct, userContext supertokens.UserContext) (SignInUpResponse, error)
 }
 
 type SignInUpResponse struct {

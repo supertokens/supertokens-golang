@@ -21,7 +21,7 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) jwtmodels.RecipeInterface {
-	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 		validitySeconds := config.JwtValiditySeconds
 		if validitySecondsPointer != nil {
 			validitySeconds = *validitySecondsPointer
@@ -53,7 +53,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 			}, nil
 		}
 	}
-	getJWKS := func() (jwtmodels.GetJWKSResponse, error) {
+	getJWKS := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
 		response, err := querier.SendGetRequest("/recipe/jwt/jwks", map[string]string{})
 		if err != nil {
 			return jwtmodels.GetJWKSResponse{}, err

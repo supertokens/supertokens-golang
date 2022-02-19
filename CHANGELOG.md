@@ -12,6 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds workflow to verify if pr title follows conventional commits
 - Added userId as an optional property to the response of `recipe/user/password/reset` (Compatibility with CDI 2.12).
 
+### Added
+
+-   Added `regenerateAccessToken` as a new recipe function for the session recipe.
+-   Added a bunch of new functions inside the session container which gives user the ability to either call a       function with userContext or just call the function without it (for example: `RevokeSession` and `RevokeSessionWithContext`)
+ 
+### Breaking changes:
+
+-   Allows passing of custom user context everywhere: https://github.com/supertokens/supertokens-golang/issues/64
+
+
 ## [0.4.1] - 2022-01-27
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
 -   Adds check to see if user has provided empty connectionInfo

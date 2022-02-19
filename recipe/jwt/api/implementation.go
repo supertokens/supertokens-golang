@@ -17,11 +17,12 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() jwtmodels.APIInterface {
-	getJWKSGET := func(options jwtmodels.APIOptions) (jwtmodels.GetJWKSResponse, error) {
-		return (*options.RecipeImplementation.GetJWKS)()
+	getJWKSGET := func(options jwtmodels.APIOptions, userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+		return (*options.RecipeImplementation.GetJWKS)(userContext)
 	}
 	return jwtmodels.APIInterface{
 		GetJWKSGET: &getJWKSGET,

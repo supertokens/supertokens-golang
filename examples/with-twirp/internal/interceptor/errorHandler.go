@@ -20,7 +20,7 @@ func NewSuperTokensErrorHandlerInterceptor() twirp.Interceptor {
 				} else if errors.As(err, &sessionError.UnauthorizedError{}) {
 					return resp, twirp.NewError(twirp.Unauthenticated, "unauthorized")
 				} else if errors.As(err, &sessionErr) {
-					_, err = session.RevokeSession(sessionErr.Payload.SessionHandle)
+					_, err = session.RevokeSession(sessionErr.Payload.SessionHandle, nil)
 					if err != nil {
 						return resp, err
 					}

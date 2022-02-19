@@ -27,12 +27,14 @@ import (
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() tpmodels.APIInterface {
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions) (tpmodels.AuthorisationUrlGETResponse, error) {
-		providerInfo := provider.Get(nil, nil)
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		providerInfo := provider.Get(nil, nil, userContext)
 		params := map[string]string{}
 		for key, value := range providerInfo.AuthorisationRedirect.Params {
 			if reflect.ValueOf(value).Kind() == reflect.String {
@@ -47,7 +49,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		if providerInfo.GetRedirectURI != nil && !isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		if providerInfo.GetRedirectURI != nil && !isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 			// the backend wants to set the redirectURI - so we set that here.
 
 			// we add the not development keys because the oauth provider will
@@ -55,19 +57,19 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			// to the the user's website, which will handle the callback as usual.
 			// If we add this, then instead, the supertokens' site will redirect
 			// the user to this API layer, which is not needed.
-			rU, err := providerInfo.GetRedirectURI()
+			rU, err := providerInfo.GetRedirectURI(userContext)
 			if err != nil {
 				return tpmodels.AuthorisationUrlGETResponse{}, err
 			}
 			params["redirect_uri"] = rU
 		}
 
-		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 			params["actual_redirect_uri"] = providerInfo.AuthorisationRedirect.URL
 
 			for key, value := range params {
-				if value == providerInfo.GetClientId() {
-					params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+				if value == providerInfo.GetClientId(userContext) {
+					params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId(userContext))
 				}
 			}
 
@@ -79,7 +81,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 		url := providerInfo.AuthorisationRedirect.URL + "?" + paramsString
 
-		if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+		if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 			url = DevOauthAuthorisationUrl + "?" + paramsString
 		}
 
@@ -90,15 +92,15 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions) (tpmodels.SignInUpPOSTResponse, error) {
+	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		{
-			providerInfo := provider.Get(nil, nil)
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			providerInfo := provider.Get(nil, nil, userContext)
+			if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 				redirectURI = DevOauthRedirectUrl
 			} else if providerInfo.GetRedirectURI != nil {
 				// we overwrite the redirectURI provided by the frontend
 				// since the backend wants to take charge of setting this.
-				rU, err := providerInfo.GetRedirectURI()
+				rU, err := providerInfo.GetRedirectURI(userContext)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
@@ -106,30 +108,30 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		providerInfo := provider.Get(&redirectURI, &code)
+		providerInfo := provider.Get(&redirectURI, &code, userContext)
 
 		var accessTokenAPIResponse map[string]interface{} = nil
 
 		if authCodeResponse != nil && len(authCodeResponse.(map[string]interface{})) != 0 {
 			accessTokenAPIResponse = authCodeResponse.(map[string]interface{})
 		} else {
-			if isUsingDevelopmentClientId(providerInfo.GetClientId()) {
+			if isUsingDevelopmentClientId(providerInfo.GetClientId(userContext)) {
 
 				for key, value := range providerInfo.AccessTokenAPI.Params {
-					if value == providerInfo.GetClientId() {
-						providerInfo.AccessTokenAPI.Params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId())
+					if value == providerInfo.GetClientId(userContext) {
+						providerInfo.AccessTokenAPI.Params[key] = GetActualClientIdFromDevelopmentClientId(providerInfo.GetClientId(userContext))
 					}
 				}
 			}
 
-			accessTokenAPIResponseTemp, err := postRequest(providerInfo)
+			accessTokenAPIResponseTemp, err := postRequest(providerInfo, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 			accessTokenAPIResponse = accessTokenAPIResponseTemp
 		}
 
-		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse)
+		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse, userContext)
 		if err != nil {
 			errMsg := err.Error()
 			return tpmodels.SignInUpPOSTResponse{
@@ -146,7 +148,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo)
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -159,19 +161,19 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 
 		if emailInfo.IsVerified {
-			tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email)
+			tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
 			if tokenResponse.OK != nil {
-				_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token)
+				_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
 			}
 		}
 
-		_, err = session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil)
+		session, err := session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -179,16 +181,18 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			OK: &struct {
 				CreatedNewUser   bool
 				User             tpmodels.User
+				Session          sessmodels.SessionContainer
 				AuthCodeResponse interface{}
 			}{
 				CreatedNewUser:   response.OK.CreatedNewUser,
 				User:             response.OK.User,
+				Session:          session,
 				AuthCodeResponse: accessTokenAPIResponse,
 			},
 		}, nil
 	}
 
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions) error {
+	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?state=" + state + "&code=" + code
 
@@ -205,7 +209,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 }
 
-func postRequest(providerInfo tpmodels.TypeProviderGetResponse) (map[string]interface{}, error) {
+func postRequest(providerInfo tpmodels.TypeProviderGetResponse, userContext supertokens.UserContext) (map[string]interface{}, error) {
 	querystring, err := getParamString(providerInfo.AccessTokenAPI.Params)
 	if err != nil {
 		return nil, err

@@ -21,81 +21,75 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, openidRecipeImplementation openidmodels.RecipeInterface) sessmodels.SessionContainer {
 
+	updateAccessTokenPayloadWithContext := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+		if newAccessTokenPayload == nil {
+			newAccessTokenPayload = map[string]interface{}{}
+		}
+		accessTokenPayload := originalSessionClass.GetAccessTokenPayloadWithContext(userContext)
+		jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
+
+		if !ok {
+			return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
+		}
+
+		existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
+
+		currentTimeInSeconds := uint64(time.Now().UnixNano() / 1000000000) // time in seconds
+
+		claims := jwt.MapClaims{}
+		decodedPayload := map[string]interface{}{}
+		_, _, err := new(jwt.Parser).ParseUnverified(existingJWT, claims)
+		if err != nil {
+			return err
+		}
+		for key, val := range claims {
+			decodedPayload[key] = val
+		}
+
+		jwtExpiry := uint64(decodedPayload["exp"].(float64)) - currentTimeInSeconds
+
+		if jwtExpiry <= 0 {
+			// it can come here if someone calls this function well after
+			// the access token and the jwt payload have expired (which can happen if an API takes a VERY long time). In this case, we still want the jwt payload to update, but the resulting JWT should
+			// not be alive for too long (since it's expired already). So we set it to
+			// 1 second lifetime.
+			jwtExpiry = 1
+		}
+
+		newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserIDWithContext(userContext), jwtPropertyName.(string), openidRecipeImplementation, userContext)
+		if err != nil {
+			return err
+		}
+
+		return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
+	}
 	return sessmodels.SessionContainer{
-		RevokeSession: func() error {
-			return originalSessionClass.RevokeSession()
-		},
-
-		GetSessionData: func() (map[string]interface{}, error) {
-			return originalSessionClass.GetSessionData()
-		},
-
-		UpdateSessionData: func(newSessionData map[string]interface{}) error {
-			return originalSessionClass.UpdateSessionData(newSessionData)
-		},
-		GetUserID: func() string {
-			return originalSessionClass.GetUserID()
-		},
-		GetAccessTokenPayload: func() map[string]interface{} {
-			return originalSessionClass.GetAccessTokenPayload()
-		},
-		GetHandle: func() string {
-			return originalSessionClass.GetHandle()
-		},
-		GetAccessToken: func() string {
-			return originalSessionClass.GetAccessToken()
-		},
-		GetTimeCreated: func() (uint64, error) {
-			return originalSessionClass.GetTimeCreated()
-		},
-		GetExpiry: func() (uint64, error) {
-			return originalSessionClass.GetExpiry()
-		},
+		RevokeSessionWithContext:            originalSessionClass.RevokeSessionWithContext,
+		GetSessionDataWithContext:           originalSessionClass.GetSessionDataWithContext,
+		UpdateSessionDataWithContext:        originalSessionClass.UpdateSessionDataWithContext,
+		GetUserIDWithContext:                originalSessionClass.GetUserIDWithContext,
+		GetAccessTokenPayloadWithContext:    originalSessionClass.GetAccessTokenPayloadWithContext,
+		GetHandleWithContext:                originalSessionClass.GetHandleWithContext,
+		GetAccessTokenWithContext:           originalSessionClass.GetAccessTokenWithContext,
+		GetTimeCreatedWithContext:           originalSessionClass.GetTimeCreatedWithContext,
+		GetExpiryWithContext:                originalSessionClass.GetExpiryWithContext,
+		RevokeSession:                       originalSessionClass.RevokeSession,
+		GetSessionData:                      originalSessionClass.GetSessionData,
+		UpdateSessionData:                   originalSessionClass.UpdateSessionData,
+		GetUserID:                           originalSessionClass.GetUserID,
+		GetAccessTokenPayload:               originalSessionClass.GetAccessTokenPayload,
+		GetHandle:                           originalSessionClass.GetHandle,
+		GetAccessToken:                      originalSessionClass.GetAccessToken,
+		GetTimeCreated:                      originalSessionClass.GetTimeCreated,
+		GetExpiry:                           originalSessionClass.GetExpiry,
+		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			if newAccessTokenPayload == nil {
-				newAccessTokenPayload = map[string]interface{}{}
-			}
-			accessTokenPayload := originalSessionClass.GetAccessTokenPayload()
-			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
-
-			if !ok {
-				return originalSessionClass.UpdateAccessTokenPayload(newAccessTokenPayload)
-			}
-
-			existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
-
-			currentTimeInSeconds := uint64(time.Now().UnixNano() / 1000000000) // time in seconds
-
-			claims := jwt.MapClaims{}
-			decodedPayload := map[string]interface{}{}
-			_, _, err := new(jwt.Parser).ParseUnverified(existingJWT, claims)
-			if err != nil {
-				return err
-			}
-			for key, val := range claims {
-				decodedPayload[key] = val
-			}
-
-			jwtExpiry := uint64(decodedPayload["exp"].(float64)) - currentTimeInSeconds
-
-			if jwtExpiry <= 0 {
-				// it can come here if someone calls this function well after
-				// the access token and the jwt payload have expired (which can happen if an API takes a VERY long time). In this case, we still want the jwt payload to update, but the resulting JWT should
-				// not be alive for too long (since it's expired already). So we set it to
-				// 1 second lifetime.
-				jwtExpiry = 1
-			}
-
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, originalSessionClass.GetUserID(), jwtPropertyName.(string), openidRecipeImplementation)
-			if err != nil {
-				return err
-			}
-
-			return originalSessionClass.UpdateAccessTokenPayload(newAccessTokenPayload)
+			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, nil)
 		},
 	}
 }

@@ -85,28 +85,28 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 		}
 		if config.EmailVerificationFeature != nil {
 			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID)
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string, userContext supertokens.UserContext) {
+					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
 					if err != nil {
 						return
 					}
 					if userInfo == nil {
 						return
 					}
-					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link)
+					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link, userContext)
 				}
 			}
 
 			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
-				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User) (string, error) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID)
+				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
+					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
 					if err != nil {
 						return "", err
 					}
 					if userInfo == nil {
 						return "", errors.New("Unknown User ID provided")
 					}
-					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo)
+					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo, userContext)
 				}
 			}
 		}
