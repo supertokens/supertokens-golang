@@ -29,7 +29,7 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInUpResponse{}, err
@@ -37,7 +37,7 @@ func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.Ema
 	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
-func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -45,7 +45,7 @@ func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignUp(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
+func SignUpWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignUpResponse{}, err
@@ -53,7 +53,7 @@ func SignUp(email, password string, userContext supertokens.UserContext) (tpepmo
 	return (*instance.RecipeImpl.SignUp)(email, password, userContext)
 }
 
-func SignIn(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
+func SignInWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInResponse{}, err
@@ -61,7 +61,7 @@ func SignIn(email, password string, userContext supertokens.UserContext) (tpepmo
 	return (*instance.RecipeImpl.SignIn)(email, password, userContext)
 }
 
-func GetUserById(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -69,7 +69,7 @@ func GetUserById(userID string, userContext supertokens.UserContext) (*tpepmodel
 	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
 }
 
-func GetUsersByEmail(email string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
+func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -77,7 +77,7 @@ func GetUsersByEmail(email string, userContext supertokens.UserContext) ([]tpepm
 	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext)
 }
 
-func CreateResetPasswordToken(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
@@ -85,7 +85,7 @@ func CreateResetPasswordToken(userID string, userContext supertokens.UserContext
 	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, userContext)
 }
 
-func ResetPasswordUsingToken(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+func ResetPasswordUsingTokenWithContext(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, err
@@ -93,7 +93,7 @@ func ResetPasswordUsingToken(token, newPassword string, userContext supertokens.
 	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext)
 }
 
-func UpdateEmailOrPassword(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
@@ -101,7 +101,7 @@ func UpdateEmailOrPassword(userId string, email *string, password *string, userC
 	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, userContext)
 }
 
-func CreateEmailVerificationToken(userID string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
+func CreateEmailVerificationTokenWithContext(userID string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
@@ -113,7 +113,7 @@ func CreateEmailVerificationToken(userID string, userContext supertokens.UserCon
 	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email, userContext)
 }
 
-func VerifyEmailUsingToken(token string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+func VerifyEmailUsingTokenWithContext(token string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -128,7 +128,7 @@ func VerifyEmailUsingToken(token string, userContext supertokens.UserContext) (*
 	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID, userContext)
 }
 
-func IsEmailVerified(userID string, userContext supertokens.UserContext) (bool, error) {
+func IsEmailVerifiedWithContext(userID string, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
@@ -140,7 +140,7 @@ func IsEmailVerified(userID string, userContext supertokens.UserContext) (bool, 
 	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email, userContext)
 }
 
-func RevokeEmailVerificationTokens(userID string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
+func RevokeEmailVerificationTokensWithContext(userID string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
@@ -152,7 +152,7 @@ func RevokeEmailVerificationTokens(userID string, userContext supertokens.UserCo
 	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email, userContext)
 }
 
-func UnverifyEmail(userID string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
+func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
@@ -162,4 +162,60 @@ func UnverifyEmail(userID string, userContext supertokens.UserContext) (evmodels
 		return evmodels.UnverifyEmailResponse{}, err
 	}
 	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
+}
+
+func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
+	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+}
+
+func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (*tpepmodels.User, error) {
+	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+}
+
+func SignUp(email, password string) (tpepmodels.SignUpResponse, error) {
+	return SignUpWithContext(email, password, &map[string]interface{}{})
+}
+
+func SignIn(email, password string) (tpepmodels.SignInResponse, error) {
+	return SignInWithContext(email, password, &map[string]interface{}{})
+}
+
+func GetUserById(userID string) (*tpepmodels.User, error) {
+	return GetUserByIdWithContext(userID, &map[string]interface{}{})
+}
+
+func GetUsersByEmail(email string) ([]tpepmodels.User, error) {
+	return GetUsersByEmailWithContext(email, &map[string]interface{}{})
+}
+
+func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
+	return CreateResetPasswordTokenWithContext(userID, &map[string]interface{}{})
+}
+
+func ResetPasswordUsingToken(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
+	return ResetPasswordUsingTokenWithContext(token, newPassword, &map[string]interface{}{})
+}
+
+func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
+	return UpdateEmailOrPasswordWithContext(userId, email, password, &map[string]interface{}{})
+}
+
+func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
+	return CreateEmailVerificationTokenWithContext(userID, &map[string]interface{}{})
+}
+
+func VerifyEmailUsingToken(token string) (*tpepmodels.User, error) {
+	return VerifyEmailUsingTokenWithContext(token, &map[string]interface{}{})
+}
+
+func IsEmailVerified(userID string) (bool, error) {
+	return IsEmailVerifiedWithContext(userID, &map[string]interface{}{})
+}
+
+func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
+	return RevokeEmailVerificationTokensWithContext(userID, &map[string]interface{}{})
+}
+
+func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
+	return UnverifyEmailWithContext(userID, &map[string]interface{}{})
 }

@@ -118,7 +118,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}
 
 		user := response.OK.User
-		session, err := session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
 			return epmodels.SignInPOSTResponse{}, err
 		}
@@ -160,7 +160,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		user := response.OK.User
 
-		session, err := session.CreateNewSession(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
 			return epmodels.SignUpPOSTResponse{}, err
 		}

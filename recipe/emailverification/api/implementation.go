@@ -27,7 +27,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 	}
 
 	isEmailVerifiedGET := func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.IsEmailVerifiedGETResponse, error) {
-		session, err := session.GetSession(options.Req, options.Res, nil, userContext)
+		session, err := session.GetSessionWithContext(options.Req, options.Res, nil, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
@@ -53,7 +53,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 	}
 
 	generateEmailVerifyTokenPOST := func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
-		session, err := session.GetSession(options.Req, options.Res, nil, userContext)
+		session, err := session.GetSessionWithContext(options.Req, options.Res, nil, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}

@@ -173,7 +173,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		session, err := session.CreateNewSession(options.Res, response.OK.User.ID, nil, nil, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Res, response.OK.User.ID, nil, nil, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
