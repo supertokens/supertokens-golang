@@ -89,7 +89,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		GetExpiry:                           originalSessionClass.GetExpiry,
 		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, nil)
+			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
 		},
 	}
 }

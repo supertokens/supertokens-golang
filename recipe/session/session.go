@@ -149,34 +149,34 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		GetTimeCreatedWithContext:           getTimeCreatedWithContext,
 		GetExpiryWithContext:                getExpiryWithContext,
 		RevokeSession: func() error {
-			return revokeSessionWithContext(nil)
+			return revokeSessionWithContext(&map[string]interface{}{})
 		},
 		GetSessionData: func() (map[string]interface{}, error) {
-			return getSessionDataWithContext(nil)
+			return getSessionDataWithContext(&map[string]interface{}{})
 		},
 		UpdateSessionData: func(newSessionData map[string]interface{}) error {
-			return updateSessionDataWithContext(newSessionData, nil)
+			return updateSessionDataWithContext(newSessionData, &map[string]interface{}{})
 		},
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, nil)
+			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
 		},
 		GetUserID: func() string {
-			return getUserIDWithContext(nil)
+			return getUserIDWithContext(&map[string]interface{}{})
 		},
 		GetAccessTokenPayload: func() map[string]interface{} {
-			return getAccessTokenPayloadWithContext(nil)
+			return getAccessTokenPayloadWithContext(&map[string]interface{}{})
 		},
 		GetHandle: func() string {
-			return getHandleWithContext(nil)
+			return getHandleWithContext(&map[string]interface{}{})
 		},
 		GetAccessToken: func() string {
-			return getAccessTokenWithContext(nil)
+			return getAccessTokenWithContext(&map[string]interface{}{})
 		},
 		GetTimeCreated: func() (uint64, error) {
-			return getTimeCreatedWithContext(nil)
+			return getTimeCreatedWithContext(&map[string]interface{}{})
 		},
 		GetExpiry: func() (uint64, error) {
-			return getExpiryWithContext(nil)
+			return getExpiryWithContext(&map[string]interface{}{})
 		},
 	}
 }
