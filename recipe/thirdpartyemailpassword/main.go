@@ -29,12 +29,12 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInUpResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (*tpepmodels.User, error) {
@@ -45,20 +45,20 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID st
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignUpWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
+func EmailPasswordSignUpWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignUpResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignUp)(email, password, userContext)
+	return (*instance.RecipeImpl.EmailPasswordSignUp)(email, password, userContext)
 }
 
-func SignInWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
+func EmailPasswordSignInWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignIn)(email, password, userContext)
+	return (*instance.RecipeImpl.EmailPasswordSignIn)(email, password, userContext)
 }
 
 func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
@@ -164,20 +164,20 @@ func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext
 	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
-	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
+	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (*tpepmodels.User, error) {
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
-func SignUp(email, password string) (tpepmodels.SignUpResponse, error) {
-	return SignUpWithContext(email, password, &map[string]interface{}{})
+func EmailPasswordSignUp(email, password string) (tpepmodels.SignUpResponse, error) {
+	return EmailPasswordSignUpWithContext(email, password, &map[string]interface{}{})
 }
 
-func SignIn(email, password string) (tpepmodels.SignInResponse, error) {
-	return SignInWithContext(email, password, &map[string]interface{}{})
+func EmailPasswordSignIn(email, password string) (tpepmodels.SignInResponse, error) {
+	return EmailPasswordSignInWithContext(email, password, &map[string]interface{}{})
 }
 
 func GetUserById(userID string) (*tpepmodels.User, error) {
