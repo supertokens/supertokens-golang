@@ -549,7 +549,7 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 	}
 
 	BeforeEach()
-	unittesting.SetKeyAndNumberValueInConfig("access_token_validity", 2)
+	unittesting.SetKeyValueInConfig("access_token_validity", strconv.Itoa(2))
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)

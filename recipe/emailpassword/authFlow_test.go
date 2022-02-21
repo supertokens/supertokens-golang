@@ -22,6 +22,7 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -1321,9 +1322,9 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 
 	BeforeEach()
 
-	unittesting.SetKeyAndNumberValueInConfig("access_token_validity", 2)
-
+	unittesting.SetKeyValueInConfig("access_token_validity", strconv.Itoa(2))
 	unittesting.StartUpST("localhost", "8080")
+
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {

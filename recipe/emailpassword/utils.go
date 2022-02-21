@@ -209,13 +209,13 @@ func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmod
 			)
 			if formField.ID == "password" {
 				formFieldPasswordIDCount++
-				validate = DefaultPasswordValidator
+				validate = defaultPasswordValidator
 				if formField.Validate != nil {
 					validate = formField.Validate
 				}
 			} else if formField.ID == "email" {
 				formFieldEmailIDCount++
-				validate = DefaultEmailValidator
+				validate = defaultEmailValidator
 				if formField.Validate != nil {
 					validate = formField.Validate
 				}
@@ -238,14 +238,14 @@ func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmod
 	if formFieldPasswordIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 			ID:       "password",
-			Validate: DefaultPasswordValidator,
+			Validate: defaultPasswordValidator,
 			Optional: false,
 		})
 	}
 	if formFieldEmailIDCount == 0 {
 		normalisedFormFields = append(normalisedFormFields, epmodels.NormalisedFormField{
 			ID:       "email",
-			Validate: DefaultEmailValidator,
+			Validate: defaultEmailValidator,
 			Optional: false,
 		})
 	}
@@ -256,7 +256,7 @@ func defaultValidator(_ interface{}) *string {
 	return nil
 }
 
-func DefaultPasswordValidator(value interface{}) *string {
+func defaultPasswordValidator(value interface{}) *string {
 	// length >= 8 && < 100
 	// must have a number and a character
 
@@ -285,7 +285,7 @@ func DefaultPasswordValidator(value interface{}) *string {
 	return nil
 }
 
-func DefaultEmailValidator(value interface{}) *string {
+func defaultEmailValidator(value interface{}) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg

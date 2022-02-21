@@ -54,7 +54,7 @@ func TestDeleteUser(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if supertokens.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
 		res, err := SignUp("test@example.com", "1234abcd")
 		if err != nil {
 			t.Error(err.Error())

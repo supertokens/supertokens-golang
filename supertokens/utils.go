@@ -104,13 +104,13 @@ func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
 	}
 	maxVersionSoFar := intersection[0]
 	for i := 1; i < len(intersection); i++ {
-		maxVersionSoFar = MaxVersion(intersection[i], maxVersionSoFar)
+		maxVersionSoFar = maxVersion(intersection[i], maxVersionSoFar)
 	}
 	return &maxVersionSoFar
 }
 
 // MaxVersion returns max of v1 and v2
-func MaxVersion(version1 string, version2 string) string {
+func maxVersion(version1 string, version2 string) string {
 	var splittedv1 = strings.Split(version1, ".")
 	var splittedv2 = strings.Split(version2, ".")
 	var minLength = len(splittedv1)

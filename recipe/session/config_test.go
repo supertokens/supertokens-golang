@@ -117,11 +117,13 @@ func TestSuperTokensInitWithoutApiDomain(t *testing.T) {
 	}
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "Please provide your apiDomain inside the appInfo object when calling supertokens.init")
+	} else {
+		t.Fail()
 	}
-	AfterEach()
 }
 
 func TestSuperTokensInitWithoutWebsiteDomain(t *testing.T) {
@@ -143,6 +145,8 @@ func TestSuperTokensInitWithoutWebsiteDomain(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -164,6 +168,8 @@ func TestSuperTokensInitWith0RecipeModules(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "please provide at least one recipe to the supertokens.init function call")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -308,6 +314,8 @@ func TestSuperTokensInitWithConfigForSessionModulesWithSameSiteValueAsRandom(t *
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), `cookie same site must be one of "strict", "lax", or "none"`)
+	} else {
+		t.Fail()
 	}
 }
 
@@ -645,6 +653,8 @@ func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -672,6 +682,8 @@ func TestSuperTokensInitWithDifferentWebAndApiDomainWithDefaultCookieSecure(t *t
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+	} else {
+		t.Fail()
 	}
 }
 func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFalse(t *testing.T) {
@@ -701,6 +713,8 @@ func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFa
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -753,6 +767,8 @@ func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -777,6 +793,8 @@ func TestSuperTokensInitWithoutAPIDomain(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "Please provide your apiDomain inside the appInfo object when calling supertokens.init")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -801,6 +819,8 @@ func TestSuperTokensInitWithoutAppName(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "Please provide your appName inside the appInfo object when calling supertokens.init")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -822,12 +842,9 @@ func TestSuperTokensInitWithoutRecipeList(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		errorMessage := err.Error()
-		if errorMessage == "please provide at least one recipe to the supertokens.init function call" {
-			assert.Equal(t, errorMessage, "please provide at least one recipe to the supertokens.init function call")
-		} else {
-			t.Error(errorMessage)
-		}
+		assert.Equal(t, err.Error(), "please provide at least one recipe to the supertokens.init function call")
+	} else {
+		t.Fail()
 	}
 }
 
@@ -1052,6 +1069,8 @@ func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, err.Error(), "_jwtPName is a reserved property name, please use a different key name for the jwt")
+	} else {
+		t.Fail()
 	}
 }
 

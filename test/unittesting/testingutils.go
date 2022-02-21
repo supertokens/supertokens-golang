@@ -193,6 +193,29 @@ func CleanST() {
 
 }
 
+// MaxVersion returns max of v1 and v2
+func MaxVersion(version1 string, version2 string) string {
+	var splittedv1 = strings.Split(version1, ".")
+	var splittedv2 = strings.Split(version2, ".")
+	var minLength = len(splittedv1)
+	if minLength > len(splittedv2) {
+		minLength = len(splittedv2)
+	}
+	for i := 0; i < minLength; i++ {
+		var v1, _ = strconv.Atoi(splittedv1[i])
+		var v2, _ = strconv.Atoi(splittedv2[i])
+		if v1 > v2 {
+			return version1
+		} else if v2 > v1 {
+			return version2
+		}
+	}
+	if len(splittedv1) >= len(splittedv2) {
+		return version1
+	}
+	return version2
+}
+
 func KillAllST() {
 	pids := getListOfPids()
 	for i := 0; i < len(pids); i++ {
@@ -225,15 +248,6 @@ func returnNumberOfDirsToGoUpFromCurrentWorkingDir(isPathProvided bool) string {
 		dirUpSlash += "../"
 	}
 	return dirUpSlash
-}
-
-func RemoveTrailingSlashFromTheEndOfString(input string) string {
-	if input[len(input)-1:] == "/" {
-		res := input[:len(input)-1] + ""
-		return res
-	} else {
-		return input
-	}
 }
 
 func ExtractInfoFromResponse(res *http.Response) map[string]string {
@@ -427,24 +441,7 @@ func SetKeyValueInConfig(key string, value string) {
 
 	defer f.Close()
 
-	f.Write([]byte("\n" + key + ": " + value))
-
 	if _, err = f.WriteString(key + ": " + value + "\n"); err != nil {
-		panic(err)
-	}
-}
-
-func SetKeyAndNumberValueInConfig(key string, value int) {
-	installationPath := getInstallationDir()
-	pathToConfigYamlFile := installationPath + "/config.yaml"
-	f, err := os.OpenFile(pathToConfigYamlFile, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-	val := strconv.Itoa(value)
-	if _, err = f.WriteString(key + ": " + val + "\n"); err != nil {
 		panic(err)
 	}
 }
