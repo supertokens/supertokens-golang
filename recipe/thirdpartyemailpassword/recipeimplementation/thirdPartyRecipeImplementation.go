@@ -40,7 +40,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 	}
 
 	signInUp := func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-		result, err := (*recipeImplementation.SignInUp)(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
+		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
 			ID:         email.ID,
 			IsVerified: email.IsVerified,
 		}, userContext)

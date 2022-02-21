@@ -257,9 +257,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	result.GetUserByID = &getUserByID
 	result.GetUsersByEmail = &getUsersByEmail
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
-	result.SignInUp = &signInUp
-	result.SignUp = &signUp
-	result.SignIn = &signIn
+	result.ThirdPartySignInUp = &signInUp
+	result.EmailPasswordSignUp = &signUp
+	result.EmailPasswordSignIn = &signIn
 	result.CreateResetPasswordToken = &createResetPasswordToken
 	result.ResetPasswordUsingToken = &resetPasswordUsingToken
 	result.UpdateEmailOrPassword = &updateEmailOrPassword

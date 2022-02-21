@@ -24,7 +24,7 @@ import (
 func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) epmodels.RecipeInterface {
 
 	signUp := func(email, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
-		response, err := (*recipeImplementation.SignUp)(email, password, userContext)
+		response, err := (*recipeImplementation.EmailPasswordSignUp)(email, password, userContext)
 		if err != nil {
 			return epmodels.SignUpResponse{}, err
 		}
@@ -45,7 +45,7 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.Recip
 	}
 
 	signIn := func(email, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
-		response, err := (*recipeImplementation.SignIn)(email, password, userContext)
+		response, err := (*recipeImplementation.EmailPasswordSignIn)(email, password, userContext)
 		if err != nil {
 			return epmodels.SignInResponse{}, err
 		}
