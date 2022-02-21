@@ -48,7 +48,7 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 						resetURL = strings.Split(passwordResetURLWithToken, "?")[0]
 						tokenInfo = strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[0]
 						ridInfo = strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[1]
@@ -291,7 +291,7 @@ func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[0], "=")[1]
 					},
 				},

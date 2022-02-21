@@ -560,7 +560,7 @@ func SessionRefresh(testUrl string, refreshToken string, idRefreshToken string, 
 func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 			return tpmodels.TypeProviderGetResponse{
 				AccessTokenAPI: tpmodels.AccessTokenAPI{
 					URL: "https://test.com/oauth/token",
@@ -575,7 +575,7 @@ func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
 						},
 					},
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
 					return tpmodels.UserInfo{
 						ID: "user",
 						Email: &tpmodels.EmailStruct{
@@ -584,7 +584,7 @@ func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext *map[string]interface{}) string {
 					return "supertokens"
 				},
 			}
@@ -595,7 +595,7 @@ func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
 func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 			return tpmodels.TypeProviderGetResponse{
 				AccessTokenAPI: tpmodels.AccessTokenAPI{
 					URL: "https://test.com/oauth/token",
@@ -603,7 +603,7 @@ func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
 					URL: "https://test.com/oauth/auth",
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
 					return tpmodels.UserInfo{
 						ID: "user",
 						Email: &tpmodels.EmailStruct{
@@ -612,7 +612,7 @@ func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext *map[string]interface{}) string {
 					return "supertokens"
 				},
 			}

@@ -105,7 +105,7 @@ func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
 						Providers: []tpmodels.TypeProvider{
 							{
 								ID: "custom",
-								Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+								Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 									return tpmodels.TypeProviderGetResponse{
 										AccessTokenAPI: tpmodels.AccessTokenAPI{
 											URL: "test.com/oauth/token",
@@ -113,7 +113,7 @@ func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
 										AuthorisationRedirect: tpmodels.AuthorisationRedirect{
 											URL: "test.com/oauth/auth",
 										},
-										GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+										GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
 											return tpmodels.UserInfo{
 												ID: "user",
 												Email: &tpmodels.EmailStruct{

@@ -657,7 +657,7 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						userInfo = user
 						emailToken = emailVerificationURLWithToken
 					},
@@ -729,7 +729,7 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -912,7 +912,7 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -920,8 +920,8 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 					EmailVerificationFeature: &evmodels.OverrideStruct{
 						APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 							originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-							*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions) (evmodels.VerifyEmailUsingTokenResponse, error) {
-								res, err := originalVerifyEmailPost(token, options)
+							*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+								res, err := originalVerifyEmailPost(token, options, userContext)
 								if err != nil {
 									log.Fatal(err.Error())
 								}
@@ -1017,7 +1017,7 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -1171,7 +1171,7 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -1179,8 +1179,8 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 					EmailVerificationFeature: &evmodels.OverrideStruct{
 						APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 							originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-							*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions) (evmodels.VerifyEmailUsingTokenResponse, error) {
-								res, err := originalVerifyEmailPost(token, options)
+							*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+								res, err := originalVerifyEmailPost(token, options, userContext)
 								if err != nil {
 									log.Fatal(err.Error())
 								}
@@ -1276,7 +1276,7 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -1284,8 +1284,8 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 					EmailVerificationFeature: &evmodels.OverrideStruct{
 						Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 							originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-							*originalImplementation.VerifyEmailUsingToken = func(token string) (evmodels.VerifyEmailUsingTokenResponse, error) {
-								res, err := originalVerifyUsingToken(token)
+							*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+								res, err := originalVerifyUsingToken(token, userContext)
 								if err != nil {
 									log.Fatal(err.Error())
 								}
@@ -1381,7 +1381,7 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -1389,8 +1389,8 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 					EmailVerificationFeature: &evmodels.OverrideStruct{
 						APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 							originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-							*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions) (evmodels.VerifyEmailUsingTokenResponse, error) {
-								res, err := originalVerifyEmailPost(token, options)
+							*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+								res, err := originalVerifyEmailPost(token, options, userContext)
 								if err != nil {
 									log.Fatal(err.Error())
 								}
@@ -1484,7 +1484,7 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
 				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string) {
+					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 						token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 					},
 				},
@@ -1492,8 +1492,8 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 					EmailVerificationFeature: &evmodels.OverrideStruct{
 						Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 							originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-							*originalImplementation.VerifyEmailUsingToken = func(token string) (evmodels.VerifyEmailUsingTokenResponse, error) {
-								res, err := originalVerifyUsingToken(token)
+							*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+								res, err := originalVerifyUsingToken(token, userContext)
 								if err != nil {
 									log.Fatal(err.Error())
 								}

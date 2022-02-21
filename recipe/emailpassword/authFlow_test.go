@@ -1119,8 +1119,8 @@ func TestHandlePostSignInFunction(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignInPost := *originalImplementation.SignInPOST
-						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignInResponse, error) {
-							res, _ := originalSignInPost(formFields, options)
+						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+							res, _ := originalSignInPost(formFields, options, userContext)
 							customUser = res.OK.User
 							return res, nil
 						}
@@ -1935,8 +1935,8 @@ func TestThatCustomFieldsAreSentUsingHandlePostSignup(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignUpPost := *originalImplementation.SignUpPOST
-						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions) (epmodels.SignUpResponse, error) {
-							res, _ := originalSignUpPost(formFields, options)
+						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+							res, _ := originalSignUpPost(formFields, options, userContext)
 							customFormFields = formFields
 							return res, nil
 						}

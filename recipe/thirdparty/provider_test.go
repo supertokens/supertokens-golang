@@ -69,7 +69,7 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 
 	assert.Equal(t, "google", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
@@ -139,7 +139,7 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 
 	assert.Equal(t, "google", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
@@ -208,7 +208,7 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 
 	assert.Equal(t, "google", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
@@ -272,7 +272,7 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, "https://graph.facebook.com/v9.0/oauth/access_token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://www.facebook.com/v9.0/dialog/oauth", providerInfoGetResult.AuthorisationRedirect.URL)
@@ -336,7 +336,7 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, map[string]interface{}{
 		"client_id":     "test",
@@ -389,7 +389,7 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 
 	assert.Equal(t, "github", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, "https://github.com/login/oauth/access_token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://github.com/login/oauth/authorize", providerInfoGetResult.AuthorisationRedirect.URL)
@@ -455,7 +455,7 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 
 	assert.Equal(t, "github", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, map[string]interface{}{
 		"client_id": "test",
@@ -512,7 +512,7 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 
 	assert.Equal(t, "github", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil)
+	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
 	assert.Equal(t, map[string]interface{}{
 		"client_id": "test",
