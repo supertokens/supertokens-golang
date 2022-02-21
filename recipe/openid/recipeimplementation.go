@@ -23,21 +23,21 @@ import (
 )
 
 func makeRecipeImplementation(config openidmodels.TypeNormalisedInput, jwtRecipeImplementation jwtmodels.RecipeInterface) openidmodels.RecipeInterface {
-	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 		issuer := config.IssuerDomain.GetAsStringDangerous() + config.IssuerPath.GetAsStringDangerous()
 		if payload == nil {
 			payload = map[string]interface{}{}
 		}
 
 		payload["iss"] = issuer
-		return (*jwtRecipeImplementation.CreateJWT)(payload, validitySecondsPointer)
+		return (*jwtRecipeImplementation.CreateJWT)(payload, validitySecondsPointer, userContext)
 	}
 
-	getJWKS := func() (jwtmodels.GetJWKSResponse, error) {
-		return (*jwtRecipeImplementation.GetJWKS)()
+	getJWKS := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+		return (*jwtRecipeImplementation.GetJWKS)(userContext)
 	}
 
-	getOpenIdDiscoveryConfiguration := func() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+	getOpenIdDiscoveryConfiguration := func(userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
 		issuer := config.IssuerDomain.GetAsStringDangerous() + config.IssuerPath.GetAsStringDangerous()
 		jwksPath, err := supertokens.NewNormalisedURLPath(jwt.GetJWKSAPI)
 		if err != nil {

@@ -18,12 +18,13 @@ package recipeimplementation
 import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) tpmodels.RecipeInterface {
 
-	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string) (*tpmodels.User, error) {
-		user, err := (*recipeImplementation.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID)
+	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -38,11 +39,11 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
-		result, err := (*recipeImplementation.SignInUp)(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, tpepmodels.EmailStruct{
 			ID:         email.ID,
 			IsVerified: email.IsVerified,
-		})
+		}, userContext)
 		if err != nil {
 			return tpmodels.SignInUpResponse{}, err
 		}
@@ -70,8 +71,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	getUserByID := func(userID string) (*tpmodels.User, error) {
-		user, err := (*recipeImplementation.GetUserByID)(userID)
+	getUserByID := func(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByID)(userID, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -86,8 +87,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	getUserByEmail := func(email string) ([]tpmodels.User, error) {
-		users, err := (*recipeImplementation.GetUsersByEmail)(email)
+	getUserByEmail := func(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
+		users, err := (*recipeImplementation.GetUsersByEmail)(email, userContext)
 		if err != nil {
 			return nil, err
 		}

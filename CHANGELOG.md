@@ -7,10 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.0] - 2022-02-20
+### Breaking Change
+
+-   Adds user context to all functions exposed to the user, and to API and Recipe interface functions. This is a non breaking change for User exposed function calls, but a breaking change if you are using the Recipe or APIs override feature
+-   Returns session from API interface functions that create a session
+-   Renames functions in ThirdPartyEmailPassword recipe (https://github.com/supertokens/supertokens-node/issues/219):
+    -   Recipe Interface:
+        -   `SignInUp` -> `ThirdPartySignInUp`
+        -   `SignUp` -> `EmailPasswordSignUp`
+        -   `SignIn` -> `EmailPasswordSignIn`
+    -   API Interface:
+        -   `EmailExistsGET` -> `EmailPasswordEmailExistsGET`
+    -   User exposed functions (in `recipe/thirdpartyemailpassword/main.go`)
+        -   `SignInUp` -> `ThirdPartySignInUp`
+        -   `SignUp` -> `EmailPasswordSignUp`
+        -   `SignIn` -> `EmailPasswordSignIn`
+
+### Change:
+
+-   Uses recipe interface inside session class so that any modification to those get reflected in the session class functions too.
+
 ## [0.4.2] - 2022-01-31
 - Adds ability to give a path for each of the hostnames in the connectionURI: https://github.com/supertokens/supertokens-node/issues/252
 - Adds workflow to verify if pr title follows conventional commits
 - Added userId as an optional property to the response of `recipe/user/password/reset` (Compatibility with CDI 2.12).
+
+### Added
+
+-   Added `regenerateAccessToken` as a new recipe function for the session recipe.
+-   Added a bunch of new functions inside the session container which gives user the ability to either call a       function with userContext or just call the function without it (for example: `RevokeSession` and `RevokeSessionWithContext`)
+ 
+### Breaking changes:
+
+-   Allows passing of custom user context everywhere: https://github.com/supertokens/supertokens-golang/issues/64
+
 
 ## [0.4.1] - 2022-01-27
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.

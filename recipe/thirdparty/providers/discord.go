@@ -20,6 +20,7 @@ import (
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const discordID = "discord"
@@ -27,7 +28,7 @@ const discordID = "discord"
 func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: discordID,
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://discord.com/api/oauth2/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -70,7 +71,7 @@ func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 
 					accessToken := authCodeResponse.(map[string]interface{})["access_token"].(string)
 					authHeader := "Bearer " + accessToken
@@ -87,7 +88,7 @@ func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext supertokens.UserContext) string {
 					return config.ClientID
 				},
 			}

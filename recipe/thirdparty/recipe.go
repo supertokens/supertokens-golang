@@ -158,8 +158,8 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
 }
 
-func (r *Recipe) getEmailForUserId(userID string) (string, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID)
+func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (string, error) {
+	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
 	if err != nil {
 		return "", err
 	}

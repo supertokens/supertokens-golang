@@ -97,13 +97,13 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 					Override: &sessmodels.OverrideStruct{
 						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 							ogCNS := *originalImplementation.CreateNewSession
-							(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+							(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 								if accessTokenPayload == nil {
 									accessTokenPayload = map[string]interface{}{}
 								}
 								accessTokenPayload["customClaim"] = "customValue"
 
-								return ogCNS(res, userID, accessTokenPayload, sessionData)
+								return ogCNS(res, userID, accessTokenPayload, sessionData, userContext)
 							}
 							return originalImplementation
 						},

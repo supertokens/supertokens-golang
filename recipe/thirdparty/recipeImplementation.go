@@ -21,7 +21,7 @@ import (
 )
 
 func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterface {
-	signInUp := func(thirdPartyID, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
+	signInUp := func(thirdPartyID, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
@@ -45,7 +45,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		}, nil
 	}
 
-	getUserByID := func(userID string) (*tpmodels.User, error) {
+	getUserByID := func(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
 		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 			"userId": userID,
 		})
@@ -62,7 +62,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		return nil, nil
 	}
 
-	getUserByThirdPartyInfo := func(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
+	getUserByThirdPartyInfo := func(thirdPartyID, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
 		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
@@ -80,7 +80,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		return nil, nil
 	}
 
-	getUsersByEmail := func(email string) ([]tpmodels.User, error) {
+	getUsersByEmail := func(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
 		response, err := querier.SendGetRequest("/recipe/users/by-email", map[string]string{
 			"email": email,
 		})

@@ -19,6 +19,8 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type APIOptions struct {
@@ -32,11 +34,27 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	EmailExistsGET                 *func(email string, options APIOptions) (EmailExistsGETResponse, error)
-	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, options APIOptions) (GeneratePasswordResetTokenPOSTResponse, error)
-	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions) (ResetPasswordUsingTokenResponse, error)
-	SignInPOST                     *func(formFields []TypeFormField, options APIOptions) (SignInResponse, error)
-	SignUpPOST                     *func(formFields []TypeFormField, options APIOptions) (SignUpResponse, error)
+	EmailExistsGET                 *func(email string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
+	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (GeneratePasswordResetTokenPOSTResponse, error)
+	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions, userContext supertokens.UserContext) (ResetPasswordUsingTokenResponse, error)
+	SignInPOST                     *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (SignInPOSTResponse, error)
+	SignUpPOST                     *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (SignUpPOSTResponse, error)
+}
+
+type SignUpPOSTResponse struct {
+	OK *struct {
+		User    User
+		Session sessmodels.SessionContainer
+	}
+	EmailAlreadyExistsError *struct{}
+}
+
+type SignInPOSTResponse struct {
+	OK *struct {
+		User    User
+		Session sessmodels.SessionContainer
+	}
+	WrongCredentialsError *struct{}
 }
 
 type EmailExistsGETResponse struct {

@@ -18,12 +18,13 @@ package recipeimplementation
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) epmodels.RecipeInterface {
 
-	signUp := func(email, password string) (epmodels.SignUpResponse, error) {
-		response, err := (*recipeImplementation.SignUp)(email, password)
+	signUp := func(email, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+		response, err := (*recipeImplementation.EmailPasswordSignUp)(email, password, userContext)
 		if err != nil {
 			return epmodels.SignUpResponse{}, err
 		}
@@ -43,8 +44,8 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.Recip
 		}, nil
 	}
 
-	signIn := func(email, password string) (epmodels.SignInResponse, error) {
-		response, err := (*recipeImplementation.SignIn)(email, password)
+	signIn := func(email, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+		response, err := (*recipeImplementation.EmailPasswordSignIn)(email, password, userContext)
 		if err != nil {
 			return epmodels.SignInResponse{}, err
 		}
@@ -64,8 +65,8 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.Recip
 		}, nil
 	}
 
-	getUserByID := func(userId string) (*epmodels.User, error) {
-		user, err := (*recipeImplementation.GetUserByID)(userId)
+	getUserByID := func(userId string, userContext supertokens.UserContext) (*epmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByID)(userId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -79,8 +80,8 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.Recip
 		}, nil
 	}
 
-	getUserByEmail := func(email string) (*epmodels.User, error) {
-		users, err := (*recipeImplementation.GetUsersByEmail)(email)
+	getUserByEmail := func(email string, userContext supertokens.UserContext) (*epmodels.User, error) {
+		users, err := (*recipeImplementation.GetUsersByEmail)(email, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -97,16 +98,16 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.Recip
 		return nil, nil
 	}
 
-	createResetPasswordToken := func(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
-		return (*recipeImplementation.CreateResetPasswordToken)(userID)
+	createResetPasswordToken := func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+		return (*recipeImplementation.CreateResetPasswordToken)(userID, userContext)
 	}
 
-	resetPasswordUsingToken := func(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
-		return (*recipeImplementation.ResetPasswordUsingToken)(token, newPassword)
+	resetPasswordUsingToken := func(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+		return (*recipeImplementation.ResetPasswordUsingToken)(token, newPassword, userContext)
 	}
 
-	updateEmailOrPassword := func(userId string, email, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
-		return (*recipeImplementation.UpdateEmailOrPassword)(userId, email, password)
+	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+		return (*recipeImplementation.UpdateEmailOrPassword)(userId, email, password, userContext)
 	}
 
 	return epmodels.RecipeInterface{

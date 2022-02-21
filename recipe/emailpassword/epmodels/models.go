@@ -15,7 +15,10 @@
 
 package epmodels
 
-import "github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type TypeNormalisedInput struct {
 	SignUpFeature                  TypeNormalisedInputSignUp
@@ -32,8 +35,8 @@ type OverrideStruct struct {
 }
 
 type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext)
 }
 
 type TypeInputFormField struct {
@@ -61,13 +64,13 @@ type TypeNormalisedInputSignIn struct {
 }
 
 type TypeInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL      func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string)
+	GetResetPasswordURL      func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext)
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL            func(user User) (string, error)
-	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string)
+	GetResetPasswordURL            func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }

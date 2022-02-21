@@ -17,6 +17,7 @@ package tpmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type UserInfo struct {
@@ -32,9 +33,9 @@ type EmailStruct struct {
 type TypeProviderGetResponse struct {
 	AccessTokenAPI        AccessTokenAPI
 	AuthorisationRedirect AuthorisationRedirect
-	GetProfileInfo        func(authCodeResponse interface{}) (UserInfo, error)
-	GetClientId           func() string
-	GetRedirectURI        func() (string, error)
+	GetProfileInfo        func(authCodeResponse interface{}, userContext supertokens.UserContext) (UserInfo, error)
+	GetClientId           func(userContext supertokens.UserContext) string
+	GetRedirectURI        func(userContext supertokens.UserContext) (string, error)
 }
 
 type AccessTokenAPI struct {
@@ -49,7 +50,7 @@ type AuthorisationRedirect struct {
 
 type TypeProvider struct {
 	ID        string
-	Get       func(redirectURI *string, authCodeFromRequest *string) TypeProviderGetResponse
+	Get       func(redirectURI *string, authCodeFromRequest *string, userContext supertokens.UserContext) TypeProviderGetResponse
 	IsDefault bool
 }
 
@@ -64,8 +65,8 @@ type User struct {
 }
 
 type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string)
+	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext)
 }
 
 type TypeInputSignInAndUp struct {

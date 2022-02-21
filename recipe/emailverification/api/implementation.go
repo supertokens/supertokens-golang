@@ -22,12 +22,12 @@ import (
 )
 
 func MakeAPIImplementation() evmodels.APIInterface {
-	verifyEmailPOST := func(token string, options evmodels.APIOptions) (evmodels.VerifyEmailUsingTokenResponse, error) {
-		return (*options.RecipeImplementation.VerifyEmailUsingToken)((token))
+	verifyEmailPOST := func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+		return (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
 	}
 
-	isEmailVerifiedGET := func(options evmodels.APIOptions) (evmodels.IsEmailVerifiedGETResponse, error) {
-		session, err := session.GetSession(options.Req, options.Res, nil)
+	isEmailVerifiedGET := func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.IsEmailVerifiedGETResponse, error) {
+		session, err := session.GetSessionWithContext(options.Req, options.Res, nil, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
@@ -35,13 +35,13 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		userID := session.GetUserID()
+		userID := session.GetUserIDWithContext(userContext)
 
-		email, err := options.Config.GetEmailForUserID(userID)
+		email, err := options.Config.GetEmailForUserID(userID, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
-		isVerified, err := (*options.RecipeImplementation.IsEmailVerified)(userID, email)
+		isVerified, err := (*options.RecipeImplementation.IsEmailVerified)(userID, email, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
@@ -52,8 +52,8 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}, nil
 	}
 
-	generateEmailVerifyTokenPOST := func(options evmodels.APIOptions) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
-		session, err := session.GetSession(options.Req, options.Res, nil)
+	generateEmailVerifyTokenPOST := func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
+		session, err := session.GetSessionWithContext(options.Req, options.Res, nil, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
@@ -61,12 +61,12 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		userID := session.GetUserID()
-		email, err := options.Config.GetEmailForUserID(userID)
+		userID := session.GetUserIDWithContext(userContext)
+		email, err := options.Config.GetEmailForUserID(userID, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email)
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
@@ -81,13 +81,13 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			ID:    userID,
 			Email: email,
 		}
-		emailVerificationURL, err := options.Config.GetEmailVerificationURL(user)
+		emailVerificationURL, err := options.Config.GetEmailVerificationURL(user, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
 		emailVerifyLink := emailVerificationURL + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
-		options.Config.CreateAndSendCustomEmail(user, emailVerifyLink)
+		options.Config.CreateAndSendCustomEmail(user, emailVerifyLink, userContext)
 
 		return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 			OK: &struct{}{},

@@ -21,7 +21,7 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterface {
-	createEmailVerificationToken := func(userID, email string) (evmodels.CreateEmailVerificationTokenResponse, error) {
+	createEmailVerificationToken := func(userID, email string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/user/email/verify/token", map[string]interface{}{
 			"userId": userID,
 			"email":  email,
@@ -41,7 +41,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		}, nil
 	}
 
-	verifyEmailUsingToken := func(token string) (evmodels.VerifyEmailUsingTokenResponse, error) {
+	verifyEmailUsingToken := func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/user/email/verify", map[string]interface{}{
 			"method": "token",
 			"token":  token,
@@ -63,7 +63,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		}, nil
 	}
 
-	isEmailVerified := func(userID, email string) (bool, error) {
+	isEmailVerified := func(userID, email string, userContext supertokens.UserContext) (bool, error) {
 		response, err := querier.SendGetRequest("/recipe/user/email/verify", map[string]string{
 			"userId": userID,
 			"email":  email,
@@ -74,7 +74,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		return response["isVerified"].(bool), nil
 	}
 
-	revokeEmailVerificationTokens := func(userId string, email string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
+	revokeEmailVerificationTokens := func(userId string, email string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
 		_, err := querier.SendPostRequest("/recipe/user/email/verify/token/remove", map[string]interface{}{
 			"userId": userId,
 			"email":  email,
@@ -87,7 +87,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		}, nil
 	}
 
-	unverifyEmail := func(userId string, email string) (evmodels.UnverifyEmailResponse, error) {
+	unverifyEmail := func(userId string, email string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
 		_, err := querier.SendPostRequest("/recipe/user/email/verify/remove", map[string]interface{}{
 			"userId": userId,
 			"email":  email,

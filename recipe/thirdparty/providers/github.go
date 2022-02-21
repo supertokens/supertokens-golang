@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const githubID = "github"
@@ -29,7 +30,7 @@ const githubID = "github"
 func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: githubID,
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://github.com/login/oauth/access_token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -70,7 +71,7 @@ func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
 					if err != nil {
 						return tpmodels.UserInfo{}, err
@@ -121,7 +122,7 @@ func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext supertokens.UserContext) string {
 					return config.ClientID
 				},
 			}

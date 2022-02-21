@@ -295,7 +295,7 @@ func sendUnauthorisedResponse(recipeInstance Recipe, _ string, _ *http.Request, 
 }
 
 func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
-	_, err := (*recipeInstance.RecipeImpl.RevokeSession)(sessionHandle)
+	_, err := (*recipeInstance.RecipeImpl.RevokeSession)(sessionHandle, &map[string]interface{}{})
 	if err != nil {
 		return err
 	}
