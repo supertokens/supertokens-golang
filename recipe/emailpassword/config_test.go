@@ -214,5 +214,4 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 	assert.Equal(t, "Password must contain at least one number", *passwordFormField.Validate("aaaaaaaaa"))
 	assert.Equal(t, "Password must contain at least one alphabet", *passwordFormField.Validate("1234*-56*789"))
 	assert.Nil(t, passwordFormField.Validate("validPass123"))
-
 }

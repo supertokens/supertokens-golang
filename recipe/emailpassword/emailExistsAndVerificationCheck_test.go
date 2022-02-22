@@ -1597,6 +1597,17 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querrier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.7", cdiVersion) == "2.7" {
+		return
+	}
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()

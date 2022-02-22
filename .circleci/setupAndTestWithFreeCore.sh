@@ -49,4 +49,4 @@ cd ../
 echo $SUPERTOKENS_API_KEY > apiPassword
 ./utils/setupTestEnvLocal
 cd ../project/
-INSTALL_DIR=../supertokens-root go test ./... -count=1 -v
+INSTALL_DIR=../supertokens-root go test  ./... -p 1 -v count=1

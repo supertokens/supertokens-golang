@@ -153,7 +153,6 @@ func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
 
 func SendNon200Response(res http.ResponseWriter, message string, statusCode int) error {
 	dw := MakeDoneWriter(res)
-
 	if !dw.IsDone() {
 		if statusCode < 300 {
 			return errors.New("calling sendNon200Response with status code < 300")

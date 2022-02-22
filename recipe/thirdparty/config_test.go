@@ -17,7 +17,6 @@
 package thirdparty
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -48,8 +47,9 @@ func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
 
 	if err != nil {
 		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
+	} else {
+		t.Fail()
 	}
-
 }
 
 func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testing.T) {
@@ -79,13 +79,10 @@ func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testi
 	err := supertokens.Init(configValue)
 
 	if err != nil {
-		if !strings.Contains(err.Error(), "at least 1 provider") {
-			t.Error(err.Error())
-		} else {
-			assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
-		}
+		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
+	} else {
+		t.Fail()
 	}
-
 }
 
 func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {

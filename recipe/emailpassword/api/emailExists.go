@@ -25,7 +25,6 @@ func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOp
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
-
 	email := options.Req.URL.Query().Get("email")
 	if email == "" {
 		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
