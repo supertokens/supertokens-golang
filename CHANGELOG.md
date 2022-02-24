@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+-   Adds testing framework along with unit tests for the recipes
+
 ## [0.5.0] - 2022-02-20
 ### Breaking Change
 
@@ -27,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Change:
 
 -   Uses recipe interface inside session class so that any modification to those get reflected in the session class functions too.
--   Adds testing framework along with unit tests for the recipes
+
 
 ## [0.4.2] - 2022-01-31
 - Adds ability to give a path for each of the hostnames in the connectionURI: https://github.com/supertokens/supertokens-node/issues/252
