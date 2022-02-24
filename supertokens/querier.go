@@ -37,15 +37,15 @@ type QuerierHost struct {
 
 var (
 	querierInitCalled     bool          = false
-	querierHosts          []QuerierHost = nil
-	querierAPIKey         *string
+	QuerierHosts          []QuerierHost = nil
+	QuerierAPIKey         *string
 	querierAPIVersion     string
 	querierLastTriedIndex int
 	querierLock           sync.Mutex
 	querierHostLock       sync.Mutex
 )
 
-func (q *Querier) getQuerierAPIVersion() (string, error) {
+func (q *Querier) GetQuerierAPIVersion() (string, error) {
 	querierLock.Lock()
 	defer querierLock.Unlock()
 	if querierAPIVersion != "" {
@@ -56,12 +56,12 @@ func (q *Querier) getQuerierAPIVersion() (string, error) {
 		if err != nil {
 			return nil, err
 		}
-		if querierAPIKey != nil {
-			req.Header.Set("api-key", *querierAPIKey)
+		if QuerierAPIKey != nil {
+			req.Header.Set("api-key", *QuerierAPIKey)
 		}
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(querierHosts))
+	}, len(QuerierHosts))
 
 	if err != nil {
 		return "", err
@@ -98,9 +98,9 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 func initQuerier(hosts []QuerierHost, APIKey string) {
 	if !querierInitCalled {
 		querierInitCalled = true
-		querierHosts = hosts
+		QuerierHosts = hosts
 		if APIKey != "" {
-			querierAPIKey = &APIKey
+			QuerierAPIKey = &APIKey
 		}
 		querierAPIVersion = ""
 		querierLastTriedIndex = 0
@@ -125,15 +125,15 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
 		req.Header.Set("cdi-version", apiVerion)
-		if querierAPIKey != nil {
-			req.Header.Set("api-key", *querierAPIKey)
+		if QuerierAPIKey != nil {
+			req.Header.Set("api-key", *QuerierAPIKey)
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -141,7 +141,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(querierHosts))
+	}, len(QuerierHosts))
 }
 
 func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
@@ -159,15 +159,15 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
 		req.Header.Set("cdi-version", apiVerion)
-		if querierAPIKey != nil {
-			req.Header.Set("api-key", *querierAPIKey)
+		if QuerierAPIKey != nil {
+			req.Header.Set("api-key", *QuerierAPIKey)
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -175,7 +175,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(querierHosts))
+	}, len(QuerierHosts))
 }
 
 func (q *Querier) SendGetRequest(path string, params map[string]string) (map[string]interface{}, error) {
@@ -196,13 +196,13 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 		req.Header.Set("cdi-version", apiVerion)
-		if querierAPIKey != nil {
-			req.Header.Set("api-key", *querierAPIKey)
+		if QuerierAPIKey != nil {
+			req.Header.Set("api-key", *QuerierAPIKey)
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -210,7 +210,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(querierHosts))
+	}, len(QuerierHosts))
 }
 
 func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
@@ -228,15 +228,15 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.getQuerierAPIVersion()
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
 		req.Header.Set("cdi-version", apiVerion)
-		if querierAPIKey != nil {
-			req.Header.Set("api-key", *querierAPIKey)
+		if QuerierAPIKey != nil {
+			req.Header.Set("api-key", *QuerierAPIKey)
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
@@ -244,7 +244,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(querierHosts))
+	}, len(QuerierHosts))
 }
 
 type httpRequestFunction func(url string) (*http.Response, error)
@@ -255,9 +255,9 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	}
 
 	querierHostLock.Lock()
-	currentDomain := querierHosts[querierLastTriedIndex].Domain.GetAsStringDangerous()
-	currentBasePath := querierHosts[querierLastTriedIndex].BasePath.GetAsStringDangerous()
-	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(querierHosts)
+	currentDomain := QuerierHosts[querierLastTriedIndex].Domain.GetAsStringDangerous()
+	currentBasePath := QuerierHosts[querierLastTriedIndex].BasePath.GetAsStringDangerous()
+	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(QuerierHosts)
 	querierHostLock.Unlock()
 
 	resp, err := httpRequest(currentDomain + currentBasePath + path.GetAsStringDangerous())
@@ -279,7 +279,7 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		return nil, readErr
 	}
 	if resp.StatusCode != 200 {
-		return nil, errors.New(fmt.Sprintf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body))
+		return nil, fmt.Errorf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body)
 	}
 
 	finalResult := make(map[string]interface{})

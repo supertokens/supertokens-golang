@@ -355,7 +355,7 @@ func deleteUser(userId string) error {
 		return err
 	}
 
-	cdiVersion, err := querier.getQuerierAPIVersion()
+	cdiVersion, err := querier.GetQuerierAPIVersion()
 	if err != nil {
 		return err
 	}
