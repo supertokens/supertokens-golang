@@ -97,6 +97,12 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		if resp == nil {
 			return nil, nil
 		}
+
+		if resp.ThirdParty != nil {
+			// this is a thirdparty user
+			return nil, nil
+		}
+
 		return &plessmodels.User{
 			ID:          resp.ID,
 			Email:       resp.Email,
@@ -115,6 +121,12 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		if resp == nil {
 			return nil, nil
 		}
+
+		if resp.ThirdParty != nil {
+			// this is a thirdparty user
+			return nil, nil
+		}
+
 		return &plessmodels.User{
 			ID:          resp.ID,
 			Email:       resp.Email,
