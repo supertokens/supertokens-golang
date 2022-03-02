@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/http"
 
@@ -132,7 +131,6 @@ func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 }
 
 func sessioninfo(c *fiber.Ctx) error {
-	fmt.Println("THIS IS COMING HERE")
 	sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
 	if sessionContainer == nil {
 		return c.Status(500).JSON("no session found")
