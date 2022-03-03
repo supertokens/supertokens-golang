@@ -122,7 +122,7 @@ func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 			c.SetUserContext(r.Context())
 		}))(c)
 
-		if options != nil && !*options.SessionRequired {
+		if options != nil && *options.SessionRequired == false {
 			return c.Next()
 		}
 		sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
