@@ -110,10 +110,7 @@ func main() {
 		AllowCredentials: true,
 	}))
 
-	cv := false
-	app.Get("/sessInfo", verifySession(&sessmodels.VerifySessionOptions{
-		SessionRequired: &cv,
-	}), sessioninfo)
+	app.Get("/sessInfo", verifySession(nil), sessioninfo)
 	log.Fatal(app.Listen(":3001"))
 }
 
@@ -125,7 +122,7 @@ func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 			c.SetUserContext(r.Context())
 		}))(c)
 
-		if !*options.SessionRequired {
+		if options != nil && !*options.SessionRequired {
 			return c.Next()
 		}
 		sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
