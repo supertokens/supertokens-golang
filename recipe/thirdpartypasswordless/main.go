@@ -317,37 +317,81 @@ func CreateMagicLinkByPhoneNumber(phoneNumber string, userContext supertokens.Us
 func SignInUpByEmail(email string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
-	User             plessmodels.User
+	User             tplmodels.User
 }, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return struct {
 			PreAuthSessionID string
 			CreatedNewUser   bool
-			User             plessmodels.User
+			User             tplmodels.User
 		}{}, err
 	}
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.passwordlessRecipe.SignInUp(&email, nil, userContext)
+	resp, err := instance.passwordlessRecipe.SignInUp(&email, nil, userContext)
+	if err != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             tplmodels.User
+		}{}, err
+	}
+	return struct {
+		PreAuthSessionID string
+		CreatedNewUser   bool
+		User             tplmodels.User
+	}{
+		PreAuthSessionID: resp.PreAuthSessionID,
+		CreatedNewUser:   resp.CreatedNewUser,
+		User: tplmodels.User{
+			ID:          resp.User.ID,
+			TimeJoined:  resp.User.TimeJoined,
+			Email:       resp.User.Email,
+			PhoneNumber: resp.User.PhoneNumber,
+			ThirdParty:  nil,
+		},
+	}, nil
 }
 
 func SignInUpByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
-	User             plessmodels.User
+	User             tplmodels.User
 }, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return struct {
 			PreAuthSessionID string
 			CreatedNewUser   bool
-			User             plessmodels.User
+			User             tplmodels.User
 		}{}, err
 	}
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.passwordlessRecipe.SignInUp(nil, &phoneNumber, userContext)
+	resp, err := instance.passwordlessRecipe.SignInUp(nil, &phoneNumber, userContext)
+	if err != nil {
+		return struct {
+			PreAuthSessionID string
+			CreatedNewUser   bool
+			User             tplmodels.User
+		}{}, err
+	}
+	return struct {
+		PreAuthSessionID string
+		CreatedNewUser   bool
+		User             tplmodels.User
+	}{
+		PreAuthSessionID: resp.PreAuthSessionID,
+		CreatedNewUser:   resp.CreatedNewUser,
+		User: tplmodels.User{
+			ID:          resp.User.ID,
+			TimeJoined:  resp.User.TimeJoined,
+			Email:       resp.User.Email,
+			PhoneNumber: resp.User.PhoneNumber,
+			ThirdParty:  nil,
+		},
+	}, nil
 }
