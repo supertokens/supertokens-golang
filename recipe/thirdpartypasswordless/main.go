@@ -314,7 +314,7 @@ func CreateMagicLinkByPhoneNumber(phoneNumber string, userContext supertokens.Us
 	return instance.passwordlessRecipe.CreateMagicLink(nil, &phoneNumber, userContext)
 }
 
-func SignInUpByEmail(email string, userContext supertokens.UserContext) (struct {
+func PasswordlessSignInUpByEmail(email string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             tplmodels.User
@@ -355,7 +355,7 @@ func SignInUpByEmail(email string, userContext supertokens.UserContext) (struct 
 	}, nil
 }
 
-func SignInUpByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (struct {
+func PasswordlessSignInUpByPhoneNumber(phoneNumber string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             tplmodels.User
