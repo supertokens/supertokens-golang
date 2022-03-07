@@ -30,6 +30,7 @@ import (
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func getListOfPids() []string {
@@ -618,4 +619,34 @@ func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
 			}
 		},
 	}
+}
+
+func SigninupCustomRequest(testServerUrl string, email string, id string) (*http.Response, error) {
+	defer gock.OffAll()
+	gock.New("https://test.com/").
+		Post("oauth/token").
+		Reply(200).
+		JSON(map[string]interface{}{
+			"email": email,
+			"id":    id,
+		})
+	postData := map[string]string{
+		"thirdPartyId": "custom",
+		"code":         "32432432",
+		"redirectURI":  "http://localhost.org",
+	}
+
+	postBody, err := json.Marshal(postData)
+	if err != nil {
+		return nil, err
+	}
+
+	gock.New(testServerUrl).EnableNetworking().Persist()
+	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+
+	resp, err := http.Post(testServerUrl+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	if err != nil {
+		return nil, err
+	}
+	return resp, nil
 }
