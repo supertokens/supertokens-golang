@@ -27,7 +27,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -80,7 +79,7 @@ func TestOverrideFunctions(t *testing.T) {
 					},
 				},
 			),
-			session.Init(&sessmodels.TypeInput{}),
+			session.Init(nil),
 		},
 	}
 
@@ -218,7 +217,7 @@ func TestOverrideAPIs(t *testing.T) {
 					},
 				},
 			),
-			session.Init(&sessmodels.TypeInput{}),
+			session.Init(nil),
 		},
 	}
 
