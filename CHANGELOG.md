@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 
 -   Adds testing framework along with unit tests for the recipes
+-   Adds unit tests for thirdparty recipe and thirdpartyemailpassword recipe
 
 ## [0.5.0] - 2022-02-20
 ### Breaking Change
