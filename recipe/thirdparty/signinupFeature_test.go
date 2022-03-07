@@ -115,7 +115,7 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_6,
+							customProvider6,
 						},
 					},
 				},
@@ -209,7 +209,7 @@ func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_6,
+							customProvider6,
 						},
 					},
 				},
@@ -266,7 +266,7 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 				},
@@ -367,7 +367,7 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_5,
+							customProvider5,
 						},
 					},
 				},
@@ -471,7 +471,7 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 				},
@@ -542,7 +542,7 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 				},
@@ -657,7 +657,7 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_3,
+							customProvider3,
 						},
 					},
 				},
@@ -739,7 +739,7 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 				},
@@ -838,7 +838,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 				},

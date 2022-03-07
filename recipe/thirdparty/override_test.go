@@ -51,7 +51,7 @@ func TestOverrideFunctions(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 					Override: &tpmodels.OverrideStruct{
@@ -198,7 +198,7 @@ func TestOverrideAPIs(t *testing.T) {
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 						Providers: []tpmodels.TypeProvider{
-							CUSTOM_PROVIDER_1,
+							customProvider1,
 						},
 					},
 					Override: &tpmodels.OverrideStruct{

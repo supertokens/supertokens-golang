@@ -44,7 +44,7 @@ type PostDataForCustomProvider struct {
 	RedirectUri      string            `json:"redirectURI"`
 }
 
-var CUSTOM_PROVIDER_6 = tpmodels.TypeProvider{
+var customProvider6 = tpmodels.TypeProvider{
 	ID: "custom",
 	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 		return tpmodels.TypeProviderGetResponse{
@@ -73,7 +73,7 @@ var CUSTOM_PROVIDER_6 = tpmodels.TypeProvider{
 	},
 }
 
-var CUSTOM_PROVIDER_1 = tpmodels.TypeProvider{
+var customProvider1 = tpmodels.TypeProvider{
 	ID: "custom",
 	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 		return tpmodels.TypeProviderGetResponse{
@@ -99,7 +99,7 @@ var CUSTOM_PROVIDER_1 = tpmodels.TypeProvider{
 	},
 }
 
-var CUSTOM_PROVIDER_2 = tpmodels.TypeProvider{
+var customProvider2 = tpmodels.TypeProvider{
 	ID: "custom",
 	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 		return tpmodels.TypeProviderGetResponse{
@@ -125,7 +125,7 @@ var CUSTOM_PROVIDER_2 = tpmodels.TypeProvider{
 	},
 }
 
-var CUSTOM_PROVIDER_5 = tpmodels.TypeProvider{
+var customProvider5 = tpmodels.TypeProvider{
 	ID: "custom",
 	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 		return tpmodels.TypeProviderGetResponse{
@@ -151,7 +151,7 @@ var CUSTOM_PROVIDER_5 = tpmodels.TypeProvider{
 	},
 }
 
-var CUSTOM_PROVIDER_3 = tpmodels.TypeProvider{
+var customProvider3 = tpmodels.TypeProvider{
 	ID: "custom",
 	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
 		return tpmodels.TypeProviderGetResponse{
