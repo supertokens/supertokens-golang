@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.1] - 2022-02-07
+
 -   Adds testing framework along with unit tests for the recipes
 -   Adds unit tests for thirdparty recipe and thirdpartyemailpassword recipe
 -   Adds example implementation with go fiber
