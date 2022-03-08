@@ -224,33 +224,6 @@ func KillAllST() {
 	}
 }
 
-/*this returns the number of slashes required to reach the to supertokens root assuming it is in the same level as supertokens-golang form the current working directory*/
-func returnNumberOfDirsToGoUpFromCurrentWorkingDir(isPathProvided bool) string {
-	mydir, err := os.Getwd()
-	if err != nil {
-		log.Fatal(err.Error(), "THIS IS RETURN-NUMBER-OF-DIRS-TO-GO-UP-FROM-CURRENT-WORKING-DIR")
-	}
-	arr := strings.Split(mydir, "/")
-	counter := 0
-	for i := 0; i < len(arr); i++ {
-		if arr[i] == "supertokens-golang" {
-			counter = i
-			break
-		}
-	}
-	var numberOfElems int
-	if isPathProvided {
-		numberOfElems = len(arr) - counter - 1
-	} else {
-		numberOfElems = len(arr) - counter
-	}
-	var dirUpSlash string
-	for i := 0; i < numberOfElems; i++ {
-		dirUpSlash += "../"
-	}
-	return dirUpSlash
-}
-
 func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	antiCsrf := res.Header["Anti-Csrf"]
 	cookies := res.Header["Set-Cookie"]
@@ -424,11 +397,7 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 
 func getInstallationDir() string {
 	installationDir := os.Getenv("INSTALL_DIR")
-	if installationDir == "" {
-		installationDir = returnNumberOfDirsToGoUpFromCurrentWorkingDir(false) + "supertokens-root"
-	} else {
-		installationDir = returnNumberOfDirsToGoUpFromCurrentWorkingDir(true) + installationDir
-	}
+	installationDir = "../../" + installationDir
 	return installationDir
 }
 
