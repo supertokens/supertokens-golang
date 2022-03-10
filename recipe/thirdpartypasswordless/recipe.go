@@ -73,7 +73,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 		// to return true for is email verified for passwordless users.
 		var apiInterfaceFunc func(originalImplementation evmodels.APIInterface) evmodels.APIInterface
 		var recipeInterfaceFunc func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface
-		if config.Override.EmailVerificationFeature != nil {
+		if config.Override != nil && config.Override.EmailVerificationFeature != nil {
 			apiInterfaceFunc = config.Override.EmailVerificationFeature.APIs
 			recipeInterfaceFunc = config.Override.EmailVerificationFeature.Functions
 		}
