@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+-   Adds mode unit tests for thirdpary email password recipe
+-   Adds test to jwt recipe
+-   Adds test to opendID recipe
+
 ## [0.5.1] - 2022-02-07
 
 -   Adds testing framework along with unit tests for the recipes
