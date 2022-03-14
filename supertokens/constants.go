@@ -21,7 +21,7 @@ const (
 )
 
 // VERSION current version of the lib
-const VERSION = "0.5.1"
+const VERSION = "0.5.2"
 
 const SUPERTOKENS_NAMESPACE = "com.supertokens:"
 const DEBUG_FLAG = "SUPERTOKENS_DEBUG"

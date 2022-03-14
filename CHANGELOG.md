@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.2] - 2022-03-14
+
+### Added 
+-   Adds functions for debug logging
+
 ## [0.5.1] - 2022-02-07
 
 -   Adds testing framework along with unit tests for the recipes
