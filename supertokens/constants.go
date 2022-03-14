@@ -23,6 +23,9 @@ const (
 // VERSION current version of the lib
 const VERSION = "0.5.1"
 
+const SUPERTOKENS_NAMESPACE = "com.supertokens:"
+const DEBUG_FLAG = "SUPERTOKENS_DEBUG"
+
 var (
 	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12"}
 )
