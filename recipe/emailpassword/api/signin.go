@@ -29,6 +29,7 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return nil
 	}
 
+	supertokens.InfoLogger("SignIn API called")
 	body, err := ioutil.ReadAll(options.Req.Body)
 	if err != nil {
 		return err
@@ -49,10 +50,12 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 	if result.WrongCredentialsError != nil {
+		supertokens.DebugLoggerWithCode[1]("WRONG_CREDENTIALS_ERROR")
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "WRONG_CREDENTIALS_ERROR",
 		})
 	} else {
+		supertokens.DebugLoggerWithCode[1]("OK")
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 			"user":   result.OK.User,

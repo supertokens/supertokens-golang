@@ -18,15 +18,11 @@ package supertokens
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
-	"log"
 	"net/http"
-	"os"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
-	"time"
 )
 
 func IsAnIPAddress(ipaddress string) (bool, error) {
@@ -174,42 +170,4 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 		}
 	}
 	return nil
-}
-
-var (
-	iLogger             = log.New(os.Stdout, "com.supertokens:info ", 0)
-	eLogger             = log.New(os.Stderr, "com.supertokens:error ", 0)
-	Error_Code_1        = 1
-	ErrorLoggerWithCode = map[int]func(string){
-		1: func(param string) {
-			stErrorLoggerHelper(Error_Code_1, "Some Error Log "+param)
-		},
-	}
-)
-
-func InfoLogger(message string) {
-	if isNamespacePassed("info") {
-		iLogger.Printf("{t: \"%s\", msg: \"%s\", sdkVer: \"%s\"}", time.Now().String(), message, VERSION)
-	}
-}
-
-func stErrorLoggerHelper(errorCode int, message string) {
-	if isNamespacePassed("error") {
-		eLogger.Printf("{t: \"%s\", errCode: %d, msg: \"%s\", sdkVer: \"%s\"}", time.Now().String(), errorCode, message, VERSION)
-	}
-
-}
-
-func isNamespacePassed(id string) bool {
-	namespace, exists := os.LookupEnv(DEBUG_FLAG)
-
-	if exists {
-		namespaceWithStar := fmt.Sprintf("%s*", SUPERTOKENS_NAMESPACE)
-		namespaceWithId := fmt.Sprintf("%s%s", SUPERTOKENS_NAMESPACE, id)
-
-		if strings.Contains(namespace, namespaceWithStar) || strings.Contains(namespace, namespaceWithId) {
-			return true
-		}
-	}
-	return false
 }
