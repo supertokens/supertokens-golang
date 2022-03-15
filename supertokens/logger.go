@@ -4,36 +4,53 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"runtime"
 	"strings"
 	"time"
 )
 
 const SUPERTOKENS_LOGGER_NAMESPACE = "com.supertokens:"
 
+type LoggerCodes int
+
+const (
+	API_RESPONSE LoggerCodes = iota + 1
+	API_CALLED
+)
+
 var (
 	iLogger             = log.New(os.Stdout, "com.supertokens:info ", 0)
 	dLogger             = log.New(os.Stdout, "com.supertokens:debug ", 0)
-	DebugLoggerWithCode = map[int]func(string){
-		1: func(param string) {
-			debugLoggerHelper(1, "API replied with status: "+param)
+	DebugLoggerWithCode = map[int]func(...string){
+		int(API_RESPONSE): func(input ...string) {
+			debugLoggerHelper(int(API_RESPONSE), input[0]+" replied with status: "+input[1])
+		},
+	}
+	InfoLoggerWithCode = map[int]func(...string){
+		int(API_CALLED): func(input ...string) {
+			infoLoggerHelper(int(API_CALLED), input[0]+" was called")
 		},
 	}
 )
 
-func logMessage(message string) string {
-	return fmt.Sprintf("{t: \"%d\", msg: %s, sdkVer: \"%s\"}", time.Now().UnixMilli(), message, VERSION)
+func logMessage(message string, code *int) string {
+	_, file, line, _ := runtime.Caller(3)
+	messageWithOptionalCode := fmt.Sprintf("msg: \"%s\"", message)
+	if code != nil {
+		messageWithOptionalCode = fmt.Sprintf("%s, code: %d", messageWithOptionalCode, *code)
+	}
+	return fmt.Sprintf("{t: \"%d\", %s, file: \"%s:%d\" sdkVer: \"%s\"}", time.Now().UnixMilli(), messageWithOptionalCode, file, line, VERSION)
 }
 
-func InfoLogger(message string) {
+func infoLoggerHelper(code int, message string) {
 	if isNamespacePassed("info") {
-		iLogger.Printf(logMessage("\"%s\""), message)
+		iLogger.Printf(logMessage(message, &code))
 	}
 }
 
-func debugLoggerHelper(errorCode int, message string) {
+func debugLoggerHelper(code int, message string) {
 	if isNamespacePassed("debug") {
-		formattedMessage := fmt.Sprintf("\"%s\", debugCode: %d", message, errorCode)
-		dLogger.Printf(logMessage((formattedMessage)))
+		dLogger.Printf(logMessage(message, &code))
 	}
 
 }
