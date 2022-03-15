@@ -8,9 +8,11 @@ import (
 	"time"
 )
 
+const SUPERTOKENS_LOGGER_NAMESPACE = "com.supertokens:"
+
 var (
 	iLogger             = log.New(os.Stdout, "com.supertokens:info ", 0)
-	eLogger             = log.New(os.Stderr, "com.supertokens:error ", 0)
+	dLogger             = log.New(os.Stdout, "com.supertokens:debug ", 0)
 	DebugLoggerWithCode = map[int]func(string){
 		1: func(param string) {
 			debugLoggerHelper(1, "API replied with status: "+param)
@@ -31,17 +33,17 @@ func InfoLogger(message string) {
 func debugLoggerHelper(errorCode int, message string) {
 	if isNamespacePassed("debug") {
 		formattedMessage := fmt.Sprintf("\"%s\", debugCode: %d", message, errorCode)
-		eLogger.Printf(logMessage((formattedMessage)))
+		dLogger.Printf(logMessage((formattedMessage)))
 	}
 
 }
 
 func isNamespacePassed(id string) bool {
-	namespace, exists := os.LookupEnv(DEBUG_FLAG)
+	namespace, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
 
 	if exists {
-		namespaceWithStar := fmt.Sprintf("%s*", SUPERTOKENS_NAMESPACE)
-		namespaceWithId := fmt.Sprintf("%s%s", SUPERTOKENS_NAMESPACE, id)
+		namespaceWithStar := fmt.Sprintf("%s*", SUPERTOKENS_LOGGER_NAMESPACE)
+		namespaceWithId := fmt.Sprintf("%s%s", SUPERTOKENS_LOGGER_NAMESPACE, id)
 
 		if strings.Contains(namespace, namespaceWithStar) || strings.Contains(namespace, namespaceWithId) {
 			return true
