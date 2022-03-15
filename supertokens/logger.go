@@ -40,7 +40,7 @@ func debugLoggerHelper(errorCode int, message string) {
 
 func isNamespacePassed(id string) bool {
 	namespace, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
-
+	// if the SUPERTOKENS_DEBUG env variable is passed and it contains either com.supertokens:* or com.supertokens:{id} where id is the id of the logger, then the logger should execute the log.
 	if exists {
 		namespaceWithStar := fmt.Sprintf("%s*", SUPERTOKENS_LOGGER_NAMESPACE)
 		namespaceWithId := fmt.Sprintf("%s%s", SUPERTOKENS_LOGGER_NAMESPACE, id)
