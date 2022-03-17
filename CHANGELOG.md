@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.2] - 2022-03-17
+- Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
+
 ## [0.5.1] - 2022-02-07
 
 -   Adds testing framework along with unit tests for the recipes
