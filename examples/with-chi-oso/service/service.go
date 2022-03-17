@@ -92,7 +92,7 @@ func (s *service) Repo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	userByID, err := thirdpartyemailpassword.GetUserById(sessionContainer.GetUserID(), nil)
+	userByID, err := thirdpartyemailpassword.GetUserById(sessionContainer.GetUserID())
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

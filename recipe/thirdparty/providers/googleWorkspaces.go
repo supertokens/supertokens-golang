@@ -24,6 +24,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const googleWorkspacesID = "google-workspaces"
@@ -37,7 +38,7 @@ func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvi
 
 	return tpmodels.TypeProvider{
 		ID: googleWorkspacesID,
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -83,7 +84,7 @@ func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvi
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 					claims, err := verifyAndGetClaims(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
 					if err != nil {
 						return tpmodels.UserInfo{}, err
@@ -125,7 +126,7 @@ func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvi
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext supertokens.UserContext) string {
 					return config.ClientID
 				},
 			}

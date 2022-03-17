@@ -302,7 +302,7 @@ func refresh(response http.ResponseWriter, request *http.Request) {
 func revokeAll(response http.ResponseWriter, request *http.Request) {
 	sessionContainer := session.GetSessionFromRequestContext(request.Context())
 	userID := sessionContainer.GetUserID()
-	session.RevokeAllSessionsForUser(userID, nil)
+	session.RevokeAllSessionsForUser(userID)
 	response.Write([]byte("success"))
 }
 
@@ -386,7 +386,7 @@ func login(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userID := body["userId"].(string)
-	sess, _ := session.CreateNewSession(response, userID, nil, nil, nil)
+	sess, _ := session.CreateNewSession(response, userID, nil, nil)
 	response.Write([]byte(sess.GetUserID()))
 }
 

@@ -97,15 +97,15 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
-			accessTokenPayload := newSession.GetAccessTokenPayload()
+			accessTokenPayload := newSession.GetAccessTokenPayloadWithContext(userContext)
 
-			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserID(), config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation, userContext)
+			accessTokenPayload, err = addJWTToAccessTokenPayload(accessTokenPayload, accessTokenValidityInSeconds+EXPIRY_OFFSET_SECONDS, newSession.GetUserIDWithContext(userContext), config.Jwt.PropertyNameInAccessTokenPayload, openidRecipeImplementation, userContext)
 
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}
 
-			err = newSession.UpdateAccessTokenPayload(accessTokenPayload)
+			err = newSession.UpdateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
 			if err != nil {
 				return sessmodels.SessionContainer{}, err
 			}

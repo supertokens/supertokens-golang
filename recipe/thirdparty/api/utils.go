@@ -25,7 +25,7 @@ func findRightProvider(providers []tpmodels.TypeProvider, thirdPartyId string, c
 			return &providers[i]
 		}
 
-		if *clientId == providers[i].Get(nil, nil).GetClientId() {
+		if *clientId == providers[i].Get(nil, nil, &map[string]interface{}{}).GetClientId(&map[string]interface{}{}) {
 			return &providers[i]
 		}
 	}

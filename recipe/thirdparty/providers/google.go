@@ -22,6 +22,7 @@ import (
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const googleID = "google"
@@ -29,7 +30,7 @@ const googleID = "google"
 func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: googleID,
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
@@ -74,7 +75,7 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
 					if err != nil {
 						return tpmodels.UserInfo{}, err
@@ -107,7 +108,7 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext supertokens.UserContext) string {
 					return config.ClientID
 				},
 			}

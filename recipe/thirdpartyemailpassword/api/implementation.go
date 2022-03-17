@@ -150,7 +150,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 	result := tpepmodels.APIInterface{
 		AuthorisationUrlGET:            &authorisationUrlGET,
-		EmailExistsGET:                 &emailExistsGET,
+		EmailPasswordEmailExistsGET:    &emailExistsGET,
 		GeneratePasswordResetTokenPOST: &generatePasswordResetTokenPOST,
 		PasswordResetPOST:              &passwordResetPOST,
 		ThirdPartySignInUpPOST:         &thirdPartySignInUpPOST,

@@ -19,21 +19,33 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
 
 ### Prerequisites
 
--   OS: Linux or macOS
+-   OS: Linux, macOS or [WSL](https://docs.microsoft.com/en-us/windows/wsl/about)
 -   Go
 -   IDE: [VSCode](https://code.visualstudio.com/download)(recommended) or equivalent IDE
 
 ### Project Setup
 
-TODO:
+1. Fork the [supertokens-golang](https://github.com/supertokens/supertokens-golang) repository
+2. Clone the forked repository in the parent directory of the previously setup `supertokens-root`.  
+   `supertokens-golang` and `supertokens-root` should exist side by side within the same parent directory
+3. `cd supertokens-golang`
+4. You should have a go setup on your local machine
 
 ## Modifying Code
 
-TODO:
+1. Open the `supertokens-golang` project in your IDE and you can start modifying the code
 
 ## Testing
 
-TODO:
+1. Navigate to the `supertokens-root` repository
+2. Start the testing environment  
+   `./startTestingEnv --wait`
+3. Navigate to the `supertokens-golang` repository  
+   `cd ../supertokens-golang/`
+4. Run all tests, [count=1 ensures tests are not cached]
+   `INSTALL_DIR=../supertokens-root go test  ./... -p 1 -v count=1`
+5. If all tests pass the output should be:
+![golang tests passing](https://github.com/supertokens/supertokens-logo/blob/master/images/supertokens-golang-test.png)
 
 ## Pull Request
 

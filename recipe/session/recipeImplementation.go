@@ -30,6 +30,8 @@ var handshakeInfoLock sync.Mutex
 
 func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput) sessmodels.RecipeInterface {
 
+	var result sessmodels.RecipeInterface
+
 	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
@@ -39,8 +41,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return sessmodels.SessionContainer{}, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
-		return newSessionContainer(querier, config, &sessionContainerInput), nil
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
+		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
 	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
@@ -87,8 +89,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			attachAccessTokenToCookie(config, res, response.AccessToken.Token, response.AccessToken.Expiry)
 			accessToken = &response.AccessToken.Token
 		}
-		sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
-		sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
+		sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
+		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 		return &sessionContainer, nil
 	}
 
@@ -119,8 +121,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return sessmodels.SessionContainer{}, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res)
-		sessionContainer := newSessionContainer(querier, config, &sessionContainerInput)
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
+		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 		return sessionContainer, nil
 	}
 
@@ -164,7 +166,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return recipeImplHandshakeInfo.RefreshTokenValidity, nil
 	}
 
-	return sessmodels.RecipeInterface{
+	regenerateAccessToken := func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (sessmodels.RegenerateAccessTokenResponse, error) {
+		return regenerateAccessTokenHelper(querier, newAccessTokenPayload, accessToken)
+	}
+
+	result = sessmodels.RecipeInterface{
 		CreateNewSession:            &createNewSession,
 		GetSession:                  &getSession,
 		RefreshSession:              &refreshSession,
@@ -177,7 +183,10 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		UpdateAccessTokenPayload:    &updateAccessTokenPayload,
 		GetAccessTokenLifeTimeMS:    &getAccessTokenLifeTimeMS,
 		GetRefreshTokenLifeTimeMS:   &getRefreshTokenLifeTimeMS,
+		RegenerateAccessToken:       &regenerateAccessToken,
 	}
+
+	return result
 
 }
 

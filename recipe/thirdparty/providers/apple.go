@@ -35,7 +35,7 @@ const appleID = "apple"
 func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: appleID,
-		Get: func(redirectURI, authCodeFromRequest *string) tpmodels.TypeProviderGetResponse {
+		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
 			accessTokenAPIURL := "https://appleid.apple.com/auth/token"
 			clientSecret, err := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
 			if err != nil {
@@ -83,7 +83,7 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 					URL:    authorisationRedirectURL,
 					Params: authorizationRedirectParams,
 				},
-				GetProfileInfo: func(authCodeResponse interface{}) (tpmodels.UserInfo, error) {
+				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 					claims, err := verifyAndGetClaimsAppleIdToken(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
 					if err != nil {
 						return tpmodels.UserInfo{}, err
@@ -109,10 +109,10 @@ func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 						},
 					}, nil
 				},
-				GetClientId: func() string {
+				GetClientId: func(userContext supertokens.UserContext) string {
 					return config.ClientID
 				},
-				GetRedirectURI: func() (string, error) {
+				GetRedirectURI: func(userContext supertokens.UserContext) (string, error) {
 					supertokens, err := supertokens.GetInstanceOrThrowError()
 					if err != nil {
 						return "", err

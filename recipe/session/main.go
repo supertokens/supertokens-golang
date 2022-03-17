@@ -30,7 +30,7 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
@@ -38,7 +38,7 @@ func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload
 	return (*instance.RecipeImpl.CreateNewSession)(res, userID, accessTokenPayload, sessionData, userContext)
 }
 
-func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -46,7 +46,7 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.
 	return (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
 }
 
-func GetSessionInformation(sessionHandle string, userContext supertokens.UserContext) (sessmodels.SessionInformation, error) {
+func GetSessionInformationWithContext(sessionHandle string, userContext supertokens.UserContext) (sessmodels.SessionInformation, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionInformation{}, err
@@ -54,7 +54,7 @@ func GetSessionInformation(sessionHandle string, userContext supertokens.UserCon
 	return (*instance.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
 }
 
-func RefreshSession(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func RefreshSessionWithContext(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
@@ -62,7 +62,7 @@ func RefreshSession(req *http.Request, res http.ResponseWriter, userContext supe
 	return (*instance.RecipeImpl.RefreshSession)(req, res, userContext)
 }
 
-func RevokeAllSessionsForUser(userID string, userContext supertokens.UserContext) ([]string, error) {
+func RevokeAllSessionsForUserWithContext(userID string, userContext supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func RevokeAllSessionsForUser(userID string, userContext supertokens.UserContext
 	return (*instance.RecipeImpl.RevokeAllSessionsForUser)(userID, userContext)
 }
 
-func GetAllSessionHandlesForUser(userID string, userContext supertokens.UserContext) ([]string, error) {
+func GetAllSessionHandlesForUserWithContext(userID string, userContext supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -78,7 +78,7 @@ func GetAllSessionHandlesForUser(userID string, userContext supertokens.UserCont
 	return (*instance.RecipeImpl.GetAllSessionHandlesForUser)(userID, userContext)
 }
 
-func RevokeSession(sessionHandle string, userContext supertokens.UserContext) (bool, error) {
+func RevokeSessionWithContext(sessionHandle string, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
@@ -86,7 +86,7 @@ func RevokeSession(sessionHandle string, userContext supertokens.UserContext) (b
 	return (*instance.RecipeImpl.RevokeSession)(sessionHandle, userContext)
 }
 
-func RevokeMultipleSessions(sessionHandles []string, userContext supertokens.UserContext) ([]string, error) {
+func RevokeMultipleSessionsWithContext(sessionHandles []string, userContext supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func RevokeMultipleSessions(sessionHandles []string, userContext supertokens.Use
 	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles, userContext)
 }
 
-func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+func UpdateSessionDataWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
@@ -102,7 +102,7 @@ func UpdateSessionData(sessionHandle string, newSessionData map[string]interface
 	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData, userContext)
 }
 
-func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+func UpdateAccessTokenPayloadWithContext(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
@@ -127,7 +127,7 @@ func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContai
 	return temp
 }
 
-func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
@@ -138,7 +138,7 @@ func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, u
 	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, userContext)
 }
 
-func GetJWKS(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+func GetJWKSWithContext(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
@@ -149,7 +149,7 @@ func GetJWKS(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, er
 	return (*instance.OpenIdRecipe.RecipeImpl.GetJWKS)(userContext)
 }
 
-func GetOpenIdDiscoveryConfiguration(userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+func GetOpenIdDiscoveryConfigurationWithContext(userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, err
@@ -158,4 +158,68 @@ func GetOpenIdDiscoveryConfiguration(userContext supertokens.UserContext) (openi
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, errors.New("GetOpenIdDiscoveryConfiguration cannot be used without enabling the Jwt feature")
 	}
 	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
+}
+
+func RegenerateAccessTokenWithContext(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string, userContext supertokens.UserContext) (sessmodels.RegenerateAccessTokenResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return sessmodels.RegenerateAccessTokenResponse{}, err
+	}
+	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, newAccessTokenPayload, userContext)
+}
+
+func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
+	return CreateNewSessionWithContext(res, userID, accessTokenPayload, sessionData, &map[string]interface{}{})
+}
+
+func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
+	return GetSessionWithContext(req, res, options, &map[string]interface{}{})
+}
+
+func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation, error) {
+	return GetSessionInformationWithContext(sessionHandle, &map[string]interface{}{})
+}
+
+func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
+	return RefreshSessionWithContext(req, res, &map[string]interface{}{})
+}
+
+func RevokeAllSessionsForUser(userID string) ([]string, error) {
+	return RevokeAllSessionsForUserWithContext(userID, &map[string]interface{}{})
+}
+
+func GetAllSessionHandlesForUser(userID string) ([]string, error) {
+	return GetAllSessionHandlesForUserWithContext(userID, &map[string]interface{}{})
+}
+
+func RevokeSession(sessionHandle string) (bool, error) {
+	return RevokeSessionWithContext(sessionHandle, &map[string]interface{}{})
+}
+
+func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
+	return RevokeMultipleSessionsWithContext(sessionHandles, &map[string]interface{}{})
+}
+
+func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) error {
+	return UpdateSessionDataWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
+}
+
+func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+	return UpdateAccessTokenPayloadWithContext(sessionHandle, newAccessTokenPayload, &map[string]interface{}{})
+}
+
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+	return CreateJWTWithContext(payload, validitySecondsPointer, &map[string]interface{}{})
+}
+
+func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
+	return GetJWKSWithContext(&map[string]interface{}{})
+}
+
+func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+	return GetOpenIdDiscoveryConfigurationWithContext(&map[string]interface{}{})
+}
+
+func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string) (sessmodels.RegenerateAccessTokenResponse, error) {
+	return RegenerateAccessTokenWithContext(accessToken, newAccessTokenPayload, sessionHandle, &map[string]interface{}{})
 }

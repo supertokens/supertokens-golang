@@ -25,7 +25,7 @@ import (
 func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmodels.APIInterface {
 
 	result := epmodels.APIInterface{
-		EmailExistsGET:                 apiImplmentation.EmailExistsGET,
+		EmailExistsGET:                 apiImplmentation.EmailPasswordEmailExistsGET,
 		GeneratePasswordResetTokenPOST: apiImplmentation.GeneratePasswordResetTokenPOST,
 		PasswordResetPOST:              apiImplmentation.PasswordResetPOST,
 		SignInPOST:                     nil,
