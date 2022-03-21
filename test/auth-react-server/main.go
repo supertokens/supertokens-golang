@@ -36,6 +36,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -81,6 +83,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	session.ResetForTest()
 	thirdparty.ResetForTest()
 	thirdpartyemailpassword.ResetForTest()
+	thirdpartypasswordless.ResetForTest()
 
 	if passwordlessConfig == nil {
 		passwordlessConfig = &plessmodels.TypeInput{
@@ -180,6 +183,29 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			}),
 			session.Init(nil),
 			passwordless.Init(*passwordlessConfig),
+			thirdpartypasswordless.Init(tplmodels.TypeInput{
+				ContactMethodPhone:        passwordlessConfig.ContactMethodPhone,
+				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
+				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
+				FlowType:                  passwordlessConfig.FlowType,
+				GetLinkDomainAndPath:      passwordlessConfig.GetLinkDomainAndPath,
+				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+				Providers: []tpmodels.TypeProvider{
+					thirdparty.Google(tpmodels.GoogleConfig{
+						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+					}),
+					thirdparty.Github(tpmodels.GithubConfig{
+						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+					}),
+					thirdparty.Facebook(tpmodels.FacebookConfig{
+						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+					}),
+					customAuth0Provider(),
+				},
+			}),
 		},
 	})
 
@@ -211,7 +237,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			rw.WriteHeader(200)
 			rw.Header().Add("content-type", "application/json")
 			bytes, _ := json.Marshal(map[string]interface{}{
-				"available": []string{"passwordless"},
+				"available": []string{"passwordless", "thirdpartypasswordless"},
 			})
 			rw.Write(bytes)
 		}

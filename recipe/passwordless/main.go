@@ -211,7 +211,7 @@ func CreateMagicLinkByEmailWithContext(email string, userContext supertokens.Use
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.createMagicLink(&email, nil, userContext)
+	return instance.CreateMagicLink(&email, nil, userContext)
 }
 
 func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (string, error) {
@@ -222,7 +222,7 @@ func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, userContext sup
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.createMagicLink(nil, &phoneNumber, userContext)
+	return instance.CreateMagicLink(nil, &phoneNumber, userContext)
 }
 
 func SignInUpByEmailWithContext(email string, userContext supertokens.UserContext) (struct {
@@ -241,7 +241,7 @@ func SignInUpByEmailWithContext(email string, userContext supertokens.UserContex
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.signInUp(&email, nil, userContext)
+	return instance.SignInUp(&email, nil, userContext)
 }
 
 func SignInUpByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (struct {
@@ -260,7 +260,7 @@ func SignInUpByPhoneNumberWithContext(phoneNumber string, userContext supertoken
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.signInUp(nil, &phoneNumber, userContext)
+	return instance.SignInUp(nil, &phoneNumber, userContext)
 }
 
 func CreateCodeWithEmail(email string, userInputCode *string) (plessmodels.CreateCodeResponse, error) {
