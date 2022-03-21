@@ -5,7 +5,6 @@ import (
 	"log"
 	"os"
 	"runtime"
-	"strings"
 	"time"
 )
 
@@ -26,11 +25,9 @@ func formatMessage(message string) string {
 }
 
 func LogDebugMessage(message string) {
-	namespace, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
+	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
 	if exists {
-		if strings.Contains(namespace, supertokens_namespace) {
-			logger.Printf(formatMessage(message))
-		}
+		logger.Printf(formatMessage(message))
 
 	}
 }
