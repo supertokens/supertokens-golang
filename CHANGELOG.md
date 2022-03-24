@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.3] - 2022-03-24
+
+### Fixes
+- Checks if discord returned email before setting it in the profile info obj.
+
 ## [0.5.2] - 2022-03-17
 - Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
 
