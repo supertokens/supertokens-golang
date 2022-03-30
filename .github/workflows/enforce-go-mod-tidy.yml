@@ -6,5 +6,6 @@ jobs:
     container: rishabhpoddar/supertokens_go_driver_testing
     steps:
       - uses: actions/checkout@v2
+      - run: git init
       - run: go mod tidy
       - run: git status | grep -q 'nothing to commit, working tree clean' && exit 0 || exit 1
