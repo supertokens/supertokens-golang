@@ -2,7 +2,7 @@ name: "Enforcing go mod tidy in PRs Workflow"
 on: [pull_request]
 jobs:
   go_mod_tidy_job:
-    runs-on: ubuntu-latest
+    runs-on: rishabhpoddar/supertokens_go_driver_testing
     name: Check if go mod tidy is run
     steps:
       - uses: actions/checkout@v3
