@@ -1,0 +1,14 @@
+name: "Enforcing go mod tidy in PRs Workflow"
+on: [pull_request]
+jobs:
+  go_mod_tidy_job:
+    runs-on: ubuntu-latest
+    name: Check go mod tidy
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-go@v3
+        with:
+          go-version: '^1.17'
+      - uses: actions/checkout@v3
+      - run: go mod tidy
+      - run: git status | grep -q 'nothing to commit, working tree clean' && exit 0 || exit 1
