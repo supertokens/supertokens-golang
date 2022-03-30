@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.4] - 2022-03-30
+
+### Added
+ - workflow to enforce go mod tidy is run when issuing a PR. 
+
 ## [0.5.3] - 2022-03-24
 
 ### Fixes
