@@ -3,7 +3,7 @@ on: [pull_request]
 jobs:
   go_mod_tidy_job:
     runs-on: ubuntu-latest
-    name: Check go mod tidy
+    name: Check if go mod tidy is run
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-go@v3
