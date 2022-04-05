@@ -97,9 +97,6 @@ func main() {
 	}
 	app := fiber.New()
 
-	//adding the supertokens middleware
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-
 	allowedHeaders := append([]string{"Content-Type"}, supertokens.GetAllCORSHeaders()...)
 	allowedHeadersInCommaSeparetedStringFormat := stringArrayToStringConvertor(allowedHeaders)
 
@@ -109,6 +106,9 @@ func main() {
 		AllowHeaders:     allowedHeadersInCommaSeparetedStringFormat,
 		AllowCredentials: true,
 	}))
+
+	//adding the supertokens middleware
+	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 
 	app.Get("/sessInfo", verifySession(nil), sessioninfo)
 	log.Fatal(app.Listen(":3001"))
