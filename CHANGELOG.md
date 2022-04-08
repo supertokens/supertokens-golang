@@ -6,9 +6,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
-
 ### Added 
 -   Adds functions for debug logging
+
+## [0.5.4] - 2022-03-30
+
+### Added
+ - workflow to enforce go mod tidy is run when issuing a PR. 
+
+## [0.5.3] - 2022-03-24
+
+### Fixes
+- Checks if discord returned email before setting it in the profile info obj.
 
 ## [0.5.2] - 2022-03-17
 - Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
