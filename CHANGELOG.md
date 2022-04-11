@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 ### Added 
 -   Adds functions for debug logging
+-   Adds debug logs
 
 ## [0.5.4] - 2022-03-30
 

@@ -40,12 +40,18 @@ func supertokensInit(config TypeInput) error {
 	if superTokensInstance != nil {
 		return nil
 	}
+
 	superTokens := &superTokens{}
 
 	superTokens.OnGeneralError = defaultOnGeneralError
 	if config.OnGeneralError != nil {
 		superTokens.OnGeneralError = config.OnGeneralError
 	}
+
+	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
+
+	appInfoJsonString, _ := json.Marshal(config.AppInfo)
+	LogDebugMessage("AppInfo: " + string(appInfoJsonString))
 
 	var err error
 	superTokens.AppInfo, err = NormaliseInputAppInfoOrThrowError(config.AppInfo)
@@ -153,6 +159,7 @@ func sendTelemetry() {
 }
 
 func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
+	LogDebugMessage("middleware: Started")
 	if theirHandler == nil {
 		theirHandler = http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {})
 	}
@@ -170,10 +177,12 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		method := r.Method
 
 		if !strings.HasPrefix(path.GetAsStringDangerous(), s.AppInfo.APIBasePath.GetAsStringDangerous()) {
+			LogDebugMessage("middleware: Not handling because request path did not start with config path. Request path: " + path.GetAsStringDangerous())
 			theirHandler.ServeHTTP(dw, r)
 			return
 		}
 		requestRID := getRIDFromRequest(r)
+		LogDebugMessage("middleware: requestRID is: " + requestRID)
 		if requestRID == "anti-csrf" {
 			// See https://github.com/supertokens/supertokens-node/issues/202
 			requestRID = ""
@@ -181,15 +190,20 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		if requestRID != "" {
 			var matchedRecipe *RecipeModule
 			for _, recipeModule := range s.RecipeModules {
+				LogDebugMessage("middleware: Checking recipe ID for match: " + recipeModule.GetRecipeID())
 				if recipeModule.GetRecipeID() == requestRID {
 					matchedRecipe = &recipeModule
 					break
 				}
 			}
 			if matchedRecipe == nil {
+				LogDebugMessage("middleware: Not handling because no recipe matched")
 				theirHandler.ServeHTTP(dw, r)
 				return
 			}
+
+			LogDebugMessage("middleware: Matched with recipe ID: " + matchedRecipe.GetRecipeID())
+
 			id, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
 
 			if err != nil {
@@ -201,9 +215,13 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			}
 
 			if id == nil {
+				LogDebugMessage("middleware: Not handling because recipe doesn't handle request path or method. Request path: " + path.GetAsStringDangerous() + ", request method: " + method)
 				theirHandler.ServeHTTP(dw, r)
 				return
 			}
+
+			LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
+
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
 			if apiErr != nil {
 				apiErr = s.errorHandler(apiErr, r, dw)
@@ -212,9 +230,11 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				}
 				return
 			}
+			LogDebugMessage("middleware: Ended")
 		} else {
 			for _, recipeModule := range s.RecipeModules {
 				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+				LogDebugMessage("middleware: Checking recipe ID for match: " + recipeModule.GetRecipeID())
 				if err != nil {
 					err = s.errorHandler(err, r, dw)
 					if err != nil {
@@ -224,16 +244,21 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				}
 
 				if id != nil {
+					LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 					err := recipeModule.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
 					if err != nil {
 						err = s.errorHandler(err, r, dw)
 						if err != nil {
 							s.OnGeneralError(err, r, dw)
 						}
+					} else {
+						LogDebugMessage("middleware: Ended")
 					}
 					return
 				}
 			}
+
+			LogDebugMessage("middleware: Not handling because no recipe matched")
 			theirHandler.ServeHTTP(dw, r)
 		}
 	})
@@ -255,14 +280,18 @@ func (s *superTokens) getAllCORSHeaders() []string {
 }
 
 func (s *superTokens) errorHandler(originalError error, req *http.Request, res http.ResponseWriter) error {
+	LogDebugMessage("errorHandler: Started")
 	if errors.As(originalError, &BadInputError{}) {
+		LogDebugMessage("errorHandler: Sending 400 status code response")
 		if catcher := SendNon200Response(res, originalError.Error(), 400); catcher != nil {
 			s.OnGeneralError(originalError, req, res)
 		}
 		return nil
 	}
 	for _, recipe := range s.RecipeModules {
+		LogDebugMessage("errorHandler: Checking recipe for match: " + recipe.recipeID)
 		if recipe.HandleError != nil {
+			LogDebugMessage("errorHandler: Matched with recipeId: " + recipe.recipeID)
 			handled, err := recipe.HandleError(originalError, req, res)
 			if err != nil {
 				return err

@@ -114,14 +114,17 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 			if accessTokenInfo != nil {
 				if antiCsrfToken == nil || *antiCsrfToken != *accessTokenInfo.antiCsrfToken {
 					if antiCsrfToken == nil {
+						supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because antiCsrfToken is missing from request")
 						return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "Provided antiCsrfToken is undefined. If you do not want anti-csrf check for this API, please set doAntiCsrfCheck to false for this API"}
 					} else {
+						supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because the passed antiCsrfToken is not the same as in the access token")
 						return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed"}
 					}
 				}
 			}
 		} else if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 			if !containsCustomHeader {
+				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because custom header (rid) was not passed")
 				return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
 			}
 		}
@@ -169,10 +172,12 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		}
 		return result, nil
 	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
+		supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because of core response")
 		return sessmodels.GetSessionResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
 		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 
+		supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because of core response")
 		return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
 }
@@ -207,6 +212,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 		if !containsCustomHeader {
 			clearCookies := false
+			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
 			return sessmodels.CreateOrRefreshAPIResponse{}, errors.UnauthorizedError{
 				Msg:          "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.",
 				ClearCookies: &clearCookies,
@@ -238,12 +244,15 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 		}
 		return result, nil
 	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
+		supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because of core response")
 		return sessmodels.CreateOrRefreshAPIResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
 		sessionInfo := errors.TokenTheftDetectedErrorPayload{
 			SessionHandle: (response["session"].(map[string]interface{}))["handle"].(string),
 			UserID:        (response["session"].(map[string]interface{}))["userId"].(string),
 		}
+
+		supertokens.LogDebugMessage("refreshSession: Returning TOKEN_THEFT_DETECTED because of core response")
 		return sessmodels.CreateOrRefreshAPIResponse{}, errors.TokenTheftDetectedError{
 			Msg:     "Token theft detected",
 			Payload: sessionInfo,
