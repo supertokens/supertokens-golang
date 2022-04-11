@@ -223,7 +223,6 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
-			LogDebugMessage("middleware: Ended")
 			if apiErr != nil {
 				apiErr = s.errorHandler(apiErr, r, dw)
 				if apiErr != nil {
@@ -231,6 +230,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				}
 				return
 			}
+			LogDebugMessage("middleware: Ended")
 		} else {
 			for _, recipeModule := range s.RecipeModules {
 				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
@@ -246,12 +246,13 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				if id != nil {
 					LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 					err := recipeModule.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
-					LogDebugMessage("middleware: Ended")
 					if err != nil {
 						err = s.errorHandler(err, r, dw)
 						if err != nil {
 							s.OnGeneralError(err, r, dw)
 						}
+					} else {
+						LogDebugMessage("middleware: Ended")
 					}
 					return
 				}
