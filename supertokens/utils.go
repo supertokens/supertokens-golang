@@ -137,6 +137,7 @@ func getRIDFromRequest(r *http.Request) string {
 }
 
 func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
+	LogDebugMessage("Sending response to client with status code: 200")
 	dw := MakeDoneWriter(res)
 	if !dw.IsDone() {
 		res.Header().Set("Content-Type", "application/json; charset=utf-8")
@@ -157,6 +158,9 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 		if statusCode < 300 {
 			return errors.New("calling sendNon200Response with status code < 300")
 		}
+
+		LogDebugMessage("Sending response to client with status code: " + strconv.Itoa(statusCode))
+
 		res.Header().Set("Content-Type", "application/json; charset=utf-8")
 		res.WriteHeader(statusCode)
 		response := map[string]interface{}{

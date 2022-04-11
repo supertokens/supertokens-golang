@@ -18,6 +18,7 @@ package session
 import (
 	defaultErrors "errors"
 	"net/http"
+	"strconv"
 
 	"github.com/supertokens/supertokens-golang/recipe/openid"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
@@ -49,6 +50,18 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if configError != nil {
 		return Recipe{}, configError
 	}
+
+	supertokens.LogDebugMessage("session init: AntiCsrf: " + verifiedConfig.AntiCsrf)
+	if verifiedConfig.CookieDomain != nil {
+		supertokens.LogDebugMessage("session init: CookieDomain: " + *verifiedConfig.CookieDomain)
+	} else {
+		supertokens.LogDebugMessage("session init: CookieDomain: nil")
+	}
+	supertokens.LogDebugMessage("session init: CookieSameSite: " + verifiedConfig.CookieSameSite)
+	supertokens.LogDebugMessage("session init: CookieSecure: " + strconv.FormatBool(verifiedConfig.CookieSecure))
+	supertokens.LogDebugMessage("session init: RefreshTokenPath: " + verifiedConfig.RefreshTokenPath.GetAsStringDangerous())
+	supertokens.LogDebugMessage("session init: SessionExpiredStatusCode: " + strconv.Itoa(verifiedConfig.SessionExpiredStatusCode))
+
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
@@ -159,10 +172,13 @@ func (r *Recipe) getAllCORSHeaders() []string {
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+		supertokens.LogDebugMessage("errorHandler: returning UNAUTHORISED")
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
+		supertokens.LogDebugMessage("errorHandler: returning TRY_REFRESH_TOKEN")
 		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
+		supertokens.LogDebugMessage("errorHandler: returning TOKEN_THEFT_DETECTED")
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	} else if r.OpenIdRecipe != nil {
