@@ -19,6 +19,7 @@ import (
 	defaultErrors "errors"
 	"net/http"
 	"reflect"
+	"strconv"
 	"sync"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
@@ -46,6 +47,10 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+		supertokens.LogDebugMessage("getSession: Started")
+		supertokens.LogDebugMessage("getSession: rid in header: " + strconv.FormatBool(frontendHasInterceptor((req))))
+		supertokens.LogDebugMessage("getSession: request method: " + req.Method)
+
 		var doAntiCsrfCheck *bool = nil
 		if options != nil {
 			doAntiCsrfCheck = options.AntiCsrfCheck
@@ -55,14 +60,17 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if idRefreshToken == nil {
 			if options != nil && options.SessionRequired != nil &&
 				!(*options.SessionRequired) {
+				supertokens.LogDebugMessage("getSession: returning nil because idRefreshToken is nil and sessionRequired is false")
 				return nil, nil
 			}
+			supertokens.LogDebugMessage("getSession: UNAUTHORISED because idRefreshToken from cookies is nil")
 			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 		}
 
 		accessToken := getAccessTokenFromCookie(req)
 		if accessToken == nil {
 			if options == nil || (options.SessionRequired != nil && *options.SessionRequired) || frontendHasInterceptor(req) || req.Method == http.MethodGet {
+				supertokens.LogDebugMessage("getSession: Returning try refresh token because access token from cookies is nil")
 				return nil, errors.TryRefreshTokenError{
 					Msg: "Access token has expired. Please call the refresh API",
 				}
@@ -76,9 +84,16 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			doAntiCsrfCheck = &doAntiCsrfCheckBool
 		}
 
+		if doAntiCsrfCheck != nil {
+			supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: " + strconv.FormatBool(*doAntiCsrfCheck))
+		} else {
+			supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: nil")
+		}
+
 		response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 		if err != nil {
 			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
+				supertokens.LogDebugMessage("getSession: Clearing cookies because of UNAUTHORISED response")
 				clearSessionFromCookie(config, res)
 			}
 			return nil, err
@@ -91,6 +106,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 		sessionContainerInput := makeSessionContainerInput(*accessToken, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
+
+		supertokens.LogDebugMessage("getSession: Success!")
 		return &sessionContainer, nil
 	}
 
@@ -99,14 +116,17 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	refreshSession := func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		supertokens.LogDebugMessage("refreshSession: Started")
 		inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 		if inputIdRefreshToken == nil {
+			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because idRefreshToken from cookies is nil")
 			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 		}
 
 		inputRefreshToken := getRefreshTokenFromCookie(req)
 		if inputRefreshToken == nil {
 			clearSessionFromCookie(config, res)
+			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token from cookies is undefined")
 			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 		}
 
@@ -118,11 +138,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			if (defaultErrors.As(err, &errors.UnauthorizedError{}) && (err.(errors.UnauthorizedError).ClearCookies == nil || *err.(errors.UnauthorizedError).ClearCookies)) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 				clearSessionFromCookie(config, res)
 			}
+			supertokens.LogDebugMessage("refreshSession: Clearing cookies because of UNAUTHORISED or TOKEN_THEFT_DETECTED response")
 			return sessmodels.SessionContainer{}, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
+
+		supertokens.LogDebugMessage("refreshSession: Success!")
 		return sessionContainer, nil
 	}
 
