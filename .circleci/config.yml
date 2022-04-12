@@ -65,40 +65,32 @@ workflows:
         jobs:
             - test-dev-tag-as-not-passed:
                 filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: cicd-parallel
             - test-unit:
                 requires:
                     - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
                 filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: cicd-parallel
             - test-website:
                 requires:
                     - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
                 filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: cicd-parallel
             - test-authreact:
                 requires:
                     - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
                 filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: cicd-parallel
             - test-success:
                 requires:
                     - test-unit
@@ -107,7 +99,5 @@ workflows:
                 context:
                     - slack-notification
                 filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: cicd-parallel
