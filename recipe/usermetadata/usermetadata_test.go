@@ -109,6 +109,17 @@ func TestShouldClearStoredField(t *testing.T) {
 			t.Error(err.Error())
 		}
 		assert.Equal(t, metadata, map[string]interface{}{})
+
+		updatedContent, err := UpdateUserMetadata("userId", map[string]interface{}{
+			"role": "admin2",
+		})
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		assert.Equal(t, updatedContent, map[string]interface{}{
+			"role": "admin2",
+		})
 	}
 }
 
@@ -180,12 +191,15 @@ func TestGetUserMetadataIfCreated(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
-		_, err := UpdateUserMetadata("userId", map[string]interface{}{
+		updatedContent, err := UpdateUserMetadata("userId", map[string]interface{}{
 			"role": "admin",
 		})
 		if err != nil {
 			t.Error(err.Error())
 		}
+		assert.Equal(t, updatedContent, map[string]interface{}{
+			"role": "admin",
+		})
 
 		metadata, err := GetUserMetadata("userId")
 		if err != nil {
@@ -257,5 +271,88 @@ func TestOverride(t *testing.T) {
 		})
 
 		assert.Equal(t, calledOverride, true)
+	}
+}
+
+func TestShouldUpdateShallowMerge(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
+		testMetadata := map[string]interface{}{
+			"updated": map[string]interface{}{
+				"subObjectNull":    "this will become null",
+				"subObjectCleared": "this will be removed",
+				"subObjectUpdate":  "this will become a number",
+			},
+			"cleared":   "this should not be on the end result",
+			"unchanged": float64(123),
+		}
+
+		testMetadataUpdate := map[string]interface{}{
+			"updated": map[string]interface{}{
+				"subObjectNull":    nil,
+				"subObjectUpdate":  float64(123),
+				"subObjectNewProp": "this will appear",
+			},
+			"cleared":     nil,
+			"newRootProp": "this should appear on the end result",
+		}
+
+		expectedResult := map[string]interface{}{
+			"updated": map[string]interface{}{
+				"subObjectNull":    nil,
+				"subObjectUpdate":  float64(123),
+				"subObjectNewProp": "this will appear",
+			},
+			"newRootProp": "this should appear on the end result",
+			"unchanged":   float64(123),
+		}
+
+		updatedContent, err := UpdateUserMetadata("userId", testMetadata)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.Equal(t, updatedContent, testMetadata)
+
+		updatedContent, err = UpdateUserMetadata("userId", testMetadataUpdate)
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		assert.Equal(t, updatedContent, expectedResult)
+
+		finalResult, err := GetUserMetadata("userId")
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		assert.Equal(t, finalResult, expectedResult)
+
 	}
 }
