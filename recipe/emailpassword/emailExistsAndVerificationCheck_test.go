@@ -1597,11 +1597,11 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	cdiVersion, err := querrier.GetQuerierAPIVersion()
+	cdiVersion, err := querier.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
 	}

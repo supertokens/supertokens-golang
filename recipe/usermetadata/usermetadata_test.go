@@ -14,18 +14,16 @@
  * under the License.
  */
 
-package emailpassword
+package usermetadata
 
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestDeleteUser(t *testing.T) {
+func TestClearMetadata(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -36,7 +34,7 @@ func TestDeleteUser(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil), session.Init(nil),
+			Init(nil),
 		},
 	}
 	BeforeEach()
@@ -54,24 +52,10 @@ func TestDeleteUser(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
-		res, err := SignUp("test@example.com", "1234abcd")
+	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
+		err := ClearUserMetadata("userId")
 		if err != nil {
 			t.Error(err.Error())
 		}
-		reponseBeforeDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		assert.Equal(t, 1, len(reponseBeforeDeletingUser.Users))
-		err = supertokens.DeleteUser(res.OK.User.ID)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		reponseAfterDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
-		if err != nil {
-			t.Error(err.Error())
-		}
-		assert.Equal(t, 0, len(reponseAfterDeletingUser.Users))
 	}
 }
