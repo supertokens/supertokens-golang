@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.5.6] - 2022-04-18
+
 - Adds UserMetadata recipe
 
 ## [0.5.5] - 2022-04-11
