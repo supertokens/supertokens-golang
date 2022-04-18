@@ -20,6 +20,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/usermetadata/usermetadatamodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -193,5 +194,68 @@ func TestGetUserMetadataIfCreated(t *testing.T) {
 		assert.Equal(t, metadata, map[string]interface{}{
 			"role": "admin",
 		})
+	}
+}
+
+func TestOverride(t *testing.T) {
+	calledOverride := false
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&usermetadatamodels.TypeInput{
+				Override: &usermetadatamodels.OverrideStruct{
+					Functions: func(originalImplementation usermetadatamodels.RecipeInterface) usermetadatamodels.RecipeInterface {
+						originalUpdateMetadata := *originalImplementation.UpdateUserMetadata
+
+						(*originalImplementation.UpdateUserMetadata) = func(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
+							calledOverride = true
+							return originalUpdateMetadata(userID, metadataUpdate, userContext)
+						}
+
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
+		_, err := UpdateUserMetadata("userId", map[string]interface{}{
+			"role": "admin",
+		})
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		metadata, err := GetUserMetadata("userId")
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.Equal(t, metadata, map[string]interface{}{
+			"role": "admin",
+		})
+
+		assert.Equal(t, calledOverride, true)
 	}
 }
