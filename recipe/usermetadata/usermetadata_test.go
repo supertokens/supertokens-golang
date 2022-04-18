@@ -19,6 +19,7 @@ package usermetadata
 import (
 	"testing"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -57,5 +58,55 @@ func TestClearMetadata(t *testing.T) {
 		if err != nil {
 			t.Error(err.Error())
 		}
+	}
+}
+
+func TestShouldClearStoredField(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
+		_, err := UpdateUserMetadata("userId", map[string]interface{}{
+			"role": "admin",
+		})
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		err = ClearUserMetadata("userId")
+		if err != nil {
+			t.Error(err.Error())
+		}
+
+		metadata, err := GetUserMetadata("userId")
+		if err != nil {
+			t.Error(err.Error())
+		}
+		assert.Equal(t, metadata, map[string]interface{}{})
 	}
 }
