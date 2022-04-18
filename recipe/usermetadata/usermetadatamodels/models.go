@@ -13,16 +13,17 @@
  * under the License.
  */
 
-package supertokens
+package usermetadatamodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+type TypeInput struct {
+	Override *OverrideStruct
+}
 
-// VERSION current version of the lib
-const VERSION = "0.5.5"
+type TypeNormalisedInput struct {
+	Override OverrideStruct
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13"}
-)
+type OverrideStruct struct {
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
+}

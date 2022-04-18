@@ -13,16 +13,12 @@
  * under the License.
  */
 
-package supertokens
+package usermetadatamodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+import "github.com/supertokens/supertokens-golang/supertokens"
 
-// VERSION current version of the lib
-const VERSION = "0.5.5"
-
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13"}
-)
+type RecipeInterface struct {
+	GetUserMetadata    *func(userID string, userContext supertokens.UserContext) (map[string]interface{}, error)
+	UpdateUserMetadata *func(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error)
+	ClearUserMetadata  *func(userID string, userContext supertokens.UserContext) error
+}

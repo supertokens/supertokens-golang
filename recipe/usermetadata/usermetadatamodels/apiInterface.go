@@ -13,16 +13,7 @@
  * under the License.
  */
 
-package supertokens
+package usermetadatamodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
-
-// VERSION current version of the lib
-const VERSION = "0.5.5"
-
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13"}
-)
+type APIInterface struct {
+}
