@@ -201,7 +201,7 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 		linkCode = &codeInfo.OK.LinkCode
 	} else {
 		userInputCode = &plessmodels.UserInputCodeWithDeviceID{
-			Code:     codeInfo.OK.CodeID,
+			Code:     codeInfo.OK.UserInputCode,
 			DeviceID: codeInfo.OK.DeviceID,
 		}
 	}

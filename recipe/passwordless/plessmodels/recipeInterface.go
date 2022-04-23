@@ -34,6 +34,10 @@ type RecipeInterface struct {
 
 	UpdateUser *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (UpdateUserResponse, error)
 
+	DeleteEmailForUser *func(userID string, userContext supertokens.UserContext) (DeleteUserResponse, error)
+
+	DeletePhoneNumberForUser *func(userID string, userContext supertokens.UserContext) (DeleteUserResponse, error)
+
 	RevokeAllCodes *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
 
 	RevokeCode *func(codeID string, userContext supertokens.UserContext) error
@@ -107,4 +111,9 @@ type UpdateUserResponse struct {
 	UnknownUserIdError            *struct{}
 	EmailAlreadyExistsError       *struct{}
 	PhoneNumberAlreadyExistsError *struct{}
+}
+
+type DeleteUserResponse struct {
+	OK                 *struct{}
+	UnknownUserIdError *struct{}
 }

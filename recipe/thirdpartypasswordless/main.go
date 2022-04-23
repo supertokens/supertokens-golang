@@ -215,6 +215,28 @@ func UpdatePasswordlessUser(userID string, email *string, phoneNumber *string, u
 	return (*instance.RecipeImpl.UpdatePasswordlessUser)(userID, email, phoneNumber, userContext)
 }
 
+func DeleteEmailForPasswordlessUser(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return plessmodels.DeleteUserResponse{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.DeleteEmailForPasswordlessUser)(userID, userContext)
+}
+
+func DeletePhoneNumberForUser(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return plessmodels.DeleteUserResponse{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.DeletePhoneNumberForUser)(userID, userContext)
+}
+
 func RevokeAllCodesByEmail(email string, userContext supertokens.UserContext) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
