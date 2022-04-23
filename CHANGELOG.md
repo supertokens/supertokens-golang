@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 - Adds functions to delete passwordless user info in recipes that have passwordless users.
+- Fixes bug in signinup helper function exposed by passwordless recipe
 
 ## [0.5.6] - 2022-04-18
 

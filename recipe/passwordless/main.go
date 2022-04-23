@@ -361,7 +361,7 @@ func DeleteEmailForUser(userID string) (plessmodels.DeleteUserResponse, error) {
 	return DeleteEmailForUserWithContext(userID, &map[string]interface{}{})
 }
 
-func DeletePhoneNumberForUser(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+func DeletePhoneNumberForUser(userID string) (plessmodels.DeleteUserResponse, error) {
 	return DeletePhoneNumberForUserWithContext(userID, &map[string]interface{}{})
 }
 
