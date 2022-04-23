@@ -163,6 +163,14 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		return (*recipeImplementation.UpdatePasswordlessUser)(userID, email, phoneNumber, userContext)
 	}
 
+	deleteEmailForUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+		return (*recipeImplementation.DeleteEmailForPasswordlessUser)(userID, userContext)
+	}
+
+	deletePhoneNumberForUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+		return (*recipeImplementation.DeletePhoneNumberForUser)(userID, userContext)
+	}
+
 	return plessmodels.RecipeInterface{
 		CreateCode:                  &createCode,
 		ConsumeCode:                 &consumeCode,
@@ -177,5 +185,7 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		RevokeAllCodes:              &revokeAllCodes,
 		RevokeCode:                  &revokeCode,
 		UpdateUser:                  &updateUser,
+		DeleteEmailForUser:          &deleteEmailForUser,
+		DeletePhoneNumberForUser:    &deletePhoneNumberForUser,
 	}
 }

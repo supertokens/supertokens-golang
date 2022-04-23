@@ -35,6 +35,10 @@ type RecipeInterface struct {
 
 	UpdatePasswordlessUser *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error)
 
+	DeleteEmailForPasswordlessUser *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
+
+	DeletePhoneNumberForUser *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
+
 	RevokeAllCodes *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
 
 	RevokeCode *func(codeID string, userContext supertokens.UserContext) error

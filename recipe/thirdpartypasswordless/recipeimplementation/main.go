@@ -298,6 +298,40 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		return ogUpdateUser(userID, email, phoneNumber, userContext)
 	}
 
+	ogDeleteEmailForUser := *passwordlessImplementation.DeleteEmailForUser
+	deleteEmailForPasswordlessUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+		user, err := (*result.GetUserByID)(userID, userContext)
+		if err != nil {
+			return plessmodels.DeleteUserResponse{}, err
+		}
+
+		if user == nil {
+			return plessmodels.DeleteUserResponse{
+				UnknownUserIdError: &struct{}{},
+			}, nil
+		} else if user.ThirdParty != nil {
+			return plessmodels.DeleteUserResponse{}, errors.New("cannot update passwordless user info for those who signed up using third party login")
+		}
+		return ogDeleteEmailForUser(userID, userContext)
+	}
+
+	ogDeletePhoneNumberForUser := *passwordlessImplementation.DeletePhoneNumberForUser
+	deletePhoneNumberForPasswordlessUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+		user, err := (*result.GetUserByID)(userID, userContext)
+		if err != nil {
+			return plessmodels.DeleteUserResponse{}, err
+		}
+
+		if user == nil {
+			return plessmodels.DeleteUserResponse{
+				UnknownUserIdError: &struct{}{},
+			}, nil
+		} else if user.ThirdParty != nil {
+			return plessmodels.DeleteUserResponse{}, errors.New("cannot update passwordless user info for those who signed up using third party login")
+		}
+		return ogDeletePhoneNumberForUser(userID, userContext)
+	}
+
 	result.GetUserByID = &getUserByID
 	result.GetUsersByEmail = &getUsersByEmail
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
@@ -313,6 +347,8 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	result.RevokeAllCodes = &revokeAllCodes
 	result.RevokeCode = &revokeCode
 	result.UpdatePasswordlessUser = &updatePasswordlessUser
+	result.DeleteEmailForPasswordlessUser = &deleteEmailForPasswordlessUser
+	result.DeletePhoneNumberForUser = &deletePhoneNumberForPasswordlessUser
 
 	modifiedPwdless := MakePasswordlessRecipeImplementation(result)
 	(*passwordlessImplementation.ConsumeCode) = *modifiedPwdless.ConsumeCode
@@ -328,6 +364,8 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	(*passwordlessImplementation.RevokeAllCodes) = *modifiedPwdless.RevokeAllCodes
 	(*passwordlessImplementation.RevokeCode) = *modifiedPwdless.RevokeCode
 	(*passwordlessImplementation.UpdateUser) = *modifiedPwdless.UpdateUser
+	(*passwordlessImplementation.DeleteEmailForUser) = *modifiedPwdless.DeleteEmailForUser
+	(*passwordlessImplementation.DeletePhoneNumberForUser) = *modifiedPwdless.DeletePhoneNumberForUser
 
 	if thirdPartyImplementation != nil {
 		modifiedTp := MakeThirdPartyRecipeImplementation(result)
