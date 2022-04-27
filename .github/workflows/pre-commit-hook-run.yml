@@ -12,7 +12,7 @@ jobs:
     pr-title:
         name: Pre commit hook check
         runs-on: ubuntu-latest
-        container: rishabhpoddar/supertokens_golang_driver_testing
+        container: rishabhpoddar/supertokens_go_driver_testing
         steps:
             - uses: actions/checkout@v2
             - name: Set up node
