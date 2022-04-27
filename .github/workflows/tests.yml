@@ -36,7 +36,6 @@ jobs:
                   persist-credentials: false
             - name: Make git use https instead of ssh
               run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
-            - run: make dev-install && rm -rf src
             - name: Cloning supertokens-root
               run: cd ../ && git clone https://github.com/supertokens/supertokens-root.git
             - name: Update Java 1
