@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 - Adds Github Actions for testing and pre-commit hooks.
+- Adds more unit tests for thirdpary email password recipe
+- Adds test to jwt recipe
+- Adds test to opendID recipe
 
 ## [0.5.7] - 2022-04-23
 - Adds functions to delete passwordless user info in recipes that have passwordless users.
@@ -32,10 +35,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.5.2] - 2022-03-17
 - Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
-
--   Adds mode unit tests for thirdpary email password recipe
--   Adds test to jwt recipe
--   Adds test to opendID recipe
 
 ## [0.5.1] - 2022-02-07
 
