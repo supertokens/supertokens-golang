@@ -2,6 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"log"
 	"net/http"
 	"strings"
 
@@ -14,6 +17,8 @@ import (
 )
 
 func main() {
+	redditKey := "o9LvVjAhrThNDJqGgHwphQ"
+	redditSecret := "vRgiA9Wy9N3qjsbfUky6PODnhZ9qLQ"
 	err := supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "https://try.supertokens.io",
@@ -83,6 +88,74 @@ func main() {
 							TeamId:     "YWQCXGJRJL",
 						},
 					}),
+					{
+						ID: "reddit",
+						Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+							if redirectURI == nil {
+								temp := ""
+								redirectURI = &temp
+							}
+
+							if authCodeFromRequest == nil {
+								temp := ""
+								authCodeFromRequest = &temp
+							}
+
+							return tpmodels.TypeProviderGetResponse{
+								AccessTokenAPI: tpmodels.AccessTokenAPI{
+									// this contains info about the token endpoint which exchanges the auth code with the access token and profile info.
+									URL: "https://www.reddit.com/api/v1/access_token",
+									Params: map[string]string{
+										// example post params
+										"client_id":     redditKey,
+										"client_secret": redditSecret,
+										"grant_type":    "authorization_code",
+										"redirect_uri":  *redirectURI,
+										"code":          *authCodeFromRequest,
+										//...
+									},
+								},
+								AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+									// this contains info about forming the authorisation redirect URL without the state params and without the redirect_uri param
+									URL: "https://www.reddit.com/api/v1/authorize",
+									Params: map[string]interface{}{
+										"client_id":     redditKey,
+										"scope":         "identity",
+										"response_type": "code",
+										"duration":      "permanent",
+									},
+								},
+								GetClientId: func(userContext supertokens.UserContext) string {
+									return redditKey
+								},
+								GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+									fmt.Println(authCodeResponse)
+									accessToken := authCodeResponse.(map[string]interface{})["access_token"].(string)
+									authHeader := "Bearer " + accessToken
+									response, err := GetAuthRequest(authHeader)
+									if err != nil {
+										return tpmodels.UserInfo{}, err
+									}
+									userInfo := response.(map[string]interface{})
+									log.Println(userInfo)
+									_, emailOk := userInfo["email"]
+									if !emailOk {
+										return tpmodels.UserInfo{
+											ID:    userInfo["id"].(string),
+											Email: nil,
+										}, nil
+									}
+									return tpmodels.UserInfo{
+										ID: userInfo["id"].(string),
+										Email: &tpmodels.EmailStruct{
+											ID:         userInfo["email"].(string),
+											IsVerified: userInfo["verified"].(bool),
+										},
+									}, nil
+								},
+							}
+						},
+					},
 				},
 			}),
 			session.Init(nil),
@@ -149,4 +222,35 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 	} else {
 		w.Write(bytes)
 	}
+}
+
+func GetAuthRequest(authHeader string) (interface{}, error) {
+	url := "https://oauth.reddit.com/api/v1/me"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	return doGetRequest(req)
+}
+
+func doGetRequest(req *http.Request) (interface{}, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	var result interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
 }

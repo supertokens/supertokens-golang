@@ -231,6 +231,8 @@ func postRequest(providerInfo tpmodels.TypeProviderGetResponse, userContext supe
 	if err != nil {
 		return nil, err
 	}
+	fmt.Println("Status code:")
+	fmt.Println(response.StatusCode)
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
