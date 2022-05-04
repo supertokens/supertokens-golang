@@ -1,0 +1,12 @@
+name: "Enforcing go mod tidy in PRs Workflow"
+on: [pull_request]
+jobs:
+  go_mod_tidy_job:
+    runs-on: ubuntu-latest
+    container: rishabhpoddar/supertokens_go_driver_testing
+    steps:
+      - uses: actions/checkout@v2
+      # When using actions/checkout in a custom container, the directory is not treated as a git repo and does not have a .git directory, therefore we need to initialize it as a git repo. This will allows us to track changes made after go mod tidy runs
+      - run: git init && git add --all && git -c user.name='test' -c user.email='test@example.com' commit -m 'init for pr action'
+      - run: go mod tidy
+      - run: git status | grep -q 'nothing to commit, working directory clean' && exit 0 || exit 1

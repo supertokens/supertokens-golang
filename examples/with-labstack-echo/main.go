@@ -118,7 +118,9 @@ func main() {
 	e.Use(func(hf echo.HandlerFunc) echo.HandlerFunc {
 		return echo.HandlerFunc(func(c echo.Context) error {
 			supertokens.Middleware(http.HandlerFunc(func(rw http.ResponseWriter, r *http.Request) {
-				hf(c)
+				if err := hf(c); err != nil {
+					c.Error(err)
+				}
 			})).ServeHTTP(c.Response(), c.Request())
 			return nil
 		})

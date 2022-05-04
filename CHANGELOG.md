@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+- Adds Github Actions for testing and pre-commit hooks.
+
+## [0.5.7] - 2022-04-23
+- Adds functions to delete passwordless user info in recipes that have passwordless users.
+- Fixes bug in signinup helper function exposed by passwordless recipe
+
+## [0.5.6] - 2022-04-18
+
+- Adds UserMetadata recipe
+
+## [0.5.5] - 2022-04-11
+### Added 
+-   Adds functions for debug logging
+
+## [0.5.4] - 2022-03-30
+
+### Added
+ - workflow to enforce go mod tidy is run when issuing a PR. 
+
+## [0.5.3] - 2022-03-24
+
+### Fixes
+- Checks if discord returned email before setting it in the profile info obj.
+
+## [0.5.2] - 2022-03-17
+- Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
 
 -   Adds mode unit tests for thirdpary email password recipe
 -   Adds test to jwt recipe

@@ -56,20 +56,14 @@ func getListOfPids() []string {
 }
 
 func SetUpST() {
-	installationPath := getInstallationDir()
-	cmd := exec.Command("cp", "temp/config.yaml", "./config.yaml")
-	cmd.Dir = installationPath
-	err := cmd.Run()
-	if err != nil {
-		log.Fatalf(err.Error(), "THIS IS SETUP-ST")
-	}
+	shellout(true, "cp", "temp/config.yaml", "./config.yaml")
 }
 
 func StartUpST(host string, port string) string {
 	pidsBefore := getListOfPids()
 	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
 	startTime := getCurrTimeInMS()
-	shellout(command)
+	shellout(false, "bash", "-c", command)
 	for getCurrTimeInMS()-startTime < 30000 {
 		pidsAfter := getListOfPids()
 		if len(pidsAfter) <= len(pidsBefore) {
@@ -107,24 +101,16 @@ func getCurrTimeInMS() uint64 {
 }
 
 //helper function to execute shell commands
-func shellout(command string) {
-	installationPath := getInstallationDir()
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-	cmd := exec.Command("bash", "-c", command)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	cmd.Dir = installationPath
-	err := cmd.Start()
-	if err != nil {
-		log.Fatal(err.Error())
+func shellout(waitFor bool, name string, args ...string) {
+	cmd := exec.Command(name, args...)
+	cmd.Dir = getInstallationDir()
+	cmd.Start()
+	if waitFor {
+		cmd.Wait()
 	}
 }
 
 func stopST(pid string) {
-	installationPath := getInstallationDir()
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
 	pidsBefore := getListOfPids()
 	if len(pidsBefore) == 0 {
 		return
@@ -134,16 +120,7 @@ func stopST(pid string) {
 			return
 		}
 	}
-	cmd := exec.Command("kill", pid)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-	cmd.Dir = installationPath
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatal(err.Error(), "error in killSt")
-	}
-
+	shellout(true, "kill", pid)
 	startTime := getCurrTimeInMS()
 	for getCurrTimeInMS()-startTime < 10000 {
 		pidsAfter := getListOfPids()
@@ -166,33 +143,9 @@ func itemExists(arr []string, item string) bool {
 }
 
 func CleanST() {
-	installationPath := getInstallationDir()
-
-	cmd := exec.Command("rm", "config.yaml")
-	cmd.Dir = installationPath
-
-	err := cmd.Run()
-
-	if err != nil {
-		log.Fatalf(err.Error(), "could not delete the config yaml file [THIS IS CLEAN-ST]")
-	}
-
-	cmd = exec.Command("rm", "-rf", ".webserver-temp-*")
-	cmd.Dir = installationPath
-	err = cmd.Run()
-
-	if err != nil {
-		log.Fatalf(err.Error(), "could not delete the webserver-temp files [THIS IS CLEAN-ST]")
-	}
-
-	cmd = exec.Command("rm", "-rf", ".started")
-	cmd.Dir = installationPath
-	err = cmd.Run()
-
-	if err != nil {
-		log.Fatalf(err.Error(), "could not delete the .started file [THIS IS CLEAN-ST]")
-	}
-
+	shellout(true, "rm", "config.yaml")
+	shellout(true, "rm", "-rf", ".webserver-temp-*")
+	shellout(true, "rm", "-rf", ".started")
 }
 
 // MaxVersion returns max of v1 and v2

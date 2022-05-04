@@ -16,11 +16,13 @@
 package passwordless
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
+func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
 	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
 		body := map[string]interface{}{}
 		if email != nil {
@@ -310,6 +312,58 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		}
 	}
 
+	deleteEmailForUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+		body := map[string]interface{}{
+			"userId": userID,
+			"email":  nil,
+		}
+
+		response, err := querier.SendPutRequest("/recipe/user", body)
+		if err != nil {
+			return plessmodels.DeleteUserResponse{}, err
+		}
+
+		status := response["status"].(string)
+
+		if status == "OK" {
+			return plessmodels.DeleteUserResponse{
+				OK: &struct{}{},
+			}, nil
+		} else if status == "UNKNOWN_USER_ID_ERROR" {
+			return plessmodels.DeleteUserResponse{
+				UnknownUserIdError: &struct{}{},
+			}, nil
+		} else {
+			return plessmodels.DeleteUserResponse{}, errors.New("should never come here")
+		}
+	}
+
+	deletePhoneNumberForUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+		body := map[string]interface{}{
+			"userId":      userID,
+			"phoneNumber": nil,
+		}
+
+		response, err := querier.SendPutRequest("/recipe/user", body)
+		if err != nil {
+			return plessmodels.DeleteUserResponse{}, err
+		}
+
+		status := response["status"].(string)
+
+		if status == "OK" {
+			return plessmodels.DeleteUserResponse{
+				OK: &struct{}{},
+			}, nil
+		} else if status == "UNKNOWN_USER_ID_ERROR" {
+			return plessmodels.DeleteUserResponse{
+				UnknownUserIdError: &struct{}{},
+			}, nil
+		} else {
+			return plessmodels.DeleteUserResponse{}, errors.New("should never come here")
+		}
+	}
+
 	return plessmodels.RecipeInterface{
 		CreateCode:                  &createCode,
 		ConsumeCode:                 &consumeCode,
@@ -324,6 +378,8 @@ func makeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		RevokeAllCodes:              &revokeAllCodes,
 		RevokeCode:                  &revokeCode,
 		UpdateUser:                  &updateUser,
+		DeleteEmailForUser:          &deleteEmailForUser,
+		DeletePhoneNumberForUser:    &deletePhoneNumberForUser,
 	}
 }
 

@@ -503,11 +503,11 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	cdiVersion, err := querrier.GetQuerierAPIVersion()
+	cdiVersion, err := querier.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -578,11 +578,11 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	cdiVersion, err := querrier.GetQuerierAPIVersion()
+	cdiVersion, err := querier.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -841,11 +841,11 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	cdiVersion, err := querrier.GetQuerierAPIVersion()
+	cdiVersion, err := querier.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -906,11 +906,11 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	if err != nil {
 		t.Error(err.Error())
 	}
-	querrier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	cdiVersion, err := querrier.GetQuerierAPIVersion()
+	cdiVersion, err := querier.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
 	}

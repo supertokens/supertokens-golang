@@ -80,6 +80,13 @@ func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
 						return tpmodels.UserInfo{}, err
 					}
 					userInfo := response.(map[string]interface{})
+					_, emailOk := userInfo["email"]
+					if !emailOk {
+						return tpmodels.UserInfo{
+							ID:    userInfo["id"].(string),
+							Email: nil,
+						}, nil
+					}
 					return tpmodels.UserInfo{
 						ID: userInfo["id"].(string),
 						Email: &tpmodels.EmailStruct{

@@ -211,7 +211,7 @@ func CreateMagicLinkByEmailWithContext(email string, userContext supertokens.Use
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.createMagicLink(&email, nil, userContext)
+	return instance.CreateMagicLink(&email, nil, userContext)
 }
 
 func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (string, error) {
@@ -222,7 +222,7 @@ func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, userContext sup
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.createMagicLink(nil, &phoneNumber, userContext)
+	return instance.CreateMagicLink(nil, &phoneNumber, userContext)
 }
 
 func SignInUpByEmailWithContext(email string, userContext supertokens.UserContext) (struct {
@@ -241,7 +241,7 @@ func SignInUpByEmailWithContext(email string, userContext supertokens.UserContex
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.signInUp(&email, nil, userContext)
+	return instance.SignInUp(&email, nil, userContext)
 }
 
 func SignInUpByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (struct {
@@ -260,7 +260,29 @@ func SignInUpByPhoneNumberWithContext(phoneNumber string, userContext supertoken
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.signInUp(nil, &phoneNumber, userContext)
+	return instance.SignInUp(nil, &phoneNumber, userContext)
+}
+
+func DeleteEmailForUserWithContext(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return plessmodels.DeleteUserResponse{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.DeleteEmailForUser)(userID, userContext)
+}
+
+func DeletePhoneNumberForUserWithContext(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return plessmodels.DeleteUserResponse{}, err
+	}
+	if userContext == nil {
+		userContext = &map[string]interface{}{}
+	}
+	return (*instance.RecipeImpl.DeletePhoneNumberForUser)(userID, userContext)
 }
 
 func CreateCodeWithEmail(email string, userInputCode *string) (plessmodels.CreateCodeResponse, error) {
@@ -333,6 +355,14 @@ func CreateMagicLinkByEmail(email string) (string, error) {
 
 func CreateMagicLinkByPhoneNumber(phoneNumber string) (string, error) {
 	return CreateMagicLinkByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+}
+
+func DeleteEmailForUser(userID string) (plessmodels.DeleteUserResponse, error) {
+	return DeleteEmailForUserWithContext(userID, &map[string]interface{}{})
+}
+
+func DeletePhoneNumberForUser(userID string) (plessmodels.DeleteUserResponse, error) {
+	return DeletePhoneNumberForUserWithContext(userID, &map[string]interface{}{})
 }
 
 func SignInUpByEmail(email string) (struct {
