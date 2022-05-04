@@ -20,6 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -350,7 +351,11 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 
 func getInstallationDir() string {
 	installationDir := os.Getenv("INSTALL_DIR")
-	installationDir = "../../" + installationDir
+	if installationDir == "" {
+		installationDir = "../../" + "../supertokens-root"
+	} else {
+		installationDir = "../../" + installationDir
+	}
 	return installationDir
 }
 
@@ -571,4 +576,23 @@ func SigninupCustomRequest(testServerUrl string, email string, id string) (*http
 		return nil, err
 	}
 	return resp, nil
+}
+
+func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interface{} {
+	dataInBytes, err := ioutil.ReadAll(body)
+	if err != nil {
+		log.Fatal(err.Error(), "Error while converting http response to consumable info")
+		return nil
+	}
+	body.Close()
+	var result map[string]interface{}
+
+	err = json.Unmarshal(dataInBytes, &result)
+
+	if err != nil {
+		log.Fatal(err.Error(), "Error while converting bytes to json inside HttpResponseToConsumableInformation")
+		return nil
+	}
+
+	return &result
 }
