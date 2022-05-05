@@ -55,13 +55,13 @@ type TypeProvider struct {
 }
 
 type User struct {
-	ID         string
-	TimeJoined uint64
-	Email      string
+	ID         string `json:"id"`
+	TimeJoined uint64 `json:"timeJoined"`
+	Email      string `json:"email"`
 	ThirdParty struct {
-		ID     string
-		UserID string
-	}
+		ID     string `json:"id"`
+		UserID string `json:"userId"`
+	} `json:"thirdParty"`
 }
 
 type TypeInputEmailVerificationFeature struct {
