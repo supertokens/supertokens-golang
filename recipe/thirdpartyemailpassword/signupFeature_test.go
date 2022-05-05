@@ -215,9 +215,9 @@ func TestMinimumConfigForOneProvider(t *testing.T) {
 
 	assert.Equal(t, "OK", result["status"])
 	assert.Equal(t, true, result["createdNewUser"])
-	assert.Equal(t, "email@test.com", user["Email"])
-	assert.Equal(t, "custom", user["ThirdParty"].(map[string]interface{})["ID"])
-	assert.Equal(t, "user", user["ThirdParty"].(map[string]interface{})["UserID"])
+	assert.Equal(t, "email@test.com", user["email"])
+	assert.Equal(t, "custom", user["thirdParty"].(map[string]interface{})["id"])
+	assert.Equal(t, "user", user["thirdParty"].(map[string]interface{})["userID"])
 }
 
 func TestSignUpAPIWorksWhenInputIsFine(t *testing.T) {
