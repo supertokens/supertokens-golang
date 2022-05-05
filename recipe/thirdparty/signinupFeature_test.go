@@ -441,7 +441,7 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 
 	assert.Equal(t, "email@test.com", user["email"])
 	assert.Equal(t, "custom", user["thirdParty"].(map[string]interface{})["id"])
-	assert.Equal(t, "user", user["thirdParty"].(map[string]interface{})["userID"])
+	assert.Equal(t, "user", user["thirdParty"].(map[string]interface{})["userId"])
 
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
