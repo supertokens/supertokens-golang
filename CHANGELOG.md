@@ -6,10 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.5.8] - 2022-05-05
+### Added
 - Adds Github Actions for testing and pre-commit hooks.
 - Adds more unit tests for thirdpary email password recipe
 - Adds test to jwt recipe
 - Adds test to opendID recipe
+
+### Fixes
+- Third party sign in up API response correction.
 
 ## [0.5.7] - 2022-04-23
 - Adds functions to delete passwordless user info in recipes that have passwordless users.
