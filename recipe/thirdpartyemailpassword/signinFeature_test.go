@@ -223,7 +223,7 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 
 	user := result["user"].(map[string]interface{})
 
-	assert.Equal(t, userId, user["ID"])
+	assert.Equal(t, userId, user["id"])
 	assert.Equal(t, "thirdparty", loginType)
 }
 
