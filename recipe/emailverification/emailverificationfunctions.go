@@ -30,10 +30,14 @@ func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(
 	}
 }
 
+// used for testing purposes.
+var EmailVerificationEmailSentForTest = false
+
 // TODO: add test to see query
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 	return func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {
+			EmailVerificationEmailSentForTest = true
 			// if running in test mode, we do not want to send this.
 			return
 		}

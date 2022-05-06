@@ -140,4 +140,5 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 
 func ResetForTest() {
 	singletonInstance = nil
+	EmailVerificationEmailSentForTest = false
 }
