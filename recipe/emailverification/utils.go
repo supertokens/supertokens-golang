@@ -18,6 +18,8 @@ package emailverification
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
+	backwardcompatibility "github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/services/backwardCompatibility"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -29,8 +31,20 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		typeNormalisedInput.GetEmailVerificationURL = config.GetEmailVerificationURL
 	}
 
-	if config.CreateAndSendCustomEmail != nil {
-		typeNormalisedInput.CreateAndSendCustomEmail = config.CreateAndSendCustomEmail
+	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildeliverymodels.TypeInputWithService {
+		emailServicePointer := config.EmailDelivery.Service
+		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
+		if config.CreateAndSendCustomEmail != nil {
+			createAndSendCustomEmail = config.CreateAndSendCustomEmail
+		}
+		emailService := backwardcompatibility.MakeBackwardCompatibilityService(appInfo, createAndSendCustomEmail)
+		if emailServicePointer != nil {
+			emailService = *emailServicePointer
+		}
+		return emaildeliverymodels.TypeInputWithService{
+			Service:  emailService,
+			Override: config.EmailDelivery.Override,
+		}
 	}
 
 	if config.Override != nil {
@@ -53,8 +67,8 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) evmodels.Typ
 		GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
 			return "", errors.New("not defined by user")
 		},
-		GetEmailVerificationURL:  DefaultGetEmailVerificationURL(appInfo),
-		CreateAndSendCustomEmail: DefaultCreateAndSendCustomEmail(appInfo),
+		GetEmailVerificationURL: DefaultGetEmailVerificationURL(appInfo),
+		GetEmailDeliveryConfig:  nil,
 		Override: evmodels.OverrideStruct{
 			Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 				return originalImplementation
