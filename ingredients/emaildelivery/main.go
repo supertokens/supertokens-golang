@@ -1,27 +1,27 @@
 package emaildelivery
 
 import (
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/edmodels"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type Ingredient struct {
-	IngredientInterfaceImpl edmodels.EmailDeliveryInterface
+	IngredientInterfaceImpl emaildeliverymodels.EmailDeliveryInterface
 }
 
-func MakeIngredeint(config edmodels.TypeInputWithService) Ingredient {
-	defaultSendEmail := func(input edmodels.EmailType, userContext supertokens.UserContext) error {
+func MakeIngredient(config emaildeliverymodels.TypeInputWithService) Ingredient {
+	defaultSendEmail := func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) error {
 		return (*config.Service.SendEmail)(input, userContext)
 	}
 
 	result := Ingredient{
-		IngredientInterfaceImpl: edmodels.EmailDeliveryInterface{
+		IngredientInterfaceImpl: emaildeliverymodels.EmailDeliveryInterface{
 			SendEmail: &defaultSendEmail,
 		},
 	}
 
 	if config.Override != nil {
-		result.IngredientInterfaceImpl = (*config.Override)(result.IngredientInterfaceImpl)
+		result.IngredientInterfaceImpl = config.Override(result.IngredientInterfaceImpl)
 	}
 
 	return result

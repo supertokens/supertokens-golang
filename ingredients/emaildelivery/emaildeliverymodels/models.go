@@ -1,4 +1,4 @@
-package edmodels
+package emaildeliverymodels
 
 import "github.com/supertokens/supertokens-golang/supertokens"
 
@@ -8,12 +8,12 @@ type EmailDeliveryInterface struct {
 
 type TypeInput struct {
 	Service  *EmailDeliveryInterface
-	Override *func(originalImplementation EmailDeliveryInterface) EmailDeliveryInterface
+	Override func(originalImplementation EmailDeliveryInterface) EmailDeliveryInterface
 }
 
 type TypeInputWithService struct {
 	Service  EmailDeliveryInterface
-	Override *func(originalImplementation EmailDeliveryInterface) EmailDeliveryInterface
+	Override func(originalImplementation EmailDeliveryInterface) EmailDeliveryInterface
 }
 
 type EmailType struct {
@@ -41,6 +41,6 @@ type PasswordlessLoginType struct {
 }
 
 type User struct {
-	Id    string
+	ID    string
 	Email string
 }

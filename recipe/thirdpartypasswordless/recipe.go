@@ -120,7 +120,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 			},
 		}
 
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, onGeneralError)
+		// TODO: do not pass nil to emaildelivery ingredient
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, nil, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
