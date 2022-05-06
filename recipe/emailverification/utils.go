@@ -40,10 +40,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}
-		return emaildeliverymodels.TypeInputWithService{
-			Service:  emailService,
-			Override: config.EmailDelivery.Override,
+		result := emaildeliverymodels.TypeInputWithService{
+			Service: emailService,
 		}
+		if config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+		return result
 	}
 
 	if config.Override != nil {
