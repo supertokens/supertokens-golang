@@ -21,7 +21,7 @@ func makeServiceImplementation(smtpAuth smtp.Auth, host string, port int, fromEm
 
 	getContent := func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) (smtpmodels.GetContentResult, error) {
 		if input.EmailVerification != nil {
-			return smtpmodels.GetContentResult{}, errors.New("TODO")
+			return smtpmodels.GetContentResult{}, errors.New("TODO..")
 		} else {
 			return smtpmodels.GetContentResult{}, errors.New("should never come here")
 		}
