@@ -6,21 +6,15 @@ import (
 )
 
 type SMTPServiceConfig struct {
-	Host   string
-	From   SMTPServiceFromConfig
-	Port   int
-	Secure *bool
-	Auth   SMTPServiceAuthConfig
+	Host     string
+	From     SMTPServiceFromConfig
+	Port     int
+	Password string
 }
 
 type SMTPServiceFromConfig struct {
 	Name  string
 	Email string
-}
-
-type SMTPServiceAuthConfig struct {
-	User     string
-	Password string
 }
 
 type GetContentResult struct {

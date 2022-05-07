@@ -11,9 +11,9 @@ import (
 
 func MakeSmtpService(config smtpmodels.TypeInput) emaildeliverymodels.EmailDeliveryInterface {
 	// TODO: check sending email..
-	smtpAuth := smtp.PlainAuth(config.SMTPSettings.From.Name, config.SMTPSettings.Auth.User, config.SMTPSettings.Auth.Password, config.SMTPSettings.Host)
+	smtpAuth := smtp.PlainAuth(config.SMTPSettings.From.Name, config.SMTPSettings.From.Email, config.SMTPSettings.Password, config.SMTPSettings.Host)
 
-	serviceImpl := makeServiceImplementation(smtpAuth, config.SMTPSettings.Host, config.SMTPSettings.Port, config.SMTPSettings.From.Email)
+	serviceImpl := makeServiceImplementation(smtpAuth, config.SMTPSettings.Host, config.SMTPSettings.Port, config.SMTPSettings.From)
 	sendEmail := func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) error {
 		if input.EmailVerification != nil {
 			content, err := (*serviceImpl.GetContent)(input, userContext)
