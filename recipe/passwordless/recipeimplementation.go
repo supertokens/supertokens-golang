@@ -268,7 +268,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		body := map[string]interface{}{
 			"codeId": codeID,
 		}
-		_, err := querier.SendPostRequest("/recipe/signinup/codes/remove", body)
+		_, err := querier.SendPostRequest("/recipe/signinup/code/remove", body)
 		if err != nil {
 			return err
 		}
