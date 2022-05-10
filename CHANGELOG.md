@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds more unit tests for thirdpary email password recipe
 - Adds test to jwt recipe
 - Adds test to opendID recipe
+- Adds test to passwordless recipe
 
 ## [0.5.7] - 2022-04-23
 - Adds functions to delete passwordless user info in recipes that have passwordless users.
