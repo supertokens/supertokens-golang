@@ -100,7 +100,7 @@ func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
 }
 
-//helper function to execute shell commands
+//helper function to execute shell command
 func shellout(waitFor bool, name string, args ...string) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = getInstallationDir()
