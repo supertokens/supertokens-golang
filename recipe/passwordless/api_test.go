@@ -555,7 +555,7 @@ func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing
 	}
 
 	randomResp1, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(randomBody1))
-
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, randomResp1.StatusCode)
 
 	randomDataInBytes1, err := io.ReadAll(randomResp1.Body)
@@ -580,7 +580,7 @@ func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing
 	}
 
 	randomResp2, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(randomBody2))
-
+	assert.NoError(t, err)
 	assert.Equal(t, http.StatusBadRequest, randomResp2.StatusCode)
 
 	randomDataInBytes2, err := io.ReadAll(randomResp2.Body)
