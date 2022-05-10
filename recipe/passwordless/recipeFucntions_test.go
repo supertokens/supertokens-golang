@@ -624,70 +624,67 @@ func TestRevokeAllCodes(t *testing.T) {
 	assert.Nil(t, result2.OK)
 }
 
-// func TestRevokeCode(t *testing.T) {
-// 	configValue := supertokens.TypeInput{
-// 		Supertokens: &supertokens.ConnectionInfo{
-// 			ConnectionURI: "http://localhost:8080",
-// 		},
-// 		AppInfo: supertokens.AppInfo{
-// 			APIDomain:     "api.supertokens.io",
-// 			AppName:       "SuperTokens",
-// 			WebsiteDomain: "supertokens.io",
-// 		},
-// 		RecipeList: []supertokens.Recipe{
-// 			session.Init(nil),
-// 			Init(plessmodels.TypeInput{
-// 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-// 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-// 					Enabled: true,
-// 					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-// 						return nil
-// 					},
-// 				},
-// 			}),
-// 		},
-// 	}
-// 	BeforeEach()
-// 	unittesting.StartUpST("localhost", "8080")
-// 	defer AfterEach()
-// 	err := supertokens.Init(configValue)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	apiV, err := q.GetQuerierAPIVersion()
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+func TestRevokeCode(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-// 		return
-// 	}
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
 
-// 	codeInfo1, err := CreateCodeWithEmail("random@example.com", nil)
-// 	assert.NoError(t, err)
-// 	codeInfo2, err := CreateCodeWithEmail("random@example.com", nil)
-// 	assert.NoError(t, err)
-// 	fmt.Println(codeInfo1, codeInfo2)
+	codeInfo1, err := CreateCodeWithEmail("random@example.com", nil)
+	assert.NoError(t, err)
+	codeInfo2, err := CreateCodeWithEmail("random@example.com", nil)
+	assert.NoError(t, err)
 
-// 	err = RevokeCode(codeInfo1.OK.CodeID)
-// 	fmt.Println(err)
+	err = RevokeCode(codeInfo1.OK.CodeID)
+	assert.NoError(t, err)
 
-// 	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
-// 	assert.NoError(t, err)
-// 	fmt.Println(result1.RestartFlowError)
-// 	// assert.NotNil(t, result1.RestartFlowError)
-// 	// assert.Nil(t, result1.OK)
+	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
+	assert.NoError(t, err)
+	assert.NotNil(t, result1.RestartFlowError)
+	assert.Nil(t, result1.OK)
 
-// 	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
-// 	assert.NoError(t, err)
-// 	fmt.Println(result2.RestartFlowError)
-// 	// assert.Nil(t, result2.RestartFlowError)
-// 	// assert.NotNil(t, result2.OK)
-// }
+	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
+	assert.NoError(t, err)
+	assert.Nil(t, result2.RestartFlowError)
+	assert.NotNil(t, result2.OK)
+}
 
 func TestListCodesByEmail(t *testing.T) {
 	configValue := supertokens.TypeInput{
