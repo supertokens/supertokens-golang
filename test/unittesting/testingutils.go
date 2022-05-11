@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -595,4 +596,16 @@ func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interfa
 	}
 
 	return &result
+}
+
+func GenerateRandomCode(size int) string {
+	characters := "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
+	randomString := ""
+
+	for i := 0; i < size; i++ {
+		randomNumber := rand.Intn(len(characters))
+		randomString += characters[randomNumber : randomNumber+1]
+	}
+
+	return randomString
 }
