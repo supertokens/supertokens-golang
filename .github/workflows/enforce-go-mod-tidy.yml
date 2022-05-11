@@ -7,9 +7,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       # When using actions/checkout in a custom container, the directory is not treated as a git repo and does not have a .git directory, therefore we need to initialize it as a git repo. This will allows us to track changes made after go mod tidy runs
-      - run: git init && git add --all && git -c user.name='test' -c user.email='test@example.com' commit -m 'init for pr action'
-      - run: go mod tidy
-      - run: cd examples
-      - run: go mod tidy
-      - run: cd ..
-      - run: git status | grep -q 'nothing to commit, working directory clean' && exit 0 || exit 1
+      - name: Create a new git repository
+        run: git init && git add --all && git -c user.name='test' -c user.email='test@example.com' commit -m 'init for pr action'
+      - name: Go mod tidy for root project
+        run: go mod tidy
+      - name: Go mod tidy for example apps      
+        working-directory: ./examples
+        run: go mod tidy
+      - name: Check for file changes by go mod tidy
+        run: git status | grep -q 'nothing to commit, working directory clean' && exit 0 || exit 1
