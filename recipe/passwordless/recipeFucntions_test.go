@@ -414,7 +414,7 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 	assert.Equal(t, 5, resp.ExpiredUserInputCodeError.MaximumCodeInputAttempts)
 }
 
-func TestUpdateUserContactMethodEmailTest(t *testing.T) {
+func TestUpdateUserContactMethodEmail(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -488,7 +488,7 @@ func TestUpdateUserContactMethodEmailTest(t *testing.T) {
 	assert.NotNil(t, updatedResp.EmailAlreadyExistsError)
 }
 
-func TestUpdateUserContactMethodPhoneTest(t *testing.T) {
+func TestUpdateUserContactMethodPhone(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",

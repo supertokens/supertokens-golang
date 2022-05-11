@@ -174,9 +174,9 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 
 	user := result["user"].(map[string]interface{})
 
-	assert.Equal(t, "email@test.com", user["Email"])
-	assert.Equal(t, "custom", user["ThirdParty"].(map[string]interface{})["ID"])
-	assert.Equal(t, "user", user["ThirdParty"].(map[string]interface{})["UserID"])
+	assert.Equal(t, "email@test.com", user["email"])
+	assert.Equal(t, "custom", user["thirdParty"].(map[string]interface{})["id"])
+	assert.Equal(t, "user", user["thirdParty"].(map[string]interface{})["userId"])
 
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
@@ -332,9 +332,9 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 
 	user := result["user"].(map[string]interface{})
 
-	assert.Equal(t, "email@test.com", user["Email"])
-	assert.Equal(t, "custom", user["ThirdParty"].(map[string]interface{})["ID"])
-	assert.Equal(t, "user", user["ThirdParty"].(map[string]interface{})["UserID"])
+	assert.Equal(t, "email@test.com", user["email"])
+	assert.Equal(t, "custom", user["thirdParty"].(map[string]interface{})["id"])
+	assert.Equal(t, "user", user["thirdParty"].(map[string]interface{})["userId"])
 
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
@@ -433,15 +433,15 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 
 	user := result["user"].(map[string]interface{})
 
-	isVerified, err := IsEmailVerified(user["ID"].(string))
+	isVerified, err := IsEmailVerified(user["id"].(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, false, isVerified)
 
-	assert.Equal(t, "email@test.com", user["Email"])
-	assert.Equal(t, "custom", user["ThirdParty"].(map[string]interface{})["ID"])
-	assert.Equal(t, "user", user["ThirdParty"].(map[string]interface{})["UserID"])
+	assert.Equal(t, "email@test.com", user["email"])
+	assert.Equal(t, "custom", user["thirdParty"].(map[string]interface{})["id"])
+	assert.Equal(t, "user", user["thirdParty"].(map[string]interface{})["userId"])
 
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
@@ -810,13 +810,13 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 
 	user := result["user"].(map[string]interface{})
-	userInfoAfterSignup, err := GetUserByID(user["ID"].(string))
+	userInfoAfterSignup, err := GetUserByID(user["id"].(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, userInfoAfterSignup.ID, user["ID"].(string))
-	assert.Equal(t, userInfoAfterSignup.Email, user["Email"].(string))
+	assert.Equal(t, userInfoAfterSignup.ID, user["id"].(string))
+	assert.Equal(t, userInfoAfterSignup.Email, user["email"].(string))
 }
 
 func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
@@ -912,6 +912,6 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, userInfoAfterSignup.ID, user["ID"].(string))
-	assert.Equal(t, userInfoAfterSignup.Email, user["Email"].(string))
+	assert.Equal(t, userInfoAfterSignup.ID, user["id"].(string))
+	assert.Equal(t, userInfoAfterSignup.Email, user["email"].(string))
 }

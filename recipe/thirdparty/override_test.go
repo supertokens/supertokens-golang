@@ -153,15 +153,15 @@ func TestOverrideFunctions(t *testing.T) {
 
 	assert.NotNil(t, user)
 	assert.True(t, createdNewUser)
-	assert.Equal(t, user.Email, data["user"].(map[string]interface{})["Email"])
-	assert.Equal(t, user.ID, data["user"].(map[string]interface{})["ID"])
+	assert.Equal(t, user.Email, data["user"].(map[string]interface{})["email"])
+	assert.Equal(t, user.ID, data["user"].(map[string]interface{})["id"])
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/user", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	q := req.URL.Query()
-	q.Add("userId", data["user"].(map[string]interface{})["ID"].(string))
+	q.Add("userId", data["user"].(map[string]interface{})["id"].(string))
 	req.URL.RawQuery = q.Encode()
 	res1, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -177,7 +177,7 @@ func TestOverrideFunctions(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, user.Email, data1["Email"])
+	assert.Equal(t, user.Email, data1["email"])
 }
 
 func TestOverrideAPIs(t *testing.T) {
@@ -291,15 +291,15 @@ func TestOverrideAPIs(t *testing.T) {
 
 	assert.NotNil(t, user)
 	assert.True(t, createdNewUser)
-	assert.Equal(t, user.Email, data["user"].(map[string]interface{})["Email"])
-	assert.Equal(t, user.ID, data["user"].(map[string]interface{})["ID"])
+	assert.Equal(t, user.Email, data["user"].(map[string]interface{})["email"])
+	assert.Equal(t, user.ID, data["user"].(map[string]interface{})["id"])
 
 	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/user", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	q := req.URL.Query()
-	q.Add("userId", data["user"].(map[string]interface{})["ID"].(string))
+	q.Add("userId", data["user"].(map[string]interface{})["id"].(string))
 	req.URL.RawQuery = q.Encode()
 	res1, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -315,5 +315,5 @@ func TestOverrideAPIs(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, user.Email, data1["Email"])
+	assert.Equal(t, user.Email, data1["email"])
 }
