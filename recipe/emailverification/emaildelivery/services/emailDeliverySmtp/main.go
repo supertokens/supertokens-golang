@@ -1,8 +1,7 @@
-package smtp
+package emailDeliverySmtp
 
 import (
 	"errors"
-	"net/smtp"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/services/smtpmodels"
@@ -10,10 +9,12 @@ import (
 )
 
 func MakeSmtpService(config smtpmodels.TypeInput) emaildeliverymodels.EmailDeliveryInterface {
-	// TODO: check sending email..
-	smtpAuth := smtp.PlainAuth(config.SMTPSettings.From.Name, config.SMTPSettings.From.Email, config.SMTPSettings.Password, config.SMTPSettings.Host)
+	serviceImpl := makeServiceImplementation(config.SMTPSettings)
 
-	serviceImpl := makeServiceImplementation(smtpAuth, config.SMTPSettings.Host, config.SMTPSettings.Port, config.SMTPSettings.From)
+	if config.Override != nil {
+		serviceImpl = config.Override(serviceImpl)
+	}
+
 	sendEmail := func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) error {
 		if input.EmailVerification != nil {
 			content, err := (*serviceImpl.GetContent)(input, userContext)

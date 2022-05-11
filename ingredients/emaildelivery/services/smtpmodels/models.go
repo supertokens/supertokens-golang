@@ -10,6 +10,7 @@ type SMTPServiceConfig struct {
 	From     SMTPServiceFromConfig
 	Port     int
 	Password string
+	Secure   *bool
 }
 
 type SMTPServiceFromConfig struct {
@@ -19,6 +20,7 @@ type SMTPServiceFromConfig struct {
 
 type GetContentResult struct {
 	Body    string
+	IsHtml  bool
 	Subject string
 	ToEmail string
 }

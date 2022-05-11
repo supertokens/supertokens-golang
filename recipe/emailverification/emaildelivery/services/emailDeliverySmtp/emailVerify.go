@@ -1,4 +1,4 @@
-package smtp
+package emailDeliverySmtp
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
@@ -6,9 +6,10 @@ import (
 )
 
 func getEmailVerifyEmailContent(input emaildeliverymodels.EmailVerificationType) (smtpmodels.GetContentResult, error) {
-	body := getEmailVerifyEmailHTML(input.User.Email, input.EmailVerifyLink)
+	bodyHtml := getEmailVerifyEmailHTML(input.User.Email, input.EmailVerifyLink)
 	return smtpmodels.GetContentResult{
-		Body:    body,
+		Body:    bodyHtml,
+		IsHtml:  true,
 		Subject: "Email verification instructions",
 		ToEmail: input.User.Email,
 	}, nil
@@ -573,7 +574,7 @@ func getEmailVerifyEmailHTML(email string, verificationLink string) string {
                             
                             <td valign="top" class="mcnTextContent" style="padding: 0px 18px 9px;color: #808080;font-size: 16px;">
                             
-                                This email was meant for` + email + `
+                                This email was meant for ` + email + `
                             </td>
                         </tr>
                     </tbody></table>
