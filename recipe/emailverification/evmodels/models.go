@@ -16,7 +16,7 @@
 package evmodels
 
 import (
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -25,14 +25,14 @@ type TypeInput struct {
 	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
 	Override                 *OverrideStruct
-	EmailDelivery            *emaildeliverymodels.TypeInput
+	EmailDelivery            *emaildelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
 	GetEmailForUserID       func(userID string, userContext supertokens.UserContext) (string, error)
 	GetEmailVerificationURL func(user User, userContext supertokens.UserContext) (string, error)
 	Override                OverrideStruct
-	GetEmailDeliveryConfig  func() emaildeliverymodels.TypeInputWithService
+	GetEmailDeliveryConfig  func() emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
