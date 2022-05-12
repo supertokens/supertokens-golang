@@ -120,7 +120,10 @@ func stopST(pid string) {
 			return
 		}
 	}
-	shellout(true, "kill", pid)
+	pid = strings.Trim(pid, "\n")
+	cmd := exec.Command("kill", pid)
+	cmd.Dir = getInstallationDir()
+	cmd.Run()
 	startTime := getCurrTimeInMS()
 	for getCurrTimeInMS()-startTime < 10000 {
 		pidsAfter := getListOfPids()
