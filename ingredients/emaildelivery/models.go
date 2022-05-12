@@ -1,4 +1,4 @@
-package emaildeliverymodels
+package emaildelivery
 
 import "github.com/supertokens/supertokens-golang/supertokens"
 

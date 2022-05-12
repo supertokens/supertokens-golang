@@ -1,21 +1,20 @@
-package emailDeliverySmtp
+package smtpService
 
 import (
 	"errors"
 
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/services/smtpmodels"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeSmtpService(config smtpmodels.TypeInput) emaildeliverymodels.EmailDeliveryInterface {
+func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeliveryInterface {
 	serviceImpl := makeServiceImplementation(config.SMTPSettings)
 
 	if config.Override != nil {
 		serviceImpl = config.Override(serviceImpl)
 	}
 
-	sendEmail := func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) error {
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 		if input.EmailVerification != nil {
 			content, err := (*serviceImpl.GetContent)(input, userContext)
 			if err != nil {
@@ -27,7 +26,7 @@ func MakeSmtpService(config smtpmodels.TypeInput) emaildeliverymodels.EmailDeliv
 		}
 	}
 
-	return emaildeliverymodels.EmailDeliveryInterface{
+	return emaildelivery.EmailDeliveryInterface{
 		SendEmail: &sendEmail,
 	}
 }

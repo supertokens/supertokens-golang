@@ -5,16 +5,13 @@ import (
 	"net"
 	"net/smtp"
 	"strconv"
-
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/services/smtpmodels"
 )
 
 type Ingredient struct {
-	IngredientInterfaceImpl emaildeliverymodels.EmailDeliveryInterface
+	IngredientInterfaceImpl EmailDeliveryInterface
 }
 
-func MakeIngredient(config emaildeliverymodels.TypeInputWithService) Ingredient {
+func MakeIngredient(config TypeInputWithService) Ingredient {
 
 	result := Ingredient{
 		IngredientInterfaceImpl: config.Service,
@@ -27,7 +24,7 @@ func MakeIngredient(config emaildeliverymodels.TypeInputWithService) Ingredient 
 	return result
 }
 
-func SendSMTPEmail(config smtpmodels.SMTPServiceConfig, content smtpmodels.GetContentResult) error {
+func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error {
 
 	fromHeader := "From: " + config.From.Name + " <" + config.From.Email + ">\r\n"
 	subject := "Subject: " + content.Subject + "\r\n"

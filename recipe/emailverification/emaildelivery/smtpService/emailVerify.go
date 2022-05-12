@@ -1,13 +1,12 @@
-package emailDeliverySmtp
+package smtpService
 
 import (
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/services/smtpmodels"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 )
 
-func getEmailVerifyEmailContent(input emaildeliverymodels.EmailVerificationType) (smtpmodels.GetContentResult, error) {
+func getEmailVerifyEmailContent(input emaildelivery.EmailVerificationType) (emaildelivery.SMTPGetContentResult, error) {
 	bodyHtml := getEmailVerifyEmailHTML(input.User.Email, input.EmailVerifyLink)
-	return smtpmodels.GetContentResult{
+	return emaildelivery.SMTPGetContentResult{
 		Body:    bodyHtml,
 		IsHtml:  true,
 		Subject: "Email verification instructions",

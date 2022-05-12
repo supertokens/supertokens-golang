@@ -16,7 +16,7 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -88,9 +88,9 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 		emailVerifyLink := emailVerificationURL + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
-		(*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildeliverymodels.EmailType{
-			EmailVerification: &emaildeliverymodels.EmailVerificationType{
-				User: emaildeliverymodels.User{
+		(*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+			EmailVerification: &emaildelivery.EmailVerificationType{
+				User: emaildelivery.User{
 					ID:    user.ID,
 					Email: user.Email,
 				},

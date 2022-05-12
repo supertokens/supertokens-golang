@@ -20,9 +20,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/emaildeliverymodels"
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery/services/smtpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/services/emailDeliverySmtp"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -53,9 +52,9 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildeliverymodels.EmailType{
-		EmailVerification: &emaildeliverymodels.EmailVerificationType{
-			User: emaildeliverymodels.User{
+	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+		EmailVerification: &emaildelivery.EmailVerificationType{
+			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "someEmail",
 			},
@@ -95,9 +94,9 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildeliverymodels.EmailType{
-		EmailVerification: &emaildeliverymodels.EmailVerificationType{
-			User: emaildeliverymodels.User{
+	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+		EmailVerification: &emaildelivery.EmailVerificationType{
+			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "someEmail",
 			},
@@ -122,9 +121,9 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
-				EmailDelivery: &emaildeliverymodels.TypeInput{
-					Override: func(originalImplementation emaildeliverymodels.EmailDeliveryInterface) emaildeliverymodels.EmailDeliveryInterface {
-						(*originalImplementation.SendEmail) = func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) error {
+				EmailDelivery: &emaildelivery.TypeInput{
+					Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+						(*originalImplementation.SendEmail) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 							overrideCalled = true
 							return nil
 						}
@@ -148,9 +147,9 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildeliverymodels.EmailType{
-		EmailVerification: &emaildeliverymodels.EmailVerificationType{
-			User: emaildeliverymodels.User{
+	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+		EmailVerification: &emaildelivery.EmailVerificationType{
+			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "someEmail",
 			},
@@ -165,23 +164,23 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 func TestSMTPServiceOverride(t *testing.T) {
 	getContentCalled := false
 	sendRawEmailCalled := false
-	smtpService := emailDeliverySmtp.MakeSmtpService(smtpmodels.TypeInput{
-		SMTPSettings: smtpmodels.SMTPServiceConfig{
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
 			Host: "",
-			From: smtpmodels.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPServiceFromConfig{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation smtpmodels.ServiceInterface) smtpmodels.ServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildeliverymodels.EmailType, userContext supertokens.UserContext) (smtpmodels.GetContentResult, error) {
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
 				getContentCalled = true
-				return smtpmodels.GetContentResult{}, nil
+				return emaildelivery.SMTPGetContentResult{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input smtpmodels.GetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -200,7 +199,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
-				EmailDelivery: &emaildeliverymodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
 					Service: &smtpService,
 				},
 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
@@ -217,9 +216,9 @@ func TestSMTPServiceOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildeliverymodels.EmailType{
-		EmailVerification: &emaildeliverymodels.EmailVerificationType{
-			User: emaildeliverymodels.User{
+	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+		EmailVerification: &emaildelivery.EmailVerificationType{
+			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "",
 			},
@@ -241,10 +240,10 @@ func TestSMTPServiceOverride(t *testing.T) {
 // 	secure := true
 // 	port := 465
 
-// 	smtpService := emailDeliverySmtp.MakeSmtpService(smtpmodels.TypeInput{
-// 		SMTPSettings: smtpmodels.SMTPServiceConfig{
+// 	smtpService := emailDeliverySmtp.MakeSmtpService(emaildelivery.SMTPTypeInput{
+// 		SMTPSettings: emaildelivery.SMTPServiceConfig{
 // 			Host: host,
-// 			From: smtpmodels.SMTPServiceFromConfig{
+// 			From: emaildelivery.SMTPServiceFromConfig{
 // 				Name:  "Test User",
 // 				Email: fromEmail,
 // 			},
@@ -264,7 +263,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 // 		},
 // 		RecipeList: []supertokens.Recipe{
 // 			Init(evmodels.TypeInput{
-// 				EmailDelivery: &emaildeliverymodels.TypeInput{
+// 				EmailDelivery: &emaildelivery.TypeInput{
 // 					Service: &smtpService,
 // 				},
 // 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
@@ -281,9 +280,9 @@ func TestSMTPServiceOverride(t *testing.T) {
 // 		t.Error(err.Error())
 // 	}
 
-// 	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildeliverymodels.EmailType{
-// 		EmailVerification: &emaildeliverymodels.EmailVerificationType{
-// 			User: emaildeliverymodels.User{
+// 	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+// 		EmailVerification: &emaildelivery.EmailVerificationType{
+// 			User: emaildelivery.User{
 // 				ID:    "someId",
 // 				Email: targetEmail,
 // 			},
