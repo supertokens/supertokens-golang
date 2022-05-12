@@ -23,6 +23,7 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
@@ -120,7 +121,10 @@ func stopST(pid string) {
 			return
 		}
 	}
-	shellout(true, "kill", pid)
+	pid = strings.Trim(pid, "\n")
+	cmd := exec.Command("kill", pid)
+	cmd.Dir = getInstallationDir()
+	cmd.Run()
 	startTime := getCurrTimeInMS()
 	for getCurrTimeInMS()-startTime < 10000 {
 		pidsAfter := getListOfPids()
@@ -595,4 +599,16 @@ func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interfa
 	}
 
 	return &result
+}
+
+func GenerateRandomCode(size int) string {
+	characters := "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
+	randomString := ""
+
+	for i := 0; i < size; i++ {
+		randomNumber := rand.Intn(len(characters))
+		randomString += characters[randomNumber : randomNumber+1]
+	}
+
+	return randomString
 }

@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [unreleased]
+### Added
+- Adds unit tests to passwordless recipe 
+
+
+### Fixes
+- Fixes existing action to run go mod tidy in the examples folder
+- Fixes stopSt function in testing utils
+
 ## [0.5.9] - 2020-05-10
 ### Fixes
 - Fixes bug in the revokeCode function of the recipeimplementation in passwordless recipe 
@@ -15,6 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adds more unit tests for thirdpary email password recipe
 - Adds test to jwt recipe
 - Adds test to opendID recipe
+
 
 ### Fixes
 - Third party sign in up API response correction.
