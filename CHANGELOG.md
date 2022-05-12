@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixes
 - Fixes existing action to run go mod tidy in the examples folder
+- Fixes stopSt function in testing utils
 
 ## [0.5.9] - 2020-05-10
 ### Fixes
