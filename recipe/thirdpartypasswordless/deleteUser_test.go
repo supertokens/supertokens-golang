@@ -68,22 +68,22 @@ func TestDeletePhoneNumber(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := PasswordlessSignInUpByEmail("test@example.com", nil)
+		res, err := PasswordlessSignInUpByEmail("test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
 		phoneNumber := "+1234567890"
-		_, err = UpdatePasswordlessUser(res.User.ID, nil, &phoneNumber, nil)
+		_, err = UpdatePasswordlessUser(res.User.ID, nil, &phoneNumber)
 		if err != nil {
 			t.Error(err.Error())
 		}
-		deleteResponse, err := DeletePhoneNumberForUser(res.User.ID, nil)
+		deleteResponse, err := DeletePhoneNumberForUser(res.User.ID)
 		if err != nil {
 			t.Error(err.Error())
 		}
 		assert.NotNil(t, deleteResponse.OK)
 
-		userInfo, err := GetUserByID(res.User.ID, nil)
+		userInfo, err := GetUserByID(res.User.ID)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -132,22 +132,22 @@ func TestDeleteEmail(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := PasswordlessSignInUpByEmail("test@example.com", nil)
+		res, err := PasswordlessSignInUpByEmail("test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
 		phoneNumber := "+1234567890"
-		_, err = UpdatePasswordlessUser(res.User.ID, nil, &phoneNumber, nil)
+		_, err = UpdatePasswordlessUser(res.User.ID, nil, &phoneNumber)
 		if err != nil {
 			t.Error(err.Error())
 		}
-		deleteResponse, err := DeleteEmailForPasswordlessUser(res.User.ID, nil)
+		deleteResponse, err := DeleteEmailForPasswordlessUser(res.User.ID)
 		if err != nil {
 			t.Error(err.Error())
 		}
 		assert.NotNil(t, deleteResponse.OK)
 
-		userInfo, err := GetUserByID(res.User.ID, nil)
+		userInfo, err := GetUserByID(res.User.ID)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -196,28 +196,28 @@ func TestDeleteEmailAndPhoneShouldThrowError(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := PasswordlessSignInUpByEmail("test@example.com", nil)
+		res, err := PasswordlessSignInUpByEmail("test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
 		phoneNumber := "+1234567890"
-		_, err = UpdatePasswordlessUser(res.User.ID, nil, &phoneNumber, nil)
+		_, err = UpdatePasswordlessUser(res.User.ID, nil, &phoneNumber)
 		if err != nil {
 			t.Error(err.Error())
 		}
-		deleteResponse, err := DeleteEmailForPasswordlessUser(res.User.ID, nil)
+		deleteResponse, err := DeleteEmailForPasswordlessUser(res.User.ID)
 		if err != nil {
 			t.Error(err.Error())
 		}
 		assert.NotNil(t, deleteResponse.OK)
 
-		userInfo, err := GetUserByID(res.User.ID, nil)
+		userInfo, err := GetUserByID(res.User.ID)
 		if err != nil {
 			t.Error(err.Error())
 		}
 		assert.Nil(t, userInfo.Email)
 
-		_, err = DeletePhoneNumberForUser(res.User.ID, nil)
+		_, err = DeletePhoneNumberForUser(res.User.ID)
 		assert.NotNil(t, err)
 		assert.Equal(t, err.Error(), "SuperTokens core threw an error for a request to path: '/recipe/user' with status code: 400 and message: You cannot clear both email and phone number of a user\n")
 	}
