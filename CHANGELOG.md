@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.6.0] - 2022-05-13
 ### Breaking Change
 
-- Adds both with context and without context functions to thirdparty passwordless recipe, Like all other recipes where we expose both WithContext functions and without context functions which are basically the same as WithContext ones with an emtpy map[string]interface{} passed as context
+- Adds both with context and without context functions to thirdparty passwordless recipe, Like all other recipes. Where we expose both WithContext functions and without context functions, which are basically the same as WithContext ones with an emtpy map[string]interface{} passed as context
 
 ### Added
 - Adds unit tests to passwordless recipe 
