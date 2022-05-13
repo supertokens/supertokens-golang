@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"log"
 	"net/http"
 	"os"
 	"strconv"
@@ -347,10 +346,7 @@ func updateJwt(response http.ResponseWriter, request *http.Request) {
 func updateJwtWithHandle(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
-	session, err := session.GetSession(request, response, nil)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	session := session.GetSessionFromRequestContext(request.Context())
 	session.UpdateAccessTokenPayload(body)
 	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
 }
