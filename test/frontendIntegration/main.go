@@ -184,6 +184,8 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			session.VerifySession(nil, getJWT).ServeHTTP(rw, r)
 		} else if r.URL.Path == "/update-jwt" && r.Method == "POST" {
 			session.VerifySession(nil, updateJwt).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/update-jwt-with-handle" && r.Method == "POST" {
+			session.VerifySession(nil, updateJwtWithHandle).ServeHTTP(rw, r)
 		} else if r.URL.Path == "/testing" {
 			testing(rw, r)
 		} else if r.URL.Path == "/logout" && r.Method == "POST" {
@@ -334,6 +336,14 @@ func getJWT(response http.ResponseWriter, request *http.Request) {
 }
 
 func updateJwt(response http.ResponseWriter, request *http.Request) {
+	var body map[string]interface{}
+	_ = json.NewDecoder(request.Body).Decode(&body)
+	session := session.GetSessionFromRequestContext(request.Context())
+	session.UpdateAccessTokenPayload(body)
+	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
+}
+
+func updateJwtWithHandle(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	session := session.GetSessionFromRequestContext(request.Context())
