@@ -346,9 +346,9 @@ func updateJwt(response http.ResponseWriter, request *http.Request) {
 func updateJwtWithHandle(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
-	session := session.GetSessionFromRequestContext(request.Context())
-	session.UpdateAccessTokenPayload(body)
-	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
+	userSession := session.GetSessionFromRequestContext(request.Context())
+	session.UpdateAccessTokenPayload(userSession.GetHandle(), body)
+	json.NewEncoder(response).Encode(userSession.GetAccessTokenPayload())
 }
 
 func checkRID(response http.ResponseWriter, request *http.Request) {
