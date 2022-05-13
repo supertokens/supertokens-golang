@@ -338,9 +338,9 @@ func getJWT(response http.ResponseWriter, request *http.Request) {
 func updateJwt(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
-	session := session.GetSessionFromRequestContext(request.Context())
-	session.UpdateAccessTokenPayload(body)
-	json.NewEncoder(response).Encode(session.GetAccessTokenPayload())
+	userSession := session.GetSessionFromRequestContext(request.Context())
+	userSession.UpdateAccessTokenPayload(body)
+	json.NewEncoder(response).Encode(userSession.GetAccessTokenPayload())
 }
 
 func updateJwtWithHandle(response http.ResponseWriter, request *http.Request) {
@@ -384,11 +384,9 @@ func setEnableJWT(w http.ResponseWriter, r *http.Request) {
 		enableJWT = val.(bool)
 	}
 	lastEnableJWTSetting = enableJWT
-	if enableJWT {
-		supertokens.ResetForTest()
-		session.ResetForTest()
-		callSTInit(lastAntiCsrfSetting, enableJWT, "jwt")
-	}
+	supertokens.ResetForTest()
+	session.ResetForTest()
+	callSTInit(lastAntiCsrfSetting, enableJWT, "jwt")
 	w.Write([]byte("success"))
 }
 
