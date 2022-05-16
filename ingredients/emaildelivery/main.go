@@ -1,7 +1,7 @@
 package emaildelivery
 
 import (
-	"errors"
+	"crypto/tls"
 	"net"
 	"net/smtp"
 	"strconv"
@@ -49,54 +49,48 @@ func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error
 	}
 
 	if secure {
-		// TODO: figure out how to send secure emails
-		// tlsconfig := &tls.Config{
-		// 	InsecureSkipVerify: true,
-		// 	ServerName:         host,
-		// }
+		tlsconfig := &tls.Config{
+			InsecureSkipVerify: true,
+			ServerName:         host,
+		}
 
-		// conn, err := tls.Dial("tcp", servername, tlsconfig)
-		// if err != nil {
-		// 	return err
-		// }
+		conn, err := tls.Dial("tcp", servername, tlsconfig)
+		if err != nil {
+			return err
+		}
 
-		// c, err := smtp.NewClient(conn, host)
-		// if err != nil {
-		// 	return err
-		// }
+		c, err := smtp.NewClient(conn, host)
+		if err != nil {
+			return err
+		}
+		defer c.Quit()
 
-		// err = c.Auth(smtpAuth)
-		// if err != nil {
-		// 	return err
-		// }
+		err = c.Auth(smtpAuth)
+		if err != nil {
+			return err
+		}
 
-		// if err = c.Mail("From: " + config.From.Name + " <" + config.From.Email + ">"); err != nil {
-		// 	return err
-		// }
+		if err = c.Mail(config.From.Email); err != nil {
+			return err
+		}
 
-		// if err = c.Rcpt(content.ToEmail); err != nil {
-		// 	return err
-		// }
+		if err = c.Rcpt(content.ToEmail); err != nil {
+			return err
+		}
 
-		// // Data
-		// w, err := c.Data()
-		// if err != nil {
-		// 	return err
-		// }
+		// Data
+		w, err := c.Data()
+		if err != nil {
+			return err
+		}
+		defer w.Close()
 
-		// _, err = w.Write([]byte(msg))
-		// if err != nil {
-		// 	return err
-		// }
+		_, err = w.Write([]byte(msg))
+		if err != nil {
+			return err
+		}
 
-		// err = w.Close()
-		// if err != nil {
-		// 	return err
-		// }
-
-		// c.Quit()
-
-		return errors.New("secure connection is not supported")
+		return nil
 	} else {
 		return smtp.SendMail(host+":"+strconv.Itoa(config.Port), smtpAuth, config.From.Email, []string{content.ToEmail}, msg)
 	}
