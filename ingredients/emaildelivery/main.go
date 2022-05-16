@@ -63,6 +63,7 @@ func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error
 		if err != nil {
 			return err
 		}
+		defer c.Quit()
 
 		err = c.Auth(smtpAuth)
 		if err != nil {
@@ -93,7 +94,7 @@ func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error
 			return err
 		}
 
-		return c.Quit()
+		return nil
 	} else {
 		return smtp.SendMail(host+":"+strconv.Itoa(config.Port), smtpAuth, config.From.Email, []string{content.ToEmail}, msg)
 	}
