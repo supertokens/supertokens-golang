@@ -83,6 +83,7 @@ func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error
 		if err != nil {
 			return err
 		}
+		defer w.Close()
 
 		_, err = w.Write([]byte(msg))
 		if err != nil {
