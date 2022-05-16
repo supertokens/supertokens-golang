@@ -17,6 +17,7 @@ package thirdpartypasswordless
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -37,4 +38,34 @@ func AfterEach() {
 	unittesting.KillAllST()
 	resetAll()
 	unittesting.CleanST()
+}
+
+var customProvider1 = tpmodels.TypeProvider{
+	ID: "custom",
+	Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+		return tpmodels.TypeProviderGetResponse{
+			AccessTokenAPI: tpmodels.AccessTokenAPI{
+				URL: "https://test.com/oauth/token",
+			},
+			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+				URL: "https://test.com/oauth/auth",
+				Params: map[string]interface{}{
+					"scope":     "test",
+					"client_id": "supertokens",
+				},
+			},
+			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+				return tpmodels.UserInfo{
+					ID: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "email@test.com",
+						IsVerified: true,
+					},
+				}, nil
+			},
+			GetClientId: func(userContext supertokens.UserContext) string {
+				return "supertokens"
+			},
+		}
+	},
 }
