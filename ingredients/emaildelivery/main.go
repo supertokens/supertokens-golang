@@ -90,11 +90,6 @@ func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error
 			return err
 		}
 
-		err = w.Close()
-		if err != nil {
-			return err
-		}
-
 		return nil
 	} else {
 		return smtp.SendMail(host+":"+strconv.Itoa(config.Port), smtpAuth, config.From.Email, []string{content.ToEmail}, msg)
