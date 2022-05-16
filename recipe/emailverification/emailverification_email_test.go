@@ -230,64 +230,64 @@ func TestSMTPServiceOverride(t *testing.T) {
 	assert.Equal(t, sendRawEmailCalled, true)
 }
 
-// func TestSMTPServiceManually(t *testing.T) {
-// 	targetEmail := "..."
-// 	fromEmail := "no-reply@supertokens.com"
-// 	host := "smtp.gmail.com"
-// 	password := "..."
-// 	// secure := false
-// 	// port := 587
-// 	secure := true
-// 	port := 465
+func TestSMTPServiceManually(t *testing.T) {
+	targetEmail := "sattvik@me.com"
+	fromEmail := "sattvik@gmail.com"
+	host := "smtp.gmail.com"
+	password := "lomicmpxczwurcdf"
+	// secure := false
+	// port := 587
+	secure := true
+	port := 465
 
-// 	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-// 		SMTPSettings: emaildelivery.SMTPServiceConfig{
-// 			Host: host,
-// 			From: emaildelivery.SMTPServiceFromConfig{
-// 				Name:  "Test User",
-// 				Email: fromEmail,
-// 			},
-// 			Secure:   &secure,
-// 			Port:     port,
-// 			Password: password,
-// 		},
-// 	})
-// 	configValue := supertokens.TypeInput{
-// 		Supertokens: &supertokens.ConnectionInfo{
-// 			ConnectionURI: "http://localhost:8080",
-// 		},
-// 		AppInfo: supertokens.AppInfo{
-// 			APIDomain:     "api.supertokens.io",
-// 			AppName:       "SuperTokens",
-// 			WebsiteDomain: "supertokens.io",
-// 		},
-// 		RecipeList: []supertokens.Recipe{
-// 			Init(evmodels.TypeInput{
-// 				EmailDelivery: &emaildelivery.TypeInput{
-// 					Service: &smtpService,
-// 				},
-// 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-// 					return targetEmail, nil
-// 				},
-// 			}),
-// 		},
-// 	}
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: host,
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: fromEmail,
+			},
+			Secure:   &secure,
+			Port:     port,
+			Password: password,
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(evmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
+					return targetEmail, nil
+				},
+			}),
+		},
+	}
 
-// 	BeforeEach()
-// 	defer AfterEach()
-// 	err := supertokens.Init(configValue)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+	BeforeEach()
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
-// 		EmailVerification: &emaildelivery.EmailVerificationType{
-// 			User: emaildelivery.User{
-// 				ID:    "someId",
-// 				Email: targetEmail,
-// 			},
-// 		},
-// 	}, nil)
+	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+		EmailVerification: &emaildelivery.EmailVerificationType{
+			User: emaildelivery.User{
+				ID:    "someId",
+				Email: targetEmail,
+			},
+		},
+	}, nil)
 
-// 	assert.Nil(t, err)
-// }
+	assert.Nil(t, err)
+}
