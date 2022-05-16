@@ -219,7 +219,7 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	assert.Equal(t, "The third party provider google seems to not be missing from the backend configs", data["message"])
+	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", data["message"])
 }
 
 func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
