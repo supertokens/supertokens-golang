@@ -36,7 +36,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	var provider *tpmodels.TypeProvider = findRightProvider(options.Providers, thirdPartyId, nil)
 
 	if provider == nil {
-		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to not be missing from the backend configs"}
+		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
 	}
 
 	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, options, &map[string]interface{}{})
