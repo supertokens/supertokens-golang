@@ -31,7 +31,7 @@ func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType)
 	return emaildelivery.SMTPGetContentResult{
 		Body:    bodyHtml,
 		IsHtml:  true,
-		Subject: "Reset password instructions",
+		Subject: "Passwordless login instructions",
 		ToEmail: input.Email,
 	}, nil
 }
