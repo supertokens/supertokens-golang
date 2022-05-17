@@ -72,9 +72,9 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 
 	if provider == nil {
 		if clientId == nil {
-			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be missing from the backend configs"}
+			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to be missing from the backend configs."}
 		} else {
-			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
+			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
 		}
 	}
 
