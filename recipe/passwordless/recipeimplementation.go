@@ -234,7 +234,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 
 	listCodesByPreAuthSessionID := func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
 		response, err := querier.SendGetRequest("/recipe/signinup/codes", map[string]string{
-			"preAuthSessionID": preAuthSessionID,
+			"preAuthSessionId": preAuthSessionID,
 		})
 
 		if err != nil {
