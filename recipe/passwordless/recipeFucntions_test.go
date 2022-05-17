@@ -916,3 +916,64 @@ func TestSignInUp(t *testing.T) {
 	assert.NotNil(t, result.User.ID)
 	assert.NotNil(t, result.User.TimeJoined)
 }
+
+func TestListCodesByPreAuthSessionID(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	assert.NoError(t, err)
+
+	codeInfo2, err := CreateNewCodeForDevice(codeInfo1.OK.DeviceID, nil)
+	assert.NoError(t, err)
+
+	assert.Equal(t, codeInfo1.OK.PreAuthSessionID, codeInfo2.OK.PreAuthSessionID)
+
+	res, err := ListCodesByPreAuthSessionID(codeInfo1.OK.PreAuthSessionID)
+	assert.NoError(t, err)
+
+	for _, c := range res.Codes {
+		if !(c.CodeID == codeInfo1.OK.CodeID || c.CodeID == codeInfo2.OK.CodeID) {
+			t.Fail()
+		}
+	}
+}
