@@ -20,6 +20,8 @@ import (
 	"regexp"
 
 	"github.com/nyaruka/phonenumbers"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -105,6 +107,30 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	// GetCustomUserInputCode is initialized correctly in makeTypeNormalisedInput
+
+	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
+		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
+		if config.ContactMethodEmail.Enabled {
+			if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
+				createAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
+			}
+		} else if config.ContactMethodEmailOrPhone.Enabled {
+			if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
+				createAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
+			}
+		}
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, createAndSendCustomEmail)
+		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
+			emailService = *config.EmailDelivery.Service
+		}
+		result := emaildelivery.TypeInputWithService{
+			Service: emailService,
+		}
+		if config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+		return result
+	}
 
 	if config.Override != nil {
 		if config.Override.Functions != nil {

@@ -149,7 +149,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 				},
 			},
 		}
-		passwordlessRecipe, err = passwordless.MakeRecipe(recipeId, appInfo, passwordlessConfig, onGeneralError)
+		passwordlessRecipe, err = passwordless.MakeRecipe(recipeId, appInfo, passwordlessConfig, nil, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
