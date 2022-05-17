@@ -228,4 +228,5 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 
 func ResetForTest() {
 	singletonInstance = nil
+	PasswordResetEmailSentForTest = false
 }
