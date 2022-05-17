@@ -94,7 +94,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				EmailVerificationFeature: nil,
 			},
 		}
-		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe, onGeneralError)
+		// TODO: Email ingredient should not be passed nil
+		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe, nil, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
