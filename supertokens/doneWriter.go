@@ -40,6 +40,10 @@ type DoneWriter interface {
 // WrapWriter wraps an http.ResponseWriter, returning a proxy that allows you to
 // hook into various parts of the response process.
 func MakeDoneWriter(w http.ResponseWriter) DoneWriter {
+	if dw, ok := w.(DoneWriter); ok {
+		return dw
+	}
+
 	_, cn := w.(http.CloseNotifier)
 	_, fl := w.(http.Flusher)
 	_, hj := w.(http.Hijacker)
