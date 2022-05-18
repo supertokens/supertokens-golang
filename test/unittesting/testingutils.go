@@ -612,3 +612,29 @@ func GenerateRandomCode(size int) string {
 
 	return randomString
 }
+
+func PasswordResetTokenRequest(email string, testUrl string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/user/password/reset/token", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
