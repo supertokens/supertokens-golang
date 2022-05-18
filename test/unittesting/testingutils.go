@@ -638,3 +638,24 @@ func PasswordResetTokenRequest(email string, testUrl string) (*http.Response, er
 
 	return resp, nil
 }
+
+func PasswordlessEmailLoginRequest(email string, testUrl string) (*http.Response, error) {
+	body := map[string]string{
+		"email": email,
+	}
+
+	postBody, err := json.Marshal(body)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}

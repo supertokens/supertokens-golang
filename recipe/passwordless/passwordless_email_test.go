@@ -17,6 +17,8 @@
 package passwordless
 
 import (
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -24,6 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestBackwardCompatibilityServiceWithtCustomFunctionForContactEmailMethod(t *testing.T) {
@@ -386,6 +389,79 @@ func TestSMTPServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 	}, nil)
 
 	assert.Nil(t, err)
+	assert.Equal(t, customCalled, false)
+	assert.Equal(t, getContentCalled, true)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestSMTPServiceOverrideForContactEmailMethodThroughAPI(t *testing.T) {
+	getContentCalled := false
+	sendRawEmailCalled := false
+	customCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				getContentCalled = true
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						customCalled = true
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	unittesting.PasswordlessEmailLoginRequest("somone@email.com", testServer.URL)
+
 	assert.Equal(t, customCalled, false)
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)

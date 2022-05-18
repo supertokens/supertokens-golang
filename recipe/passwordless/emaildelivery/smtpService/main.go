@@ -30,7 +30,7 @@ func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeli
 	}
 
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-		if input.EmailVerification != nil {
+		if input.PasswordlessLogin != nil {
 			content, err := (*serviceImpl.GetContent)(input, userContext)
 			if err != nil {
 				return err
