@@ -1,4 +1,5 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/*
+ * Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -16,23 +17,17 @@
 package thirdpartypasswordless
 
 import (
-	"net/http"
-	"net/http/httptest"
-	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T) {
-	antiCsrfVal := "VIA_TOKEN"
+func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -43,23 +38,24 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				AntiCsrf: &antiCsrfVal,
-			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
 					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 						return nil
 					},
+					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
 				},
 				Providers: []tpmodels.TypeProvider{
-					customProvider1,
+					mockThirdPartyProvider1,
 				},
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -80,29 +76,12 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 		return
 	}
 
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
-	defer testServer.Close()
-
-	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=custom")
+	users, err := GetUsersByEmail("john.doe@example.com")
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
-	assert.Equal(t, "OK", result["status"])
-
-	fetchedUrl := result["url"].(string)
-	fetchedParsedUrl, err := url.Parse(fetchedUrl)
-
-	assert.NoError(t, err)
-	assert.Equal(t, "test.com", fetchedParsedUrl.Host)
-	assert.Equal(t, "/oauth/auth", fetchedParsedUrl.Path)
-	assert.Equal(t, "test", fetchedParsedUrl.Query().Get("scope"))
-	assert.Equal(t, "supertokens", fetchedParsedUrl.Query().Get("client_id"))
+	assert.Equal(t, 0, len(users))
 }
 
-func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) {
-	antiCsrfVal := "VIA_TOKEN"
+func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -113,23 +92,25 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				AntiCsrf: &antiCsrfVal,
-			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
 					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 						return nil
 					},
+					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
 				},
 				Providers: []tpmodels.TypeProvider{
-					customProvider1,
+					mockThirdPartyProvider1,
+					mockThirdPartyProvider2,
 				},
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -150,14 +131,25 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 		return
 	}
 
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
-	defer testServer.Close()
+	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", tplmodels.EmailStruct{
+		ID:         "john.doe@example.com",
+		IsVerified: true,
+	})
+	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", tplmodels.EmailStruct{
+		ID:         "john.doe@example.com",
+		IsVerified: true,
+	})
 
-	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google")
+	users, err := GetUsersByEmail("john.doe@example.com")
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
+	assert.Equal(t, 2, len(users))
 
-	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
-	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", result["message"])
+	for _, u := range users {
+		assert.Equal(t, "john.doe@example.com", *u.Email)
+		assert.Equal(t, "thirdPartyJohnDoe", u.ThirdParty.UserID)
+		assert.NotNil(t, u.ID)
+		assert.NotNil(t, u.TimeJoined)
+		assert.NotNil(t, u.ThirdParty.ID)
+		assert.Nil(t, u.PhoneNumber)
+	}
 }

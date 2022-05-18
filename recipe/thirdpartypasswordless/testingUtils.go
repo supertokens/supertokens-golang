@@ -69,3 +69,11 @@ var customProvider1 = tpmodels.TypeProvider{
 		}
 	},
 }
+
+var mockThirdPartyProvider1 = tpmodels.TypeProvider{
+	ID: "mock1",
+}
+
+var mockThirdPartyProvider2 = tpmodels.TypeProvider{
+	ID: "mock2",
+}
