@@ -185,6 +185,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		EmailVerificationRecipeImplementation: r.EmailVerificationRecipe.RecipeImpl,
 		Req:                                   req,
 		Res:                                   res,
+		EmailDelivery:                         r.EmailDelivery,
 	}
 	if id == constants.SignUpAPI {
 		return api.SignUpAPI(r.APIImpl, options)
