@@ -55,19 +55,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
 
-	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, emailDeliveryIngredient, onGeneralError)
-		if err != nil {
-			return Recipe{}, err
-		}
-		r.EmailVerificationRecipe = emailVerificationRecipe
-
-	} else {
-		r.EmailVerificationRecipe = *emailVerificationInstance
-	}
-
 	verifiedConfig.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
-		createAndSendCustomEmail := defaultCreateAndSendCustomPasswordResetEmail(appInfo)
+		createAndSendCustomEmail := DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
 		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
 			createAndSendCustomEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
 		}
@@ -95,6 +84,17 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.EmailDelivery = *emailDeliveryIngredient
 	} else {
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
+	}
+
+	if emailVerificationInstance == nil {
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onGeneralError)
+		if err != nil {
+			return Recipe{}, err
+		}
+		r.EmailVerificationRecipe = emailVerificationRecipe
+
+	} else {
+		r.EmailVerificationRecipe = *emailVerificationInstance
 	}
 
 	return *r, nil
