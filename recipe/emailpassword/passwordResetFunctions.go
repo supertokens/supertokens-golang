@@ -24,6 +24,8 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+var PasswordResetEmailSentForTest = false
+
 func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ epmodels.User, userContext supertokens.UserContext) (string, error) {
 	return func(_ epmodels.User, userContext supertokens.UserContext) (string, error) {
 		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/reset-password", nil
@@ -31,10 +33,11 @@ func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ ep
 }
 
 // TODO: add test to see query
-func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
+func DefaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 	return func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
+			PasswordResetEmailSentForTest = true
 			return
 		}
 		url := "https://api.supertokens.io/0/st/auth/password/reset"

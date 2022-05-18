@@ -125,7 +125,7 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 		FormFieldsForGenerateTokenForm: nil,
 		FormFieldsForPasswordResetForm: nil,
 		GetResetPasswordURL:            defaultGetResetPasswordURL(appInfo),
-		CreateAndSendCustomEmail:       defaultCreateAndSendCustomPasswordResetEmail(appInfo),
+		CreateAndSendCustomEmail:       DefaultCreateAndSendCustomPasswordResetEmail(appInfo),
 	}
 
 	if len(signUpConfig.FormFields) > 0 {
