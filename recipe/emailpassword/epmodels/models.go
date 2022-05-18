@@ -27,7 +27,7 @@ type TypeNormalisedInput struct {
 	ResetPasswordUsingTokenFeature TypeNormalisedInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
-	GetEmailDeliveryConfig         func() emaildelivery.TypeInputWithService
+	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
@@ -72,7 +72,6 @@ type TypeInputResetPasswordUsingTokenFeature struct {
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 	GetResetPasswordURL            func(user User, userContext supertokens.UserContext) (string, error)
-	CreateAndSendCustomEmail       func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }

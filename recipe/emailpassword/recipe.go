@@ -22,7 +22,6 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -55,35 +54,10 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
 
-	verifiedConfig.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
-		createAndSendCustomEmail := DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
-		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
-			createAndSendCustomEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
-		}
-
-		sendVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
-		if verifiedConfig.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-			sendVerificationEmail = verifiedConfig.EmailVerificationFeature.CreateAndSendCustomEmail
-		}
-
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(r.RecipeImpl, appInfo, createAndSendCustomEmail, sendVerificationEmail)
-		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
-			emailService = *config.EmailDelivery.Service
-		}
-		result := emaildelivery.TypeInputWithService{
-			Service: emailService,
-		}
-		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
-			result.Override = config.EmailDelivery.Override
-		}
-
-		return result
-	}
-
 	if emailDeliveryIngredient != nil {
 		r.EmailDelivery = *emailDeliveryIngredient
 	} else {
-		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
+		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl))
 	}
 
 	if emailVerificationInstance == nil {
