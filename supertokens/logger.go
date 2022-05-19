@@ -31,3 +31,7 @@ func LogDebugMessage(message string) {
 
 	}
 }
+
+func LogWarningMessage(message string) {
+	logger.Printf(formatMessage(message))
+}

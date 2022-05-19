@@ -34,6 +34,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
 		if config.CreateAndSendCustomEmail != nil {
+			supertokens.LogWarningMessage("CreateAndSendCustomEmail is deprecated. Use EmailDelivery instead.")
 			createAndSendCustomEmail = config.CreateAndSendCustomEmail
 		}
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, createAndSendCustomEmail)
