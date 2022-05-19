@@ -66,13 +66,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.ContactMethodEmail.Enabled {
-		if config.ContactMethodEmail.CreateAndSendCustomEmail == nil {
-			panic("Please pass a function (ContactMethodEmail.CreateAndSendCustomEmail) to send emails.")
-		}
 		typeNormalisedInput.ContactMethodEmail.Enabled = true
-		if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
-			typeNormalisedInput.ContactMethodEmail.CreateAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
-		}
 		if config.ContactMethodEmail.ValidateEmailAddress != nil {
 			typeNormalisedInput.ContactMethodEmail.ValidateEmailAddress = config.ContactMethodEmail.ValidateEmailAddress
 		}
@@ -82,13 +76,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage == nil {
 			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage) to send text messages.")
 		}
-		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail == nil {
-			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomEmail) to send emails.")
-		}
 		typeNormalisedInput.ContactMethodEmailOrPhone.Enabled = true
-		if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
-			typeNormalisedInput.ContactMethodEmailOrPhone.CreateAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
-		}
 		if config.ContactMethodEmailOrPhone.ValidateEmailAddress != nil {
 			typeNormalisedInput.ContactMethodEmailOrPhone.ValidateEmailAddress = config.ContactMethodEmailOrPhone.ValidateEmailAddress
 		}
@@ -112,10 +100,12 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
 		if config.ContactMethodEmail.Enabled {
 			if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
+				supertokens.LogWarningMessage("ContactMethodEmail.CreateAndSendCustomEmail is deprecated. Please use EmailDelivery instead.")
 				createAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
 			}
 		} else if config.ContactMethodEmailOrPhone.Enabled {
 			if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
+				supertokens.LogWarningMessage("ContactMethodEmailOrPhone.CreateAndSendCustomEmail is deprecated. Please use EmailDelivery instead.")
 				createAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
 			}
 		}
