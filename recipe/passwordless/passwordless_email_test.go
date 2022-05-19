@@ -167,11 +167,9 @@ func TestBackwardCompatibilityServiceWithOverrideForContactEmailMethod(t *testin
 	}
 
 	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "someEmail",
-			},
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "someEmail",
+			PreAuthSessionId: "someSession",
 		},
 	}, nil)
 
@@ -226,11 +224,9 @@ func TestBackwardCompatibilityServiceWithOverrideForContactEmailOrPhoneMethod(t 
 	}
 
 	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "someEmail",
-			},
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "someEmail",
+			PreAuthSessionId: "someSession",
 		},
 	}, nil)
 
@@ -301,11 +297,9 @@ func TestSMTPServiceOverrideForContactEmailMethod(t *testing.T) {
 	}
 
 	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "",
-			},
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "someEmail",
+			PreAuthSessionId: "someSession",
 		},
 	}, nil)
 
@@ -380,11 +374,9 @@ func TestSMTPServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 	}
 
 	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "",
-			},
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "someEmail",
+			PreAuthSessionId: "someSession",
 		},
 	}, nil)
 
