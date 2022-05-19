@@ -16,6 +16,7 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -70,7 +71,15 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		passwordResetLink = passwordResetLink + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
-		options.Config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail(*user, passwordResetLink, userContext)
+		(*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+			PasswordReset: &emaildelivery.PasswordResetType{
+				User: emaildelivery.User{
+					ID:    user.ID,
+					Email: user.Email,
+				},
+				PasswordResetLink: passwordResetLink,
+			},
+		}, userContext)
 
 		return epmodels.GeneratePasswordResetTokenPOSTResponse{
 			OK: &struct{}{},

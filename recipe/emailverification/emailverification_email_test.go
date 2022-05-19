@@ -240,7 +240,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 // 	secure := true
 // 	port := 465
 
-// 	smtpService := emailDeliverySmtp.MakeSmtpService(emaildelivery.SMTPTypeInput{
+// 	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
 // 		SMTPSettings: emaildelivery.SMTPServiceConfig{
 // 			Host: host,
 // 			From: emaildelivery.SMTPServiceFromConfig{
