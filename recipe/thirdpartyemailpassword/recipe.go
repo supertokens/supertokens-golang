@@ -19,6 +19,7 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -40,11 +41,12 @@ type Recipe struct {
 	thirdPartyRecipe        *thirdparty.Recipe
 	RecipeImpl              tpepmodels.RecipeInterface
 	APIImpl                 tpepmodels.APIInterface
+	EmailDelivery           emaildelivery.Ingredient
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpepmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpepmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, emailPasswordInstance *emailpassword.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
 
@@ -67,9 +69,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
+	if emailDeliveryIngredient != nil {
+		r.EmailDelivery = *emailDeliveryIngredient
+	} else {
+		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.thirdPartyRecipe.RecipeImpl, r.emailPasswordRecipe.RecipeImpl))
+	}
+
 	if emailVerificationInstance == nil {
-		// TODO: do not pass nil to emaildelivery ingredient
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, nil, onGeneralError)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -94,8 +101,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				EmailVerificationFeature: nil,
 			},
 		}
-		// TODO: Email ingredient should not be passed nil
-		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe, nil, onGeneralError)
+		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe, &r.EmailDelivery, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -120,8 +126,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 					EmailVerificationFeature: nil,
 				},
 			}
-			// TODO: Do not pass nil for emaildelivery
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, nil, onGeneralError)
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, &r.EmailDelivery, onGeneralError)
 			if err != nil {
 				return Recipe{}, err
 			}
@@ -137,7 +142,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 func recipeInit(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, nil, onGeneralError)
 			if err != nil {
 				return nil, err
 			}

@@ -48,7 +48,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
-		sendPasswordResetEmail := defaultCreateAndSendCustomPasswordResetEmail(appInfo)
+		sendPasswordResetEmail := DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
 		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
 			supertokens.LogWarningMessage("CreateAndSendCustomEmail is deprecated. Use EmailDelivery instead.")
 			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
