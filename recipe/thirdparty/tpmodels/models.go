@@ -16,6 +16,7 @@
 package tpmodels
 
 import (
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -81,12 +82,14 @@ type TypeInput struct {
 	SignInAndUpFeature       TypeInputSignInAndUp
 	EmailVerificationFeature *TypeInputEmailVerificationFeature
 	Override                 *OverrideStruct
+	EmailDelivery            *emaildelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
 	SignInAndUpFeature       TypeNormalisedInputSignInAndUp
 	EmailVerificationFeature evmodels.TypeInput
 	Override                 OverrideStruct
+	GetEmailDeliveryConfig   func(recipeImpl RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {

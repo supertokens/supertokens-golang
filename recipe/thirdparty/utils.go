@@ -19,7 +19,10 @@ import (
 	"encoding/json"
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -34,6 +37,26 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	typeNormalisedInput.SignInAndUpFeature = signInAndUpFeature
 
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
+
+	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tpmodels.RecipeInterface) emaildelivery.TypeInputWithService {
+		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
+		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
+		}
+
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendEmailVerificationEmail)
+		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
+			emailService = *config.EmailDelivery.Service
+		}
+		result := emaildelivery.TypeInputWithService{
+			Service: emailService,
+		}
+		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+
+		return result
+	}
 
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
