@@ -7,7 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeServiceImplementation(config emaildelivery.SMTPServiceConfig) emaildelivery.SMTPServiceInterface {
+func MakeServiceImplementation(config emaildelivery.SMTPServiceConfig) emaildelivery.SMTPServiceInterface {
 	sendRawEmail := func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
 		return emaildelivery.SendSMTPEmail(config, input)
 	}

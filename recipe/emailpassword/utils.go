@@ -21,7 +21,10 @@ import (
 	"reflect"
 	"regexp"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -43,6 +46,31 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	}
 
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
+
+	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
+		sendPasswordResetEmail := defaultCreateAndSendCustomPasswordResetEmail(appInfo)
+		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
+			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
+		}
+
+		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
+		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
+		}
+
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendPasswordResetEmail, sendEmailVerificationEmail)
+		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
+			emailService = *config.EmailDelivery.Service
+		}
+		result := emaildelivery.TypeInputWithService{
+			Service: emailService,
+		}
+		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+
+		return result
+	}
 
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
@@ -125,7 +153,6 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 		FormFieldsForGenerateTokenForm: nil,
 		FormFieldsForPasswordResetForm: nil,
 		GetResetPasswordURL:            defaultGetResetPasswordURL(appInfo),
-		CreateAndSendCustomEmail:       DefaultCreateAndSendCustomPasswordResetEmail(appInfo),
 	}
 
 	if len(signUpConfig.FormFields) > 0 {
@@ -147,9 +174,6 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 
 	if config != nil && config.GetResetPasswordURL != nil {
 		normalisedInputResetPasswordUsingTokenFeature.GetResetPasswordURL = config.GetResetPasswordURL
-	}
-	if config != nil && config.CreateAndSendCustomEmail != nil {
-		normalisedInputResetPasswordUsingTokenFeature.CreateAndSendCustomEmail = config.CreateAndSendCustomEmail
 	}
 
 	return normalisedInputResetPasswordUsingTokenFeature
