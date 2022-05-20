@@ -67,7 +67,7 @@ type TypeNormalisedInputSignIn struct {
 
 type TypeInputResetPasswordUsingTokenFeature struct {
 	GetResetPasswordURL      func(user User, userContext supertokens.UserContext) (string, error)
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext)
+	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {

@@ -100,12 +100,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
 		if config.ContactMethodEmail.Enabled {
 			if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
-				supertokens.LogWarningMessage("ContactMethodEmail.CreateAndSendCustomEmail is deprecated. Please use EmailDelivery instead.")
 				createAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
 			}
 		} else if config.ContactMethodEmailOrPhone.Enabled {
 			if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
-				supertokens.LogWarningMessage("ContactMethodEmailOrPhone.CreateAndSendCustomEmail is deprecated. Please use EmailDelivery instead.")
 				createAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
 			}
 		}
