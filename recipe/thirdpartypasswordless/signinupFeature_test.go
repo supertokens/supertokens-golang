@@ -1005,7 +1005,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	gock.New(testServer.URL).EnableNetworking().Persist()
 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-	userBegoreSignup, err := GetUserByThirdPartyInfo("custom", "user", tpmodels.EmailStruct{})
+	userBegoreSignup, err := GetUserByThirdPartyInfo("custom", "user")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1033,7 +1033,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 
 	user := result["user"].(map[string]interface{})
-	userInfoAfterSignup, err := GetUserByThirdPartyInfo("custom", "user", tpmodels.EmailStruct{})
+	userInfoAfterSignup, err := GetUserByThirdPartyInfo("custom", "user")
 	if err != nil {
 		t.Error(err.Error())
 	}
