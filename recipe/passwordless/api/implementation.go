@@ -16,6 +16,7 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -114,7 +115,18 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			}
 		} else {
 			if options.Config.ContactMethodEmail.Enabled {
-				err := options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+					emaildelivery.EmailType{
+						PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+							Email:            *email,
+							UserInputCode:    userInputCode,
+							UrlWithLinkCode:  magicLink,
+							CodeLifetime:     response.OK.CodeLifetime,
+							PreAuthSessionId: response.OK.PreAuthSessionID,
+						},
+					},
+					userContext,
+				)
 				if err != nil {
 					return plessmodels.CreateCodePOSTResponse{
 						GeneralError: &struct{ Message string }{
@@ -123,7 +135,18 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					}, nil
 				}
 			} else {
-				err := options.Config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+					emaildelivery.EmailType{
+						PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+							Email:            *email,
+							UserInputCode:    userInputCode,
+							UrlWithLinkCode:  magicLink,
+							CodeLifetime:     response.OK.CodeLifetime,
+							PreAuthSessionId: response.OK.PreAuthSessionID,
+						},
+					},
+					userContext,
+				)
 				if err != nil {
 					return plessmodels.CreateCodePOSTResponse{
 						GeneralError: &struct{ Message string }{
@@ -254,7 +277,18 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 				}
 			} else {
 				if options.Config.ContactMethodEmail.Enabled {
-					err := options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+					err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+						emaildelivery.EmailType{
+							PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+								Email:            *deviceInfo.Email,
+								UserInputCode:    userInputCode,
+								UrlWithLinkCode:  magicLink,
+								CodeLifetime:     response.OK.CodeLifetime,
+								PreAuthSessionId: response.OK.PreAuthSessionID,
+							},
+						},
+						userContext,
+					)
 					if err != nil {
 						return plessmodels.ResendCodePOSTResponse{
 							GeneralError: &struct{ Message string }{
@@ -263,7 +297,18 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						}, nil
 					}
 				} else {
-					err := options.Config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+					err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+						emaildelivery.EmailType{
+							PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+								Email:            *deviceInfo.Email,
+								UserInputCode:    userInputCode,
+								UrlWithLinkCode:  magicLink,
+								CodeLifetime:     response.OK.CodeLifetime,
+								PreAuthSessionId: response.OK.PreAuthSessionID,
+							},
+						},
+						userContext,
+					)
 					if err != nil {
 						return plessmodels.ResendCodePOSTResponse{
 							GeneralError: &struct{ Message string }{
