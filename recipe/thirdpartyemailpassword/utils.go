@@ -49,7 +49,6 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	typeNormalisedInput.GetEmailDeliveryConfig = func(tpRecipeImpl tpmodels.RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordResetEmail := emailpassword.DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
 		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
-			supertokens.LogWarningMessage("CreateAndSendCustomEmail is deprecated. Use EmailDelivery instead.")
 			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
 		}
 
@@ -116,19 +115,6 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 			emailverificationTypeInput.Override = config.Override.EmailVerificationFeature
 		}
 		if config.EmailVerificationFeature != nil {
-			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string, userContext supertokens.UserContext) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
-					if err != nil {
-						return
-					}
-					if userInfo == nil {
-						return
-					}
-					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link, userContext)
-				}
-			}
-
 			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
 				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
 					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)

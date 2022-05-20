@@ -69,12 +69,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
-	if emailDeliveryIngredient != nil {
-		r.EmailDelivery = *emailDeliveryIngredient
-	} else {
-		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.thirdPartyRecipe.RecipeImpl, r.emailPasswordRecipe.RecipeImpl))
-	}
-
 	if emailVerificationInstance == nil {
 		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onGeneralError)
 		if err != nil {
@@ -134,6 +128,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		} else {
 			r.thirdPartyRecipe = thirdPartyInstance
 		}
+	}
+
+	if emailDeliveryIngredient != nil {
+		r.EmailDelivery = *emailDeliveryIngredient
+	} else {
+		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.thirdPartyRecipe.RecipeImpl, r.emailPasswordRecipe.RecipeImpl))
 	}
 
 	return *r, nil
