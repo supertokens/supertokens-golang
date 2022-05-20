@@ -154,13 +154,6 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						},
 					}, nil
 				}
-				if err != nil {
-					return plessmodels.CreateCodePOSTResponse{
-						GeneralError: &struct{ Message string }{
-							Message: err.Error(),
-						},
-					}, nil
-				}
 			}
 		}
 
