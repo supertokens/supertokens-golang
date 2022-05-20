@@ -69,6 +69,15 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
+	var emailPasswordRecipe emailpassword.Recipe
+	emailPasswordRecipeImpl := recipeimplementation.MakeEmailPasswordRecipeImplementation(r.RecipeImpl)
+
+	if emailDeliveryIngredient != nil {
+		r.EmailDelivery = *emailDeliveryIngredient
+	} else {
+		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl, emailPasswordRecipeImpl))
+	}
+
 	if emailVerificationInstance == nil {
 		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onGeneralError)
 		if err != nil {
@@ -80,14 +89,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.EmailVerificationRecipe = *emailVerificationInstance
 	}
 
-	var emailPasswordRecipe emailpassword.Recipe
 	if emailPasswordInstance == nil {
 		emailPasswordConfig := &epmodels.TypeInput{
 			SignUpFeature:                  verifiedConfig.SignUpFeature,
 			ResetPasswordUsingTokenFeature: verifiedConfig.ResetPasswordUsingTokenFeature,
 			Override: &epmodels.OverrideStruct{
 				Functions: func(_ epmodels.RecipeInterface) epmodels.RecipeInterface {
-					return recipeimplementation.MakeEmailPasswordRecipeImplementation(r.RecipeImpl)
+					return emailPasswordRecipeImpl
 				},
 				APIs: func(_ epmodels.APIInterface) epmodels.APIInterface {
 					return api.GetEmailPasswordIterfaceImpl(r.APIImpl)
@@ -128,12 +136,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		} else {
 			r.thirdPartyRecipe = thirdPartyInstance
 		}
-	}
-
-	if emailDeliveryIngredient != nil {
-		r.EmailDelivery = *emailDeliveryIngredient
-	} else {
-		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl, r.emailPasswordRecipe.RecipeImpl))
 	}
 
 	return *r, nil
