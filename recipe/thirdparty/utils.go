@@ -38,13 +38,13 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
 
-	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tpmodels.RecipeInterface) emaildelivery.TypeInputWithService {
+	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
 		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
 			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
 		}
 
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendEmailVerificationEmail)
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendEmailVerificationEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}

@@ -61,7 +61,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if emailDeliveryIngredient != nil {
 		r.EmailDelivery = *emailDeliveryIngredient
 	} else {
-		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl))
+		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
 	}
 
 	if emailVerificationInstance == nil {

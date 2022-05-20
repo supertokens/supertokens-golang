@@ -58,7 +58,7 @@ type TypeNormalisedInput struct {
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
-	GetEmailDeliveryConfig         func(tpRecipeImpl tpmodels.RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService
+	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
