@@ -32,7 +32,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
 
-	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
+	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tplmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordlessLoginEmail := passwordless.DefaultCreateAndSendCustomEmail(appInfo)
 		if config.ContactMethodEmail.Enabled && config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
 			sendPasswordlessLoginEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
@@ -45,7 +45,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
 		}
 
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendEmailVerificationEmail, sendPasswordlessLoginEmail)
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendEmailVerificationEmail, sendPasswordlessLoginEmail)
 		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}
