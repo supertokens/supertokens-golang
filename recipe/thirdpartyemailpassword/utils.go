@@ -23,7 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -46,7 +45,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 		typeNormalisedInput.ResetPasswordUsingTokenFeature = config.ResetPasswordUsingTokenFeature
 	}
 
-	typeNormalisedInput.GetEmailDeliveryConfig = func(tpRecipeImpl tpmodels.RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
+	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tpepmodels.RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordResetEmail := emailpassword.DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
 		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
 			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
@@ -57,7 +56,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
 		}
 
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(tpRecipeImpl, epRecipeImpl, appInfo, sendEmailVerificationEmail, sendPasswordResetEmail)
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, epRecipeImpl, appInfo, sendEmailVerificationEmail, sendPasswordResetEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}
