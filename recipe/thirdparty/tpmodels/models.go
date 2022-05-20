@@ -89,7 +89,7 @@ type TypeNormalisedInput struct {
 	SignInAndUpFeature       TypeNormalisedInputSignInAndUp
 	EmailVerificationFeature evmodels.TypeInput
 	Override                 OverrideStruct
-	GetEmailDeliveryConfig   func() emaildelivery.TypeInputWithService
+	GetEmailDeliveryConfig   func(recipeImpl RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
