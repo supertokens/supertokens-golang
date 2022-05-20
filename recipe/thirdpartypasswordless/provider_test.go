@@ -17,7 +17,6 @@
 package thirdpartypasswordless
 
 import (
-	"fmt"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -821,74 +820,6 @@ func TestWithThirdPartyProviderPasswordlessPassingScopesInConfigForThirdPartyPro
 	assert.Equal(t, "test-scope-1 test-scope-2", providerInfoGetResult.AuthorisationRedirect.Params["scope"])
 	assert.Equal(t, "form_post", providerInfoGetResult.AuthorisationRedirect.Params["response_mode"])
 	assert.Equal(t, "code", providerInfoGetResult.AuthorisationRedirect.Params["response_type"])
-}
-
-func TestWithThirdPartyPasswordlessPassingInvalidPrivateKeyForThirdPartyRecipeApple(t *testing.T) {
-	clientId := "test"
-	clientSecret := tpmodels.AppleClientSecret{
-		KeyId:      "test-key",
-		PrivateKey: "privateKey",
-		TeamId:     "test-team-id",
-	}
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
-			Init(tplmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-				},
-				Providers: []tpmodels.TypeProvider{
-					thirdparty.Apple(tpmodels.AppleConfig{
-						ClientID:     clientId,
-						ClientSecret: clientSecret,
-					}),
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		// fmt.Println(err)
-		fmt.Println(err)
-	}
-	// q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-	// apiV, err := q.GetQuerierAPIVersion()
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-
-	// if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-	// 	return
-	// }
-
-	// thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
-	// assert.NoError(t, err)
-
-	// providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
-	// assert.Equal(t, "apple", providerInfo.ID)
-
-	// providerInfoGetResult := providerInfo.Get(nil, nil, nil)
-
 }
 
 func TestWithThirdPartyPasswordlessDuplicateProviderWithoutAnyDefault(t *testing.T) {
