@@ -9,7 +9,7 @@ import (
 )
 
 func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeliveryInterface {
-	serviceImpl := makeServiceImplementation(config.SMTPSettings)
+	serviceImpl := MakeServiceImplementation(config.SMTPSettings)
 
 	if config.Override != nil {
 		serviceImpl = config.Override(serviceImpl)

@@ -16,6 +16,7 @@
 package tpepmodels
 
 import (
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -39,7 +40,7 @@ type TypeContext struct {
 
 type TypeInputEmailVerificationFeature struct {
 	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext)
+	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
 }
 
 type TypeInput struct {
@@ -48,6 +49,7 @@ type TypeInput struct {
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       *TypeInputEmailVerificationFeature
 	Override                       *OverrideStruct
+	EmailDelivery                  *emaildelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
@@ -56,6 +58,7 @@ type TypeNormalisedInput struct {
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
+	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {

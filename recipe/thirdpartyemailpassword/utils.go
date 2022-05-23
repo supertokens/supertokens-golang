@@ -18,7 +18,12 @@ package thirdpartyemailpassword
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -38,6 +43,31 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
 		typeNormalisedInput.ResetPasswordUsingTokenFeature = config.ResetPasswordUsingTokenFeature
+	}
+
+	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tpepmodels.RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
+		sendPasswordResetEmail := emailpassword.DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
+		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
+			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
+		}
+
+		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
+		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
+		}
+
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, epRecipeImpl, appInfo, sendEmailVerificationEmail, sendPasswordResetEmail)
+		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
+			emailService = *config.EmailDelivery.Service
+		}
+		result := emaildelivery.TypeInputWithService{
+			Service: emailService,
+		}
+		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+
+		return result
 	}
 
 	if config != nil && config.Override != nil {
@@ -84,19 +114,6 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 			emailverificationTypeInput.Override = config.Override.EmailVerificationFeature
 		}
 		if config.EmailVerificationFeature != nil {
-			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string, userContext supertokens.UserContext) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
-					if err != nil {
-						return
-					}
-					if userInfo == nil {
-						return
-					}
-					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link, userContext)
-				}
-			}
-
 			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
 				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
 					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)

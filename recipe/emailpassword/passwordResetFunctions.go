@@ -33,7 +33,7 @@ func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ ep
 }
 
 // TODO: add test to see query
-func defaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
+func DefaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 	return func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
