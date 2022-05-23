@@ -9,16 +9,7 @@ import (
 )
 
 func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeliveryInterface {
-	serviceImpl := makeServiceImplementation(config.SMTPSettings)
-
-	if config.Override != nil {
-		serviceImpl = config.Override(serviceImpl)
-	}
-
-	emailVerificationServiceImpl := evsmtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: config.SMTPSettings,
-		Override:     makeEmailverificationServiceImplementation(serviceImpl),
-	})
+	emailVerificationServiceImpl := evsmtpService.MakeSmtpService(config)
 
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 		if input.EmailVerification != nil {

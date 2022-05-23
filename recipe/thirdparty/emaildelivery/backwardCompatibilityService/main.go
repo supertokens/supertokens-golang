@@ -11,17 +11,7 @@ import (
 )
 
 func MakeBackwardCompatibilityService(recipeInterfaceImpl tpmodels.RecipeInterface, appInfo supertokens.NormalisedAppinfo, sendEmailVerificationEmail func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext)) emaildelivery.EmailDeliveryInterface {
-	if sendEmailVerificationEmail != nil {
-		inputSendEmailVerificationEmail := sendEmailVerificationEmail
-		sendEmailVerificationEmail = func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-			userInfo, err := (*recipeInterfaceImpl.GetUserByID)(user.ID, userContext)
-			if err != nil {
-				return // FIXME: No error handling here
-			}
-			inputSendEmailVerificationEmail(evmodels.User{ID: userInfo.ID, Email: userInfo.Email}, emailVerificationURLWithToken, userContext)
-		}
-	}
-
+	// We are using evmodels.User as opposed to tpmodels.User because TypeInput of thirdparty accepts evmodels.TypeInput for EmailVerificationFeature
 	emailVerificationService := emailVerificationBackwardsCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendEmailVerificationEmail)
 
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
