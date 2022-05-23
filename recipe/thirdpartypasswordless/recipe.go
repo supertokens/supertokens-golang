@@ -175,7 +175,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 					EmailVerificationFeature: nil,
 				},
 			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, onGeneralError)
+			// TODO: Do not pass nil for emaildelivery
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, nil, onGeneralError)
 			if err != nil {
 				return Recipe{}, err
 			}
