@@ -18,7 +18,11 @@ package thirdpartypasswordless
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -27,6 +31,33 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance, config)
 
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
+
+	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
+		sendPasswordlessLoginEmail := passwordless.DefaultCreateAndSendCustomEmail(appInfo)
+		if config.ContactMethodEmail.Enabled && config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
+			sendPasswordlessLoginEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
+		} else if config.ContactMethodEmailOrPhone.Enabled && config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
+			sendPasswordlessLoginEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
+		}
+
+		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
+		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
+		}
+
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendEmailVerificationEmail, sendPasswordlessLoginEmail)
+		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
+			emailService = *config.EmailDelivery.Service
+		}
+		result := emaildelivery.TypeInputWithService{
+			Service: emailService,
+		}
+		if config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+
+		return result
+	}
 
 	if config.Override != nil {
 		if config.Override.Functions != nil {
