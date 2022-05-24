@@ -62,7 +62,7 @@ type TypeNormalisedInput struct {
 	Providers                 []tpmodels.TypeProvider
 	EmailVerificationFeature  evmodels.TypeInput
 	Override                  OverrideStruct
-	GetEmailDeliveryConfig    func(recipeImpl RecipeInterface) emaildelivery.TypeInputWithService
+	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
