@@ -55,9 +55,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo, config)
 
 	if config.ContactMethodPhone.Enabled {
-		if config.ContactMethodPhone.CreateAndSendCustomTextMessage == nil {
-			panic("Please pass a function (ContactMethodPhone.CreateAndSendCustomTextMessage) to send text messages.")
-		}
 		typeNormalisedInput.ContactMethodPhone.Enabled = true
 		if config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
 			typeNormalisedInput.ContactMethodPhone.CreateAndSendCustomTextMessage = config.ContactMethodPhone.CreateAndSendCustomTextMessage
@@ -75,9 +72,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.ContactMethodEmailOrPhone.Enabled {
-		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage == nil {
-			panic("Please pass a function (ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage) to send text messages.")
-		}
 		typeNormalisedInput.ContactMethodEmailOrPhone.Enabled = true
 		if config.ContactMethodEmailOrPhone.ValidateEmailAddress != nil {
 			typeNormalisedInput.ContactMethodEmailOrPhone.ValidateEmailAddress = config.ContactMethodEmailOrPhone.ValidateEmailAddress

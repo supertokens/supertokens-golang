@@ -153,6 +153,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Res:                  res,
 		OtherHandler:         theirHandler,
 		EmailDelivery:        r.EmailDelivery,
+		SmsDelivery:          r.SmsDelivery,
 	}
 	if id == consumeCodeAPI {
 		return api.ConsumeCode(r.APIImpl, options)
