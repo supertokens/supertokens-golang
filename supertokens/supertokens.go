@@ -107,6 +107,10 @@ func supertokensInit(config TypeInput) error {
 }
 
 func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
+	w := MakeDoneWriter(res)
+	if w.IsDone() {
+		return
+	}
 	http.Error(res, err.Error(), 500)
 }
 
