@@ -1,0 +1,13 @@
+✔ First set everything up @done (5/25/2022, 1:00:05 PM)
+  ✔ Make sure all the dependencies related to grpc and protocol buffers is ready @done (5/25/2022, 12:42:07 PM)
+  ✔ Make sure prtoc actually compiles the binary and generates valid golang code in the right place @done (5/25/2022, 12:56:23 PM)
+✔ Build a basic server client setup that enables you to make a hat @done (5/25/2022, 1:25:55 PM)
+  ✔ Build server from ground up @done (5/25/2022, 1:25:47 PM)
+  ✔ Build client from ground up @done (5/25/2022, 1:25:52 PM)
+☐ Hook up supertokens to the game
+  ☐ Figure out the init setup
+    ✔ Call SuperTokens init and check error @done (5/25/2022, 3:55:52 PM)
+    ✔ Hook up the cors setup <BUG> @done (5/25/2022, 4:06:58 PM)
+    ☐ Hook up the middleware to the listener <BUG>
+  ✔ Then figure out a way to use the session functions inside the server functions @done (5/25/2022, 4:01:47 PM)
+  ✔ Then make a initial check for auth user and only allow auth users to make a hat @done (5/25/2022, 4:01:48 PM)
