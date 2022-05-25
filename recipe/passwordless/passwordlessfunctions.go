@@ -18,8 +18,10 @@ package passwordless
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/supertokensService"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -55,6 +57,46 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		_, err = client.Do(req)
 		if err != nil {
 			return err
+		}
+		return nil
+	}
+}
+
+func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo) func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	return func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+		data := map[string]map[string]interface{}{
+			"smsInput": {
+				"type":         "PASSWORDLESS_LOGIN",
+				"phoneNumber":  phoneNumber,
+				"codeLifetime": codeLifetime,
+				"appName":      appInfo.AppName,
+			},
+		}
+		if urlWithLinkCode != nil {
+			data["smsInput"]["urlWithLinkCode"] = *urlWithLinkCode
+		}
+		if userInputCode != nil {
+			data["smsInput"]["userInputCode"] = *userInputCode
+		}
+
+		jsonData, err := json.Marshal(data)
+		if err != nil {
+			return err
+		}
+		req, err := http.NewRequest("POST", supertokensService.SUPERTOKENS_SMS_SERVICE_URL, bytes.NewBuffer(jsonData))
+		if err != nil {
+			return err
+		}
+
+		req.Header.Set("content-type", "application/json")
+		req.Header.Set("api-version", "0")
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode == 429 {
+			return errors.New("Free daily SMS quota reached. If using our managed service, please create a production environment to get dedicated API keys for SMS sending, or define your own method for sending SMS.")
 		}
 		return nil
 	}

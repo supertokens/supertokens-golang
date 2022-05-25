@@ -156,7 +156,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 				},
 			},
 		}
-		passwordlessRecipe, err = passwordless.MakeRecipe(recipeId, appInfo, passwordlessConfig, &r.EmailDelivery, onGeneralError)
+		// TODO: nil should not be passed to smsdelivery
+		passwordlessRecipe, err = passwordless.MakeRecipe(recipeId, appInfo, passwordlessConfig, &r.EmailDelivery, nil, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}

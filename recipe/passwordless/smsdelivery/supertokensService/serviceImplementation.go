@@ -18,17 +18,19 @@ func MakeServiceImplementation(config smsdelivery.SupertokensServiceConfig) smsd
 			return err
 		}
 
-		data := map[string]interface{}{
-			"type":         "PASSWORDLESS_LOGIN",
-			"phoneNumber":  input.PhoneNumber,
-			"codeLifetime": input.CodeLifetime,
-			"appName":      instance.AppInfo.AppName,
+		data := map[string]map[string]interface{}{
+			"smsInput": {
+				"type":         "PASSWORDLESS_LOGIN",
+				"phoneNumber":  input.PhoneNumber,
+				"codeLifetime": input.CodeLifetime,
+				"appName":      instance.AppInfo.AppName,
+			},
 		}
 		if input.UrlWithLinkCode != nil {
-			data["urlWithLinkCode"] = *input.UrlWithLinkCode
+			data["smsInput"]["urlWithLinkCode"] = *input.UrlWithLinkCode
 		}
 		if input.UserInputCode != nil {
-			data["userInputCode"] = *input.UserInputCode
+			data["smsInput"]["userInputCode"] = *input.UserInputCode
 		}
 
 		jsonData, err := json.Marshal(data)

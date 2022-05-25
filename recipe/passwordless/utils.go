@@ -21,8 +21,10 @@ import (
 
 	"github.com/nyaruka/phonenumbers"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	smsBackwardCompatibilityService "github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -116,6 +118,31 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 		if config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
 			result.Override = config.EmailDelivery.Override
+		}
+		return result
+	}
+
+	typeNormalisedInput.GetSmsDeliveryConfig = func() smsdelivery.TypeInputWithService {
+		createAndSendCustomSms := DefaultCreateAndSendCustomTextMessage(appInfo)
+		if config.ContactMethodPhone.Enabled {
+			if config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
+				createAndSendCustomSms = config.ContactMethodPhone.CreateAndSendCustomTextMessage
+			}
+		} else if config.ContactMethodEmailOrPhone.Enabled {
+			if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
+				createAndSendCustomSms = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
+			}
+		}
+
+		smsService := smsBackwardCompatibilityService.MakeBackwardCompatibilityService(createAndSendCustomSms)
+		if config.SmsDelivery != nil && config.SmsDelivery.Service != nil {
+			smsService = *config.SmsDelivery.Service
+		}
+		result := smsdelivery.TypeInputWithService{
+			Service: smsService,
+		}
+		if config.SmsDelivery != nil && config.SmsDelivery.Override != nil {
+			result.Override = config.SmsDelivery.Override
 		}
 		return result
 	}

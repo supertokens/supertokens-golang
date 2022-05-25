@@ -17,6 +17,7 @@ package plessmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -36,6 +37,7 @@ type TypeInput struct {
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Override                  *OverrideStruct
 	EmailDelivery             *emaildelivery.TypeInput
+	SmsDelivery               *smsdelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
@@ -47,6 +49,7 @@ type TypeNormalisedInput struct {
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Override                  OverrideStruct
 	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
+	GetSmsDeliveryConfig      func() smsdelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
