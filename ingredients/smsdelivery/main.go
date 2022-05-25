@@ -23,7 +23,7 @@ func MakeIngredient(config TypeInputWithService) Ingredient {
 	return result
 }
 
-func SendTwilioSms(config TwilioServiceConfig, content GetContentResult) error {
+func SendTwilioSms(config TwilioServiceConfig, content TwilioGetContentResult) error {
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: config.AccountSid,
 		Password: config.AuthToken,

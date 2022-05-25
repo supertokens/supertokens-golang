@@ -6,8 +6,8 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 )
 
-func getPasswordlessLoginSmsContent(input smsdelivery.PasswordlessLoginType) smsdelivery.GetContentResult {
-	return smsdelivery.GetContentResult{
+func getPasswordlessLoginSmsContent(input smsdelivery.PasswordlessLoginType) smsdelivery.TwilioGetContentResult {
+	return smsdelivery.TwilioGetContentResult{
 		Body:          getPasswordlessLoginSmsBody(input.CodeLifetime, input.UrlWithLinkCode, input.UserInputCode),
 		ToPhoneNumber: input.PhoneNumber,
 	}

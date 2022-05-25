@@ -6,11 +6,11 @@ import (
 )
 
 func MakeServiceImplementation(config smsdelivery.TwilioServiceConfig) smsdelivery.TwilioServiceInterface {
-	sendRawSms := func(input smsdelivery.GetContentResult, userContext supertokens.UserContext) error {
+	sendRawSms := func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
 		return smsdelivery.SendTwilioSms(config, input)
 	}
 
-	getContent := func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.GetContentResult, error) {
+	getContent := func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
 		result := getPasswordlessLoginSmsContent(*input.PasswordlessLogin)
 		return result, nil
 	}

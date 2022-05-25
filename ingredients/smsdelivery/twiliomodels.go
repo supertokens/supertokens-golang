@@ -9,14 +9,14 @@ type TwilioServiceConfig struct {
 	MessagingServiceSid *string
 }
 
-type GetContentResult struct {
+type TwilioGetContentResult struct {
 	Body          string
 	ToPhoneNumber string
 }
 
 type TwilioServiceInterface struct {
-	SendRawSms *func(input GetContentResult, userContext supertokens.UserContext) error
-	GetContent *func(input SmsType, userContext supertokens.UserContext) (GetContentResult, error)
+	SendRawSms *func(input TwilioGetContentResult, userContext supertokens.UserContext) error
+	GetContent *func(input SmsType, userContext supertokens.UserContext) (TwilioGetContentResult, error)
 }
 
 type TwilioTypeInput struct {

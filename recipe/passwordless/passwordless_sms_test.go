@@ -352,12 +352,12 @@ func TestTwilioServiceOverrideForContactPhoneMethod(t *testing.T) {
 				MessagingServiceSid: nil,
 			},
 			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.GetContentResult, error) {
+				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
 					getContentCalled = true
-					return smsdelivery.GetContentResult{}, nil
+					return smsdelivery.TwilioGetContentResult{}, nil
 				}
 
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.GetContentResult, userContext supertokens.UserContext) error {
+				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
 					sendRawSmsCalled = true
 					return nil
 				}
@@ -432,12 +432,12 @@ func TestTwilioServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 				MessagingServiceSid: nil,
 			},
 			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.GetContentResult, error) {
+				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
 					getContentCalled = true
-					return smsdelivery.GetContentResult{}, nil
+					return smsdelivery.TwilioGetContentResult{}, nil
 				}
 
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.GetContentResult, userContext supertokens.UserContext) error {
+				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
 					sendRawSmsCalled = true
 					return nil
 				}
@@ -512,12 +512,12 @@ func TestTwilioServiceOverrideForContactPhoneMethodThroughAPI(t *testing.T) {
 				MessagingServiceSid: nil,
 			},
 			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.GetContentResult, error) {
+				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
 					getContentCalled = true
-					return smsdelivery.GetContentResult{}, nil
+					return smsdelivery.TwilioGetContentResult{}, nil
 				}
 
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.GetContentResult, userContext supertokens.UserContext) error {
+				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
 					sendRawSmsCalled = true
 					return nil
 				}
