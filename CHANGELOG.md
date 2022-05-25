@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixes issue in writing custom response in API override with general error
 ### Added
 - Adds unit tests to thirdpartypasswordless recipe
-  
+
 ## [0.6.3] - 2022-05-19
 ### Fixes
 - Fixes the function signature of the `GetUserByThirdPartyInfo` function in the `thirdpartypasswordless` recipe.
