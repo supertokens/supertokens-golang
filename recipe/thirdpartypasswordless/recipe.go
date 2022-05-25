@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
@@ -43,11 +44,12 @@ type Recipe struct {
 	RecipeImpl              tplmodels.RecipeInterface
 	APIImpl                 tplmodels.APIInterface
 	EmailDelivery           emaildelivery.Ingredient
+	SmsDelivery             smsdelivery.Ingredient
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config tplmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, passwordlessInstance *passwordless.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config tplmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, passwordlessInstance *passwordless.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, smsDeliveryIngredient *smsdelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
 
@@ -74,6 +76,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 		r.EmailDelivery = *emailDeliveryIngredient
 	} else {
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
+	}
+
+	if smsDeliveryIngredient != nil {
+		r.SmsDelivery = *smsDeliveryIngredient
+	} else {
+		r.SmsDelivery = smsdelivery.MakeIngredient(verifiedConfig.GetSmsDeliveryConfig())
 	}
 
 	if emailVerificationInstance == nil {
@@ -156,8 +164,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 				},
 			},
 		}
-		// TODO: nil should not be passed to smsdelivery
-		passwordlessRecipe, err = passwordless.MakeRecipe(recipeId, appInfo, passwordlessConfig, &r.EmailDelivery, nil, onGeneralError)
+		passwordlessRecipe, err = passwordless.MakeRecipe(recipeId, appInfo, passwordlessConfig, &r.EmailDelivery, &r.SmsDelivery, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -182,8 +189,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 					EmailVerificationFeature: nil,
 				},
 			}
-			// TODO: Do not pass nil for emaildelivery
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, nil, onGeneralError)
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, &r.EmailDelivery, onGeneralError)
 			if err != nil {
 				return Recipe{}, err
 			}
@@ -199,7 +205,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 func recipeInit(config tplmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, nil, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, nil, nil, onGeneralError)
 			if err != nil {
 				return nil, err
 			}

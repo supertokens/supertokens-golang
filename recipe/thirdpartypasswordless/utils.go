@@ -19,10 +19,12 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/backwardCompatibilityService"
+	smsBackwardCompatibilityService "github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -56,6 +58,28 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 			result.Override = config.EmailDelivery.Override
 		}
 
+		return result
+	}
+
+	typeNormalisedInput.GetSmsDeliveryConfig = func() smsdelivery.TypeInputWithService {
+		sendPasswordlessLoginSms := passwordless.DefaultCreateAndSendCustomTextMessage(appInfo)
+
+		if config.ContactMethodPhone.Enabled && config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
+			sendPasswordlessLoginSms = config.ContactMethodPhone.CreateAndSendCustomTextMessage
+		} else if config.ContactMethodEmailOrPhone.Enabled && config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
+			sendPasswordlessLoginSms = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
+		}
+
+		smsService := smsBackwardCompatibilityService.MakeBackwardCompatibilityService(sendPasswordlessLoginSms)
+		if config.SmsDelivery != nil && config.SmsDelivery.Service != nil {
+			smsService = *config.SmsDelivery.Service
+		}
+		result := smsdelivery.TypeInputWithService{
+			Service: smsService,
+		}
+		if config.SmsDelivery != nil && config.SmsDelivery.Override != nil {
+			result.Override = config.SmsDelivery.Override
+		}
 		return result
 	}
 

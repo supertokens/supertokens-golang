@@ -17,6 +17,7 @@ package tplmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -50,6 +51,7 @@ type TypeInput struct {
 	EmailVerificationFeature  *TypeInputEmailVerificationFeature
 	Override                  *OverrideStruct
 	EmailDelivery             *emaildelivery.TypeInput
+	SmsDelivery               *smsdelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
@@ -63,6 +65,7 @@ type TypeNormalisedInput struct {
 	EmailVerificationFeature  evmodels.TypeInput
 	Override                  OverrideStruct
 	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
+	GetSmsDeliveryConfig      func() smsdelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {

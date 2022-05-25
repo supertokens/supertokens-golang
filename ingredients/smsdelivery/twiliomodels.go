@@ -1,6 +1,10 @@
 package smsdelivery
 
-import "github.com/supertokens/supertokens-golang/supertokens"
+import (
+	"errors"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type TwilioServiceConfig struct {
 	AccountSid          string
@@ -22,4 +26,14 @@ type TwilioServiceInterface struct {
 type TwilioTypeInput struct {
 	TwilioSettings TwilioServiceConfig
 	Override       func(originalImplementation TwilioServiceInterface) TwilioServiceInterface
+}
+
+func NormaliseTwilioTypeInput(input TwilioTypeInput) (TwilioTypeInput, error) {
+	if input.TwilioSettings.From == nil && input.TwilioSettings.MessagingServiceSid == nil {
+		return TwilioTypeInput{}, errors.New("either 'From' or 'MessagingServiceSid' must be set")
+	}
+	if input.TwilioSettings.From != nil && input.TwilioSettings.MessagingServiceSid != nil {
+		return TwilioTypeInput{}, errors.New("only one of 'From' or 'MessagingServiceSid' must be set")
+	}
+	return input, nil
 }

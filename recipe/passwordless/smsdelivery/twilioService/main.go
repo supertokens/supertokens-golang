@@ -8,6 +8,12 @@ import (
 )
 
 func MakeTwilioService(config smsdelivery.TwilioTypeInput) smsdelivery.SmsDeliveryInterface {
+	config, err := smsdelivery.NormaliseTwilioTypeInput(config)
+
+	if err != nil {
+		panic(err)
+	}
+
 	serviceImpl := MakeServiceImplementation(config.TwilioSettings)
 
 	if config.Override != nil {
