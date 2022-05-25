@@ -26,6 +26,7 @@ import (
 )
 
 var PasswordlessLoginEmailSentForTest bool = false
+var PasswordlessLoginSmsSentForTest bool = false
 
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 	return func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
@@ -64,6 +65,12 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 
 func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo) func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 	return func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+		if supertokens.IsRunningInTestMode() {
+			// if running in test mode, we do not want to send this.
+			PasswordlessLoginSmsSentForTest = true
+			return nil
+		}
+
 		data := map[string]map[string]interface{}{
 			"smsInput": {
 				"type":         "PASSWORDLESS_LOGIN",

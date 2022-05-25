@@ -7,8 +7,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeTwilioService(config smsdelivery.TwilioServiceConfig) smsdelivery.SmsDeliveryInterface {
-	serviceImpl := MakeServiceImplementation(config)
+func MakeTwilioService(config smsdelivery.TwilioTypeInput) smsdelivery.SmsDeliveryInterface {
+	serviceImpl := MakeServiceImplementation(config.TwilioSettings)
+
+	if config.Override != nil {
+		serviceImpl = config.Override(serviceImpl)
+	}
 
 	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
 		if input.PasswordlessLogin != nil {

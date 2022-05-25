@@ -251,4 +251,6 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 
 func ResetForTest() {
 	singletonInstance = nil
+	PasswordlessLoginEmailSentForTest = false
+	PasswordlessLoginSmsSentForTest = false
 }

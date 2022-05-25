@@ -12,7 +12,6 @@ type Ingredient struct {
 }
 
 func MakeIngredient(config TypeInputWithService) Ingredient {
-
 	result := Ingredient{
 		IngredientInterfaceImpl: config.Service,
 	}
