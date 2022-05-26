@@ -16,8 +16,6 @@
 package smtpService
 
 import (
-	"strconv"
-
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -27,7 +25,7 @@ func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType)
 	if err != nil {
 		panic("Please call supertokens.Init function before using the Middleware")
 	}
-	bodyHtml := getPasswordlessLoginEmailHTML(stInstance.AppInfo.AppName, int(input.CodeLifetime), input.UrlWithLinkCode, input.UserInputCode, input.Email)
+	bodyHtml := getPasswordlessLoginEmailHTML(stInstance.AppInfo.AppName, input.CodeLifetime, input.UrlWithLinkCode, input.UserInputCode, input.Email)
 	return emaildelivery.SMTPGetContentResult{
 		Body:    bodyHtml,
 		IsHtml:  true,
@@ -36,7 +34,7 @@ func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType)
 	}, nil
 }
 
-func getOTPBody(codeLifetime int, userInputCode string) string {
+func getOTPBody(codeLifetime uint64, userInputCode string) string {
 	return `
 	<table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnCodeBlock">
 		<tbody class="mcnTextBlockOuter">
@@ -47,7 +45,7 @@ func getOTPBody(codeLifetime int, userInputCode string) string {
 				<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
 				<div style="background-color:#fff; border: 1px solid #ddd; border-radius: 6px">
 						<div style="padding-left: 15%; padding-right: 15%;">
-						<p style="font-family: Rubik; font-size: 16px; line-height: 26px; font-weight:500; text-align: center; padding-top: 24px; padding-bottom: 8px; padding-left: 10%; padding-right: 10%; ">Enter the below OTP in your login screen. Note that the link expires in ` + strconv.Itoa(codeLifetime) + ` seconds</p>
+						<p style="font-family: Rubik; font-size: 16px; line-height: 26px; font-weight:500; text-align: center; padding-top: 24px; padding-bottom: 8px; padding-left: 10%; padding-right: 10%; ">Enter the below OTP in your login screen. Note that the link expires in ` + supertokens.HumaniseMilliseconds(codeLifetime) + `</p>
 						</div>
 						<div style="display: flex; flex-direction: row; justify-content: center; margin-bottom: 40px">
 						<div class="mcnTextContent" style="padding: 10px 20px; background-color: #fafafa; border: 1px solid #DDD; color: #222; font-family: Rubik; font-size: 32px; line-height: 40px; font-weight: 500; text-align: center; display: inline-block; border-radius: 6px; margin-top: 8px;">` + userInputCode + `</div>
@@ -60,7 +58,7 @@ func getOTPBody(codeLifetime int, userInputCode string) string {
 	`
 }
 
-func getURLLinkBody(appName string, codeLifetime int, urlWithLinkCode string) string {
+func getURLLinkBody(appName string, codeLifetime uint64, urlWithLinkCode string) string {
 	return `
 	<table border="0" cellpadding="0" cellspacing="0" width="100%" class="mcnCodeBlock">
 		<tbody class="mcnTextBlockOuter">
@@ -71,7 +69,7 @@ func getURLLinkBody(appName string, codeLifetime int, urlWithLinkCode string) st
 					<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
 					<div style="background-color:#fff; border: 1px solid #ddd; border-radius: 6px; ">
 							<div style="padding-left: 15%; padding-right: 15%;">
-							<p style="font-family: Rubik; font-size: 16px; line-height: 26px; font-weight:500; text-align: center; padding-top: 24px; padding-bottom: 24px; padding-left: 10%; padding-right: 10%; ">Please click the button below to sign-in/up to ` + appName + `. Note that the link expires in ` + strconv.Itoa(codeLifetime) + ` seconds</p>
+							<p style="font-family: Rubik; font-size: 16px; line-height: 26px; font-weight:500; text-align: center; padding-top: 24px; padding-bottom: 24px; padding-left: 10%; padding-right: 10%; ">Please click the button below to sign-in/up to ` + appName + `. Note that the link expires in ` + supertokens.HumaniseMilliseconds(codeLifetime) + `</p>
 							<div class="button-td button-td-primary" style="border-radius: 6px; margin-bottom: 40px; display: flex; flex-direction: row; justify-content: center;">
 									<a class="button-a button-a-primary" href="` + urlWithLinkCode + `" target="_blank" style="background: #52B56E;font-size: 17px;line-height: 24px;font-weight: 500;font-family: 'Rubik', sans-serif;text-decoration: none;padding: 9px 25px 9px 25px;color: #ffffff;display: block;border-radius: 6px;">Login</a>
 							</div>
@@ -88,7 +86,7 @@ func getURLLinkBody(appName string, codeLifetime int, urlWithLinkCode string) st
 	`
 }
 
-func getPasswordlessLoginEmailHTML(appName string, codeLifetime int, urlWithLinkCode *string, userInputCode *string, email string) string {
+func getPasswordlessLoginEmailHTML(appName string, codeLifetime uint64, urlWithLinkCode *string, userInputCode *string, email string) string {
 	mainBody := ``
 	if userInputCode != nil {
 		mainBody += getOTPBody(codeLifetime, *userInputCode)
