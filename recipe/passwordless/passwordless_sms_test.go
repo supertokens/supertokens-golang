@@ -343,7 +343,7 @@ func TestTwilioServiceOverrideForContactPhoneMethod(t *testing.T) {
 	customCalled := false
 
 	fromPhoneNumber := "someNumber"
-	twilioService := twilioService.MakeTwilioService(
+	twilioService, err := twilioService.MakeTwilioService(
 		smsdelivery.TwilioTypeInput{
 			TwilioSettings: smsdelivery.TwilioServiceConfig{
 				AccountSid:          "sid",
@@ -366,6 +366,7 @@ func TestTwilioServiceOverrideForContactPhoneMethod(t *testing.T) {
 			},
 		},
 	)
+	assert.Nil(t, err)
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -395,7 +396,7 @@ func TestTwilioServiceOverrideForContactPhoneMethod(t *testing.T) {
 
 	BeforeEach()
 	defer AfterEach()
-	err := supertokens.Init(configValue)
+	err = supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -423,7 +424,7 @@ func TestTwilioServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 	customCalled := false
 
 	fromPhoneNumber := "someNumber"
-	twilioService := twilioService.MakeTwilioService(
+	twilioService, err := twilioService.MakeTwilioService(
 		smsdelivery.TwilioTypeInput{
 			TwilioSettings: smsdelivery.TwilioServiceConfig{
 				AccountSid:          "sid",
@@ -446,6 +447,7 @@ func TestTwilioServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 			},
 		},
 	)
+	assert.Nil(t, err)
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -475,7 +477,7 @@ func TestTwilioServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 
 	BeforeEach()
 	defer AfterEach()
-	err := supertokens.Init(configValue)
+	err = supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -503,7 +505,7 @@ func TestTwilioServiceOverrideForContactPhoneMethodThroughAPI(t *testing.T) {
 	customCalled := false
 
 	fromPhoneNumber := "someNumber"
-	twilioService := twilioService.MakeTwilioService(
+	twilioService, err := twilioService.MakeTwilioService(
 		smsdelivery.TwilioTypeInput{
 			TwilioSettings: smsdelivery.TwilioServiceConfig{
 				AccountSid:          "sid",
@@ -526,6 +528,7 @@ func TestTwilioServiceOverrideForContactPhoneMethodThroughAPI(t *testing.T) {
 			},
 		},
 	)
+	assert.Nil(t, err)
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -560,7 +563,7 @@ func TestTwilioServiceOverrideForContactPhoneMethodThroughAPI(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
-	err := supertokens.Init(configValue)
+	err = supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}

@@ -68,11 +68,11 @@ type ContactMethodEmailOrPhoneConfig struct {
 	ValidateEmailAddress           func(email interface{}) *string
 	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
 }
 
 type ContactMethodPhoneConfig struct {
 	Enabled                        bool
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
 }
