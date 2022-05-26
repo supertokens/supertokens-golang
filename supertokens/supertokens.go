@@ -286,7 +286,7 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 		if catcher := SendNon200Response(res, originalError.Error(), 400); catcher != nil {
 			dw := MakeDoneWriter(res)
 			if !dw.IsDone() {
-				s.OnGeneralError(originalError, req, res)
+				s.OnGeneralError(originalError, req, dw)
 			}
 		}
 		return nil
