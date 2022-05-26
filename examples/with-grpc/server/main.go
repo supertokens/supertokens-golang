@@ -9,6 +9,7 @@ import (
 	"net"
 	"net/http"
 
+	"github.com/soheilhy/cmux"
 	pb "github.com/supertokens/supertokens-golang/examples/with-grpc/hatmaker"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -17,6 +18,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"golang.org/x/sync/errgroup"
 	"google.golang.org/grpc"
 )
 
@@ -113,25 +115,28 @@ func main() {
 
 	log.Println("Listening on: " + addr)
 
+	m := cmux.New(lis)
+	grpcListener := m.Match(cmux.HTTP2HeaderField("content-type", "application/grpc"))
+	httpListener := m.Match(cmux.HTTP1Fast())
+
+	g := new(errgroup.Group)
+	g.Go(func() error { return grpcServe(grpcListener) })
+	g.Go(func() error { return httpServe(httpListener) })
+	g.Go(func() error { return m.Serve() })
+
+	log.Println("run server:", g.Wait())
+}
+
+func grpcServe(l net.Listener) error {
 	s := grpc.NewServer()
-
 	pb.RegisterHatmakerServer(s, &Server{})
+	return s.Serve(l)
+}
 
-	if err = s.Serve(lis); err != nil {
-		log.Fatal("Failed to serve grpc server over port 8080", err.Error())
-	}
-
-	// mux := runtime.NewServeMux()
-
-	// // register the gRPC Service Handler(s) to the mux
-	// srv := &http.Server{
-	// 	Addr:    addr,
-	// 	Handler: cors(mux),
-	// }
-
-	// if err := srv.ListenAndServe(); err != nil {
-	// 	log.Fatal("Unexpected err while connecting to the server", err.Error())
-	// }
+func httpServe(l net.Listener) error {
+	mux := http.NewServeMux()
+	s := &http.Server{Handler: cors(mux)}
+	return s.Serve(l)
 }
 
 func cors(h http.Handler) http.Handler {
@@ -147,7 +152,6 @@ func cors(h http.Handler) http.Handler {
 }
 
 func (s *Server) MakeHat(ctx context.Context, in *pb.Size) (*pb.Hat, error) {
-	fmt.Println("I am getting called")
 	sessionContainer := session.GetSessionFromRequestContext(ctx)
 	if sessionContainer == nil {
 		fmt.Println("no session exists!")
