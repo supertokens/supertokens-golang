@@ -19,6 +19,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/supertokensService"
@@ -103,7 +104,18 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 			return err
 		}
 		if resp.StatusCode == 429 {
-			return errors.New("Free daily SMS quota reached. If using our managed service, please create a production environment to get dedicated API keys for SMS sending, or define your own method for sending SMS.")
+			smsData, err := json.Marshal(data["smsInput"])
+			if err != nil {
+				return err
+			}
+			fmt.Println("Free daily SMS quota reached. If using our managed service, please create a production environment to get dedicated API keys for SMS sending, or define your own method for sending SMS. For now, we are logging it below:")
+			fmt.Printf("SMS content: %s\n", string(smsData))
+
+			return nil
+		}
+
+		if resp.StatusCode >= 300 {
+			return errors.New("error sending SMS")
 		}
 		return nil
 	}
