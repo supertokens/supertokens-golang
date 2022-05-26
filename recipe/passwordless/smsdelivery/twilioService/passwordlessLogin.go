@@ -1,9 +1,8 @@
 package twilioService
 
 import (
-	"fmt"
-
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func getPasswordlessLoginSmsContent(input smsdelivery.PasswordlessLoginType) smsdelivery.TwilioGetContentResult {
@@ -23,6 +22,6 @@ func getPasswordlessLoginSmsBody(codeLifetime uint64, urlWithLinkCode *string, u
 	} else {
 		message = `Enter OTP: ` + *userInputCode + ` to login.`
 	}
-	message += ` It will expire in ` + fmt.Sprint(codeLifetime) + ` seconds.`
+	message += ` It will expire in ` + supertokens.HumaniseMilliseconds(codeLifetime) + `.`
 	return message
 }

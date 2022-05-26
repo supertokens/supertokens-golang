@@ -472,7 +472,7 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 	}
 
 	// Input code only
-	message = "Enter OTP: someCode to login. It will expire in 3600 seconds."
+	message = "Enter OTP: someCode to login. It will expire in 1 hour."
 	someCode := "someCode"
 	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
 		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
@@ -480,12 +480,12 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 			PreAuthSessionId: "someSession",
 			UserInputCode:    &someCode,
 			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
+			CodeLifetime:     3600000,
 		},
 	}, nil)
 
 	// Url with code
-	message = "Click this link: someUrl to login. It will expire in 1800 seconds."
+	message = "Click this link: someUrl to login. It will expire in 30 minutes."
 	urlWithLinkCode := "someUrl"
 	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
 		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
@@ -493,19 +493,19 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 			PreAuthSessionId: "someSession",
 			UserInputCode:    nil,
 			UrlWithLinkCode:  &urlWithLinkCode,
-			CodeLifetime:     1800,
+			CodeLifetime:     1800000,
 		},
 	}, nil)
 
 	// Both code and link
-	message = "Enter OTP: someCode OR click this link: someUrl to login. It will expire in 600 seconds."
+	message = "Enter OTP: someCode OR click this link: someUrl to login. It will expire in 10 minutes."
 	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
 		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
 			PhoneNumber:      "somePhoneNumber",
 			PreAuthSessionId: "someSession",
 			UserInputCode:    &someCode,
 			UrlWithLinkCode:  &urlWithLinkCode,
-			CodeLifetime:     600,
+			CodeLifetime:     600000,
 		},
 	}, nil)
 
