@@ -578,3 +578,52 @@ func TestTwilioServiceOverrideForContactPhoneMethodThroughAPI(t *testing.T) {
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawSmsCalled, true)
 }
+
+// func TestSupertokensServiceManually(t *testing.T) {
+// 	serviceImpl := supertokensService.MakeSupertokensService(smsdelivery.SupertokensServiceConfig{
+// 		ApiKey: "...",
+// 	})
+
+// 	configValue := supertokens.TypeInput{
+// 		Supertokens: &supertokens.ConnectionInfo{
+// 			ConnectionURI: "http://localhost:8080",
+// 		},
+// 		AppInfo: supertokens.AppInfo{
+// 			APIDomain:     "api.supertokens.io",
+// 			AppName:       "SuperTokens",
+// 			WebsiteDomain: "supertokens.io",
+// 		},
+// 		RecipeList: []supertokens.Recipe{
+// 			Init(plessmodels.TypeInput{
+// 				FlowType: "USER_INPUT_CODE",
+// 				SmsDelivery: &smsdelivery.TypeInput{
+// 					Service: &serviceImpl,
+// 				},
+// 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+// 					Enabled: true,
+// 				},
+// 			}),
+// 		},
+// 	}
+
+// 	BeforeEach()
+// 	defer AfterEach()
+// 	err := supertokens.Init(configValue)
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+
+// 	code := "123456"
+// 	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(
+// 		smsdelivery.SmsType{
+// 			PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
+// 				PhoneNumber:      "...",
+// 				UserInputCode:    &code,
+// 				UrlWithLinkCode:  nil,
+// 				CodeLifetime:     3600,
+// 				PreAuthSessionId: "someSession",
+// 			},
+// 		},
+// 		nil,
+// 	)
+// }
