@@ -168,7 +168,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
 			err = s.errorHandler(err, r, dw)
-			if err != nil {
+			if err != nil && !dw.IsDone() {
 				s.OnGeneralError(err, r, dw)
 			}
 			return
@@ -208,7 +208,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			if err != nil {
 				err = s.errorHandler(err, r, dw)
-				if err != nil {
+				if err != nil && !dw.IsDone() {
 					s.OnGeneralError(err, r, dw)
 				}
 				return
@@ -225,7 +225,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			apiErr := matchedRecipe.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
 			if apiErr != nil {
 				apiErr = s.errorHandler(apiErr, r, dw)
-				if apiErr != nil {
+				if apiErr != nil && !dw.IsDone() {
 					s.OnGeneralError(apiErr, r, dw)
 				}
 				return
@@ -237,7 +237,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				LogDebugMessage("middleware: Checking recipe ID for match: " + recipeModule.GetRecipeID())
 				if err != nil {
 					err = s.errorHandler(err, r, dw)
-					if err != nil {
+					if err != nil && !dw.IsDone() {
 						s.OnGeneralError(err, r, dw)
 					}
 					return
@@ -248,7 +248,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 					err := recipeModule.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
 					if err != nil {
 						err = s.errorHandler(err, r, dw)
-						if err != nil {
+						if err != nil && !dw.IsDone() {
 							s.OnGeneralError(err, r, dw)
 						}
 					} else {
@@ -284,7 +284,10 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 	if errors.As(originalError, &BadInputError{}) {
 		LogDebugMessage("errorHandler: Sending 400 status code response")
 		if catcher := SendNon200Response(res, originalError.Error(), 400); catcher != nil {
-			s.OnGeneralError(originalError, req, res)
+			dw := MakeDoneWriter(res)
+			if !dw.IsDone() {
+				s.OnGeneralError(originalError, req, dw)
+			}
 		}
 		return nil
 	}
