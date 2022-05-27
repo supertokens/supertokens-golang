@@ -21,19 +21,6 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestHumaniseSeconds(t *testing.T) {
-	assert.Equal(t, "1 second", HumaniseSeconds(1))
-	assert.Equal(t, "59 seconds", HumaniseSeconds(59))
-	assert.Equal(t, "1 minute", HumaniseSeconds(60))
-	assert.Equal(t, "1 minute", HumaniseSeconds(119))
-	assert.Equal(t, "2 minutes", HumaniseSeconds(120))
-	assert.Equal(t, "1 hour", HumaniseSeconds(3600))
-	assert.Equal(t, "1 hour", HumaniseSeconds(3660))
-	assert.Equal(t, "1.1 hours", HumaniseSeconds(3960))
-	assert.Equal(t, "2 hours", HumaniseSeconds(7260))
-	assert.Equal(t, "5 hours", HumaniseSeconds(18000))
-}
-
 func TestHumaniseMilliseconds(t *testing.T) {
 	assert.Equal(t, "1 second", HumaniseMilliseconds(1000))
 	assert.Equal(t, "59 seconds", HumaniseMilliseconds(59000))
