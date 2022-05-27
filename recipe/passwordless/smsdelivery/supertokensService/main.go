@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
@@ -47,8 +48,14 @@ func MakeSupertokensService(config smsdelivery.SupertokensServiceConfig) smsdeli
 		req.Header.Set("content-type", "application/json")
 		req.Header.Set("api-version", "0")
 		client := &http.Client{}
-		_, err = client.Do(req)
-		return err
+		resp, err := client.Do(req)
+		if err != nil {
+			return err
+		}
+		if resp.StatusCode >= 300 {
+			return errors.New(fmt.Sprintf("Could not send SMS. The API returned %d status.", resp.StatusCode))
+		}
+		return nil
 	}
 
 	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {

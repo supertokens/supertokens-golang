@@ -56,9 +56,12 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		req.Header.Set("api-version", "0")
 
 		client := &http.Client{}
-		_, err = client.Do(req)
+		resp, err := client.Do(req)
 		if err != nil {
 			return err
+		}
+		if resp.StatusCode >= 300 {
+			return errors.New(fmt.Sprintf("Error sending email. API returned %d status.", resp.StatusCode))
 		}
 		return nil
 	}
