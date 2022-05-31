@@ -19,7 +19,6 @@ package emailpassword
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -291,9 +290,22 @@ func TestAPIRequestBodyInAPIOverride(t *testing.T) {
 						oSignUpPost := *originalImplementation.SignUpPOST
 						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							body := options.Req.Body
-							strBody, err := ioutil.ReadAll(body)
+							bodyBytes, err := ioutil.ReadAll(body)
 							assert.Nil(t, err)
-							fmt.Println(string(strBody))
+							requestBody := map[string]interface{}{}
+							json.Unmarshal(bodyBytes, &requestBody)
+
+							requestFormFields := requestBody["formFields"].([]interface{})
+
+							for _, formField := range requestFormFields {
+								formFieldMap := formField.(map[string]interface{})
+								if formFieldMap["id"] == "email" {
+									assert.Equal(t, formFieldMap["value"], "testrandom@gmail.com")
+								} else if formFieldMap["id"] == "password" {
+									assert.Equal(t, formFieldMap["value"], "validpass123")
+								}
+							}
+
 							return oSignUpPost(formFields, options, userContext)
 						}
 						originalImplementation.SignUpPOST = &nSignUpPost
