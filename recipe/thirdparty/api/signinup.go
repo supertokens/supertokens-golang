@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -37,7 +36,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(options.Req.Body)
+	body, err := supertokens.ReadFromRequest(options.Req)
 	if err != nil {
 		return err
 	}

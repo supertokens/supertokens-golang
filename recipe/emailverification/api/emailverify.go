@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"reflect"
 
@@ -34,7 +33,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		body, err := ioutil.ReadAll(options.Req.Body)
+		body, err := supertokens.ReadFromRequest(options.Req)
+
 		if err != nil {
 			return err
 		}

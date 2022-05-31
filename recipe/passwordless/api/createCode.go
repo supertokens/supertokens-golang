@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"reflect"
 	"strings"
 
@@ -32,7 +31,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(options.Req.Body)
+	body, err := supertokens.ReadFromRequest(options.Req)
 	if err != nil {
 		return err
 	}
