@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
@@ -30,7 +29,7 @@ func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.API
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(options.Req.Body)
+	body, err := supertokens.ReadFromRequest(options.Req)
 	if err != nil {
 		return err
 	}
