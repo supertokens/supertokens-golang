@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/api"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -33,11 +34,12 @@ type Recipe struct {
 	RecipeImpl    plessmodels.RecipeInterface
 	APIImpl       plessmodels.APIInterface
 	EmailDelivery emaildelivery.Ingredient
+	SmsDelivery   smsdelivery.Ingredient
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config plessmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config plessmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, smsDeliveryIngredient *smsdelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -60,6 +62,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
 	}
 
+	if smsDeliveryIngredient != nil {
+		r.SmsDelivery = *smsDeliveryIngredient
+	} else {
+		r.SmsDelivery = smsdelivery.MakeIngredient(verifiedConfig.GetSmsDeliveryConfig())
+	}
+
 	return *r, nil
 }
 
@@ -73,7 +81,7 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 func recipeInit(config plessmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
@@ -145,6 +153,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Res:                  res,
 		OtherHandler:         theirHandler,
 		EmailDelivery:        r.EmailDelivery,
+		SmsDelivery:          r.SmsDelivery,
 	}
 	if id == consumeCodeAPI {
 		return api.ConsumeCode(r.APIImpl, options)
@@ -242,4 +251,6 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 
 func ResetForTest() {
 	singletonInstance = nil
+	PasswordlessLoginEmailSentForTest = false
+	PasswordlessLoginSmsSentForTest = false
 }

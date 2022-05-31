@@ -659,3 +659,24 @@ func PasswordlessEmailLoginRequest(email string, testUrl string) (*http.Response
 
 	return resp, nil
 }
+
+func PasswordlessPhoneLoginRequest(phone string, testUrl string) (*http.Response, error) {
+	body := map[string]string{
+		"phoneNumber": phone,
+	}
+
+	postBody, err := json.Marshal(body)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
