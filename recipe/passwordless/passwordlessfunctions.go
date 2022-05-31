@@ -112,6 +112,7 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 				return err
 			}
 			fmt.Println("Free daily SMS quota reached. If using our managed service, please create a production environment to get dedicated API keys for SMS sending, or define your own method for sending SMS. For now, we are logging it below:")
+			fmt.Println()
 			fmt.Printf("SMS content: %s\n", string(smsData))
 
 			return nil
