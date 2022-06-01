@@ -18,6 +18,8 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
@@ -58,9 +60,26 @@ func DefaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.Normalised
 		req.Header.Set("api-version", "0")
 
 		client := &http.Client{}
-		_, err = client.Do(req)
-		if err != nil {
+		resp, err := client.Do(req)
+
+		if err == nil && resp.StatusCode < 300 {
+			supertokens.LogDebugMessage(fmt.Sprintf("Password reset email sent to %s", user.Email))
 			return
 		}
+
+		supertokens.LogDebugMessage("Error sending password reset email")
+		if err != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		} else {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
+			}
+		}
+		supertokens.LogDebugMessage("Logging the input below:")
+		supertokens.LogDebugMessage(string(jsonData))
 	}
 }

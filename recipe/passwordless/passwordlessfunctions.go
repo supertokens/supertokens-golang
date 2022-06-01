@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/supertokensService"
@@ -57,13 +58,28 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 
 		client := &http.Client{}
 		resp, err := client.Do(req)
+
+		if err == nil && resp.StatusCode < 300 {
+			supertokens.LogDebugMessage(fmt.Sprintf("Passwordless login email sent to %s", email))
+			return nil
+		}
+
 		if err != nil {
-			return err
+			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		} else {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
+			}
+
+			err = errors.New(fmt.Sprintf("Error sending email. API returned %d status.", resp.StatusCode))
 		}
-		if resp.StatusCode >= 300 {
-			return errors.New(fmt.Sprintf("Error sending email. API returned %d status.", resp.StatusCode))
-		}
-		return nil
+		supertokens.LogDebugMessage("Logging the input below:")
+		supertokens.LogDebugMessage(string(jsonData))
+		return err
 	}
 }
 
@@ -103,10 +119,13 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 		req.Header.Set("api-version", "0")
 		client := &http.Client{}
 		resp, err := client.Do(req)
-		if err != nil {
-			return err
+
+		if err == nil && resp.StatusCode < 300 {
+			supertokens.LogDebugMessage(fmt.Sprintf("Passwordless login SMS sent to %s", phoneNumber))
+			return nil
 		}
-		if resp.StatusCode == 429 {
+
+		if err == nil && resp.StatusCode == 429 {
 			smsData, err := json.Marshal(data["smsInput"])
 			if err != nil {
 				return err
@@ -118,9 +137,21 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 			return nil
 		}
 
-		if resp.StatusCode >= 300 {
-			return errors.New("error sending SMS")
+		if err != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		} else {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
+			}
+
+			err = errors.New(fmt.Sprintf("Error sending SMS. API returned %d status.", resp.StatusCode))
 		}
-		return nil
+		supertokens.LogDebugMessage("Logging the input below:")
+		supertokens.LogDebugMessage(string(jsonData))
+		return err
 	}
 }
