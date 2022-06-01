@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
@@ -49,13 +50,29 @@ func MakeSupertokensService(config smsdelivery.SupertokensServiceConfig) smsdeli
 		req.Header.Set("api-version", "0")
 		client := &http.Client{}
 		resp, err := client.Do(req)
+
+		if err == nil && resp.StatusCode < 300 {
+			supertokens.LogDebugMessage(fmt.Sprintf("Passwordless login SMS sent to %s", input.PhoneNumber))
+			return nil
+		}
+
 		if err != nil {
-			return err
+			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		} else {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
+			}
+
+			err = errors.New(fmt.Sprintf("Error sending SMS. API returned %d status.", resp.StatusCode))
 		}
-		if resp.StatusCode >= 300 {
-			return errors.New(fmt.Sprintf("Could not send SMS. The API returned %d status.", resp.StatusCode))
-		}
-		return nil
+
+		supertokens.LogDebugMessage("Logging the input below:")
+		supertokens.LogDebugMessage(string(jsonData))
+		return err
 	}
 
 	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {

@@ -16,6 +16,8 @@
 package api
 
 import (
+	"fmt"
+
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
@@ -96,6 +98,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 
 		if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && phoneNumber != nil) {
 			if options.Config.ContactMethodPhone.Enabled {
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *phoneNumber))
 				err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
 					smsdelivery.SmsType{
 						PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
@@ -116,6 +119,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					}, nil
 				}
 			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *phoneNumber))
 				err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
 					smsdelivery.SmsType{
 						PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
@@ -138,6 +142,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			}
 		} else {
 			if options.Config.ContactMethodEmail.Enabled {
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *email))
 				err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
 					emaildelivery.EmailType{
 						PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
@@ -158,6 +163,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					}, nil
 				}
 			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *email))
 				err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
 					emaildelivery.EmailType{
 						PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
@@ -280,6 +286,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 
 			if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && deviceInfo.PhoneNumber != nil) {
 				if options.Config.ContactMethodPhone.Enabled {
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *deviceInfo.PhoneNumber))
 					err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
 						smsdelivery.SmsType{
 							PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
@@ -300,6 +307,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						}, nil
 					}
 				} else {
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *deviceInfo.PhoneNumber))
 					err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
 						smsdelivery.SmsType{
 							PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
@@ -322,6 +330,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 				}
 			} else {
 				if options.Config.ContactMethodEmail.Enabled {
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *deviceInfo.Email))
 					err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
 						emaildelivery.EmailType{
 							PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
@@ -342,6 +351,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						}, nil
 					}
 				} else {
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *deviceInfo.Email))
 					err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
 						emaildelivery.EmailType{
 							PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
