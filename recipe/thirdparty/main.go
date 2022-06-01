@@ -18,6 +18,7 @@ package thirdparty
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -128,6 +129,14 @@ func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext
 	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
 }
 
+func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
+}
+
 func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
 	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
@@ -186,4 +195,8 @@ func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvi
 
 func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 	return providers.Google(config)
+}
+
+func SendEmail(input emaildelivery.EmailType) error {
+	return SendEmailWithContext(input, &map[string]interface{}{})
 }

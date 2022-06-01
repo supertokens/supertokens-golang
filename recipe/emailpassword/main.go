@@ -18,6 +18,7 @@ package emailpassword
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -146,6 +147,14 @@ func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext
 	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
 }
 
+func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
+}
+
 func SignUp(email string, password string) (epmodels.SignUpResponse, error) {
 	return SignUpWithContext(email, password, &map[string]interface{}{})
 }
@@ -192,4 +201,8 @@ func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificat
 
 func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	return UnverifyEmailWithContext(userID, &map[string]interface{}{})
+}
+
+func SendEmail(input emaildelivery.EmailType) error {
+	return SendEmailWithContext(input, &map[string]interface{}{})
 }
