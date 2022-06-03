@@ -30,6 +30,32 @@ import (
 var PasswordlessLoginEmailSentForTest bool = false
 var PasswordlessLoginSmsSentForTest bool = false
 
+func logAndReturnError(resp *http.Response, err error) error {
+	if err != nil {
+		supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		return err
+	}
+
+	supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
+	var body []byte
+	body, err = ioutil.ReadAll(resp.Body)
+	if err != nil {
+		supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		return err
+	}
+
+	supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
+
+	var bodyObj map[string]interface{}
+	if err = json.Unmarshal(body, &bodyObj); err == nil {
+		if errMsg, ok := bodyObj["err"].(string); ok {
+			return errors.New(errMsg)
+		}
+	}
+
+	return errors.New(string(body))
+}
+
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 	return func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 		if supertokens.IsRunningInTestMode() {
@@ -64,19 +90,7 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 			return nil
 		}
 
-		if err != nil {
-			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
-		} else {
-			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
-			} else {
-				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
-			}
-
-			err = errors.New(fmt.Sprintf("Error sending email. API returned %d status.", resp.StatusCode))
-		}
+		err = logAndReturnError(resp, err)
 		supertokens.LogDebugMessage("Logging the input below:")
 		supertokens.LogDebugMessage(string(jsonData))
 		return err
@@ -137,19 +151,7 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 			return nil
 		}
 
-		if err != nil {
-			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
-		} else {
-			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
-			body, err := ioutil.ReadAll(resp.Body)
-			if err != nil {
-				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
-			} else {
-				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
-			}
-
-			err = errors.New(fmt.Sprintf("Error sending SMS. API returned %d status.", resp.StatusCode))
-		}
+		err = logAndReturnError(resp, err)
 		supertokens.LogDebugMessage("Logging the input below:")
 		supertokens.LogDebugMessage(string(jsonData))
 		return err
