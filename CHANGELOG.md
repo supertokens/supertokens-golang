@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.6.6]
+- Fixes facebook login
+
 ## [0.6.5]
 - Fixes issue in reading request body in API override: https://github.com/supertokens/supertokens-golang/issues/116
 
