@@ -230,6 +230,76 @@ func TestSMTPServiceOverride(t *testing.T) {
 	assert.Equal(t, sendRawEmailCalled, true)
 }
 
+func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
+	sendRawEmailCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				emailBody := input.Body
+				assert.Contains(t, emailBody, "Please verify your email address")
+				assert.Contains(t, emailBody, "SuperTokens")
+				assert.Contains(t, emailBody, "some@email.com")
+
+				assert.NotContains(t, emailBody, "${appName}")
+				assert.NotContains(t, emailBody, "${verificatioLink}")
+				assert.NotContains(t, emailBody, "${toEmail}")
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(evmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
+					return "", nil
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = SendEmail(emaildelivery.EmailType{
+		EmailVerification: &emaildelivery.EmailVerificationType{
+			User: emaildelivery.User{
+				ID:    "someId",
+				Email: "some@email.com",
+			},
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
+
 // func TestSMTPServiceManually(t *testing.T) {
 // 	targetEmail := "..."
 // 	fromEmail := "no-reply@supertokens.com"
