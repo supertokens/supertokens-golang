@@ -275,9 +275,7 @@ func TestSMTPServiceOverrideEmailTemplate(t *testing.T) {
 				assert.Contains(t, emailBody, "SuperTokens")
 				assert.Contains(t, emailBody, "some@email.com")
 
-				assert.NotContains(t, emailBody, "${appname}")
-				assert.NotContains(t, emailBody, "${resetLink}")
-				assert.NotContains(t, emailBody, "${toEmail}")
+				assert.NotContains(t, emailBody, "${")
 				return nil
 			}
 
@@ -309,7 +307,7 @@ func TestSMTPServiceOverrideEmailTemplate(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		PasswordReset: &emaildelivery.PasswordResetType{
 			User: emaildelivery.User{
 				ID:    "someId",
@@ -317,7 +315,7 @@ func TestSMTPServiceOverrideEmailTemplate(t *testing.T) {
 			},
 			PasswordResetLink: "someLink",
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, sendRawEmailCalled, true)

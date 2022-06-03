@@ -458,3 +458,241 @@ func TestSMTPServiceOverrideForContactEmailMethodThroughAPI(t *testing.T) {
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)
 }
+
+func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
+	sendRawEmailCalled := false
+	customCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				emailBody := input.Body
+				assert.Contains(t, emailBody, "Please click the button below to sign in / up")
+				assert.Contains(t, emailBody, "SuperTokens")
+				assert.Contains(t, emailBody, "some@email.com")
+				assert.Contains(t, emailBody, "http://someUrl")
+				assert.Contains(t, emailBody, "1 minute")
+
+				assert.NotContains(t, emailBody, "${")
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(plessmodels.TypeInput{
+				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						customCalled = true
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	someUrl := "http://someUrl"
+	err = SendEmail(emaildelivery.EmailType{
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "some@email.com",
+			UrlWithLinkCode:  &someUrl,
+			PreAuthSessionId: "someSession",
+			CodeLifetime:     60000,
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, customCalled, false)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
+	sendRawEmailCalled := false
+	customCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				emailBody := input.Body
+				assert.Contains(t, emailBody, "Enter the below OTP in your login screen.")
+				assert.Contains(t, emailBody, "SuperTokens")
+				assert.Contains(t, emailBody, "some@email.com")
+				assert.Contains(t, emailBody, "123456")
+				assert.Contains(t, emailBody, "1 minute")
+
+				assert.NotContains(t, emailBody, "${")
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(plessmodels.TypeInput{
+				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						customCalled = true
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	someCode := "123456"
+	err = SendEmail(emaildelivery.EmailType{
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "some@email.com",
+			UserInputCode:    &someCode,
+			PreAuthSessionId: "someSession",
+			CodeLifetime:     60000,
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, customCalled, false)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
+	sendRawEmailCalled := false
+	customCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				emailBody := input.Body
+				assert.Contains(t, emailBody, "Please click the button below to sign in / up")
+				assert.Contains(t, emailBody, "Enter the below OTP in your login screen.")
+				assert.Contains(t, emailBody, "SuperTokens")
+				assert.Contains(t, emailBody, "some@email.com")
+				assert.Contains(t, emailBody, "http://someUrl")
+				assert.Contains(t, emailBody, "123456")
+				assert.Contains(t, emailBody, "1 minute")
+
+				assert.NotContains(t, emailBody, "${")
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(plessmodels.TypeInput{
+				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						customCalled = true
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	someCode := "123456"
+	someUrl := "http://someUrl"
+	err = SendEmail(emaildelivery.EmailType{
+		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+			Email:            "some@email.com",
+			UserInputCode:    &someCode,
+			UrlWithLinkCode:  &someUrl,
+			PreAuthSessionId: "someSession",
+			CodeLifetime:     60000,
+		},
+	})
+
+	assert.Nil(t, err)
+	assert.Equal(t, customCalled, false)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
