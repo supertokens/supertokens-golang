@@ -68,14 +68,25 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 		} else {
 			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
-			body, err := ioutil.ReadAll(resp.Body)
+			var body []byte
+			body, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
 				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 			} else {
 				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
 			}
 
-			err = errors.New(fmt.Sprintf("Error sending email. API returned %d status.", resp.StatusCode))
+			var bodyObj map[string]interface{}
+			err = json.Unmarshal(body, &bodyObj)
+			if err != nil {
+				err = errors.New(string(body))
+			} else {
+				if errMsg, ok := bodyObj["err"].(string); ok {
+					err = errors.New(errMsg)
+				} else {
+					err = errors.New(string(body))
+				}
+			}
 		}
 		supertokens.LogDebugMessage("Logging the input below:")
 		supertokens.LogDebugMessage(string(jsonData))
@@ -141,14 +152,25 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 		} else {
 			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
-			body, err := ioutil.ReadAll(resp.Body)
+			var body []byte
+			body, err = ioutil.ReadAll(resp.Body)
 			if err != nil {
 				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 			} else {
 				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
 			}
 
-			err = errors.New(fmt.Sprintf("Error sending SMS. API returned %d status.", resp.StatusCode))
+			var bodyObj map[string]interface{}
+			err = json.Unmarshal(body, &bodyObj)
+			if err != nil {
+				err = errors.New(string(body))
+			} else {
+				if errMsg, ok := bodyObj["err"].(string); ok {
+					err = errors.New(errMsg)
+				} else {
+					err = errors.New(string(body))
+				}
+			}
 		}
 		supertokens.LogDebugMessage("Logging the input below:")
 		supertokens.LogDebugMessage(string(jsonData))
