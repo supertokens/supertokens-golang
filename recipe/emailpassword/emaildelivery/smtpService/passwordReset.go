@@ -930,13 +930,14 @@ func getPasswordResetEmailContent(input emaildelivery.PasswordResetType) (emaild
 	return emaildelivery.SMTPGetContentResult{
 		Body:    bodyHtml,
 		IsHtml:  true,
-		Subject: "Email verification instructions",
+		Subject: "Password reset instructions",
 		ToEmail: input.User.Email,
 	}, nil
 }
 
 func getPasswordResetEmailHTML(appName string, email string, resetLink string) string {
 	emailBody := passwordResetTemplate
+	emailBody = strings.Replace(emailBody, "*|MC:SUBJECT|*", "Password reset instructions", -1)
 	emailBody = strings.Replace(emailBody, "${appname}", appName, -1)
 	emailBody = strings.Replace(emailBody, "${resetLink}", resetLink, -1)
 	emailBody = strings.Replace(emailBody, "${toEmail}", email, -1)

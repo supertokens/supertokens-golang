@@ -2856,7 +2856,7 @@ func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType)
 	return emaildelivery.SMTPGetContentResult{
 		Body:    bodyHtml,
 		IsHtml:  true,
-		Subject: "Passwordless login instructions",
+		Subject: "Login to your account",
 		ToEmail: input.Email,
 	}, nil
 }
@@ -2876,6 +2876,7 @@ func getPasswordlessLoginEmailHTML(appName string, codeLifetime uint64, urlWithL
 
 	humanisedCodeLifetime := supertokens.HumaniseMilliseconds(codeLifetime)
 
+	emailBody = strings.Replace(emailBody, "*|MC:SUBJECT|*", "Login to your account", -1)
 	emailBody = strings.Replace(emailBody, "${appname}", appName, -1)
 	emailBody = strings.Replace(emailBody, "${toEmail}", email, -1)
 	emailBody = strings.Replace(emailBody, "${time}", humanisedCodeLifetime, -1)

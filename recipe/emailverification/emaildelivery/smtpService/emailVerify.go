@@ -939,6 +939,7 @@ func getEmailVerifyEmailContent(input emaildelivery.EmailVerificationType) (emai
 
 func getEmailVerifyEmailHTML(appName string, email string, verificationLink string) string {
 	emailBody := emailVerificationTemplate
+	emailBody = strings.Replace(emailBody, "*|MC:SUBJECT|*", "Email verification instructions", -1)
 	emailBody = strings.Replace(emailBody, "${appname}", appName, -1)
 	emailBody = strings.Replace(emailBody, "${verificationLink}", verificationLink, -1)
 	emailBody = strings.Replace(emailBody, "${toEmail}", email, -1)
