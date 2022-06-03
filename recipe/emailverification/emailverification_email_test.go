@@ -250,7 +250,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 				assert.Contains(t, emailBody, "SuperTokens")
 				assert.Contains(t, emailBody, "some@email.com")
 
-				assert.NotContains(t, emailBody, "${appName}")
+				assert.NotContains(t, emailBody, "${appname}")
 				assert.NotContains(t, emailBody, "${verificatioLink}")
 				assert.NotContains(t, emailBody, "${toEmail}")
 				return nil
