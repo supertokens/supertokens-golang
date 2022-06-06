@@ -419,7 +419,7 @@ func TestTwilioServiceOverrideForContactPhoneMethod(t *testing.T) {
 }
 
 func TestTwilioServiceMessageContent(t *testing.T) {
-	var message string = ""
+	var messageParts []string
 
 	fromPhoneNumber := "someNumber"
 	twilioService, err := twilioService.MakeTwilioService(
@@ -432,7 +432,11 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 			},
 			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
 				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
-					assert.Equal(t, message, input.Body)
+					for _, message := range messageParts {
+						assert.Contains(t, input.Body, message)
+					}
+
+					assert.NotContains(t, input.Body, "${")
 					return nil
 				}
 
@@ -453,7 +457,7 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				SmsDelivery: &smsdelivery.TypeInput{
 					Service: &twilioService,
 				},
@@ -472,9 +476,13 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 	}
 
 	// Input code only
-	message = "Enter OTP: someCode to login. It will expire in 1 hour."
+	messageParts = []string{
+		"SuperTokens - Login to your account",
+		"Your OTP to login: someCode",
+		"This is valid for 1 hour.",
+	}
 	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
+	SendSms(smsdelivery.SmsType{
 		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
 			PhoneNumber:      "somePhoneNumber",
 			PreAuthSessionId: "someSession",
@@ -482,12 +490,16 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 			UrlWithLinkCode:  nil,
 			CodeLifetime:     3600000,
 		},
-	}, nil)
+	})
 
 	// Url with code
-	message = "Click this link: someUrl to login. It will expire in 30 minutes."
+	messageParts = []string{
+		"SuperTokens - Login to your account",
+		"Click on this link: someUrl",
+		"This is valid for 30 minutes.",
+	}
 	urlWithLinkCode := "someUrl"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
+	SendSms(smsdelivery.SmsType{
 		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
 			PhoneNumber:      "somePhoneNumber",
 			PreAuthSessionId: "someSession",
@@ -495,11 +507,16 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 			UrlWithLinkCode:  &urlWithLinkCode,
 			CodeLifetime:     1800000,
 		},
-	}, nil)
+	})
 
 	// Both code and link
-	message = "Enter OTP: someCode OR click this link: someUrl to login. It will expire in 10 minutes."
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
+	messageParts = []string{
+		"SuperTokens - Login to your account",
+		"Your OTP to login: someCode",
+		"Click on this link: someUrl",
+		"This is valid for 10 minutes.",
+	}
+	SendSms(smsdelivery.SmsType{
 		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
 			PhoneNumber:      "somePhoneNumber",
 			PreAuthSessionId: "someSession",
@@ -507,7 +524,7 @@ func TestTwilioServiceMessageContent(t *testing.T) {
 			UrlWithLinkCode:  &urlWithLinkCode,
 			CodeLifetime:     600000,
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 }
