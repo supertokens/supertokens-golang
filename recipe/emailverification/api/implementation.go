@@ -92,7 +92,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		emailVerifyLink := emailVerificationURL + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email))
-		(*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+		err = (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
 			EmailVerification: &emaildelivery.EmailVerificationType{
 				User: emaildelivery.User{
 					ID:    user.ID,
@@ -101,6 +101,9 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				EmailVerifyLink: emailVerifyLink,
 			},
 		}, userContext)
+		if err != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent, error: %s", err.Error()))
+		}
 
 		return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 			OK: &struct{}{},
