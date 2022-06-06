@@ -52,14 +52,14 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "someEmail",
 			},
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, EmailVerificationEmailSentForTest, true)
 }
@@ -94,14 +94,14 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "someEmail",
 			},
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, EmailVerificationEmailSentForTest, false)
 	assert.Equal(t, funcCalled, true)
@@ -147,14 +147,14 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "someEmail",
 			},
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, EmailVerificationEmailSentForTest, false)
 	assert.Equal(t, funcCalled, false)
@@ -216,14 +216,14 @@ func TestSMTPServiceOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "",
 			},
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, getContentCalled, true)
@@ -280,14 +280,14 @@ func TestSMTPServiceOverride(t *testing.T) {
 // 		t.Error(err.Error())
 // 	}
 
-// 	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+// 	err = SendEmail(emaildelivery.EmailType{
 // 		EmailVerification: &emaildelivery.EmailVerificationType{
 // 			User: emaildelivery.User{
 // 				ID:    "someId",
 // 				Email: targetEmail,
 // 			},
 // 		},
-// 	}, nil)
+// 	})
 
 // 	assert.Nil(t, err)
 // }

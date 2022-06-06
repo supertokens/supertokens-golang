@@ -66,7 +66,7 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordReset: &emaildelivery.PasswordResetType{
 			User: emaildelivery.User{
 				ID:    "someId",
@@ -74,7 +74,7 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 			},
 			PasswordResetLink: "someLink",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, PasswordResetEmailSentForTest, true)
 }
@@ -120,7 +120,7 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordReset: &emaildelivery.PasswordResetType{
 			User: emaildelivery.User{
 				ID:    "someId",
@@ -128,7 +128,7 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 			},
 			PasswordResetLink: "someLink",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, PasswordResetEmailSentForTest, false)
 	assert.Equal(t, funcCalled, true)
@@ -173,7 +173,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordReset: &emaildelivery.PasswordResetType{
 			User: emaildelivery.User{
 				ID:    "someId",
@@ -181,7 +181,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 			},
 			PasswordResetLink: "someLink",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, PasswordResetEmailSentForTest, false)
 	assert.Equal(t, funcCalled, false)
@@ -240,7 +240,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		PasswordReset: &emaildelivery.PasswordResetType{
 			User: emaildelivery.User{
 				ID:    "someId",
@@ -248,7 +248,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 			},
 			PasswordResetLink: "someLink",
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, getContentCalled, true)
@@ -307,14 +307,14 @@ func TestEmailVerificationSMTPOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailVerificationRecipe.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "",
 			},
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, getContentCalled, true)
