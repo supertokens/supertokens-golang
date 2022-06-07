@@ -338,17 +338,15 @@ func TestEmailVerificationTokenThroughAPI(t *testing.T) {
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
 			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
-				if input.EmailVerification != nil {
-					getContentCalled = true
-					return emaildelivery.SMTPGetContentResult{Body: "EmailVerify"}, nil
-				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				assert.NotNil(t, input.EmailVerification)
+				assert.Equal(t, input.EmailVerification.User.Email, "random@gmail.com")
+				getContentCalled = true
+				return emaildelivery.SMTPGetContentResult{Body: "EmailVerify"}, nil
 			}
 
 			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				if input.Body == "EmailVerify" {
-					sendRawEmailCalled = true
-				}
+				assert.Equal(t, input.Body, "EmailVerify")
+				sendRawEmailCalled = true
 				return nil
 			}
 
@@ -418,11 +416,14 @@ func TestPasswordResetTokenThroughAPI(t *testing.T) {
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
 			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				assert.NotNil(t, input.PasswordReset)
+				assert.Equal(t, input.PasswordReset.User.Email, "random@gmail.com")
 				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPGetContentResult{Body: "PasswordReset"}, nil
 			}
 
 			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				assert.Equal(t, input.Body, "PasswordReset")
 				sendRawEmailCalled = true
 				return nil
 			}

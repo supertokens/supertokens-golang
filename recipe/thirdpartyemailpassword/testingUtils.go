@@ -40,6 +40,12 @@ func AfterEach() {
 	unittesting.CleanST()
 }
 
+type PostDataForCustomProvider struct {
+	ThirdPartyId     string            `json:"thirdPartyId"`
+	AuthCodeResponse map[string]string `json:"authCodeResponse"`
+	RedirectUri      string            `json:"redirectURI"`
+}
+
 var customProvider1 = tpmodels.TypeProvider{
 	ID: "custom",
 	Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
