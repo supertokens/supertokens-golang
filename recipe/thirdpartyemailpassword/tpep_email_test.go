@@ -531,3 +531,66 @@ func TestPasswordResetOnThirdPartyUserSMTPOverrideThroughAPI(t *testing.T) {
 	assert.Equal(t, getContentCalled, false)
 	assert.Equal(t, sendRawEmailCalled, false)
 }
+
+func TestPasswordResetTokenForNonExistantUserThroughAPI(t *testing.T) {
+	getContentCalled := false
+	sendRawEmailCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				getContentCalled = true
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&tpepmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+			}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	unittesting.PasswordResetTokenRequest("random@gmail.com", testServer.URL)
+	assert.Equal(t, getContentCalled, false)
+	assert.Equal(t, sendRawEmailCalled, false)
+}
