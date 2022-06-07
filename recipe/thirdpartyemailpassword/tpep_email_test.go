@@ -421,3 +421,113 @@ func TestEmailVerificationSMTPOverrideThroughAPI(t *testing.T) {
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)
 }
+
+func TestPasswordResetOnThirdPartyUserSMTPOverrideThroughAPI(t *testing.T) {
+	var customProviderForEmailVerification = tpmodels.TypeProvider{
+		ID: "custom",
+		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
+			return tpmodels.TypeProviderGetResponse{
+				AccessTokenAPI: tpmodels.AccessTokenAPI{
+					URL: "https://test.com/oauth/token",
+				},
+				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+					URL: "https://test.com/oauth/auth",
+				},
+				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
+					if authCodeResponse.(map[string]interface{})["access_token"] == nil {
+						return tpmodels.UserInfo{}, nil
+					}
+					return tpmodels.UserInfo{
+						ID: "user",
+						Email: &tpmodels.EmailStruct{
+							ID:         "email@test.com",
+							IsVerified: false,
+						},
+					}, nil
+				},
+				GetClientId: func(userContext *map[string]interface{}) string {
+					return "supertokens"
+				},
+			}
+		},
+	}
+
+	getContentCalled := false
+	sendRawEmailCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				getContentCalled = true
+				return emaildelivery.SMTPGetContentResult{Body: "EmailVerification", ToEmail: input.EmailVerification.User.Email}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(&tpepmodels.TypeInput{
+				Providers: []tpmodels.TypeProvider{
+					customProviderForEmailVerification,
+				},
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	signinupPostData := PostDataForCustomProvider{
+		ThirdPartyId: "custom",
+		AuthCodeResponse: map[string]string{
+			"access_token": "saodiasjodai",
+		},
+		RedirectUri: "http://127.0.0.1/callback",
+	}
+
+	postBody, err := json.Marshal(signinupPostData)
+	_, err = http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	assert.NoError(t, err)
+
+	unittesting.PasswordResetTokenRequest("email@test.com", testServer.URL)
+
+	assert.Nil(t, err)
+	assert.Equal(t, getContentCalled, false)
+	assert.Equal(t, sendRawEmailCalled, false)
+}
