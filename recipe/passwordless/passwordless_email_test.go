@@ -65,12 +65,12 @@ func TestBackwardCompatibilityServiceWithtCustomFunctionForContactEmailMethod(t 
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email:            "someEmail",
 			PreAuthSessionId: "someSession",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, customEmailSent, true)
 }
@@ -114,12 +114,12 @@ func TestBackwardCompatibilityServiceWithtCustomFunctionForContactEmailOrPhoneMe
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email:            "someEmail",
 			PreAuthSessionId: "someSession",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, customEmailSent, true)
 }
@@ -166,12 +166,12 @@ func TestBackwardCompatibilityServiceWithOverrideForContactEmailMethod(t *testin
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email:            "someEmail",
 			PreAuthSessionId: "someSession",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, PasswordlessLoginEmailSentForTest, false)
 	assert.Equal(t, funcCalled, false)
@@ -223,12 +223,12 @@ func TestBackwardCompatibilityServiceWithOverrideForContactEmailOrPhoneMethod(t 
 		t.Error(err.Error())
 	}
 
-	(*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email:            "someEmail",
 			PreAuthSessionId: "someSession",
 		},
-	}, nil)
+	})
 
 	assert.Equal(t, PasswordlessLoginEmailSentForTest, false)
 	assert.Equal(t, funcCalled, false)
@@ -296,12 +296,12 @@ func TestSMTPServiceOverrideForContactEmailMethod(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email:            "someEmail",
 			PreAuthSessionId: "someSession",
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, customCalled, false)
@@ -373,12 +373,12 @@ func TestSMTPServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email:            "someEmail",
 			PreAuthSessionId: "someSession",
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, customCalled, false)

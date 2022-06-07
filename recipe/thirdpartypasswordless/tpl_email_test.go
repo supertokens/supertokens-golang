@@ -75,14 +75,14 @@ func TestEmailVerificationSMTPOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
 				ID:    "someId",
 				Email: "",
 			},
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, getContentCalled, true)
@@ -151,11 +151,11 @@ func TestPasswordlessLoginSMTPOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = (*singletonInstance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+	err = SendEmail(emaildelivery.EmailType{
 		PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
 			Email: "someEmail",
 		},
-	}, nil)
+	})
 
 	assert.Nil(t, err)
 	assert.Equal(t, getContentCalled, true)

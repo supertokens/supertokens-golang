@@ -2,9 +2,9 @@ package emaildelivery
 
 import (
 	"crypto/tls"
-	"net"
-	"net/smtp"
-	"strconv"
+	"fmt"
+
+	"gopkg.in/gomail.v2"
 )
 
 type Ingredient struct {
@@ -25,73 +25,27 @@ func MakeIngredient(config TypeInputWithService) Ingredient {
 }
 
 func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error {
+	m := gomail.NewMessage()
+	m.SetHeader("From", fmt.Sprintf("%s <%s>", config.From.Name, config.From.Email))
+	m.SetHeader("To", content.ToEmail)
+	m.SetHeader("Subject", content.Subject)
 
-	fromHeader := "From: " + config.From.Name + " <" + config.From.Email + ">\r\n"
-	subject := "Subject: " + content.Subject + "\r\n"
-	body := content.Body + "\r\n"
-	msg := []byte(fromHeader + subject + body)
 	if content.IsHtml {
-		mime := "MIME-version: 1.0;\nContent-Type: text/html; charset=\"UTF-8\";\r\n"
-		msg = []byte(fromHeader + subject + mime + body)
+		m.SetBody("text/html", content.Body)
+	} else {
+		m.SetBody("text/plain", content.Body)
 	}
 
-	servername := config.Host + ":" + strconv.Itoa(config.Port)
-
-	host, _, err := net.SplitHostPort(servername)
-	if err != nil {
-		return err
-	}
-
-	smtpAuth := smtp.PlainAuth("", config.From.Email, config.Password, host)
 	secure := false
 	if config.Secure != nil {
 		secure = *config.Secure
 	}
 
+	d := gomail.NewDialer(config.Host, config.Port, config.From.Email, config.Password)
+
 	if secure {
-		tlsconfig := &tls.Config{
-			InsecureSkipVerify: true,
-			ServerName:         host,
-		}
-
-		conn, err := tls.Dial("tcp", servername, tlsconfig)
-		if err != nil {
-			return err
-		}
-
-		c, err := smtp.NewClient(conn, host)
-		if err != nil {
-			return err
-		}
-		defer c.Quit()
-
-		err = c.Auth(smtpAuth)
-		if err != nil {
-			return err
-		}
-
-		if err = c.Mail(config.From.Email); err != nil {
-			return err
-		}
-
-		if err = c.Rcpt(content.ToEmail); err != nil {
-			return err
-		}
-
-		// Data
-		w, err := c.Data()
-		if err != nil {
-			return err
-		}
-		defer w.Close()
-
-		_, err = w.Write([]byte(msg))
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else {
-		return smtp.SendMail(host+":"+strconv.Itoa(config.Port), smtpAuth, config.From.Email, []string{content.ToEmail}, msg)
+		d.TLSConfig = &tls.Config{InsecureSkipVerify: true, ServerName: config.Host}
+		d.SSL = true
 	}
+	return d.DialAndSend(m)
 }
