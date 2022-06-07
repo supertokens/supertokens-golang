@@ -613,6 +613,23 @@ func GenerateRandomCode(size int) string {
 	return randomString
 }
 
+func EmailVerificationTokenRequest(cookies []*http.Cookie, testUrl string) (*http.Response, error) {
+	req, err := http.NewRequest("POST", testUrl+"/auth/user/email/verify/token", nil)
+
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func PasswordResetTokenRequest(email string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {

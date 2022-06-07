@@ -17,6 +17,8 @@
 package emailpassword
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -321,6 +323,86 @@ func TestEmailVerificationSMTPOverride(t *testing.T) {
 	assert.Equal(t, sendRawEmailCalled, true)
 }
 
+func TestEmailVerificationTokenThroughAPI(t *testing.T) {
+	getContentCalled := false
+	sendRawEmailCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				if input.EmailVerification != nil {
+					getContentCalled = true
+					return emaildelivery.SMTPGetContentResult{Body: "EmailVerify"}, nil
+				}
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				if input.Body == "EmailVerify" {
+					sendRawEmailCalled = true
+				}
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+			}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	resp, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	signUpBodyResponse := map[string]interface{}{}
+	err = json.Unmarshal(bodyBytes, &signUpBodyResponse)
+	assert.NoError(t, err)
+	cookies := resp.Cookies()
+
+	unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.Equal(t, PasswordResetEmailSentForTest, false)
+	assert.Equal(t, getContentCalled, true)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
+
 func TestPasswordResetTokenThroughAPI(t *testing.T) {
 	getContentCalled := false
 	sendRawEmailCalled := false
@@ -389,4 +471,68 @@ func TestPasswordResetTokenThroughAPI(t *testing.T) {
 	assert.Equal(t, PasswordResetEmailSentForTest, false)
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestPasswordResetTokenForNonExistantUserThroughAPI(t *testing.T) {
+	getContentCalled := false
+	sendRawEmailCalled := false
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				getContentCalled = true
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &smtpService,
+				},
+			}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	unittesting.PasswordResetTokenRequest("random@gmail.com", testServer.URL)
+	assert.Equal(t, PasswordResetEmailSentForTest, false)
+	assert.Equal(t, getContentCalled, false)
+	assert.Equal(t, sendRawEmailCalled, false)
 }
