@@ -2,6 +2,7 @@ package emaildelivery
 
 import (
 	"crypto/tls"
+	"fmt"
 
 	"gopkg.in/gomail.v2"
 )
@@ -25,7 +26,7 @@ func MakeIngredient(config TypeInputWithService) Ingredient {
 
 func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", config.From.Email)
+	m.SetHeader("From", fmt.Sprintf("%s <%s>", config.From.Name, config.From.Email))
 	m.SetHeader("To", content.ToEmail)
 	m.SetHeader("Subject", content.Subject)
 

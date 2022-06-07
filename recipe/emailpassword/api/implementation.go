@@ -85,7 +85,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			},
 		}, userContext)
 		if err != nil {
-			supertokens.LogDebugMessage(fmt.Sprintf("Password reset email not sent, error: %s", err.Error()))
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
 		}
 
 		return epmodels.GeneratePasswordResetTokenPOSTResponse{

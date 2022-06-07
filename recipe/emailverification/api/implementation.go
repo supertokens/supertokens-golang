@@ -102,7 +102,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			},
 		}, userContext)
 		if err != nil {
-			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent, error: %s", err.Error()))
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
 
 		return evmodels.GenerateEmailVerifyTokenPOSTResponse{
