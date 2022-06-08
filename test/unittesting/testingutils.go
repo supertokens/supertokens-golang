@@ -697,3 +697,26 @@ func PasswordlessPhoneLoginRequest(phone string, testUrl string) (*http.Response
 
 	return resp, nil
 }
+
+func PasswordlessLoginWithCodeRequest(deviceId string, preAuthSessionId string, code string, testUrl string) (*http.Response, error) {
+	body := map[string]string{
+		"deviceId":         deviceId,
+		"preAuthSessionId": preAuthSessionId,
+		"userInputCode":    code,
+	}
+
+	postBody, err := json.Marshal(body)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/signinup/code/consume", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}

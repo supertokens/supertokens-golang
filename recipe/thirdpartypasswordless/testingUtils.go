@@ -38,3 +38,9 @@ func AfterEach() {
 	resetAll()
 	unittesting.CleanST()
 }
+
+type PostDataForCustomProvider struct {
+	ThirdPartyId     string            `json:"thirdPartyId"`
+	AuthCodeResponse map[string]string `json:"authCodeResponse"`
+	RedirectUri      string            `json:"redirectURI"`
+}
