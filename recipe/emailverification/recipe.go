@@ -141,4 +141,9 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 func ResetForTest() {
 	singletonInstance = nil
 	EmailVerificationEmailSentForTest = false
+	EmailVerificationDataForTest = struct {
+		User                    evmodels.User
+		EmailVerifyURLWithToken string
+		UserContext             supertokens.UserContext
+	}{}
 }
