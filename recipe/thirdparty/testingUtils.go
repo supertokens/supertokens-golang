@@ -16,6 +16,12 @@
 package thirdparty
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -25,6 +31,7 @@ import (
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
+	emailverification.ResetForTest()
 	session.ResetForTest()
 }
 
@@ -44,6 +51,56 @@ type PostDataForCustomProvider struct {
 	ThirdPartyId     string            `json:"thirdPartyId"`
 	AuthCodeResponse map[string]string `json:"authCodeResponse"`
 	RedirectUri      string            `json:"redirectURI"`
+}
+
+func supertokensInitForTest(t *testing.T, recipes ...supertokens.Recipe) *httptest.Server {
+	config := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: recipes,
+	}
+
+	err := supertokens.Init(config)
+	assert.NoError(t, err)
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	return testServer
+}
+
+var customProviderForEmailVerification = tpmodels.TypeProvider{
+	ID: "custom",
+	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
+		return tpmodels.TypeProviderGetResponse{
+			AccessTokenAPI: tpmodels.AccessTokenAPI{
+				URL: "https://test.com/oauth/token",
+			},
+			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+				URL: "https://test.com/oauth/auth",
+			},
+			GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
+				if authCodeResponse.(map[string]interface{})["access_token"] == nil {
+					return tpmodels.UserInfo{}, nil
+				}
+				return tpmodels.UserInfo{
+					ID: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "test@example.com",
+						IsVerified: false,
+					},
+				}, nil
+			},
+			GetClientId: func(userContext *map[string]interface{}) string {
+				return "supertokens"
+			},
+		}
+	},
 }
 
 var customProvider6 = tpmodels.TypeProvider{

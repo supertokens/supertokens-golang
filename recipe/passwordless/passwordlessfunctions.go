@@ -1,4 +1,5 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/*
+ * Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -28,7 +29,23 @@ import (
 )
 
 var PasswordlessLoginEmailSentForTest bool = false
+var PasswordlessLoginEmailDataForTest struct {
+	Email            string
+	UserInputCode    *string
+	UrlWithLinkCode  *string
+	CodeLifetime     uint64
+	PreAuthSessionId string
+	UserContext      supertokens.UserContext
+}
 var PasswordlessLoginSmsSentForTest bool = false
+var PasswordlessLoginSmsDataForTest struct {
+	Phone            string
+	UserInputCode    *string
+	UrlWithLinkCode  *string
+	CodeLifetime     uint64
+	PreAuthSessionId string
+	UserContext      supertokens.UserContext
+}
 
 func logAndReturnError(resp *http.Response, err error) error {
 	if err != nil {
@@ -61,6 +78,12 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
 			PasswordlessLoginEmailSentForTest = true
+			PasswordlessLoginEmailDataForTest.Email = email
+			PasswordlessLoginEmailDataForTest.UserInputCode = userInputCode
+			PasswordlessLoginEmailDataForTest.UrlWithLinkCode = urlWithLinkCode
+			PasswordlessLoginEmailDataForTest.CodeLifetime = codeLifetime
+			PasswordlessLoginEmailDataForTest.PreAuthSessionId = preAuthSessionId
+			PasswordlessLoginEmailDataForTest.UserContext = userContext
 			return nil
 		}
 		url := "https://api.supertokens.io/0/st/auth/passwordless/login"
@@ -102,6 +125,13 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
 			PasswordlessLoginSmsSentForTest = true
+			PasswordlessLoginSmsDataForTest.Phone = phoneNumber
+			PasswordlessLoginSmsDataForTest.UserInputCode = userInputCode
+			PasswordlessLoginSmsDataForTest.UrlWithLinkCode = urlWithLinkCode
+			PasswordlessLoginSmsDataForTest.CodeLifetime = codeLifetime
+			PasswordlessLoginSmsDataForTest.PreAuthSessionId = preAuthSessionId
+			PasswordlessLoginSmsDataForTest.UserContext = userContext
+
 			return nil
 		}
 
