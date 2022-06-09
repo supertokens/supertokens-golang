@@ -252,5 +252,13 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 func ResetForTest() {
 	singletonInstance = nil
 	PasswordlessLoginEmailSentForTest = false
+	PasswordlessLoginDataForTest = struct {
+		Email            string
+		UserInputCode    *string
+		UrlWithLinkCode  *string
+		CodeLifetime     uint64
+		PreAuthSessionId string
+		UserContext      supertokens.UserContext
+	}{}
 	PasswordlessLoginSmsSentForTest = false
 }
