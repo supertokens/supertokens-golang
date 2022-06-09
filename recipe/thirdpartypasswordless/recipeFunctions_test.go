@@ -1,4 +1,5 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/*
+ * Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -13,7 +14,7 @@
  * under the License.
  */
 
-package passwordless
+package thirdpartypasswordless
 
 import (
 	"net/url"
@@ -23,11 +24,12 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestGetUser(t *testing.T) {
+func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTheCorrectEmailVerificationStatus(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -39,31 +41,177 @@ func TestGetUser(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
 					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
 						return nil
 					},
 				},
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-
 	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
 
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	resp, err := ThirdPartySignInUp("customProvider", "verifiedUser", tplmodels.EmailStruct{
+		ID:         "test@example.com",
+		IsVerified: true,
+	})
+	assert.NoError(t, err)
+
+	emailVerificationToken, err := CreateEmailVerificationToken(resp.OK.User.ID)
+	assert.NoError(t, err)
+
+	VerifyEmailUsingToken(emailVerificationToken.OK.Token)
+
+	isVerfied, err := IsEmailVerified(resp.OK.User.ID)
+	assert.NoError(t, err)
+	assert.True(t, isVerfied)
+
+	resp1, err := ThirdPartySignInUp("customProvider2", "NotVerifiedUser", tplmodels.EmailStruct{
+		ID:         "test@example.com",
+		IsVerified: false,
+	})
+	assert.NoError(t, err)
+
+	isVerfied1, err := IsEmailVerified(resp1.OK.User.ID)
+	assert.NoError(t, err)
+	assert.False(t, isVerfied1)
+}
+
+func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturnsTrueForBothEmailAndPhone(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(tplmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	response, err := PasswordlessSignInUpByEmail("test@example.com")
+	assert.NoError(t, err)
+
+	isVerified, err := IsEmailVerified(response.User.ID)
+	assert.NoError(t, err)
+	assert.True(t, isVerified)
+
+	emailVerificationResp, err := CreateEmailVerificationToken(response.User.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
+	assert.Nil(t, emailVerificationResp.OK)
+
+	response, err = PasswordlessSignInUpByPhoneNumber("+123456789012")
+	assert.NoError(t, err)
+
+	isVerified, err = IsEmailVerified(response.User.ID)
+	assert.NoError(t, err)
+	assert.True(t, isVerified)
+
+	emailVerificationResp, err = CreateEmailVerificationToken(response.User.ID)
+	assert.NoError(t, err)
+	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
+	assert.Nil(t, emailVerificationResp.OK)
+}
+
+func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(tplmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
 	apiV, err := q.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
@@ -77,52 +225,56 @@ func TestGetUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, user)
 
-	result, err := SignInUpByEmail("test@example.com")
+	resp, err := PasswordlessSignInUpByEmail("test@example.com")
+	assert.NoError(t, err)
+	userId := resp.User.ID
+
+	user, err = GetUserByID(userId)
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+
+	assert.Equal(t, userId, user.ID)
+	assert.Equal(t, resp.User.Email, user.Email)
+	assert.Nil(t, user.PhoneNumber)
+
+	users, err := GetUsersByEmail("random")
+	assert.NoError(t, err)
+	assert.Equal(t, 0, len(users))
+
+	users, err = GetUsersByEmail("test@example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, 1, len(users))
+
+	userInfo := users[0]
+
+	assert.Equal(t, user.Email, userInfo.Email)
+	assert.Equal(t, user.ID, userInfo.ID)
+	assert.Equal(t, user.PhoneNumber, userInfo.PhoneNumber)
+	assert.Nil(t, userInfo.PhoneNumber)
+	assert.Nil(t, userInfo.ThirdParty)
+	assert.Equal(t, user.TimeJoined, userInfo.TimeJoined)
+
+	user, err = GetUserByPhoneNumber("random")
+	assert.NoError(t, err)
+	assert.Nil(t, user)
+
+	resp, err = PasswordlessSignInUpByPhoneNumber("+1234567890")
 	assert.NoError(t, err)
 
-	user = &result.User
-
-	userData, err := GetUserByID(user.ID)
+	user, err = GetUserByPhoneNumber(*resp.User.PhoneNumber)
 	assert.NoError(t, err)
+	assert.NotNil(t, user)
 
-	assert.Equal(t, user.ID, userData.ID)
-	assert.Equal(t, user.Email, userData.Email)
-	assert.Nil(t, userData.PhoneNumber)
-
-	user1, err := GetUserByID("random")
-	assert.NoError(t, err)
-	assert.Nil(t, user1)
-
-	result1, err := SignInUpByEmail("test@example.com")
-	assert.NoError(t, err)
-
-	user1 = &result1.User
-
-	userData1, err := GetUserByEmail(*user1.Email)
-	assert.NoError(t, err)
-
-	assert.Equal(t, user1.ID, userData1.ID)
-	assert.Equal(t, user1.Email, userData1.Email)
-	assert.Nil(t, userData1.PhoneNumber)
-
-	user2, err := GetUserByID("random")
-	assert.NoError(t, err)
-	assert.Nil(t, user2)
-
-	result2, err := SignInUpByPhoneNumber("+1234567890")
-	assert.NoError(t, err)
-
-	user2 = &result2.User
-
-	userData2, err := GetUserByPhoneNumber(*user2.PhoneNumber)
-	assert.NoError(t, err)
-
-	assert.Equal(t, user2.ID, userData2.ID)
-	assert.Equal(t, user2.PhoneNumber, userData2.PhoneNumber)
-	assert.Nil(t, userData2.Email)
+	assert.Equal(t, user.Email, resp.User.Email)
+	assert.Equal(t, user.ID, resp.User.ID)
+	assert.Equal(t, user.PhoneNumber, resp.User.PhoneNumber)
+	assert.Equal(t, user.ThirdParty, resp.User.ThirdParty)
+	assert.Equal(t, user.ThirdParty, resp.User.ThirdParty)
+	assert.Nil(t, user.Email)
+	assert.Nil(t, user.ThirdParty)
 }
 
-func TestCreateCode(t *testing.T) {
+func TestWithThirdPartyPasswordlessCreateCodeTest(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -134,7 +286,7 @@ func TestCreateCode(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -145,20 +297,18 @@ func TestCreateCode(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-
 	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
-
 	apiV, err := q.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
@@ -170,29 +320,29 @@ func TestCreateCode(t *testing.T) {
 
 	resp, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
-
+	assert.NotNil(t, resp.OK)
 	assert.NotNil(t, resp.OK.CodeID)
+	assert.NotNil(t, resp.OK.PreAuthSessionID)
 	assert.NotNil(t, resp.OK.CodeLifetime)
 	assert.NotNil(t, resp.OK.DeviceID)
 	assert.NotNil(t, resp.OK.LinkCode)
-	assert.NotNil(t, resp.OK.PreAuthSessionID)
 	assert.NotNil(t, resp.OK.TimeCreated)
 	assert.NotNil(t, resp.OK.UserInputCode)
 
-	userInputCode := "123"
+	userInputCode := "23123"
 	resp1, err := CreateCodeWithEmail("test@example.com", &userInputCode)
 	assert.NoError(t, err)
-
+	assert.NotNil(t, resp1.OK)
 	assert.NotNil(t, resp1.OK.CodeID)
+	assert.NotNil(t, resp1.OK.PreAuthSessionID)
 	assert.NotNil(t, resp1.OK.CodeLifetime)
 	assert.NotNil(t, resp1.OK.DeviceID)
 	assert.NotNil(t, resp1.OK.LinkCode)
-	assert.NotNil(t, resp1.OK.PreAuthSessionID)
 	assert.NotNil(t, resp1.OK.TimeCreated)
 	assert.NotNil(t, resp1.OK.UserInputCode)
 }
 
-func TestCreateNewCodeForDeviceTest(t *testing.T) {
+func TestThirdPartyPasswordlessCreateNewCodeFromDevice(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -204,7 +354,7 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -215,20 +365,113 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
-
 	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		t.Error(err.Error())
 	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
 
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	resp, err := CreateCodeWithEmail("test@example.com", nil)
+
+	assert.NoError(t, err)
+
+	resp1, err := CreateNewCodeForDevice(resp.OK.DeviceID, nil)
+	assert.NoError(t, err)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp1.OK)
+	assert.NotNil(t, resp1.OK.CodeID)
+	assert.NotNil(t, resp1.OK.PreAuthSessionID)
+	assert.NotNil(t, resp1.OK.CodeLifetime)
+	assert.NotNil(t, resp1.OK.DeviceID)
+	assert.NotNil(t, resp1.OK.LinkCode)
+	assert.NotNil(t, resp1.OK.TimeCreated)
+	assert.NotNil(t, resp1.OK.UserInputCode)
+
+	resp, err = CreateCodeWithEmail("test@example.com", nil)
+	assert.NoError(t, err)
+
+	userInputCode := "2314"
+	resp1, err = CreateNewCodeForDevice(resp.OK.DeviceID, &userInputCode)
+	assert.NoError(t, err)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, resp1.OK)
+	assert.NotNil(t, resp1.OK.CodeID)
+	assert.NotNil(t, resp1.OK.PreAuthSessionID)
+	assert.NotNil(t, resp1.OK.CodeLifetime)
+	assert.NotNil(t, resp1.OK.DeviceID)
+	assert.NotNil(t, resp1.OK.LinkCode)
+	assert.NotNil(t, resp1.OK.TimeCreated)
+	assert.NotNil(t, resp1.OK.UserInputCode)
+
+	resp, err = CreateCodeWithEmail("test@example.com", nil)
+	assert.NoError(t, err)
+
+	resp1, err = CreateNewCodeForDevice("random", nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp1.RestartFlowError)
+	assert.Nil(t, resp1.OK)
+
+	resp, err = CreateCodeWithEmail("test@example.com", &userInputCode)
+	assert.NoError(t, err)
+
+	resp1, err = CreateNewCodeForDevice(resp.OK.DeviceID, &userInputCode)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp1.UserInputCodeAlreadyUsedError)
+	assert.Nil(t, resp1.OK)
+}
+
+func TestThirdPartyPasswordlessConsumeCoed(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(tplmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
 	apiV, err := q.GetQuerierAPIVersion()
 	if err != nil {
 		t.Error(err.Error())
@@ -241,123 +484,36 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 	resp, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
-	newDeviceCodeResp, err := CreateNewCodeForDevice(resp.OK.DeviceID, nil)
+	result, err := ConsumeCodeWithUserInputCode(resp.OK.DeviceID, resp.OK.UserInputCode, resp.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, newDeviceCodeResp.OK.CodeID)
-	assert.NotNil(t, newDeviceCodeResp.OK.CodeLifetime)
-	assert.NotNil(t, newDeviceCodeResp.OK.DeviceID)
-	assert.NotNil(t, newDeviceCodeResp.OK.LinkCode)
-	assert.NotNil(t, newDeviceCodeResp.OK.PreAuthSessionID)
-	assert.NotNil(t, newDeviceCodeResp.OK.TimeCreated)
-	assert.NotNil(t, newDeviceCodeResp.OK.UserInputCode)
+	assert.NotNil(t, result.OK)
+	assert.True(t, result.OK.CreatedNewUser)
+	assert.Equal(t, "test@example.com", *result.OK.User.Email)
+	assert.NotNil(t, result.OK)
+	assert.NotNil(t, result.OK.User)
+	assert.NotNil(t, result.OK.User.ID)
+	assert.NotNil(t, result.OK.User.TimeJoined)
+	assert.Nil(t, result.OK.User.PhoneNumber)
+	assert.Nil(t, result.OK.User.ThirdParty)
 
-	resp1, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err = CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
-	userInputCode := "123"
-	newDeviceCodeResp1, err := CreateNewCodeForDevice(resp1.OK.DeviceID, &userInputCode)
+	result, err = ConsumeCodeWithUserInputCode(resp.OK.DeviceID, "random", resp.OK.PreAuthSessionID)
+	assert.NoError(t, err)
+	assert.NotNil(t, result.IncorrectUserInputCodeError)
+	assert.Equal(t, 1, result.IncorrectUserInputCodeError.FailedCodeInputAttemptCount)
+	assert.Equal(t, 5, result.IncorrectUserInputCodeError.MaximumCodeInputAttempts)
+
+	resp, err = CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
-	assert.NotNil(t, newDeviceCodeResp1.OK.CodeID)
-	assert.NotNil(t, newDeviceCodeResp1.OK.CodeLifetime)
-	assert.NotNil(t, newDeviceCodeResp1.OK.DeviceID)
-	assert.NotNil(t, newDeviceCodeResp1.OK.LinkCode)
-	assert.NotNil(t, newDeviceCodeResp1.OK.PreAuthSessionID)
-	assert.NotNil(t, newDeviceCodeResp1.OK.TimeCreated)
-	assert.NotNil(t, newDeviceCodeResp1.OK.UserInputCode)
-
-	_, err = CreateCodeWithEmail("test@example.com", nil)
-	assert.NoError(t, err)
-
-	newDeviceCodeResp2, err := CreateNewCodeForDevice("asdasdasddas", nil)
-	assert.NoError(t, err)
-
-	assert.NotNil(t, newDeviceCodeResp2.RestartFlowError)
-	assert.Nil(t, newDeviceCodeResp2.OK)
-
-	resp2, err := CreateCodeWithEmail("test@example.com", &userInputCode)
-	assert.NoError(t, err)
-
-	newDeviceCodeResp3, err := CreateNewCodeForDevice(resp2.OK.DeviceID, &userInputCode)
-	assert.NoError(t, err)
-
-	assert.NotNil(t, newDeviceCodeResp3.UserInputCodeAlreadyUsedError)
-	assert.Nil(t, newDeviceCodeResp3.OK)
-}
-
-func TestConsumeCode(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-				},
-			}),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	apiV, err := q.GetQuerierAPIVersion()
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-		return
-	}
-
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
-	assert.NoError(t, err)
-
-	resp, err := ConsumeCodeWithUserInputCode(codeInfo.OK.DeviceID, codeInfo.OK.UserInputCode, codeInfo.OK.PreAuthSessionID)
-	assert.NoError(t, err)
-
-	assert.True(t, resp.OK.CreatedNewUser)
-	assert.NotNil(t, resp.OK.User)
-
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
-	assert.NoError(t, err)
-
-	resp1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, "qefefikjeii", codeInfo1.OK.PreAuthSessionID)
-	assert.NoError(t, err)
-
-	assert.NotNil(t, resp1.IncorrectUserInputCodeError)
-	assert.Nil(t, resp1.OK)
-
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
-	assert.NoError(t, err)
-
-	_, err = ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, "asdasdasdasds")
+	_, err = ConsumeCodeWithUserInputCode(resp.OK.DeviceID, resp.OK.UserInputCode, "random")
 	assert.Contains(t, err.Error(), "preAuthSessionId and deviceId doesn't match")
 }
 
-func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
+func TestThirdPartyPasswordlessConsumeCodeTestWithExpiredUserInputCodeError(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -369,7 +525,7 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -380,6 +536,7 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
 	unittesting.StartUpST("localhost", "8080")
@@ -401,20 +558,20 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 		return
 	}
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
 
-	resp, err := ConsumeCodeWithUserInputCode(codeInfo.OK.DeviceID, codeInfo.OK.UserInputCode, codeInfo.OK.PreAuthSessionID)
+	result, err := ConsumeCodeWithUserInputCode(resp.OK.DeviceID, resp.OK.UserInputCode, resp.OK.PreAuthSessionID)
 	assert.NoError(t, err)
-
-	assert.NotNil(t, resp.ExpiredUserInputCodeError)
-	assert.Equal(t, 1, resp.ExpiredUserInputCodeError.FailedCodeInputAttemptCount)
-	assert.Equal(t, 5, resp.ExpiredUserInputCodeError.MaximumCodeInputAttempts)
+	assert.NotNil(t, result.ExpiredUserInputCodeError)
+	assert.Equal(t, 1, result.ExpiredUserInputCodeError.FailedCodeInputAttemptCount)
+	assert.Equal(t, 5, result.ExpiredUserInputCodeError.MaximumCodeInputAttempts)
+	assert.Nil(t, result.OK)
 }
 
-func TestUpdateUserContactMethodEmail(t *testing.T) {
+func TestThirdPartyPasswordlessUpdateUserContactMethodEmailTest(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -426,7 +583,7 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -437,8 +594,8 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
@@ -458,37 +615,33 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 		return
 	}
 
-	resp, err := SignInUpByEmail("test@example.com")
+	userInfo, err := PasswordlessSignInUpByEmail("test@example.com")
 	assert.NoError(t, err)
 
-	email := "test2@example.com"
-	updatedResp, err := UpdateUser(resp.User.ID, &email, nil)
+	updatedEmail := "test2@example.com"
+	resp, err := UpdatePasswordlessUser(userInfo.User.ID, &updatedEmail, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, resp.OK)
+
+	user, err := GetUserByID(userInfo.User.ID)
+	assert.NoError(t, err)
+	assert.Equal(t, updatedEmail, *user.Email)
+
+	resp, err = UpdatePasswordlessUser("random", &updatedEmail, nil)
+	assert.NoError(t, err)
+	assert.Nil(t, resp.OK)
+	assert.NotNil(t, resp.UnknownUserIdError)
+
+	userInfo2, err := PasswordlessSignInUpByEmail("test3@example.com")
 	assert.NoError(t, err)
 
-	assert.NotNil(t, updatedResp.OK)
-
-	updatedUser, err := GetUserByID(resp.User.ID)
+	resp, err = UpdatePasswordlessUser(userInfo2.User.ID, &updatedEmail, nil)
 	assert.NoError(t, err)
-
-	assert.Equal(t, *updatedUser.Email, email)
-
-	updatedResp, err = UpdateUser("asdasdasdsads", &email, nil)
-	assert.NoError(t, err)
-
-	assert.Nil(t, updatedResp.OK)
-	assert.NotNil(t, updatedResp.UnknownUserIdError)
-
-	resp1, err := SignInUpByEmail("test3@example.com")
-	assert.NoError(t, err)
-
-	updatedResp, err = UpdateUser(resp1.User.ID, &email, nil)
-	assert.NoError(t, err)
-
-	assert.Nil(t, updatedResp.OK)
-	assert.NotNil(t, updatedResp.EmailAlreadyExistsError)
+	assert.Nil(t, resp.OK)
+	assert.NotNil(t, resp.EmailAlreadyExistsError)
 }
 
-func TestUpdateUserContactMethodPhone(t *testing.T) {
+func TestThirdPartyPasswordlessUpdateUserContactPhone(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -500,7 +653,7 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
@@ -511,8 +664,8 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
@@ -536,10 +689,10 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 	phoneNumber_2 := "+1234567892"
 	phoneNumber_3 := "+1234567893"
 
-	userInfo, err := SignInUpByPhoneNumber(phoneNumber_1)
+	userInfo, err := PasswordlessSignInUpByPhoneNumber(phoneNumber_1)
 	assert.NoError(t, err)
 
-	res1, err := UpdateUser(userInfo.User.ID, nil, &phoneNumber_2)
+	res1, err := UpdatePasswordlessUser(userInfo.User.ID, nil, &phoneNumber_2)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, res1.OK)
@@ -549,17 +702,17 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 
 	assert.Equal(t, phoneNumber_2, *result.PhoneNumber)
 
-	userInfo1, err := SignInUpByPhoneNumber(phoneNumber_3)
+	userInfo1, err := PasswordlessSignInUpByPhoneNumber(phoneNumber_3)
 	assert.NoError(t, err)
 
-	res1, err = UpdateUser(userInfo1.User.ID, nil, &phoneNumber_2)
+	res1, err = UpdatePasswordlessUser(userInfo1.User.ID, nil, &phoneNumber_2)
 	assert.NoError(t, err)
 
 	assert.Nil(t, res1.OK)
 	assert.NotNil(t, res1.PhoneNumberAlreadyExistsError)
 }
 
-func TestRevokeAllCodes(t *testing.T) {
+func TestThirdPartyPasswordlessRevokeAllCodesTest(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -571,7 +724,7 @@ func TestRevokeAllCodes(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -582,8 +735,8 @@ func TestRevokeAllCodes(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
@@ -605,6 +758,7 @@ func TestRevokeAllCodes(t *testing.T) {
 
 	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
+
 	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
@@ -613,18 +767,16 @@ func TestRevokeAllCodes(t *testing.T) {
 
 	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
-
 	assert.NotNil(t, result1.RestartFlowError)
 	assert.Nil(t, result1.OK)
 
 	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
 	assert.NoError(t, err)
-
 	assert.NotNil(t, result2.RestartFlowError)
 	assert.Nil(t, result2.OK)
 }
 
-func TestRevokeCode(t *testing.T) {
+func TestThirdPartyPasswordlessRevokeCode(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -636,7 +788,7 @@ func TestRevokeCode(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -647,6 +799,7 @@ func TestRevokeCode(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -667,9 +820,10 @@ func TestRevokeCode(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("random@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
-	codeInfo2, err := CreateCodeWithEmail("random@example.com", nil)
+
+	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
 	err = RevokeCode(codeInfo1.OK.CodeID)
@@ -686,7 +840,7 @@ func TestRevokeCode(t *testing.T) {
 	assert.NotNil(t, result2.OK)
 }
 
-func TestListCodesByEmail(t *testing.T) {
+func TestThirdPartyPasswordlessListCodesByEmail(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -698,7 +852,7 @@ func TestListCodesByEmail(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -709,6 +863,7 @@ func TestListCodesByEmail(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -731,15 +886,15 @@ func TestListCodesByEmail(t *testing.T) {
 
 	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
+
 	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
 	assert.NoError(t, err)
 
-	res, err := ListCodesByEmail("test@example.com")
+	result, err := ListCodesByEmail("test@example.com")
 	assert.NoError(t, err)
 
-	assert.Equal(t, 2, len(res))
-
-	for _, dt := range res {
+	assert.Equal(t, 2, len(result))
+	for _, dt := range result {
 		for _, c := range dt.Codes {
 			if !(c.CodeID == codeInfo1.OK.CodeID || c.CodeID == codeInfo2.OK.CodeID) {
 				t.Fail()
@@ -748,7 +903,7 @@ func TestListCodesByEmail(t *testing.T) {
 	}
 }
 
-func TestListCodeByPhoneNumber(t *testing.T) {
+func TestListCodesByPhoneNumber(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -760,7 +915,7 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
@@ -771,6 +926,7 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -791,17 +947,17 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithPhoneNumber("+1234567890", nil)
-	assert.NoError(t, err)
-	codeInfo2, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo1, err := CreateCodeWithEmail("+1234567890", nil)
 	assert.NoError(t, err)
 
-	res, err := ListCodesByPhoneNumber("+1234567890")
+	codeInfo2, err := CreateCodeWithEmail("+1234567890", nil)
 	assert.NoError(t, err)
 
-	assert.Equal(t, 2, len(res))
+	result, err := ListCodesByEmail("+1234567890")
+	assert.NoError(t, err)
 
-	for _, dt := range res {
+	assert.Equal(t, 2, len(result))
+	for _, dt := range result {
 		for _, c := range dt.Codes {
 			if !(c.CodeID == codeInfo1.OK.CodeID || c.CodeID == codeInfo2.OK.CodeID) {
 				t.Fail()
@@ -810,7 +966,7 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 	}
 }
 
-func TestCreatingMagicLink(t *testing.T) {
+func TestThirdPartyPasswordlessListCodesByDeviceIdAndListCodesByPreAuthSessionId(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -822,7 +978,7 @@ func TestCreatingMagicLink(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
@@ -833,6 +989,7 @@ func TestCreatingMagicLink(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -853,18 +1010,21 @@ func TestCreatingMagicLink(t *testing.T) {
 		return
 	}
 
-	link, err := CreateMagicLinkByPhoneNumber("+1234567890")
+	codeInfo1, err := CreateCodeWithEmail("+1234567890", nil)
 	assert.NoError(t, err)
 
-	res, err := url.Parse(link)
+	result, err := ListCodesByDeviceID(codeInfo1.OK.DeviceID)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "supertokens.io", res.Host)
-	assert.Equal(t, "/auth/verify", res.Path)
-	assert.Equal(t, "passwordless", res.Query().Get("rid"))
+	assert.Equal(t, codeInfo1.OK.CodeID, result.Codes[0].CodeID)
+
+	result, err = ListCodesByPreAuthSessionID(codeInfo1.OK.PreAuthSessionID)
+	assert.NoError(t, err)
+
+	assert.Equal(t, codeInfo1.OK.CodeID, result.Codes[0].CodeID)
 }
 
-func TestSignInUp(t *testing.T) {
+func TestCreateMagicLinkTest(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -876,7 +1036,7 @@ func TestSignInUp(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			session.Init(nil),
-			Init(plessmodels.TypeInput{
+			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
@@ -887,6 +1047,7 @@ func TestSignInUp(t *testing.T) {
 			}),
 		},
 	}
+
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -907,73 +1068,68 @@ func TestSignInUp(t *testing.T) {
 		return
 	}
 
-	result, err := SignInUpByPhoneNumber("+1234567890")
+	result, err := CreateMagicLinkByPhoneNumber("+1234567890")
 	assert.NoError(t, err)
 
-	assert.True(t, result.CreatedNewUser)
+	magicLinkURL, err := url.Parse(result)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "supertokens.io", magicLinkURL.Host)
+	assert.Equal(t, "/auth/verify", magicLinkURL.Path)
+	assert.Equal(t, "thirdpartypasswordless", magicLinkURL.Query().Get("rid"))
+	assert.NotNil(t, magicLinkURL.Query().Get("preAuthSessionId"))
+}
+
+func TestThirdPartyPasswordlessSignInUp(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(tplmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+					Enabled: true,
+					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	result, err := PasswordlessSignInUpByPhoneNumber("+12345678901")
+	assert.NoError(t, err)
 	assert.NotNil(t, result.User)
-	assert.Equal(t, "+1234567890", *result.User.PhoneNumber)
-	assert.NotNil(t, result.User.ID)
+	assert.True(t, result.CreatedNewUser)
+	assert.Equal(t, "+12345678901", *result.User.PhoneNumber)
 	assert.NotNil(t, result.User.TimeJoined)
-}
-
-func TestListCodesByPreAuthSessionID(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-				},
-			}),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	apiV, err := q.GetQuerierAPIVersion()
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-		return
-	}
-
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
-	assert.NoError(t, err)
-
-	codeInfo2, err := CreateNewCodeForDevice(codeInfo1.OK.DeviceID, nil)
-	assert.NoError(t, err)
-
-	assert.Equal(t, codeInfo1.OK.PreAuthSessionID, codeInfo2.OK.PreAuthSessionID)
-
-	res, err := ListCodesByPreAuthSessionID(codeInfo1.OK.PreAuthSessionID)
-	assert.NoError(t, err)
-
-	for _, c := range res.Codes {
-		if !(c.CodeID == codeInfo1.OK.CodeID || c.CodeID == codeInfo2.OK.CodeID) {
-			t.Fail()
-		}
-	}
+	assert.NotNil(t, result.User.ID)
+	assert.Nil(t, result.User.ThirdParty)
 }

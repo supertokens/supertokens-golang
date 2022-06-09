@@ -16,9 +16,12 @@
 package supertokens
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"io/ioutil"
 	"math"
 	"net/http"
 	"reflect"
@@ -176,6 +179,18 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 		}
 	}
 	return nil
+}
+
+func ReadFromRequest(r *http.Request) ([]byte, error) {
+	f := r.Body
+	buf, err := ioutil.ReadAll(f)
+	if err != nil {
+		return buf, err
+	}
+
+	r.Body = io.NopCloser(bytes.NewReader(buf))
+
+	return buf, nil
 }
 
 func formatOneDecimalFloat(n float64) (string, string) {

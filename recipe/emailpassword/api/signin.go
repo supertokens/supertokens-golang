@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -29,7 +28,7 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(options.Req.Body)
+	body, err := supertokens.ReadFromRequest(options.Req)
 	if err != nil {
 		return err
 	}

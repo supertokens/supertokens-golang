@@ -585,7 +585,6 @@ func SigninupCustomRequest(testServerUrl string, email string, id string) (*http
 func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interface{} {
 	dataInBytes, err := ioutil.ReadAll(body)
 	if err != nil {
-		log.Fatal(err.Error(), "Error while converting http response to consumable info")
 		return nil
 	}
 	body.Close()
@@ -594,7 +593,6 @@ func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interfa
 	err = json.Unmarshal(dataInBytes, &result)
 
 	if err != nil {
-		log.Fatal(err.Error(), "Error while converting bytes to json inside HttpResponseToConsumableInformation")
 		return nil
 	}
 

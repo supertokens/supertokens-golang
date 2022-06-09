@@ -6,15 +6,44 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.6.6]
+- Fixes facebook login
+
+## [0.6.5]
+- Fixes issue in reading request body in API override: https://github.com/supertokens/supertokens-golang/issues/116
+
+## [0.6.4]
+- Fixes issue in writing custom response in API override with general error
+### Added
+- Adds unit tests to thirdpartypasswordless recipe
+
+## [0.6.3] - 2022-05-19
+### Fixes
+- Fixes the function signature of the `GetUserByThirdPartyInfo` function in the `thirdpartypasswordless` recipe.
+
+## [0.6.2] - 2022-05-18
+### Fixes
+- Fixes issue in writing custom response in API Override
+
+## [0.6.1] - 2022-05-17
+### Fixes
+- https://github.com/supertokens/supertokens-golang/issues/102. Sending `preAuthSessionID` instead of `preAuthSessionId` to the core.
+- Fixes the error message in AuthorizationUrlAPI function in the `api` module of the thirdparty recipe in case when providers is nil
+
+## [0.6.0] - 2022-05-13
+### Breaking Change
+
+- Adds both with context and without context functions to thirdparty passwordless recipe, Like all other recipes. Where we expose both WithContext functions and without context functions, which are basically the same as WithContext ones with an emtpy map[string]interface{} passed as context
+
 ### Added
 - Adds unit tests to passwordless recipe 
-
 
 ### Fixes
 - Fixes existing action to run go mod tidy in the examples folder
 - Fixes stopSt function in testing utils
 
-## [0.5.9] - 2020-05-10
+## [0.5.9] - 2022-05-10
 ### Fixes
 - Fixes bug in the revokeCode function of the recipeimplementation in passwordless recipe 
 

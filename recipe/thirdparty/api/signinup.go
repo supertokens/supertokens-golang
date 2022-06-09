@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -37,7 +36,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(options.Req.Body)
+	body, err := supertokens.ReadFromRequest(options.Req)
 	if err != nil {
 		return err
 	}
@@ -72,9 +71,9 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 
 	if provider == nil {
 		if clientId == nil {
-			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be missing from the backend configs"}
+			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to be missing from the backend configs."}
 		} else {
-			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to not be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
+			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
 		}
 	}
 

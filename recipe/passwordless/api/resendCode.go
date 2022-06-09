@@ -17,7 +17,6 @@ package api
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
@@ -30,7 +29,7 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		return nil
 	}
 
-	body, err := ioutil.ReadAll(options.Req.Body)
+	body, err := supertokens.ReadFromRequest(options.Req)
 	if err != nil {
 		return err
 	}

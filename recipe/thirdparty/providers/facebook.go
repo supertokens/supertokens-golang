@@ -80,18 +80,18 @@ func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 					}
 					userInfo := response.(map[string]interface{})
 					ID := userInfo["id"].(string)
-					email := userInfo["email"].(string)
-					if email == "" {
+					email, emailOk := userInfo["email"].(string)
+					if !emailOk {
 						return tpmodels.UserInfo{
 							ID: ID,
 						}, nil
 					}
-					isVerified := userInfo["verified_email"].(bool)
+					isVerified, isVerifiedOk := userInfo["verified_email"].(bool)
 					return tpmodels.UserInfo{
 						ID: ID,
 						Email: &tpmodels.EmailStruct{
 							ID:         email,
-							IsVerified: isVerified,
+							IsVerified: isVerified && isVerifiedOk,
 						},
 					}, nil
 				},
@@ -110,9 +110,11 @@ func getFacebookAuthRequest(accessToken string) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("access_token", accessToken)
-	req.Header.Add("fields", "id,email")
-	req.Header.Add("format", "json")
+	q := req.URL.Query()
+	q.Add("access_token", accessToken)
+	q.Add("fields", "id,email")
+	q.Add("format", "json")
+	req.URL.RawQuery = q.Encode()
 	return doGetRequest(req)
 }
 
