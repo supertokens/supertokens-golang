@@ -18,6 +18,7 @@ package thirdpartyemailpassword
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -164,6 +165,14 @@ func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext
 	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
 }
 
+func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
+}
+
 func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
 	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
@@ -218,4 +227,8 @@ func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificat
 
 func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
 	return UnverifyEmailWithContext(userID, &map[string]interface{}{})
+}
+
+func SendEmail(input emaildelivery.EmailType) error {
+	return SendEmailWithContext(input, &map[string]interface{}{})
 }

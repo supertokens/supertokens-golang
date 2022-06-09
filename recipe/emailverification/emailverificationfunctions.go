@@ -18,6 +18,8 @@ package emailverification
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
@@ -30,10 +32,14 @@ func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(
 	}
 }
 
+// used for testing purposes.
+var EmailVerificationEmailSentForTest = false
+
 // TODO: add test to see query
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 	return func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {
+			EmailVerificationEmailSentForTest = true
 			// if running in test mode, we do not want to send this.
 			return
 		}
@@ -56,10 +62,26 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		req.Header.Set("content-type", "application/json")
 		req.Header.Set("api-version", "0")
 		client := &http.Client{}
-		_, err = client.Do(req)
-		if err != nil {
+		resp, err := client.Do(req)
+
+		if err == nil && resp.StatusCode < 300 {
+			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email sent to %s", user.Email))
 			return
 		}
-		return
+
+		supertokens.LogDebugMessage("Error sending verification email")
+		if err != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+		} else {
+			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
+			body, err := ioutil.ReadAll(resp.Body)
+			if err != nil {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
+			} else {
+				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
+			}
+		}
+		supertokens.LogDebugMessage("Logging the input below:")
+		supertokens.LogDebugMessage(string(jsonData))
 	}
 }

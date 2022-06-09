@@ -16,6 +16,10 @@
 package api
 
 import (
+	"fmt"
+
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -94,7 +98,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 
 		if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && phoneNumber != nil) {
 			if options.Config.ContactMethodPhone.Enabled {
-				err := options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*phoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *phoneNumber))
+				err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
+					smsdelivery.SmsType{
+						PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
+							PhoneNumber:      *phoneNumber,
+							UserInputCode:    userInputCode,
+							UrlWithLinkCode:  magicLink,
+							CodeLifetime:     response.OK.CodeLifetime,
+							PreAuthSessionId: response.OK.PreAuthSessionID,
+						},
+					},
+					userContext,
+				)
 				if err != nil {
 					return plessmodels.CreateCodePOSTResponse{
 						GeneralError: &struct{ Message string }{
@@ -103,7 +119,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					}, nil
 				}
 			} else {
-				err := options.Config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage(*phoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *phoneNumber))
+				err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
+					smsdelivery.SmsType{
+						PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
+							PhoneNumber:      *phoneNumber,
+							UserInputCode:    userInputCode,
+							UrlWithLinkCode:  magicLink,
+							CodeLifetime:     response.OK.CodeLifetime,
+							PreAuthSessionId: response.OK.PreAuthSessionID,
+						},
+					},
+					userContext,
+				)
 				if err != nil {
 					return plessmodels.CreateCodePOSTResponse{
 						GeneralError: &struct{ Message string }{
@@ -114,7 +142,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			}
 		} else {
 			if options.Config.ContactMethodEmail.Enabled {
-				err := options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *email))
+				err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+					emaildelivery.EmailType{
+						PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+							Email:            *email,
+							UserInputCode:    userInputCode,
+							UrlWithLinkCode:  magicLink,
+							CodeLifetime:     response.OK.CodeLifetime,
+							PreAuthSessionId: response.OK.PreAuthSessionID,
+						},
+					},
+					userContext,
+				)
 				if err != nil {
 					return plessmodels.CreateCodePOSTResponse{
 						GeneralError: &struct{ Message string }{
@@ -123,7 +163,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					}, nil
 				}
 			} else {
-				err := options.Config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail(*email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *email))
+				err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+					emaildelivery.EmailType{
+						PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+							Email:            *email,
+							UserInputCode:    userInputCode,
+							UrlWithLinkCode:  magicLink,
+							CodeLifetime:     response.OK.CodeLifetime,
+							PreAuthSessionId: response.OK.PreAuthSessionID,
+						},
+					},
+					userContext,
+				)
 				if err != nil {
 					return plessmodels.CreateCodePOSTResponse{
 						GeneralError: &struct{ Message string }{
@@ -234,7 +286,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 
 			if options.Config.ContactMethodPhone.Enabled || (options.Config.ContactMethodEmailOrPhone.Enabled && deviceInfo.PhoneNumber != nil) {
 				if options.Config.ContactMethodPhone.Enabled {
-					err := options.Config.ContactMethodPhone.CreateAndSendCustomTextMessage(*deviceInfo.PhoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *deviceInfo.PhoneNumber))
+					err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
+						smsdelivery.SmsType{
+							PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
+								PhoneNumber:      *deviceInfo.PhoneNumber,
+								UserInputCode:    userInputCode,
+								UrlWithLinkCode:  magicLink,
+								CodeLifetime:     response.OK.CodeLifetime,
+								PreAuthSessionId: response.OK.PreAuthSessionID,
+							},
+						},
+						userContext,
+					)
 					if err != nil {
 						return plessmodels.ResendCodePOSTResponse{
 							GeneralError: &struct{ Message string }{
@@ -243,7 +307,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						}, nil
 					}
 				} else {
-					err := options.Config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage(*deviceInfo.PhoneNumber, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *deviceInfo.PhoneNumber))
+					err := (*options.SmsDelivery.IngredientInterfaceImpl.SendSms)(
+						smsdelivery.SmsType{
+							PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
+								PhoneNumber:      *deviceInfo.PhoneNumber,
+								UserInputCode:    userInputCode,
+								UrlWithLinkCode:  magicLink,
+								CodeLifetime:     response.OK.CodeLifetime,
+								PreAuthSessionId: response.OK.PreAuthSessionID,
+							},
+						},
+						userContext,
+					)
 					if err != nil {
 						return plessmodels.ResendCodePOSTResponse{
 							GeneralError: &struct{ Message string }{
@@ -254,7 +330,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 				}
 			} else {
 				if options.Config.ContactMethodEmail.Enabled {
-					err := options.Config.ContactMethodEmail.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *deviceInfo.Email))
+					err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+						emaildelivery.EmailType{
+							PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+								Email:            *deviceInfo.Email,
+								UserInputCode:    userInputCode,
+								UrlWithLinkCode:  magicLink,
+								CodeLifetime:     response.OK.CodeLifetime,
+								PreAuthSessionId: response.OK.PreAuthSessionID,
+							},
+						},
+						userContext,
+					)
 					if err != nil {
 						return plessmodels.ResendCodePOSTResponse{
 							GeneralError: &struct{ Message string }{
@@ -263,7 +351,19 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						}, nil
 					}
 				} else {
-					err := options.Config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail(*deviceInfo.Email, userInputCode, magicLink, response.OK.CodeLifetime, response.OK.PreAuthSessionID, userContext)
+					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *deviceInfo.Email))
+					err := (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(
+						emaildelivery.EmailType{
+							PasswordlessLogin: &emaildelivery.PasswordlessLoginType{
+								Email:            *deviceInfo.Email,
+								UserInputCode:    userInputCode,
+								UrlWithLinkCode:  magicLink,
+								CodeLifetime:     response.OK.CodeLifetime,
+								PreAuthSessionId: response.OK.PreAuthSessionID,
+							},
+						},
+						userContext,
+					)
 					if err != nil {
 						return plessmodels.ResendCodePOSTResponse{
 							GeneralError: &struct{ Message string }{

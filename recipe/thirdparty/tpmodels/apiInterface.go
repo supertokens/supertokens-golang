@@ -18,6 +18,7 @@ package tpmodels
 import (
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -54,4 +55,5 @@ type APIOptions struct {
 	Res                                   http.ResponseWriter
 	OtherHandler                          http.HandlerFunc
 	AppInfo                               supertokens.NormalisedAppinfo
+	EmailDelivery                         emaildelivery.Ingredient
 }

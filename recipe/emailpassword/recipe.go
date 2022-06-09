@@ -19,6 +19,7 @@ import (
 	defaultErrors "errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
@@ -35,11 +36,12 @@ type Recipe struct {
 	RecipeImpl              epmodels.RecipeInterface
 	APIImpl                 epmodels.APIInterface
 	EmailVerificationRecipe emailverification.Recipe
+	EmailDelivery           emaildelivery.Ingredient
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *epmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *epmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
 
@@ -52,8 +54,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
 
+	if emailDeliveryIngredient != nil {
+		r.EmailDelivery = *emailDeliveryIngredient
+	} else {
+		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl))
+	}
+
 	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, onGeneralError)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onGeneralError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -69,7 +77,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 func recipeInit(config *epmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, onGeneralError)
 			if err != nil {
 				return nil, err
 			}
@@ -151,6 +159,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		EmailVerificationRecipeImplementation: r.EmailVerificationRecipe.RecipeImpl,
 		Req:                                   req,
 		Res:                                   res,
+		EmailDelivery:                         r.EmailDelivery,
 	}
 	if id == constants.SignUpAPI {
 		return api.SignUpAPI(r.APIImpl, options)
@@ -194,4 +203,5 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 
 func ResetForTest() {
 	singletonInstance = nil
+	PasswordResetEmailSentForTest = false
 }

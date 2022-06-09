@@ -19,8 +19,10 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"reflect"
 	"regexp"
@@ -189,4 +191,38 @@ func ReadFromRequest(r *http.Request) ([]byte, error) {
 	r.Body = io.NopCloser(bytes.NewReader(buf))
 
 	return buf, nil
+}
+
+func formatOneDecimalFloat(n float64) (string, string) {
+	n = math.Floor(n*10) / 10
+	if float64(int(n)) == n {
+		if n == 1.0 {
+			return fmt.Sprintf("%d", int(n)), ""
+		} else {
+			return fmt.Sprintf("%d", int(n)), "s"
+		}
+	}
+	return fmt.Sprintf("%.1f", n), "s"
+}
+
+func HumaniseMilliseconds(m uint64) string {
+	t := m / 1000
+	var suffix string = ""
+	if t < 60 {
+		if t > 1 {
+			suffix = "s"
+		}
+		return fmt.Sprintf("%d second%s", t, suffix)
+	} else if t < 3600 {
+		if t/60 > 1 {
+			suffix = "s"
+		}
+		return fmt.Sprintf("%d minute%s", t/60, suffix)
+	}
+	if t/3600 > 1 {
+		suffix = "s"
+	}
+	h := float64(t) / 3600
+	hStr, suffix := formatOneDecimalFloat(h)
+	return fmt.Sprintf("%s hour%s", hStr, suffix)
 }
