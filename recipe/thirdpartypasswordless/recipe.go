@@ -306,4 +306,7 @@ func (r *Recipe) getEmailForUserIdForEmailVerification(userID string, userContex
 
 func ResetForTest() {
 	singletonInstance = nil
+	emailverification.ResetForTest()
+	thirdparty.ResetForTest()
+	passwordless.ResetForTest()
 }
