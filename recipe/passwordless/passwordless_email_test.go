@@ -48,9 +48,9 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	assert.True(t, PasswordlessLoginEmailSentForTest)
-	assert.Equal(t, PasswordlessLoginDataForTest.Email, "test@example.com")
-	assert.NotNil(t, PasswordlessLoginDataForTest.UrlWithLinkCode)
-	assert.NotNil(t, PasswordlessLoginDataForTest.UserInputCode)
+	assert.Equal(t, PasswordlessLoginEmailDataForTest.Email, "test@example.com")
+	assert.NotNil(t, PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
+	assert.NotNil(t, PasswordlessLoginEmailDataForTest.UserInputCode)
 }
 
 func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
@@ -86,9 +86,9 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 
 	// Default handler not called
 	assert.False(t, PasswordlessLoginEmailSentForTest)
-	assert.Empty(t, PasswordlessLoginDataForTest.Email)
-	assert.Nil(t, PasswordlessLoginDataForTest.UserInputCode)
-	assert.Nil(t, PasswordlessLoginDataForTest.UrlWithLinkCode)
+	assert.Empty(t, PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
 	assert.Equal(t, plessEmail, "test@example.com")
@@ -138,9 +138,9 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 
 	// Default handler not called
 	assert.False(t, PasswordlessLoginEmailSentForTest)
-	assert.Empty(t, PasswordlessLoginDataForTest.Email)
-	assert.Nil(t, PasswordlessLoginDataForTest.UserInputCode)
-	assert.Nil(t, PasswordlessLoginDataForTest.UrlWithLinkCode)
+	assert.Empty(t, PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
 	assert.Equal(t, plessEmail, "test@example.com")
@@ -209,9 +209,9 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 
 	// Default handler not called
 	assert.False(t, PasswordlessLoginEmailSentForTest)
-	assert.Empty(t, PasswordlessLoginDataForTest.Email)
-	assert.Nil(t, PasswordlessLoginDataForTest.UserInputCode)
-	assert.Nil(t, PasswordlessLoginDataForTest.UrlWithLinkCode)
+	assert.Empty(t, PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	assert.Equal(t, plessEmail, "test@example.com")
 	assert.NotNil(t, code)

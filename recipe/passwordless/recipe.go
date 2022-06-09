@@ -252,7 +252,7 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 func ResetForTest() {
 	singletonInstance = nil
 	PasswordlessLoginEmailSentForTest = false
-	PasswordlessLoginDataForTest = struct {
+	PasswordlessLoginEmailDataForTest = struct {
 		Email            string
 		UserInputCode    *string
 		UrlWithLinkCode  *string

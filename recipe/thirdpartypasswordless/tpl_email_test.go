@@ -39,9 +39,9 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
 	assert.True(t, passwordless.PasswordlessLoginEmailSentForTest)
-	assert.Equal(t, passwordless.PasswordlessLoginDataForTest.Email, "test@example.com")
-	assert.NotNil(t, passwordless.PasswordlessLoginDataForTest.UrlWithLinkCode)
-	assert.NotNil(t, passwordless.PasswordlessLoginDataForTest.UserInputCode)
+	assert.Equal(t, passwordless.PasswordlessLoginEmailDataForTest.Email, "test@example.com")
+	assert.NotNil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
+	assert.NotNil(t, passwordless.PasswordlessLoginEmailDataForTest.UserInputCode)
 }
 
 func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
@@ -77,9 +77,9 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginEmailSentForTest)
-	assert.Empty(t, passwordless.PasswordlessLoginDataForTest.Email)
-	assert.Nil(t, passwordless.PasswordlessLoginDataForTest.UserInputCode)
-	assert.Nil(t, passwordless.PasswordlessLoginDataForTest.UrlWithLinkCode)
+	assert.Empty(t, passwordless.PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
 	assert.Equal(t, plessEmail, "test@example.com")
@@ -129,9 +129,9 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginEmailSentForTest)
-	assert.Empty(t, passwordless.PasswordlessLoginDataForTest.Email)
-	assert.Nil(t, passwordless.PasswordlessLoginDataForTest.UserInputCode)
-	assert.Nil(t, passwordless.PasswordlessLoginDataForTest.UrlWithLinkCode)
+	assert.Empty(t, passwordless.PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
 	assert.Equal(t, plessEmail, "test@example.com")
@@ -200,9 +200,9 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginEmailSentForTest)
-	assert.Empty(t, passwordless.PasswordlessLoginDataForTest.Email)
-	assert.Nil(t, passwordless.PasswordlessLoginDataForTest.UserInputCode)
-	assert.Nil(t, passwordless.PasswordlessLoginDataForTest.UrlWithLinkCode)
+	assert.Empty(t, passwordless.PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	assert.Equal(t, plessEmail, "test@example.com")
 	assert.NotNil(t, code)
@@ -235,7 +235,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T
 	var response map[string]interface{}
 	json.Unmarshal(bodyBytes, &response)
 
-	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginDataForTest.UserInputCode, testServer.URL)
+	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -328,7 +328,7 @@ func TestBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T) {
 	var response map[string]interface{}
 	json.Unmarshal(bodyBytes, &response)
 
-	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginDataForTest.UserInputCode, testServer.URL)
+	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
@@ -456,7 +456,7 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	var response map[string]interface{}
 	json.Unmarshal(bodyBytes, &response)
 
-	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginDataForTest.UserInputCode, testServer.URL)
+	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 

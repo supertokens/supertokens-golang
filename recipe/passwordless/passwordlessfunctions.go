@@ -28,7 +28,7 @@ import (
 )
 
 var PasswordlessLoginEmailSentForTest bool = false
-var PasswordlessLoginDataForTest struct {
+var PasswordlessLoginEmailDataForTest struct {
 	Email            string
 	UserInputCode    *string
 	UrlWithLinkCode  *string
@@ -77,12 +77,12 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
 			PasswordlessLoginEmailSentForTest = true
-			PasswordlessLoginDataForTest.Email = email
-			PasswordlessLoginDataForTest.UserInputCode = userInputCode
-			PasswordlessLoginDataForTest.UrlWithLinkCode = urlWithLinkCode
-			PasswordlessLoginDataForTest.CodeLifetime = codeLifetime
-			PasswordlessLoginDataForTest.PreAuthSessionId = preAuthSessionId
-			PasswordlessLoginDataForTest.UserContext = userContext
+			PasswordlessLoginEmailDataForTest.Email = email
+			PasswordlessLoginEmailDataForTest.UserInputCode = userInputCode
+			PasswordlessLoginEmailDataForTest.UrlWithLinkCode = urlWithLinkCode
+			PasswordlessLoginEmailDataForTest.CodeLifetime = codeLifetime
+			PasswordlessLoginEmailDataForTest.PreAuthSessionId = preAuthSessionId
+			PasswordlessLoginEmailDataForTest.UserContext = userContext
 			return nil
 		}
 		url := "https://api.supertokens.io/0/st/auth/passwordless/login"
