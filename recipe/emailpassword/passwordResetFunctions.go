@@ -1,4 +1,5 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/*
+ * Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -27,6 +28,11 @@ import (
 )
 
 var PasswordResetEmailSentForTest = false
+var PasswordResetDataForTest = struct {
+	User                      epmodels.User
+	PasswordResetURLWithToken string
+	UserContext               supertokens.UserContext
+}{}
 
 func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ epmodels.User, userContext supertokens.UserContext) (string, error) {
 	return func(_ epmodels.User, userContext supertokens.UserContext) (string, error) {
@@ -40,6 +46,9 @@ func DefaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.Normalised
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
 			PasswordResetEmailSentForTest = true
+			PasswordResetDataForTest.User = user
+			PasswordResetDataForTest.PasswordResetURLWithToken = passwordResetURLWithToken
+			PasswordResetDataForTest.UserContext = userContext
 			return
 		}
 		url := "https://api.supertokens.io/0/st/auth/password/reset"

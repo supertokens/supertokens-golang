@@ -126,6 +126,19 @@ func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config 
 					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo, userContext)
 				}
 			}
+
+			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
+					if err != nil {
+						return
+					}
+					if userInfo == nil {
+						return
+					}
+					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, emailVerificationURLWithToken, userContext)
+				}
+			}
 		}
 	}
 
