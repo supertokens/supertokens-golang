@@ -3,8 +3,6 @@ package thirdpartyemailpassword
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
-	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -507,9 +505,6 @@ func TestDefaultBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	bodyBytes, _ := ioutil.ReadAll(resp.Body)
-	fmt.Println(string(bodyBytes))
 
 	cookies := resp.Cookies()
 	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
