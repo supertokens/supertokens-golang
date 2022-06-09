@@ -4,11 +4,11 @@ import (
 	"bytes"
 	"encoding/json"
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -16,172 +16,19 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestEmailVerificationSMTPOverride(t *testing.T) {
-	getContentCalled := false
-	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
-			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
-				Name:  "Test User",
-				Email: "",
-			},
-			Port:     123,
-			Password: "",
-		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
-				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{}, nil
-			}
-
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				sendRawEmailCalled = true
-				return nil
-			}
-
-			return originalImplementation
-		},
-	})
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&tpmodels.TypeInput{
-				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-					Providers: []tpmodels.TypeProvider{
-						Google(tpmodels.GoogleConfig{ClientID: "id", ClientSecret: "secret"}),
-					},
-				},
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	err = SendEmail(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "",
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Equal(t, getContentCalled, true)
-	assert.Equal(t, sendRawEmailCalled, true)
-}
-
-func TestEmailVerificationSMTPOverrideThroughAPI(t *testing.T) {
-	var customProviderForEmailVerification = tpmodels.TypeProvider{
-		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL: "https://test.com/oauth/token",
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL: "https://test.com/oauth/auth",
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-					if authCodeResponse.(map[string]interface{})["access_token"] == nil {
-						return tpmodels.UserInfo{}, nil
-					}
-					return tpmodels.UserInfo{
-						ID: "user",
-						Email: &tpmodels.EmailStruct{
-							ID:         "email@test.com",
-							IsVerified: false,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext *map[string]interface{}) string {
-					return "supertokens"
-				},
-			}
-		},
-	}
-
-	getContentCalled := false
-	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
-			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
-				Name:  "Test User",
-				Email: "",
-			},
-			Port:     123,
-			Password: "",
-		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
-				assert.NotNil(t, input.EmailVerification)
-				assert.Equal(t, input.EmailVerification.User.Email, "email@test.com")
-				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{Body: "EmailVerification", ToEmail: input.EmailVerification.User.Email}, nil
-			}
-
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				assert.Equal(t, input.Body, "EmailVerification")
-				assert.Equal(t, input.ToEmail, "email@test.com")
-				sendRawEmailCalled = true
-				return nil
-			}
-
-			return originalImplementation
-		},
-	})
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
-			Init(&tpmodels.TypeInput{
-				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-					Providers: []tpmodels.TypeProvider{
-						customProviderForEmailVerification,
-					},
-				},
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
-				},
-			}),
-		},
-	}
-
+func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
+	tpConfig := &tpmodels.TypeInput{
+		SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+			Providers: []tpmodels.TypeProvider{
+				customProviderForEmailVerification,
+			},
+		},
 	}
-
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -197,9 +44,206 @@ func TestEmailVerificationSMTPOverrideThroughAPI(t *testing.T) {
 	assert.NoError(t, err)
 
 	cookies := resp.Cookies()
-	unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
 
-	assert.Nil(t, err)
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.True(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Equal(t, emailverification.EmailVerificationDataForTest.User.Email, "test@example.com")
+	assert.NotEmpty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+}
+
+func TestBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	emailVerifyLink := ""
+	var thirdparty struct {
+		ID     string `json:"id"`
+		UserID string `json:"userId"`
+	}
+
+	tpConfig := &tpmodels.TypeInput{
+		EmailVerificationFeature: &tpmodels.TypeInputEmailVerificationFeature{
+			CreateAndSendCustomEmail: func(user tpmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+				email = user.Email
+				emailVerifyLink = emailVerificationURLWithToken
+				thirdparty = user.ThirdParty
+				customCalled = true
+			},
+		},
+		SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+			Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpConfig))
+	defer testServer.Close()
+
+	signinupPostData := PostDataForCustomProvider{
+		ThirdPartyId: "custom",
+		AuthCodeResponse: map[string]string{
+			"access_token": "saodiasjodai",
+		},
+		RedirectUri: "http://127.0.0.1/callback",
+	}
+
+	postBody, err := json.Marshal(signinupPostData)
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	assert.NoError(t, err)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+
+	// Custom handler called
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, emailVerifyLink)
+	assert.NotNil(t, thirdparty)
+	assert.True(t, customCalled)
+}
+
+func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	emailVerifyLink := ""
+
+	tpConfig := &tpmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+				sendEmail := *originalImplementation.SendEmail
+				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+					if input.EmailVerification != nil {
+						customCalled = true
+						email = input.EmailVerification.User.Email
+						emailVerifyLink = input.EmailVerification.EmailVerifyLink
+						return nil
+					}
+					return sendEmail(input, userContext)
+				}
+				return originalImplementation
+			},
+		},
+		SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+			Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpConfig))
+	defer testServer.Close()
+
+	signinupPostData := PostDataForCustomProvider{
+		ThirdPartyId: "custom",
+		AuthCodeResponse: map[string]string{
+			"access_token": "saodiasjodai",
+		},
+		RedirectUri: "http://127.0.0.1/callback",
+	}
+
+	postBody, err := json.Marshal(signinupPostData)
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	assert.NoError(t, err)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+
+	// Custom handler called
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, emailVerifyLink)
+	assert.True(t, customCalled)
+}
+
+func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	getContentCalled := false
+	sendRawEmailCalled := false
+	email := ""
+	emailVerifyLink := ""
+
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				if input.EmailVerification != nil {
+					email = input.EmailVerification.User.Email
+					emailVerifyLink = input.EmailVerification.EmailVerifyLink
+					getContentCalled = true
+				}
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tpConfig := &tpmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &smtpService,
+		},
+		SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+			Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpConfig))
+	defer testServer.Close()
+
+	signinupPostData := PostDataForCustomProvider{
+		ThirdPartyId: "custom",
+		AuthCodeResponse: map[string]string{
+			"access_token": "saodiasjodai",
+		},
+		RedirectUri: "http://127.0.0.1/callback",
+	}
+
+	postBody, err := json.Marshal(signinupPostData)
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	assert.NoError(t, err)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, emailVerifyLink)
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)
 }

@@ -22,6 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -33,6 +34,7 @@ func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
 	session.ResetForTest()
+	emailverification.ResetForTest()
 	thirdparty.ResetForTest()
 	emailpassword.ResetForTest()
 }
