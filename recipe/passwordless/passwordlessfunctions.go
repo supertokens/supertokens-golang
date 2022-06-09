@@ -37,6 +37,14 @@ var PasswordlessLoginDataForTest struct {
 	UserContext      supertokens.UserContext
 }
 var PasswordlessLoginSmsSentForTest bool = false
+var PasswordlessLoginSmsDataForTest struct {
+	Phone            string
+	UserInputCode    *string
+	UrlWithLinkCode  *string
+	CodeLifetime     uint64
+	PreAuthSessionId string
+	UserContext      supertokens.UserContext
+}
 
 func logAndReturnError(resp *http.Response, err error) error {
 	if err != nil {
@@ -116,6 +124,13 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 		if supertokens.IsRunningInTestMode() {
 			// if running in test mode, we do not want to send this.
 			PasswordlessLoginSmsSentForTest = true
+			PasswordlessLoginSmsDataForTest.Phone = phoneNumber
+			PasswordlessLoginSmsDataForTest.UserInputCode = userInputCode
+			PasswordlessLoginSmsDataForTest.UrlWithLinkCode = urlWithLinkCode
+			PasswordlessLoginSmsDataForTest.CodeLifetime = codeLifetime
+			PasswordlessLoginSmsDataForTest.PreAuthSessionId = preAuthSessionId
+			PasswordlessLoginSmsDataForTest.UserContext = userContext
+
 			return nil
 		}
 

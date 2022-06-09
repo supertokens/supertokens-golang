@@ -18,657 +18,204 @@ package passwordless
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/twilioService"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestSmsBackwardCompatibilityServiceForContactPhoneMethod(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				GetCustomUserInputCode: func(userContext supertokens.UserContext) (string, error) {
-					return "", nil
-				},
-				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-					Enabled: true,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-			PreAuthSessionId: "someSession",
-		},
-	}, nil)
-
-	assert.Equal(t, PasswordlessLoginSmsSentForTest, true)
-}
-
-func TestSmsBackwardCompatibilityServiceForContactEmailOrPhoneMethod(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				GetCustomUserInputCode: func(userContext supertokens.UserContext) (string, error) {
-					return "", nil
-				},
-				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-					Enabled: true,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-		},
-	}, nil)
-
-	assert.Equal(t, PasswordlessLoginSmsSentForTest, true)
-}
-
-func TestSmsBackwardCompatibilityServiceWithtCustomFunctionForContactPhoneMethod(t *testing.T) {
-	customSmsSent := false
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				GetCustomUserInputCode: func(userContext supertokens.UserContext) (string, error) {
-					return "", nil
-				},
-				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						customSmsSent = true
-						return nil
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-			PreAuthSessionId: "someSession",
-		},
-	}, nil)
-
-	assert.Equal(t, PasswordlessLoginSmsSentForTest, false)
-	assert.Equal(t, customSmsSent, true)
-}
-
-func TestSmsBackwardCompatibilityServiceWithtCustomFunctionForContactEmailOrPhoneMethod(t *testing.T) {
-	customSmsSent := false
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				GetCustomUserInputCode: func(userContext supertokens.UserContext) (string, error) {
-					return "", nil
-				},
-				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						customSmsSent = true
-						return nil
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-		},
-	}, nil)
-
-	assert.Equal(t, PasswordlessLoginSmsSentForTest, false)
-	assert.Equal(t, customSmsSent, true)
-}
-
-func TestSmsBackwardCompatibilityServiceWithOverrideForContactPhoneMethod(t *testing.T) {
-	funcCalled := false
-	overrideCalled := false
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						funcCalled = true
-						return nil
-					},
-				},
-				SmsDelivery: &smsdelivery.TypeInput{
-					Override: func(originalImplementation smsdelivery.SmsDeliveryInterface) smsdelivery.SmsDeliveryInterface {
-						(*originalImplementation.SendSms) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
-							overrideCalled = true
-							return nil
-						}
-						return originalImplementation
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-		},
-	}, nil)
-
-	assert.Equal(t, PasswordlessLoginSmsSentForTest, false)
-	assert.Equal(t, funcCalled, false)
-	assert.Equal(t, overrideCalled, true)
-}
-
-func TestSmsBackwardCompatibilityServiceWithOverrideForContactEmailOrPhoneMethod(t *testing.T) {
-	funcCalled := false
-	overrideCalled := false
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						funcCalled = true
-						return nil
-					},
-				},
-				SmsDelivery: &smsdelivery.TypeInput{
-					Override: func(originalImplementation smsdelivery.SmsDeliveryInterface) smsdelivery.SmsDeliveryInterface {
-						(*originalImplementation.SendSms) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
-							overrideCalled = true
-							return nil
-						}
-						return originalImplementation
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-		},
-	}, nil)
-
-	assert.Equal(t, PasswordlessLoginSmsSentForTest, false)
-	assert.Equal(t, funcCalled, false)
-	assert.Equal(t, overrideCalled, true)
-}
-
-func TestTwilioServiceOverrideForContactPhoneMethod(t *testing.T) {
-	getContentCalled := false
-	sendRawSmsCalled := false
-	customCalled := false
-
-	fromPhoneNumber := "someNumber"
-	twilioService, err := twilioService.MakeTwilioService(
-		smsdelivery.TwilioTypeInput{
-			TwilioSettings: smsdelivery.TwilioServiceConfig{
-				AccountSid:          "sid",
-				AuthToken:           "token",
-				From:                &fromPhoneNumber,
-				MessagingServiceSid: nil,
-			},
-			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
-					getContentCalled = true
-					return smsdelivery.TwilioGetContentResult{}, nil
-				}
-
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
-					sendRawSmsCalled = true
-					return nil
-				}
-
-				return originalImplementation
-			},
-		},
-	)
-	assert.Nil(t, err)
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				SmsDelivery: &smsdelivery.TypeInput{
-					Service: &twilioService,
-				},
-				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						customCalled = true
-						return nil
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err = supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-		},
-	}, nil)
-
-	assert.Nil(t, err)
-	assert.Equal(t, customCalled, false)
-	assert.Equal(t, getContentCalled, true)
-	assert.Equal(t, sendRawSmsCalled, true)
-}
-
-func TestTwilioServiceMessageContent(t *testing.T) {
-	var message string = ""
-
-	fromPhoneNumber := "someNumber"
-	twilioService, err := twilioService.MakeTwilioService(
-		smsdelivery.TwilioTypeInput{
-			TwilioSettings: smsdelivery.TwilioServiceConfig{
-				AccountSid:          "sid",
-				AuthToken:           "token",
-				From:                &fromPhoneNumber,
-				MessagingServiceSid: nil,
-			},
-			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
-					assert.Equal(t, message, input.Body)
-					return nil
-				}
-
-				return originalImplementation
-			},
-		},
-	)
-	assert.Nil(t, err)
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				SmsDelivery: &smsdelivery.TypeInput{
-					Service: &twilioService,
-				},
-				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-					Enabled: true,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err = supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	// Input code only
-	message = "Enter OTP: someCode to login. It will expire in 1 hour."
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600000,
-		},
-	}, nil)
-
-	// Url with code
-	message = "Click this link: someUrl to login. It will expire in 30 minutes."
-	urlWithLinkCode := "someUrl"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    nil,
-			UrlWithLinkCode:  &urlWithLinkCode,
-			CodeLifetime:     1800000,
-		},
-	}, nil)
-
-	// Both code and link
-	message = "Enter OTP: someCode OR click this link: someUrl to login. It will expire in 10 minutes."
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  &urlWithLinkCode,
-			CodeLifetime:     600000,
-		},
-	}, nil)
-
-	assert.Nil(t, err)
-}
-
-func TestTwilioServiceOverrideForContactEmailOrPhoneMethod(t *testing.T) {
-	getContentCalled := false
-	sendRawSmsCalled := false
-	customCalled := false
-
-	fromPhoneNumber := "someNumber"
-	twilioService, err := twilioService.MakeTwilioService(
-		smsdelivery.TwilioTypeInput{
-			TwilioSettings: smsdelivery.TwilioServiceConfig{
-				AccountSid:          "sid",
-				AuthToken:           "token",
-				From:                &fromPhoneNumber,
-				MessagingServiceSid: nil,
-			},
-			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
-					getContentCalled = true
-					return smsdelivery.TwilioGetContentResult{}, nil
-				}
-
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
-					sendRawSmsCalled = true
-					return nil
-				}
-
-				return originalImplementation
-			},
-		},
-	)
-	assert.Nil(t, err)
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-				SmsDelivery: &smsdelivery.TypeInput{
-					Service: &twilioService,
-				},
-				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						customCalled = true
-						return nil
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err = supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	someCode := "someCode"
-	(*singletonInstance.SmsDelivery.IngredientInterfaceImpl.SendSms)(smsdelivery.SmsType{
-		PasswordlessLogin: &smsdelivery.PasswordlessLoginType{
-			PhoneNumber:      "somePhoneNumber",
-			PreAuthSessionId: "someSession",
-			UserInputCode:    &someCode,
-			UrlWithLinkCode:  nil,
-			CodeLifetime:     3600,
-		},
-	}, nil)
-
-	assert.Nil(t, err)
-	assert.Equal(t, customCalled, false)
-	assert.Equal(t, getContentCalled, true)
-	assert.Equal(t, sendRawSmsCalled, true)
-}
-
-func TestTwilioServiceOverrideForContactPhoneMethodThroughAPI(t *testing.T) {
-	getContentCalled := false
-	sendRawSmsCalled := false
-	customCalled := false
-
-	fromPhoneNumber := "someNumber"
-	twilioService, err := twilioService.MakeTwilioService(
-		smsdelivery.TwilioTypeInput{
-			TwilioSettings: smsdelivery.TwilioServiceConfig{
-				AccountSid:          "sid",
-				AuthToken:           "token",
-				From:                &fromPhoneNumber,
-				MessagingServiceSid: nil,
-			},
-			Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-				(*originalImplementation.GetContent) = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
-					getContentCalled = true
-					return smsdelivery.TwilioGetContentResult{}, nil
-				}
-
-				(*originalImplementation.SendRawSms) = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
-					sendRawSmsCalled = true
-					return nil
-				}
-
-				return originalImplementation
-			},
-		},
-	)
-	assert.Nil(t, err)
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE",
-
-				SmsDelivery: &smsdelivery.TypeInput{
-					Service: &twilioService,
-				},
-				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						customCalled = true
-						return nil
-					},
-					ValidatePhoneNumber: func(phoneNumber interface{}) *string {
-						return nil
-					},
-				},
-			}),
-		},
-	}
-
+func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
-	err = supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
 
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	plessConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+			Enabled: true,
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
 	defer testServer.Close()
 
-	unittesting.PasswordlessPhoneLoginRequest("somePhone", testServer.URL)
+	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
-	assert.Equal(t, customCalled, false)
+	assert.True(t, PasswordlessLoginSmsSentForTest)
+	assert.Equal(t, PasswordlessLoginSmsDataForTest.Phone, "+919876543210")
+	assert.NotNil(t, PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
+	assert.NotNil(t, PasswordlessLoginSmsDataForTest.UserInputCode)
+}
+
+func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	plessPhone := ""
+	var code, urlWithCode *string
+	var codeLife uint64
+
+	plessConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+			Enabled: true,
+			CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+				plessPhone = phoneNumber
+				code = userInputCode
+				urlWithCode = urlWithLinkCode
+				codeLife = codeLifetime
+				customCalled = true
+				return nil
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordlessLoginSmsSentForTest)
+	assert.Empty(t, PasswordlessLoginSmsDataForTest.Phone)
+	assert.Nil(t, PasswordlessLoginSmsDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
+
+	// Custom handler called
+	assert.Equal(t, plessPhone, "+919876543210")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
+}
+
+func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	plessPhone := ""
+	var code, urlWithCode *string
+	var codeLife uint64
+
+	plessConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+			Enabled: true,
+		},
+		SmsDelivery: &smsdelivery.TypeInput{
+			Override: func(originalImplementation smsdelivery.SmsDeliveryInterface) smsdelivery.SmsDeliveryInterface {
+				*originalImplementation.SendSms = func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+					if input.PasswordlessLogin != nil {
+						customCalled = true
+						plessPhone = input.PasswordlessLogin.PhoneNumber
+						code = input.PasswordlessLogin.UserInputCode
+						urlWithCode = input.PasswordlessLogin.UrlWithLinkCode
+						codeLife = input.PasswordlessLogin.CodeLifetime
+					}
+					return nil
+				}
+				return originalImplementation
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordlessLoginSmsSentForTest)
+	assert.Empty(t, PasswordlessLoginSmsDataForTest.Phone)
+	assert.Nil(t, PasswordlessLoginSmsDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
+
+	// Custom handler called
+	assert.Equal(t, plessPhone, "+919876543210")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
+}
+
+func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	getContentCalled := false
+	sendRawSmsCalled := false
+	plessPhone := ""
+	var code, urlWithCode *string
+	var codeLife uint64
+
+	serviceSid := "MS123"
+	twilioService, err := twilioService.MakeTwilioService(smsdelivery.TwilioTypeInput{
+		TwilioSettings: smsdelivery.TwilioServiceConfig{
+			AccountSid:          "AC123",
+			AuthToken:           "123",
+			MessagingServiceSid: &serviceSid,
+		},
+		Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
+			*originalImplementation.GetContent = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
+				if input.PasswordlessLogin != nil {
+					plessPhone = input.PasswordlessLogin.PhoneNumber
+					code = input.PasswordlessLogin.UserInputCode
+					urlWithCode = input.PasswordlessLogin.UrlWithLinkCode
+					codeLife = input.PasswordlessLogin.CodeLifetime
+					getContentCalled = true
+				}
+				return smsdelivery.TwilioGetContentResult{}, nil
+			}
+
+			*originalImplementation.SendRawSms = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
+				sendRawSmsCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	assert.NoError(t, err)
+
+	plessConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+			Enabled: true,
+		},
+		SmsDelivery: &smsdelivery.TypeInput{
+			Service: &twilioService,
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordlessLoginSmsSentForTest)
+	assert.Empty(t, PasswordlessLoginSmsDataForTest.Phone)
+	assert.Nil(t, PasswordlessLoginSmsDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
+
+	assert.Equal(t, plessPhone, "+919876543210")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawSmsCalled, true)
 }

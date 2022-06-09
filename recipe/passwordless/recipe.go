@@ -261,4 +261,12 @@ func ResetForTest() {
 		UserContext      supertokens.UserContext
 	}{}
 	PasswordlessLoginSmsSentForTest = false
+	PasswordlessLoginSmsDataForTest = struct {
+		Phone            string
+		UserInputCode    *string
+		UrlWithLinkCode  *string
+		CodeLifetime     uint64
+		PreAuthSessionId string
+		UserContext      supertokens.UserContext
+	}{}
 }
