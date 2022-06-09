@@ -35,9 +35,11 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "EMAIL_ALREADY_VERIFIED_ERROR",
 		})
-	} else {
+	} else if response.OK != nil {
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 		})
+	} else {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
 	}
 }

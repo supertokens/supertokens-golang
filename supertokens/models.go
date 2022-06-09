@@ -60,3 +60,7 @@ type APIHandled struct {
 }
 
 type UserContext = *map[string]interface{}
+
+type GeneralErrorResponse struct {
+	Message string
+}

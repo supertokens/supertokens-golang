@@ -33,18 +33,28 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	VerifyEmailPOST              *func(token string, options APIOptions, userContext supertokens.UserContext) (VerifyEmailUsingTokenResponse, error)
+	VerifyEmailPOST              *func(token string, options APIOptions, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
 	IsEmailVerifiedGET           *func(options APIOptions, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
 	GenerateEmailVerifyTokenPOST *func(options APIOptions, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
+}
+
+type VerifyEmailPOSTResponse struct {
+	OK *struct {
+		User User
+	}
+	EmailVerificationInvalidTokenError *struct{}
+	GeneralError                       *supertokens.GeneralErrorResponse
 }
 
 type IsEmailVerifiedGETResponse struct {
 	OK *struct {
 		IsVerified bool
 	}
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type GenerateEmailVerifyTokenPOSTResponse struct {
 	OK                        *struct{}
 	EmailAlreadyVerifiedError *struct{}
+	GeneralError              *supertokens.GeneralErrorResponse
 }

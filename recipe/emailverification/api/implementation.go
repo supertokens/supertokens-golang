@@ -25,8 +25,20 @@ import (
 )
 
 func MakeAPIImplementation() evmodels.APIInterface {
-	verifyEmailPOST := func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-		return (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
+	verifyEmailPOST := func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
+		if err != nil {
+			return evmodels.VerifyEmailPOSTResponse{}, err
+		}
+		if resp.OK != nil {
+			return evmodels.VerifyEmailPOSTResponse{
+				OK: resp.OK,
+			}, err
+		} else {
+			return evmodels.VerifyEmailPOSTResponse{
+				EmailVerificationInvalidTokenError: resp.EmailVerificationInvalidTokenError,
+			}, nil
+		}
 	}
 
 	isEmailVerifiedGET := func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.IsEmailVerifiedGETResponse, error) {
@@ -102,7 +114,11 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			},
 		}, userContext)
 		if err != nil {
-			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{
+					Message: err.Error(),
+				},
+			}, nil
 		}
 
 		return evmodels.GenerateEmailVerifyTokenPOSTResponse{
