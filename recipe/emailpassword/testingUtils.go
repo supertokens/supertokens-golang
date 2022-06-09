@@ -16,6 +16,12 @@
 package emailpassword
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -24,6 +30,7 @@ import (
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
+	emailverification.ResetForTest()
 	session.ResetForTest()
 }
 
@@ -37,4 +44,25 @@ func AfterEach() {
 	unittesting.KillAllST()
 	resetAll()
 	unittesting.CleanST()
+}
+
+func supertokensInitForTest(t *testing.T, recipes ...supertokens.Recipe) *httptest.Server {
+	config := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: recipes,
+	}
+
+	err := supertokens.Init(config)
+	assert.NoError(t, err)
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	return testServer
 }
