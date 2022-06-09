@@ -18,441 +18,500 @@ package emailpassword
 
 import (
 	"net/http"
-	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{},
-				Override: &epmodels.OverrideStruct{
-					Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
-						getUserByID := func(id string, userContext supertokens.UserContext) (*epmodels.User, error) {
-							return &epmodels.User{
-								ID:    "someId",
-								Email: "someEmail",
-							}, nil
-						}
-						originalImplementation.GetUserByID = &getUserByID
-						return originalImplementation
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	SendEmail(emaildelivery.EmailType{
-		PasswordReset: &emaildelivery.PasswordResetType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "someEmail",
-			},
-			PasswordResetLink: "someLink",
-		},
-	})
-
-	assert.Equal(t, PasswordResetEmailSentForTest, true)
-}
-
-func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
-	funcCalled := false
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-						funcCalled = true
-					},
-				},
-				Override: &epmodels.OverrideStruct{
-					Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
-						getUserByID := func(id string, userContext supertokens.UserContext) (*epmodels.User, error) {
-							return &epmodels.User{
-								ID:    "someId",
-								Email: "someEmail",
-							}, nil
-						}
-						originalImplementation.GetUserByID = &getUserByID
-						return originalImplementation
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	SendEmail(emaildelivery.EmailType{
-		PasswordReset: &emaildelivery.PasswordResetType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "someEmail",
-			},
-			PasswordResetLink: "someLink",
-		},
-	})
-
-	assert.Equal(t, PasswordResetEmailSentForTest, false)
-	assert.Equal(t, funcCalled, true)
-}
-
-func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
-	funcCalled := false
-	overrideCalled := false
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				EmailDelivery: &emaildelivery.TypeInput{
-					Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
-						(*originalImplementation.SendEmail) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-							overrideCalled = true
-							return nil
-						}
-						return originalImplementation
-					},
-				},
-				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-						funcCalled = true
-					},
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	SendEmail(emaildelivery.EmailType{
-		PasswordReset: &emaildelivery.PasswordResetType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "someEmail",
-			},
-			PasswordResetLink: "someLink",
-		},
-	})
-
-	assert.Equal(t, PasswordResetEmailSentForTest, false)
-	assert.Equal(t, funcCalled, false)
-	assert.Equal(t, overrideCalled, true)
-}
-
-func TestSMTPServiceOverride(t *testing.T) {
-	getContentCalled := false
-	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
-			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
-				Name:  "Test User",
-				Email: "",
-			},
-			Port:     123,
-			Password: "",
-		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
-				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{}, nil
-			}
-
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				sendRawEmailCalled = true
-				return nil
-			}
-
-			return originalImplementation
-		},
-	})
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	err = SendEmail(emaildelivery.EmailType{
-		PasswordReset: &emaildelivery.PasswordResetType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "",
-			},
-			PasswordResetLink: "someLink",
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Equal(t, getContentCalled, true)
-	assert.Equal(t, sendRawEmailCalled, true)
-}
-
-func TestSMTPServiceOverrideEmailTemplate(t *testing.T) {
-	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
-			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
-				Name:  "Test User",
-				Email: "",
-			},
-			Port:     123,
-			Password: "",
-		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				sendRawEmailCalled = true
-				emailBody := input.Body
-				assert.Contains(t, emailBody, "A password reset request for your account")
-				assert.Contains(t, emailBody, "SuperTokens")
-				assert.Contains(t, emailBody, "some@email.com")
-
-				assert.NotContains(t, emailBody, "${")
-				return nil
-			}
-
-			return originalImplementation
-		},
-	})
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	err = SendEmail(emaildelivery.EmailType{
-		PasswordReset: &emaildelivery.PasswordResetType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "some@email.com",
-			},
-			PasswordResetLink: "someLink",
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Equal(t, sendRawEmailCalled, true)
-}
-
-func TestEmailVerificationSMTPOverride(t *testing.T) {
-	getContentCalled := false
-	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
-			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
-				Name:  "Test User",
-				Email: "",
-			},
-			Port:     123,
-			Password: "",
-		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
-				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{}, nil
-			}
-
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				sendRawEmailCalled = true
-				return nil
-			}
-
-			return originalImplementation
-		},
-	})
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	err = SendEmail(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "",
-			},
-		},
-	})
-
-	assert.Nil(t, err)
-	assert.Equal(t, getContentCalled, true)
-	assert.Equal(t, sendRawEmailCalled, true)
-}
-
-func TestPasswordResetTokenThroughAPI(t *testing.T) {
-	getContentCalled := false
-	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
-			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
-				Name:  "Test User",
-				Email: "",
-			},
-			Port:     123,
-			Password: "",
-		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
-				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{}, nil
-			}
-
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-				sendRawEmailCalled = true
-				return nil
-			}
-
-			return originalImplementation
-		},
-	})
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&epmodels.TypeInput{
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
-				},
-			}),
-			session.Init(nil),
-		},
-	}
-
+func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUser(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
 
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
 	defer testServer.Close()
 
-	_, err = unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
-	if err != nil {
-		t.Error(err.Error())
+	SignUp("test@example.com", "1234abcd")
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.True(t, PasswordResetEmailSentForTest)
+	assert.Equal(t, PasswordResetDataForTest.User.Email, "test@example.com")
+	assert.NotEmpty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+}
+
+func TestDefaultBackwardCompatibilityPasswordResetForNonExistantUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+}
+
+func TestBackwardCompatibilityResetPasswordForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	passwordResetLink := ""
+
+	tpepConfig := &epmodels.TypeInput{
+		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
+			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
+				email = user.Email
+				passwordResetLink = passwordResetURLWithToken
+				customCalled = true
+			},
+		},
 	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	SignUp("test@example.com", "1234abcd")
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler called
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, passwordResetLink)
+	assert.True(t, customCalled)
+}
+
+func TestBackwardCompatibilityResetPasswordForNonExistantUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	passwordResetLink := ""
+
+	tpepConfig := &epmodels.TypeInput{
+		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
+			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
+				email = user.Email
+				passwordResetLink = passwordResetURLWithToken
+				customCalled = true
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler not called
+	assert.Empty(t, email)
+	assert.Empty(t, passwordResetLink)
+	assert.False(t, customCalled)
+}
+
+func TestCustomOverrideResetPasswordForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	passwordResetLink := ""
+
+	tpepConfig := &epmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+					if input.PasswordReset != nil {
+						customCalled = true
+						email = input.PasswordReset.User.Email
+						passwordResetLink = input.PasswordReset.PasswordResetLink
+					}
+					return nil
+				}
+				return originalImplementation
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	SignUp("test@example.com", "1234abcd")
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler called
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, passwordResetLink)
+	assert.True(t, customCalled)
+}
+
+func TestCustomOverrideResetPasswordForNonExistantUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	passwordResetLink := ""
+
+	tpepConfig := &epmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+					if input.PasswordReset != nil {
+						customCalled = true
+						email = input.PasswordReset.User.Email
+						passwordResetLink = input.PasswordReset.PasswordResetLink
+					}
+					return nil
+				}
+				return originalImplementation
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler not called
+	assert.Empty(t, email)
+	assert.Empty(t, passwordResetLink)
+	assert.False(t, customCalled)
+}
+
+func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	getContentCalled := false
+	sendRawEmailCalled := false
+	email := ""
+	passwordResetLink := ""
+
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				if input.PasswordReset != nil {
+					email = input.PasswordReset.User.Email
+					passwordResetLink = input.PasswordReset.PasswordResetLink
+					getContentCalled = true
+				}
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tpepConfig := &epmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &smtpService,
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	SignUp("test@example.com", "1234abcd")
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, passwordResetLink)
+	assert.Equal(t, getContentCalled, true)
+	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestSMTPOverridePasswordResetForNonExistantUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	getContentCalled := false
+	sendRawEmailCalled := false
+	email := ""
+	passwordResetLink := ""
+
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				if input.PasswordReset != nil {
+					email = input.PasswordReset.User.Email
+					passwordResetLink = input.PasswordReset.PasswordResetLink
+					getContentCalled = true
+				}
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tpepConfig := &epmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &smtpService,
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler not called
+	assert.Empty(t, email)
+	assert.Empty(t, passwordResetLink)
+	assert.False(t, getContentCalled)
+	assert.False(t, sendRawEmailCalled)
+}
+
+func TestDefaultBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
+	defer testServer.Close()
+
+	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.True(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Equal(t, emailverification.EmailVerificationDataForTest.User.Email, "test@example.com")
+	assert.NotEmpty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+}
+
+func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	emailVerifyLink := ""
+
+	tpepConfig := &epmodels.TypeInput{
+		EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
+			CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+				email = user.Email
+				emailVerifyLink = emailVerificationURLWithToken
+				customCalled = true
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
 	assert.NoError(t, err)
 
-	unittesting.PasswordResetTokenRequest("random@gmail.com", testServer.URL)
-	assert.Equal(t, PasswordResetEmailSentForTest, false)
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler called
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, emailVerifyLink)
+	assert.True(t, customCalled)
+}
+
+func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	emailVerifyLink := ""
+
+	tpepConfig := &epmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+					if input.EmailVerification != nil {
+						customCalled = true
+						email = input.EmailVerification.User.Email
+						emailVerifyLink = input.EmailVerification.EmailVerifyLink
+					}
+					return nil
+				}
+				return originalImplementation
+			},
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
+	assert.NoError(t, err)
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	// Custom handler called
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, emailVerifyLink)
+	assert.True(t, customCalled)
+}
+
+func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	getContentCalled := false
+	sendRawEmailCalled := false
+	email := ""
+	emailVerifyLink := ""
+
+	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
+		SMTPSettings: emaildelivery.SMTPServiceConfig{
+			Host: "",
+			From: emaildelivery.SMTPServiceFromConfig{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+				if input.EmailVerification != nil {
+					email = input.EmailVerification.User.Email
+					emailVerifyLink = input.EmailVerification.EmailVerifyLink
+					getContentCalled = true
+				}
+				return emaildelivery.SMTPGetContentResult{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tpepConfig := &epmodels.TypeInput{
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &smtpService,
+		},
+	}
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	defer testServer.Close()
+
+	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
+	assert.NoError(t, err)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	// Default handler not called
+	assert.False(t, PasswordResetEmailSentForTest)
+	assert.Empty(t, PasswordResetDataForTest.User.Email)
+	assert.Empty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+
+	assert.Equal(t, email, "test@example.com")
+	assert.NotEmpty(t, emailVerifyLink)
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)
 }
