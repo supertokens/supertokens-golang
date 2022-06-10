@@ -53,9 +53,13 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 						Session: result.OK.Session,
 					},
 				}, nil
-			} else {
+			} else if result.WrongCredentialsError != nil {
 				return epmodels.SignInPOSTResponse{
 					WrongCredentialsError: &struct{}{},
+				}, nil
+			} else {
+				return epmodels.SignInPOSTResponse{
+					GeneralError: result.GeneralError,
 				}, nil
 			}
 		}
@@ -82,9 +86,13 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 						Session: result.OK.Session,
 					},
 				}, nil
-			} else {
+			} else if result.EmailAlreadyExistsError != nil {
 				return epmodels.SignUpPOSTResponse{
 					EmailAlreadyExistsError: &struct{}{},
+				}, nil
+			} else {
+				return epmodels.SignUpPOSTResponse{
+					GeneralError: result.GeneralError,
 				}, nil
 			}
 		}

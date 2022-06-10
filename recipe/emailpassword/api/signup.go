@@ -53,7 +53,7 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 			"status": "OK",
 			"user":   result.OK.User,
 		})
-	} else {
+	} else if result.EmailAlreadyExistsError != nil {
 		return errors.FieldError{
 			Msg: "Error in input formFields",
 			Payload: []errors.ErrorPayload{{
@@ -61,5 +61,7 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 				ErrorMsg: "This email already exists. Please sign in instead.",
 			}},
 		}
+	} else {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
 }

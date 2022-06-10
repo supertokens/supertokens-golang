@@ -85,7 +85,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			},
 		}, userContext)
 		if err != nil {
-			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{
+					Message: err.Error(),
+				},
+			}, nil
 		}
 
 		return epmodels.GeneratePasswordResetTokenPOSTResponse{
@@ -93,7 +97,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}, nil
 	}
 
-	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
 		var newPassword string
 		for _, formField := range formFields {
 			if formField.ID == "password" {
@@ -103,10 +107,18 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		response, err := (*options.RecipeImplementation.ResetPasswordUsingToken)(token, newPassword, userContext)
 		if err != nil {
-			return epmodels.ResetPasswordUsingTokenResponse{}, err
+			return epmodels.ResetPasswordPOSTResponse{}, err
 		}
 
-		return response, nil
+		if response.OK != nil {
+			return epmodels.ResetPasswordPOSTResponse{
+				OK: response.OK,
+			}, nil
+		} else {
+			return epmodels.ResetPasswordPOSTResponse{
+				ResetPasswordInvalidTokenError: response.ResetPasswordInvalidTokenError,
+			}, nil
+		}
 	}
 
 	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
