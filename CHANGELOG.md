@@ -6,6 +6,121 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Added
+- `EmailDelivery` user config for Emailpassword, Thirdparty, ThirdpartyEmailpassword, Passwordless and ThirdpartyPasswordless recipes.
+- `SmsDelivery` user config for Passwordless and ThirdpartyPasswordless recipes.
+- `Twilio` service integration for SmsDelivery ingredient.
+- `SMTP` service integration for EmailDelivery ingredient.
+- `Supertokens` service integration for SmsDelivery ingredient.
+
+### Breaking Change
+
+-   `User` object passed for password-reset and email-verification send email functions will only have `ID` and `Email` properties. `TimeJoined` property has been removed.
+
+### Deprecated
+- For Emailpassword recipe input config, `ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
+- For Thirdparty recipe input config, `EmailVerificationFeature.CreateAndSendCustomEmail` has been deprecated.
+- For ThirdpartyEmailpassword recipe input config, `ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
+- For Passwordless recipe input config, `CreateAndSendCustomEmail` and `CreateAndSendCustomTextMessage` have been deprecated.
+- For ThirdpartyPasswordless recipe input config, `CreateAndSendCustomEmail`, `CreateAndSendCustomTextMessage` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
+
+### Migration
+
+Following is an example of ThirdpartyPasswordless recipe migration. If your existing code looks like
+
+```go
+func passwordlessLoginEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+}
+
+func passwordlessLoginSms(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+}
+
+func verifyEmail(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+	// some custom logic
+}
+
+supertokens.Init(supertokens.TypeInput{
+    AppInfo: supertokens.AppInfo{
+        AppName:       "...",
+        APIDomain:     "...",
+        WebsiteDomain: "...",
+    },
+    RecipeList: []supertokens.Recipe{
+        thirdpartypasswordless.Init(tplmodels.TypeInput{
+            FlowType: "...",
+            ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+                Enabled: true,
+                CreateAndSendCustomEmail: passwordlessLoginEmail,
+                CreateAndSendCustomTextMessage: passwordlessLoginSms,
+            },
+            EmailVerificationFeature: &tplmodels.TypeInputEmailVerificationFeature{
+                CreateAndSendCustomEmail: verifyEmail,
+            },
+        }),
+    },
+})
+```
+
+After migration to using new `EmailDelivery` and `SmsDelivery` config, your code would look like:
+```go
+func passwordlessLoginEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+	return nil
+}
+
+func passwordlessLoginSms(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+	return nil
+}
+
+func verifyEmail(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+	// some custom logic
+}
+
+var sendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	if input.EmailVerification != nil {
+		verifyEmail(tplmodels.User{ID: input.EmailVerification.User.ID, Email: &input.EmailVerification.User.Email}, input.EmailVerification.EmailVerifyLink, userContext)
+	} else if input.PasswordlessLogin != nil {
+		return passwordlessLoginEmail(input.PasswordlessLogin.Email, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+	return nil
+}
+
+var sendSms = func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+	if input.PasswordlessLogin != nil {
+		return passwordlessLoginSms(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+	return nil
+}
+
+supertokens.Init(supertokens.TypeInput{
+    AppInfo: supertokens.AppInfo{
+        AppName:       "...",
+        APIDomain:     "...",
+        WebsiteDomain: "...",
+    },
+    RecipeList: []supertokens.Recipe{
+        thirdpartypasswordless.Init(tplmodels.TypeInput{
+            FlowType: "...",
+            ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+                Enabled: true,
+            },
+            EmailDelivery: &emaildelivery.TypeInput{
+                Service: &emaildelivery.EmailDeliveryInterface{
+                    SendEmail: &sendEmail,
+                },
+            },
+            SmsDelivery: &smsdelivery.TypeInput{
+                Service: &smsdelivery.SmsDeliveryInterface{
+                    SendSms: &sendSms,
+                },
+            },
+        }),
+    },
+})
+```
 
 ## [0.6.6]
 - Fixes facebook login
