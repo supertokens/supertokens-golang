@@ -88,12 +88,17 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		}
 		url := "https://api.supertokens.io/0/st/auth/passwordless/login"
 		data := map[string]interface{}{
-			"email":           email,
-			"appName":         appInfo.AppName,
-			"codeLifetime":    codeLifetime,
-			"urlWithLinkCode": urlWithLinkCode,
-			"userInputCode":   userInputCode,
+			"email":        email,
+			"appName":      appInfo.AppName,
+			"codeLifetime": codeLifetime,
 		}
+		if urlWithLinkCode != nil {
+			data["urlWithLinkCode"] = *urlWithLinkCode
+		}
+		if userInputCode != nil {
+			data["userInputCode"] = *userInputCode
+		}
+
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return err
