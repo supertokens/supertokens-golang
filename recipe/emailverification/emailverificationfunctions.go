@@ -41,7 +41,6 @@ var EmailVerificationDataForTest = struct {
 	UserContext             supertokens.UserContext
 }{}
 
-// TODO: add test to see query
 func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 	return func(user evmodels.User, emailVerifyURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {
