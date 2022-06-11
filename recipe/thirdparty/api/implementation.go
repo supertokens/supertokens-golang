@@ -133,12 +133,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 		userInfo, err := providerInfo.GetProfileInfo(accessTokenAPIResponse, userContext)
 		if err != nil {
-			errMsg := err.Error()
-			return tpmodels.SignInUpPOSTResponse{
-				FieldError: &struct{ ErrorMsg string }{
-					ErrorMsg: errMsg,
-				},
-			}, nil
+			return tpmodels.SignInUpPOSTResponse{}, err
 		}
 
 		emailInfo := userInfo.Email
@@ -151,13 +146,6 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
-		}
-		if response.FieldError != nil {
-			return tpmodels.SignInUpPOSTResponse{
-				FieldError: &struct{ ErrorMsg string }{
-					ErrorMsg: response.FieldError.ErrorMsg,
-				},
-			}, nil
 		}
 
 		if emailInfo.IsVerified {

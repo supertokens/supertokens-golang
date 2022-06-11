@@ -51,13 +51,6 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		if err != nil {
 			return tplmodels.ThirdPartySignInUp{}, err
 		}
-		if result.FieldError != nil {
-			return tplmodels.ThirdPartySignInUp{
-				FieldError: &struct{ ErrorMsg string }{
-					ErrorMsg: result.FieldError.ErrorMsg,
-				},
-			}, nil
-		}
 		return tplmodels.ThirdPartySignInUp{
 			OK: &struct {
 				CreatedNewUser bool
