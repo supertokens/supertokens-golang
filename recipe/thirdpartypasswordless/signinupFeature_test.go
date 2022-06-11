@@ -732,8 +732,8 @@ func TestWithThirdPartyPasswordlessErrorThrownFromGetProfileInfoFunction(t *test
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
-	assert.Equal(t, "FIELD_ERROR", result["status"])
-	assert.Equal(t, "error from getProfileInfo", result["error"])
+	assert.Equal(t, "GENERAL_ERROR", result["status"])
+	assert.Equal(t, "error from getProfileInfo", result["message"])
 }
 
 func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testing.T) {
