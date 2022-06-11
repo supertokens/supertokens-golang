@@ -85,11 +85,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			},
 		}, userContext)
 		if err != nil {
-			return epmodels.GeneratePasswordResetTokenPOSTResponse{
-				GeneralError: &supertokens.GeneralErrorResponse{
-					Message: err.Error(),
-				},
-			}, nil
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
 		}
 
 		return epmodels.GeneratePasswordResetTokenPOSTResponse{
