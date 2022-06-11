@@ -114,11 +114,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			},
 		}, userContext)
 		if err != nil {
-			return evmodels.GenerateEmailVerifyTokenPOSTResponse{
-				GeneralError: &supertokens.GeneralErrorResponse{
-					Message: err.Error(),
-				},
-			}, nil
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
 
 		return evmodels.GenerateEmailVerifyTokenPOSTResponse{
