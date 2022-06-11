@@ -55,9 +55,7 @@ type ConsumeCodePOSTResponse struct {
 		MaximumCodeInputAttempts    int
 	}
 	RestartFlowError *struct{}
-	GeneralError     *struct {
-		Message string
-	}
+	GeneralError     *supertokens.GeneralErrorResponse
 }
 
 type ThirdPartySignInUpOutput struct {
