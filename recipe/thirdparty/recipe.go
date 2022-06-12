@@ -40,10 +40,10 @@ type Recipe struct {
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, OnSuperTokensAPIError)
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
@@ -65,7 +65,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 
 	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onGeneralError)
+		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, OnSuperTokensAPIError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -79,9 +79,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 }
 
 func recipeInit(config *tpmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, OnSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}

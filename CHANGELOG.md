@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - If there is an error in sending SMS or email in passwordless based recipes, then we no longer return a GENERAL_ERROR, but instead, we return a regular golang error.
 - Changes `GetJWKSGET` in JWT recipe to return `GetJWKSAPIResponse` (that also contains a General Error response)
 - Changes `GetOpenIdDiscoveryConfigurationGET` in Open ID recipe to return `GetOpenIdDiscoveryConfigurationAPIResponse` (that also contains a General Error response)
+- Renames `OnGeneralError` callback (that's in user input) to `OnSuperTokensAPIError`
+- If there is an error in the `errorHandler`, we no longer call `OnSuperTokensAPIError` in that, but instead, we return an error back.
 
 ## [0.6.6]
 - Fixes facebook login
