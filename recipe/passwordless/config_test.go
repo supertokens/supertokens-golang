@@ -833,7 +833,7 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeUserInputCodeAndMagicLinkAndP
 	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
 }
 
-func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainAGeneralErrorInResponse(t *testing.T) {
+func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainA500Error(t *testing.T) {
 	isCreateAndSendCustomTextMessageCalled := false
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -895,22 +895,7 @@ func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainAGeneralErr
 	phoneResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(phoneBody))
 
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, phoneResp.StatusCode)
-
-	phoneDataInBytes, err := io.ReadAll(phoneResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	phoneResp.Body.Close()
-
-	var phoneResult map[string]interface{}
-	err = json.Unmarshal(phoneDataInBytes, &phoneResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "GENERAL_ERROR", phoneResult["status"])
-	assert.Equal(t, "test message", phoneResult["message"])
+	assert.Equal(t, 500, phoneResp.StatusCode)
 	assert.True(t, isCreateAndSendCustomTextMessageCalled)
 }
 
@@ -1287,7 +1272,7 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeUserInputCodeAndMagicLinkAndE
 	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
 }
 
-func TestCreateAndSendCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeAGeneralError(t *testing.T) {
+func TestCreateAndSendCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeA500Error(t *testing.T) {
 	isCreateAndSendCustomEmailCalled := true
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1348,22 +1333,7 @@ func TestCreateAndSendCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeAG
 	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
 
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
-
-	emailDataInBytes, err := io.ReadAll(emailResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	emailResp.Body.Close()
-
-	var emailResult map[string]interface{}
-	err = json.Unmarshal(emailDataInBytes, &emailResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "GENERAL_ERROR", emailResult["status"])
-	assert.Equal(t, "test message", emailResult["message"])
+	assert.Equal(t, 500, emailResp.StatusCode)
 	assert.True(t, isCreateAndSendCustomEmailCalled)
 }
 
