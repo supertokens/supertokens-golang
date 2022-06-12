@@ -17,6 +17,11 @@ package sessmodels
 
 import "github.com/supertokens/supertokens-golang/supertokens"
 
+/**
+ * We do not add a GeneralErrorResponse response to the refresh API
+ * since it's not something that is directly called by the user on the
+ * frontend anyway
+ */
 type APIInterface struct {
 	RefreshPOST   *func(options APIOptions, userContext supertokens.UserContext) error
 	SignOutPOST   *func(options APIOptions, userContext supertokens.UserContext) (SignOutPOSTResponse, error)
@@ -24,5 +29,6 @@ type APIInterface struct {
 }
 
 type SignOutPOSTResponse struct {
-	OK *struct{}
+	OK           *struct{}
+	GeneralError *supertokens.GeneralErrorResponse
 }

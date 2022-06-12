@@ -31,5 +31,13 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	GetOpenIdDiscoveryConfigurationGET *func(options APIOptions, userContext supertokens.UserContext) (GetOpenIdDiscoveryConfigurationResponse, error)
+	GetOpenIdDiscoveryConfigurationGET *func(options APIOptions, userContext supertokens.UserContext) (GetOpenIdDiscoveryConfigurationAPIResponse, error)
+}
+
+type GetOpenIdDiscoveryConfigurationAPIResponse struct {
+	OK *struct {
+		Issuer   string
+		Jwks_uri string
+	}
+	GeneralError *supertokens.GeneralErrorResponse
 }
