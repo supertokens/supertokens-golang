@@ -21,8 +21,14 @@ import (
 )
 
 func MakeAPIImplementation() jwtmodels.APIInterface {
-	getJWKSGET := func(options jwtmodels.APIOptions, userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
-		return (*options.RecipeImplementation.GetJWKS)(userContext)
+	getJWKSGET := func(options jwtmodels.APIOptions, userContext supertokens.UserContext) (jwtmodels.GetJWKSAPIResponse, error) {
+		resp, err := (*options.RecipeImplementation.GetJWKS)(userContext)
+		if err != nil {
+			return jwtmodels.GetJWKSAPIResponse{}, err
+		}
+		return jwtmodels.GetJWKSAPIResponse{
+			OK: resp.OK,
+		}, nil
 	}
 	return jwtmodels.APIInterface{
 		GetJWKSGET: &getJWKSGET,

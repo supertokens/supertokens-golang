@@ -131,10 +131,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			"flowType":         response.OK.FlowType,
 		}
 	} else {
-		result = map[string]interface{}{
-			"status":  "GENERAL_ERROR",
-			"message": response.GeneralError.Message,
-		}
+		result = supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError)
 	}
 
 	return supertokens.Send200Response(options.Res, result)

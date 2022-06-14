@@ -246,7 +246,7 @@ func TestForThirdPartyPasswordlessCreateAndSendCustomMessageWithFlowTypeUserInpu
 	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
 }
 
-func TestWithThirdPartyPasswordLessCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainAGeneralErrorInTheResponse(t *testing.T) {
+func TestWithThirdPartyPasswordLessCreateAndSendCustomTextMessageIfErrorIsThrownItShouldReturnA500Error(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -307,22 +307,7 @@ func TestWithThirdPartyPasswordLessCreateAndSendCustomTextMessageIfErrorIsThrown
 	phoneResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(phoneBody))
 
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, phoneResp.StatusCode)
-
-	phoneDataInBytes, err := io.ReadAll(phoneResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	phoneResp.Body.Close()
-
-	var phoneResult map[string]interface{}
-	err = json.Unmarshal(phoneDataInBytes, &phoneResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "GENERAL_ERROR", phoneResult["status"])
-	assert.Equal(t, "test message", phoneResult["message"])
+	assert.Equal(t, 500, phoneResp.StatusCode)
 	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
 }
 
@@ -784,7 +769,7 @@ func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInput
 	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
 }
 
-func TestForThirdPartyPasswordLessThatForCreateAndCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeAGeneralError(t *testing.T) {
+func TestForThirdPartyPasswordLessThatForCreateAndCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeA500Error(t *testing.T) {
 	isCreateAndSendCustomEmailCalled := false
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -845,21 +830,6 @@ func TestForThirdPartyPasswordLessThatForCreateAndCustomEmailIfErrorIsThrownTheS
 	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
 
 	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
-
-	emailDataInBytes, err := io.ReadAll(emailResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	emailResp.Body.Close()
-
-	var emailResult map[string]interface{}
-	err = json.Unmarshal(emailDataInBytes, &emailResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "GENERAL_ERROR", emailResult["status"])
+	assert.Equal(t, 500, emailResp.StatusCode)
 	assert.True(t, isCreateAndSendCustomEmailCalled)
-	assert.Equal(t, "test message", emailResult["message"])
 }

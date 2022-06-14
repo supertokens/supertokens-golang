@@ -58,17 +58,13 @@ type ConsumeCodePOSTResponse struct {
 		MaximumCodeInputAttempts    int
 	}
 	RestartFlowError *struct{}
-	GeneralError     *struct {
-		Message string
-	}
+	GeneralError     *supertokens.GeneralErrorResponse
 }
 
 type ResendCodePOSTResponse struct {
 	OK             *struct{}
 	ResetFlowError *struct{}
-	GeneralError   *struct {
-		Message string
-	}
+	GeneralError   *supertokens.GeneralErrorResponse
 }
 
 type CreateCodePOSTResponse struct {
@@ -77,15 +73,15 @@ type CreateCodePOSTResponse struct {
 		PreAuthSessionID string
 		FlowType         string
 	}
-	GeneralError *struct {
-		Message string
-	}
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type EmailExistsGETResponse struct {
-	OK *struct{ Exists bool }
+	OK           *struct{ Exists bool }
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type PhoneNumberExistsGETResponse struct {
-	OK *struct{ Exists bool }
+	OK           *struct{ Exists bool }
+	GeneralError *supertokens.GeneralErrorResponse
 }

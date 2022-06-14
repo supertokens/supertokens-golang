@@ -39,7 +39,7 @@ type Recipe struct {
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config plessmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, smsDeliveryIngredient *smsdelivery.Ingredient, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config plessmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, smsDeliveryIngredient *smsdelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -53,7 +53,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 	recipeImplementation := MakeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
 	r.RecipeModule = recipeModuleInstance
 
 	if emailDeliveryIngredient != nil {
@@ -79,9 +79,9 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 }
 
 func recipeInit(config plessmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, onSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}

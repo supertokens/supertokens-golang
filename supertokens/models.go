@@ -37,14 +37,14 @@ type AppInfo struct {
 	APIGatewayPath  *string
 }
 
-type Recipe func(appInfo NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*RecipeModule, error)
+type Recipe func(appInfo NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*RecipeModule, error)
 
 type TypeInput struct {
-	Supertokens    *ConnectionInfo
-	AppInfo        AppInfo
-	RecipeList     []Recipe
-	Telemetry      *bool
-	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
+	Supertokens           *ConnectionInfo
+	AppInfo               AppInfo
+	RecipeList            []Recipe
+	Telemetry             *bool
+	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 type ConnectionInfo struct {

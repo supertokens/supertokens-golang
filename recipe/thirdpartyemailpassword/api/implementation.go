@@ -41,7 +41,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogPasswordResetPOST := *emailPasswordImplementation.PasswordResetPOST
-	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
 		return ogPasswordResetPOST(formFields, token, options, userContext)
 	}
 
@@ -66,9 +66,13 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 					Session: response.OK.Session,
 				},
 			}, nil
-		} else {
+		} else if response.WrongCredentialsError != nil {
 			return tpepmodels.SignInPOSTResponse{
 				WrongCredentialsError: &struct{}{},
+			}, nil
+		} else {
+			return tpepmodels.SignInPOSTResponse{
+				GeneralError: response.GeneralError,
 			}, nil
 		}
 	}
@@ -94,9 +98,13 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 					Session: response.OK.Session,
 				},
 			}, nil
-		} else {
+		} else if response.EmailAlreadyExistsError != nil {
 			return tpepmodels.SignUpPOSTResponse{
 				EmailAlreadyExistsError: &struct{}{},
+			}, nil
+		} else {
+			return tpepmodels.SignUpPOSTResponse{
+				GeneralError: response.GeneralError,
 			}, nil
 		}
 	}
@@ -107,11 +115,9 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		if err != nil {
 			return tpepmodels.ThirdPartyOutput{}, err
 		}
-		if response.FieldError != nil {
+		if response.GeneralError != nil {
 			return tpepmodels.ThirdPartyOutput{
-				FieldError: &struct{ ErrorMsg string }{
-					ErrorMsg: response.FieldError.ErrorMsg,
-				},
+				GeneralError: response.GeneralError,
 			}, nil
 		} else if response.NoEmailGivenByProviderError != nil {
 			return tpepmodels.ThirdPartyOutput{

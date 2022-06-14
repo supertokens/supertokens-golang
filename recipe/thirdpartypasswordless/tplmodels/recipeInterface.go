@@ -73,7 +73,6 @@ type ThirdPartySignInUp struct {
 		CreatedNewUser bool
 		User           User
 	}
-	FieldError *struct{ ErrorMsg string }
 }
 
 type SignUpResponse struct {

@@ -18,13 +18,13 @@ package supertokens
 import "net/http"
 
 type RecipeModule struct {
-	recipeID          string
-	appInfo           NormalisedAppinfo
-	HandleAPIRequest  func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
-	GetAllCORSHeaders func() []string
-	GetAPIsHandled    func() ([]APIHandled, error)
-	HandleError       func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
-	OnGeneralError    func(err error, req *http.Request, res http.ResponseWriter)
+	recipeID              string
+	appInfo               NormalisedAppinfo
+	HandleAPIRequest      func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
+	GetAllCORSHeaders     func() []string
+	GetAPIsHandled        func() ([]APIHandled, error)
+	HandleError           func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
+	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 func MakeRecipeModule(
@@ -34,23 +34,23 @@ func MakeRecipeModule(
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
-	onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
+	onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
 		// Execution will come here only if there is a bug in the code
 		panic("nil passed for handleError in recipe")
 	}
-	if onGeneralError == nil {
+	if onSuperTokensAPIError == nil {
 		// Execution will come here only if there is a bug in the code
-		panic("nil passed for onGeneralError in recipe")
+		panic("nil passed for OnSuperTokensAPIError in recipe")
 	}
 	return RecipeModule{
-		recipeID:          recipeId,
-		appInfo:           appInfo,
-		HandleAPIRequest:  handleAPIRequest,
-		GetAllCORSHeaders: getAllCORSHeaders,
-		GetAPIsHandled:    getAPIsHandled,
-		HandleError:       handleError,
-		OnGeneralError:    onGeneralError,
+		recipeID:              recipeId,
+		appInfo:               appInfo,
+		HandleAPIRequest:      handleAPIRequest,
+		GetAllCORSHeaders:     getAllCORSHeaders,
+		GetAPIsHandled:        getAPIsHandled,
+		HandleError:           handleError,
+		OnSuperTokensAPIError: onSuperTokensAPIError,
 	}
 }
 
