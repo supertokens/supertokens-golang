@@ -57,11 +57,6 @@ type EmailpasswordInput struct {
 	Options    epmodels.APIOptions
 }
 
-type SignInUpAPIOutput struct {
-	EmailpasswordOutput *EmailpasswordOutput
-	ThirdPartyOutput    *ThirdPartyOutput
-}
-
 type EmailpasswordOutput struct {
 	OK *struct {
 		User           User
@@ -79,5 +74,5 @@ type ThirdPartyOutput struct {
 		Session          sessmodels.SessionContainer
 	}
 	NoEmailGivenByProviderError *struct{}
-	FieldError                  *struct{ ErrorMsg string }
+	GeneralError                *supertokens.GeneralErrorResponse
 }

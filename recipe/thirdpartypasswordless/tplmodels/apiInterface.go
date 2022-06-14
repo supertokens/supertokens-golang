@@ -68,5 +68,5 @@ type ThirdPartySignInUpOutput struct {
 		Session          sessmodels.SessionContainer
 	}
 	NoEmailGivenByProviderError *struct{}
-	FieldError                  *struct{ ErrorMsg string }
+	GeneralError                *supertokens.GeneralErrorResponse
 }

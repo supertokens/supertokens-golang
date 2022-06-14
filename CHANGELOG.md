@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     -   Removed `FIELD_ERROR` status type from third party signinup recipe function.
 - Changes output of `VerifyEmailPOST` to `VerifyEmailPOSTResponse`
 - Changes output of `PasswordResetPOST` to `ResetPasswordPOSTResponse`
+- `SignInUp` recipe function doesn't return `FIELD_ERROR` anymore in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
+- `SignInUpPOST` api function returns `GENERAL_ERROR` instead of `FIELD_ERROR` in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
 
 ## [0.6.6]
 - Fixes facebook login
