@@ -22,8 +22,14 @@ import (
 
 func MakeAPIImplementation() openidmodels.APIInterface {
 
-	getOpenIdDiscoveryConfigurationGET := func(options openidmodels.APIOptions, userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
-		return (*options.RecipeImplementation.GetOpenIdDiscoveryConfiguration)(userContext)
+	getOpenIdDiscoveryConfigurationGET := func(options openidmodels.APIOptions, userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationAPIResponse, error) {
+		resp, err := (*options.RecipeImplementation.GetOpenIdDiscoveryConfiguration)(userContext)
+		if err != nil {
+			return openidmodels.GetOpenIdDiscoveryConfigurationAPIResponse{}, err
+		}
+		return openidmodels.GetOpenIdDiscoveryConfigurationAPIResponse{
+			OK: resp.OK,
+		}, nil
 	}
 
 	return openidmodels.APIInterface{
