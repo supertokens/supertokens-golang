@@ -34,12 +34,12 @@ func MakeRecipeModule(
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
-	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
+	onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
 		// Execution will come here only if there is a bug in the code
 		panic("nil passed for handleError in recipe")
 	}
-	if OnSuperTokensAPIError == nil {
+	if onSuperTokensAPIError == nil {
 		// Execution will come here only if there is a bug in the code
 		panic("nil passed for OnSuperTokensAPIError in recipe")
 	}
@@ -50,7 +50,7 @@ func MakeRecipeModule(
 		GetAllCORSHeaders:     getAllCORSHeaders,
 		GetAPIsHandled:        getAPIsHandled,
 		HandleError:           handleError,
-		OnSuperTokensAPIError: OnSuperTokensAPIError,
+		OnSuperTokensAPIError: onSuperTokensAPIError,
 	}
 }
 
