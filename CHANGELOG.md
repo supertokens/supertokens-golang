@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking change
 -   https://github.com/supertokens/supertokens-node/issues/220
     -   Adds `{status: "GENERAL_ERROR", message: string}` as a possible output to all the APIs.
-    -   Catches error from all email and sms sending services in APIs and returns then as a `GENERAL_ERROR` from the API
     -   Changes `FIELD_ERROR` output status in third party recipe API to be `GENERAL_ERROR`.
     -   Replaced `FIELD_ERROR` status type in third party signinup API with `GENERAL_ERROR`.
     -   Removed `FIELD_ERROR` status type from third party signinup recipe function.
@@ -18,6 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Changes output of `PasswordResetPOST` to `ResetPasswordPOSTResponse`
 - `SignInUp` recipe function doesn't return `FIELD_ERROR` anymore in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
 - `SignInUpPOST` api function returns `GENERAL_ERROR` instead of `FIELD_ERROR` in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
+- If there is an error in sending SMS or email in passwordless based recipes, then we no longer return a GENERAL_ERROR, but instead, we return a regular golang error.
 
 ## [0.6.6]
 - Fixes facebook login
