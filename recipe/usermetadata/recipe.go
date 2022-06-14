@@ -33,7 +33,7 @@ type Recipe struct {
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *usermetadatamodels.TypeInput, OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *usermetadatamodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -45,7 +45,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, OnSuperTokensAPIError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
 	r.RecipeModule = recipeModuleInstance
 
 	return *r, nil
@@ -59,9 +59,9 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 }
 
 func recipeInit(config *usermetadatamodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo, OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, OnSuperTokensAPIError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}

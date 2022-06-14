@@ -41,10 +41,10 @@ const RECIPE_ID = "session"
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, OnSuperTokensAPIError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
 
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
@@ -75,7 +75,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		openIdRecipe, err := openid.MakeRecipe(recipeId, appInfo, &openidmodels.TypeInput{
 			Issuer:   verifiedConfig.Jwt.Issuer,
 			Override: verifiedConfig.Override.OpenIdFeature,
-		}, OnSuperTokensAPIError)
+		}, onSuperTokensAPIError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -96,9 +96,9 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 }
 
 func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo, OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, OnSuperTokensAPIError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}
