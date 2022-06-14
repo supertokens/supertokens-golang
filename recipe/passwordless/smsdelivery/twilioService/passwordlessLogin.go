@@ -23,23 +23,15 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const magicLinkLoginTemplate = `${appname} - Login to your account
-
-Click on this link: ${magicLink}
+const magicLinkLoginTemplate = `Click ${magicLink} to login to ${appname}
 
 This is valid for ${time}.`
-const otpLoginTemplate = `${appname} - Login to your account
-
-Your OTP to login: ${otp}
+const otpLoginTemplate = `OTP to login is ${otp} for ${appname}
 
 This is valid for ${time}.`
-const magicLinkAndOtpLoginTemplate = `${appname} - Login to your account
+const magicLinkAndOtpLoginTemplate = `OTP to login is ${otp} for ${appname}
 
-Your OTP to login: ${otp}
-
-OR
-
-Click on this link: ${magicLink}
+Or click ${magicLink} to login.
 
 This is valid for ${time}.`
 
