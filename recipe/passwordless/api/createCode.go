@@ -74,10 +74,9 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			validateErr = options.Config.ContactMethodEmailOrPhone.ValidateEmailAddress(email)
 		}
 		if validateErr != nil {
-			return supertokens.Send200Response(options.Res, map[string]interface{}{
-				"status":  "GENERAL_ERROR",
-				"message": *validateErr,
-			})
+			return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(supertokens.GeneralErrorResponse{
+				Message: *validateErr,
+			}))
 		}
 	}
 
@@ -89,10 +88,9 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			validateErr = options.Config.ContactMethodEmailOrPhone.ValidatePhoneNumber(phoneNumber)
 		}
 		if validateErr != nil {
-			return supertokens.Send200Response(options.Res, map[string]interface{}{
-				"status":  "GENERAL_ERROR",
-				"message": *validateErr,
-			})
+			return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(supertokens.GeneralErrorResponse{
+				Message: *validateErr,
+			}))
 		}
 
 		parsedPhoneNumber, err := phonenumbers.Parse(phoneNumber.(string), "")
