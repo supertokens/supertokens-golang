@@ -110,27 +110,52 @@ func main() {
 	//adding the supertokens middleware
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 
-	app.Get("/sessInfo", verifySession(nil), sessioninfo)
+	app.Get("/sessionInfo", verifySession(nil), sessioninfo)
 	log.Fatal(app.Listen(":3001"))
 }
 
 //wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 	return func(c *fiber.Ctx) error {
+		var httpResponse http.ResponseWriter
+		callbackCalled := false
 		adaptor.HTTPHandler(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
+			callbackCalled = true
+			httpResponse = rw
 			//setting up the verified session context from http request to the fiber context
 			c.SetUserContext(r.Context())
 		}))(c)
 
-		if options != nil && *options.SessionRequired == false {
-			return c.Next()
+		if options != nil && !*options.SessionRequired {
+			err := c.Next()
+			if err != nil {
+				return err
+			}
 		}
 		sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
 		if sessionContainer != nil {
-			return c.Next()
+			err := c.Next()
+			if err != nil {
+				return err
+			}
 		} else {
 			return nil
 		}
+		if callbackCalled {
+			// the API may have modified the response headers, so we get that and set
+			// it in the fiber context
+			for key, valueArr := range httpResponse.Header() {
+				valueStr := ""
+				for i := 0; i < len(valueArr); i++ {
+					valueStr += valueArr[i]
+					if i < len(valueArr)-1 {
+						valueStr += ", "
+					}
+				}
+				c.Set(key, valueStr)
+			}
+		}
+		return nil
 	}
 }
 
@@ -145,6 +170,16 @@ func sessioninfo(c *fiber.Ctx) error {
 	}
 	c.Response().Header.Add("content-type", "application/json")
 
+	currAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
+	counter, ok := currAccessTokenPayload["counter"]
+	if !ok {
+		counter = 1
+	} else {
+		counter = int(counter.(float64) + 1)
+	}
+	sessionContainer.UpdateAccessTokenPayload(map[string]interface{}{
+		"counter": counter.(int),
+	})
 	return c.Status(200).JSON(map[string]interface{}{
 		"sessionHandle":      sessionContainer.GetHandle(),
 		"userId":             sessionContainer.GetUserID(),
