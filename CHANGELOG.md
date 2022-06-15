@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.6.7]
+- Fixes panic when call to thirdparty provider API returns a non 2xx status.
+
 ## [0.6.6]
 - Fixes facebook login
 

@@ -17,6 +17,7 @@ package providers
 
 import (
 	"encoding/json"
+	"errors"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -133,6 +134,10 @@ func doGetRequest(req *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode >= 300 {
+		return nil, errors.New("Provider API did not return a success status code")
+	}
+
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
