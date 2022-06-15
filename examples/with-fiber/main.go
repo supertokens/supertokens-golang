@@ -15,6 +15,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
@@ -117,40 +118,25 @@ func main() {
 //wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		var httpResponse http.ResponseWriter
-		callbackCalled := false
-		adaptor.HTTPHandler(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
-			callbackCalled = true
-			httpResponse = rw
-			//setting up the verified session context from http request to the fiber context
+		return adaptor.HTTPHandlerFunc(http.HandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.SetUserContext(r.Context())
-		}))(c)
-
-		if options != nil && !*options.SessionRequired {
 			err := c.Next()
 			if err != nil {
-				return err
-			}
-		}
-		if callbackCalled {
-			err := c.Next()
-			if err != nil {
-				return err
-			}
-			// the API may have modified the response headers, so we get that and set
-			// it in the fiber context
-			for key, valueArr := range httpResponse.Header() {
-				valueStr := ""
-				for i := 0; i < len(valueArr); i++ {
-					valueStr += valueArr[i]
-					if i < len(valueArr)-1 {
-						valueStr += ", "
-					}
+				err = supertokens.ErrorHandler(err, r, rw)
+				if err != nil {
+					rw.WriteHeader(500)
+					_, _ = rw.Write([]byte(err.Error()))
 				}
-				c.Set(key, valueStr)
+				return
 			}
-		}
-		return nil
+			c.Response().Header.VisitAll(func(k, v []byte) {
+				if string(k) == fasthttp.HeaderContentType {
+					rw.Header().Set(string(k), string(v))
+				}
+			})
+			rw.WriteHeader(c.Response().StatusCode())
+			_, _ = rw.Write(c.Response().Body())
+		})))(c)
 	}
 }
 
@@ -172,9 +158,12 @@ func sessioninfo(c *fiber.Ctx) error {
 	} else {
 		counter = int(counter.(float64) + 1)
 	}
-	sessionContainer.UpdateAccessTokenPayload(map[string]interface{}{
+	err = sessionContainer.UpdateAccessTokenPayload(map[string]interface{}{
 		"counter": counter.(int),
 	})
+	if err != nil {
+		return err
+	}
 	return c.Status(200).JSON(map[string]interface{}{
 		"sessionHandle":      sessionContainer.GetHandle(),
 		"userId":             sessionContainer.GetUserID(),
