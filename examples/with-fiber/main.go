@@ -132,16 +132,11 @@ func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 				return err
 			}
 		}
-		sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
-		if sessionContainer != nil {
+		if callbackCalled {
 			err := c.Next()
 			if err != nil {
 				return err
 			}
-		} else {
-			return nil
-		}
-		if callbackCalled {
 			// the API may have modified the response headers, so we get that and set
 			// it in the fiber context
 			for key, valueArr := range httpResponse.Header() {
