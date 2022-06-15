@@ -17,8 +17,6 @@ package providers
 
 import (
 	"encoding/json"
-	"errors"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -126,30 +124,6 @@ func getGoogleAuthRequest(authHeader string) (interface{}, error) {
 	}
 	req.Header.Add("Authorization", authHeader)
 	return doGetRequest(req)
-}
-
-func doGetRequest(req *http.Request) (interface{}, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	if resp.StatusCode >= 300 {
-		return nil, errors.New("Provider API did not return a success status code")
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var result interface{}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 type googleGetProfileInfoInput struct {
