@@ -122,6 +122,9 @@ supertokens.Init(supertokens.TypeInput{
 })
 ```
 
+## [0.6.7]
+- Fixes panic when call to thirdparty provider API returns a non 2xx status.
+
 ## [0.6.6]
 - Fixes facebook login
 

@@ -15,6 +15,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/valyala/fasthttp"
 )
 
 func main() {
@@ -110,27 +111,32 @@ func main() {
 	//adding the supertokens middleware
 	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
 
-	app.Get("/sessInfo", verifySession(nil), sessioninfo)
+	app.Get("/sessionInfo", verifySession(nil), sessioninfo)
 	log.Fatal(app.Listen(":3001"))
 }
 
 //wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		adaptor.HTTPHandler(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
-			//setting up the verified session context from http request to the fiber context
+		return adaptor.HTTPHandlerFunc(http.HandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.SetUserContext(r.Context())
-		}))(c)
-
-		if options != nil && *options.SessionRequired == false {
-			return c.Next()
-		}
-		sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
-		if sessionContainer != nil {
-			return c.Next()
-		} else {
-			return nil
-		}
+			err := c.Next()
+			if err != nil {
+				err = supertokens.ErrorHandler(err, r, rw)
+				if err != nil {
+					rw.WriteHeader(500)
+					_, _ = rw.Write([]byte(err.Error()))
+				}
+				return
+			}
+			c.Response().Header.VisitAll(func(k, v []byte) {
+				if string(k) == fasthttp.HeaderContentType {
+					rw.Header().Set(string(k), string(v))
+				}
+			})
+			rw.WriteHeader(c.Response().StatusCode())
+			_, _ = rw.Write(c.Response().Body())
+		})))(c)
 	}
 }
 
@@ -145,6 +151,19 @@ func sessioninfo(c *fiber.Ctx) error {
 	}
 	c.Response().Header.Add("content-type", "application/json")
 
+	currAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
+	counter, ok := currAccessTokenPayload["counter"]
+	if !ok {
+		counter = 1
+	} else {
+		counter = int(counter.(float64) + 1)
+	}
+	err = sessionContainer.UpdateAccessTokenPayload(map[string]interface{}{
+		"counter": counter.(int),
+	})
+	if err != nil {
+		return err
+	}
 	return c.Status(200).JSON(map[string]interface{}{
 		"sessionHandle":      sessionContainer.GetHandle(),
 		"userId":             sessionContainer.GetUserID(),

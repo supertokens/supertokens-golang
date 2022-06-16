@@ -17,7 +17,6 @@ package providers
 
 import (
 	"encoding/json"
-	"io/ioutil"
 	"net/http"
 	"strings"
 
@@ -125,26 +124,6 @@ func getGoogleAuthRequest(authHeader string) (interface{}, error) {
 	}
 	req.Header.Add("Authorization", authHeader)
 	return doGetRequest(req)
-}
-
-func doGetRequest(req *http.Request) (interface{}, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var result interface{}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
 }
 
 type googleGetProfileInfoInput struct {
