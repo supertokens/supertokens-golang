@@ -13,16 +13,37 @@
  * under the License.
  */
 
-package supertokens
+package providers
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"io/ioutil"
+	"net/http"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.6.7"
+func doGetRequest(req *http.Request) (interface{}, error) {
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
 
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13"}
-)
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode >= 300 {
+		return nil, errors.New(fmt.Sprintf("Provider API returned response with status `%s` and body `%s`", resp.Status, string(body)))
+	}
+
+	var result interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
