@@ -13,10 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `SMTP` service integration for EmailDelivery ingredient.
 - `Supertokens` service integration for SmsDelivery ingredient.
 
-### Breaking Change
-
--   `User` object passed for password-reset and email-verification send email functions will only have `ID` and `Email` properties. `TimeJoined` property has been removed.
-
 ### Deprecated
 - For Emailpassword recipe input config, `ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
 - For Thirdparty recipe input config, `EmailVerificationFeature.CreateAndSendCustomEmail` has been deprecated.
