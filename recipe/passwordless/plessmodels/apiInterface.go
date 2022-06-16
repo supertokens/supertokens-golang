@@ -18,6 +18,8 @@ package plessmodels
 import (
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -29,6 +31,8 @@ type APIOptions struct {
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc
+	EmailDelivery        emaildelivery.Ingredient
+	SmsDelivery          smsdelivery.Ingredient
 }
 
 type APIInterface struct {

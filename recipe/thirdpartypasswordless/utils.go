@@ -18,7 +18,13 @@ package thirdpartypasswordless
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/backwardCompatibilityService"
+	smsBackwardCompatibilityService "github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -27,6 +33,55 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance, config)
 
 	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
+
+	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
+		sendPasswordlessLoginEmail := passwordless.DefaultCreateAndSendCustomEmail(appInfo)
+		if config.ContactMethodEmail.Enabled && config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
+			sendPasswordlessLoginEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
+		} else if config.ContactMethodEmailOrPhone.Enabled && config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
+			sendPasswordlessLoginEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
+		}
+
+		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
+		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
+			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
+		}
+
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendEmailVerificationEmail, sendPasswordlessLoginEmail)
+		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
+			emailService = *config.EmailDelivery.Service
+		}
+		result := emaildelivery.TypeInputWithService{
+			Service: emailService,
+		}
+		if config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
+			result.Override = config.EmailDelivery.Override
+		}
+
+		return result
+	}
+
+	typeNormalisedInput.GetSmsDeliveryConfig = func() smsdelivery.TypeInputWithService {
+		sendPasswordlessLoginSms := passwordless.DefaultCreateAndSendCustomTextMessage(appInfo)
+
+		if config.ContactMethodPhone.Enabled && config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
+			sendPasswordlessLoginSms = config.ContactMethodPhone.CreateAndSendCustomTextMessage
+		} else if config.ContactMethodEmailOrPhone.Enabled && config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
+			sendPasswordlessLoginSms = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
+		}
+
+		smsService := smsBackwardCompatibilityService.MakeBackwardCompatibilityService(sendPasswordlessLoginSms)
+		if config.SmsDelivery != nil && config.SmsDelivery.Service != nil {
+			smsService = *config.SmsDelivery.Service
+		}
+		result := smsdelivery.TypeInputWithService{
+			Service: smsService,
+		}
+		if config.SmsDelivery != nil && config.SmsDelivery.Override != nil {
+			result.Override = config.SmsDelivery.Override
+		}
+		return result
+	}
 
 	if config.Override != nil {
 		if config.Override.Functions != nil {

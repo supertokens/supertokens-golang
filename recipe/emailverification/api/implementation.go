@@ -16,6 +16,9 @@
 package api
 
 import (
+	"fmt"
+
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -72,6 +75,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 
 		if response.EmailAlreadyVerifiedError != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to %s because it is already verified", email))
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
@@ -87,7 +91,19 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 		emailVerifyLink := emailVerificationURL + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
 
-		options.Config.CreateAndSendCustomEmail(user, emailVerifyLink, userContext)
+		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email))
+		err = (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
+			EmailVerification: &emaildelivery.EmailVerificationType{
+				User: emaildelivery.User{
+					ID:    user.ID,
+					Email: user.Email,
+				},
+				EmailVerifyLink: emailVerifyLink,
+			},
+		}, userContext)
+		if err != nil {
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
+		}
 
 		return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 			OK: &struct{}{},

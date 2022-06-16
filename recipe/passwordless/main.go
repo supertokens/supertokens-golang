@@ -16,6 +16,8 @@
 package passwordless
 
 import (
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -285,6 +287,22 @@ func DeletePhoneNumberForUserWithContext(userID string, userContext supertokens.
 	return (*instance.RecipeImpl.DeletePhoneNumberForUser)(userID, userContext)
 }
 
+func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
+}
+
+func SendSmsWithContext(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.SmsDelivery.IngredientInterfaceImpl.SendSms)(input, userContext)
+}
+
 func CreateCodeWithEmail(email string, userInputCode *string) (plessmodels.CreateCodeResponse, error) {
 	return CreateCodeWithEmailWithContext(email, userInputCode, &map[string]interface{}{})
 }
@@ -379,4 +397,12 @@ func SignInUpByPhoneNumber(phoneNumber string) (struct {
 	User             plessmodels.User
 }, error) {
 	return SignInUpByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+}
+
+func SendEmail(input emaildelivery.EmailType) error {
+	return SendEmailWithContext(input, &map[string]interface{}{})
+}
+
+func SendSms(input smsdelivery.SmsType) error {
+	return SendSmsWithContext(input, &map[string]interface{}{})
 }

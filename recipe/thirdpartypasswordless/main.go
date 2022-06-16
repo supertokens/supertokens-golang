@@ -18,6 +18,8 @@ package thirdpartypasswordless
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
@@ -415,6 +417,30 @@ func PasswordlessSignInUpByPhoneNumberWithContext(phoneNumber string, userContex
 			ThirdParty:  nil,
 		},
 	}, nil
+}
+
+func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
+}
+
+func SendSmsWithContext(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	return (*instance.SmsDelivery.IngredientInterfaceImpl.SendSms)(input, userContext)
+}
+
+func SendEmail(input emaildelivery.EmailType) error {
+	return SendEmailWithContext(input, &map[string]interface{}{})
+}
+
+func SendSms(input smsdelivery.SmsType) error {
+	return SendSmsWithContext(input, &map[string]interface{}{})
 }
 
 func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email tplmodels.EmailStruct) (tplmodels.ThirdPartySignInUp, error) {

@@ -15,7 +15,11 @@
 
 package plessmodels
 
-import "github.com/supertokens/supertokens-golang/supertokens"
+import (
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type User struct {
 	ID          string  `json:"id"`
@@ -32,6 +36,8 @@ type TypeInput struct {
 	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Override                  *OverrideStruct
+	EmailDelivery             *emaildelivery.TypeInput
+	SmsDelivery               *smsdelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
@@ -42,6 +48,8 @@ type TypeNormalisedInput struct {
 	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Override                  OverrideStruct
+	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
+	GetSmsDeliveryConfig      func() smsdelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
@@ -52,19 +60,19 @@ type OverrideStruct struct {
 type ContactMethodEmailConfig struct {
 	Enabled                  bool
 	ValidateEmailAddress     func(email interface{}) *string
-	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
 }
 
 type ContactMethodEmailOrPhoneConfig struct {
 	Enabled                        bool
 	ValidateEmailAddress           func(email interface{}) *string
-	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
 }
 
 type ContactMethodPhoneConfig struct {
 	Enabled                        bool
 	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error
+	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
 }
