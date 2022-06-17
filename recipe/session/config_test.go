@@ -1255,65 +1255,86 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/hello")
 }
 
-func TestInvalidSameSiteConfig1(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:       "SuperTokens",
-			WebsiteDomain: "http://localhost:3000",
-			APIDomain:     "http://api.supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{}),
-		},
+func TestInvalidSameSiteNoneConfig(t *testing.T) {
+	domainCombinations := []struct {
+		WebsiteDomain string
+		APIDomain     string
+	}{
+		{"http://localhost:3000", "http://supertokensapi.io"},
+		{"http://127.0.0.1:3000", "http://supertokensapi.io"},
+		{"http://supertokens.io", "http://localhost:8000"},
+		{"http://supertokens.io", "http://127.0.0.1:8000"},
+		{"http://supertokens.io", "http://supertokensapi.io"},
 	}
 
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+	None := "none"
+
+	for _, domainCombination := range domainCombinations {
+		BeforeEach()
+		configValue := supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: "http://localhost:8080",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:       "SuperTokens",
+				WebsiteDomain: domainCombination.WebsiteDomain,
+				APIDomain:     domainCombination.APIDomain,
+			},
+			RecipeList: []supertokens.Recipe{
+				Init(&sessmodels.TypeInput{
+					CookieSameSite: &None,
+				}),
+			},
+		}
+		err := supertokens.Init(configValue)
+		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+		AfterEach()
+	}
 }
 
-func TestInvalidSameSiteConfig2(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:       "SuperTokens",
-			WebsiteDomain: "http://supertokens.io",
-			APIDomain:     "http://localhost:8000",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{}),
-		},
+func TestValidSameSiteNoneConfig(t *testing.T) {
+	domainCombinations := []struct {
+		WebsiteDomain string
+		APIDomain     string
+	}{
+		{"http://localhost:3000", "http://localhost:8000"},
+		{"http://127.0.0.1:3000", "http://localhost:8000"},
+		{"http://localhost:3000", "http://127.0.0.1:8000"},
+		{"http://127.0.0.1:3000", "http://127.0.0.1:8000"},
+
+		{"https://localhost:3000", "https://localhost:8000"},
+		{"https://127.0.0.1:3000", "https://localhost:8000"},
+		{"https://localhost:3000", "https://127.0.0.1:8000"},
+		{"https://127.0.0.1:3000", "https://127.0.0.1:8000"},
+
+		{"https://supertokens.io", "https://api.supertokens.io"},
+		{"https://supertokens.io", "https://supertokensapi.io"},
+
+		{"http://localhost:3000", "https://supertokensapi.io"},
+		{"http://127.0.0.1:3000", "https://supertokensapi.io"},
 	}
 
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-}
+	None := "none"
 
-func TestInvalidSameSiteConfig3(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:       "SuperTokens",
-			WebsiteDomain: "http://supertokens.io",
-			APIDomain:     "http://supertokensapi.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{}),
-		},
+	for _, domainCombination := range domainCombinations {
+		BeforeEach()
+		configValue := supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: "http://localhost:8080",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:       "SuperTokens",
+				WebsiteDomain: domainCombination.WebsiteDomain,
+				APIDomain:     domainCombination.APIDomain,
+			},
+			RecipeList: []supertokens.Recipe{
+				Init(&sessmodels.TypeInput{
+					CookieSameSite: &None,
+				}),
+			},
+		}
+		err := supertokens.Init(configValue)
+		assert.NoError(t, err)
+		AfterEach()
 	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
 }
