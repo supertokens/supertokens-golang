@@ -53,7 +53,7 @@ func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -102,7 +102,7 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -166,7 +166,7 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -248,7 +248,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 

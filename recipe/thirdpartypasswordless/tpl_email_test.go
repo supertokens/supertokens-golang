@@ -58,7 +58,7 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -107,7 +107,7 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -171,7 +171,7 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -254,7 +254,7 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -298,7 +298,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -403,7 +403,7 @@ func TestBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -543,7 +543,7 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
@@ -705,7 +705,7 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == cdiVersion {
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
 		return
 	}
 
