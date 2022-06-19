@@ -296,10 +296,14 @@ func (r *Recipe) getEmailForUserIdForEmailVerification(userID string, userContex
 		return "", errors.New("Unknown User ID provided")
 	}
 	if userInfo.ThirdParty == nil {
-		// this is a passwordless user.. so we always return some random email,
-		// and in the function for isEmailVerified, we will check if the user
-		// is a passwordless user, and if they are, we will return true in there
-		return "_____supertokens_passwordless_user@supertokens.com", nil
+		if userInfo.Email != nil {
+			return *userInfo.Email, nil
+		}
+		// this is a passwordless user with only a phone number.
+		// returning an empty string here is not a problem since
+		// we override the email verification functions above to
+		// send that the email is already verified for passwordless users.
+		return "", nil
 	}
 	return *userInfo.Email, nil
 }
