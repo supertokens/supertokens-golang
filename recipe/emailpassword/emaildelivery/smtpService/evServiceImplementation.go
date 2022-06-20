@@ -23,11 +23,11 @@ import (
 
 func makeEmailverificationServiceImplementation(serviceImpl emaildelivery.SMTPServiceInterface) func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
 	return func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-		sendRawEmail := func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+		sendRawEmail := func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 			return (*serviceImpl.SendRawEmail)(input, userContext)
 		}
 
-		getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+		getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 			return (*serviceImpl.GetContent)(input, userContext)
 		}
 

@@ -29,7 +29,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -333,10 +332,10 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 	email := ""
 	passwordResetLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -344,16 +343,16 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 				if input.PasswordReset != nil {
 					email = input.PasswordReset.User.Email
 					passwordResetLink = input.PasswordReset.PasswordResetLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -363,7 +362,7 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 	})
 	tpepConfig := &tpepmodels.TypeInput{
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
@@ -395,10 +394,10 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	email := ""
 	passwordResetLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -406,16 +405,16 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 				if input.PasswordReset != nil {
 					email = input.PasswordReset.User.Email
 					passwordResetLink = input.PasswordReset.PasswordResetLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -425,7 +424,7 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	})
 	tpepConfig := &tpepmodels.TypeInput{
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
@@ -458,10 +457,10 @@ func TestSMTPOverridePasswordResetForNonExistantUser(t *testing.T) {
 	email := ""
 	passwordResetLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -469,16 +468,16 @@ func TestSMTPOverridePasswordResetForNonExistantUser(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 				if input.PasswordReset != nil {
 					email = input.PasswordReset.User.Email
 					passwordResetLink = input.PasswordReset.PasswordResetLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -488,7 +487,7 @@ func TestSMTPOverridePasswordResetForNonExistantUser(t *testing.T) {
 	})
 	tpepConfig := &tpepmodels.TypeInput{
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
@@ -773,10 +772,10 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -784,16 +783,16 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 				if input.EmailVerification != nil {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -803,7 +802,7 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	})
 	tpepConfig := &tpepmodels.TypeInput{
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
@@ -838,10 +837,10 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -849,16 +848,16 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 				if input.EmailVerification != nil {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -868,7 +867,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	})
 	tpepConfig := &tpepmodels.TypeInput{
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
 	}

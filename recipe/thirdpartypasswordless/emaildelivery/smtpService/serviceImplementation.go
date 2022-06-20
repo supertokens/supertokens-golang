@@ -25,15 +25,15 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeServiceImplementation(config emaildelivery.SMTPServiceConfig) emaildelivery.SMTPServiceInterface {
-	sendRawEmail := func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-		return emaildelivery.SendSMTPEmail(config, input)
+func makeServiceImplementation(settings emaildelivery.SMTPSettings) emaildelivery.SMTPServiceInterface {
+	sendRawEmail := func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+		return emaildelivery.SendSMTPEmail(settings, input)
 	}
 
-	evServiceImpl := evsmtpService.MakeServiceImplementation(config)
-	plessServiceImpl := plesssmtpService.MakeServiceImplementation(config)
+	evServiceImpl := evsmtpService.MakeServiceImplementation(settings)
+	plessServiceImpl := plesssmtpService.MakeServiceImplementation(settings)
 
-	getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+	getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 		if input.EmailVerification != nil {
 			return (*evServiceImpl.GetContent)(input, userContext)
 
@@ -41,7 +41,7 @@ func makeServiceImplementation(config emaildelivery.SMTPServiceConfig) emaildeli
 			return (*plessServiceImpl.GetContent)(input, userContext)
 
 		} else {
-			return emaildelivery.SMTPGetContentResult{}, errors.New("should never come here")
+			return emaildelivery.SMTPContent{}, errors.New("should never come here")
 		}
 	}
 

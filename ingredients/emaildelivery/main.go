@@ -40,9 +40,9 @@ func MakeIngredient(config TypeInputWithService) Ingredient {
 	return result
 }
 
-func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error {
+func SendSMTPEmail(settings SMTPSettings, content SMTPContent) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", fmt.Sprintf("%s <%s>", config.From.Name, config.From.Email))
+	m.SetHeader("From", fmt.Sprintf("%s <%s>", settings.From.Name, settings.From.Email))
 	m.SetHeader("To", content.ToEmail)
 	m.SetHeader("Subject", content.Subject)
 
@@ -52,15 +52,10 @@ func SendSMTPEmail(config SMTPServiceConfig, content SMTPGetContentResult) error
 		m.SetBody("text/plain", content.Body)
 	}
 
-	secure := false
-	if config.Secure != nil {
-		secure = *config.Secure
-	}
+	d := gomail.NewDialer(settings.Host, settings.Port, settings.From.Email, settings.Password)
 
-	d := gomail.NewDialer(config.Host, config.Port, config.From.Email, config.Password)
-
-	if secure {
-		d.TLSConfig = &tls.Config{InsecureSkipVerify: true, ServerName: config.Host}
+	if settings.Secure {
+		d.TLSConfig = &tls.Config{InsecureSkipVerify: true, ServerName: settings.Host}
 		d.SSL = true
 	}
 	return d.DialAndSend(m)

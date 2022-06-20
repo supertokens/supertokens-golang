@@ -22,7 +22,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -197,10 +196,10 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	var code, urlWithCode *string
 	var codeLife uint64
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -208,7 +207,7 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 				if input.PasswordlessLogin != nil {
 					plessEmail = input.PasswordlessLogin.Email
 					code = input.PasswordlessLogin.UserInputCode
@@ -216,10 +215,10 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 					codeLife = input.PasswordlessLogin.CodeLifetime
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.SMTPContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -233,7 +232,7 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 			Enabled: true,
 		},
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
@@ -272,10 +271,10 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 	sendRawEmailCalled := false
 	customCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -283,7 +282,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Please click the button below to sign in / up")
@@ -312,7 +311,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 			Init(plessmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
 				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
+					Service: smtpService,
 				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -350,10 +349,10 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 	sendRawEmailCalled := false
 	customCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -361,7 +360,7 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Enter the below OTP in your login screen.")
@@ -390,7 +389,7 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 			Init(plessmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
 				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
+					Service: smtpService,
 				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
@@ -428,10 +427,10 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 	sendRawEmailCalled := false
 	customCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
@@ -439,7 +438,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 			Password: "",
 		},
 		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Please click the button below to sign in / up")
@@ -470,7 +469,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 			Init(plessmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
 				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
+					Service: smtpService,
 				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,

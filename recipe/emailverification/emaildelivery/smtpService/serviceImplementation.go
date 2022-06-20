@@ -23,16 +23,16 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeServiceImplementation(config emaildelivery.SMTPServiceConfig) emaildelivery.SMTPServiceInterface {
-	sendRawEmail := func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
-		return emaildelivery.SendSMTPEmail(config, input)
+func MakeServiceImplementation(settings emaildelivery.SMTPSettings) emaildelivery.SMTPServiceInterface {
+	sendRawEmail := func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+		return emaildelivery.SendSMTPEmail(settings, input)
 	}
 
-	getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+	getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
 		if input.EmailVerification != nil {
 			return getEmailVerifyEmailContent(*input.EmailVerification)
 		} else {
-			return emaildelivery.SMTPGetContentResult{}, errors.New("should never come here")
+			return emaildelivery.SMTPContent{}, errors.New("should never come here")
 		}
 	}
 

@@ -937,13 +937,13 @@ const passwordResetTemplate = `<!doctype html>
 
 </html>`
 
-func getPasswordResetEmailContent(input emaildelivery.PasswordResetType) (emaildelivery.SMTPGetContentResult, error) {
+func getPasswordResetEmailContent(input emaildelivery.PasswordResetType) (emaildelivery.SMTPContent, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		panic("Please call supertokens.Init function before using the Middleware")
 	}
 	bodyHtml := getPasswordResetEmailHTML(stInstance.AppInfo.AppName, input.User.Email, input.PasswordResetLink)
-	return emaildelivery.SMTPGetContentResult{
+	return emaildelivery.SMTPContent{
 		Body:    bodyHtml,
 		IsHtml:  true,
 		Subject: "Password reset instructions",
