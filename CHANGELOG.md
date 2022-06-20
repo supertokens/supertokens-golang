@@ -14,6 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `SMTPTypeInput` to `SMTPServiceConfig`
 -   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
 -   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
+-   All instances of `MakeSMTPService` returns `*EmailDeliveryInterface` instead of `EmailDeliveryInterface`
 
 ### Added
 -   Exposed `MakeSmtpService` from all recipes for convinience.
