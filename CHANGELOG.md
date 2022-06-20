@@ -6,7 +6,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Breaking change
+-   Renamed `SMTPServiceConfig` to `SMTPSettings`
+-   Changed type of `Secure` in `SMTPSettings` from `*bool` to `bool`
+-   Renamed `SMTPServiceFromConfig` to `SMTPFrom`
+-   Renamed `SMTPGetContentResult` to `SMTPContent`
+-   Renamed `SMTPTypeInput` to `SMTPServiceConfig`
+-   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
+-   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
 
+### Added
+-   Exposed `MakeSmtpService` from all recipes for convinience.
+
+### Fixes
 -   Changes `getEmailForUserIdForEmailVerification` function inside thirdpartypasswordless to take into account passwordless emails and return an empty string in case a passwordless email doesn't exist. This helps situations where the dev wants to customise the email verification functions in the thirdpartypasswordless recipe.
 
 ## [0.6.8] - 2022-06-17
