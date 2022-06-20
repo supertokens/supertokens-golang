@@ -20,6 +20,8 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/supertokensService"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/twilioService"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -410,4 +412,12 @@ func SendSms(input smsdelivery.SmsType) error {
 
 func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {
 	return smtpService.MakeSMTPService(config)
+}
+
+func MakeTwilioService(config smsdelivery.TwilioServiceConfig) (*smsdelivery.SmsDeliveryInterface, error) {
+	return twilioService.MakeTwilioService(config)
+}
+
+func MakeSupertokensService(config smsdelivery.SupertokensServiceConfig) *smsdelivery.SmsDeliveryInterface {
+	return supertokensService.MakeSupertokensService(config)
 }

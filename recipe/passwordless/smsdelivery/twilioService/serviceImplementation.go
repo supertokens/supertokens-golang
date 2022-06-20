@@ -21,12 +21,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeServiceImplementation(config smsdelivery.TwilioServiceConfig) smsdelivery.TwilioServiceInterface {
-	sendRawSms := func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
+func MakeServiceImplementation(config smsdelivery.TwilioSettings) smsdelivery.TwilioServiceInterface {
+	sendRawSms := func(input smsdelivery.TwilioContent, userContext supertokens.UserContext) error {
 		return smsdelivery.SendTwilioSms(config, input)
 	}
 
-	getContent := func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
+	getContent := func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioContent, error) {
 		result := getPasswordlessLoginSmsContent(*input.PasswordlessLogin)
 		return result, nil
 	}

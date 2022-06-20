@@ -22,34 +22,34 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type TwilioServiceConfig struct {
+type TwilioSettings struct {
 	AccountSid          string
 	AuthToken           string
 	From                *string
 	MessagingServiceSid *string
 }
 
-type TwilioGetContentResult struct {
+type TwilioContent struct {
 	Body          string
 	ToPhoneNumber string
 }
 
 type TwilioServiceInterface struct {
-	SendRawSms *func(input TwilioGetContentResult, userContext supertokens.UserContext) error
-	GetContent *func(input SmsType, userContext supertokens.UserContext) (TwilioGetContentResult, error)
+	SendRawSms *func(input TwilioContent, userContext supertokens.UserContext) error
+	GetContent *func(input SmsType, userContext supertokens.UserContext) (TwilioContent, error)
 }
 
-type TwilioTypeInput struct {
-	TwilioSettings TwilioServiceConfig
-	Override       func(originalImplementation TwilioServiceInterface) TwilioServiceInterface
+type TwilioServiceConfig struct {
+	Settings TwilioSettings
+	Override func(originalImplementation TwilioServiceInterface) TwilioServiceInterface
 }
 
-func NormaliseTwilioTypeInput(input TwilioTypeInput) (TwilioTypeInput, error) {
-	if input.TwilioSettings.From == nil && input.TwilioSettings.MessagingServiceSid == nil {
-		return TwilioTypeInput{}, errors.New("either 'From' or 'MessagingServiceSid' must be set")
+func NormaliseTwilioServiceConfig(input TwilioServiceConfig) (TwilioServiceConfig, error) {
+	if input.Settings.From == nil && input.Settings.MessagingServiceSid == nil {
+		return TwilioServiceConfig{}, errors.New("either 'From' or 'MessagingServiceSid' must be set")
 	}
-	if input.TwilioSettings.From != nil && input.TwilioSettings.MessagingServiceSid != nil {
-		return TwilioTypeInput{}, errors.New("only one of 'From' or 'MessagingServiceSid' must be set")
+	if input.Settings.From != nil && input.Settings.MessagingServiceSid != nil {
+		return TwilioServiceConfig{}, errors.New("only one of 'From' or 'MessagingServiceSid' must be set")
 	}
 	return input, nil
 }
