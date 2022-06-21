@@ -15,9 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
 -   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
 -   All instances of `MakeSMTPService` returns `*EmailDeliveryInterface` instead of `EmailDeliveryInterface`
+-   Renamed `TwilioServiceConfig` to `TwilioSettings`
+-   Renamed `TwilioGetContentResult` to `TwilioContent`
+-   Renamed `TwilioTypeInput` to `TwilioServiceConfig`
+-   Renamed field `TwilioSettings` to `Settings` in `TwilioServiceConfig`
+-   All instances of `MakeSupertokensService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
 
 ### Added
--   Exposed `MakeSMTPService` from all recipes for convinience.
+-   Exposed `MakeSMTPService` from emailverification, emailpassword, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
+-   Exposed `MakeSupertokensService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
 
 ### Fixes
 -   Changes `getEmailForUserIdForEmailVerification` function inside thirdpartypasswordless to take into account passwordless emails and return an empty string in case a passwordless email doesn't exist. This helps situations where the dev wants to customise the email verification functions in the thirdpartypasswordless recipe.
