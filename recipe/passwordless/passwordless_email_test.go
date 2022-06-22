@@ -43,6 +43,18 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
@@ -79,6 +91,18 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -131,6 +155,18 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -202,6 +238,18 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)

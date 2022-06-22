@@ -43,6 +43,18 @@ func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
 	defer testServer.Close()
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
 	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
@@ -79,6 +91,18 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
 	assert.NoError(t, err)
@@ -131,6 +155,18 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
 	assert.NoError(t, err)
@@ -201,6 +237,18 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(plessConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
 	assert.NoError(t, err)
