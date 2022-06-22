@@ -23,14 +23,14 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeTwilioService(config smsdelivery.TwilioTypeInput) (smsdelivery.SmsDeliveryInterface, error) {
-	config, err := smsdelivery.NormaliseTwilioTypeInput(config)
+func MakeTwilioService(config smsdelivery.TwilioServiceConfig) (*smsdelivery.SmsDeliveryInterface, error) {
+	config, err := smsdelivery.NormaliseTwilioServiceConfig(config)
 
 	if err != nil {
-		return smsdelivery.SmsDeliveryInterface{}, err
+		return nil, err
 	}
 
-	serviceImpl := MakeServiceImplementation(config.TwilioSettings)
+	serviceImpl := MakeServiceImplementation(config.Settings)
 
 	if config.Override != nil {
 		serviceImpl = config.Override(serviceImpl)
@@ -49,7 +49,7 @@ func MakeTwilioService(config smsdelivery.TwilioTypeInput) (smsdelivery.SmsDeliv
 		}
 	}
 
-	return smsdelivery.SmsDeliveryInterface{
+	return &smsdelivery.SmsDeliveryInterface{
 		SendSms: &sendSms,
 	}, nil
 }

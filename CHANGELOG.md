@@ -6,6 +6,30 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Breaking change
+-   Renamed `SMTPServiceConfig` to `SMTPSettings`
+-   Changed type of `Secure` in `SMTPSettings` from `*bool` to `bool`
+-   Renamed `SMTPServiceFromConfig` to `SMTPFrom`
+-   Renamed `SMTPGetContentResult` to `EmailContent`
+-   Renamed `SMTPTypeInput` to `SMTPServiceConfig`
+-   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
+-   Renamed `SMTPServiceInterface` to `SMTPInterface`
+-   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
+-   All instances of `MakeSMTPService` returns `*EmailDeliveryInterface` instead of `EmailDeliveryInterface`
+-   Renamed `TwilioServiceConfig` to `TwilioSettings`
+-   Renamed `TwilioGetContentResult` to `SMSContent`
+-   Renamed `TwilioTypeInput` to `TwilioServiceConfig`
+-   Renamed field `TwilioSettings` to `Settings` in `TwilioServiceConfig`
+-   Changed types of fields `From` and `MessagingServiceSid` in `TwilioSettings` from `*string` to `string`
+-   Renamed `MakeSupertokensService` to `MakeSupertokensSMSService`
+-   All instances of `MakeSupertokensSMSService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
+-   Removed `SupertokensServiceConfig` and `MakeSupertokensSMSService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
+-   Renamed `TwilioServiceInterface` to `TwilioInterface`
+
+### Added
+-   Exposed `MakeSMTPService` from emailverification, emailpassword, passwordless, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
+-   Exposed `MakeSupertokensSMSService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
+
 ### Fixes
 - Fixes Cookie SameSite config validation.
 - Changes `getEmailForUserIdForEmailVerification` function inside thirdpartypasswordless to take into account passwordless emails and return an empty string in case a passwordless email doesn't exist. This helps situations where the dev wants to customise the email verification functions in the thirdpartypasswordless recipe.

@@ -22,6 +22,9 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/smtpService"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/supertokensService"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/twilioService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -569,4 +572,16 @@ func PasswordlessSignInUpByPhoneNumber(phoneNumber string) (struct {
 	User             tplmodels.User
 }, error) {
 	return PasswordlessSignInUpByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+}
+
+func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {
+	return smtpService.MakeSMTPService(config)
+}
+
+func MakeTwilioService(config smsdelivery.TwilioServiceConfig) (*smsdelivery.SmsDeliveryInterface, error) {
+	return twilioService.MakeTwilioService(config)
+}
+
+func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface {
+	return supertokensService.MakeSupertokensSMSService(apiKey)
 }

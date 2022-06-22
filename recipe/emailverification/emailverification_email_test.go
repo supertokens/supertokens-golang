@@ -21,7 +21,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -164,23 +163,23 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 func TestSMTPServiceOverride(t *testing.T) {
 	getContentCalled := false
 	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				getContentCalled = true
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -200,7 +199,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
 				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
+					Service: smtpService,
 				},
 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
 					return "", nil
@@ -232,18 +231,18 @@ func TestSMTPServiceOverride(t *testing.T) {
 
 func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 	sendRawEmailCalled := false
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Please verify your email address")
@@ -269,7 +268,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
 				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &smtpService,
+					Service: smtpService,
 				},
 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
 					return "", nil
@@ -308,10 +307,10 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 // 	secure := true
 // 	port := 465
 
-// 	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-// 		SMTPSettings: emaildelivery.SMTPServiceConfig{
+// 	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+// 		Settings: emaildelivery.SMTPSettings{
 // 			Host: host,
-// 			From: emaildelivery.SMTPServiceFromConfig{
+// 			From: emaildelivery.SMTPFrom{
 // 				Name:  "Test User",
 // 				Email: fromEmail,
 // 			},
@@ -332,7 +331,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 // 		RecipeList: []supertokens.Recipe{
 // 			Init(evmodels.TypeInput{
 // 				EmailDelivery: &emaildelivery.TypeInput{
-// 					Service: &smtpService,
+// 					Service: smtpService,
 // 				},
 // 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
 // 					return targetEmail, nil

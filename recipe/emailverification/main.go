@@ -17,6 +17,7 @@ package emailverification
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -95,4 +96,8 @@ func UnverifyEmail(userID, email string) (evmodels.UnverifyEmailResponse, error)
 
 func SendEmail(input emaildelivery.EmailType) error {
 	return SendEmailWithContext(input, &map[string]interface{}{})
+}
+
+func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {
+	return smtpService.MakeSMTPService(config)
 }
