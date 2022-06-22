@@ -173,13 +173,13 @@ func TestSMTPServiceOverride(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				getContentCalled = true
-				return emaildelivery.SMTPContent{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -241,8 +241,8 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Please verify your email address")

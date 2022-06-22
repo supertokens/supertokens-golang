@@ -39,7 +39,7 @@ func MakeIngredient(config TypeInputWithService) Ingredient {
 	return result
 }
 
-func SendTwilioSms(settings TwilioSettings, content TwilioContent) error {
+func SendTwilioSms(settings TwilioSettings, content SMSContent) error {
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: settings.AccountSid,
 		Password: settings.AuthToken,
@@ -49,10 +49,10 @@ func SendTwilioSms(settings TwilioSettings, content TwilioContent) error {
 	params.SetTo(content.ToPhoneNumber)
 	params.SetBody(content.Body)
 
-	if settings.From != nil {
-		params.SetFrom(*settings.From)
-	} else if settings.MessagingServiceSid != nil {
-		params.SetMessagingServiceSid(*settings.MessagingServiceSid)
+	if settings.From != "" {
+		params.SetFrom(settings.From)
+	} else if settings.MessagingServiceSid != "" {
+		params.SetMessagingServiceSid(settings.MessagingServiceSid)
 	} else {
 		return errors.New("should not come here")
 	}

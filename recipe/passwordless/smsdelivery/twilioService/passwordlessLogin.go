@@ -35,12 +35,12 @@ Or click ${magicLink} to login.
 
 This is valid for ${time}.`
 
-func getPasswordlessLoginSmsContent(input smsdelivery.PasswordlessLoginType) smsdelivery.TwilioContent {
+func getPasswordlessLoginSmsContent(input smsdelivery.PasswordlessLoginType) smsdelivery.SMSContent {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		panic("Please call supertokens.Init function before using the Middleware")
 	}
-	return smsdelivery.TwilioContent{
+	return smsdelivery.SMSContent{
 		Body:          getPasswordlessLoginSmsBody(stInstance.AppInfo.AppName, input.CodeLifetime, input.UrlWithLinkCode, input.UserInputCode),
 		ToPhoneNumber: input.PhoneNumber,
 	}

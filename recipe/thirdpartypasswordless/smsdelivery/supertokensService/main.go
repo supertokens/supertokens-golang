@@ -22,8 +22,8 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeSupertokensService(apiKey string) *smsdelivery.SmsDeliveryInterface {
-	plessService := supertokensService.MakeSupertokensService(apiKey)
+func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface {
+	plessService := supertokensService.MakeSupertokensSMSService(apiKey)
 
 	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
 		return (*plessService.SendSms)(input, userContext)

@@ -240,17 +240,17 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.PasswordReset != nil {
 					email = input.PasswordReset.User.Email
 					passwordResetLink = input.PasswordReset.PasswordResetLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPContent{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -302,17 +302,17 @@ func TestSMTPOverridePasswordResetForNonExistantUser(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.PasswordReset != nil {
 					email = input.PasswordReset.User.Email
 					passwordResetLink = input.PasswordReset.PasswordResetLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPContent{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -470,17 +470,17 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.EmailVerification != nil {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPContent{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}

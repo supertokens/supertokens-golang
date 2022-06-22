@@ -2848,13 +2848,13 @@ const otpLoginTemplate = `<!doctype html>
 
 </html>`
 
-func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType) (emaildelivery.SMTPContent, error) {
+func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType) (emaildelivery.EmailContent, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		panic("Please call supertokens.Init function before using the Middleware")
 	}
 	bodyHtml := getPasswordlessLoginEmailHTML(stInstance.AppInfo.AppName, input.CodeLifetime, input.UrlWithLinkCode, input.UserInputCode, input.Email)
-	return emaildelivery.SMTPContent{
+	return emaildelivery.EmailContent{
 		Body:    bodyHtml,
 		IsHtml:  true,
 		Subject: "Login to your account",

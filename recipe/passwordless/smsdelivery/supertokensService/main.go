@@ -30,7 +30,7 @@ import (
 
 const SUPERTOKENS_SMS_SERVICE_URL = "https://api.supertokens.com/0/services/sms"
 
-func MakeSupertokensService(apiKey string) *smsdelivery.SmsDeliveryInterface {
+func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface {
 	sendPasswordlessLoginSms := func(input smsdelivery.PasswordlessLoginType, userContext supertokens.UserContext) error {
 		instance, err := supertokens.GetInstanceOrThrowError()
 		if err != nil {

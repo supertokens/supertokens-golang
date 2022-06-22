@@ -10,21 +10,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `SMTPServiceConfig` to `SMTPSettings`
 -   Changed type of `Secure` in `SMTPSettings` from `*bool` to `bool`
 -   Renamed `SMTPServiceFromConfig` to `SMTPFrom`
--   Renamed `SMTPGetContentResult` to `SMTPContent`
+-   Renamed `SMTPGetContentResult` to `EmailContent`
 -   Renamed `SMTPTypeInput` to `SMTPServiceConfig`
 -   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
+-   Renamed `SMTPServiceInterface` to `SMTPInterface`
 -   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
 -   All instances of `MakeSMTPService` returns `*EmailDeliveryInterface` instead of `EmailDeliveryInterface`
 -   Renamed `TwilioServiceConfig` to `TwilioSettings`
--   Renamed `TwilioGetContentResult` to `TwilioContent`
+-   Renamed `TwilioGetContentResult` to `SMSContent`
 -   Renamed `TwilioTypeInput` to `TwilioServiceConfig`
 -   Renamed field `TwilioSettings` to `Settings` in `TwilioServiceConfig`
--   All instances of `MakeSupertokensService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
--   Removed `SupertokensServiceConfig` and `MakeSupertokensService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
+-   Changed types of fields `From` and `MessagingServiceSid` in `TwilioSettings` from `*string` to `string`
+-   Renamed `MakeSupertokensService` to `MakeSupertokensSMSService`
+-   All instances of `MakeSupertokensSMSService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
+-   Removed `SupertokensServiceConfig` and `MakeSupertokensSMSService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
+-   Renamed `TwilioServiceInterface` to `TwilioInterface`
 
 ### Added
 -   Exposed `MakeSMTPService` from emailverification, emailpassword, passwordless, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
--   Exposed `MakeSupertokensService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
+-   Exposed `MakeSupertokensSMSService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
 
 ### Fixes
 - Fixes Cookie SameSite config validation.

@@ -206,8 +206,8 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.PasswordlessLogin != nil {
 					plessEmail = input.PasswordlessLogin.Email
 					code = input.PasswordlessLogin.UserInputCode
@@ -215,10 +215,10 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 					codeLife = input.PasswordlessLogin.CodeLifetime
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPContent{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -281,8 +281,8 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Please click the button below to sign in / up")
@@ -359,8 +359,8 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Enter the below OTP in your login screen.")
@@ -437,8 +437,8 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				emailBody := input.Body
 				assert.Contains(t, emailBody, "Please click the button below to sign in / up")

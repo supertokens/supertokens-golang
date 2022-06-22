@@ -24,24 +24,24 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeServiceImplementation(settings emaildelivery.SMTPSettings) emaildelivery.SMTPServiceInterface {
-	sendRawEmail := func(input emaildelivery.SMTPContent, userContext supertokens.UserContext) error {
+func MakeServiceImplementation(settings emaildelivery.SMTPSettings) emaildelivery.SMTPInterface {
+	sendRawEmail := func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 		return emaildelivery.SendSMTPEmail(settings, input)
 	}
 
 	evServiceImpl := evsmtpService.MakeServiceImplementation(settings)
 
-	getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPContent, error) {
+	getContent := func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 		if input.EmailVerification != nil {
 			return (*evServiceImpl.GetContent)(input, userContext)
 		} else if input.PasswordReset != nil {
 			return getPasswordResetEmailContent(*input.PasswordReset)
 		} else {
-			return emaildelivery.SMTPContent{}, errors.New("should never come here")
+			return emaildelivery.EmailContent{}, errors.New("should never come here")
 		}
 	}
 
-	return emaildelivery.SMTPServiceInterface{
+	return emaildelivery.SMTPInterface{
 		SendRawEmail: &sendRawEmail,
 		GetContent:   &getContent,
 	}

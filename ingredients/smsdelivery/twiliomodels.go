@@ -25,30 +25,30 @@ import (
 type TwilioSettings struct {
 	AccountSid          string
 	AuthToken           string
-	From                *string
-	MessagingServiceSid *string
+	From                string
+	MessagingServiceSid string
 }
 
-type TwilioContent struct {
+type SMSContent struct {
 	Body          string
 	ToPhoneNumber string
 }
 
-type TwilioServiceInterface struct {
-	SendRawSms *func(input TwilioContent, userContext supertokens.UserContext) error
-	GetContent *func(input SmsType, userContext supertokens.UserContext) (TwilioContent, error)
+type TwilioInterface struct {
+	SendRawSms *func(input SMSContent, userContext supertokens.UserContext) error
+	GetContent *func(input SmsType, userContext supertokens.UserContext) (SMSContent, error)
 }
 
 type TwilioServiceConfig struct {
 	Settings TwilioSettings
-	Override func(originalImplementation TwilioServiceInterface) TwilioServiceInterface
+	Override func(originalImplementation TwilioInterface) TwilioInterface
 }
 
 func NormaliseTwilioServiceConfig(input TwilioServiceConfig) (TwilioServiceConfig, error) {
-	if input.Settings.From == nil && input.Settings.MessagingServiceSid == nil {
+	if input.Settings.From == "" && input.Settings.MessagingServiceSid == "" {
 		return TwilioServiceConfig{}, errors.New("either 'From' or 'MessagingServiceSid' must be set")
 	}
-	if input.Settings.From != nil && input.Settings.MessagingServiceSid != nil {
+	if input.Settings.From != "" && input.Settings.MessagingServiceSid != "" {
 		return TwilioServiceConfig{}, errors.New("only one of 'From' or 'MessagingServiceSid' must be set")
 	}
 	return input, nil

@@ -40,7 +40,7 @@ func MakeIngredient(config TypeInputWithService) Ingredient {
 	return result
 }
 
-func SendSMTPEmail(settings SMTPSettings, content SMTPContent) error {
+func SendSMTPEmail(settings SMTPSettings, content EmailContent) error {
 	m := gomail.NewMessage()
 	m.SetHeader("From", fmt.Sprintf("%s <%s>", settings.From.Name, settings.From.Email))
 	m.SetHeader("To", content.ToEmail)

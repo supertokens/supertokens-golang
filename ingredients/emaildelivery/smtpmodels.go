@@ -33,19 +33,19 @@ type SMTPFrom struct {
 	Email string
 }
 
-type SMTPContent struct {
+type EmailContent struct {
 	Body    string
 	IsHtml  bool
 	Subject string
 	ToEmail string
 }
 
-type SMTPServiceInterface struct {
-	SendRawEmail *func(input SMTPContent, userContext supertokens.UserContext) error
-	GetContent   *func(input EmailType, userContext supertokens.UserContext) (SMTPContent, error)
+type SMTPInterface struct {
+	SendRawEmail *func(input EmailContent, userContext supertokens.UserContext) error
+	GetContent   *func(input EmailType, userContext supertokens.UserContext) (EmailContent, error)
 }
 
 type SMTPServiceConfig struct {
 	Settings SMTPSettings
-	Override func(originalImplementation SMTPServiceInterface) SMTPServiceInterface
+	Override func(originalImplementation SMTPInterface) SMTPInterface
 }

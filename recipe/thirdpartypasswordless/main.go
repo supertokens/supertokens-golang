@@ -582,6 +582,6 @@ func MakeTwilioService(config smsdelivery.TwilioServiceConfig) (*smsdelivery.Sms
 	return twilioService.MakeTwilioService(config)
 }
 
-func MakeSupertokensService(apiKey string) *smsdelivery.SmsDeliveryInterface {
-	return supertokensService.MakeSupertokensService(apiKey)
+func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface {
+	return supertokensService.MakeSupertokensSMSService(apiKey)
 }
