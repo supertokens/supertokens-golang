@@ -646,6 +646,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFine(t *testing.T) {
 	customAntiCsrfVal := "NONE"
+	True := true
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -657,7 +658,8 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
-				AntiCsrf: &customAntiCsrfVal,
+				AntiCsrf:     &customAntiCsrfVal,
+				CookieSecure: &True,
 			}),
 		},
 	}
