@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `TwilioTypeInput` to `TwilioServiceConfig`
 -   Renamed field `TwilioSettings` to `Settings` in `TwilioServiceConfig`
 -   All instances of `MakeSupertokensService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
+-   Removed `SupertokensServiceConfig` and `MakeSupertokensService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
 
 ### Added
 -   Exposed `MakeSMTPService` from emailverification, emailpassword, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes

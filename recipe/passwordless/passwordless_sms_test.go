@@ -268,9 +268,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 }
 
 // func TestSupertokensServiceManually(t *testing.T) {
-// 	serviceImpl := supertokensService.MakeSupertokensService(smsdelivery.SupertokensServiceConfig{
-// 		ApiKey: "...",
-// 	})
+// 	serviceImpl := supertokensService.MakeSupertokensService("...")
 
 // 	configValue := supertokens.TypeInput{
 // 		Supertokens: &supertokens.ConnectionInfo{
