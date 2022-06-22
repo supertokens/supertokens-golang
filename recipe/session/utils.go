@@ -148,6 +148,8 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	if cookieSameSite == cookieSameSite_NONE &&
 		!cookieSecure && !((topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
 		(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain)) {
+		// We can allow insecure cookie when both website & API domain are localhost or an IP
+		// When either of them is a different domain, API domain needs to have https and a secure cookie to work
 		return sessmodels.TypeNormalisedInput{}, errors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
 	}
 
