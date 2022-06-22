@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Removed `SupertokensServiceConfig` and `MakeSupertokensService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
 
 ### Added
--   Exposed `MakeSMTPService` from emailverification, emailpassword, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
+-   Exposed `MakeSMTPService` from emailverification, emailpassword, passwordless, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
 -   Exposed `MakeSupertokensService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
 
 ### Fixes
