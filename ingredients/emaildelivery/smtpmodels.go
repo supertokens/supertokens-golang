@@ -20,32 +20,32 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type SMTPServiceConfig struct {
+type SMTPSettings struct {
 	Host     string
-	From     SMTPServiceFromConfig
+	From     SMTPFrom
 	Port     int
 	Password string
-	Secure   *bool
+	Secure   bool
 }
 
-type SMTPServiceFromConfig struct {
+type SMTPFrom struct {
 	Name  string
 	Email string
 }
 
-type SMTPGetContentResult struct {
+type EmailContent struct {
 	Body    string
 	IsHtml  bool
 	Subject string
 	ToEmail string
 }
 
-type SMTPServiceInterface struct {
-	SendRawEmail *func(input SMTPGetContentResult, userContext supertokens.UserContext) error
-	GetContent   *func(input EmailType, userContext supertokens.UserContext) (SMTPGetContentResult, error)
+type SMTPInterface struct {
+	SendRawEmail *func(input EmailContent, userContext supertokens.UserContext) error
+	GetContent   *func(input EmailType, userContext supertokens.UserContext) (EmailContent, error)
 }
 
-type SMTPTypeInput struct {
-	SMTPSettings SMTPServiceConfig
-	Override     func(originalImplementation SMTPServiceInterface) SMTPServiceInterface
+type SMTPServiceConfig struct {
+	Settings SMTPSettings
+	Override func(originalImplementation SMTPInterface) SMTPInterface
 }

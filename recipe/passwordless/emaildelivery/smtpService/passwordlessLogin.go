@@ -853,12 +853,12 @@ const magicLinkAndOtpLoginTemplate = `<!doctype html>
 													<tr>
 														<td valign="top" class="mcnTextBlockInner">
 															<div
-																style="background-color:#fff; border: 1px solid #ddd; margin-left: 3%; margin-right: 3%; border-radius: 6px">
+																style="background-color:#fff; margin-left: 3%; margin-right: 3%; border: 1px solid #ddd; border-radius: 6px">
 																<div style="padding-left: 15%; padding-right: 15%;">
 																	<p
 																		style="font-family: 'Helvetica' , sans-serif; font-size: 16px; line-height: 26px; font-weight:700; text-align: center; padding-top: 24px; padding-bottom: 8px; padding-left: 10%; padding-right: 10%; ">
 																		Enter the below OTP in your login screen. Note
-																		that the link expires in ${time}.</p>
+																		that the OTP expires in ${time}.</p>
 																</div>
 
 																<div
@@ -2774,7 +2774,7 @@ const otpLoginTemplate = `<!doctype html>
 																	<p
 																		style="font-family:'Helvetica', sans-serif; font-size: 16px; line-height: 26px; font-weight:700; text-align: center; padding-top: 24px; padding-bottom: 24px; padding-left: 8%; padding-right: 8%; ">
 																		Enter the below OTP in your login screen. Note
-																		that the link expires in ${time}.</p>
+																		that the OTP expires in ${time}.</p>
 
 																	<div
 																		style="display: block; flex-direction: row; justify-content: center; margin-bottom: 40px; text-align: center">
@@ -2848,13 +2848,13 @@ const otpLoginTemplate = `<!doctype html>
 
 </html>`
 
-func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType) (emaildelivery.SMTPGetContentResult, error) {
+func getPasswordlessLoginEmailContent(input emaildelivery.PasswordlessLoginType) (emaildelivery.EmailContent, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		panic("Please call supertokens.Init function before using the Middleware")
 	}
 	bodyHtml := getPasswordlessLoginEmailHTML(stInstance.AppInfo.AppName, input.CodeLifetime, input.UrlWithLinkCode, input.UserInputCode, input.Email)
-	return emaildelivery.SMTPGetContentResult{
+	return emaildelivery.EmailContent{
 		Body:    bodyHtml,
 		IsHtml:  true,
 		Subject: "Login to your account",

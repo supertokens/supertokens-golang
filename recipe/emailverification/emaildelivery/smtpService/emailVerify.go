@@ -939,13 +939,13 @@ const emailVerificationTemplate = `<!doctype html>
 
 </html>`
 
-func getEmailVerifyEmailContent(input emaildelivery.EmailVerificationType) (emaildelivery.SMTPGetContentResult, error) {
+func getEmailVerifyEmailContent(input emaildelivery.EmailVerificationType) (emaildelivery.EmailContent, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		panic("Please call supertokens.Init function before using the Middleware")
 	}
 	bodyHtml := getEmailVerifyEmailHTML(stInstance.AppInfo.AppName, input.User.Email, input.EmailVerifyLink)
-	return emaildelivery.SMTPGetContentResult{
+	return emaildelivery.EmailContent{
 		Body:    bodyHtml,
 		IsHtml:  true,
 		Subject: "Email verification instructions",

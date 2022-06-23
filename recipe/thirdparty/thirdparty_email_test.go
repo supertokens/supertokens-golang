@@ -26,7 +26,6 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -197,27 +196,27 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.EmailVerification != nil {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -227,7 +226,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	})
 	tpConfig := &tpmodels.TypeInput{
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 		SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 			Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},

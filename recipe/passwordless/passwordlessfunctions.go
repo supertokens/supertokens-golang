@@ -88,12 +88,17 @@ func DefaultCreateAndSendCustomEmail(appInfo supertokens.NormalisedAppinfo) func
 		}
 		url := "https://api.supertokens.io/0/st/auth/passwordless/login"
 		data := map[string]interface{}{
-			"email":           email,
-			"appName":         appInfo.AppName,
-			"codeLifetime":    codeLifetime,
-			"urlWithLinkCode": urlWithLinkCode,
-			"userInputCode":   userInputCode,
+			"email":        email,
+			"appName":      appInfo.AppName,
+			"codeLifetime": codeLifetime,
 		}
+		if urlWithLinkCode != nil {
+			data["urlWithLinkCode"] = *urlWithLinkCode
+		}
+		if userInputCode != nil {
+			data["userInputCode"] = *userInputCode
+		}
+
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return err
@@ -174,7 +179,7 @@ func DefaultCreateAndSendCustomTextMessage(appInfo supertokens.NormalisedAppinfo
 			if err != nil {
 				return err
 			}
-			fmt.Println("Free daily SMS quota reached. If using our managed service, please create a production environment to get dedicated API keys for SMS sending, or define your own method for sending SMS. For now, we are logging it below:")
+			fmt.Println("Free daily SMS quota reached. If you want to use SuperTokens to send SMS, please sign up on supertokens.com to get your SMS API key, else you can also define your own method by overriding the service. For now, we are logging it below:")
 			fmt.Println()
 			fmt.Printf("SMS content: %s\n", string(smsData))
 

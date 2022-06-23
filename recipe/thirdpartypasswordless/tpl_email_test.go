@@ -30,7 +30,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -49,6 +48,18 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -86,6 +97,18 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -139,6 +162,18 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -168,18 +203,18 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	var code, urlWithCode *string
 	var codeLife uint64
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.PasswordlessLogin != nil {
 					plessEmail = input.PasswordlessLogin.Email
 					code = input.PasswordlessLogin.UserInputCode
@@ -187,10 +222,10 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 					codeLife = input.PasswordlessLogin.CodeLifetime
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -204,11 +239,23 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 			Enabled: true,
 		},
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -241,6 +288,18 @@ func TestDefaultBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -334,6 +393,18 @@ func TestBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -463,6 +534,18 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -571,18 +654,18 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	emailVerifyLink := ""
 	var userInputCode *string
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.EmailVerification != nil {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
@@ -590,10 +673,10 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 				} else if input.PasswordlessLogin != nil {
 					userInputCode = input.PasswordlessLogin.UserInputCode
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -607,11 +690,23 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 			Enabled: true,
 		},
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
 
 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
@@ -661,27 +756,27 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := smtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: emaildelivery.SMTPServiceConfig{
+	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
 			Host: "",
-			From: emaildelivery.SMTPServiceFromConfig{
+			From: emaildelivery.SMTPFrom{
 				Name:  "Test User",
 				Email: "",
 			},
 			Port:     123,
 			Password: "",
 		},
-		Override: func(originalImplementation emaildelivery.SMTPServiceInterface) emaildelivery.SMTPServiceInterface {
-			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.SMTPGetContentResult, error) {
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
 				if input.EmailVerification != nil {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
 					getContentCalled = true
 				}
-				return emaildelivery.SMTPGetContentResult{}, nil
+				return emaildelivery.EmailContent{}, nil
 			}
 
-			(*originalImplementation.SendRawEmail) = func(input emaildelivery.SMTPGetContentResult, userContext supertokens.UserContext) error {
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
 				sendRawEmailCalled = true
 				return nil
 			}
@@ -695,7 +790,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 			Enabled: true,
 		},
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: &smtpService,
+			Service: smtpService,
 		},
 		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
 	}

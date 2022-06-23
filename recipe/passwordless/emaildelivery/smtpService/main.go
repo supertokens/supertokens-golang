@@ -23,8 +23,8 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeliveryInterface {
-	serviceImpl := MakeServiceImplementation(config.SMTPSettings)
+func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {
+	serviceImpl := MakeServiceImplementation(config.Settings)
 
 	if config.Override != nil {
 		serviceImpl = config.Override(serviceImpl)
@@ -42,7 +42,7 @@ func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeli
 		}
 	}
 
-	return emaildelivery.EmailDeliveryInterface{
+	return &emaildelivery.EmailDeliveryInterface{
 		SendEmail: &sendEmail,
 	}
 }

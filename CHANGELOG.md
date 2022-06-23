@@ -6,6 +6,149 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+### Breaking change
+-   Renamed `SMTPServiceConfig` to `SMTPSettings`
+-   Changed type of `Secure` in `SMTPSettings` from `*bool` to `bool`
+-   Renamed `SMTPServiceFromConfig` to `SMTPFrom`
+-   Renamed `SMTPGetContentResult` to `EmailContent`
+-   Renamed `SMTPTypeInput` to `SMTPServiceConfig`
+-   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
+-   Renamed `SMTPServiceInterface` to `SMTPInterface`
+-   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
+-   All instances of `MakeSMTPService` returns `*EmailDeliveryInterface` instead of `EmailDeliveryInterface`
+-   Renamed `TwilioServiceConfig` to `TwilioSettings`
+-   Renamed `TwilioGetContentResult` to `SMSContent`
+-   Renamed `TwilioTypeInput` to `TwilioServiceConfig`
+-   Renamed field `TwilioSettings` to `Settings` in `TwilioServiceConfig`
+-   Changed types of fields `From` and `MessagingServiceSid` in `TwilioSettings` from `*string` to `string`
+-   Renamed `MakeSupertokensService` to `MakeSupertokensSMSService`
+-   All instances of `MakeSupertokensSMSService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
+-   Removed `SupertokensServiceConfig` and `MakeSupertokensSMSService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
+-   Renamed `TwilioServiceInterface` to `TwilioInterface`
+
+### Added
+-   Exposed `MakeSMTPService` from emailverification, emailpassword, passwordless, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
+-   Exposed `MakeSupertokensSMSService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
+
+### Fixes
+- Fixes Cookie SameSite config validation.
+- Changes `getEmailForUserIdForEmailVerification` function inside thirdpartypasswordless to take into account passwordless emails and return an empty string in case a passwordless email doesn't exist. This helps situations where the dev wants to customise the email verification functions in the thirdpartypasswordless recipe.
+
+## [0.6.8] - 2022-06-17
+### Added
+- `EmailDelivery` user config for Emailpassword, Thirdparty, ThirdpartyEmailpassword, Passwordless and ThirdpartyPasswordless recipes.
+- `SmsDelivery` user config for Passwordless and ThirdpartyPasswordless recipes.
+- `Twilio` service integration for SmsDelivery ingredient.
+- `SMTP` service integration for EmailDelivery ingredient.
+- `Supertokens` service integration for SmsDelivery ingredient.
+
+### Deprecated
+- For Emailpassword recipe input config, `ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
+- For Thirdparty recipe input config, `EmailVerificationFeature.CreateAndSendCustomEmail` has been deprecated.
+- For ThirdpartyEmailpassword recipe input config, `ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
+- For Passwordless recipe input config, `CreateAndSendCustomEmail` and `CreateAndSendCustomTextMessage` have been deprecated.
+- For ThirdpartyPasswordless recipe input config, `CreateAndSendCustomEmail`, `CreateAndSendCustomTextMessage` and `EmailVerificationFeature.CreateAndSendCustomEmail` have been deprecated.
+
+### Migration
+
+Following is an example of ThirdpartyPasswordless recipe migration. If your existing code looks like
+
+```go
+func passwordlessLoginEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+}
+
+func passwordlessLoginSms(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+}
+
+func verifyEmail(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+	// some custom logic
+}
+
+supertokens.Init(supertokens.TypeInput{
+    AppInfo: supertokens.AppInfo{
+        AppName:       "...",
+        APIDomain:     "...",
+        WebsiteDomain: "...",
+    },
+    RecipeList: []supertokens.Recipe{
+        thirdpartypasswordless.Init(tplmodels.TypeInput{
+            FlowType: "...",
+            ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+                Enabled: true,
+                CreateAndSendCustomEmail: passwordlessLoginEmail,
+                CreateAndSendCustomTextMessage: passwordlessLoginSms,
+            },
+            EmailVerificationFeature: &tplmodels.TypeInputEmailVerificationFeature{
+                CreateAndSendCustomEmail: verifyEmail,
+            },
+        }),
+    },
+})
+```
+
+After migration to using new `EmailDelivery` and `SmsDelivery` config, your code would look like:
+```go
+func passwordlessLoginEmail(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+	return nil
+}
+
+func passwordlessLoginSms(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+	// some custom logic
+	return nil
+}
+
+func verifyEmail(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+	// some custom logic
+}
+
+var sendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	if input.EmailVerification != nil {
+		verifyEmail(tplmodels.User{ID: input.EmailVerification.User.ID, Email: &input.EmailVerification.User.Email}, input.EmailVerification.EmailVerifyLink, userContext)
+	} else if input.PasswordlessLogin != nil {
+		return passwordlessLoginEmail(input.PasswordlessLogin.Email, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+	return nil
+}
+
+var sendSms = func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+	if input.PasswordlessLogin != nil {
+		return passwordlessLoginSms(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+	return nil
+}
+
+supertokens.Init(supertokens.TypeInput{
+    AppInfo: supertokens.AppInfo{
+        AppName:       "...",
+        APIDomain:     "...",
+        WebsiteDomain: "...",
+    },
+    RecipeList: []supertokens.Recipe{
+        thirdpartypasswordless.Init(tplmodels.TypeInput{
+            FlowType: "...",
+            ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+                Enabled: true,
+            },
+            EmailDelivery: &emaildelivery.TypeInput{
+                Service: &emaildelivery.EmailDeliveryInterface{
+                    SendEmail: &sendEmail,
+                },
+            },
+            SmsDelivery: &smsdelivery.TypeInput{
+                Service: &smsdelivery.SmsDeliveryInterface{
+                    SendSms: &sendSms,
+                },
+            },
+        }),
+    },
+})
+```
+
+## [0.6.7]
+- Fixes panic when call to thirdparty provider API returns a non 2xx status.
 
 ### Breaking change
 -   https://github.com/supertokens/supertokens-node/issues/220

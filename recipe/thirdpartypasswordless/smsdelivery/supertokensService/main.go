@@ -22,14 +22,14 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeSupertokensService(config smsdelivery.SupertokensServiceConfig) smsdelivery.SmsDeliveryInterface {
-	plessService := supertokensService.MakeSupertokensService(config)
+func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface {
+	plessService := supertokensService.MakeSupertokensSMSService(apiKey)
 
 	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
 		return (*plessService.SendSms)(input, userContext)
 	}
 
-	return smsdelivery.SmsDeliveryInterface{
+	return &smsdelivery.SmsDeliveryInterface{
 		SendSms: &sendSms,
 	}
 }
