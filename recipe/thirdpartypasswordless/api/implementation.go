@@ -35,11 +35,9 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 		if err != nil {
 			return tplmodels.ThirdPartySignInUpOutput{}, err
 		}
-		if response.FieldError != nil {
+		if response.GeneralError != nil {
 			return tplmodels.ThirdPartySignInUpOutput{
-				FieldError: &struct{ ErrorMsg string }{
-					ErrorMsg: response.FieldError.ErrorMsg,
-				},
+				GeneralError: response.GeneralError,
 			}, nil
 		} else if response.NoEmailGivenByProviderError != nil {
 			return tplmodels.ThirdPartySignInUpOutput{

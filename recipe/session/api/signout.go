@@ -25,12 +25,16 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	_, err := (*apiImplementation.SignOutPOST)(options, &map[string]interface{}{})
+	resp, err := (*apiImplementation.SignOutPOST)(options, &map[string]interface{}{})
 	if err != nil {
 		return err
 	}
 
-	return supertokens.Send200Response(options.Res, map[string]interface{}{
-		"status": "OK",
-	})
+	if resp.OK != nil {
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "OK",
+		})
+	} else {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*resp.GeneralError))
+	}
 }

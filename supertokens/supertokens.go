@@ -26,9 +26,9 @@ import (
 )
 
 type superTokens struct {
-	AppInfo        NormalisedAppinfo
-	RecipeModules  []RecipeModule
-	OnGeneralError func(err error, req *http.Request, res http.ResponseWriter)
+	AppInfo               NormalisedAppinfo
+	RecipeModules         []RecipeModule
+	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 // this will be set to true if this is used in a test app environment
@@ -43,9 +43,9 @@ func supertokensInit(config TypeInput) error {
 
 	superTokens := &superTokens{}
 
-	superTokens.OnGeneralError = defaultOnGeneralError
-	if config.OnGeneralError != nil {
-		superTokens.OnGeneralError = config.OnGeneralError
+	superTokens.OnSuperTokensAPIError = defaultOnSuperTokensAPIError
+	if config.OnSuperTokensAPIError != nil {
+		superTokens.OnSuperTokensAPIError = config.OnSuperTokensAPIError
 	}
 
 	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
@@ -90,7 +90,7 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	for _, elem := range config.RecipeList {
-		recipeModule, err := elem(superTokens.AppInfo, superTokens.OnGeneralError)
+		recipeModule, err := elem(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
 		if err != nil {
 			return err
 		}
@@ -106,7 +106,7 @@ func supertokensInit(config TypeInput) error {
 	return nil
 }
 
-func defaultOnGeneralError(err error, req *http.Request, res http.ResponseWriter) {
+func defaultOnSuperTokensAPIError(err error, req *http.Request, res http.ResponseWriter) {
 	http.Error(res, err.Error(), 500)
 }
 
@@ -169,7 +169,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		if err != nil {
 			err = s.errorHandler(err, r, dw)
 			if err != nil && !dw.IsDone() {
-				s.OnGeneralError(err, r, dw)
+				s.OnSuperTokensAPIError(err, r, dw)
 			}
 			return
 		}
@@ -209,7 +209,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			if err != nil {
 				err = s.errorHandler(err, r, dw)
 				if err != nil && !dw.IsDone() {
-					s.OnGeneralError(err, r, dw)
+					s.OnSuperTokensAPIError(err, r, dw)
 				}
 				return
 			}
@@ -226,7 +226,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			if apiErr != nil {
 				apiErr = s.errorHandler(apiErr, r, dw)
 				if apiErr != nil && !dw.IsDone() {
-					s.OnGeneralError(apiErr, r, dw)
+					s.OnSuperTokensAPIError(apiErr, r, dw)
 				}
 				return
 			}
@@ -238,7 +238,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				if err != nil {
 					err = s.errorHandler(err, r, dw)
 					if err != nil && !dw.IsDone() {
-						s.OnGeneralError(err, r, dw)
+						s.OnSuperTokensAPIError(err, r, dw)
 					}
 					return
 				}
@@ -249,7 +249,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 					if err != nil {
 						err = s.errorHandler(err, r, dw)
 						if err != nil && !dw.IsDone() {
-							s.OnGeneralError(err, r, dw)
+							s.OnSuperTokensAPIError(err, r, dw)
 						}
 					} else {
 						LogDebugMessage("middleware: Ended")
@@ -283,11 +283,13 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 	LogDebugMessage("errorHandler: Started")
 	if errors.As(originalError, &BadInputError{}) {
 		LogDebugMessage("errorHandler: Sending 400 status code response")
-		if catcher := SendNon200Response(res, originalError.Error(), 400); catcher != nil {
-			dw := MakeDoneWriter(res)
-			if !dw.IsDone() {
-				s.OnGeneralError(originalError, req, dw)
-			}
+		err := SendNon200Response(res, originalError.Error(), 400)
+		if err != nil {
+			// this function can return an error, so we should return
+			// the error here. Once returned, either the user will handle
+			// the error themselves, or if this function is being called
+			// by our middleware, the middleware will call the OnSuperTokensAPIError callback
+			return err
 		}
 		return nil
 	}

@@ -191,11 +191,11 @@ func TestOverridingAPI(t *testing.T) {
 				Override: &jwtmodels.OverrideStruct{
 					APIs: func(originalImplementation jwtmodels.APIInterface) jwtmodels.APIInterface {
 						getJWKSOriginal := *originalImplementation.GetJWKSGET
-						*originalImplementation.GetJWKSGET = func(options jwtmodels.APIOptions, userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+						*originalImplementation.GetJWKSGET = func(options jwtmodels.APIOptions, userContext supertokens.UserContext) (jwtmodels.GetJWKSAPIResponse, error) {
 							resp, err := getJWKSOriginal(options, userContext)
 							if err != nil {
 								t.Error(err.Error())
-								return jwtmodels.GetJWKSResponse{}, err
+								return jwtmodels.GetJWKSAPIResponse{}, err
 							}
 							jwksKeys = resp.OK.Keys
 							return resp, nil

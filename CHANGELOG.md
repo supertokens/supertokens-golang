@@ -150,6 +150,22 @@ supertokens.Init(supertokens.TypeInput{
 ## [0.6.7]
 - Fixes panic when call to thirdparty provider API returns a non 2xx status.
 
+### Breaking change
+-   https://github.com/supertokens/supertokens-node/issues/220
+    -   Adds `{status: "GENERAL_ERROR", message: string}` as a possible output to all the APIs.
+    -   Changes `FIELD_ERROR` output status in third party recipe API to be `GENERAL_ERROR`.
+    -   Replaced `FIELD_ERROR` status type in third party signinup API with `GENERAL_ERROR`.
+    -   Removed `FIELD_ERROR` status type from third party signinup recipe function.
+- Changes output of `VerifyEmailPOST` to `VerifyEmailPOSTResponse`
+- Changes output of `PasswordResetPOST` to `ResetPasswordPOSTResponse`
+- `SignInUp` recipe function doesn't return `FIELD_ERROR` anymore in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
+- `SignInUpPOST` api function returns `GENERAL_ERROR` instead of `FIELD_ERROR` in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
+- If there is an error in sending SMS or email in passwordless based recipes, then we no longer return a GENERAL_ERROR, but instead, we return a regular golang error.
+- Changes `GetJWKSGET` in JWT recipe to return `GetJWKSAPIResponse` (that also contains a General Error response)
+- Changes `GetOpenIdDiscoveryConfigurationGET` in Open ID recipe to return `GetOpenIdDiscoveryConfigurationAPIResponse` (that also contains a General Error response)
+- Renames `OnGeneralError` callback (that's in user input) to `OnSuperTokensAPIError`
+- If there is an error in the `errorHandler`, we no longer call `OnSuperTokensAPIError` in that, but instead, we return an error back.
+
 ## [0.6.6]
 - Fixes facebook login
 

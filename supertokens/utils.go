@@ -226,3 +226,10 @@ func HumaniseMilliseconds(m uint64) string {
 	hStr, suffix := formatOneDecimalFloat(h)
 	return fmt.Sprintf("%s hour%s", hStr, suffix)
 }
+
+func ConvertGeneralErrorToJsonResponse(resp GeneralErrorResponse) map[string]interface{} {
+	return map[string]interface{}{
+		"status":  "GENERAL_ERROR",
+		"message": resp.Message,
+	}
+}

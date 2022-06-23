@@ -43,8 +43,12 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	if err != nil {
 		return err
 	}
-	return supertokens.Send200Response(options.Res, map[string]interface{}{
-		"status": "OK",
-		"url":    result.OK.Url,
-	})
+	if result.OK != nil {
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status": "OK",
+			"url":    result.OK.Url,
+		})
+	} else {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
+	}
 }

@@ -99,13 +99,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		if err != nil {
 			return tpepmodels.SignInUpResponse{}, err
 		}
-		if result.FieldError != nil {
-			return tpepmodels.SignInUpResponse{
-				FieldError: &struct{ ErrorMsg string }{
-					ErrorMsg: result.FieldError.ErrorMsg,
-				},
-			}, nil
-		}
+
 		return tpepmodels.SignInUpResponse{
 			OK: &struct {
 				CreatedNewUser bool

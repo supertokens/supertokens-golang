@@ -51,10 +51,12 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "WRONG_CREDENTIALS_ERROR",
 		})
-	} else {
+	} else if result.OK != nil {
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 			"user":   result.OK.User,
 		})
+	} else {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
 }

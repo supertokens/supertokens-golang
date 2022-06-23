@@ -28,10 +28,12 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/jwt"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
@@ -128,6 +130,93 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailpassword.Init(&epmodels.TypeInput{
+				Override: &epmodels.OverrideStruct{
+					EmailVerificationFeature: &evmodels.OverrideStruct{
+						APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
+							ogGenerateEmailVerifyTokenPOST := *originalImplementation.GenerateEmailVerifyTokenPOST
+							ogVerifyEmailPOST := *originalImplementation.VerifyEmailPOST
+
+							(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
+								gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verification code", false)
+								if gr != nil {
+									return evmodels.GenerateEmailVerifyTokenPOSTResponse{
+										GeneralError: gr,
+									}, nil
+								}
+								return ogGenerateEmailVerifyTokenPOST(options, userContext)
+							}
+
+							(*originalImplementation.VerifyEmailPOST) = func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+								gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
+								if gr != nil {
+									return evmodels.VerifyEmailPOSTResponse{
+										GeneralError: gr,
+									}, nil
+								}
+								return ogVerifyEmailPOST(token, options, userContext)
+							}
+							return originalImplementation
+						},
+					},
+					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
+						ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
+						ogGeneratePasswordResetTokenPOST := *originalImplementation.GeneratePasswordResetTokenPOST
+						ogEmailExistsGET := *originalImplementation.EmailExistsGET
+						ogSignUpPOST := *originalImplementation.SignUpPOST
+						ogSignInPOST := *originalImplementation.SignInPOST
+
+						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password consume", false)
+							if gr != nil {
+								return epmodels.ResetPasswordPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogPasswordResetPOST(formFields, token, options, userContext)
+						}
+
+						(*originalImplementation.GeneratePasswordResetTokenPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password", false)
+							if gr != nil {
+								return epmodels.GeneratePasswordResetTokenPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
+						}
+
+						(*originalImplementation.EmailExistsGET) = func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email exists", true)
+							if gr != nil {
+								return epmodels.EmailExistsGETResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogEmailExistsGET(email, options, userContext)
+						}
+
+						(*originalImplementation.SignUpPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign up", false)
+							if gr != nil {
+								return epmodels.SignUpPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignUpPOST(formFields, options, userContext)
+						}
+
+						(*originalImplementation.SignInPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in", false)
+							if gr != nil {
+								return epmodels.SignInPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignInPOST(formFields, options, userContext)
+						}
+						return originalImplementation
+					},
+				},
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: formFields,
 				},
@@ -143,6 +232,33 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				},
 			}),
 			thirdparty.Init(&tpmodels.TypeInput{
+				Override: &tpmodels.OverrideStruct{
+					APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
+						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+						ogSignInUpPOST := *originalImplementation.SignInUpPOST
+
+						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+							if gr != nil {
+								return tpmodels.AuthorisationUrlGETResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogAuthorisationUrlGET(provider, options, userContext)
+						}
+
+						(*originalImplementation.SignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+							if gr != nil {
+								return tpmodels.SignInUpPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+						}
+						return originalImplementation
+					},
+				},
 				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 					Providers: []tpmodels.TypeProvider{
 						thirdparty.Google(tpmodels.GoogleConfig{
@@ -162,6 +278,88 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				},
 			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+				Override: &tpepmodels.OverrideStruct{
+					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
+						ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
+						ogGeneratePasswordResetTokenPOST := *originalImplementation.GeneratePasswordResetTokenPOST
+						ogEmailExistsGET := *originalImplementation.EmailPasswordEmailExistsGET
+						ogSignUpPOST := *originalImplementation.EmailPasswordSignUpPOST
+						ogSignInPOST := *originalImplementation.EmailPasswordSignInPOST
+						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
+
+						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+							if gr != nil {
+								return tpmodels.AuthorisationUrlGETResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogAuthorisationUrlGET(provider, options, userContext)
+						}
+
+						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+							if gr != nil {
+								return tpepmodels.ThirdPartyOutput{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+						}
+
+						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password consume", false)
+							if gr != nil {
+								return epmodels.ResetPasswordPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogPasswordResetPOST(formFields, token, options, userContext)
+						}
+
+						(*originalImplementation.GeneratePasswordResetTokenPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password", false)
+							if gr != nil {
+								return epmodels.GeneratePasswordResetTokenPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
+						}
+
+						(*originalImplementation.EmailPasswordEmailExistsGET) = func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email exists", true)
+							if gr != nil {
+								return epmodels.EmailExistsGETResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogEmailExistsGET(email, options, userContext)
+						}
+
+						(*originalImplementation.EmailPasswordSignUpPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign up", false)
+							if gr != nil {
+								return tpepmodels.SignUpPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignUpPOST(formFields, options, userContext)
+						}
+
+						(*originalImplementation.EmailPasswordSignInPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in", false)
+							if gr != nil {
+								return tpepmodels.SignInPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignInPOST(formFields, options, userContext)
+						}
+						return originalImplementation
+					},
+				},
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: formFields,
 				},
@@ -181,8 +379,69 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					customAuth0Provider(),
 				},
 			}),
-			session.Init(nil),
-			passwordless.Init(*passwordlessConfig),
+			session.Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
+						ogSignOutPOST := *originalImplementation.SignOutPOST
+						(*originalImplementation.SignOutPOST) = func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from signout API", false)
+							if gr != nil {
+								return sessmodels.SignOutPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignOutPOST(options, userContext)
+						}
+						return originalImplementation
+					},
+				},
+			}),
+			passwordless.Init(plessmodels.TypeInput{
+				ContactMethodPhone:        passwordlessConfig.ContactMethodPhone,
+				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
+				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
+				FlowType:                  passwordlessConfig.FlowType,
+				GetLinkDomainAndPath:      passwordlessConfig.GetLinkDomainAndPath,
+				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+				Override: &plessmodels.OverrideStruct{
+					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
+						ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
+						ogCreateCodePOST := *originalImplementation.CreateCodePOST
+						ogResendCodePOST := *originalImplementation.ResendCodePOST
+
+						(*originalImplementation.ConsumeCodePOST) = func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API consume code", false)
+							if gr != nil {
+								return plessmodels.ConsumeCodePOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, options, userContext)
+						}
+
+						(*originalImplementation.CreateCodePOST) = func(email, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API create code", false)
+							if gr != nil {
+								return plessmodels.CreateCodePOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogCreateCodePOST(email, phoneNumber, options, userContext)
+						}
+
+						(*originalImplementation.ResendCodePOST) = func(deviceID, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API resend code", false)
+							if gr != nil {
+								return plessmodels.ResendCodePOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogResendCodePOST(deviceID, preAuthSessionID, options, userContext)
+						}
+						return originalImplementation
+					},
+				},
+			}),
 			thirdpartypasswordless.Init(tplmodels.TypeInput{
 				ContactMethodPhone:        passwordlessConfig.ContactMethodPhone,
 				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
@@ -204,6 +463,66 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
 					}),
 					customAuth0Provider(),
+				},
+				Override: &tplmodels.OverrideStruct{
+					APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
+						ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
+						ogCreateCodePOST := *originalImplementation.CreateCodePOST
+						ogResendCodePOST := *originalImplementation.ResendCodePOST
+						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
+
+						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+							if gr != nil {
+								return tpmodels.AuthorisationUrlGETResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogAuthorisationUrlGET(provider, options, userContext)
+						}
+
+						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+							if gr != nil {
+								return tplmodels.ThirdPartySignInUpOutput{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+						}
+
+						(*originalImplementation.ConsumeCodePOST) = func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API consume code", false)
+							if gr != nil {
+								return tplmodels.ConsumeCodePOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, options, userContext)
+						}
+
+						(*originalImplementation.CreateCodePOST) = func(email, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API create code", false)
+							if gr != nil {
+								return plessmodels.CreateCodePOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogCreateCodePOST(email, phoneNumber, options, userContext)
+						}
+
+						(*originalImplementation.ResendCodePOST) = func(deviceID, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API resend code", false)
+							if gr != nil {
+								return plessmodels.ResendCodePOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogResendCodePOST(deviceID, preAuthSessionID, options, userContext)
+						}
+						return originalImplementation
+					},
 				},
 			}),
 		},
@@ -237,13 +556,41 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			rw.WriteHeader(200)
 			rw.Header().Add("content-type", "application/json")
 			bytes, _ := json.Marshal(map[string]interface{}{
-				"available": []string{"passwordless", "thirdpartypasswordless"},
+				"available": []string{"passwordless", "thirdpartypasswordless", "generalerror"},
 			})
 			rw.Write(bytes)
 		}
 	}))
 
 	routes = &middleware
+}
+
+func returnGeneralErrorIfNeeded(req http.Request, message string, useQueryParams bool) *supertokens.GeneralErrorResponse {
+	if useQueryParams {
+		generalError := req.URL.Query().Get("generalError")
+		if generalError == "" {
+			return nil
+		}
+		return &supertokens.GeneralErrorResponse{
+			Message: message,
+		}
+	} else {
+		var body map[string]interface{}
+		_ = json.NewDecoder(req.Body).Decode(&body)
+		_, ok := body["generalError"]
+		customMessage, okCustomMessage := body["generalErrorMessage"]
+		if ok {
+			if okCustomMessage {
+				return &supertokens.GeneralErrorResponse{
+					Message: customMessage.(string),
+				}
+			}
+			return &supertokens.GeneralErrorResponse{
+				Message: message,
+			}
+		}
+	}
+	return nil
 }
 
 func customAuth0Provider() tpmodels.TypeProvider {
