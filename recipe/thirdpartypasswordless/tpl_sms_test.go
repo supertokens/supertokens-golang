@@ -25,7 +25,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/twilioService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -199,15 +198,14 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 	var code, urlWithCode *string
 	var codeLife uint64
 
-	serviceSid := "MS123"
-	twilioService, err := twilioService.MakeTwilioService(smsdelivery.TwilioTypeInput{
-		TwilioSettings: smsdelivery.TwilioServiceConfig{
+	twilioService, err := MakeTwilioService(smsdelivery.TwilioServiceConfig{
+		Settings: smsdelivery.TwilioSettings{
 			AccountSid:          "AC123",
 			AuthToken:           "123",
-			MessagingServiceSid: &serviceSid,
+			MessagingServiceSid: "MS123",
 		},
-		Override: func(originalImplementation smsdelivery.TwilioServiceInterface) smsdelivery.TwilioServiceInterface {
-			*originalImplementation.GetContent = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.TwilioGetContentResult, error) {
+		Override: func(originalImplementation smsdelivery.TwilioInterface) smsdelivery.TwilioInterface {
+			*originalImplementation.GetContent = func(input smsdelivery.SmsType, userContext supertokens.UserContext) (smsdelivery.SMSContent, error) {
 				if input.PasswordlessLogin != nil {
 					plessPhone = input.PasswordlessLogin.PhoneNumber
 					code = input.PasswordlessLogin.UserInputCode
@@ -215,10 +213,10 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 					codeLife = input.PasswordlessLogin.CodeLifetime
 					getContentCalled = true
 				}
-				return smsdelivery.TwilioGetContentResult{}, nil
+				return smsdelivery.SMSContent{}, nil
 			}
 
-			*originalImplementation.SendRawSms = func(input smsdelivery.TwilioGetContentResult, userContext supertokens.UserContext) error {
+			*originalImplementation.SendRawSms = func(input smsdelivery.SMSContent, userContext supertokens.UserContext) error {
 				sendRawSmsCalled = true
 				return nil
 			}
@@ -234,7 +232,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 			Enabled: true,
 		},
 		SmsDelivery: &smsdelivery.TypeInput{
-			Service: &twilioService,
+			Service: twilioService,
 		},
 	}
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))

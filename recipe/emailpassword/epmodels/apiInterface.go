@@ -38,9 +38,17 @@ type APIOptions struct {
 type APIInterface struct {
 	EmailExistsGET                 *func(email string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
 	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (GeneratePasswordResetTokenPOSTResponse, error)
-	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions, userContext supertokens.UserContext) (ResetPasswordUsingTokenResponse, error)
+	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions, userContext supertokens.UserContext) (ResetPasswordPOSTResponse, error)
 	SignInPOST                     *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (SignInPOSTResponse, error)
 	SignUpPOST                     *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (SignUpPOSTResponse, error)
+}
+
+type ResetPasswordPOSTResponse struct {
+	OK *struct {
+		UserId *string
+	}
+	ResetPasswordInvalidTokenError *struct{}
+	GeneralError                   *supertokens.GeneralErrorResponse
 }
 
 type SignUpPOSTResponse struct {
@@ -49,6 +57,7 @@ type SignUpPOSTResponse struct {
 		Session sessmodels.SessionContainer
 	}
 	EmailAlreadyExistsError *struct{}
+	GeneralError            *supertokens.GeneralErrorResponse
 }
 
 type SignInPOSTResponse struct {
@@ -57,12 +66,15 @@ type SignInPOSTResponse struct {
 		Session sessmodels.SessionContainer
 	}
 	WrongCredentialsError *struct{}
+	GeneralError          *supertokens.GeneralErrorResponse
 }
 
 type EmailExistsGETResponse struct {
-	OK *struct{ Exists bool }
+	OK           *struct{ Exists bool }
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type GeneratePasswordResetTokenPOSTResponse struct {
-	OK *struct{}
+	OK           *struct{}
+	GeneralError *supertokens.GeneralErrorResponse
 }

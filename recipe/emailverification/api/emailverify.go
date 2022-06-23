@@ -59,11 +59,13 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			result = map[string]interface{}{
 				"status": "EMAIL_VERIFICATION_INVALID_TOKEN_ERROR",
 			}
-		} else {
+		} else if response.OK != nil {
 			result = map[string]interface{}{
 				"status": "OK",
 				"user":   response.OK.User,
 			}
+		} else {
+			result = supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError)
 		}
 	} else {
 		if apiImplementation.IsEmailVerifiedGET == nil ||
@@ -77,9 +79,13 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return err
 		}
 
-		result = map[string]interface{}{
-			"status":     "OK",
-			"isVerified": isVerified.OK.IsVerified,
+		if isVerified.OK != nil {
+			result = map[string]interface{}{
+				"status":     "OK",
+				"isVerified": isVerified.OK.IsVerified,
+			}
+		} else {
+			result = supertokens.ConvertGeneralErrorToJsonResponse(*isVerified.GeneralError)
 		}
 	}
 

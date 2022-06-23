@@ -24,16 +24,16 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeliveryInterface {
-	serviceImpl := MakeServiceImplementation(config.SMTPSettings)
+func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {
+	serviceImpl := MakeServiceImplementation(config.Settings)
 
 	if config.Override != nil {
 		serviceImpl = config.Override(serviceImpl)
 	}
 
-	emailVerificationServiceImpl := evsmtpService.MakeSmtpService(emaildelivery.SMTPTypeInput{
-		SMTPSettings: config.SMTPSettings,
-		Override:     makeEmailverificationServiceImplementation(serviceImpl),
+	emailVerificationServiceImpl := evsmtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: config.Settings,
+		Override: makeEmailverificationServiceImplementation(serviceImpl),
 	})
 
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
@@ -52,7 +52,7 @@ func MakeSmtpService(config emaildelivery.SMTPTypeInput) emaildelivery.EmailDeli
 		}
 	}
 
-	return emaildelivery.EmailDeliveryInterface{
+	return &emaildelivery.EmailDeliveryInterface{
 		SendEmail: &sendEmail,
 	}
 }

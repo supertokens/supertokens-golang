@@ -37,7 +37,7 @@ func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessio
 		if err != nil {
 			err = supertokens.ErrorHandler(err, r, dw)
 			if err != nil {
-				recipeInstance.RecipeModule.OnGeneralError(err, r, dw)
+				recipeInstance.RecipeModule.OnSuperTokensAPIError(err, r, dw)
 			}
 			return
 		}

@@ -121,8 +121,8 @@ func TestOverridingAPIS(t *testing.T) {
 			Init(&openidmodels.TypeInput{
 				Override: &openidmodels.OverrideStruct{
 					APIs: func(originalImplementation openidmodels.APIInterface) openidmodels.APIInterface {
-						*originalImplementation.GetOpenIdDiscoveryConfigurationGET = func(options openidmodels.APIOptions, userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
-							return openidmodels.GetOpenIdDiscoveryConfigurationResponse{
+						*originalImplementation.GetOpenIdDiscoveryConfigurationGET = func(options openidmodels.APIOptions, userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationAPIResponse, error) {
+							return openidmodels.GetOpenIdDiscoveryConfigurationAPIResponse{
 								OK: &struct {
 									Issuer   string
 									Jwks_uri string

@@ -38,10 +38,10 @@ const RECIPE_ID = "openid"
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *openidmodels.TypeInput, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *openidmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onGeneralError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
 
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
@@ -53,7 +53,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	jwtRecipe, err := jwt.MakeRecipe(recipeId, appInfo, &jwtmodels.TypeInput{
 		JwtValiditySeconds: verifiedConfig.JwtValiditySeconds,
 		Override:           verifiedConfig.Override.JwtFeature,
-	}, onGeneralError)
+	}, onSuperTokensAPIError)
 	if err != nil {
 		return Recipe{}, err
 	}
@@ -71,9 +71,9 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 }
 
 func recipeInit(config *openidmodels.TypeInput) supertokens.Recipe {
-	return func(appInfo supertokens.NormalisedAppinfo, onGeneralError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
+	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onGeneralError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}

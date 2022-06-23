@@ -31,7 +31,8 @@ type APIInterface struct {
 }
 
 type AuthorisationUrlGETResponse struct {
-	OK *struct{ Url string }
+	OK           *struct{ Url string }
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type SignInUpPOSTResponse struct {
@@ -42,7 +43,7 @@ type SignInUpPOSTResponse struct {
 		AuthCodeResponse interface{}
 	}
 	NoEmailGivenByProviderError *struct{}
-	FieldError                  *struct{ ErrorMsg string }
+	GeneralError                *supertokens.GeneralErrorResponse
 }
 
 type APIOptions struct {

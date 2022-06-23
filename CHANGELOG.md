@@ -6,6 +6,32 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.7.0] - 2022-06-23
+### Breaking change
+-   Renamed `SMTPServiceConfig` to `SMTPSettings`
+-   Changed type of `Secure` in `SMTPSettings` from `*bool` to `bool`
+-   Renamed `SMTPServiceFromConfig` to `SMTPFrom`
+-   Renamed `SMTPGetContentResult` to `EmailContent`
+-   Renamed `SMTPTypeInput` to `SMTPServiceConfig`
+-   Renamed field `SMTPSettings` to `Settings` in `SMTPServiceConfig`
+-   Renamed `SMTPServiceInterface` to `SMTPInterface`
+-   Renamed all instances of `MakeSmtpService` to `MakeSMTPService`
+-   All instances of `MakeSMTPService` returns `*EmailDeliveryInterface` instead of `EmailDeliveryInterface`
+-   Renamed `TwilioServiceConfig` to `TwilioSettings`
+-   Renamed `TwilioGetContentResult` to `SMSContent`
+-   Renamed `TwilioTypeInput` to `TwilioServiceConfig`
+-   Renamed field `TwilioSettings` to `Settings` in `TwilioServiceConfig`
+-   Changed types of fields `From` and `MessagingServiceSid` in `TwilioSettings` from `*string` to `string`
+-   Renamed `MakeSupertokensService` to `MakeSupertokensSMSService`
+-   All instances of `MakeSupertokensSMSService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
+-   Removed `SupertokensServiceConfig` and `MakeSupertokensSMSService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
+-   Renamed `TwilioServiceInterface` to `TwilioInterface`
+
+### Added
+-   Exposed `MakeSMTPService` from emailverification, emailpassword, passwordless, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
+-   Exposed `MakeSupertokensSMSService` and `MakeTwilioService` from passwordless and thirdpartypasswordless recipes
+
 ### Fixes
 - Fixes Cookie SameSite config validation.
 - Changes `getEmailForUserIdForEmailVerification` function inside thirdpartypasswordless to take into account passwordless emails and return an empty string in case a passwordless email doesn't exist. This helps situations where the dev wants to customise the email verification functions in the thirdpartypasswordless recipe.
@@ -125,6 +151,22 @@ supertokens.Init(supertokens.TypeInput{
 
 ## [0.6.7]
 - Fixes panic when call to thirdparty provider API returns a non 2xx status.
+
+### Breaking change
+-   https://github.com/supertokens/supertokens-node/issues/220
+    -   Adds `{status: "GENERAL_ERROR", message: string}` as a possible output to all the APIs.
+    -   Changes `FIELD_ERROR` output status in third party recipe API to be `GENERAL_ERROR`.
+    -   Replaced `FIELD_ERROR` status type in third party signinup API with `GENERAL_ERROR`.
+    -   Removed `FIELD_ERROR` status type from third party signinup recipe function.
+- Changes output of `VerifyEmailPOST` to `VerifyEmailPOSTResponse`
+- Changes output of `PasswordResetPOST` to `ResetPasswordPOSTResponse`
+- `SignInUp` recipe function doesn't return `FIELD_ERROR` anymore in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
+- `SignInUpPOST` api function returns `GENERAL_ERROR` instead of `FIELD_ERROR` in thirdparty, thirdpartypasswordless and thirdpartyemailpassword recipe.
+- If there is an error in sending SMS or email in passwordless based recipes, then we no longer return a GENERAL_ERROR, but instead, we return a regular golang error.
+- Changes `GetJWKSGET` in JWT recipe to return `GetJWKSAPIResponse` (that also contains a General Error response)
+- Changes `GetOpenIdDiscoveryConfigurationGET` in Open ID recipe to return `GetOpenIdDiscoveryConfigurationAPIResponse` (that also contains a General Error response)
+- Renames `OnGeneralError` callback (that's in user input) to `OnSuperTokensAPIError`
+- If there is an error in the `errorHandler`, we no longer call `OnSuperTokensAPIError` in that, but instead, we return an error back.
 
 ## [0.6.6]
 - Fixes facebook login

@@ -31,5 +31,12 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	GetJWKSGET *func(options APIOptions, userContext supertokens.UserContext) (GetJWKSResponse, error)
+	GetJWKSGET *func(options APIOptions, userContext supertokens.UserContext) (GetJWKSAPIResponse, error)
+}
+
+type GetJWKSAPIResponse struct {
+	OK *struct {
+		Keys []JsonWebKeys
+	}
+	GeneralError *supertokens.GeneralErrorResponse
 }

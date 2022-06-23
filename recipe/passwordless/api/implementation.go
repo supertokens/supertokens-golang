@@ -112,11 +112,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					userContext,
 				)
 				if err != nil {
-					return plessmodels.CreateCodePOSTResponse{
-						GeneralError: &struct{ Message string }{
-							Message: err.Error(),
-						},
-					}, nil
+					return plessmodels.CreateCodePOSTResponse{}, err
 				}
 			} else {
 				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *phoneNumber))
@@ -133,11 +129,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					userContext,
 				)
 				if err != nil {
-					return plessmodels.CreateCodePOSTResponse{
-						GeneralError: &struct{ Message string }{
-							Message: err.Error(),
-						},
-					}, nil
+					return plessmodels.CreateCodePOSTResponse{}, err
 				}
 			}
 		} else {
@@ -156,11 +148,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					userContext,
 				)
 				if err != nil {
-					return plessmodels.CreateCodePOSTResponse{
-						GeneralError: &struct{ Message string }{
-							Message: err.Error(),
-						},
-					}, nil
+					return plessmodels.CreateCodePOSTResponse{}, err
 				}
 			} else {
 				supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *email))
@@ -177,11 +165,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 					userContext,
 				)
 				if err != nil {
-					return plessmodels.CreateCodePOSTResponse{
-						GeneralError: &struct{ Message string }{
-							Message: err.Error(),
-						},
-					}, nil
+					return plessmodels.CreateCodePOSTResponse{}, err
 				}
 			}
 		}
@@ -300,11 +284,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						userContext,
 					)
 					if err != nil {
-						return plessmodels.ResendCodePOSTResponse{
-							GeneralError: &struct{ Message string }{
-								Message: err.Error(),
-							},
-						}, nil
+						return plessmodels.ResendCodePOSTResponse{}, err
 					}
 				} else {
 					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login SMS to %s", *deviceInfo.PhoneNumber))
@@ -321,11 +301,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						userContext,
 					)
 					if err != nil {
-						return plessmodels.ResendCodePOSTResponse{
-							GeneralError: &struct{ Message string }{
-								Message: err.Error(),
-							},
-						}, nil
+						return plessmodels.ResendCodePOSTResponse{}, err
 					}
 				}
 			} else {
@@ -344,11 +320,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						userContext,
 					)
 					if err != nil {
-						return plessmodels.ResendCodePOSTResponse{
-							GeneralError: &struct{ Message string }{
-								Message: err.Error(),
-							},
-						}, nil
+						return plessmodels.ResendCodePOSTResponse{}, err
 					}
 				} else {
 					supertokens.LogDebugMessage(fmt.Sprintf("Sending passwordless login email to %s", *deviceInfo.Email))
@@ -365,11 +337,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 						userContext,
 					)
 					if err != nil {
-						return plessmodels.ResendCodePOSTResponse{
-							GeneralError: &struct{ Message string }{
-								Message: err.Error(),
-							},
-						}, nil
+						return plessmodels.ResendCodePOSTResponse{}, err
 					}
 				}
 			}
@@ -381,7 +349,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}
 
 		return plessmodels.ResendCodePOSTResponse{
-			GeneralError: &struct{ Message string }{
+			GeneralError: &supertokens.GeneralErrorResponse{
 				Message: "Failed to generate a one time code. Please try again",
 			},
 		}, nil
