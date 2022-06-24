@@ -27,6 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   All instances of `MakeSupertokensSMSService` and `MakeTwilioService` returns `*SmsDeliveryInterface` instead of `SmsDeliveryInterface`
 -   Removed `SupertokensServiceConfig` and `MakeSupertokensSMSService` accepts `apiKey` directly instead of `SupertokensServiceConfig`
 -   Renamed `TwilioServiceInterface` to `TwilioInterface`
+- Removes support for FDIs that are < 1.14
 
 ### Added
 -   Exposed `MakeSMTPService` from emailverification, emailpassword, passwordless, thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
