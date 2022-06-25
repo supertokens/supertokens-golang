@@ -44,6 +44,9 @@ jobs:
         steps:
             - checkout
             - run: apt-get install lsof
+            - run: curl -fsSL https://deb.nodesource.com/setup_16.x | bash
+            - run: apt install -y nodejs
+            - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
             - run: rm -rf /etc/alternatives/java
