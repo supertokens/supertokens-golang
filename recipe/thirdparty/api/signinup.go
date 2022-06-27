@@ -93,7 +93,8 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "NO_EMAIL_GIVEN_BY_PROVIDER",
 		})
-	} else {
+	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

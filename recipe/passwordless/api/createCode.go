@@ -128,8 +128,10 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			"preAuthSessionId": response.OK.PreAuthSessionID,
 			"flowType":         response.OK.FlowType,
 		}
-	} else {
+	} else if response.GeneralError != nil {
 		result = supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError)
+	} else {
+		return supertokens.ErrorIfNoResponse(options.Res)
 	}
 
 	return supertokens.Send200Response(options.Res, result)

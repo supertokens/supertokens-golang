@@ -73,11 +73,13 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		result = map[string]interface{}{
 			"status": "RESTART_FLOW_ERROR",
 		}
-	} else {
+	} else if response.GeneralError != nil {
 		result = map[string]interface{}{
 			"status":  "GENERAL_ERROR",
 			"message": response.GeneralError.Message,
 		}
+	} else {
+		return supertokens.ErrorIfNoResponse(options.Res)
 	}
 
 	return supertokens.Send200Response(options.Res, result)

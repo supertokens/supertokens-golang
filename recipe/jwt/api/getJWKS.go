@@ -36,7 +36,8 @@ func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOpti
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"keys": response.OK.Keys,
 		})
-	} else {
+	} else if response.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
 	}
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

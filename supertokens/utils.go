@@ -233,3 +233,11 @@ func ConvertGeneralErrorToJsonResponse(resp GeneralErrorResponse) map[string]int
 		"message": resp.Message,
 	}
 }
+
+func ErrorIfNoResponse(res http.ResponseWriter) error {
+	dw := MakeDoneWriter(res)
+	if !dw.IsDone() {
+		return errors.New("invalid return from API interface function")
+	}
+	return nil
+}
