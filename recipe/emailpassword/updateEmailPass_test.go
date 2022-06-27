@@ -341,6 +341,65 @@ func TestAPICustomResponseMalformedResult(t *testing.T) {
 	assert.Equal(t, "My custom response", data["message"])
 }
 
+func TestAPICustomResponseMalformedResultWithoutCustomResponse(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				Override: &epmodels.OverrideStruct{
+					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
+						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+							return epmodels.SignUpPOSTResponse{}, nil
+						}
+						originalImplementation.SignUpPOST = &nSignUpPost
+						return originalImplementation
+					},
+				},
+			}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.7", cdiVersion) == "2.7" {
+		return
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	res, err := unittesting.SignupRequest("testrandom@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 500, res.StatusCode)
+	dataInBytes, err := io.ReadAll(res.Body)
+	assert.Equal(t, nil, err)
+	assert.Equal(t, "invalid return from API interface function\n", string(dataInBytes))
+}
+
 func TestAPIRequestBodyInAPIOverride(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
