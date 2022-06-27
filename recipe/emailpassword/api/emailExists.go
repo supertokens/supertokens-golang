@@ -41,5 +41,6 @@ func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOp
 	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
-	return supertokens.Send200Response(options.Res, map[string]interface{}{})
+
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

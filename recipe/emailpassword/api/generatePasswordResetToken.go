@@ -55,5 +55,5 @@ func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options
 	} else if resp.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*resp.GeneralError))
 	}
-	return supertokens.Send200Response(options.Res, map[string]interface{}{})
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

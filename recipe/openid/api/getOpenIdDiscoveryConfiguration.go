@@ -40,5 +40,5 @@ func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface
 	} else if response.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
 	}
-	return supertokens.Send200Response(options.Res, map[string]interface{}{})
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

@@ -78,6 +78,8 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 			"status":  "GENERAL_ERROR",
 			"message": response.GeneralError.Message,
 		}
+	} else {
+		return supertokens.ErrorIfNoResponse(options.Res)
 	}
 
 	return supertokens.Send200Response(options.Res, result)

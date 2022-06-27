@@ -42,5 +42,5 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 	} else if response.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
 	}
-	return supertokens.Send200Response(options.Res, map[string]interface{}{})
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

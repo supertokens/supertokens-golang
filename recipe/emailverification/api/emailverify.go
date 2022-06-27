@@ -66,6 +66,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			}
 		} else if response.GeneralError != nil {
 			result = supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError)
+		} else {
+			return supertokens.ErrorIfNoResponse(options.Res)
 		}
 	} else {
 		if apiImplementation.IsEmailVerifiedGET == nil ||
@@ -86,6 +88,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			}
 		} else if isVerified.GeneralError != nil {
 			result = supertokens.ConvertGeneralErrorToJsonResponse(*isVerified.GeneralError)
+		} else {
+			return supertokens.ErrorIfNoResponse(options.Res)
 		}
 	}
 
