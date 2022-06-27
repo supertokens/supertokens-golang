@@ -118,7 +118,7 @@ func ConsumeCode(apiImplementation plessmodels.APIInterface, options plessmodels
 		result = map[string]interface{}{
 			"status": "RESTART_FLOW_ERROR",
 		}
-	} else {
+	} else if response.GeneralError != nil {
 		result = supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError)
 	}
 

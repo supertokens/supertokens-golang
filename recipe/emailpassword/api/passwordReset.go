@@ -64,7 +64,8 @@ func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.API
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "RESET_PASSWORD_INVALID_TOKEN_ERROR",
 		})
-	} else {
+	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{})
 }

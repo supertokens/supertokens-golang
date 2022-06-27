@@ -34,7 +34,8 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status": "OK",
 		})
-	} else {
+	} else if resp.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*resp.GeneralError))
 	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{})
 }

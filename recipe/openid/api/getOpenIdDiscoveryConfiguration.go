@@ -37,7 +37,8 @@ func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface
 			"issuer":   response.OK.Issuer,
 			"jwks_uri": response.OK.Jwks_uri,
 		})
-	} else {
+	} else if response.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
 	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{})
 }

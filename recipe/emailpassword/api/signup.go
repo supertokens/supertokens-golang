@@ -61,7 +61,8 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 				ErrorMsg: "This email already exists. Please sign in instead.",
 			}},
 		}
-	} else {
+	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
+	return supertokens.Send200Response(options.Res, map[string]interface{}{})
 }
