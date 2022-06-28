@@ -65,6 +65,24 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
+	assert.True(t, passwordless.PasswordlessLoginEmailSentForTest)
+	assert.Equal(t, passwordless.PasswordlessLoginEmailDataForTest.Email, "test@example.com")
+	assert.NotNil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
+	assert.NotNil(t, passwordless.PasswordlessLoginEmailDataForTest.UserInputCode)
+
+	// Test resend
+	ResetForTest()
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
 	assert.True(t, passwordless.PasswordlessLoginEmailSentForTest)
 	assert.Equal(t, passwordless.PasswordlessLoginEmailDataForTest.Email, "test@example.com")
 	assert.NotNil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
@@ -114,6 +132,13 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginEmailSentForTest)
 	assert.Empty(t, passwordless.PasswordlessLoginEmailDataForTest.Email)
@@ -121,6 +146,23 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
+	assert.Equal(t, plessEmail, "test@example.com")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
+
+	// Test resend
+	customCalled = false
+	plessEmail = ""
+	code = nil
+	urlWithCode = nil
+	codeLife = 0
+
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
 	assert.Equal(t, plessEmail, "test@example.com")
 	assert.NotNil(t, code)
 	assert.NotNil(t, urlWithCode)
@@ -178,6 +220,13 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginEmailSentForTest)
 	assert.Empty(t, passwordless.PasswordlessLoginEmailDataForTest.Email)
@@ -185,6 +234,23 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
+	assert.Equal(t, plessEmail, "test@example.com")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
+
+	// Test resend
+	customCalled = false
+	plessEmail = ""
+	code = nil
+	urlWithCode = nil
+	codeLife = 0
+
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
 	assert.Equal(t, plessEmail, "test@example.com")
 	assert.NotNil(t, code)
 	assert.NotNil(t, urlWithCode)
@@ -261,11 +327,37 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginEmailSentForTest)
 	assert.Empty(t, passwordless.PasswordlessLoginEmailDataForTest.Email)
 	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UserInputCode)
 	assert.Nil(t, passwordless.PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
+
+	assert.Equal(t, plessEmail, "test@example.com")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.Equal(t, getContentCalled, true)
+	assert.Equal(t, sendRawEmailCalled, true)
+
+	// Test resend
+	getContentCalled = false
+	sendRawEmailCalled = false
+	plessEmail = ""
+	code = nil
+	urlWithCode = nil
+	codeLife = 0
+
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	assert.Equal(t, plessEmail, "test@example.com")
 	assert.NotNil(t, code)
