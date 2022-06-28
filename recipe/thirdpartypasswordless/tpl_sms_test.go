@@ -17,6 +17,8 @@
 package thirdpartypasswordless
 
 import (
+	"encoding/json"
+	"io/ioutil"
 	"net/http"
 	"testing"
 
@@ -57,6 +59,24 @@ func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 
 	resp, err := unittesting.PasswordlessPhoneLoginRequest("+919876543210", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
+	assert.True(t, passwordless.PasswordlessLoginSmsSentForTest)
+	assert.Equal(t, passwordless.PasswordlessLoginSmsDataForTest.Phone, "+919876543210")
+	assert.NotNil(t, passwordless.PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
+	assert.NotNil(t, passwordless.PasswordlessLoginSmsDataForTest.UserInputCode)
+
+	// Test resend
+	ResetForTest()
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)
 
@@ -109,6 +129,13 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginSmsSentForTest)
 	assert.Empty(t, passwordless.PasswordlessLoginSmsDataForTest.Phone)
@@ -116,6 +143,23 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.Nil(t, passwordless.PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
+	assert.Equal(t, plessPhone, "+919876543210")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
+
+	// Test resend
+	customCalled = false
+	plessPhone = ""
+	code = nil
+	urlWithCode = nil
+	codeLife = 0
+
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
 	assert.Equal(t, plessPhone, "+919876543210")
 	assert.NotNil(t, code)
 	assert.NotNil(t, urlWithCode)
@@ -173,6 +217,13 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginSmsSentForTest)
 	assert.Empty(t, passwordless.PasswordlessLoginSmsDataForTest.Phone)
@@ -180,6 +231,23 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 	assert.Nil(t, passwordless.PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
 
 	// Custom handler called
+	assert.Equal(t, plessPhone, "+919876543210")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
+
+	// Test resend
+	customCalled = false
+	plessPhone = ""
+	code = nil
+	urlWithCode = nil
+	codeLife = 0
+
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, resp.StatusCode, http.StatusOK)
+
 	assert.Equal(t, plessPhone, "+919876543210")
 	assert.NotNil(t, code)
 	assert.NotNil(t, urlWithCode)
@@ -254,11 +322,37 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body := map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
 	// Default handler not called
 	assert.False(t, passwordless.PasswordlessLoginSmsSentForTest)
 	assert.Empty(t, passwordless.PasswordlessLoginSmsDataForTest.Phone)
 	assert.Nil(t, passwordless.PasswordlessLoginSmsDataForTest.UserInputCode)
 	assert.Nil(t, passwordless.PasswordlessLoginSmsDataForTest.UrlWithLinkCode)
+
+	assert.Equal(t, plessPhone, "+919876543210")
+	assert.NotNil(t, code)
+	assert.NotNil(t, urlWithCode)
+	assert.NotZero(t, codeLife)
+	assert.Equal(t, getContentCalled, true)
+	assert.Equal(t, sendRawSmsCalled, true)
+
+	// Test resend
+	getContentCalled = false
+	sendRawSmsCalled = false
+	plessPhone = ""
+	code = nil
+	urlWithCode = nil
+	codeLife = 0
+
+	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	assert.Equal(t, plessPhone, "+919876543210")
 	assert.NotNil(t, code)

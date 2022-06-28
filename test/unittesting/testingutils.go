@@ -696,6 +696,28 @@ func PasswordlessPhoneLoginRequest(phone string, testUrl string) (*http.Response
 	return resp, nil
 }
 
+func PasswordlessLoginResendRequest(deviceId string, preAuthSessionId string, testUrl string) (*http.Response, error) {
+	body := map[string]interface{}{
+		"deviceId":         deviceId,
+		"preAuthSessionId": preAuthSessionId,
+	}
+
+	postBody, err := json.Marshal(body)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+"/auth/signinup/code/resend", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func PasswordlessLoginWithCodeRequest(deviceId string, preAuthSessionId string, code string, testUrl string) (*http.Response, error) {
 	body := map[string]string{
 		"deviceId":         deviceId,
