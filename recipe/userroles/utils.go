@@ -48,3 +48,11 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) userrolesmod
 		},
 	}
 }
+
+func convertToStringArray(arr []interface{}) []string {
+	result := make([]string, len(arr))
+	for idx, v := range arr {
+		result[idx] = v.(string)
+	}
+	return result
+}

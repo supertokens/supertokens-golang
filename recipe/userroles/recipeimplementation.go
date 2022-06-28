@@ -47,7 +47,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	}
 
 	removeUserRole := func(userID string, role string, userContext supertokens.UserContext) (userrolesmodels.RemoveUserRoleResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/user/role", map[string]interface{}{
+		response, err := querier.SendPostRequest("/recipe/user/role/remove", map[string]interface{}{
 			"userId": userID,
 			"role":   role,
 		})
@@ -79,7 +79,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		if response["status"] == "OK" {
 			return userrolesmodels.GetRolesForUserResponse{
 				OK: &struct{ Roles []string }{
-					Roles: response["roles"].([]string),
+					Roles: convertToStringArray(response["roles"].([]interface{})),
 				},
 			}, nil
 		}
@@ -88,7 +88,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	}
 
 	getUsersThatHaveRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/user/roles", map[string]string{
+		response, err := querier.SendGetRequest("/recipe/role/users", map[string]string{
 			"role": role,
 		})
 		if err != nil {
@@ -98,7 +98,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		if response["status"] == "OK" {
 			return userrolesmodels.GetUsersThatHaveRoleResponse{
 				OK: &struct{ Users []string }{
-					Users: response["users"].([]string),
+					Users: convertToStringArray(response["users"].([]interface{})),
 				},
 			}, nil
 		}
@@ -109,7 +109,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	}
 
 	createNewRoleOrAddPermissions := func(role string, permissions []string, userContext supertokens.UserContext) (userrolesmodels.CreateNewRoleOrAddPermissionsResponse, error) {
-		response, err := querier.SendPutRequest("/recipe/user/roles", map[string]interface{}{
+		response, err := querier.SendPutRequest("/recipe/role", map[string]interface{}{
 			"role":        role,
 			"permissions": permissions,
 		})
@@ -139,7 +139,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		if response["status"] == "OK" {
 			return userrolesmodels.GetPermissionsForRoleResponse{
 				OK: &struct{ Permissions []string }{
-					Permissions: response["permissions"].([]string),
+					Permissions: convertToStringArray(response["permissions"].([]interface{})),
 				},
 			}, nil
 		}
@@ -180,7 +180,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		if response["status"] == "OK" {
 			return userrolesmodels.GetRolesThatHavePermissionResponse{
 				OK: &struct{ Roles []string }{
-					Roles: response["roles"].([]string),
+					Roles: convertToStringArray(response["roles"].([]interface{})),
 				},
 			}, nil
 		}
@@ -216,7 +216,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		if response["status"] == "OK" {
 			return userrolesmodels.GetAllRolesResponse{
 				OK: &struct{ Roles []string }{
-					Roles: response["roles"].([]string),
+					Roles: convertToStringArray(response["roles"].([]interface{})),
 				},
 			}, nil
 		}

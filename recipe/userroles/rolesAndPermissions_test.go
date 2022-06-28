@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestAddNewRoleToUser(t *testing.T) {
+func TestCreateRole(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -31,26 +31,47 @@ func TestAddNewRoleToUser(t *testing.T) {
 		return
 	}
 
-	// Create a new role
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	assert.NoError(t, err)
+	assert.NotNil(t, createResult.OK)
+	assert.True(t, createResult.OK.CreatedNewRole)
+}
+
+func TestCreateRoleTwice(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "Supertokens Demo",
+			APIDomain:     "https://api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	if !canRunTest(t) {
+		return
+	}
+
 	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	// Add role to the user
-	addResult, err := AddRoleToUser("userId", "role", &map[string]interface{}{})
+	createResult, err = CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.NotNil(t, addResult.OK)
-	assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
-
-	// Check user has new role
-	listResult, err := GetRolesForUser("userId", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.NotNil(t, listResult.OK)
-	assert.Contains(t, listResult.OK.Roles, "role")
+	assert.NotNil(t, createResult.OK)
+	assert.False(t, createResult.OK.CreatedNewRole)
 }
 
-func TestAddDuplicateRoleToUser(t *testing.T) {
+func TestCreateRoleWithPermissions(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -73,32 +94,18 @@ func TestAddDuplicateRoleToUser(t *testing.T) {
 		return
 	}
 
-	// Create a new role
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1"}, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	// Add role to the user
-	addResult, err := AddRoleToUser("userId", "role", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.NotNil(t, addResult.OK)
-	assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
-
-	// Add role to the user
-	addResult, err = AddRoleToUser("userId", "role", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.NotNil(t, addResult.OK)
-	assert.True(t, addResult.OK.DidUserAlreadyHaveRole)
-
-	// Check user has new role
-	listResult, err := GetRolesForUser("userId", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.NotNil(t, listResult.OK)
-	assert.Contains(t, listResult.OK.Roles, "role")
+	assert.NotNil(t, permissionResult.OK)
+	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
 }
 
-func TestAddUnknownRoleToUser(t *testing.T) {
+func TestAddPermissionToRole(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -121,68 +128,25 @@ func TestAddUnknownRoleToUser(t *testing.T) {
 		return
 	}
 
-	// Add role to the user
-	addResult, err := AddRoleToUser("userId", "role", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.Nil(t, addResult.OK)
-	assert.NotNil(t, addResult.UnknownRoleError)
-
-	// Check user has new role
-	listResult, err := GetRolesForUser("userId", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.NotNil(t, listResult.OK)
-	assert.NotContains(t, listResult.OK.Roles, "role")
-}
-
-func TestGetUsersThatHaveARole(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
-	supertokens.Init(supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			AppName:       "Supertokens Demo",
-			APIDomain:     "https://api.supertokens.io",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(nil),
-		},
-	})
-
-	if !canRunTest(t) {
-		return
-	}
-
-	// Create a new role
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1"}, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	// Add role to the users
-	users := []string{"user1", "user2", "user3"}
-	for _, user := range users {
-		addResult, err := AddRoleToUser(user, "role", &map[string]interface{}{})
-		assert.NoError(t, err)
-		assert.NotNil(t, addResult.OK)
-		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
-	}
-
-	// Check user has new role
-	listResult, err := GetUsersThatHaveRole("role", &map[string]interface{}{})
+	createResult, err = CreateNewRoleOrAddPermissions("role", []string{"permission2", "permission3"}, &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.NotNil(t, listResult.OK)
-	assert.Contains(t, listResult.OK.Users, "user1")
-	assert.Contains(t, listResult.OK.Users, "user2")
-	assert.Contains(t, listResult.OK.Users, "user3")
-	assert.Equal(t, 3, len(listResult.OK.Users))
+	assert.NotNil(t, createResult.OK)
+	assert.False(t, createResult.OK.CreatedNewRole)
+
+	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	assert.NoError(t, err)
+	assert.NotNil(t, permissionResult.OK)
+	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
+	assert.Contains(t, permissionResult.OK.Permissions, "permission2")
+	assert.Contains(t, permissionResult.OK.Permissions, "permission3")
 }
 
-func TestGetUsersThatHaveUnknownRole(t *testing.T) {
+func TestDuplicatePermission(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -205,14 +169,25 @@ func TestGetUsersThatHaveUnknownRole(t *testing.T) {
 		return
 	}
 
-	// Check user has new role
-	listResult, err := GetUsersThatHaveRole("role", &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2"}, &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.Nil(t, listResult.OK)
-	assert.NotNil(t, listResult.UnknownRoleError)
+	assert.NotNil(t, createResult.OK)
+	assert.True(t, createResult.OK.CreatedNewRole)
+
+	createResult, err = CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2"}, &map[string]interface{}{})
+	assert.NoError(t, err)
+	assert.NotNil(t, createResult.OK)
+	assert.False(t, createResult.OK.CreatedNewRole)
+
+	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	assert.NoError(t, err)
+	assert.NotNil(t, permissionResult.OK)
+	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
+	assert.Contains(t, permissionResult.OK.Permissions, "permission2")
+	assert.Equal(t, 2, len(permissionResult.OK.Permissions))
 }
 
-func TestRemoveUserRole(t *testing.T) {
+func TestPermissionsOfUnknownRole(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -235,43 +210,92 @@ func TestRemoveUserRole(t *testing.T) {
 		return
 	}
 
-	// Create a new roles and assign them to the users
+	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	assert.NoError(t, err)
+	assert.Nil(t, permissionResult.OK)
+	assert.NotNil(t, permissionResult.UnknownRoleError)
+}
+
+func TestGetRolesThatHavePermission(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "Supertokens Demo",
+			APIDomain:     "https://api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	if !canRunTest(t) {
+		return
+	}
+
 	roles := []string{"role1", "role2", "role3"}
+
+	for _, role := range roles {
+		createResult, err := CreateNewRoleOrAddPermissions(role, []string{"permission"}, &map[string]interface{}{})
+		assert.NoError(t, err)
+		assert.NotNil(t, createResult.OK)
+		assert.True(t, createResult.OK.CreatedNewRole)
+	}
+
+	listResult, err := GetRolesThatHavePermission("permission", &map[string]interface{}{})
+	assert.NoError(t, err)
+	assert.NotNil(t, listResult.OK)
+	assert.Contains(t, listResult.OK.Roles, "role1")
+	assert.Contains(t, listResult.OK.Roles, "role2")
+	assert.Contains(t, listResult.OK.Roles, "role3")
+	assert.Equal(t, 3, len(listResult.OK.Roles))
+}
+
+func TestGetRolesThatHaveUnknownPermission(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "Supertokens Demo",
+			APIDomain:     "https://api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	if !canRunTest(t) {
+		return
+	}
+
+	roles := []string{"role1", "role2", "role3"}
+
 	for _, role := range roles {
 		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
-
-		addResult, err := AddRoleToUser("userId", role, &map[string]interface{}{})
-		assert.NoError(t, err)
-		assert.NotNil(t, addResult.OK)
-		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 	}
 
-	rolesResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	listResult, err := GetRolesThatHavePermission("permission", &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.NotNil(t, rolesResult.OK)
-	assert.Contains(t, rolesResult.OK.Roles, "role1")
-	assert.Contains(t, rolesResult.OK.Roles, "role2")
-	assert.Contains(t, rolesResult.OK.Roles, "role3")
-	assert.Equal(t, 3, len(rolesResult.OK.Roles))
-
-	// Remove role from the user
-	removeResult, err := RemoveUserRole("userId", "role2", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.NotNil(t, removeResult.OK)
-	assert.True(t, removeResult.OK.DidUserHaveRole)
-
-	rolesResult, err = GetRolesForUser("userId", &map[string]interface{}{})
-	assert.NoError(t, err)
-	assert.NotNil(t, rolesResult.OK)
-	assert.Contains(t, rolesResult.OK.Roles, "role1")
-	assert.Contains(t, rolesResult.OK.Roles, "role3")
-	assert.Equal(t, 2, len(rolesResult.OK.Roles))
+	assert.NotNil(t, listResult.OK)
+	assert.Equal(t, 0, len(listResult.OK.Roles))
 }
 
-func TestRemoveUnassignedUserRole(t *testing.T) {
+func TestDeletePermissionFromRole(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -294,48 +318,32 @@ func TestRemoveUnassignedUserRole(t *testing.T) {
 		return
 	}
 
-	// Create a new roles and assign them to the users
-	roles := []string{"role1", "role2", "role3"}
-	for _, role := range roles {
-		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, &map[string]interface{}{})
-		assert.NoError(t, err)
-		assert.NotNil(t, createResult.OK)
-		assert.True(t, createResult.OK.CreatedNewRole)
-
-		addResult, err := AddRoleToUser("userId", role, &map[string]interface{}{})
-		assert.NoError(t, err)
-		assert.NotNil(t, addResult.OK)
-		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
-	}
-	createResult, err := CreateNewRoleOrAddPermissions("role4", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2", "permission3"}, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	rolesResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.NotNil(t, rolesResult.OK)
-	assert.Contains(t, rolesResult.OK.Roles, "role1")
-	assert.Contains(t, rolesResult.OK.Roles, "role2")
-	assert.Contains(t, rolesResult.OK.Roles, "role3")
-	assert.Equal(t, 3, len(rolesResult.OK.Roles))
+	assert.NotNil(t, permissionResult.OK)
+	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
+	assert.Contains(t, permissionResult.OK.Permissions, "permission2")
+	assert.Contains(t, permissionResult.OK.Permissions, "permission3")
 
-	// Remove role from the user
-	removeResult, err := RemoveUserRole("userId", "role4", &map[string]interface{}{})
+	removeResult, err := RemovePermissionsFromRole("role", []string{"permission1", "permission3"}, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, removeResult.OK)
-	assert.False(t, removeResult.OK.DidUserHaveRole)
 
-	rolesResult, err = GetRolesForUser("userId", &map[string]interface{}{})
+	permissionResult, err = GetPermissionsForRole("role", &map[string]interface{}{})
 	assert.NoError(t, err)
-	assert.NotNil(t, rolesResult.OK)
-	assert.Contains(t, rolesResult.OK.Roles, "role1")
-	assert.Contains(t, rolesResult.OK.Roles, "role2")
-	assert.Contains(t, rolesResult.OK.Roles, "role3")
-	assert.Equal(t, 3, len(rolesResult.OK.Roles))
+	assert.NotNil(t, permissionResult.OK)
+	assert.NotContains(t, permissionResult.OK.Permissions, "permission1")
+	assert.Contains(t, permissionResult.OK.Permissions, "permission2")
+	assert.NotContains(t, permissionResult.OK.Permissions, "permission3")
+	assert.Equal(t, 1, len(permissionResult.OK.Permissions))
 }
 
-func TestRemoveUnknownUserRole(t *testing.T) {
+func TestDeletePermissionFromUnknownRole(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -358,8 +366,7 @@ func TestRemoveUnknownUserRole(t *testing.T) {
 		return
 	}
 
-	// Remove role from the user
-	removeResult, err := RemoveUserRole("userId", "role", &map[string]interface{}{})
+	removeResult, err := RemovePermissionsFromRole("role", []string{"permission1", "permission2"}, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.Nil(t, removeResult.OK)
 	assert.NotNil(t, removeResult.UnknownRoleError)
