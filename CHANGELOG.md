@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 -   Adds unit tests for resend email & sms services for passwordless and thirdpartypasswordless recipes
+-   Adds User Roles recipe and compatibility with CDI 2.14
 
 ## [0.7.1]
 -   Fixes panic while returning empty result object with nil error in the API overrides. Related to https://github.com/supertokens/supertokens-golang/issues/107

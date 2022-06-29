@@ -1,4 +1,4 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/* Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -13,16 +13,17 @@
  * under the License.
  */
 
-package supertokens
+package userrolesmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
+type TypeInput struct {
+	Override *OverrideStruct
+}
 
-// VERSION current version of the lib
-const VERSION = "0.7.1"
+type TypeNormalisedInput struct {
+	Override OverrideStruct
+}
 
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14"}
-)
+type OverrideStruct struct {
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
+}
