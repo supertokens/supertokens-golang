@@ -16,8 +16,6 @@
 package userroles
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -76,15 +74,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 			return userrolesmodels.GetRolesForUserResponse{}, err
 		}
 
-		if response["status"] == "OK" {
-			return userrolesmodels.GetRolesForUserResponse{
-				OK: &struct{ Roles []string }{
-					Roles: convertToStringArray(response["roles"].([]interface{})),
-				},
-			}, nil
-		}
+		return userrolesmodels.GetRolesForUserResponse{
+			OK: &struct{ Roles []string }{
+				Roles: convertToStringArray(response["roles"].([]interface{})),
+			},
+		}, nil
 
-		return userrolesmodels.GetRolesForUserResponse{}, errors.New("should never come here")
 	}
 
 	getUsersThatHaveRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
@@ -117,15 +112,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 			return userrolesmodels.CreateNewRoleOrAddPermissionsResponse{}, err
 		}
 
-		if response["status"] == "OK" {
-			return userrolesmodels.CreateNewRoleOrAddPermissionsResponse{
-				OK: &struct{ CreatedNewRole bool }{
-					CreatedNewRole: response["createdNewRole"].(bool),
-				},
-			}, nil
-		}
-
-		return userrolesmodels.CreateNewRoleOrAddPermissionsResponse{}, errors.New("should never come here")
+		return userrolesmodels.CreateNewRoleOrAddPermissionsResponse{
+			OK: &struct{ CreatedNewRole bool }{
+				CreatedNewRole: response["createdNewRole"].(bool),
+			},
+		}, nil
 	}
 
 	getPermissionsForRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.GetPermissionsForRoleResponse, error) {
@@ -177,15 +168,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 			return userrolesmodels.GetRolesThatHavePermissionResponse{}, err
 		}
 
-		if response["status"] == "OK" {
-			return userrolesmodels.GetRolesThatHavePermissionResponse{
-				OK: &struct{ Roles []string }{
-					Roles: convertToStringArray(response["roles"].([]interface{})),
-				},
-			}, nil
-		}
-
-		return userrolesmodels.GetRolesThatHavePermissionResponse{}, errors.New("should never come here")
+		return userrolesmodels.GetRolesThatHavePermissionResponse{
+			OK: &struct{ Roles []string }{
+				Roles: convertToStringArray(response["roles"].([]interface{})),
+			},
+		}, nil
 	}
 
 	deleteRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.DeleteRoleResponse, error) {
@@ -196,15 +183,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 			return userrolesmodels.DeleteRoleResponse{}, err
 		}
 
-		if response["status"] == "OK" {
-			return userrolesmodels.DeleteRoleResponse{
-				OK: &struct{ DidRoleExist bool }{
-					DidRoleExist: response["didRoleExist"].(bool),
-				},
-			}, nil
-		}
-
-		return userrolesmodels.DeleteRoleResponse{}, errors.New("should never come here")
+		return userrolesmodels.DeleteRoleResponse{
+			OK: &struct{ DidRoleExist bool }{
+				DidRoleExist: response["didRoleExist"].(bool),
+			},
+		}, nil
 	}
 
 	getAllRoles := func(userContext supertokens.UserContext) (userrolesmodels.GetAllRolesResponse, error) {
@@ -213,15 +196,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 			return userrolesmodels.GetAllRolesResponse{}, err
 		}
 
-		if response["status"] == "OK" {
-			return userrolesmodels.GetAllRolesResponse{
-				OK: &struct{ Roles []string }{
-					Roles: convertToStringArray(response["roles"].([]interface{})),
-				},
-			}, nil
-		}
-
-		return userrolesmodels.GetAllRolesResponse{}, errors.New("should never come here")
+		return userrolesmodels.GetAllRolesResponse{
+			OK: &struct{ Roles []string }{
+				Roles: convertToStringArray(response["roles"].([]interface{})),
+			},
+		}, nil
 	}
 
 	return userrolesmodels.RecipeInterface{

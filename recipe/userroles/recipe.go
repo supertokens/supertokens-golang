@@ -68,7 +68,7 @@ func recipeInit(config *userrolesmodels.TypeInput) supertokens.Recipe {
 			singletonInstance = &recipe
 			return &singletonInstance.RecipeModule, nil
 		}
-		return nil, errors.New("User Metadata recipe has already been initialised. Please check your code for bugs.")
+		return nil, errors.New("User Roles recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
