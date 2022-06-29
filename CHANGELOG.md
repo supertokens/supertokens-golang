@@ -6,10 +6,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.7.2] - 2022-06-29
 -   Adds unit tests for resend email & sms services for passwordless and thirdpartypasswordless recipes
 -   Adds User Roles recipe and compatibility with CDI 2.14
 
-## [0.7.1]
+## [0.7.1] - 2022-06-27
 -   Fixes panic while returning empty result object with nil error in the API overrides. Related to https://github.com/supertokens/supertokens-golang/issues/107
 
 ## [0.7.0] - 2022-06-23
