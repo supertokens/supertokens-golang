@@ -76,7 +76,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, &map[string]interface{}{})
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 		if err != nil {
 			return err
 		}
