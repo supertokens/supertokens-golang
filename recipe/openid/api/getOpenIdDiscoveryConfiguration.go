@@ -26,7 +26,7 @@ func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface
 		return nil
 	}
 
-	response, err := (*apiImplementation.GetOpenIdDiscoveryConfigurationGET)(options, &map[string]interface{}{})
+	response, err := (*apiImplementation.GetOpenIdDiscoveryConfigurationGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

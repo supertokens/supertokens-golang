@@ -25,7 +25,7 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	resp, err := (*apiImplementation.SignOutPOST)(options, &map[string]interface{}{})
+	resp, err := (*apiImplementation.SignOutPOST)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

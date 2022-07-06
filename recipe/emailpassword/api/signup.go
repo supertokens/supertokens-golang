@@ -44,7 +44,7 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 
-	result, err := (*apiImplementation.SignUpPOST)(formFields, options, &map[string]interface{}{})
+	result, err := (*apiImplementation.SignUpPOST)(formFields, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}
