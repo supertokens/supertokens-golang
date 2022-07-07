@@ -114,7 +114,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		phoneNumberStrPointer = &t
 	}
 
-	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, options, &map[string]interface{}{})
+	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

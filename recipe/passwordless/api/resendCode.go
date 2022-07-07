@@ -58,7 +58,7 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		return supertokens.BadInputError{Msg: "Please make sure that deviceId is a string"}
 	}
 
-	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), options, &map[string]interface{}{})
+	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

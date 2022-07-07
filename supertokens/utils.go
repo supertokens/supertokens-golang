@@ -241,3 +241,11 @@ func ErrorIfNoResponse(res http.ResponseWriter) error {
 	}
 	return nil
 }
+
+func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
+	return &map[string]interface{}{
+		"_default": map[string]interface{}{
+			"request": r,
+		},
+	}
+}
