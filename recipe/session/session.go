@@ -48,13 +48,11 @@ func makeSessionContainerInput(accessToken string, sessionHandle string, userID 
 func newSessionContainer(config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
 	revokeSessionWithContext := func(userContext supertokens.UserContext) error {
-		success, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
+		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
 		if err != nil {
 			return err
 		}
-		if success {
-			clearSessionFromCookie(config, session.res)
-		}
+		clearSessionFromCookie(config, session.res)
 		return nil
 	}
 

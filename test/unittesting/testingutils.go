@@ -190,6 +190,7 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	var refreshTokenDomain string
 	var refreshTokenHttpOnly = "false"
 	var idRefreshTokenFromCookie string
+	var idRefreshTokenFromHeader string
 	var idRefreshTokenExpiry string
 	var idRefreshTokenDomain string
 	var idRefreshTokenHttpOnly = "false"
@@ -252,20 +253,26 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 			}
 		}
 	}
+	idRefreshTokenFromHeader = res.Header.Get("id-refresh-token")
+	antiCsrfVal := ""
+	if len(antiCsrf) > 0 {
+		antiCsrfVal = antiCsrf[0]
+	}
 	return map[string]string{
-		"antiCsrf":               antiCsrf[0],
-		"sAccessToken":           accessToken,
-		"sRefreshToken":          refreshToken,
-		"sIdRefreshToken":        idRefreshTokenFromCookie,
-		"refreshTokenExpiry":     refreshTokenExpiry,
-		"refreshTokenDomain":     refreshTokenDomain,
-		"refreshTokenHttpOnly":   refreshTokenHttpOnly,
-		"idRefreshTokenExpiry":   idRefreshTokenExpiry,
-		"idRefreshTokenDomain":   idRefreshTokenDomain,
-		"idRefreshTokenHttpOnly": idRefreshTokenHttpOnly,
-		"accessTokenExpiry":      accessTokenExpiry,
-		"accessTokenDomain":      accessTokenDomain,
-		"accessTokenHttpOnly":    accessTokenHttpOnly,
+		"antiCsrf":                 antiCsrfVal,
+		"sAccessToken":             accessToken,
+		"sRefreshToken":            refreshToken,
+		"sIdRefreshToken":          idRefreshTokenFromCookie,
+		"refreshTokenExpiry":       refreshTokenExpiry,
+		"refreshTokenDomain":       refreshTokenDomain,
+		"refreshTokenHttpOnly":     refreshTokenHttpOnly,
+		"idRefreshTokenExpiry":     idRefreshTokenExpiry,
+		"idRefreshTokenFromHeader": idRefreshTokenFromHeader,
+		"idRefreshTokenDomain":     idRefreshTokenDomain,
+		"idRefreshTokenHttpOnly":   idRefreshTokenHttpOnly,
+		"accessTokenExpiry":        accessTokenExpiry,
+		"accessTokenDomain":        accessTokenDomain,
+		"accessTokenHttpOnly":      accessTokenHttpOnly,
 	}
 }
 

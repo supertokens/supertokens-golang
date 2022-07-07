@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-### Adds:
+### Fixes
+-   Clears cookies when RevokeSession is called using the session container, even if the session did not exist from before: https://github.com/supertokens/supertokens-node/issues/343
 
+### Adds:
 -   Adds default userContext for API calls that contains the request object. It can be used in APIs / functions override like so:
 
 ```golang
