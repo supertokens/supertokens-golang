@@ -46,10 +46,10 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 	return (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
 }
 
-func GetSessionInformationWithContext(sessionHandle string, userContext supertokens.UserContext) (sessmodels.SessionInformation, error) {
+func GetSessionInformationWithContext(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return sessmodels.SessionInformation{}, err
+		return nil, err
 	}
 	return (*instance.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
 }
@@ -94,18 +94,18 @@ func RevokeMultipleSessionsWithContext(sessionHandles []string, userContext supe
 	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles, userContext)
 }
 
-func UpdateSessionDataWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+func UpdateSessionDataWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return err
+		return false, err
 	}
 	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData, userContext)
 }
 
-func UpdateAccessTokenPayloadWithContext(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+func UpdateAccessTokenPayloadWithContext(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return err
+		return false, err
 	}
 	return (*instance.RecipeImpl.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
 }
@@ -160,10 +160,10 @@ func GetOpenIdDiscoveryConfigurationWithContext(userContext supertokens.UserCont
 	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
 }
 
-func RegenerateAccessTokenWithContext(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string, userContext supertokens.UserContext) (sessmodels.RegenerateAccessTokenResponse, error) {
+func RegenerateAccessTokenWithContext(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return sessmodels.RegenerateAccessTokenResponse{}, err
+		return nil, err
 	}
 	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, newAccessTokenPayload, userContext)
 }
@@ -176,7 +176,7 @@ func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.
 	return GetSessionWithContext(req, res, options, &map[string]interface{}{})
 }
 
-func GetSessionInformation(sessionHandle string) (sessmodels.SessionInformation, error) {
+func GetSessionInformation(sessionHandle string) (*sessmodels.SessionInformation, error) {
 	return GetSessionInformationWithContext(sessionHandle, &map[string]interface{}{})
 }
 
@@ -200,11 +200,11 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 	return RevokeMultipleSessionsWithContext(sessionHandles, &map[string]interface{}{})
 }
 
-func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) error {
+func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
 	return UpdateSessionDataWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
 }
 
-func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) (bool, error) {
 	return UpdateAccessTokenPayloadWithContext(sessionHandle, newAccessTokenPayload, &map[string]interface{}{})
 }
 
@@ -220,6 +220,6 @@ func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigura
 	return GetOpenIdDiscoveryConfigurationWithContext(&map[string]interface{}{})
 }
 
-func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string) (sessmodels.RegenerateAccessTokenResponse, error) {
+func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string) (*sessmodels.RegenerateAccessTokenResponse, error) {
 	return RegenerateAccessTokenWithContext(accessToken, newAccessTokenPayload, sessionHandle, &map[string]interface{}{})
 }

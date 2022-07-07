@@ -182,16 +182,16 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 	}
 }
 
-func getSessionInformationHelper(querier supertokens.Querier, sessionHandle string) (sessmodels.SessionInformation, error) {
+func getSessionInformationHelper(querier supertokens.Querier, sessionHandle string) (*sessmodels.SessionInformation, error) {
 	response, err := querier.SendGetRequest("/recipe/session",
 		map[string]string{
 			"sessionHandle": sessionHandle,
 		})
 	if err != nil {
-		return sessmodels.SessionInformation{}, err
+		return nil, err
 	}
 	if response["status"] == "OK" {
-		return sessmodels.SessionInformation{
+		return &sessmodels.SessionInformation{
 			SessionHandle:      response["sessionHandle"].(string),
 			UserId:             response["userId"].(string),
 			SessionData:        response["userDataInDatabase"].(map[string]interface{}),
@@ -200,7 +200,7 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 			AccessTokenPayload: response["userDataInJWT"].(map[string]interface{}),
 		}, nil
 	}
-	return sessmodels.SessionInformation{}, errors.UnauthorizedError{Msg: response["message"].(string)}
+	return nil, nil
 }
 
 func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (sessmodels.CreateOrRefreshAPIResponse, error) {
@@ -328,7 +328,7 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	return result, nil
 }
 
-func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) error {
+func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
 	if newSessionData == nil {
 		newSessionData = map[string]interface{}{}
 	}
@@ -338,15 +338,15 @@ func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, 
 			"userDataInDatabase": newSessionData,
 		})
 	if err != nil {
-		return err
+		return false, err
 	}
 	if response["status"].(string) == errors.UnauthorizedErrorStr {
-		return errors.UnauthorizedError{Msg: response["message"].(string)}
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
-func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle string, newAccessTokenPayload map[string]interface{}) error {
+func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle string, newAccessTokenPayload map[string]interface{}) (bool, error) {
 	if newAccessTokenPayload == nil {
 		newAccessTokenPayload = map[string]interface{}{}
 	}
@@ -355,15 +355,15 @@ func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle s
 		"userDataInJWT": newAccessTokenPayload,
 	})
 	if err != nil {
-		return err
+		return false, err
 	}
 	if response["status"].(string) == errors.UnauthorizedErrorStr {
-		return errors.UnauthorizedError{Msg: response["message"].(string)}
+		return false, nil
 	}
-	return nil
+	return true, nil
 }
 
-func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayload *map[string]interface{}, accessToken string) (sessmodels.RegenerateAccessTokenResponse, error) {
+func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayload *map[string]interface{}, accessToken string) (*sessmodels.RegenerateAccessTokenResponse, error) {
 	if newAccessTokenPayload == nil {
 		newAccessTokenPayload = &map[string]interface{}{}
 	}
@@ -372,19 +372,19 @@ func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayl
 		"userDataInJWT": newAccessTokenPayload,
 	})
 	if err != nil {
-		return sessmodels.RegenerateAccessTokenResponse{}, err
+		return nil, err
 	}
 	if response["status"].(string) == errors.UnauthorizedErrorStr {
-		return sessmodels.RegenerateAccessTokenResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
+		return nil, nil
 	}
 	responseByte, err := json.Marshal(response)
 	if err != nil {
-		return sessmodels.RegenerateAccessTokenResponse{}, err
+		return nil, err
 	}
 	var resp sessmodels.RegenerateAccessTokenResponse
 	err = json.Unmarshal(responseByte, &resp)
 	if err != nil {
-		return sessmodels.RegenerateAccessTokenResponse{}, err
+		return nil, err
 	}
-	return resp, nil
+	return &resp, nil
 }
