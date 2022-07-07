@@ -49,8 +49,11 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 	revokeSessionWithContext := func(userContext supertokens.UserContext) error {
 		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
+		if err != nil {
+			return err
+		}
 		clearSessionFromCookie(config, session.res)
-		return err
+		return nil
 	}
 
 	getSessionDataWithContext := func(userContext supertokens.UserContext) (map[string]interface{}, error) {
