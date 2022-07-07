@@ -44,7 +44,7 @@ func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options
 		return err
 	}
 
-	resp, err := (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, options, &map[string]interface{}{})
+	resp, err := (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

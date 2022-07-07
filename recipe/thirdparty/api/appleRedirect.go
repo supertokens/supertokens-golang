@@ -17,6 +17,7 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
@@ -29,5 +30,5 @@ func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmod
 	state := options.Req.FormValue("state")
 	code := options.Req.FormValue("code")
 
-	return (*apiImplementation.AppleRedirectHandlerPOST)(code, state, options, &map[string]interface{}{})
+	return (*apiImplementation.AppleRedirectHandlerPOST)(code, state, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 }
