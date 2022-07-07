@@ -10,6 +10,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixes
 -   Clears cookies when RevokeSession is called using the session container, even if the session did not exist from before: https://github.com/supertokens/supertokens-node/issues/343
 
+### Adds:
+-   Adds default userContext for API calls that contains the request object. It can be used in APIs / functions override like so:
+
+```golang
+SignIn: func (..., userContext supertokens.UserContext) {
+    if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
+        if req, ok := _default["request"].(*http.Request); ok {
+            // do something here with the request object
+        }
+    }
+}
+```
+
 ## [0.7.2] - 2022-06-29
 -   Adds unit tests for resend email & sms services for passwordless and thirdpartypasswordless recipes
 -   Adds User Roles recipe and compatibility with CDI 2.14

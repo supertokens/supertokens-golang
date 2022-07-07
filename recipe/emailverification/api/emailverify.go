@@ -51,7 +51,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options, &map[string]interface{}{})
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 		if err != nil {
 			return err
 		}
@@ -76,7 +76,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, &map[string]interface{}{})
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 		if err != nil {
 			return err
 		}

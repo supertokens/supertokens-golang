@@ -89,7 +89,7 @@ func ConsumeCode(apiImplementation plessmodels.APIInterface, options plessmodels
 		linkCodePointer = &t
 	}
 
-	response, err := (*apiImplementation.ConsumeCodePOST)(userInput, linkCodePointer, preAuthSessionID.(string), options, &map[string]interface{}{})
+	response, err := (*apiImplementation.ConsumeCodePOST)(userInput, linkCodePointer, preAuthSessionID.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}
