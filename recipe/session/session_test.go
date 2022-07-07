@@ -953,3 +953,60 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	_, err = GetSessionInformation(sessionHandlers[0])
 	assert.Error(t, err)
 }
+
+func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
+	sessionHandle := ""
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
+		sess, _ := CreateNewSession(rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		sessionHandle = sess.GetHandle()
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
+
+	RevokeSession(sessionHandle)
+
+	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	cookieData = unittesting.ExtractInfoFromResponse(resp1)
+
+	assert.Equal(t, cookieData["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+	assert.Equal(t, cookieData["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+	assert.Equal(t, cookieData["idRefreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+	assert.Equal(t, cookieData["accessToken"], "")
+	assert.Equal(t, cookieData["refreshToken"], "")
+	assert.Equal(t, cookieData["idRefreshTokenFromCookie"], "")
+	assert.Equal(t, cookieData["idRefreshTokenFromHeader"], "remove")
+}
