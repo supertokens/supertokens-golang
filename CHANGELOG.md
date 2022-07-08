@@ -15,8 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   `RegenerateAccessToken` now returns `nil` if the input access token's `sessionHandle` does not exist.
 -   The session container functions have not changed in behaviour and return errors if `sessionHandle` does not exist. This works on the current session.
 
-### Adds:
+### Fixes
+-   Clears cookies when RevokeSession is called using the session container, even if the session did not exist from before: https://github.com/supertokens/supertokens-node/issues/343
 
+### Adds:
 -   Adds default userContext for API calls that contains the request object. It can be used in APIs / functions override like so:
 
 ```golang
