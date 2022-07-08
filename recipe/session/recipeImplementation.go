@@ -111,7 +111,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return &sessionContainer, nil
 	}
 
-	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (sessmodels.SessionInformation, error) {
+	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
@@ -165,11 +165,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return revokeMultipleSessionsHelper(querier, sessionHandles)
 	}
 
-	updateSessionData := func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+	updateSessionData := func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 		return updateSessionDataHelper(querier, sessionHandle, newSessionData)
 	}
 
-	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
 	}
 
@@ -189,7 +189,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return recipeImplHandshakeInfo.RefreshTokenValidity, nil
 	}
 
-	regenerateAccessToken := func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (sessmodels.RegenerateAccessTokenResponse, error) {
+	regenerateAccessToken := func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
 		return regenerateAccessTokenHelper(querier, newAccessTokenPayload, accessToken)
 	}
 

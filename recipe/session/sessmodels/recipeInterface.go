@@ -25,14 +25,14 @@ type RecipeInterface struct {
 	CreateNewSession            *func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (*SessionContainer, error)
 	RefreshSession              *func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (SessionContainer, error)
-	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (SessionInformation, error)
+	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (*SessionInformation, error)
 	RevokeAllSessionsForUser    *func(userID string, userContext supertokens.UserContext) ([]string, error)
 	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)
 	RevokeSession               *func(sessionHandle string, userContext supertokens.UserContext) (bool, error)
 	RevokeMultipleSessions      *func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error)
-	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) error
-	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
+	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
+	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)
 	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
-	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (RegenerateAccessTokenResponse, error)
+	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*RegenerateAccessTokenResponse, error)
 }

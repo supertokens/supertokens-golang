@@ -470,13 +470,12 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	//update session data with wrong session handle
 
-	err = UpdateSessionData("random", map[string]interface{}{
+	sessionUpdated, err := UpdateSessionData("random", map[string]interface{}{
 		"name": "Ronit",
 	})
 
-	assert.Error(t, err)
-
-	assert.Equal(t, "Session does not exist.", err.Error())
+	assert.NoError(t, err)
+	assert.False(t, sessionUpdated)
 }
 
 func TestNilValuesPassedForSessionData(t *testing.T) {
@@ -613,11 +612,12 @@ func TestManipulatingJWTpayload(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
+	tokenUpdated, err := UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value",
 	})
 
 	assert.NoError(t, err)
+	assert.True(t, tokenUpdated)
 
 	sessionInfo, err := GetSessionInformation(sessionHandles[0])
 
@@ -625,11 +625,12 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	assert.Equal(t, "value", sessionInfo.AccessTokenPayload["key"])
 
-	err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
+	tokenUpdated, err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value2",
 	})
 
 	assert.NoError(t, err)
+	assert.True(t, tokenUpdated)
 
 	sessionInfo1, err := GetSessionInformation(sessionHandles[0])
 
@@ -637,11 +638,12 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	assert.Equal(t, "value2", sessionInfo1.AccessTokenPayload["key"])
 
-	err = UpdateAccessTokenPayload("random", map[string]interface{}{
+	tokenUpdated, err = UpdateAccessTokenPayload("random", map[string]interface{}{
 		"key": "value3",
 	})
 
-	assert.Error(t, err)
+	assert.NoError(t, err)
+	assert.False(t, tokenUpdated)
 }
 
 func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFine(t *testing.T) {
@@ -950,8 +952,9 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	assert.NoError(t, err)
 	_, err = RevokeAllSessionsForUser("ronit")
 	assert.NoError(t, err)
-	_, err = GetSessionInformation(sessionHandlers[0])
-	assert.Error(t, err)
+	sessionInformation, err := GetSessionInformation(sessionHandlers[0])
+	assert.Nil(t, sessionInformation)
+	assert.NoError(t, err)
 }
 
 func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {

@@ -117,13 +117,16 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
 
-		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
 			}
 			sessionInformation, err := (*originalImplementation.GetSessionInformation)(sessionHandle, userContext)
 			if err != nil {
-				return err
+				return false, err
+			}
+			if sessionInformation == nil {
+				return false, nil
 			}
 			accessTokenPayload := sessionInformation.AccessTokenPayload
 			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
@@ -140,7 +143,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			decodedPayload := map[string]interface{}{}
 			_, _, err = new(jwt.Parser).ParseUnverified(existingJWT, claims)
 			if err != nil {
-				return err
+				return false, err
 			}
 			for key, val := range claims {
 				decodedPayload[key] = val
@@ -158,7 +161,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 
 			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), openidRecipeImplementation, userContext)
 			if err != nil {
-				return err
+				return false, err
 			}
 
 			return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload, userContext)

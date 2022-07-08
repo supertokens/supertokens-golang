@@ -16,7 +16,6 @@
 package session
 
 import (
-	defaultErrors "errors"
 	"net/http"
 	"reflect"
 
@@ -59,21 +58,23 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	getSessionDataWithContext := func(userContext supertokens.UserContext) (map[string]interface{}, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				clearSessionFromCookie(config, session.res)
-			}
 			return nil, err
+		}
+		if sessionInformation == nil {
+			clearSessionFromCookie(config, session.res)
+			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.SessionData, nil
 	}
 
 	updateSessionDataWithContext := func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
-		err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, userContext)
+		updated, err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, userContext)
 		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				clearSessionFromCookie(config, session.res)
-			}
 			return err
+		}
+		if !updated {
+			clearSessionFromCookie(config, session.res)
+			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return nil
 	}
@@ -89,6 +90,11 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return err
 		}
 
+		if resp == nil {
+			clearSessionFromCookie(config, session.res)
+			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
+		}
+
 		session.userDataInAccessToken = resp.Session.UserDataInAccessToken
 
 		if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
@@ -102,10 +108,11 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	getTimeCreatedWithContext := func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				clearSessionFromCookie(config, session.res)
-			}
 			return 0, err
+		}
+		if sessionInformation == nil {
+			clearSessionFromCookie(config, session.res)
+			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.TimeCreated, nil
 	}
@@ -113,10 +120,11 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	getExpiryWithContext := func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				clearSessionFromCookie(config, session.res)
-			}
 			return 0, err
+		}
+		if sessionInformation == nil {
+			clearSessionFromCookie(config, session.res)
+			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.Expiry, nil
 	}

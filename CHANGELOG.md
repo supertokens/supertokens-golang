@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Breaking change:
+-   Changes session recipe interfaces to not return an `UNAUTHORISED` error when the input is a sessionHandle: https://github.com/supertokens/backend/issues/83
+-   `GetSessionInformation` now returns `nil` is the session does not exist
+-   `UpdateSessionData` now returns `nil` if the input `sessionHandle` does not exist.
+-   `UpdateAccessTokenPayload` now returns `false` if the input `sessionHandle` does not exist.
+-   `RegenerateAccessToken` now returns `nil` if the input access token's `sessionHandle` does not exist.
+-   The session container functions have not changed in behaviour and return errors if `sessionHandle` does not exist. This works on the current session.
+
 ### Fixes
 -   Clears cookies when RevokeSession is called using the session container, even if the session did not exist from before: https://github.com/supertokens/supertokens-node/issues/343
 
