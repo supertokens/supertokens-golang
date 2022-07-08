@@ -16,10 +16,10 @@
 package session
 
 import (
-	defaultErrors "errors"
 	"net/http"
 	"reflect"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -64,7 +64,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 		if sessionInformation == nil {
 			clearSessionFromCookie(config, session.res)
-			return nil, defaultErrors.New("session does not exist anymore")
+			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.SessionData, nil
 	}
@@ -76,7 +76,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 		if !updated {
 			clearSessionFromCookie(config, session.res)
-			return defaultErrors.New("session does not exist anymore")
+			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return nil
 	}
@@ -94,7 +94,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 		if resp == nil {
 			clearSessionFromCookie(config, session.res)
-			return defaultErrors.New("session does not exist anymore")
+			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 
 		session.userDataInAccessToken = resp.Session.UserDataInAccessToken
@@ -114,7 +114,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 		if sessionInformation == nil {
 			clearSessionFromCookie(config, session.res)
-			return 0, defaultErrors.New("session does not exist anymore")
+			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.TimeCreated, nil
 	}
@@ -126,7 +126,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 		if sessionInformation == nil {
 			clearSessionFromCookie(config, session.res)
-			return 0, defaultErrors.New("session does not exist anymore")
+			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.Expiry, nil
 	}
