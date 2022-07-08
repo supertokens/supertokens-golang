@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.8.0] - 2022-07-08
+
 ### Breaking change:
 -   Changes session recipe interfaces to not return an `UNAUTHORISED` error when the input is a sessionHandle: https://github.com/supertokens/backend/issues/83
 -   `GetSessionInformation` now returns `nil` is the session does not exist
