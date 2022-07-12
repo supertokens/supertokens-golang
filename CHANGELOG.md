@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.8.1] - 2022-07-12
+
+### Fixes:
+- Fixes issue with 404 status being sent for apple redirect callback route.
+
 ## [0.8.0] - 2022-07-08
 
 ### Breaking change:

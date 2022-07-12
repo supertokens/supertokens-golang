@@ -185,6 +185,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?state=" + state + "&code=" + code
 
 		options.Res.Header().Set("Content-Type", "text/html; charset=utf-8")
+		options.Res.WriteHeader(200)
 
 		fmt.Fprint(options.Res, "<html><head><script>window.location.replace(\""+redirectURL+"\");</script></head></html>")
 		return nil
