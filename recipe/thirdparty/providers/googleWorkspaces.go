@@ -141,7 +141,10 @@ func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) 
 
 	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
 	options := keyfunc.Options{
-		// RefreshInterval: time.Hour, // This causes a leak as the pointer to JWKS would be held in the goroutine
+		// https://github.com/supertokens/supertokens-golang/issues/155
+		// This causes a leak as the pointer to JWKS would be held in the goroutine and
+		// also results in compounding refresh requests
+		// RefreshInterval: time.Hour,
 	}
 
 	// Create the JWKS from the resource at the given URL.
