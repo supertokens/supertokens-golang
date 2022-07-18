@@ -18,7 +18,6 @@ package providers
 import (
 	"errors"
 	"strings"
-	"time"
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
@@ -141,9 +140,8 @@ func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) 
 	jwksURL := "https://www.googleapis.com/oauth2/v3/certs"
 
 	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
-	refreshInterval := time.Hour
 	options := keyfunc.Options{
-		RefreshInterval: refreshInterval,
+		// RefreshInterval: time.Hour, // This causes a leak as the pointer to JWKS would be held in the goroutine
 	}
 
 	// Create the JWKS from the resource at the given URL.
