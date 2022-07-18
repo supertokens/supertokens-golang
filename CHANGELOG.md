@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixes:
+- Fixes JWKS Keyfunc call that resulted in a goroutine leak: https://github.com/supertokens/supertokens-golang/issues/155
+
 ## [0.8.1] - 2022-07-12
 
 ### Fixes:
