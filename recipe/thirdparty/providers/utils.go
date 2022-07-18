@@ -21,6 +21,10 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sync"
+	"time"
+
+	"github.com/MicahParks/keyfunc"
 )
 
 func doGetRequest(req *http.Request) (interface{}, error) {
@@ -46,4 +50,31 @@ func doGetRequest(req *http.Request) (interface{}, error) {
 		return nil, err
 	}
 	return result, nil
+}
+
+var jwksKeys = map[string]*keyfunc.JWKS{}
+var jwksKeysLock = sync.Mutex{}
+
+func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
+	if jwks, ok := jwksKeys[url]; ok {
+		return jwks, nil
+	}
+
+	jwksKeysLock.Lock()
+	defer jwksKeysLock.Unlock()
+
+	// Check again to see if it was added while we were waiting for the lock
+	if jwks, ok := jwksKeys[url]; ok {
+		return jwks, nil
+	}
+
+	options := keyfunc.Options{
+		RefreshInterval: time.Hour,
+	}
+	jwks, err := keyfunc.Get(url, options)
+	if err != nil {
+		return nil, err
+	}
+	jwksKeys[url] = jwks
+	return jwks, nil
 }

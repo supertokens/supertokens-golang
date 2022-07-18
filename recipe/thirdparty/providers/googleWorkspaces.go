@@ -18,9 +18,7 @@ package providers
 import (
 	"errors"
 	"strings"
-	"time"
 
-	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -140,14 +138,8 @@ func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) 
 	// Get the JWKS URL.
 	jwksURL := "https://www.googleapis.com/oauth2/v3/certs"
 
-	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
-	refreshInterval := time.Hour
-	options := keyfunc.Options{
-		RefreshInterval: refreshInterval,
-	}
-
 	// Create the JWKS from the resource at the given URL.
-	jwks, err := keyfunc.Get(jwksURL, options)
+	jwks, err := getJWKSFromURL(jwksURL)
 	if err != nil {
 		return claims, err
 	}

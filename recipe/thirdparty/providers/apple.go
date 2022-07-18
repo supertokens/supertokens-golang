@@ -23,7 +23,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -177,14 +176,8 @@ func verifyAndGetClaimsAppleIdToken(idToken string, clientId string) (jwt.MapCla
 	// Get the JWKS URL.
 	jwksURL := "https://appleid.apple.com/auth/keys"
 
-	// Create the keyfunc options. Refresh the JWKS every hour and log errors.
-	refreshInterval := time.Hour
-	options := keyfunc.Options{
-		RefreshInterval: refreshInterval,
-	}
-
 	// Create the JWKS from the resource at the given URL.
-	jwks, err := keyfunc.Get(jwksURL, options)
+	jwks, err := getJWKSFromURL(jwksURL)
 	if err != nil {
 		return claims, err
 	}
