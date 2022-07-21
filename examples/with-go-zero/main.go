@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -88,7 +87,6 @@ func main() {
 				},
 			}),
 			session.Init(nil),
-			emailpassword.Init(nil),
 		},
 	})
 	if err != nil {
