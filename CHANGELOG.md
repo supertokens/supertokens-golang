@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Added
+- Adds with-go-zero example: https://github.com/supertokens/supertokens-golang/issues/157
+
 ## [0.8.2] - 2022-07-18
 
 ### Fixes:

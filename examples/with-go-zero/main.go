@@ -1,20 +1,18 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
+	"strings"
 
-	"github.com/gofiber/adaptor/v2"
-	"github.com/gofiber/fiber/v2"
-	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"github.com/valyala/fasthttp"
+	"github.com/zeromicro/go-zero/rest"
 )
 
 func main() {
@@ -94,87 +92,95 @@ func main() {
 	if err != nil {
 		log.Fatal("Something went wrong while starting up supertokens: ", err.Error())
 	}
-	app := fiber.New()
+	server := rest.MustNewServer(
+		rest.RestConf{
+			Host: "0.0.0.0",
+			Port: 8000,
+		},
+	)
+	defer server.Stop()
 
-	allowedHeaders := append([]string{"Content-Type"}, supertokens.GetAllCORSHeaders()...)
-	allowedHeadersInCommaSeparetedStringFormat := stringArrayToStringConvertor(allowedHeaders)
-
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     "http://localhost:3000",
-		AllowMethods:     "GET, POST, PUT, HEAD, OPTIONS",
-		AllowHeaders:     allowedHeadersInCommaSeparetedStringFormat,
-		AllowCredentials: true,
-	}))
-
-	//adding the supertokens middleware
-	app.Use(adaptor.HTTPMiddleware(supertokens.Middleware))
-
-	app.Get("/sessionInfo", verifySession(nil), sessioninfo)
-	log.Fatal(app.Listen(":3001"))
+	server.Use(corsMiddleware)
+	server.Use(rest.ToMiddleware(supertokens.Middleware))
+	addSupertokensRoutes("/auth", server) // go-zero doesn't execute middlewares if matching routes are not found
+	server.AddRoute(rest.Route{
+		Method: http.MethodGet,
+		Path:   "/sessionInfo",
+		Handler: func(rw http.ResponseWriter, r *http.Request) {
+			session.VerifySession(nil, sessioninfo).ServeHTTP(rw, r)
+		},
+	})
+	server.Start()
 }
 
-//wrapper of the original implementation of verify session to match the required function signature
-func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
-	return func(c *fiber.Ctx) error {
-		return adaptor.HTTPHandlerFunc(http.HandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
-			c.SetUserContext(r.Context())
-			err := c.Next()
-			if err != nil {
-				err = supertokens.ErrorHandler(err, r, rw)
-				if err != nil {
-					rw.WriteHeader(500)
-					_, _ = rw.Write([]byte(err.Error()))
-				}
-				return
-			}
-			c.Response().Header.VisitAll(func(k, v []byte) {
-				if string(k) == fasthttp.HeaderContentType {
-					rw.Header().Set(string(k), string(v))
-				}
-			})
-			rw.WriteHeader(c.Response().StatusCode())
-			_, _ = rw.Write(c.Response().Body())
-		})))(c)
-	}
-}
+func sessioninfo(w http.ResponseWriter, r *http.Request) {
+	sessionContainer := session.GetSessionFromRequestContext(r.Context())
 
-func sessioninfo(c *fiber.Ctx) error {
-	sessionContainer := session.GetSessionFromRequestContext(c.UserContext())
 	if sessionContainer == nil {
-		return c.Status(500).JSON("no session found")
+		w.WriteHeader(500)
+		w.Write([]byte("no session found"))
+		return
 	}
 	sessionData, err := sessionContainer.GetSessionData()
 	if err != nil {
-		return c.Status(500).JSON(err.Error())
+		err = supertokens.ErrorHandler(err, r, w)
+		if err != nil {
+			w.WriteHeader(500)
+			w.Write([]byte(err.Error()))
+		}
+		return
 	}
-	c.Response().Header.Add("content-type", "application/json")
-
-	currAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	counter, ok := currAccessTokenPayload["counter"]
-	if !ok {
-		counter = 1
-	} else {
-		counter = int(counter.(float64) + 1)
-	}
-	err = sessionContainer.UpdateAccessTokenPayload(map[string]interface{}{
-		"counter": counter.(int),
-	})
-	if err != nil {
-		return err
-	}
-	return c.Status(200).JSON(map[string]interface{}{
+	w.WriteHeader(200)
+	w.Header().Add("content-type", "application/json")
+	bytes, err := json.Marshal(map[string]interface{}{
 		"sessionHandle":      sessionContainer.GetHandle(),
 		"userId":             sessionContainer.GetUserID(),
 		"accessTokenPayload": sessionContainer.GetAccessTokenPayload(),
 		"sessionData":        sessionData,
 	})
+	if err != nil {
+		w.WriteHeader(500)
+		w.Write([]byte("error in converting to json"))
+	} else {
+		w.Write(bytes)
+	}
 }
 
-//utility funtion to help convert an array of string to convert to comma separeted string format
-func stringArrayToStringConvertor(stringArray []string) string {
-	var stringToBeReturned string
-	for _, val := range stringArray {
-		stringToBeReturned += (val + ", ")
+func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(response http.ResponseWriter, r *http.Request) {
+		response.Header().Set("Access-Control-Allow-Origin", "localhost:8000")
+		response.Header().Set("Access-Control-Allow-Credentials", "true")
+		if r.Method == "OPTIONS" {
+			response.Header().Set("Access-Control-Allow-Headers", strings.Join(append([]string{"Content-Type"}, supertokens.GetAllCORSHeaders()...), ","))
+			response.Header().Set("Access-Control-Allow-Methods", "*")
+			response.Write([]byte(""))
+		} else {
+			next.ServeHTTP(response, r)
+		}
 	}
-	return stringToBeReturned
+}
+
+func addSupertokensRoutes(prefix string, server *rest.Server) {
+	methods := []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete, http.MethodOptions}
+	routes := []string{
+		prefix,
+		prefix + "/:a",
+		prefix + "/:a/:b",
+		prefix + "/:a/:b/:c",
+		prefix + "/:a/:b/:c/:d",
+		prefix + "/:a/:b/:c/:d/:e",
+		prefix + "/:a/:b/:c/:d/:e/:f",
+	}
+
+	for _, method := range methods {
+		for _, route := range routes {
+			server.AddRoute(rest.Route{
+				Method: method,
+				Path:   route,
+				Handler: func(w http.ResponseWriter, r *http.Request) {
+					http.NotFound(w, r) // Return not found if not handled by middleware
+				},
+			})
+		}
+	}
 }
