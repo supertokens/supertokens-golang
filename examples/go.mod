@@ -18,8 +18,8 @@ require (
 	github.com/supertokens/supertokens-golang v0.0.0-20210909070424-b13c10ce5994
 	github.com/twitchtv/twirp v8.1.0+incompatible
 	github.com/valyala/fasthttp v1.33.0
-	golang.org/x/sys v0.0.0-20220224120231-95c6836cb0e7 // indirect
-	google.golang.org/protobuf v1.27.1
+	github.com/zeromicro/go-zero v1.3.5
+	google.golang.org/protobuf v1.28.0
 )
 
 replace github.com/supertokens/supertokens-golang => ../
