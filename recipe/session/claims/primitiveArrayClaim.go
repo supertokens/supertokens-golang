@@ -327,9 +327,9 @@ func (impl *ExcludesAllValuesImpl) Validate(payload map[string]interface{}, user
 		return ClaimValidationResult{
 			IsValid: false,
 			Reason: map[string]interface{}{
-				"message":           "value does not exist",
-				"expectedToInclude": impl.vals,
-				"actualValue":       claimVal,
+				"message":              "value does not exist",
+				"expectedToNotInclude": impl.vals,
+				"actualValue":          claimVal,
 			},
 		}
 	}
@@ -361,9 +361,9 @@ func (impl *ExcludesAllValuesImpl) Validate(payload map[string]interface{}, user
 		return ClaimValidationResult{
 			IsValid: false,
 			Reason: map[string]interface{}{
-				"message":           "wrong value",
-				"expectedToInclude": impl.vals,
-				"actualValue":       claimVal,
+				"message":              "wrong value",
+				"expectedToNotInclude": impl.vals,
+				"actualValue":          claimVal,
 			},
 		}
 	}
