@@ -29,13 +29,13 @@ func (claim *BooleanClaim) GetValidators() BooleanClaimValidators {
 					id:              claim.Key + "-freshVal",
 					claim:           claim,
 					maxAgeInSeconds: *maxAgeInSeconds,
-					val:             true,
+					val:             false,
 				}
 			}
 			return &HasValueImpl{
 				id:    claim.Key,
 				claim: claim,
-				val:   true,
+				val:   false,
 			}
 		},
 	}

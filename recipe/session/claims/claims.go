@@ -4,38 +4,36 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type Any interface{}
-
 type SessionClaim interface {
-	FetchValue(userId string, userContext supertokens.UserContext) Any
-	AddToPayload_internal(payload map[string]Any, value Any, userContext supertokens.UserContext) map[string]Any
-	RemoveFromPayloadByMerge_internal(payload map[string]Any, userContext supertokens.UserContext) map[string]Any
-	RemoveFromPayload(payload map[string]Any, userContext supertokens.UserContext) map[string]Any
-	GetValueFromPayload(payload map[string]Any, userContext supertokens.UserContext) Any
+	FetchValue(userId string, userContext supertokens.UserContext) interface{}
+	AddToPayload_internal(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{}
+	RemoveFromPayloadByMerge_internal(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
+	RemoveFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
+	GetValueFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
 }
 
-func BuildSessionClaim(c SessionClaim, userId string, userContext supertokens.UserContext) map[string]Any {
+func BuildSessionClaim(c SessionClaim, userId string, userContext supertokens.UserContext) map[string]interface{} {
 	value := c.FetchValue(userId, userContext)
 	if value == nil {
-		return map[string]Any{}
+		return map[string]interface{}{}
 	}
 
-	return c.AddToPayload_internal(map[string]Any{}, value, userContext)
+	return c.AddToPayload_internal(map[string]interface{}{}, value, userContext)
 }
 
 type SessionClaimValidator interface {
 	GetID() string
 	GetClaim() SessionClaim
-	ShouldRefetch(payload map[string]Any, userContext supertokens.UserContext) bool
-	Validate(payload map[string]Any, userContext supertokens.UserContext) ClaimValidationResult
+	ShouldRefetch(payload map[string]interface{}, userContext supertokens.UserContext) bool
+	Validate(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult
 }
 
 type ClaimValidationResult struct {
 	IsValid bool
-	Reason  Any
+	Reason  interface{}
 }
 
 type ClaimValidationError struct {
 	ID     string
-	Reason Any
+	Reason interface{}
 }
