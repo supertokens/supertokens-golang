@@ -17,11 +17,13 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -322,4 +324,20 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 	}
 
 	return keyList
+}
+
+func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []sessmodels.ClaimValidationError {
+	validationErrors := []sessmodels.ClaimValidationError{}
+
+	for _, validator := range claimValidators {
+		claimValidationResult := validator.Validate(newAccessTokenPayload, userContext)
+		supertokens.LogDebugMessage(fmt.Sprint("validateClaimsInPayload ", validator.GetID(), " validation res ", claimValidationResult))
+		if !claimValidationResult.IsValid {
+			validationErrors = append(validationErrors, sessmodels.ClaimValidationError{
+				ID:     validator.GetID(),
+				Reason: claimValidationResult.Reason,
+			})
+		}
+	}
+	return validationErrors
 }

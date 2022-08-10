@@ -6,4 +6,6 @@ type ValidateClaimsResponse struct {
 }
 
 type ClaimValidationError struct {
+	ID     string
+	Reason interface{}
 }

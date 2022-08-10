@@ -33,16 +33,16 @@ type RecipeInterface struct {
 	RevokeMultipleSessions      *func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error)
 	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error)
-	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext)
+	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)
 	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
 	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*RegenerateAccessTokenResponse, error)
 
 	GetGlobalClaimValidators   *func(claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator) []claims.SessionClaimValidator
 	ValidateClaims             *func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (ValidateClaimsResponse, error)
-	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext)
-	FetchAndSetClaim           *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext)
-	SetClaimValue              *func(sessionHandle string, claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext)
-	GetClaimValue              *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext)
-	RemoveClaim                *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext)
+	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ValidateClaimsResponse // TODO change return type
+	FetchAndSetClaim           *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (bool, error)
+	SetClaimValue              *func(sessionHandle string, claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error)
+	GetClaimValue              *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error)
+	RemoveClaim                *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (bool, error)
 }
