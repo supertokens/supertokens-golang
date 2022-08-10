@@ -10,6 +10,7 @@ type SessionClaim interface {
 	RemoveFromPayloadByMerge_internal(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	RemoveFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	GetValueFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
+	Build(userId string, userContext supertokens.UserContext) map[string]interface{}
 }
 
 func BuildSessionClaim(c SessionClaim, userId string, userContext supertokens.UserContext) map[string]interface{} {

@@ -20,6 +20,7 @@ import (
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -174,6 +175,13 @@ type SessionContainer struct {
 	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
 	GetTimeCreatedWithContext           func(userContext supertokens.UserContext) (uint64, error)
 	GetExpiryWithContext                func(userContext supertokens.UserContext) (uint64, error)
+	MergeIntoAccessTokenPayload         func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
+
+	AssertClaims     func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error
+	FetchAndSetClaim func(claim claims.SessionClaim, userContext supertokens.UserContext) error
+	SetClaimValue    func(claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) error
+	GetClaimValue    func(claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error)
+	RemoveClaim      func(claim claims.SessionClaim, userContext supertokens.UserContext) error
 }
 
 type SessionInformation struct {

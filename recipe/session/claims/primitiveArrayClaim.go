@@ -82,6 +82,14 @@ func (claim *PrimitiveArrayClaim) GetValidators() PrimitiveArrayClaimValidators 
 	}
 }
 
+func (claim *PrimitiveArrayClaim) Build(userId string, userContext supertokens.UserContext) map[string]interface{} {
+	value := claim.fetchValue(userId, userContext)
+	if value == nil {
+		return map[string]interface{}{}
+	}
+	return claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+}
+
 type IncludesValueImpl struct {
 	id              string
 	claim           *PrimitiveArrayClaim

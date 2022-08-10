@@ -15,6 +15,8 @@
 
 package errors
 
+import "github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+
 const (
 	UnauthorizedErrorStr       = "UNAUTHORISED"
 	TryRefreshTokenErrorStr    = "TRY_REFRESH_TOKEN"
@@ -52,5 +54,14 @@ type UnauthorizedError struct {
 }
 
 func (err UnauthorizedError) Error() string {
+	return err.Msg
+}
+
+type InvalidClaimError struct {
+	Msg           string
+	InvalidClaims []sessmodels.ClaimValidationError
+}
+
+func (err InvalidClaimError) Error() string {
 	return err.Msg
 }

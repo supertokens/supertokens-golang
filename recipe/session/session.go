@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -105,6 +106,18 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
+	mergeIntoAccessTokenPayload := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+		accessTokenPayload := session.userDataInAccessToken
+		for k, v := range accessTokenPayloadUpdate {
+			if v == nil {
+				delete(accessTokenPayload, k)
+			} else {
+				accessTokenPayload[k] = v
+			}
+		}
+		return nil
+	}
+
 	getTimeCreatedWithContext := func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
@@ -141,6 +154,48 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 	getAccessTokenWithContext := func(userContext supertokens.UserContext) string {
 		return session.accessToken
+	}
+
+	assertClaims := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, session.userDataInAccessToken, claimValidators, userContext)
+		if err != nil {
+			return err
+		}
+
+		if validateClaimResponse.AccessTokenPayloadUpdate != nil {
+			err := mergeIntoAccessTokenPayload(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(validateClaimResponse.InvalidClaims) > 0 {
+			return errors.InvalidClaimError{
+				Msg:           "invalid claims",
+				InvalidClaims: validateClaimResponse.InvalidClaims,
+			}
+		}
+
+		return nil
+	}
+
+	fetchAndSetClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+		update := claim.Build(session.userID, userContext)
+		return mergeIntoAccessTokenPayload(update, userContext)
+	}
+
+	setClaimValue := func(claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) error {
+		update := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+		return mergeIntoAccessTokenPayload(update, userContext)
+	}
+
+	getClaimValue := func(claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+		return claim.GetValueFromPayload(session.userDataInAccessToken, userContext), nil
+	}
+
+	removeClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+		update := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
+		return mergeIntoAccessTokenPayload(update, userContext)
 	}
 
 	return sessmodels.SessionContainer{
@@ -184,5 +239,12 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		GetExpiry: func() (uint64, error) {
 			return getExpiryWithContext(&map[string]interface{}{})
 		},
+
+		MergeIntoAccessTokenPayload: mergeIntoAccessTokenPayload,
+		AssertClaims:                assertClaims,
+		FetchAndSetClaim:            fetchAndSetClaim,
+		SetClaimValue:               setClaimValue,
+		GetClaimValue:               getClaimValue,
+		RemoveClaim:                 removeClaim,
 	}
 }

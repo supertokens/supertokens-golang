@@ -76,6 +76,14 @@ func (claim *PrimitiveClaim) GetValidators() PrimitiveClaimValidators {
 	}
 }
 
+func (claim *PrimitiveClaim) Build(userId string, userContext supertokens.UserContext) map[string]interface{} {
+	value := claim.fetchValue(userId, userContext)
+	if value == nil {
+		return map[string]interface{}{}
+	}
+	return claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+}
+
 func (claim *PrimitiveClaim) getPrimitiveClaim() *PrimitiveClaim {
 	return claim
 }
