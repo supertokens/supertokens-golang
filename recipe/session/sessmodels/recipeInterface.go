@@ -38,7 +38,13 @@ type RecipeInterface struct {
 	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
 	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*RegenerateAccessTokenResponse, error)
 
-	GetGlobalClaimValidators   *func(claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator) []claims.SessionClaimValidator
+	AddClaimFromOtherRecipe      *func(claim claims.SessionClaim) error
+	GetClaimsAddedByOtherRecipes *func() []claims.SessionClaim
+
+	AddClaimValidatorFromOtherRecipe      *func(claimValidator claims.SessionClaimValidator) error
+	GetClaimValidatorsAddedByOtherRecipes *func() []claims.SessionClaimValidator
+
+	GetGlobalClaimValidators   *func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 	ValidateClaims             *func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (ValidateClaimsResponse, error)
 	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ValidateClaimsResponse // TODO change return type
 	FetchAndSetClaim           *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (bool, error)

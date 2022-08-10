@@ -11,6 +11,10 @@ type PrimitiveClaim struct {
 	fetchValue func(userId string, userContext supertokens.UserContext) interface{}
 }
 
+func (claim *PrimitiveClaim) GetKey() string {
+	return claim.Key
+}
+
 func (claim *PrimitiveClaim) FetchValue(userId string, userContext supertokens.UserContext) interface{} {
 	return claim.fetchValue(userId, userContext)
 }

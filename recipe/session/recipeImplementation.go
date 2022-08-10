@@ -37,6 +37,9 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	var result sessmodels.RecipeInterface
 
+	var claimsAddedByOtherRecipes []claims.SessionClaim
+	var claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator
+
 	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
@@ -216,8 +219,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return (*result.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
 	}
 
-	getGlobalClaimValidators := func(claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator) []claims.SessionClaimValidator {
-		return claimValidatorsAddedByOtherRecipes
+	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+		return claimValidatorsAddedByOtherRecipes, nil
 	}
 
 	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResponse, error) {
@@ -300,6 +303,29 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
+	addClaimFromOtherRecipe := func(claim claims.SessionClaim) error {
+		for _, existingClaim := range claimsAddedByOtherRecipes {
+			if claim.GetKey() == existingClaim.GetKey() {
+				return defaultErrors.New("claim already added by other recipe")
+			}
+		}
+		claimsAddedByOtherRecipes = append(claimsAddedByOtherRecipes, claim)
+		return nil
+	}
+
+	getClaimsAddedByOtherRecipes := func() []claims.SessionClaim {
+		return claimsAddedByOtherRecipes
+	}
+
+	addClaimValidatorFromOtherRecipe := func(validator claims.SessionClaimValidator) error {
+		claimValidatorsAddedByOtherRecipes = append(claimValidatorsAddedByOtherRecipes, validator)
+		return nil
+	}
+
+	getClaimValidatorsAddedByOtherRecipes := func() []claims.SessionClaimValidator {
+		return claimValidatorsAddedByOtherRecipes
+	}
+
 	result = sessmodels.RecipeInterface{
 		CreateNewSession:            &createNewSession,
 		GetSession:                  &getSession,
@@ -323,6 +349,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		SetClaimValue:               &setClaimValue,
 		GetClaimValue:               &getClaimValue,
 		RemoveClaim:                 &removeClaim,
+
+		AddClaimFromOtherRecipe:      &addClaimFromOtherRecipe,
+		GetClaimsAddedByOtherRecipes: &getClaimsAddedByOtherRecipes,
+
+		AddClaimValidatorFromOtherRecipe:      &addClaimValidatorFromOtherRecipe,
+		GetClaimValidatorsAddedByOtherRecipes: &getClaimValidatorsAddedByOtherRecipes,
 	}
 
 	return result

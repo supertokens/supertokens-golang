@@ -5,6 +5,7 @@ import (
 )
 
 type SessionClaim interface {
+	GetKey() string
 	FetchValue(userId string, userContext supertokens.UserContext) interface{}
 	AddToPayload_internal(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{}
 	RemoveFromPayloadByMerge_internal(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}

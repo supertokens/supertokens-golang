@@ -46,7 +46,25 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
 			return &session, err
 		} else {
-			return (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			if err != nil {
+				return nil, err
+			}
+
+			if sessionContainer == nil {
+				return nil, nil
+			}
+
+			claimValidators, err := getRequiredClaimValidators(options.RecipeImplementation, sessionContainer, verifySessionOptions.OverrideGlobalClaimValidators, userContext)
+			if err != nil {
+				return nil, err
+			}
+			err = sessionContainer.AssertClaims(claimValidators, userContext)
+			if err != nil {
+				return nil, err
+			}
+
+			return sessionContainer, nil
 		}
 	}
 
