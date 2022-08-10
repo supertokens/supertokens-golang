@@ -115,7 +115,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 				accessTokenPayload[k] = v
 			}
 		}
-		return nil
+		return updateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
 	}
 
 	getTimeCreatedWithContext := func(userContext supertokens.UserContext) (uint64, error) {
