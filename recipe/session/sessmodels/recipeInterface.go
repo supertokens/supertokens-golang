@@ -46,7 +46,7 @@ type RecipeInterface struct {
 
 	GetGlobalClaimValidators   *func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 	ValidateClaims             *func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (ValidateClaimsResponse, error)
-	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ValidateClaimsResponse // TODO change return type
+	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (ValidateClaimsResponse, error) // TODO change return type
 	FetchAndSetClaim           *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (bool, error)
 	SetClaimValue              *func(sessionHandle string, claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error)
 	GetClaimValue              *func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error)

@@ -22,6 +22,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -35,7 +36,17 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 	if err != nil {
 		return sessmodels.SessionContainer{}, err
 	}
-	return (*instance.RecipeImpl.CreateNewSession)(res, userID, accessTokenPayload, sessionData, userContext)
+
+	claimsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimsAddedByOtherRecipes)()
+	finalAccessTokenPayload := accessTokenPayload
+	for _, claim := range claimsAddedByOtherRecipes {
+		update := claim.Build(userID, userContext)
+		for k, v := range update {
+			finalAccessTokenPayload[k] = v
+		}
+	}
+
+	return (*instance.RecipeImpl.CreateNewSession)(res, userID, finalAccessTokenPayload, sessionData, userContext)
 }
 
 func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
@@ -43,7 +54,22 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
+	sessionContainer, err := (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
+	if err != nil {
+		return nil, err
+	}
+
+	if sessionContainer != nil {
+		claimValidators, err := getRequiredClaimValidators(instance.RecipeImpl, sessionContainer, options.OverrideGlobalClaimValidators, userContext)
+		if err != nil {
+			return nil, err
+		}
+		err = sessionContainer.AssertClaims(claimValidators, userContext)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return sessionContainer, nil
 }
 
 func GetSessionInformationWithContext(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
@@ -222,4 +248,76 @@ func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigura
 
 func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string) (*sessmodels.RegenerateAccessTokenResponse, error) {
 	return RegenerateAccessTokenWithContext(accessToken, newAccessTokenPayload, sessionHandle, &map[string]interface{}{})
+}
+
+func ValidateClaimsForSessionHandleWithContext(
+	sessionHandle string,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []claims.SessionClaimValidator,
+	userContext supertokens.UserContext,
+) (sessmodels.ValidateClaimsResponse, error) { // TODO: change return type
+
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return sessmodels.ValidateClaimsResponse{}, err
+	}
+
+	sessionInfo, err := (*instance.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
+	if err != nil {
+		return sessmodels.ValidateClaimsResponse{}, err
+	}
+
+	if sessionInfo == nil {
+		return sessmodels.ValidateClaimsResponse{}, errors.New("session not found")
+	}
+
+	claimValidatorsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimValidatorsAddedByOtherRecipes)()
+	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionInfo.UserId, claimValidatorsAddedByOtherRecipes, userContext)
+	if err != nil {
+		return sessmodels.ValidateClaimsResponse{}, err
+	}
+
+	if overrideGlobalClaimValidators != nil {
+		claimValidators = overrideGlobalClaimValidators(claimValidators, *sessionInfo, userContext)
+	}
+
+	claimValidationResponse, err := (*instance.RecipeImpl.ValidateClaims)(sessionInfo.UserId, sessionInfo.AccessTokenPayload, claimValidators, userContext)
+	if err != nil {
+		return sessmodels.ValidateClaimsResponse{}, err
+	}
+	if claimValidationResponse.AccessTokenPayloadUpdate != nil || len(claimValidationResponse.AccessTokenPayloadUpdate) > 0 {
+		ok, err := (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, claimValidationResponse.AccessTokenPayloadUpdate, userContext)
+		if err != nil {
+			return sessmodels.ValidateClaimsResponse{}, err
+		}
+
+		if !ok {
+			return sessmodels.ValidateClaimsResponse{}, errors.New("could not update access token payload")
+		}
+	}
+	return claimValidationResponse, nil // TODO: change return type
+}
+
+func ValidateClaimsInJWTPayload(
+	userID string,
+	jwtPayload map[string]interface{},
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
+	userContext supertokens.UserContext,
+) (sessmodels.ValidateClaimsResponse, error) { // TODO: change return type
+
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return sessmodels.ValidateClaimsResponse{}, err
+	}
+
+	claimValidatorsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimValidatorsAddedByOtherRecipes)()
+	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(userID, claimValidatorsAddedByOtherRecipes, userContext)
+	if err != nil {
+		return sessmodels.ValidateClaimsResponse{}, err
+	}
+
+	if overrideGlobalClaimValidators != nil {
+		claimValidators = overrideGlobalClaimValidators(claimValidators, userID, userContext)
+	}
+
+	return (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext) // TODO: change return type
 }
