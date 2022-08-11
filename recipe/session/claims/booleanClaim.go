@@ -10,33 +10,15 @@ func (claim *BooleanClaim) GetValidators() BooleanClaimValidators {
 		PrimitiveClaimValidators: primitiveClaimValidators,
 		IsTrue: func(maxAgeInSeconds *int64) SessionClaimValidator {
 			if maxAgeInSeconds != nil {
-				return &hasFreshValueImpl{
-					id:              claim.Key + "-freshVal",
-					claim:           claim,
-					maxAgeInSeconds: *maxAgeInSeconds,
-					val:             true,
-				}
+				return primitiveClaimValidators.HasFreshValue(true, *maxAgeInSeconds, nil)
 			}
-			return &hasValueImpl{
-				id:    claim.Key,
-				claim: claim,
-				val:   true,
-			}
+			return primitiveClaimValidators.HasValue(true, nil)
 		},
 		IsFalse: func(maxAgeInSeconds *int64) SessionClaimValidator {
 			if maxAgeInSeconds != nil {
-				return &hasFreshValueImpl{
-					id:              claim.Key + "-freshVal",
-					claim:           claim,
-					maxAgeInSeconds: *maxAgeInSeconds,
-					val:             false,
-				}
+				return primitiveClaimValidators.HasFreshValue(false, *maxAgeInSeconds, nil)
 			}
-			return &hasValueImpl{
-				id:    claim.Key,
-				claim: claim,
-				val:   false,
-			}
+			return primitiveClaimValidators.HasValue(true, nil)
 		},
 	}
 }
