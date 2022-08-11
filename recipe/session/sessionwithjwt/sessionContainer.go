@@ -20,6 +20,7 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -68,6 +69,31 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 
 		return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 	}
+
+	mergeIntoAccessTokenPayload := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+		return originalSessionClass.MergeIntoAccessTokenPayload(accessTokenPayloadUpdate, userContext)
+	}
+
+	assertClaims := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+		return originalSessionClass.AssertClaims(claimValidators, userContext)
+	}
+
+	fetchAndSetClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+		return originalSessionClass.FetchAndSetClaim(claim, userContext)
+	}
+
+	setClaimValue := func(claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) error {
+		return originalSessionClass.SetClaimValue(claim, value, userContext)
+	}
+
+	getClaimValue := func(claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+		return originalSessionClass.GetClaimValue(claim, userContext)
+	}
+
+	removeClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+		return originalSessionClass.RemoveClaim(claim, userContext)
+	}
+
 	return sessmodels.SessionContainer{
 		RevokeSessionWithContext:            originalSessionClass.RevokeSessionWithContext,
 		GetSessionDataWithContext:           originalSessionClass.GetSessionDataWithContext,
@@ -91,5 +117,12 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
 			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
 		},
+
+		MergeIntoAccessTokenPayload: mergeIntoAccessTokenPayload,
+		AssertClaims:                assertClaims,
+		FetchAndSetClaim:            fetchAndSetClaim,
+		SetClaimValue:               setClaimValue,
+		GetClaimValue:               getClaimValue,
+		RemoveClaim:                 removeClaim,
 	}
 }
