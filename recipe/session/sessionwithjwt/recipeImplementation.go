@@ -33,6 +33,40 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	// Time difference between JWT expiry and access token expiry (JWT expiry = access token expiry + EXPIRY_OFFSET_SECONDS)
 	var EXPIRY_OFFSET_SECONDS uint64 = 30
 
+	originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
+
+	jwtAwareUpdateAccessTokenPayload := func(sessionInformation *sessmodels.SessionInformation, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+		accessTokenPayload := sessionInformation.AccessTokenPayload
+		jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
+
+		if !ok {
+			return originalUpdateAccessTokenPayload(sessionInformation.SessionHandle, newAccessTokenPayload, userContext)
+		}
+
+		existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
+		currentTimeInSeconds := uint64(time.Now().UnixNano() / 1000000000) // time in seconds
+		claims := jwt.MapClaims{}
+		decodedPayload := map[string]interface{}{}
+		_, _, err := new(jwt.Parser).ParseUnverified(existingJWT, claims)
+		if err != nil {
+			return false, err
+		}
+		jwtExpiry := uint64(decodedPayload["exp"].(float64)) - currentTimeInSeconds
+
+		if jwtExpiry <= 0 {
+			// it can come here if someone calls this function well after
+			// the access token and the jwt payload have expired (which can happen if an API takes a VERY long time). In this case, we still want the jwt payload to update, but the resulting JWT should
+			// not be alive for too long (since it's expired already). So we set it to
+			// 1 second lifetime.
+			jwtExpiry = 1
+		}
+		newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), openidRecipeImplementation, userContext)
+		if err != nil {
+			return false, err
+		}
+		return originalUpdateAccessTokenPayload(sessionInformation.SessionHandle, newAccessTokenPayload, userContext)
+	}
+
 	{
 		originalCreateNewSession := *originalImplementation.CreateNewSession
 
@@ -115,8 +149,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	}
 
 	{
-		originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
-
+		// originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
 		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
@@ -128,43 +161,33 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			if sessionInformation == nil {
 				return false, nil
 			}
-			accessTokenPayload := sessionInformation.AccessTokenPayload
-			jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
-			if !ok {
-				return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload, userContext)
-			}
+			return jwtAwareUpdateAccessTokenPayload(sessionInformation, newAccessTokenPayload, userContext)
+		}
+	}
 
-			existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
-
-			currentTimeInSeconds := uint64(time.Now().UnixNano() / 1000000000) // time in seconds
-
-			claims := jwt.MapClaims{}
-			decodedPayload := map[string]interface{}{}
-			_, _, err = new(jwt.Parser).ParseUnverified(existingJWT, claims)
-			if err != nil {
-				return false, err
-			}
-			for key, val := range claims {
-				decodedPayload[key] = val
-			}
-
-			jwtExpiry := uint64(decodedPayload["exp"].(float64)) - currentTimeInSeconds
-
-			if jwtExpiry <= 0 {
-				// it can come here if someone calls this function well after
-				// the access token and the jwt payload have expired (which can happen if an API takes a VERY long time). In this case, we still want the jwt payload to update, but the resulting JWT should
-				// not be alive for too long (since it's expired already). So we set it to
-				// 1 second lifetime.
-				jwtExpiry = 1
-			}
-
-			newAccessTokenPayload, err = addJWTToAccessTokenPayload(newAccessTokenPayload, jwtExpiry, sessionInformation.UserId, jwtPropertyName.(string), openidRecipeImplementation, userContext)
+	{
+		// originalMergeIntoAccessTokenPayload := *originalImplementation.MergeIntoAccessTokenPayload
+		(*originalImplementation.MergeIntoAccessTokenPayload) = func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+			sessionInfo, err := (*originalImplementation.GetSessionInformation)(sessionHandle, userContext)
 			if err != nil {
 				return false, err
 			}
 
-			return originalUpdateAccessTokenPayload(sessionHandle, newAccessTokenPayload, userContext)
+			if sessionInfo == nil {
+				return false, nil
+			}
+
+			newAccessTokenPayload := sessionInfo.AccessTokenPayload
+			for k, v := range accessTokenPayloadUpdate {
+				if v == nil {
+					delete(newAccessTokenPayload, k)
+				} else {
+					newAccessTokenPayload[k] = v
+				}
+			}
+
+			return jwtAwareUpdateAccessTokenPayload(sessionInfo, newAccessTokenPayload, userContext)
 		}
 	}
 
