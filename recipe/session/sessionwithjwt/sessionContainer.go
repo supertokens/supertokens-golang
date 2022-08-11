@@ -74,23 +74,23 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		return originalSessionClass.MergeIntoAccessTokenPayload(accessTokenPayloadUpdate, userContext)
 	}
 
-	assertClaims := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+	assertClaims := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
 		return originalSessionClass.AssertClaims(claimValidators, userContext)
 	}
 
-	fetchAndSetClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+	fetchAndSetClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		return originalSessionClass.FetchAndSetClaim(claim, userContext)
 	}
 
-	setClaimValue := func(claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) error {
+	setClaimValue := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
 		return originalSessionClass.SetClaimValue(claim, value, userContext)
 	}
 
-	getClaimValue := func(claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+	getClaimValue := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
 		return originalSessionClass.GetClaimValue(claim, userContext)
 	}
 
-	removeClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+	removeClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		return originalSessionClass.RemoveClaim(claim, userContext)
 	}
 

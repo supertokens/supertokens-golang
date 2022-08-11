@@ -156,7 +156,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return session.accessToken
 	}
 
-	assertClaims := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+	assertClaims := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
 		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, session.userDataInAccessToken, claimValidators, userContext)
 		if err != nil {
 			return err
@@ -179,21 +179,24 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	fetchAndSetClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
-		update := claim.Build(session.userID, userContext)
+	fetchAndSetClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+		update, err := claim.Build(session.userID, userContext)
+		if err != nil {
+			return err
+		}
 		return mergeIntoAccessTokenPayload(update, userContext)
 	}
 
-	setClaimValue := func(claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) error {
+	setClaimValue := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
 		update := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
 		return mergeIntoAccessTokenPayload(update, userContext)
 	}
 
-	getClaimValue := func(claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+	getClaimValue := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
 		return claim.GetValueFromPayload(session.userDataInAccessToken, userContext), nil
 	}
 
-	removeClaim := func(claim claims.SessionClaim, userContext supertokens.UserContext) error {
+	removeClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		update := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
 		return mergeIntoAccessTokenPayload(update, userContext)
 	}

@@ -9,18 +9,17 @@ import (
 )
 
 func TestBooleanClaim(t *testing.T) {
-	boolClaim := BooleanClaim{
-		PrimitiveClaim: PrimitiveClaim{
-			Key: "test",
-			fetchValue: func(userId string, userContext supertokens.UserContext) interface{} {
-				return map[string]interface{}{}
-			},
+	boolClaim := BooleanClaim(
+		"test",
+		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+			return map[string]interface{}{}, nil
 		},
-	}
+	)
+
 	payload := map[string]interface{}{}
 	payload = boolClaim.AddToPayload_internal(payload, true, nil)
 
-	validators := boolClaim.GetValidators()
+	validators := boolClaim.Validators
 	assert.True(t, validators.IsTrue(nil).Validate(payload, nil).IsValid)
 	assert.False(t, validators.IsFalse(nil).Validate(payload, nil).IsValid)
 

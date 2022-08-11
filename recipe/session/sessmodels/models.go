@@ -136,7 +136,7 @@ type JWTNormalisedConfig struct {
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
-	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator
+	OverrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator
 }
 
 type APIOptions struct {
@@ -178,11 +178,11 @@ type SessionContainer struct {
 	GetExpiryWithContext                func(userContext supertokens.UserContext) (uint64, error)
 	MergeIntoAccessTokenPayload         func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
 
-	AssertClaims     func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error
-	FetchAndSetClaim func(claim claims.SessionClaim, userContext supertokens.UserContext) error
-	SetClaimValue    func(claim claims.SessionClaim, value interface{}, userContext supertokens.UserContext) error
-	GetClaimValue    func(claim claims.SessionClaim, userContext supertokens.UserContext) (interface{}, error)
-	RemoveClaim      func(claim claims.SessionClaim, userContext supertokens.UserContext) error
+	AssertClaims     func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error
+	FetchAndSetClaim func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
+	SetClaimValue    func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error
+	GetClaimValue    func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error)
+	RemoveClaim      func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
 }
 
 type SessionInformation struct {

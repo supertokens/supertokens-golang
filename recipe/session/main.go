@@ -40,7 +40,10 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 	claimsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimsAddedByOtherRecipes)()
 	finalAccessTokenPayload := accessTokenPayload
 	for _, claim := range claimsAddedByOtherRecipes {
-		update := claim.Build(userID, userContext)
+		update, err := claim.Build(userID, userContext)
+		if err != nil {
+			return sessmodels.SessionContainer{}, err
+		}
 		for k, v := range update {
 			finalAccessTokenPayload[k] = v
 		}
@@ -252,7 +255,7 @@ func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string
 
 func ValidateClaimsForSessionHandleWithContext(
 	sessionHandle string,
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
 ) (sessmodels.ValidateClaimsResponse, error) {
 
@@ -310,7 +313,7 @@ func ValidateClaimsForSessionHandleWithContext(
 func ValidateClaimsInJWTPayload(
 	userID string,
 	jwtPayload map[string]interface{},
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
 ) (sessmodels.ValidateClaimsResponse, error) {
 

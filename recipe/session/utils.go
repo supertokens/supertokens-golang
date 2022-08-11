@@ -326,15 +326,15 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 	return keyList
 }
 
-func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []sessmodels.ClaimValidationError {
+func validateClaimsInPayload(claimValidators []*claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []sessmodels.ClaimValidationError {
 	validationErrors := []sessmodels.ClaimValidationError{}
 
 	for _, validator := range claimValidators {
 		claimValidationResult := validator.Validate(newAccessTokenPayload, userContext)
-		supertokens.LogDebugMessage(fmt.Sprint("validateClaimsInPayload ", validator.GetID(), " validation res ", claimValidationResult))
+		supertokens.LogDebugMessage(fmt.Sprint("validateClaimsInPayload ", validator.ID, " validation res ", claimValidationResult))
 		if !claimValidationResult.IsValid {
 			validationErrors = append(validationErrors, sessmodels.ClaimValidationError{
-				ID:     validator.GetID(),
+				ID:     validator.ID,
 				Reason: claimValidationResult.Reason,
 			})
 		}
@@ -345,9 +345,9 @@ func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, new
 func getRequiredClaimValidators(
 	sessionRecipe sessmodels.RecipeInterface,
 	sessionContainer *sessmodels.SessionContainer,
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) ([]claims.SessionClaimValidator, error) { // FIXME This function is duplicated
+) ([]*claims.SessionClaimValidator, error) { // FIXME This function is duplicated
 	claimValidatorsAddedByOtherRecipes := (*sessionRecipe.GetClaimValidatorsAddedByOtherRecipes)()
 	globalClaimValidators, err := (*sessionRecipe.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
 	if err != nil {

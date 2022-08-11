@@ -9,16 +9,16 @@ import (
 )
 
 func TestPrimitiveClaim(t *testing.T) {
-	primClaim := PrimitiveClaim{
-		Key: "test",
-		fetchValue: func(userId string, userContext supertokens.UserContext) interface{} {
-			return map[string]interface{}{}
+	primClaim := PrimitiveClaim(
+		"test",
+		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+			return map[string]interface{}{}, nil
 		},
-	}
+	)
 	payload := map[string]interface{}{}
 	payload = primClaim.AddToPayload_internal(payload, "world", nil)
 
-	validators := primClaim.GetValidators()
+	validators := primClaim.Validators
 	assert.True(t, validators.HasValue("world", nil).Validate(payload, nil).IsValid)
 	assert.False(t, validators.HasValue("hello", nil).Validate(payload, nil).IsValid)
 

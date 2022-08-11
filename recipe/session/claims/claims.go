@@ -4,30 +4,40 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type SessionClaim interface {
-	GetKey() string
-	FetchValue(userId string, userContext supertokens.UserContext) interface{}
-	AddToPayload_internal(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{}
-	RemoveFromPayloadByMerge_internal(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
-	RemoveFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
-	GetValueFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
-	Build(userId string, userContext supertokens.UserContext) map[string]interface{}
-}
-
-func BuildSessionClaim(c SessionClaim, userId string, userContext supertokens.UserContext) map[string]interface{} {
-	value := c.FetchValue(userId, userContext)
-	if value == nil {
-		return map[string]interface{}{}
+func SessionClaim(key string, fetchValue FetchValueFunc) *TypeSessionClaim {
+	sessionClaim := &TypeSessionClaim{
+		Key:        key,
+		FetchValue: fetchValue,
 	}
 
-	return c.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+	sessionClaim.Build = func(userId string, userContext supertokens.UserContext) (map[string]interface{}, error) {
+		value, err := sessionClaim.FetchValue(userId, userContext)
+		if err != nil {
+			return nil, err
+		}
+		return sessionClaim.AddToPayload_internal(map[string]interface{}{}, value, userContext), nil
+	}
+
+	return sessionClaim
 }
 
-type SessionClaimValidator interface {
-	GetID() string
-	GetClaim() SessionClaim
-	ShouldRefetch(payload map[string]interface{}, userContext supertokens.UserContext) bool
-	Validate(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult
+type FetchValueFunc func(userId string, userContext supertokens.UserContext) (interface{}, error)
+
+type TypeSessionClaim struct {
+	Key                               string
+	FetchValue                        FetchValueFunc
+	AddToPayload_internal             func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{}
+	RemoveFromPayloadByMerge_internal func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
+	RemoveFromPayload                 func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
+	GetValueFromPayload               func(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
+	Build                             func(userId string, userContext supertokens.UserContext) (map[string]interface{}, error)
+}
+
+type SessionClaimValidator struct {
+	ID            string
+	Claim         *TypeSessionClaim
+	ShouldRefetch func(payload map[string]interface{}, userContext supertokens.UserContext) bool
+	Validate      func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult
 }
 
 type ClaimValidationResult struct {

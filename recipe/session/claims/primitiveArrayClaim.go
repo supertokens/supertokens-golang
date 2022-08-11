@@ -6,97 +6,324 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type PrimitiveArrayClaim struct {
-	Key        string
-	fetchValue func(userId string, userContext supertokens.UserContext) interface{}
-}
+func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveArrayClaim {
+	sessionClaim := SessionClaim(key, fetchValue)
 
-func (claim *PrimitiveArrayClaim) GetKey() string {
-	return claim.Key
-}
-
-func (claim *PrimitiveArrayClaim) FetchValue(userId string, userContext supertokens.UserContext) interface{} {
-	return claim.fetchValue(userId, userContext)
-}
-
-func (claim *PrimitiveArrayClaim) AddToPayload_internal(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
-	_, ok := value.([]interface{})
-	assertCondition(ok, "value not an array")
-	payload[claim.Key] = map[string]interface{}{
-		"v": value,
-		"t": time.Now().Unix(),
+	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
+		_, ok := value.([]interface{})
+		assertCondition(ok, "value not an array")
+		payload[sessionClaim.Key] = map[string]interface{}{
+			"v": value,
+			"t": time.Now().Unix(),
+		}
+		return payload
 	}
-	return payload
-}
 
-func (claim *PrimitiveArrayClaim) RemoveFromPayloadByMerge_internal(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
-	payload[claim.Key] = nil
-	return payload
-}
-
-func (claim *PrimitiveArrayClaim) RemoveFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
-	delete(payload, claim.Key)
-	return payload
-}
-
-func (claim *PrimitiveArrayClaim) GetValueFromPayload(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
-	if value, ok := payload[claim.Key].(map[string]interface{}); ok {
-		return value["v"]
+	sessionClaim.RemoveFromPayloadByMerge_internal = func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
+		payload[sessionClaim.Key] = nil
+		return payload
 	}
-	return nil
-}
 
-func (claim *PrimitiveArrayClaim) GetLastRefetchTime(payload map[string]interface{}, userContext supertokens.UserContext) int64 {
-	if value, ok := payload[claim.Key].(map[string]interface{}); ok {
-		return value["t"].(int64)
+	sessionClaim.RemoveFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
+		delete(payload, sessionClaim.Key)
+		return payload
 	}
-	return 0
-}
 
-func (claim *PrimitiveArrayClaim) GetValidators() PrimitiveArrayClaimValidators {
-	return PrimitiveArrayClaimValidators{
-		Includes: func(val interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator {
-			claimId := claim.Key + "-includes"
+	sessionClaim.GetValueFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
+		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
+			return value["v"]
+		}
+		return nil
+	}
+
+	primitiveArrayClaim := &TypePrimitiveArrayClaim{
+		TypeSessionClaim: sessionClaim,
+	}
+
+	primitiveArrayClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) int64 {
+		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
+			return value["t"].(int64)
+		}
+		return 0
+	}
+
+	primitiveArrayClaim.Validators = PrimitiveArrayClaimValidators{
+		Includes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			claimId := sessionClaim.Key + "-includes"
 			if id != nil {
 				claimId = *id
 			}
-			return &includesValueImpl{claim: claim, maxAgeInSeconds: maxAgeInSeconds, id: claimId, val: val}
+			return &SessionClaimValidator{
+				ID:    claimId,
+				Claim: sessionClaim,
+				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
+					claimVal, ok := sessionClaim.GetValueFromPayload(payload, userContext).(map[string]interface{})
+					if !ok || claimVal == nil {
+						return true
+					}
+					if maxAgeInSeconds != nil {
+						return claimVal["t"].(int64) < time.Now().Unix()-*maxAgeInSeconds
+					}
+					return false
+				},
+				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
+					claimVal, claimValOk := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
+					assertCondition(claimValOk, "claim value not an array")
+
+					if claimVal == nil {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":           "value does not exist",
+								"expectedToInclude": val,
+								"actualValue":       claimVal,
+							},
+						}
+					}
+					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":         "expired",
+								"ageInSeconds":    ageInSeconds,
+								"maxAgeInSeconds": *maxAgeInSeconds,
+							},
+						}
+					}
+					if !includes(claimVal, val) {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":           "wrong value",
+								"expectedToInclude": val,
+								"actualValue":       claimVal,
+							},
+						}
+					}
+					return ClaimValidationResult{
+						IsValid: true,
+					}
+				},
+			}
 		},
-		Excludes: func(val interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator {
-			claimId := claim.Key + "-excludes"
+		Excludes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			claimId := sessionClaim.Key + "-excludes"
 			if id != nil {
 				claimId = *id
 			}
-			return &excludesValueImpl{claim: claim, maxAgeInSeconds: maxAgeInSeconds, id: claimId, val: val}
+			return &SessionClaimValidator{
+				ID:    claimId,
+				Claim: sessionClaim,
+				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
+					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).(map[string]interface{})
+					if !ok || val == nil {
+						return true
+					}
+					if maxAgeInSeconds != nil {
+						return val["t"].(int64) < time.Now().Unix()-*maxAgeInSeconds
+					}
+					return false
+				},
+				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
+					claimVal, claimValOk := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
+					assertCondition(claimValOk, "claim value not an array")
+
+					if claimVal == nil {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":           "value does not exist",
+								"expectedToInclude": val,
+								"actualValue":       claimVal,
+							},
+						}
+					}
+					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":         "expired",
+								"ageInSeconds":    ageInSeconds,
+								"maxAgeInSeconds": *maxAgeInSeconds,
+							},
+						}
+					}
+					if includes(claimVal, val) {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":           "wrong value",
+								"expectedToExclude": val,
+								"actualValue":       claimVal,
+							},
+						}
+					}
+					return ClaimValidationResult{
+						IsValid: true,
+					}
+				},
+			}
 		},
-		IncludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator {
-			claimId := claim.Key + "-includesAll"
+		IncludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			claimId := sessionClaim.Key + "-includes-all"
 			if id != nil {
 				claimId = *id
 			}
-			return &includesAllValuesImpl{claim: claim, maxAgeInSeconds: maxAgeInSeconds, id: claimId, vals: vals}
+			return &SessionClaimValidator{
+				ID:    claimId,
+				Claim: sessionClaim,
+				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
+					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).(map[string]interface{})
+					if !ok || val == nil {
+						return true
+					}
+					if maxAgeInSeconds != nil {
+						return val["t"].(int64) < time.Now().Unix()-*maxAgeInSeconds
+					}
+					return false
+				},
+				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
+					claimVal, claimValOk := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
+					assertCondition(claimValOk, "claim value not an array")
+
+					if claimVal == nil {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":           "value does not exist",
+								"expectedToInclude": vals,
+								"actualValue":       claimVal,
+							},
+						}
+					}
+					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":         "expired",
+								"ageInSeconds":    ageInSeconds,
+								"maxAgeInSeconds": *maxAgeInSeconds,
+							},
+						}
+					}
+
+					isValid := true
+					valsMap := map[interface{}]bool{}
+					for _, v := range vals {
+						valsMap[v] = true
+					}
+					for _, v := range claimVal {
+						if !valsMap[v] {
+							isValid = false
+							break
+						}
+					}
+
+					if !isValid {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":           "wrong value",
+								"expectedToInclude": vals,
+								"actualValue":       claimVal,
+							},
+						}
+					}
+					return ClaimValidationResult{
+						IsValid: true,
+					}
+				},
+			}
 		},
-		ExcludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator {
-			claimId := claim.Key + "-excludesAll"
+		ExcludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			claimId := sessionClaim.Key + "-excludes-all"
 			if id != nil {
 				claimId = *id
 			}
-			return &excludesAllValuesImpl{claim: claim, maxAgeInSeconds: maxAgeInSeconds, id: claimId, vals: vals}
+			return &SessionClaimValidator{
+				ID:    claimId,
+				Claim: sessionClaim,
+				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
+					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).(map[string]interface{})
+					if !ok || val == nil {
+						return true
+					}
+					if maxAgeInSeconds != nil {
+						return val["t"].(int64) < time.Now().Unix()-*maxAgeInSeconds
+					}
+					return false
+				},
+				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
+					claimVal, claimValOk := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
+					assertCondition(claimValOk, "claim value not an array")
+
+					if claimVal == nil {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":              "value does not exist",
+								"expectedToNotInclude": vals,
+								"actualValue":          claimVal,
+							},
+						}
+					}
+					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":         "expired",
+								"ageInSeconds":    ageInSeconds,
+								"maxAgeInSeconds": *maxAgeInSeconds,
+							},
+						}
+					}
+
+					isValid := true
+					valsMap := map[interface{}]bool{}
+					for _, v := range vals {
+						valsMap[v] = true
+					}
+					for _, v := range claimVal {
+						if valsMap[v] {
+							isValid = false
+							break
+						}
+					}
+
+					if !isValid {
+						return ClaimValidationResult{
+							IsValid: false,
+							Reason: map[string]interface{}{
+								"message":              "wrong value",
+								"expectedToNotInclude": vals,
+								"actualValue":          claimVal,
+							},
+						}
+					}
+					return ClaimValidationResult{
+						IsValid: true,
+					}
+				},
+			}
 		},
 	}
+
+	return primitiveArrayClaim
 }
 
-func (claim *PrimitiveArrayClaim) Build(userId string, userContext supertokens.UserContext) map[string]interface{} {
-	value := claim.fetchValue(userId, userContext)
-	if value == nil {
-		return map[string]interface{}{}
-	}
-	return claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+type TypePrimitiveArrayClaim struct {
+	*TypeSessionClaim
+	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) int64
+	Validators         PrimitiveArrayClaimValidators
 }
 
 type PrimitiveArrayClaimValidators struct {
-	Includes    func(val interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator
-	Excludes    func(val interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator
-	IncludesAll func(vals []interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator
-	ExcludesAll func(vals []interface{}, maxAgeInSeconds *int64, id *string) SessionClaimValidator
+	Includes    func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator
+	Excludes    func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator
+	IncludesAll func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator
+	ExcludesAll func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator
 }
