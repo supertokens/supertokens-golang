@@ -7,7 +7,7 @@ func BooleanClaim(key string, fetchValue FetchValueFunc) *TypeBooleanClaim {
 		TypePrimitiveClaim: *primitiveClaim,
 	}
 
-	booleanClaim.Validators = BooleanClaimValidators{
+	booleanClaim.Validators = &BooleanClaimValidators{
 		PrimitiveClaimValidators: primitiveClaim.Validators,
 
 		IsTrue: func(maxAgeInSeconds *int64) *SessionClaimValidator {
@@ -30,11 +30,11 @@ func BooleanClaim(key string, fetchValue FetchValueFunc) *TypeBooleanClaim {
 
 type TypeBooleanClaim struct {
 	TypePrimitiveClaim
-	Validators BooleanClaimValidators
+	Validators *BooleanClaimValidators
 }
 
 type BooleanClaimValidators struct {
-	PrimitiveClaimValidators
+	*PrimitiveClaimValidators
 	IsTrue  func(maxAgeInSeconds *int64) *SessionClaimValidator
 	IsFalse func(maxAgeInSeconds *int64) *SessionClaimValidator
 }

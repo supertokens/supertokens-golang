@@ -45,7 +45,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
 		}
 		return 0
 	}
-	primitiveClaim.Validators = PrimitiveClaimValidators{
+	primitiveClaim.Validators = &PrimitiveClaimValidators{
 		HasValue: func(val interface{}, id *string) *SessionClaimValidator {
 			validatorId := primitiveClaim.Key
 			if id != nil {
@@ -141,7 +141,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
 type TypePrimitiveClaim struct {
 	*TypeSessionClaim
 	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) int64
-	Validators         PrimitiveClaimValidators
+	Validators         *PrimitiveClaimValidators
 }
 
 type PrimitiveClaimValidators struct {

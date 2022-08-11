@@ -47,7 +47,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 		return 0
 	}
 
-	primitiveArrayClaim.Validators = PrimitiveArrayClaimValidators{
+	primitiveArrayClaim.Validators = &PrimitiveArrayClaimValidators{
 		Includes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
 			claimId := sessionClaim.Key + "-includes"
 			if id != nil {
@@ -318,7 +318,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 type TypePrimitiveArrayClaim struct {
 	*TypeSessionClaim
 	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) int64
-	Validators         PrimitiveArrayClaimValidators
+	Validators         *PrimitiveArrayClaimValidators
 }
 
 type PrimitiveArrayClaimValidators struct {
