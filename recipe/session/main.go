@@ -254,7 +254,7 @@ func ValidateClaimsForSessionHandleWithContext(
 	sessionHandle string,
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) (sessmodels.ValidateClaimsResponse, error) { // TODO: change return type
+) (sessmodels.ValidateClaimsResponse, error) {
 
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
@@ -267,7 +267,9 @@ func ValidateClaimsForSessionHandleWithContext(
 	}
 
 	if sessionInfo == nil {
-		return sessmodels.ValidateClaimsResponse{}, errors.New("session not found")
+		return sessmodels.ValidateClaimsResponse{
+			SessionDoesNotExistError: &struct{}{},
+		}, nil
 	}
 
 	claimValidatorsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimValidatorsAddedByOtherRecipes)()
@@ -291,10 +293,18 @@ func ValidateClaimsForSessionHandleWithContext(
 		}
 
 		if !ok {
-			return sessmodels.ValidateClaimsResponse{}, errors.New("could not update access token payload")
+			return sessmodels.ValidateClaimsResponse{
+				SessionDoesNotExistError: &struct{}{},
+			}, nil
 		}
 	}
-	return claimValidationResponse, nil // TODO: change return type
+	return sessmodels.ValidateClaimsResponse{
+		OK: &struct {
+			InvalidClaims []sessmodels.ClaimValidationError
+		}{
+			InvalidClaims: claimValidationResponse.InvalidClaims,
+		},
+	}, nil
 }
 
 func ValidateClaimsInJWTPayload(
@@ -302,7 +312,7 @@ func ValidateClaimsInJWTPayload(
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) (sessmodels.ValidateClaimsResponse, error) { // TODO: change return type
+) (sessmodels.ValidateClaimsResponse, error) {
 
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
@@ -319,5 +329,5 @@ func ValidateClaimsInJWTPayload(
 		claimValidators = overrideGlobalClaimValidators(claimValidators, userID, userContext)
 	}
 
-	return (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext) // TODO: change return type
+	return (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext)
 }

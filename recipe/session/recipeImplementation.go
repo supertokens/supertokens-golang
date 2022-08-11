@@ -223,11 +223,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return claimValidatorsAddedByOtherRecipes, nil
 	}
 
-	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResponse, error) {
+	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
 		accessTokenPayloadUpdate := map[string]interface{}{}
 		origSessionClaimPayloadJSON, err := json.Marshal(accessTokenPayload)
 		if err != nil {
-			return sessmodels.ValidateClaimsResponse{}, err
+			return sessmodels.ValidateClaimsResult{}, err
 		}
 
 		for _, validator := range claimValidators {
@@ -247,14 +247,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		newSessionClaimPayloadJSON, err := json.Marshal(accessTokenPayload)
 		if err != nil {
-			return sessmodels.ValidateClaimsResponse{}, err
+			return sessmodels.ValidateClaimsResult{}, err
 		}
 		if !bytes.Equal(origSessionClaimPayloadJSON, newSessionClaimPayloadJSON) {
 			accessTokenPayloadUpdate = accessTokenPayload
 		}
 
 		invalidClaims := validateClaimsInPayload(claimValidators, accessTokenPayload, userContext)
-		return sessmodels.ValidateClaimsResponse{
+		return sessmodels.ValidateClaimsResult{
 			InvalidClaims:            invalidClaims,
 			AccessTokenPayloadUpdate: accessTokenPayloadUpdate,
 		}, nil
@@ -263,8 +263,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResponse, error) {
 		invalidClaims := validateClaimsInPayload(claimValidators, jwtPayload, userContext)
 		return sessmodels.ValidateClaimsResponse{
-			InvalidClaims: invalidClaims,
-		}, nil // TODO change return type
+			OK: &struct {
+				InvalidClaims []sessmodels.ClaimValidationError
+			}{
+				InvalidClaims: invalidClaims,
+			},
+		}, nil
 	}
 
 	fetchAndSetClaim := func(sessionHandle string, claim claims.SessionClaim, userContext supertokens.UserContext) (bool, error) {
