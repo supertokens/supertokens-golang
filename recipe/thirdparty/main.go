@@ -76,7 +76,13 @@ func CreateEmailVerificationTokenWithContext(userID string, userContext supertok
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email, userContext)
+	if email.EmailDoesNotExistError != nil {
+		return evmodels.CreateEmailVerificationTokenResponse{}, errors.New("email does not exist")
+	}
+	if email.UnknownUserIDError != nil {
+		return evmodels.CreateEmailVerificationTokenResponse{}, errors.New("unknown user id")
+	}
+	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
 }
 
 func VerifyEmailUsingTokenWithContext(token string, userContext supertokens.UserContext) (*tpmodels.User, error) {
@@ -103,7 +109,13 @@ func IsEmailVerifiedWithContext(userID string, userContext supertokens.UserConte
 	if err != nil {
 		return false, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email, userContext)
+	if email.EmailDoesNotExistError != nil {
+		return true, nil
+	}
+	if email.UnknownUserIDError != nil {
+		return false, errors.New("unknown user id")
+	}
+	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email.OK.Email, userContext)
 }
 
 func RevokeEmailVerificationTokensWithContext(userID string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
@@ -115,7 +127,13 @@ func RevokeEmailVerificationTokensWithContext(userID string, userContext superto
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email, userContext)
+	if email.EmailDoesNotExistError != nil {
+		return evmodels.RevokeEmailVerificationTokensResponse{}, errors.New("email does not exist")
+	}
+	if email.UnknownUserIDError != nil {
+		return evmodels.RevokeEmailVerificationTokensResponse{}, errors.New("unknown user id")
+	}
+	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email.OK.Email, userContext)
 }
 
 func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
@@ -127,7 +145,14 @@ func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email, userContext)
+	if email.EmailDoesNotExistError != nil {
+		return evmodels.UnverifyEmailResponse{}, errors.New("email does not exist")
+	}
+	if email.UnknownUserIDError != nil {
+		return evmodels.UnverifyEmailResponse{}, errors.New("unknown user id")
+	}
+
+	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email.OK.Email, userContext)
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {

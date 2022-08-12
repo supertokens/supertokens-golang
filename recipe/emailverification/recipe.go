@@ -33,11 +33,16 @@ type Recipe struct {
 	RecipeImpl    evmodels.RecipeInterface
 	APIImpl       evmodels.APIInterface
 	EmailDelivery emaildelivery.Ingredient
+
+	GetEmailForUserID        evmodels.TypeGetEmailForUserID
+	AddGetEmailForUserIdFunc func(function evmodels.TypeGetEmailForUserID)
 }
 
 var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+	getEmailForUserIdFuncsFromOtherRecipes := []evmodels.TypeGetEmailForUserID{}
+
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -57,6 +62,26 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		r.EmailDelivery = *emailDeliveryIngredient
 	} else {
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
+	}
+
+	r.GetEmailForUserID = func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+		if r.Config.GetEmailForUserID != nil {
+			return r.Config.GetEmailForUserID(userID, userContext)
+		}
+
+		var err error
+		var email evmodels.TypeEmailInfo
+		for _, getEmailForUserIdFunc := range getEmailForUserIdFuncsFromOtherRecipes {
+			email, err = getEmailForUserIdFunc(userID, userContext)
+			if err == nil {
+				return email, nil
+			}
+		}
+		return evmodels.TypeEmailInfo{}, err
+	}
+
+	r.AddGetEmailForUserIdFunc = func(function evmodels.TypeGetEmailForUserID) {
+		getEmailForUserIdFuncsFromOtherRecipes = append(getEmailForUserIdFuncsFromOtherRecipes, function)
 	}
 
 	return *r, nil

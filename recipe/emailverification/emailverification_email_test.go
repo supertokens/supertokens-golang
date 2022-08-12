@@ -37,8 +37,8 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
 		},
@@ -79,8 +79,8 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					funcCalled = true
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
 		},
@@ -132,8 +132,8 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					funcCalled = true
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
 		},
@@ -201,8 +201,8 @@ func TestSMTPServiceOverride(t *testing.T) {
 				EmailDelivery: &emaildelivery.TypeInput{
 					Service: smtpService,
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
 		},
@@ -270,8 +270,8 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 				EmailDelivery: &emaildelivery.TypeInput{
 					Service: smtpService,
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
 		},

@@ -16,6 +16,7 @@
 package api
 
 import (
+	"errors"
 	"fmt"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
@@ -56,7 +57,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
-		isVerified, err := (*options.RecipeImplementation.IsEmailVerified)(userID, email, userContext)
+		isVerified, err := (*options.RecipeImplementation.IsEmailVerified)(userID, email.OK.Email, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
@@ -81,13 +82,19 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email, userContext)
+		if email.UnknownUserIDError != nil {
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, errors.New("unknown userid")
+		}
+		if email.EmailDoesNotExistError != nil {
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, errors.New("email does not exist")
+		}
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
 
 		if response.EmailAlreadyVerifiedError != nil {
-			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to %s because it is already verified", email))
+			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to %s because it is already verified", email.OK.Email))
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
@@ -95,7 +102,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 
 		user := evmodels.User{
 			ID:    userID,
-			Email: email,
+			Email: email.OK.Email,
 		}
 		emailVerificationURL, err := options.Config.GetEmailVerificationURL(user, userContext)
 		if err != nil {
