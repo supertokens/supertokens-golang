@@ -20,7 +20,12 @@ import (
 )
 
 func Init(config TypeInput) error {
-	return supertokensInit(config)
+	err := supertokensInit(config)
+	if err != nil {
+		return err
+	}
+	runPostInitCallbacks()
+	return nil
 }
 
 func Middleware(theirHandler http.Handler) http.Handler {

@@ -16,8 +16,6 @@
 package emailverification
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
@@ -66,9 +64,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) evmodels.TypeNormalisedInput {
 	return evmodels.TypeNormalisedInput{
-		GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-			return evmodels.TypeEmailInfo{}, errors.New("not defined by user")
-		},
 		GetEmailVerificationURL: DefaultGetEmailVerificationURL(appInfo),
 		GetEmailDeliveryConfig:  nil,
 		Override: evmodels.OverrideStruct{

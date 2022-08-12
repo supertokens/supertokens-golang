@@ -72,6 +72,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.EmailVerificationRecipe = *emailVerificationInstance
 	}
 
+	supertokens.AddPostInitCallback(func() {
+		emailVerificationRecipe, _ := emailverification.GetRecipeInstanceOrThrowError()
+		if emailVerificationRecipe != nil {
+			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
+		}
+	})
+
 	return *r, nil
 }
 

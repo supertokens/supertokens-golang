@@ -21,12 +21,22 @@ import (
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
 	var result map[string]interface{}
+	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+
 	if options.Req.Method == http.MethodPost {
+		sessionRequired := false
+		sessionContainer, err := session.GetSessionWithContext(options.Req, options.Res, &sessmodels.VerifySessionOptions{SessionRequired: &sessionRequired}, userContext)
+		if err != nil {
+			return err
+		}
+
 		if apiImplementation.VerifyEmailPOST == nil ||
 			(*apiImplementation.VerifyEmailPOST) == nil {
 			options.OtherHandler(options.Res, options.Req)
@@ -51,7 +61,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options, sessionContainer, userContext)
 		if err != nil {
 			return err
 		}
@@ -70,13 +80,18 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.ErrorIfNoResponse(options.Res)
 		}
 	} else {
+		sessionContainer, err := session.GetSessionWithContext(options.Req, options.Res, &sessmodels.VerifySessionOptions{}, userContext)
+		if err != nil {
+			return err
+		}
+
 		if apiImplementation.IsEmailVerifiedGET == nil ||
 			(*apiImplementation.IsEmailVerifiedGET) == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
 		}
 
-		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, sessionContainer, userContext)
 		if err != nil {
 			return err
 		}

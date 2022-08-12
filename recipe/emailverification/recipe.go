@@ -84,10 +84,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		getEmailForUserIdFuncsFromOtherRecipes = append(getEmailForUserIdFuncsFromOtherRecipes, function)
 	}
 
+	initClaims()
+
 	return *r, nil
 }
 
-func getRecipeInstanceOrThrowError() (*Recipe, error) {
+func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if singletonInstance != nil {
 		return singletonInstance, nil
 	}
@@ -147,6 +149,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Res:                  res,
 		OtherHandler:         theirHandler,
 		EmailDelivery:        r.EmailDelivery,
+		GetEmailForUserID:    r.GetEmailForUserID,
 	}
 	if id == generateEmailVerifyTokenAPI {
 		return api.GenerateEmailVerifyToken(r.APIImpl, options)

@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -30,12 +31,13 @@ type APIOptions struct {
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc
 	EmailDelivery        emaildelivery.Ingredient
+	GetEmailForUserID    TypeGetEmailForUserID
 }
 
 type APIInterface struct {
-	VerifyEmailPOST              *func(token string, options APIOptions, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
-	IsEmailVerifiedGET           *func(options APIOptions, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
-	GenerateEmailVerifyTokenPOST *func(options APIOptions, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
+	VerifyEmailPOST              *func(token string, options APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
+	IsEmailVerifiedGET           *func(options APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
+	GenerateEmailVerifyTokenPOST *func(options APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
 }
 
 type VerifyEmailPOSTResponse struct {
