@@ -89,7 +89,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 				return emailRes, nil
 			}
 		}
-		return evmodels.TypeEmailInfo{}, err
+		return evmodels.TypeEmailInfo{
+			UnknownUserIDError: &struct{}{},
+		}, nil
 	}
 
 	r.AddGetEmailForUserIdFunc = func(function evmodels.TypeGetEmailForUserID) {
