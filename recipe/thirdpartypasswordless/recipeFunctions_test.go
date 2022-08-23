@@ -22,6 +22,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
@@ -82,12 +83,12 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	})
 	assert.NoError(t, err)
 
-	emailVerificationToken, err := CreateEmailVerificationToken(resp.OK.User.ID)
+	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, "FIXME")
 	assert.NoError(t, err)
 
-	VerifyEmailUsingToken(emailVerificationToken.OK.Token)
+	emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token)
 
-	isVerfied, err := IsEmailVerified(resp.OK.User.ID)
+	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, "FIXME")
 	assert.NoError(t, err)
 	assert.True(t, isVerfied)
 
@@ -97,7 +98,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	})
 	assert.NoError(t, err)
 
-	isVerfied1, err := IsEmailVerified(resp1.OK.User.ID)
+	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, "FIXME")
 	assert.NoError(t, err)
 	assert.False(t, isVerfied1)
 }
@@ -152,11 +153,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	response, err := PasswordlessSignInUpByEmail("test@example.com")
 	assert.NoError(t, err)
 
-	isVerified, err := IsEmailVerified(response.User.ID)
+	isVerified, err := emailverification.IsEmailVerified(response.User.ID, "FIXME")
 	assert.NoError(t, err)
 	assert.True(t, isVerified)
 
-	emailVerificationResp, err := CreateEmailVerificationToken(response.User.ID)
+	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, "FIXME")
 	assert.NoError(t, err)
 	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.Nil(t, emailVerificationResp.OK)
@@ -164,11 +165,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	response, err = PasswordlessSignInUpByPhoneNumber("+123456789012")
 	assert.NoError(t, err)
 
-	isVerified, err = IsEmailVerified(response.User.ID)
+	isVerified, err = emailverification.IsEmailVerified(response.User.ID, "FIXME")
 	assert.NoError(t, err)
 	assert.True(t, isVerified)
 
-	emailVerificationResp, err = CreateEmailVerificationToken(response.User.ID)
+	emailVerificationResp, err = emailverification.CreateEmailVerificationToken(response.User.ID, "FIXME")
 	assert.NoError(t, err)
 	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.Nil(t, emailVerificationResp.OK)

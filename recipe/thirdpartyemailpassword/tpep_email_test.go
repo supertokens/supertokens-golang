@@ -565,101 +565,101 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 	assert.NotEmpty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
 }
 
-func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
+// func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
 
-	customCalled := false
-	email := ""
-	emailVerifyLink := ""
+// 	customCalled := false
+// 	email := ""
+// 	emailVerifyLink := ""
 
-	tpepConfig := &tpepmodels.TypeInput{
-		EmailVerificationFeature: &tpepmodels.TypeInputEmailVerificationFeature{
-			CreateAndSendCustomEmail: func(user tpepmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				emailVerifyLink = emailVerificationURLWithToken
-				customCalled = true
-			},
-		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
-	defer testServer.Close()
+// 	tpepConfig := &tpepmodels.TypeInput{
+// 		EmailVerificationFeature: &tpepmodels.TypeInputEmailVerificationFeature{
+// 			CreateAndSendCustomEmail: func(user tpepmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+// 				email = user.Email
+// 				emailVerifyLink = emailVerificationURLWithToken
+// 				customCalled = true
+// 			},
+// 		},
+// 	}
+// 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+// 	defer testServer.Close()
 
-	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
-	assert.NoError(t, err)
+// 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
+// 	assert.NoError(t, err)
 
-	cookies := resp.Cookies()
-	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+// 	cookies := resp.Cookies()
+// 	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// Default handler not called
-	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
+// 	// Default handler not called
+// 	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
+// 	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
+// 	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
 
-	// Custom handler called
-	assert.Equal(t, email, "test@example.com")
-	assert.NotEmpty(t, emailVerifyLink)
-	assert.True(t, customCalled)
-}
+// 	// Custom handler called
+// 	assert.Equal(t, email, "test@example.com")
+// 	assert.NotEmpty(t, emailVerifyLink)
+// 	assert.True(t, customCalled)
+// }
 
-func TestBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
+// func TestBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
 
-	customCalled := false
-	email := ""
-	emailVerifyLink := ""
-	var thirdparty *struct {
-		ID     string `json:"id"`
-		UserID string `json:"userId"`
-	}
+// 	customCalled := false
+// 	email := ""
+// 	emailVerifyLink := ""
+// 	var thirdparty *struct {
+// 		ID     string `json:"id"`
+// 		UserID string `json:"userId"`
+// 	}
 
-	tpepConfig := &tpepmodels.TypeInput{
-		EmailVerificationFeature: &tpepmodels.TypeInputEmailVerificationFeature{
-			CreateAndSendCustomEmail: func(user tpepmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				emailVerifyLink = emailVerificationURLWithToken
-				thirdparty = user.ThirdParty
-				customCalled = true
-			},
-		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
-	defer testServer.Close()
+// 	tpepConfig := &tpepmodels.TypeInput{
+// 		EmailVerificationFeature: &tpepmodels.TypeInputEmailVerificationFeature{
+// 			CreateAndSendCustomEmail: func(user tpepmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+// 				email = user.Email
+// 				emailVerifyLink = emailVerificationURLWithToken
+// 				thirdparty = user.ThirdParty
+// 				customCalled = true
+// 			},
+// 		},
+// 		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+// 	}
+// 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+// 	defer testServer.Close()
 
-	signinupPostData := PostDataForCustomProvider{
-		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
-			"access_token": "saodiasjodai",
-		},
-		RedirectUri: "http://127.0.0.1/callback",
-	}
+// 	signinupPostData := PostDataForCustomProvider{
+// 		ThirdPartyId: "custom",
+// 		AuthCodeResponse: map[string]string{
+// 			"access_token": "saodiasjodai",
+// 		},
+// 		RedirectUri: "http://127.0.0.1/callback",
+// 	}
 
-	postBody, err := json.Marshal(signinupPostData)
-	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
-	assert.NoError(t, err)
+// 	postBody, err := json.Marshal(signinupPostData)
+// 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+// 	assert.NoError(t, err)
 
-	cookies := resp.Cookies()
-	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+// 	cookies := resp.Cookies()
+// 	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// Default handler not called
-	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
+// 	// Default handler not called
+// 	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
+// 	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
+// 	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
 
-	// Custom handler called
-	assert.Equal(t, email, "test@example.com")
-	assert.NotEmpty(t, emailVerifyLink)
-	assert.NotNil(t, thirdparty)
-	assert.True(t, customCalled)
-}
+// 	// Custom handler called
+// 	assert.Equal(t, email, "test@example.com")
+// 	assert.NotEmpty(t, emailVerifyLink)
+// 	assert.NotNil(t, thirdparty)
+// 	assert.True(t, customCalled)
+// }
 
 func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	BeforeEach()

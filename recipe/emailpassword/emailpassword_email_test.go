@@ -24,6 +24,7 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -374,16 +375,19 @@ func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	tpepConfig := &epmodels.TypeInput{
-		EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-			CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+	tpepConfig := &epmodels.TypeInput{}
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(nil),
+		emailverification.Init(evmodels.TypeInput{
+			CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 				email = user.Email
 				emailVerifyLink = emailVerificationURLWithToken
 				customCalled = true
 			},
-		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)

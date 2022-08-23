@@ -16,18 +16,22 @@
 package emailverification
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput) evmodels.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput) (evmodels.TypeNormalisedInput, error) {
+	if config.Mode != "REQUIRED" && config.Mode != "OPTIONAL" {
+		return evmodels.TypeNormalisedInput{}, errors.New("mode must be either REQUIRED or OPTIONAL")
+	}
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if config.GetEmailVerificationURL != nil {
-		typeNormalisedInput.GetEmailVerificationURL = config.GetEmailVerificationURL
-	}
+	typeNormalisedInput.Mode = config.Mode
+	typeNormalisedInput.GetEmailForUserID = config.GetEmailForUserID
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
@@ -59,13 +63,15 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	if config.GetEmailForUserID != nil {
 		typeNormalisedInput.GetEmailForUserID = config.GetEmailForUserID
 	}
-	return typeNormalisedInput
+	return typeNormalisedInput, nil
 }
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) evmodels.TypeNormalisedInput {
 	return evmodels.TypeNormalisedInput{
-		GetEmailVerificationURL: DefaultGetEmailVerificationURL(appInfo),
-		GetEmailDeliveryConfig:  nil,
+		GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+			return evmodels.TypeEmailInfo{}, errors.New("not defined by user")
+		},
+		GetEmailDeliveryConfig: nil,
 		Override: evmodels.OverrideStruct{
 			Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 				return originalImplementation

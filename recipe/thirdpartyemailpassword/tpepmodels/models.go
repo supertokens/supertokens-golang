@@ -18,9 +18,7 @@ package tpepmodels
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type User struct {
@@ -38,16 +36,10 @@ type TypeContext struct {
 	ThirdPartyAuthCodeResponse interface{}
 }
 
-type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
-}
-
 type TypeInput struct {
 	SignUpFeature                  *epmodels.TypeInputSignUp
 	Providers                      []tpmodels.TypeProvider
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
-	EmailVerificationFeature       *TypeInputEmailVerificationFeature
 	Override                       *OverrideStruct
 	EmailDelivery                  *emaildelivery.TypeInput
 }
@@ -56,15 +48,13 @@ type TypeNormalisedInput struct {
 	SignUpFeature                  *epmodels.TypeInputSignUp
 	Providers                      []tpmodels.TypeProvider
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
-	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
 	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
-	Functions                func(originalImplementation RecipeInterface) RecipeInterface
-	APIs                     func(originalImplementation APIInterface) APIInterface
-	EmailVerificationFeature *evmodels.OverrideStruct
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
 }
 
 type EmailStruct struct {

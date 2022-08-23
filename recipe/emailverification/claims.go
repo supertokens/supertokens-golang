@@ -11,7 +11,7 @@ func initClaims() {
 	claims.EmailVerificationClaim = claims.NewEmailVerificationClaim(
 		"st-ev",
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
-			instance, err := GetRecipeInstanceOrThrowError()
+			instance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return nil, err
 			}

@@ -129,35 +129,41 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			WebsiteDomain: "http://localhost:" + webPort,
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+					latestURLWithToken = emailVerificationURLWithToken
+				},
+
+				Override: &evmodels.OverrideStruct{
+					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
+						ogGenerateEmailVerifyTokenPOST := *originalImplementation.GenerateEmailVerifyTokenPOST
+						ogVerifyEmailPOST := *originalImplementation.VerifyEmailPOST
+
+						(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verification code", false)
+							if gr != nil {
+								return evmodels.GenerateEmailVerifyTokenPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogGenerateEmailVerifyTokenPOST(options, sessionContainer, userContext)
+						}
+
+						(*originalImplementation.VerifyEmailPOST) = func(token string, options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
+							if gr != nil {
+								return evmodels.VerifyEmailPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogVerifyEmailPOST(token, options, sessionContainer, userContext)
+						}
+						return originalImplementation
+					},
+				},
+			}),
 			emailpassword.Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
-					EmailVerificationFeature: &evmodels.OverrideStruct{
-						APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
-							ogGenerateEmailVerifyTokenPOST := *originalImplementation.GenerateEmailVerifyTokenPOST
-							ogVerifyEmailPOST := *originalImplementation.VerifyEmailPOST
-
-							(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
-								gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verification code", false)
-								if gr != nil {
-									return evmodels.GenerateEmailVerifyTokenPOSTResponse{
-										GeneralError: gr,
-									}, nil
-								}
-								return ogGenerateEmailVerifyTokenPOST(options, sessionContainer, userContext)
-							}
-
-							(*originalImplementation.VerifyEmailPOST) = func(token string, options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-								gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
-								if gr != nil {
-									return evmodels.VerifyEmailPOSTResponse{
-										GeneralError: gr,
-									}, nil
-								}
-								return ogVerifyEmailPOST(token, options, sessionContainer, userContext)
-							}
-							return originalImplementation
-						},
-					},
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
 						ogGeneratePasswordResetTokenPOST := *originalImplementation.GeneratePasswordResetTokenPOST
@@ -223,11 +229,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 						latestURLWithToken = passwordResetURLWithToken
-					},
-				},
-				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-						latestURLWithToken = emailVerificationURLWithToken
 					},
 				},
 			}),

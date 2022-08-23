@@ -27,7 +27,7 @@ func Init(config evmodels.TypeInput) supertokens.Recipe {
 }
 
 func CreateEmailVerificationTokenWithContext(userID, email string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.CreateEmailVerificationTokenResponse{}, err
 	}
@@ -35,7 +35,7 @@ func CreateEmailVerificationTokenWithContext(userID, email string, userContext s
 }
 
 func VerifyEmailUsingTokenWithContext(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.VerifyEmailUsingTokenResponse{}, err
 	}
@@ -43,7 +43,7 @@ func VerifyEmailUsingTokenWithContext(token string, userContext supertokens.User
 }
 
 func IsEmailVerifiedWithContext(userID, email string, userContext supertokens.UserContext) (bool, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
@@ -51,7 +51,7 @@ func IsEmailVerifiedWithContext(userID, email string, userContext supertokens.Us
 }
 
 func RevokeEmailVerificationTokensWithContext(userID, email string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.RevokeEmailVerificationTokensResponse{}, err
 	}
@@ -59,7 +59,7 @@ func RevokeEmailVerificationTokensWithContext(userID, email string, userContext 
 }
 
 func UnverifyEmailWithContext(userID, email string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return evmodels.UnverifyEmailResponse{}, err
 	}
@@ -67,7 +67,7 @@ func UnverifyEmailWithContext(userID, email string, userContext supertokens.User
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-	instance, err := GetRecipeInstanceOrThrowError()
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}

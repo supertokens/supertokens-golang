@@ -25,6 +25,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -474,7 +475,7 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 
 	user := result["user"].(map[string]interface{})
 
-	isVerified, err := IsEmailVerified(user["id"].(string))
+	isVerified, err := emailverification.IsEmailVerified(user["id"].(string), "FIXME")
 	if err != nil {
 		t.Error(err.Error())
 	}

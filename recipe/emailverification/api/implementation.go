@@ -71,6 +71,10 @@ func MakeAPIImplementation() evmodels.APIInterface {
 	}
 
 	generateEmailVerifyTokenPOST := func(options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
+		stInstance, err := supertokens.GetInstanceOrThrowError()
+		if err != nil {
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
+		}
 		if sessionContainer == nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
@@ -104,11 +108,13 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			ID:    userID,
 			Email: email.OK.Email,
 		}
-		emailVerificationURL, err := options.Config.GetEmailVerificationURL(user, userContext)
-		if err != nil {
-			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
-		}
-		emailVerifyLink := emailVerificationURL + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
+		emailVerificationURL := fmt.Sprintf(
+			"%s%s/verify-email?token=%s&rid=%s",
+			stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+			stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+			response.OK.Token,
+			options.RecipeID,
+		)
 
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email.OK.Email))
 		err = (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
@@ -117,7 +123,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 					ID:    user.ID,
 					Email: user.Email,
 				},
-				EmailVerifyLink: emailVerifyLink,
+				EmailVerifyLink: emailVerificationURL,
 			},
 		}, userContext)
 		if err != nil {

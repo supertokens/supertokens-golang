@@ -44,7 +44,10 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 	getEmailForUserIdFuncsFromOtherRecipes := []evmodels.TypeGetEmailForUserID{}
 
 	r := &Recipe{}
-	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
+	verifiedConfig, err := validateAndNormaliseUserInput(appInfo, config)
+	if err != nil {
+		return Recipe{}, err
+	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
@@ -89,7 +92,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 	return *r, nil
 }
 
-func GetRecipeInstanceOrThrowError() (*Recipe, error) {
+func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	if singletonInstance != nil {
 		return singletonInstance, nil
 	}

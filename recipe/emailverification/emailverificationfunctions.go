@@ -27,12 +27,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func DefaultGetEmailVerificationURL(appInfo supertokens.NormalisedAppinfo) func(evmodels.User, supertokens.UserContext) (string, error) {
-	return func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
-		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/verify-email", nil
-	}
-}
-
 // used for testing purposes.
 var EmailVerificationEmailSentForTest = false
 var EmailVerificationDataForTest = struct {

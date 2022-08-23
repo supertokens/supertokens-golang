@@ -16,12 +16,9 @@
 package emailpassword
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -85,95 +82,6 @@ func UpdateEmailOrPasswordWithContext(userId string, email *string, password *st
 	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, userContext)
 }
 
-func CreateEmailVerificationTokenWithContext(userID string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return evmodels.CreateEmailVerificationTokenResponse{}, err
-	}
-	email, err := instance.getEmailForUserId(userID, userContext)
-	if err != nil {
-		return evmodels.CreateEmailVerificationTokenResponse{}, err
-	}
-	if email.EmailDoesNotExistError != nil {
-		return evmodels.CreateEmailVerificationTokenResponse{}, errors.New("email does not exist")
-	}
-	if email.UnknownUserIDError != nil {
-		return evmodels.CreateEmailVerificationTokenResponse{}, errors.New("unknown user id")
-	}
-
-	return (*instance.EmailVerificationRecipe.RecipeImpl.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
-}
-
-func VerifyEmailUsingTokenWithContext(token string, userContext supertokens.UserContext) (*epmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return nil, err
-	}
-	response, err := (*instance.EmailVerificationRecipe.RecipeImpl.VerifyEmailUsingToken)(token, userContext)
-	if err != nil {
-		return nil, err
-	}
-	if response.EmailVerificationInvalidTokenError != nil {
-		return nil, errors.New("email verification token is invalid")
-	}
-	return (*instance.RecipeImpl.GetUserByID)(response.OK.User.ID, userContext)
-}
-
-func IsEmailVerifiedWithContext(userID string, userContext supertokens.UserContext) (bool, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return false, err
-	}
-	email, err := instance.getEmailForUserId(userID, userContext)
-	if err != nil {
-		return false, err
-	}
-	if email.EmailDoesNotExistError != nil {
-		return true, nil
-	}
-	if email.UnknownUserIDError != nil {
-		return false, errors.New("unknown user id")
-	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.IsEmailVerified)(userID, email.OK.Email, userContext)
-}
-
-func RevokeEmailVerificationTokensWithContext(userID string, userContext supertokens.UserContext) (evmodels.RevokeEmailVerificationTokensResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return evmodels.RevokeEmailVerificationTokensResponse{}, err
-	}
-	email, err := instance.getEmailForUserId(userID, userContext)
-	if err != nil {
-		return evmodels.RevokeEmailVerificationTokensResponse{}, err
-	}
-	if email.EmailDoesNotExistError != nil {
-		return evmodels.RevokeEmailVerificationTokensResponse{}, errors.New("email does not exist")
-	}
-	if email.UnknownUserIDError != nil {
-		return evmodels.RevokeEmailVerificationTokensResponse{}, errors.New("unknown user id")
-	}
-
-	return (*instance.EmailVerificationRecipe.RecipeImpl.RevokeEmailVerificationTokens)(userID, email.OK.Email, userContext)
-}
-
-func UnverifyEmailWithContext(userID string, userContext supertokens.UserContext) (evmodels.UnverifyEmailResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return evmodels.UnverifyEmailResponse{}, err
-	}
-	email, err := instance.getEmailForUserId(userID, userContext)
-	if err != nil {
-		return evmodels.UnverifyEmailResponse{}, err
-	}
-	if email.EmailDoesNotExistError != nil {
-		return evmodels.UnverifyEmailResponse{}, errors.New("email does not exist")
-	}
-	if email.UnknownUserIDError != nil {
-		return evmodels.UnverifyEmailResponse{}, errors.New("unknown user id")
-	}
-	return (*instance.EmailVerificationRecipe.RecipeImpl.UnverifyEmail)(userID, email.OK.Email, userContext)
-}
-
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
@@ -208,26 +116,6 @@ func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPa
 
 func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	return UpdateEmailOrPasswordWithContext(userId, email, password, &map[string]interface{}{})
-}
-
-func CreateEmailVerificationToken(userID string) (evmodels.CreateEmailVerificationTokenResponse, error) {
-	return CreateEmailVerificationTokenWithContext(userID, &map[string]interface{}{})
-}
-
-func VerifyEmailUsingToken(token string) (*epmodels.User, error) {
-	return VerifyEmailUsingTokenWithContext(token, &map[string]interface{}{})
-}
-
-func IsEmailVerified(userID string) (bool, error) {
-	return IsEmailVerifiedWithContext(userID, &map[string]interface{}{})
-}
-
-func RevokeEmailVerificationTokens(userID string) (evmodels.RevokeEmailVerificationTokensResponse, error) {
-	return RevokeEmailVerificationTokensWithContext(userID, &map[string]interface{}{})
-}
-
-func UnverifyEmail(userID string) (evmodels.UnverifyEmailResponse, error) {
-	return UnverifyEmailWithContext(userID, &map[string]interface{}{})
 }
 
 func SendEmail(input emaildelivery.EmailType) error {

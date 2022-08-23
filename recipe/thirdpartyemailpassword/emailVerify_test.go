@@ -23,6 +23,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -123,11 +124,11 @@ func TestGenerateTokenAPIwithValidInputEmailVerifiedAndTestError(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 	user := result["user"].(map[string]interface{})
 
-	verifyToken, err := CreateEmailVerificationToken(user["id"].(string))
+	verifyToken, err := emailverification.CreateEmailVerificationToken(user["id"].(string), "FIXME")
 	if err != nil {
 		t.Error(err.Error())
 	}
-	VerifyEmailUsingToken(verifyToken.OK.Token)
+	emailverification.VerifyEmailUsingToken(verifyToken.OK.Token)
 
 	rep1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user["id"].(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
 	if err != nil {
