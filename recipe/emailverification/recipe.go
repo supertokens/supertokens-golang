@@ -69,15 +69,24 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 
 	r.GetEmailForUserID = func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 		if r.Config.GetEmailForUserID != nil {
-			return r.Config.GetEmailForUserID(userID, userContext)
+			emailRes, err := r.Config.GetEmailForUserID(userID, userContext)
+			if err != nil {
+				return evmodels.TypeEmailInfo{}, err
+			}
+			if emailRes.UnknownUserIDError != nil {
+				return emailRes, nil
+			}
 		}
 
 		var err error
-		var email evmodels.TypeEmailInfo
+		var emailRes evmodels.TypeEmailInfo
 		for _, getEmailForUserIdFunc := range getEmailForUserIdFuncsFromOtherRecipes {
-			email, err = getEmailForUserIdFunc(userID, userContext)
-			if err == nil {
-				return email, nil
+			emailRes, err = getEmailForUserIdFunc(userID, userContext)
+			if err != nil {
+				return emailRes, err
+			}
+			if emailRes.UnknownUserIDError != nil {
+				return emailRes, nil
 			}
 		}
 		return evmodels.TypeEmailInfo{}, err
