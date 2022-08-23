@@ -28,10 +28,8 @@ func initClaims() {
 			} else if emailInfo.EmailDoesNotExistError != nil {
 				// We consider people without email addresses as validated
 				return true, nil
-			} else if emailInfo.UnknownUserIDError != nil {
-				return false, errors.New("should never come here: UnknownUserIdError or invalid result from getEmailForUserId")
 			} else {
-				return false, errors.New("should never come here")
+				return false, errors.New("should never come here: UnknownUserIdError or invalid result from getEmailForUserId")
 			}
 		},
 	)

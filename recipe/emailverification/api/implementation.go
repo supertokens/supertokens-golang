@@ -51,17 +51,17 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		sessionContainer.FetchAndSetClaim(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
-		isVerified, err := sessionContainer.GetClaimValue(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
+		err := sessionContainer.FetchAndSetClaim(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
 
+		isVerified, err := sessionContainer.GetClaimValue(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
-		if err != nil {
-			return evmodels.IsEmailVerifiedGETResponse{}, err
+		if isVerified == nil {
+			return evmodels.IsEmailVerifiedGETResponse{}, errors.New("should never come here: EmailVerificationClaim failed to set value")
 		}
 		return evmodels.IsEmailVerifiedGETResponse{
 			OK: &struct{ IsVerified bool }{
@@ -88,6 +88,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, errors.New("unknown userid")
 		}
 		if email.EmailDoesNotExistError != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to user %s because it doesn't have an email address.", userID))
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil

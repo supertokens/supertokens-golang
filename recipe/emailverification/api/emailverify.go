@@ -22,25 +22,34 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
 	var result map[string]interface{}
-	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-
 	if options.Req.Method == http.MethodPost {
-		sessionRequired := false
-		sessionContainer, err := session.GetSessionWithContext(options.Req, options.Res, &sessmodels.VerifySessionOptions{SessionRequired: &sessionRequired}, userContext)
-		if err != nil {
-			return err
-		}
-
 		if apiImplementation.VerifyEmailPOST == nil ||
 			(*apiImplementation.VerifyEmailPOST) == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
+		}
+
+		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+		sessionRequired := false
+		sessionContainer, err := session.GetSessionWithContext(
+			options.Req, options.Res,
+			&sessmodels.VerifySessionOptions{
+				SessionRequired: &sessionRequired,
+				OverrideGlobalClaimValidators: func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator {
+					validators := []*claims.SessionClaimValidator{}
+					return validators
+				},
+			},
+			userContext)
+		if err != nil {
+			return err
 		}
 
 		body, err := supertokens.ReadFromRequest(options.Req)
@@ -80,15 +89,26 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.ErrorIfNoResponse(options.Res)
 		}
 	} else {
-		sessionContainer, err := session.GetSessionWithContext(options.Req, options.Res, &sessmodels.VerifySessionOptions{}, userContext)
-		if err != nil {
-			return err
-		}
-
 		if apiImplementation.IsEmailVerifiedGET == nil ||
 			(*apiImplementation.IsEmailVerifiedGET) == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
+		}
+
+		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+		sessionContainer, err := session.GetSessionWithContext(
+			options.Req,
+			options.Res,
+			&sessmodels.VerifySessionOptions{
+				OverrideGlobalClaimValidators: func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator {
+					validators := []*claims.SessionClaimValidator{}
+					return validators
+				},
+			},
+			userContext,
+		)
+		if err != nil {
+			return err
 		}
 
 		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, sessionContainer, userContext)
