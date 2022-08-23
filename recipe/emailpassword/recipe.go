@@ -24,6 +24,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/constants"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -59,6 +60,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	} else {
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl))
 	}
+
+	supertokens.AddPostInitCallback(func() {
+		emailVerificationRecipe := emailverification.GetRecipeInstance()
+		if emailVerificationRecipe != nil {
+			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
+		}
+	})
 
 	return *r, nil
 }
