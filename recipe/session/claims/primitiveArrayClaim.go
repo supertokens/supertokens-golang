@@ -10,10 +10,8 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 	sessionClaim := SessionClaim(key, fetchValue)
 
 	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
-		_, ok := value.([]interface{})
-		assertCondition(ok, "value not an array")
 		payload[sessionClaim.Key] = map[string]interface{}{
-			"v": value,
+			"v": value.([]interface{}),
 			"t": time.Now().Unix(),
 		}
 		return payload
@@ -68,8 +66,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal, claimValOk := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
-					assertCondition(claimValOk, "claim value not an array")
+					claimVal := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
@@ -127,8 +124,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal, claimValOk := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
-					assertCondition(claimValOk, "claim value not an array")
+					claimVal := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
@@ -186,8 +182,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal, claimValOk := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
-					assertCondition(claimValOk, "claim value not an array")
+					claimVal := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
@@ -258,8 +253,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal, claimValOk := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
-					assertCondition(claimValOk, "claim value not an array")
+					claimVal := primitiveArrayClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
