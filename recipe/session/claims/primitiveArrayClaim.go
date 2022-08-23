@@ -40,11 +40,12 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 		TypeSessionClaim: sessionClaim,
 	}
 
-	primitiveArrayClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) int64 {
+	primitiveArrayClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
-			return value["t"].(int64)
+			val := value["t"].(int64)
+			return &val
 		}
-		return 0
+		return nil
 	}
 
 	primitiveArrayClaim.Validators = &PrimitiveArrayClaimValidators{
@@ -80,7 +81,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -139,7 +140,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -198,7 +199,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -270,7 +271,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -317,7 +318,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 
 type TypePrimitiveArrayClaim struct {
 	*TypeSessionClaim
-	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) int64
+	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) *int64
 	Validators         *PrimitiveArrayClaimValidators
 }
 

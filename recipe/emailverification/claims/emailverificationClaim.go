@@ -35,7 +35,7 @@ func NewEmailVerificationClaim(key string, fetchValue claims.FetchValueFunc) *Ty
 			claimValidator := booleanClaim.Validators.HasValue(true, &id)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 				value := emailVerificationClaim.GetValueFromPayload(payload, userContext)
-				return value == nil || (value == false && emailVerificationClaim.GetLastRefetchTime(payload, userContext) < time.Now().Unix()-int64(*refetchTimeOnFalseInSeconds))
+				return value == nil || (value == false && *emailVerificationClaim.GetLastRefetchTime(payload, userContext) < time.Now().Unix()-int64(*refetchTimeOnFalseInSeconds))
 			}
 			return claimValidator
 		},
