@@ -6,7 +6,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveArrayClaim {
+func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) *TypePrimitiveArrayClaim {
+	if defaultMaxAgeInSeconds == nil {
+		val := int64(300)
+		defaultMaxAgeInSeconds = &val
+	}
+
 	sessionClaim := SessionClaim(key, fetchValue)
 
 	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
@@ -48,6 +53,9 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 
 	primitiveArrayClaim.Validators = &PrimitiveArrayClaimValidators{
 		Includes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			if maxAgeInSeconds == nil {
+				maxAgeInSeconds = defaultMaxAgeInSeconds
+			}
 			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
@@ -106,6 +114,9 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 			}
 		},
 		Excludes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			if maxAgeInSeconds == nil {
+				maxAgeInSeconds = defaultMaxAgeInSeconds
+			}
 			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
@@ -164,6 +175,9 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 			}
 		},
 		IncludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			if maxAgeInSeconds == nil {
+				maxAgeInSeconds = defaultMaxAgeInSeconds
+			}
 			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
@@ -206,19 +220,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 						}
 					}
 
-					isValid := true
-					valsMap := map[interface{}]bool{}
-					for _, v := range vals {
-						valsMap[v] = true
-					}
-					for _, v := range claimVal {
-						if !valsMap[v] {
-							isValid = false
-							break
-						}
-					}
-
-					if !isValid {
+					if !includesAll(claimVal, vals) {
 						return ClaimValidationResult{
 							IsValid: false,
 							Reason: map[string]interface{}{
@@ -235,6 +237,9 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 			}
 		},
 		ExcludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			if maxAgeInSeconds == nil {
+				maxAgeInSeconds = defaultMaxAgeInSeconds
+			}
 			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
@@ -277,19 +282,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 						}
 					}
 
-					isValid := true
-					valsMap := map[interface{}]bool{}
-					for _, v := range vals {
-						valsMap[v] = true
-					}
-					for _, v := range claimVal {
-						if valsMap[v] {
-							isValid = false
-							break
-						}
-					}
-
-					if !isValid {
+					if !excludesAll(claimVal, vals) {
 						return ClaimValidationResult{
 							IsValid: false,
 							Reason: map[string]interface{}{
@@ -312,8 +305,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 
 type TypePrimitiveArrayClaim struct {
 	*TypeSessionClaim
-	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) *int64
-	Validators         *PrimitiveArrayClaimValidators
+	Validators *PrimitiveArrayClaimValidators
 }
 
 type PrimitiveArrayClaimValidators struct {
