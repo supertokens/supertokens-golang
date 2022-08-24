@@ -6,13 +6,17 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
+func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) *TypePrimitiveClaim {
+	if defaultMaxAgeInSeconds == nil {
+		val := int64(300)
+		defaultMaxAgeInSeconds = &val
+	}
 	sessionClaim := SessionClaim(key, fetchValue)
 
 	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
 		payload[sessionClaim.Key] = map[string]interface{}{
 			"v": value,
-			"t": time.Now().Unix(),
+			"t": time.Now().UnixMilli(),
 		}
 
 		return payload
@@ -35,51 +39,23 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
 		return nil
 	}
 
-	primitiveClaim := &TypePrimitiveClaim{
-		TypeSessionClaim: sessionClaim,
-	}
-
-	primitiveClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
+	sessionClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
 			val := value["t"].(int64)
 			return &val
 		}
 		return nil
 	}
+
+	primitiveClaim := &TypePrimitiveClaim{
+		TypeSessionClaim: sessionClaim,
+	}
+
 	primitiveClaim.Validators = &PrimitiveClaimValidators{
-		HasValue: func(val interface{}, id *string) *SessionClaimValidator {
-			validatorId := primitiveClaim.Key
-			if id != nil {
-				validatorId = *id
+		HasValue: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			if maxAgeInSeconds == nil {
+				maxAgeInSeconds = defaultMaxAgeInSeconds
 			}
-			return &SessionClaimValidator{
-				ID:    validatorId,
-				Claim: sessionClaim,
-				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-					val := primitiveClaim.GetValueFromPayload(payload, userContext)
-					return val == nil
-				},
-				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal := primitiveClaim.GetValueFromPayload(payload, userContext)
-					isValid := claimVal == val
-					if isValid {
-						return ClaimValidationResult{
-							IsValid: true,
-						}
-					} else {
-						return ClaimValidationResult{
-							IsValid: false,
-							Reason: map[string]interface{}{
-								"message":       "wrong value",
-								"expectedValue": val,
-								"actualValue":   claimVal,
-							},
-						}
-					}
-				},
-			}
-		},
-		HasFreshValue: func(val interface{}, maxAgeInSeconds int64, id *string) *SessionClaimValidator {
 			validatorId := primitiveClaim.Key
 			if id != nil {
 				validatorId = *id
@@ -92,7 +68,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
 					if !ok || val == nil {
 						return true
 					}
-					return val["t"].(int64) < time.Now().Unix()-maxAgeInSeconds
+					return maxAgeInSeconds != nil && val["t"].(int64) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
 					claimVal := sessionClaim.GetValueFromPayload(payload, userContext)
@@ -107,8 +83,8 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - *primitiveClaim.GetLastRefetchTime(payload, userContext)
-					if ageInSeconds > maxAgeInSeconds {
+					ageInSeconds := (time.Now().UnixMilli() - *primitiveClaim.GetLastRefetchTime(payload, userContext)) / 1000
+					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
 							Reason: map[string]interface{}{
@@ -141,11 +117,9 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveClaim {
 
 type TypePrimitiveClaim struct {
 	*TypeSessionClaim
-	GetLastRefetchTime func(payload map[string]interface{}, userContext supertokens.UserContext) *int64
-	Validators         *PrimitiveClaimValidators
+	Validators *PrimitiveClaimValidators
 }
 
 type PrimitiveClaimValidators struct {
-	HasValue      func(val interface{}, id *string) *SessionClaimValidator
-	HasFreshValue func(val interface{}, maxAgeInSeconds int64, id *string) *SessionClaimValidator
+	HasValue func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator
 }

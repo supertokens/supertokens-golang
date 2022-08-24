@@ -12,7 +12,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
 		payload[sessionClaim.Key] = map[string]interface{}{
 			"v": value.([]interface{}),
-			"t": time.Now().Unix(),
+			"t": time.Now().UnixMilli(),
 		}
 		return payload
 	}
@@ -34,11 +34,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 		return nil
 	}
 
-	primitiveArrayClaim := &TypePrimitiveArrayClaim{
-		TypeSessionClaim: sessionClaim,
-	}
-
-	primitiveArrayClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
+	sessionClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
 			val := value["t"].(int64)
 			return &val
@@ -46,9 +42,13 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 		return nil
 	}
 
+	primitiveArrayClaim := &TypePrimitiveArrayClaim{
+		TypeSessionClaim: sessionClaim,
+	}
+
 	primitiveArrayClaim.Validators = &PrimitiveArrayClaimValidators{
 		Includes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
-			claimId := sessionClaim.Key + "-includes"
+			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
 			}
@@ -61,7 +61,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().Unix()-*maxAgeInSeconds
+						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -78,7 +78,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := (time.Now().UnixMilli() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -106,7 +106,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 			}
 		},
 		Excludes: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
-			claimId := sessionClaim.Key + "-excludes"
+			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
 			}
@@ -119,7 +119,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().Unix()-*maxAgeInSeconds
+						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -136,7 +136,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := (time.Now().UnixMilli() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -164,7 +164,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 			}
 		},
 		IncludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
-			claimId := sessionClaim.Key + "-includes-all"
+			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
 			}
@@ -177,7 +177,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().Unix()-*maxAgeInSeconds
+						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -194,7 +194,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := (time.Now().UnixMilli() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -235,7 +235,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 			}
 		},
 		ExcludesAll: func(vals []interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
-			claimId := sessionClaim.Key + "-excludes-all"
+			claimId := sessionClaim.Key
 			if id != nil {
 				claimId = *id
 			}
@@ -248,7 +248,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().Unix()-*maxAgeInSeconds
+						return *primitiveArrayClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -265,7 +265,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc) *TypePrimitiveAr
 							},
 						}
 					}
-					ageInSeconds := time.Now().Unix() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)
+					ageInSeconds := (time.Now().UnixMilli() - *primitiveArrayClaim.GetLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,

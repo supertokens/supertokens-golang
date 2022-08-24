@@ -1,7 +1,7 @@
 package claims
 
-func BooleanClaim(key string, fetchValue FetchValueFunc) *TypeBooleanClaim {
-	primitiveClaim := PrimitiveClaim(key, fetchValue)
+func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) *TypeBooleanClaim {
+	primitiveClaim := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
 
 	booleanClaim := &TypeBooleanClaim{
 		TypePrimitiveClaim: *primitiveClaim,
@@ -11,17 +11,11 @@ func BooleanClaim(key string, fetchValue FetchValueFunc) *TypeBooleanClaim {
 		PrimitiveClaimValidators: primitiveClaim.Validators,
 
 		IsTrue: func(maxAgeInSeconds *int64) *SessionClaimValidator {
-			if maxAgeInSeconds != nil {
-				return primitiveClaim.Validators.HasFreshValue(true, *maxAgeInSeconds, nil)
-			}
-			return primitiveClaim.Validators.HasValue(true, nil)
+			return primitiveClaim.Validators.HasValue(true, maxAgeInSeconds, nil)
 		},
 
 		IsFalse: func(maxAgeInSeconds *int64) *SessionClaimValidator {
-			if maxAgeInSeconds != nil {
-				return primitiveClaim.Validators.HasFreshValue(false, *maxAgeInSeconds, nil)
-			}
-			return primitiveClaim.Validators.HasValue(false, nil)
+			return primitiveClaim.Validators.HasValue(false, maxAgeInSeconds, nil)
 		},
 	}
 

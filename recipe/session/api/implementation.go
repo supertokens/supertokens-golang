@@ -59,7 +59,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			if err != nil {
 				return nil, err
 			}
-			err = sessionContainer.AssertClaims(claimValidators, userContext)
+			err = sessionContainer.AssertClaimsWithContext(claimValidators, userContext)
 			if err != nil {
 				return nil, err
 			}

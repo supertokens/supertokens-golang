@@ -106,7 +106,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	mergeIntoAccessTokenPayload := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+	mergeIntoAccessTokenPayloadWithContext := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
 		accessTokenPayload := session.userDataInAccessToken
 		for k, v := range accessTokenPayloadUpdate {
 			if v == nil {
@@ -156,14 +156,14 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return session.accessToken
 	}
 
-	assertClaims := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+	assertClaimsWithContext := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
 		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, session.userDataInAccessToken, claimValidators, userContext)
 		if err != nil {
 			return err
 		}
 
 		if validateClaimResponse.AccessTokenPayloadUpdate != nil {
-			err := mergeIntoAccessTokenPayload(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
+			err := mergeIntoAccessTokenPayloadWithContext(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
 			if err != nil {
 				return err
 			}
@@ -179,26 +179,26 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	fetchAndSetClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+	fetchAndSetClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		update, err := claim.Build(session.userID, userContext)
 		if err != nil {
 			return err
 		}
-		return mergeIntoAccessTokenPayload(update, userContext)
+		return mergeIntoAccessTokenPayloadWithContext(update, userContext)
 	}
 
-	setClaimValue := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
+	setClaimValueWithContext := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
 		update := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
-		return mergeIntoAccessTokenPayload(update, userContext)
+		return mergeIntoAccessTokenPayloadWithContext(update, userContext)
 	}
 
-	getClaimValue := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+	getClaimValueWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
 		return claim.GetValueFromPayload(session.userDataInAccessToken, userContext), nil
 	}
 
-	removeClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+	removeClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		update := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
-		return mergeIntoAccessTokenPayload(update, userContext)
+		return mergeIntoAccessTokenPayloadWithContext(update, userContext)
 	}
 
 	return sessmodels.SessionContainer{
@@ -243,11 +243,31 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return getExpiryWithContext(&map[string]interface{}{})
 		},
 
-		MergeIntoAccessTokenPayload: mergeIntoAccessTokenPayload,
-		AssertClaims:                assertClaims,
-		FetchAndSetClaim:            fetchAndSetClaim,
-		SetClaimValue:               setClaimValue,
-		GetClaimValue:               getClaimValue,
-		RemoveClaim:                 removeClaim,
+		MergeIntoAccessTokenPayloadWithContext: mergeIntoAccessTokenPayloadWithContext,
+		MergeIntoAccessTokenPayload: func(accessTokenPayloadUpdate map[string]interface{}) error {
+			return mergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, &map[string]interface{}{})
+		},
+
+		AssertClaimsWithContext:     assertClaimsWithContext,
+		FetchAndSetClaimWithContext: fetchAndSetClaimWithContext,
+		SetClaimValueWithContext:    setClaimValueWithContext,
+		GetClaimValueWithContext:    getClaimValueWithContext,
+		RemoveClaimWithContext:      removeClaimWithContext,
+
+		AssertClaims: func(claimValidators []*claims.SessionClaimValidator) error {
+			return assertClaimsWithContext(claimValidators, &map[string]interface{}{})
+		},
+		FetchAndSetClaim: func(claim *claims.TypeSessionClaim) error {
+			return fetchAndSetClaimWithContext(claim, &map[string]interface{}{})
+		},
+		SetClaimValue: func(claim *claims.TypeSessionClaim, value interface{}) error {
+			return setClaimValueWithContext(claim, value, &map[string]interface{}{})
+		},
+		GetClaimValue: func(claim *claims.TypeSessionClaim) (interface{}, error) {
+			return getClaimValueWithContext(claim, &map[string]interface{}{})
+		},
+		RemoveClaim: func(claim *claims.TypeSessionClaim) error {
+			return removeClaimWithContext(claim, &map[string]interface{}{})
+		},
 	}
 }

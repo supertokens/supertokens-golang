@@ -70,59 +70,80 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 	}
 
-	mergeIntoAccessTokenPayload := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
-		return originalSessionClass.MergeIntoAccessTokenPayload(accessTokenPayloadUpdate, userContext)
+	mergeIntoAccessTokenPayloadWithContext := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+		return originalSessionClass.MergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, userContext)
 	}
 
-	assertClaims := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
-		return originalSessionClass.AssertClaims(claimValidators, userContext)
+	assertClaimsWithContext := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+		return originalSessionClass.AssertClaimsWithContext(claimValidators, userContext)
 	}
 
-	fetchAndSetClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		return originalSessionClass.FetchAndSetClaim(claim, userContext)
+	fetchAndSetClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+		return originalSessionClass.FetchAndSetClaimWithContext(claim, userContext)
 	}
 
-	setClaimValue := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
-		return originalSessionClass.SetClaimValue(claim, value, userContext)
+	setClaimValueWithContext := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
+		return originalSessionClass.SetClaimValueWithContext(claim, value, userContext)
 	}
 
-	getClaimValue := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
-		return originalSessionClass.GetClaimValue(claim, userContext)
+	getClaimValueWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+		return originalSessionClass.GetClaimValueWithContext(claim, userContext)
 	}
 
-	removeClaim := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		return originalSessionClass.RemoveClaim(claim, userContext)
+	removeClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+		return originalSessionClass.RemoveClaimWithContext(claim, userContext)
 	}
 
 	return sessmodels.SessionContainer{
-		RevokeSessionWithContext:            originalSessionClass.RevokeSessionWithContext,
-		GetSessionDataWithContext:           originalSessionClass.GetSessionDataWithContext,
-		UpdateSessionDataWithContext:        originalSessionClass.UpdateSessionDataWithContext,
-		GetUserIDWithContext:                originalSessionClass.GetUserIDWithContext,
-		GetAccessTokenPayloadWithContext:    originalSessionClass.GetAccessTokenPayloadWithContext,
-		GetHandleWithContext:                originalSessionClass.GetHandleWithContext,
-		GetAccessTokenWithContext:           originalSessionClass.GetAccessTokenWithContext,
-		GetTimeCreatedWithContext:           originalSessionClass.GetTimeCreatedWithContext,
-		GetExpiryWithContext:                originalSessionClass.GetExpiryWithContext,
-		RevokeSession:                       originalSessionClass.RevokeSession,
-		GetSessionData:                      originalSessionClass.GetSessionData,
-		UpdateSessionData:                   originalSessionClass.UpdateSessionData,
-		GetUserID:                           originalSessionClass.GetUserID,
-		GetAccessTokenPayload:               originalSessionClass.GetAccessTokenPayload,
-		GetHandle:                           originalSessionClass.GetHandle,
-		GetAccessToken:                      originalSessionClass.GetAccessToken,
-		GetTimeCreated:                      originalSessionClass.GetTimeCreated,
-		GetExpiry:                           originalSessionClass.GetExpiry,
+		RevokeSessionWithContext:         originalSessionClass.RevokeSessionWithContext,
+		GetSessionDataWithContext:        originalSessionClass.GetSessionDataWithContext,
+		UpdateSessionDataWithContext:     originalSessionClass.UpdateSessionDataWithContext,
+		GetUserIDWithContext:             originalSessionClass.GetUserIDWithContext,
+		GetAccessTokenPayloadWithContext: originalSessionClass.GetAccessTokenPayloadWithContext,
+		GetHandleWithContext:             originalSessionClass.GetHandleWithContext,
+		GetAccessTokenWithContext:        originalSessionClass.GetAccessTokenWithContext,
+		GetTimeCreatedWithContext:        originalSessionClass.GetTimeCreatedWithContext,
+		GetExpiryWithContext:             originalSessionClass.GetExpiryWithContext,
+		RevokeSession:                    originalSessionClass.RevokeSession,
+		GetSessionData:                   originalSessionClass.GetSessionData,
+		UpdateSessionData:                originalSessionClass.UpdateSessionData,
+		GetUserID:                        originalSessionClass.GetUserID,
+		GetAccessTokenPayload:            originalSessionClass.GetAccessTokenPayload,
+		GetHandle:                        originalSessionClass.GetHandle,
+		GetAccessToken:                   originalSessionClass.GetAccessToken,
+		GetTimeCreated:                   originalSessionClass.GetTimeCreated,
+		GetExpiry:                        originalSessionClass.GetExpiry,
+
 		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
 		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
 			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
 		},
 
-		MergeIntoAccessTokenPayload: mergeIntoAccessTokenPayload,
-		AssertClaims:                assertClaims,
-		FetchAndSetClaim:            fetchAndSetClaim,
-		SetClaimValue:               setClaimValue,
-		GetClaimValue:               getClaimValue,
-		RemoveClaim:                 removeClaim,
+		MergeIntoAccessTokenPayloadWithContext: mergeIntoAccessTokenPayloadWithContext,
+		MergeIntoAccessTokenPayload: func(accessTokenPayloadUpdate map[string]interface{}) error {
+			return mergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, &map[string]interface{}{})
+		},
+
+		AssertClaimsWithContext:     assertClaimsWithContext,
+		FetchAndSetClaimWithContext: fetchAndSetClaimWithContext,
+		SetClaimValueWithContext:    setClaimValueWithContext,
+		GetClaimValueWithContext:    getClaimValueWithContext,
+		RemoveClaimWithContext:      removeClaimWithContext,
+
+		AssertClaims: func(claimValidators []*claims.SessionClaimValidator) error {
+			return assertClaimsWithContext(claimValidators, &map[string]interface{}{})
+		},
+		FetchAndSetClaim: func(claim *claims.TypeSessionClaim) error {
+			return fetchAndSetClaimWithContext(claim, &map[string]interface{}{})
+		},
+		SetClaimValue: func(claim *claims.TypeSessionClaim, value interface{}) error {
+			return setClaimValueWithContext(claim, value, &map[string]interface{}{})
+		},
+		GetClaimValue: func(claim *claims.TypeSessionClaim) (interface{}, error) {
+			return getClaimValueWithContext(claim, &map[string]interface{}{})
+		},
+		RemoveClaim: func(claim *claims.TypeSessionClaim) error {
+			return removeClaimWithContext(claim, &map[string]interface{}{})
+		},
 	}
 }

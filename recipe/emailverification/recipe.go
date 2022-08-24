@@ -98,8 +98,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		getEmailForUserIdFuncsFromOtherRecipes = append(getEmailForUserIdFuncsFromOtherRecipes, function)
 	}
 
-	initClaims()
-
 	return *r, nil
 }
 

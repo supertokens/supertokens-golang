@@ -34,7 +34,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 		if resp.OK != nil {
 			if sessionContainer != nil {
-				sessionContainer.FetchAndSetClaim(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
+				sessionContainer.FetchAndSetClaimWithContext(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
 			}
 			return evmodels.VerifyEmailPOSTResponse{
 				OK: resp.OK,
@@ -51,12 +51,12 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		err := sessionContainer.FetchAndSetClaim(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
+		err := sessionContainer.FetchAndSetClaimWithContext(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
 
-		isVerified, err := sessionContainer.GetClaimValue(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
+		isVerified, err := sessionContainer.GetClaimValueWithContext(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}

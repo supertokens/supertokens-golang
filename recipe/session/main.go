@@ -67,7 +67,7 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 		if err != nil {
 			return nil, err
 		}
-		err = sessionContainer.AssertClaims(claimValidators, userContext)
+		err = sessionContainer.AssertClaimsWithContext(claimValidators, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -310,7 +310,7 @@ func ValidateClaimsForSessionHandleWithContext(
 	}, nil
 }
 
-func ValidateClaimsInJWTPayload(
+func ValidateClaimsInJWTPayloadWithContext(
 	userID string,
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
@@ -333,4 +333,12 @@ func ValidateClaimsInJWTPayload(
 	}
 
 	return (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext)
+}
+
+func ValidateClaimsInJWTPayload(
+	userID string,
+	jwtPayload map[string]interface{},
+	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+) (sessmodels.ValidateClaimsResponse, error) {
+	return ValidateClaimsInJWTPayloadWithContext(userID, jwtPayload, overrideGlobalClaimValidators, &map[string]interface{}{})
 }

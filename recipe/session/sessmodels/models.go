@@ -162,7 +162,7 @@ type SessionContainer struct {
 	GetAccessTokenPayload    func() map[string]interface{}
 	GetHandle                func() string
 	GetAccessToken           func() string
-	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error
+	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error // Deprecated
 	GetTimeCreated           func() (uint64, error)
 	GetExpiry                func() (uint64, error)
 
@@ -173,16 +173,24 @@ type SessionContainer struct {
 	GetAccessTokenPayloadWithContext    func(userContext supertokens.UserContext) map[string]interface{}
 	GetHandleWithContext                func(userContext supertokens.UserContext) string
 	GetAccessTokenWithContext           func(userContext supertokens.UserContext) string
-	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error
+	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error // Deprecated
 	GetTimeCreatedWithContext           func(userContext supertokens.UserContext) (uint64, error)
 	GetExpiryWithContext                func(userContext supertokens.UserContext) (uint64, error)
-	MergeIntoAccessTokenPayload         func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
 
-	AssertClaims     func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error
-	FetchAndSetClaim func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
-	SetClaimValue    func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error
-	GetClaimValue    func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error)
-	RemoveClaim      func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
+	MergeIntoAccessTokenPayloadWithContext func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
+	MergeIntoAccessTokenPayload            func(accessTokenPayloadUpdate map[string]interface{}) error
+
+	AssertClaims     func(claimValidators []*claims.SessionClaimValidator) error
+	FetchAndSetClaim func(claim *claims.TypeSessionClaim) error
+	SetClaimValue    func(claim *claims.TypeSessionClaim, value interface{}) error
+	GetClaimValue    func(claim *claims.TypeSessionClaim) (interface{}, error)
+	RemoveClaim      func(claim *claims.TypeSessionClaim) error
+
+	AssertClaimsWithContext     func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error
+	FetchAndSetClaimWithContext func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
+	SetClaimValueWithContext    func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error
+	GetClaimValueWithContext    func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error)
+	RemoveClaimWithContext      func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
 }
 
 type SessionInformation struct {

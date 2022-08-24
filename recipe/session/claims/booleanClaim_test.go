@@ -14,6 +14,7 @@ func TestBooleanClaim(t *testing.T) {
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 			return map[string]interface{}{}, nil
 		},
+		nil,
 	)
 
 	payload := map[string]interface{}{}
