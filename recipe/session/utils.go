@@ -326,7 +326,7 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 	return keyList
 }
 
-func validateClaimsInPayload(claimValidators []*claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []sessmodels.ClaimValidationError {
+func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []sessmodels.ClaimValidationError {
 	validationErrors := []sessmodels.ClaimValidationError{}
 
 	for _, validator := range claimValidators {
@@ -344,9 +344,9 @@ func validateClaimsInPayload(claimValidators []*claims.SessionClaimValidator, ne
 
 func getRequiredClaimValidators(
 	sessionContainer *sessmodels.SessionContainer,
-	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) ([]*claims.SessionClaimValidator, error) {
+) ([]claims.SessionClaimValidator, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err

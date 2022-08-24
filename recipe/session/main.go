@@ -39,6 +39,10 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 
 	claimsAddedByOtherRecipes := instance.getClaimsAddedByOtherRecipes()
 	finalAccessTokenPayload := accessTokenPayload
+	if finalAccessTokenPayload == nil {
+		finalAccessTokenPayload = map[string]interface{}{}
+	}
+
 	for _, claim := range claimsAddedByOtherRecipes {
 		update, err := claim.Build(userID, userContext)
 		if err != nil {
@@ -255,7 +259,7 @@ func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string
 
 func ValidateClaimsForSessionHandleWithContext(
 	sessionHandle string,
-	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
 ) (sessmodels.ValidateClaimsResponse, error) {
 
@@ -312,7 +316,7 @@ func ValidateClaimsForSessionHandleWithContext(
 
 func ValidateClaimsForSessionHandle(
 	sessionHandle string,
-	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 ) (sessmodels.ValidateClaimsResponse, error) {
 	return ValidateClaimsForSessionHandleWithContext(sessionHandle, overrideGlobalClaimValidators, &map[string]interface{}{})
 }
@@ -320,7 +324,7 @@ func ValidateClaimsForSessionHandle(
 func ValidateClaimsInJWTPayloadWithContext(
 	userID string,
 	jwtPayload map[string]interface{},
-	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
 ) ([]sessmodels.ClaimValidationError, error) {
 
@@ -353,7 +357,7 @@ func ValidateClaimsInJWTPayloadWithContext(
 func ValidateClaimsInJWTPayload(
 	userID string,
 	jwtPayload map[string]interface{},
-	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 ) ([]sessmodels.ClaimValidationError, error) {
 	return ValidateClaimsInJWTPayloadWithContext(userID, jwtPayload, overrideGlobalClaimValidators, &map[string]interface{}{})
 }

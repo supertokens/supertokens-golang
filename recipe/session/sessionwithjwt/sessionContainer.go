@@ -74,7 +74,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		return originalSessionClass.MergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, userContext)
 	}
 
-	assertClaimsWithContext := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+	assertClaimsWithContext := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
 		return originalSessionClass.AssertClaimsWithContext(claimValidators, userContext)
 	}
 
@@ -130,7 +130,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		GetClaimValueWithContext:    getClaimValueWithContext,
 		RemoveClaimWithContext:      removeClaimWithContext,
 
-		AssertClaims: func(claimValidators []*claims.SessionClaimValidator) error {
+		AssertClaims: func(claimValidators []claims.SessionClaimValidator) error {
 			return assertClaimsWithContext(claimValidators, &map[string]interface{}{})
 		},
 		FetchAndSetClaim: func(claim *claims.TypeSessionClaim) error {

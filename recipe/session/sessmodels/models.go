@@ -136,7 +136,7 @@ type JWTNormalisedConfig struct {
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
-	OverrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator
+	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator
 }
 
 type APIOptions struct {
@@ -147,7 +147,7 @@ type APIOptions struct {
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc
 
-	ClaimValidatorsAddedByOtherRecipes []*claims.SessionClaimValidator
+	ClaimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator
 }
 
 type NormalisedErrorHandlers struct {
@@ -182,13 +182,13 @@ type SessionContainer struct {
 	MergeIntoAccessTokenPayloadWithContext func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
 	MergeIntoAccessTokenPayload            func(accessTokenPayloadUpdate map[string]interface{}) error
 
-	AssertClaims     func(claimValidators []*claims.SessionClaimValidator) error
+	AssertClaims     func(claimValidators []claims.SessionClaimValidator) error
 	FetchAndSetClaim func(claim *claims.TypeSessionClaim) error
 	SetClaimValue    func(claim *claims.TypeSessionClaim, value interface{}) error
 	GetClaimValue    func(claim *claims.TypeSessionClaim) (interface{}, error)
 	RemoveClaim      func(claim *claims.TypeSessionClaim) error
 
-	AssertClaimsWithContext     func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error
+	AssertClaimsWithContext     func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error
 	FetchAndSetClaimWithContext func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
 	SetClaimValueWithContext    func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error
 	GetClaimValueWithContext    func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error)

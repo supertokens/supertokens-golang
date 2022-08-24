@@ -21,11 +21,11 @@ func TestBooleanClaim(t *testing.T) {
 	payload = boolClaim.AddToPayload_internal(payload, true, nil)
 
 	validators := boolClaim.Validators
-	assert.True(t, validators.IsTrue(nil).Validate(payload, nil).IsValid)
-	assert.False(t, validators.IsFalse(nil).Validate(payload, nil).IsValid)
+	assert.True(t, validators.IsTrue(nil, nil).Validate(payload, nil).IsValid)
+	assert.False(t, validators.IsFalse(nil, nil).Validate(payload, nil).IsValid)
 
 	maxAge := int64(1)
-	assert.True(t, validators.IsTrue(&maxAge).Validate(payload, nil).IsValid)
+	assert.True(t, validators.IsTrue(&maxAge, nil).Validate(payload, nil).IsValid)
 	time.Sleep(2 * time.Second)
-	assert.False(t, validators.IsTrue(&maxAge).Validate(payload, nil).IsValid)
+	assert.False(t, validators.IsTrue(&maxAge, nil).Validate(payload, nil).IsValid)
 }

@@ -156,7 +156,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return session.accessToken
 	}
 
-	assertClaimsWithContext := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+	assertClaimsWithContext := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
 		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, getAccessTokenPayloadWithContext(userContext), claimValidators, userContext)
 		if err != nil {
 			return err
@@ -254,7 +254,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		GetClaimValueWithContext:    getClaimValueWithContext,
 		RemoveClaimWithContext:      removeClaimWithContext,
 
-		AssertClaims: func(claimValidators []*claims.SessionClaimValidator) error {
+		AssertClaims: func(claimValidators []claims.SessionClaimValidator) error {
 			return assertClaimsWithContext(claimValidators, &map[string]interface{}{})
 		},
 		FetchAndSetClaim: func(claim *claims.TypeSessionClaim) error {

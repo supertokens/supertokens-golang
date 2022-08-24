@@ -219,11 +219,11 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return (*result.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
 	}
 
-	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []*claims.SessionClaimValidator, userContext supertokens.UserContext) ([]*claims.SessionClaimValidator, error) {
+	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 		return claimValidatorsAddedByOtherRecipes, nil
 	}
 
-	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
+	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
 		accessTokenPayloadUpdate := map[string]interface{}{}
 		origSessionClaimPayloadJSON, err := json.Marshal(accessTokenPayload)
 		if err != nil {
@@ -263,7 +263,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}, nil
 	}
 
-	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResponse, error) {
+	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResponse, error) {
 		invalidClaims := validateClaimsInPayload(claimValidators, jwtPayload, userContext)
 		return sessmodels.ValidateClaimsResponse{
 			OK: &struct {

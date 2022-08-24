@@ -38,7 +38,7 @@ type Recipe struct {
 	APIImpl      sessmodels.APIInterface
 
 	claimsAddedByOtherRecipes          []*claims.TypeSessionClaim
-	claimValidatorsAddedByOtherRecipes []*claims.SessionClaimValidator
+	claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator
 }
 
 const RECIPE_ID = "session"
@@ -48,7 +48,7 @@ var singletonInstance *Recipe
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{
 		claimsAddedByOtherRecipes:          []*claims.TypeSessionClaim{},
-		claimValidatorsAddedByOtherRecipes: []*claims.SessionClaimValidator{},
+		claimValidatorsAddedByOtherRecipes: []claims.SessionClaimValidator{},
 	}
 
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
@@ -211,12 +211,12 @@ func (r *Recipe) getClaimsAddedByOtherRecipes() []*claims.TypeSessionClaim {
 	return r.claimsAddedByOtherRecipes
 }
 
-func (r *Recipe) addClaimValidatorFromOtherRecipe(validator *claims.SessionClaimValidator) error {
+func (r *Recipe) addClaimValidatorFromOtherRecipe(validator claims.SessionClaimValidator) error {
 	r.claimValidatorsAddedByOtherRecipes = append(r.claimValidatorsAddedByOtherRecipes, validator)
 	return nil
 }
 
-func (r *Recipe) getClaimValidatorsAddedByOtherRecipes() []*claims.SessionClaimValidator {
+func (r *Recipe) getClaimValidatorsAddedByOtherRecipes() []claims.SessionClaimValidator {
 	return r.claimValidatorsAddedByOtherRecipes
 }
 

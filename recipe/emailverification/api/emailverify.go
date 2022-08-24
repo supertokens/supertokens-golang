@@ -42,8 +42,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			options.Req, options.Res,
 			&sessmodels.VerifySessionOptions{
 				SessionRequired: &sessionRequired,
-				OverrideGlobalClaimValidators: func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator {
-					validators := []*claims.SessionClaimValidator{}
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+					validators := []claims.SessionClaimValidator{}
 					return validators
 				},
 			},
@@ -100,8 +100,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			options.Req,
 			options.Res,
 			&sessmodels.VerifySessionOptions{
-				OverrideGlobalClaimValidators: func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator {
-					validators := []*claims.SessionClaimValidator{}
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+					validators := []claims.SessionClaimValidator{}
 					return validators
 				},
 			},
