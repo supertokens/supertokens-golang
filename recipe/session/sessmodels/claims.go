@@ -1,18 +1,15 @@
 package sessmodels
 
+import "github.com/supertokens/supertokens-golang/recipe/session/claims"
+
 type ValidateClaimsResult struct {
-	InvalidClaims            []ClaimValidationError
+	InvalidClaims            []claims.ClaimValidationError
 	AccessTokenPayloadUpdate map[string]interface{}
 }
 
 type ValidateClaimsResponse struct {
 	OK *struct {
-		InvalidClaims []ClaimValidationError
+		InvalidClaims []claims.ClaimValidationError
 	}
 	SessionDoesNotExistError *struct{}
-}
-
-type ClaimValidationError struct {
-	ID     string
-	Reason interface{}
 }

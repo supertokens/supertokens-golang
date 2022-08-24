@@ -326,14 +326,14 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 	return keyList
 }
 
-func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []sessmodels.ClaimValidationError {
-	validationErrors := []sessmodels.ClaimValidationError{}
+func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []claims.ClaimValidationError {
+	validationErrors := []claims.ClaimValidationError{}
 
 	for _, validator := range claimValidators {
 		claimValidationResult := validator.Validate(newAccessTokenPayload, userContext)
 		supertokens.LogDebugMessage(fmt.Sprint("validateClaimsInPayload ", validator.ID, " validation res ", claimValidationResult))
 		if !claimValidationResult.IsValid {
-			validationErrors = append(validationErrors, sessmodels.ClaimValidationError{
+			validationErrors = append(validationErrors, claims.ClaimValidationError{
 				ID:     validator.ID,
 				Reason: claimValidationResult.Reason,
 			})

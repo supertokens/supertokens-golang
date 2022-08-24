@@ -263,15 +263,9 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}, nil
 	}
 
-	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResponse, error) {
+	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.ClaimValidationError, error) {
 		invalidClaims := validateClaimsInPayload(claimValidators, jwtPayload, userContext)
-		return sessmodels.ValidateClaimsResponse{
-			OK: &struct {
-				InvalidClaims []sessmodels.ClaimValidationError
-			}{
-				InvalidClaims: invalidClaims,
-			},
-		}, nil
+		return invalidClaims, nil
 	}
 
 	fetchAndSetClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {

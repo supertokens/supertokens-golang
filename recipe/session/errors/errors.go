@@ -15,7 +15,7 @@
 
 package errors
 
-import "github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+import "github.com/supertokens/supertokens-golang/recipe/session/claims"
 
 const (
 	UnauthorizedErrorStr       = "UNAUTHORISED"
@@ -59,7 +59,7 @@ func (err UnauthorizedError) Error() string {
 
 type InvalidClaimError struct {
 	Msg           string
-	InvalidClaims []sessmodels.ClaimValidationError
+	InvalidClaims []claims.ClaimValidationError
 }
 
 func (err InvalidClaimError) Error() string {

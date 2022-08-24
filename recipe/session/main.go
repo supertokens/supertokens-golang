@@ -307,7 +307,7 @@ func ValidateClaimsForSessionHandleWithContext(
 	}
 	return sessmodels.ValidateClaimsResponse{
 		OK: &struct {
-			InvalidClaims []sessmodels.ClaimValidationError
+			InvalidClaims []claims.ClaimValidationError
 		}{
 			InvalidClaims: claimValidationResponse.InvalidClaims,
 		},
@@ -326,7 +326,7 @@ func ValidateClaimsInJWTPayloadWithContext(
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) ([]sessmodels.ClaimValidationError, error) {
+) ([]claims.ClaimValidationError, error) {
 
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
@@ -343,22 +343,19 @@ func ValidateClaimsInJWTPayloadWithContext(
 		claimValidators = overrideGlobalClaimValidators(claimValidators, userID, userContext)
 	}
 
-	resp, err := (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext)
+	invalidClaims, err := (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext)
 	if err != nil {
 		return nil, err
 	}
-	if resp.SessionDoesNotExistError != nil {
-		return []sessmodels.ClaimValidationError{}, nil
-	}
 
-	return resp.OK.InvalidClaims, nil
+	return invalidClaims, nil
 }
 
 func ValidateClaimsInJWTPayload(
 	userID string,
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []claims.SessionClaimValidator,
-) ([]sessmodels.ClaimValidationError, error) {
+) ([]claims.ClaimValidationError, error) {
 	return ValidateClaimsInJWTPayloadWithContext(userID, jwtPayload, overrideGlobalClaimValidators, &map[string]interface{}{})
 }
 
