@@ -361,3 +361,68 @@ func ValidateClaimsInJWTPayload(
 ) ([]sessmodels.ClaimValidationError, error) {
 	return ValidateClaimsInJWTPayloadWithContext(userID, jwtPayload, overrideGlobalClaimValidators, &map[string]interface{}{})
 }
+
+func MergeIntoAccessTokenPayloadWithContext(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return false, err
+	}
+
+	return (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+}
+
+func MergeIntoAccessTokenPayload(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}) (bool, error) {
+	return MergeIntoAccessTokenPayloadWithContext(sessionHandle, accessTokenPayloadUpdate, &map[string]interface{}{})
+}
+
+func FetchAndSetClaimWithContext(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return false, err
+	}
+
+	return (*instance.RecipeImpl.FetchAndSetClaim)(sessionHandle, claim, userContext)
+}
+
+func FetchAndSetClaim(sessionHandle string, claim *claims.TypeSessionClaim) (bool, error) {
+	return FetchAndSetClaimWithContext(sessionHandle, claim, &map[string]interface{}{})
+}
+
+func SetClaimValueWithContext(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return false, err
+	}
+
+	return (*instance.RecipeImpl.SetClaimValue)(sessionHandle, claim, value, userContext)
+}
+
+func SetClaimValue(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}) (bool, error) {
+	return SetClaimValueWithContext(sessionHandle, claim, value, &map[string]interface{}{})
+}
+
+func GetClaimValueWithContext(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+
+	return (*instance.RecipeImpl.GetClaimValue)(sessionHandle, claim, userContext)
+}
+
+func GetClaimValue(sessionHandle string, claim *claims.TypeSessionClaim) (interface{}, error) {
+	return GetClaimValueWithContext(sessionHandle, claim, &map[string]interface{}{})
+}
+
+func RemoveClaimWithContext(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return false, err
+	}
+
+	return (*instance.RecipeImpl.RemoveClaim)(sessionHandle, claim, userContext)
+}
+
+func RemoveClaim(sessionHandle string, claim *claims.TypeSessionClaim) (bool, error) {
+	return RemoveClaimWithContext(sessionHandle, claim, &map[string]interface{}{})
+}
