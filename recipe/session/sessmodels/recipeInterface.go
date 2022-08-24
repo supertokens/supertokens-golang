@@ -43,6 +43,6 @@ type RecipeInterface struct {
 	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.ClaimValidationError, error) // TODO change return type
 	FetchAndSetClaim           *func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error)
 	SetClaimValue              *func(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error)
-	GetClaimValue              *func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error)
+	GetClaimValue              *func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (GetClaimValueResult, error)
 	RemoveClaim                *func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error)
 }

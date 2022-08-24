@@ -13,3 +13,10 @@ type ValidateClaimsResponse struct {
 	}
 	SessionDoesNotExistError *struct{}
 }
+
+type GetClaimValueResult struct {
+	OK *struct {
+		Value interface{}
+	}
+	SessionDoesNotExistError *struct{}
+}

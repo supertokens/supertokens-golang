@@ -288,18 +288,22 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
-	getClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+	getClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
 		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
-			return nil, err
+			return sessmodels.GetClaimValueResult{}, err
 		}
 		if sessionInfo == nil {
-			return nil, errors.UnauthorizedError{
-				Msg: "session not found",
-			}
+			return sessmodels.GetClaimValueResult{
+				SessionDoesNotExistError: &struct{}{},
+			}, nil
 		}
 
-		return claim.GetValueFromPayload(sessionInfo.AccessTokenPayload, userContext), nil
+		return sessmodels.GetClaimValueResult{
+			OK: &struct{ Value interface{} }{
+				Value: claim.GetValueFromPayload(sessionInfo.AccessTokenPayload, userContext),
+			},
+		}, nil
 	}
 
 	removeClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
