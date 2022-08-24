@@ -10,12 +10,12 @@ func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds 
 	booleanClaim.Validators = &BooleanClaimValidators{
 		PrimitiveClaimValidators: primitiveClaim.Validators,
 
-		IsTrue: func(maxAgeInSeconds *int64) *SessionClaimValidator {
-			return primitiveClaim.Validators.HasValue(true, maxAgeInSeconds, nil)
+		IsTrue: func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			return primitiveClaim.Validators.HasValue(true, maxAgeInSeconds, id)
 		},
 
-		IsFalse: func(maxAgeInSeconds *int64) *SessionClaimValidator {
-			return primitiveClaim.Validators.HasValue(false, maxAgeInSeconds, nil)
+		IsFalse: func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+			return primitiveClaim.Validators.HasValue(false, maxAgeInSeconds, id)
 		},
 	}
 
@@ -29,6 +29,6 @@ type TypeBooleanClaim struct {
 
 type BooleanClaimValidators struct {
 	*PrimitiveClaimValidators
-	IsTrue  func(maxAgeInSeconds *int64) *SessionClaimValidator
-	IsFalse func(maxAgeInSeconds *int64) *SessionClaimValidator
+	IsTrue  func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator
+	IsFalse func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator
 }
