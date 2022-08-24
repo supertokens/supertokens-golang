@@ -23,6 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/openid"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -35,6 +36,9 @@ type Recipe struct {
 	RecipeImpl   sessmodels.RecipeInterface
 	OpenIdRecipe *openid.Recipe
 	APIImpl      sessmodels.APIInterface
+
+	claimsAddedByOtherRecipes          []*claims.TypeSessionClaim
+	claimValidatorsAddedByOtherRecipes []*claims.SessionClaimValidator
 }
 
 const RECIPE_ID = "session"
@@ -42,7 +46,10 @@ const RECIPE_ID = "session"
 var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
-	r := &Recipe{}
+	r := &Recipe{
+		claimsAddedByOtherRecipes:          []*claims.TypeSessionClaim{},
+		claimValidatorsAddedByOtherRecipes: []*claims.SessionClaimValidator{},
+	}
 
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
 
@@ -151,6 +158,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Req:                  req,
 		Res:                  res,
 		OtherHandler:         theirhandler,
+
+		ClaimValidatorsAddedByOtherRecipes: r.getClaimValidatorsAddedByOtherRecipes(),
 	}
 	if id == refreshAPIPath {
 		return api.HandleRefreshAPI(r.APIImpl, options)
@@ -185,6 +194,30 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res)
 	}
 	return false, nil
+}
+
+// Claim functions
+func (r *Recipe) addClaimFromOtherRecipe(claim *claims.TypeSessionClaim) error {
+	for _, existingClaim := range r.claimsAddedByOtherRecipes {
+		if claim.Key == existingClaim.Key {
+			return defaultErrors.New("claim already added by other recipe")
+		}
+	}
+	r.claimsAddedByOtherRecipes = append(r.claimsAddedByOtherRecipes, claim)
+	return nil
+}
+
+func (r *Recipe) getClaimsAddedByOtherRecipes() []*claims.TypeSessionClaim {
+	return r.claimsAddedByOtherRecipes
+}
+
+func (r *Recipe) addClaimValidatorFromOtherRecipe(validator *claims.SessionClaimValidator) error {
+	r.claimValidatorsAddedByOtherRecipes = append(r.claimValidatorsAddedByOtherRecipes, validator)
+	return nil
+}
+
+func (r *Recipe) getClaimValidatorsAddedByOtherRecipes() []*claims.SessionClaimValidator {
+	return r.claimValidatorsAddedByOtherRecipes
 }
 
 func ResetForTest() {

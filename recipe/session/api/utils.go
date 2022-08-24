@@ -7,13 +7,13 @@ import (
 )
 
 func getRequiredClaimValidators(
-	sessionRecipe sessmodels.RecipeInterface,
+	claimValidatorsAddedByOtherRecipes []*claims.SessionClaimValidator,
+	sessionRecipeImpl sessmodels.RecipeInterface,
 	sessionContainer *sessmodels.SessionContainer,
 	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
 ) ([]*claims.SessionClaimValidator, error) {
-	claimValidatorsAddedByOtherRecipes := (*sessionRecipe.GetClaimValidatorsAddedByOtherRecipes)()
-	globalClaimValidators, err := (*sessionRecipe.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
+	globalClaimValidators, err := (*sessionRecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
 	if err != nil {
 		return nil, err
 	}

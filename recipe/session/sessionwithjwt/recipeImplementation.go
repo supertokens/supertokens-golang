@@ -149,7 +149,6 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	}
 
 	{
-		// originalUpdateAccessTokenPayload := *originalImplementation.UpdateAccessTokenPayload
 		(*originalImplementation.UpdateAccessTokenPayload) = func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 			if newAccessTokenPayload == nil {
 				newAccessTokenPayload = map[string]interface{}{}
@@ -167,7 +166,6 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	}
 
 	{
-		// originalMergeIntoAccessTokenPayload := *originalImplementation.MergeIntoAccessTokenPayload
 		(*originalImplementation.MergeIntoAccessTokenPayload) = func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 			sessionInfo, err := (*originalImplementation.GetSessionInformation)(sessionHandle, userContext)
 			if err != nil {

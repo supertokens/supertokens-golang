@@ -343,13 +343,16 @@ func validateClaimsInPayload(claimValidators []*claims.SessionClaimValidator, ne
 }
 
 func getRequiredClaimValidators(
-	sessionRecipe sessmodels.RecipeInterface,
 	sessionContainer *sessmodels.SessionContainer,
 	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) ([]*claims.SessionClaimValidator, error) { // FIXME This function is duplicated
-	claimValidatorsAddedByOtherRecipes := (*sessionRecipe.GetClaimValidatorsAddedByOtherRecipes)()
-	globalClaimValidators, err := (*sessionRecipe.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
+) ([]*claims.SessionClaimValidator, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
+	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
 	if err != nil {
 		return nil, err
 	}

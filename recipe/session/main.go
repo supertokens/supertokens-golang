@@ -37,7 +37,7 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 		return sessmodels.SessionContainer{}, err
 	}
 
-	claimsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimsAddedByOtherRecipes)()
+	claimsAddedByOtherRecipes := instance.getClaimsAddedByOtherRecipes()
 	finalAccessTokenPayload := accessTokenPayload
 	for _, claim := range claimsAddedByOtherRecipes {
 		update, err := claim.Build(userID, userContext)
@@ -63,7 +63,7 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 	}
 
 	if sessionContainer != nil {
-		claimValidators, err := getRequiredClaimValidators(instance.RecipeImpl, sessionContainer, options.OverrideGlobalClaimValidators, userContext)
+		claimValidators, err := getRequiredClaimValidators(sessionContainer, options.OverrideGlobalClaimValidators, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -275,7 +275,7 @@ func ValidateClaimsForSessionHandleWithContext(
 		}, nil
 	}
 
-	claimValidatorsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimValidatorsAddedByOtherRecipes)()
+	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
 	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionInfo.UserId, claimValidatorsAddedByOtherRecipes, userContext)
 	if err != nil {
 		return sessmodels.ValidateClaimsResponse{}, err
@@ -289,7 +289,7 @@ func ValidateClaimsForSessionHandleWithContext(
 	if err != nil {
 		return sessmodels.ValidateClaimsResponse{}, err
 	}
-	if claimValidationResponse.AccessTokenPayloadUpdate != nil || len(claimValidationResponse.AccessTokenPayloadUpdate) > 0 {
+	if claimValidationResponse.AccessTokenPayloadUpdate != nil && len(claimValidationResponse.AccessTokenPayloadUpdate) > 0 {
 		ok, err := (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, claimValidationResponse.AccessTokenPayloadUpdate, userContext)
 		if err != nil {
 			return sessmodels.ValidateClaimsResponse{}, err
@@ -310,35 +310,50 @@ func ValidateClaimsForSessionHandleWithContext(
 	}, nil
 }
 
+func ValidateClaimsForSessionHandle(
+	sessionHandle string,
+	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
+) (sessmodels.ValidateClaimsResponse, error) {
+	return ValidateClaimsForSessionHandleWithContext(sessionHandle, overrideGlobalClaimValidators, &map[string]interface{}{})
+}
+
 func ValidateClaimsInJWTPayloadWithContext(
 	userID string,
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
 	userContext supertokens.UserContext,
-) (sessmodels.ValidateClaimsResponse, error) {
+) ([]sessmodels.ClaimValidationError, error) {
 
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return sessmodels.ValidateClaimsResponse{}, err
+		return nil, err
 	}
 
-	claimValidatorsAddedByOtherRecipes := (*instance.RecipeImpl.GetClaimValidatorsAddedByOtherRecipes)()
+	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
 	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(userID, claimValidatorsAddedByOtherRecipes, userContext)
 	if err != nil {
-		return sessmodels.ValidateClaimsResponse{}, err
+		return nil, err
 	}
 
 	if overrideGlobalClaimValidators != nil {
 		claimValidators = overrideGlobalClaimValidators(claimValidators, userID, userContext)
 	}
 
-	return (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext)
+	resp, err := (*instance.RecipeImpl.ValidateClaimsInJWTPayload)(userID, jwtPayload, claimValidators, userContext)
+	if err != nil {
+		return nil, err
+	}
+	if resp.SessionDoesNotExistError != nil {
+		return []sessmodels.ClaimValidationError{}, nil
+	}
+
+	return resp.OK.InvalidClaims, nil
 }
 
 func ValidateClaimsInJWTPayload(
 	userID string,
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []*claims.SessionClaimValidator, userID string, userContext supertokens.UserContext) []*claims.SessionClaimValidator,
-) (sessmodels.ValidateClaimsResponse, error) {
+) ([]sessmodels.ClaimValidationError, error) {
 	return ValidateClaimsInJWTPayloadWithContext(userID, jwtPayload, overrideGlobalClaimValidators, &map[string]interface{}{})
 }

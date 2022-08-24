@@ -55,7 +55,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				return nil, nil
 			}
 
-			claimValidators, err := getRequiredClaimValidators(options.RecipeImplementation, sessionContainer, verifySessionOptions.OverrideGlobalClaimValidators, userContext)
+			claimValidators, err := getRequiredClaimValidators(options.ClaimValidatorsAddedByOtherRecipes, options.RecipeImplementation, sessionContainer, verifySessionOptions.OverrideGlobalClaimValidators, userContext)
 			if err != nil {
 				return nil, err
 			}

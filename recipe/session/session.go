@@ -106,18 +106,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	mergeIntoAccessTokenPayloadWithContext := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
-		accessTokenPayload := session.userDataInAccessToken
-		for k, v := range accessTokenPayloadUpdate {
-			if v == nil {
-				delete(accessTokenPayload, k)
-			} else {
-				accessTokenPayload[k] = v
-			}
-		}
-		return updateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
-	}
-
 	getTimeCreatedWithContext := func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
@@ -149,6 +137,18 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return session.userDataInAccessToken
 	}
 
+	mergeIntoAccessTokenPayloadWithContext := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+		accessTokenPayload := getAccessTokenPayloadWithContext(userContext)
+		for k, v := range accessTokenPayloadUpdate {
+			if v == nil {
+				delete(accessTokenPayload, k)
+			} else {
+				accessTokenPayload[k] = v
+			}
+		}
+		return updateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
+	}
+
 	getHandleWithContext := func(userContext supertokens.UserContext) string {
 		return session.sessionHandle
 	}
@@ -157,7 +157,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	assertClaimsWithContext := func(claimValidators []*claims.SessionClaimValidator, userContext supertokens.UserContext) error {
-		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, session.userDataInAccessToken, claimValidators, userContext)
+		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, getAccessTokenPayloadWithContext(userContext), claimValidators, userContext)
 		if err != nil {
 			return err
 		}
@@ -180,7 +180,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	fetchAndSetClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		update, err := claim.Build(session.userID, userContext)
+		update, err := claim.Build(getUserIDWithContext(userContext), userContext)
 		if err != nil {
 			return err
 		}
@@ -193,7 +193,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	getClaimValueWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
-		return claim.GetValueFromPayload(session.userDataInAccessToken, userContext), nil
+		return claim.GetValueFromPayload(getAccessTokenPayloadWithContext(userContext), userContext), nil
 	}
 
 	removeClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {

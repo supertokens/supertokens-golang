@@ -146,6 +146,8 @@ type APIOptions struct {
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc
+
+	ClaimValidatorsAddedByOtherRecipes []*claims.SessionClaimValidator
 }
 
 type NormalisedErrorHandlers struct {
