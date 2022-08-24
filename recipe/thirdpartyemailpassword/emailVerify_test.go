@@ -124,7 +124,7 @@ func TestGenerateTokenAPIwithValidInputEmailVerifiedAndTestError(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 	user := result["user"].(map[string]interface{})
 
-	verifyToken, err := emailverification.CreateEmailVerificationToken(user["id"].(string), "FIXME")
+	verifyToken, err := emailverification.CreateEmailVerificationToken(user["id"].(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

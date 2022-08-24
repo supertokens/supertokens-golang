@@ -434,7 +434,7 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 
 	user := result["user"].(map[string]interface{})
 
-	isVerified, err := emailverification.IsEmailVerified(user["id"].(string), "FIXME")
+	isVerified, err := emailverification.IsEmailVerified(user["id"].(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

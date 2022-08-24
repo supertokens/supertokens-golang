@@ -1611,13 +1611,13 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 
 	userId := response["user"].(map[string]interface{})["id"]
 
-	res, err := emailverification.CreateEmailVerificationToken(userId.(string), "FIXME")
+	res, err := emailverification.CreateEmailVerificationToken(userId.(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	verifyToken := res.OK.Token
 
-	emailverification.RevokeEmailVerificationTokens(userId.(string), "FIXME")
+	emailverification.RevokeEmailVerificationTokens(userId.(string), nil)
 
 	res1, err := emailverification.VerifyEmailUsingToken(verifyToken)
 	assert.Nil(t, res1)

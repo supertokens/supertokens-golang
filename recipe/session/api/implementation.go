@@ -16,10 +16,8 @@
 package api
 
 import (
-	defaultErrors "errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -68,23 +66,12 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		}
 	}
 
-	signOutPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
-		session, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, nil, userContext)
-		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				return sessmodels.SignOutPOSTResponse{
-					OK: &struct{}{},
-				}, nil
+	signOutPOST := func(options sessmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+		if sessionContainer != nil {
+			err := sessionContainer.RevokeSessionWithContext(userContext)
+			if err != nil {
+				return sessmodels.SignOutPOSTResponse{}, err
 			}
-			return sessmodels.SignOutPOSTResponse{}, err
-		}
-		if session == nil {
-			return sessmodels.SignOutPOSTResponse{}, defaultErrors.New("session is nil. Should not come here")
-		}
-
-		err = session.RevokeSessionWithContext(userContext)
-		if err != nil {
-			return sessmodels.SignOutPOSTResponse{}, err
 		}
 
 		return sessmodels.SignOutPOSTResponse{

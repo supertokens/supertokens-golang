@@ -83,12 +83,12 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	})
 	assert.NoError(t, err)
 
-	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, "FIXME")
+	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
 	assert.NoError(t, err)
 
 	emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token)
 
-	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, "FIXME")
+	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, nil)
 	assert.NoError(t, err)
 	assert.True(t, isVerfied)
 
@@ -98,7 +98,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	})
 	assert.NoError(t, err)
 
-	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, "FIXME")
+	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)
 	assert.NoError(t, err)
 	assert.False(t, isVerfied1)
 }
@@ -153,11 +153,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	response, err := PasswordlessSignInUpByEmail("test@example.com")
 	assert.NoError(t, err)
 
-	isVerified, err := emailverification.IsEmailVerified(response.User.ID, "FIXME")
+	isVerified, err := emailverification.IsEmailVerified(response.User.ID, nil)
 	assert.NoError(t, err)
 	assert.True(t, isVerified)
 
-	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, "FIXME")
+	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.Nil(t, emailVerificationResp.OK)
@@ -165,11 +165,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	response, err = PasswordlessSignInUpByPhoneNumber("+123456789012")
 	assert.NoError(t, err)
 
-	isVerified, err = emailverification.IsEmailVerified(response.User.ID, "FIXME")
+	isVerified, err = emailverification.IsEmailVerified(response.User.ID, nil)
 	assert.NoError(t, err)
 	assert.True(t, isVerified)
 
-	emailVerificationResp, err = emailverification.CreateEmailVerificationToken(response.User.ID, "FIXME")
+	emailVerificationResp, err = emailverification.CreateEmailVerificationToken(response.User.ID, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.Nil(t, emailVerificationResp.OK)

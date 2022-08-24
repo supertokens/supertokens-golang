@@ -16,6 +16,7 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -25,7 +26,22 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	resp, err := (*apiImplementation.SignOutPOST)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+
+	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+
+	False := false
+	sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, &sessmodels.VerifySessionOptions{
+		SessionRequired: &False,
+		OverrideGlobalClaimValidators: func(globalClaimValidators []*claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []*claims.SessionClaimValidator {
+			return []*claims.SessionClaimValidator{}
+		},
+	}, userContext)
+
+	if err != nil {
+		return err
+	}
+
+	resp, err := (*apiImplementation.SignOutPOST)(options, sessionContainer, userContext)
 	if err != nil {
 		return err
 	}
