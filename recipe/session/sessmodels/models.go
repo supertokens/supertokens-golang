@@ -164,7 +164,7 @@ type SessionContainer struct {
 	GetAccessTokenPayload    func() map[string]interface{}
 	GetHandle                func() string
 	GetAccessToken           func() string
-	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error // Deprecated
+	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error // Deprecated: use MergeIntoAccessTokenPayload instead
 	GetTimeCreated           func() (uint64, error)
 	GetExpiry                func() (uint64, error)
 
@@ -175,7 +175,7 @@ type SessionContainer struct {
 	GetAccessTokenPayloadWithContext    func(userContext supertokens.UserContext) map[string]interface{}
 	GetHandleWithContext                func(userContext supertokens.UserContext) string
 	GetAccessTokenWithContext           func(userContext supertokens.UserContext) string
-	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error // Deprecated
+	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error // Deprecated: use MergeIntoAccessTokenPayloadWithContext instead
 	GetTimeCreatedWithContext           func(userContext supertokens.UserContext) (uint64, error)
 	GetExpiryWithContext                func(userContext supertokens.UserContext) (uint64, error)
 
