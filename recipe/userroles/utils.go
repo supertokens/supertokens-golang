@@ -24,6 +24,11 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
+	if config != nil {
+		typeNormalisedInput.SkipAddingRolesToAccessToken = config.SkipAddingRolesToAccessToken
+		typeNormalisedInput.SkipAddingPermissionsToAccessToken = config.SkipAddingPermissionsToAccessToken
+	}
+
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
 			typeNormalisedInput.Override.Functions = config.Override.Functions

@@ -16,10 +16,16 @@
 package userrolesmodels
 
 type TypeInput struct {
+	SkipAddingRolesToAccessToken       bool
+	SkipAddingPermissionsToAccessToken bool
+
 	Override *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
+	SkipAddingRolesToAccessToken       bool
+	SkipAddingPermissionsToAccessToken bool
+
 	Override OverrideStruct
 }
 

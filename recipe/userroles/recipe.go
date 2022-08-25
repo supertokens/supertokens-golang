@@ -19,6 +19,8 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/userroles/claims"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -66,6 +68,22 @@ func recipeInit(config *userrolesmodels.TypeInput) supertokens.Recipe {
 				return nil, err
 			}
 			singletonInstance = &recipe
+
+			supertokens.AddPostInitCallback(func() {
+				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
+				if err != nil {
+					return
+				}
+
+				if !config.SkipAddingRolesToAccessToken {
+					sessionRecipe.AddClaimFromOtherRecipe(claims.UserRoleClaim.TypeSessionClaim)
+				}
+
+				if !config.SkipAddingPermissionsToAccessToken {
+					sessionRecipe.AddClaimFromOtherRecipe(claims.PermissionClaim.TypeSessionClaim)
+				}
+			})
+
 			return &singletonInstance.RecipeModule, nil
 		}
 		return nil, errors.New("User Roles recipe has already been initialised. Please check your code for bugs.")
