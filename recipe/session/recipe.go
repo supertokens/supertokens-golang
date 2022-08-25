@@ -102,6 +102,10 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, defaultErrors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
+func GetRecipeInstanceOrThrowError() (*Recipe, error) {
+	return getRecipeInstanceOrThrowError()
+}
+
 func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
@@ -197,7 +201,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 }
 
 // Claim functions
-func (r *Recipe) addClaimFromOtherRecipe(claim *claims.TypeSessionClaim) error {
+func (r *Recipe) AddClaimFromOtherRecipe(claim *claims.TypeSessionClaim) error {
 	for _, existingClaim := range r.claimsAddedByOtherRecipes {
 		if claim.Key == existingClaim.Key {
 			return defaultErrors.New("claim already added by other recipe")
@@ -211,7 +215,7 @@ func (r *Recipe) getClaimsAddedByOtherRecipes() []*claims.TypeSessionClaim {
 	return r.claimsAddedByOtherRecipes
 }
 
-func (r *Recipe) addClaimValidatorFromOtherRecipe(validator claims.SessionClaimValidator) error {
+func (r *Recipe) AddClaimValidatorFromOtherRecipe(validator claims.SessionClaimValidator) error {
 	r.claimValidatorsAddedByOtherRecipes = append(r.claimValidatorsAddedByOtherRecipes, validator)
 	return nil
 }
