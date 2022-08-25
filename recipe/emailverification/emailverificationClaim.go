@@ -47,7 +47,7 @@ func NewEmailVerificationClaim() *evclaims.TypeEmailVerificationClaim {
 				refetchTimeOnFalseInSeconds = &defaultTimeout
 			}
 
-			claimValidator := booleanClaim.Validators.HasValue(true, refetchTimeOnFalseInSeconds, nil)
+			claimValidator := booleanClaim.Validators.HasValue(true, nil, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 				value := emailVerificationClaim.GetValueFromPayload(payload, userContext)
 				return value == nil || (value == false && *emailVerificationClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
