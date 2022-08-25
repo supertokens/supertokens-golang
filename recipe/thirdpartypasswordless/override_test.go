@@ -59,7 +59,7 @@ func TestOverridingFunctions(t *testing.T) {
 				Override: &tplmodels.OverrideStruct{
 					Functions: func(originalImplementation tplmodels.RecipeInterface) tplmodels.RecipeInterface {
 						originalThirdPartySignInUp := *originalImplementation.ThirdPartySignInUp
-						*originalImplementation.ThirdPartySignInUp = func(thirdPartyID, thirdPartyUserID string, email tplmodels.EmailStruct, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+						*originalImplementation.ThirdPartySignInUp = func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
 							resp, err := originalThirdPartySignInUp(thirdPartyID, thirdPartyUserID, email, userContext)
 							userRef = &resp.OK.User
 							newUser = resp.OK.CreatedNewUser

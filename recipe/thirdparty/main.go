@@ -30,7 +30,7 @@ func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.SignInUpResponse{}, err
@@ -62,7 +62,7 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct) (tpmodels.SignInUpResponse, error) {
+func SignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.SignInUpResponse, error) {
 	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 

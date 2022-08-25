@@ -59,7 +59,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForThirdpartyUser(t *testing.T
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", tpepmodels.EmailStruct{ID: "test@example.com", IsVerified: true})
+	ThirdPartySignInUp("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -142,7 +142,7 @@ func TestBackwardCompatibilityResetPasswordForThirdpartyUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", tpepmodels.EmailStruct{ID: "test@example.com", IsVerified: true})
+	ThirdPartySignInUp("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -264,7 +264,7 @@ func TestCustomOverrideResetPasswordForThirdpartyUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", tpepmodels.EmailStruct{ID: "test@example.com", IsVerified: true})
+	ThirdPartySignInUp("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -430,7 +430,7 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", tpepmodels.EmailStruct{ID: "test@example.com", IsVerified: true})
+	ThirdPartySignInUp("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

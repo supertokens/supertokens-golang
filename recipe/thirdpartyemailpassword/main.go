@@ -28,7 +28,7 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInUpResponse{}, err
@@ -108,7 +108,7 @@ func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens
 	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
 }
 
-func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email tpepmodels.EmailStruct) (tpepmodels.SignInUpResponse, error) {
+func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tpepmodels.SignInUpResponse, error) {
 	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 

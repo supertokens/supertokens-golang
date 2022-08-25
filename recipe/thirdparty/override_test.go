@@ -57,7 +57,7 @@ func TestOverrideFunctions(t *testing.T) {
 						Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
 							originalSignInUp := *originalImplementation.SignInUp
 							originalGetUserById := *originalImplementation.GetUserByID
-							*originalImplementation.SignInUp = func(thirdPartyID, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+							*originalImplementation.SignInUp = func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 								resp, err := originalSignInUp(thirdPartyID, thirdPartyUserID, email, userContext)
 								if err != nil {
 									return tpmodels.SignInUpResponse{}, err
