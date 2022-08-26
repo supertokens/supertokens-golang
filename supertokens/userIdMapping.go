@@ -4,6 +4,8 @@ import (
 	"errors"
 )
 
+var userIdTypeDefault = "ANY"
+
 type CreateUserIdMappingResult struct {
 	OK                              *struct{}
 	UnknownSupertokensUserIdError   *struct{}
@@ -68,7 +70,10 @@ type GetUserIdMappingResult struct {
 	UnknownMappingError *struct{}
 }
 
-func GetUserIdMapping(userId string, userIdType string) (GetUserIdMappingResult, error) {
+func GetUserIdMapping(userId string, userIdType *string) (GetUserIdMappingResult, error) {
+	if userIdType == nil {
+		userIdType = &userIdTypeDefault
+	}
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return GetUserIdMappingResult{}, err
@@ -83,7 +88,7 @@ func GetUserIdMapping(userId string, userIdType string) (GetUserIdMappingResult,
 
 	resp, err := querier.SendGetRequest("/recipe/userid/map", map[string]string{
 		"userId":     userId,
-		"userIdType": userIdType,
+		"userIdType": *userIdType,
 	})
 	if err != nil {
 		return GetUserIdMappingResult{}, err
@@ -117,7 +122,10 @@ type DeleteUserIdMappingResult struct {
 	}
 }
 
-func DeleteUserIdMapping(userId string, userIdType string, force bool) (DeleteUserIdMappingResult, error) {
+func DeleteUserIdMapping(userId string, userIdType *string, force bool) (DeleteUserIdMappingResult, error) {
+	if userIdType == nil {
+		userIdType = &userIdTypeDefault
+	}
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return DeleteUserIdMappingResult{}, err
@@ -151,6 +159,9 @@ type UpdateOrDeleteUserIdMappingInfoResult struct {
 }
 
 func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *string, externalUserIdInfo *string) (UpdateOrDeleteUserIdMappingInfoResult, error) {
+	if userIdType == nil {
+		userIdType = &userIdTypeDefault
+	}
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, err

@@ -54,7 +54,8 @@ func TestCreateUserIdMapping(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, "SUPERTOKENS")
+	supertokensType := "SUPERTOKENS"
+	getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
 	assert.NoError(t, err)
 	assert.NotNil(t, getResp.OK)
 	assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)

@@ -26,21 +26,24 @@ func TestDeleteUnknownUserIdMapping(t *testing.T) {
 	}
 
 	{
-		deleteResp, err := supertokens.DeleteUserIdMapping("unknownUserId", "SUPERTOKENS", false)
+		supertokensType := "SUPERTOKENS"
+		deleteResp, err := supertokens.DeleteUserIdMapping("unknownUserId", &supertokensType, false)
 		assert.NoError(t, err)
 		assert.NotNil(t, deleteResp.OK)
 		assert.False(t, deleteResp.OK.DidMappingExist)
 	}
 
 	{
-		deleteResp, err := supertokens.DeleteUserIdMapping("unknownUserId", "EXTERNAL", false)
+		externalType := "EXTERNAL"
+		deleteResp, err := supertokens.DeleteUserIdMapping("unknownUserId", &externalType, false)
 		assert.NoError(t, err)
 		assert.NotNil(t, deleteResp.OK)
 		assert.False(t, deleteResp.OK.DidMappingExist)
 	}
 
 	{
-		deleteResp, err := supertokens.DeleteUserIdMapping("unknownUserId", "ANY", false)
+		anyType := "ANY"
+		deleteResp, err := supertokens.DeleteUserIdMapping("unknownUserId", &anyType, false)
 		assert.NoError(t, err)
 		assert.NotNil(t, deleteResp.OK)
 		assert.False(t, deleteResp.OK.DidMappingExist)
@@ -75,7 +78,8 @@ func TestDeleteUserIdMappingOfSupertokensUserId(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	deleteResp, err := supertokens.DeleteUserIdMapping(signUpResponse.OK.User.ID, "SUPERTOKENS", false)
+	supertokensType := "SUPERTOKENS"
+	deleteResp, err := supertokens.DeleteUserIdMapping(signUpResponse.OK.User.ID, &supertokensType, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, deleteResp.OK)
 	assert.True(t, deleteResp.OK.DidMappingExist)
@@ -109,7 +113,8 @@ func TestDeleteUserIdMappingOfExternalUserId(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	deleteResp, err := supertokens.DeleteUserIdMapping(externalUserId, "EXTERNAL", false)
+	externalType := "EXTERNAL"
+	deleteResp, err := supertokens.DeleteUserIdMapping(externalUserId, &externalType, false)
 	assert.NoError(t, err)
 	assert.NotNil(t, deleteResp.OK)
 	assert.True(t, deleteResp.OK.DidMappingExist)
@@ -136,6 +141,8 @@ func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, signUpResponse.OK)
 
+	anyType := "ANY"
+
 	{
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
@@ -143,12 +150,12 @@ func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.OK)
 
-		deleteResp, err := supertokens.DeleteUserIdMapping(externalUserId, "ANY", false)
+		deleteResp, err := supertokens.DeleteUserIdMapping(externalUserId, &anyType, false)
 		assert.NoError(t, err)
 		assert.NotNil(t, deleteResp.OK)
 		assert.True(t, deleteResp.OK.DidMappingExist)
 
-		getResp, err := supertokens.GetUserIdMapping(externalUserId, "ANY")
+		getResp, err := supertokens.GetUserIdMapping(externalUserId, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}
@@ -160,12 +167,12 @@ func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.OK)
 
-		deleteResp, err := supertokens.DeleteUserIdMapping(signUpResponse.OK.User.ID, "ANY", false)
+		deleteResp, err := supertokens.DeleteUserIdMapping(signUpResponse.OK.User.ID, &anyType, false)
 		assert.NoError(t, err)
 		assert.NotNil(t, deleteResp.OK)
 		assert.True(t, deleteResp.OK.DidMappingExist)
 
-		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, "ANY")
+		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}

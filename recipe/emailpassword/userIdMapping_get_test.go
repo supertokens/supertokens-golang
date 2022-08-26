@@ -37,7 +37,8 @@ func TestGetUserIdMapping(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, "SUPERTOKENS")
+		supertokensType := "SUPERTOKENS"
+		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -46,7 +47,8 @@ func TestGetUserIdMapping(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(externalUserId, "EXTERNAL")
+		externalType := "EXTERNAL"
+		getResp, err := supertokens.GetUserIdMapping(externalUserId, &externalType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -55,7 +57,8 @@ func TestGetUserIdMapping(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, "ANY")
+		anyType := "ANY"
+		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -64,7 +67,8 @@ func TestGetUserIdMapping(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(externalUserId, "ANY")
+		anyType := "ANY"
+		getResp, err := supertokens.GetUserIdMapping(externalUserId, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -91,19 +95,22 @@ func TestGetUserIdMappingThatDoesNotExist(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping("unknownId", "ANY")
+		anyType := "ANY"
+		getResp, err := supertokens.GetUserIdMapping("unknownId", &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping("unknownId", "SUPERTOKENS")
+		supertokensType := "SUPERTOKENS"
+		getResp, err := supertokens.GetUserIdMapping("unknownId", &supertokensType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping("unknownId", "EXTERNAL")
+		externalType := "EXTERNAL"
+		getResp, err := supertokens.GetUserIdMapping("unknownId", &externalType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}
@@ -137,7 +144,8 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, "SUPERTOKENS")
+		supertokensType := "SUPERTOKENS"
+		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -146,7 +154,8 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(externalUserId, "EXTERNAL")
+		externalType := "EXTERNAL"
+		getResp, err := supertokens.GetUserIdMapping(externalUserId, &externalType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -155,7 +164,8 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, "ANY")
+		anyType := "ANY"
+		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
@@ -164,7 +174,8 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	}
 
 	{
-		getResp, err := supertokens.GetUserIdMapping(externalUserId, "ANY")
+		anyType := "ANY"
+		getResp, err := supertokens.GetUserIdMapping(externalUserId, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, signUpResponse.OK.User.ID, getResp.OK.SupertokensUserId)
