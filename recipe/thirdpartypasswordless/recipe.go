@@ -90,7 +90,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 			ContactMethodEmail:        verifiedConfig.ContactMethodEmail,
 			ContactMethodEmailOrPhone: verifiedConfig.ContactMethodEmailOrPhone,
 			FlowType:                  verifiedConfig.FlowType,
-			GetLinkDomainAndPath:      verifiedConfig.GetLinkDomainAndPath,
 			GetCustomUserInputCode:    verifiedConfig.GetCustomUserInputCode,
 			Override: &plessmodels.OverrideStruct{
 				Functions: func(originalImplementation plessmodels.RecipeInterface) plessmodels.RecipeInterface {

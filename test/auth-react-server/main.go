@@ -402,7 +402,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
-				GetLinkDomainAndPath:      passwordlessConfig.GetLinkDomainAndPath,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
 				Override: &plessmodels.OverrideStruct{
 					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
@@ -448,7 +447,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
-				GetLinkDomainAndPath:      passwordlessConfig.GetLinkDomainAndPath,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
 				Providers: []tpmodels.TypeProvider{
 					thirdparty.Google(tpmodels.GoogleConfig{
