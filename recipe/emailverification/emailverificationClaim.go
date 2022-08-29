@@ -10,7 +10,7 @@ import (
 )
 
 // key string, fetchValue claims.FetchValueFunc
-func NewEmailVerificationClaim() (*claims.TypeSessionClaim, *evclaims.TypeEmailVerificationClaimValidators) {
+func NewEmailVerificationClaim() (claims.TypeSessionClaim, evclaims.TypeEmailVerificationClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -36,9 +36,9 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, *evclaims.TypeEmailV
 
 	evClaim, booleanClaimValidators := claims.BooleanClaim("st-ev", fetchValue, nil)
 
-	validators := &evclaims.TypeEmailVerificationClaimValidators{
+	validators := evclaims.TypeEmailVerificationClaimValidators{
 		BooleanClaimValidators: booleanClaimValidators,
-		IsVerified: func(refetchTimeOnFalseInSeconds *int64) *claims.SessionClaimValidator {
+		IsVerified: func(refetchTimeOnFalseInSeconds *int64) claims.SessionClaimValidator {
 			if refetchTimeOnFalseInSeconds == nil {
 				var defaultTimeout int64 = 10
 				refetchTimeOnFalseInSeconds = &defaultTimeout
@@ -56,5 +56,6 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, *evclaims.TypeEmailV
 }
 
 func init() {
+	// this function is called automatically when the package is imported
 	evclaims.EmailVerificationClaim, evclaims.EmailVerificationClaimValidators = NewEmailVerificationClaim()
 }

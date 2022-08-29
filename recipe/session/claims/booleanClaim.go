@@ -1,16 +1,16 @@
 package claims
 
-func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, *BooleanClaimValidators) {
+func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (TypeSessionClaim, BooleanClaimValidators) {
 	claim, primitiveClaimValidators := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
 
-	validators := &BooleanClaimValidators{
+	validators := BooleanClaimValidators{
 		PrimitiveClaimValidators: primitiveClaimValidators,
 
-		IsTrue: func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+		IsTrue: func(maxAgeInSeconds *int64, id *string) SessionClaimValidator {
 			return primitiveClaimValidators.HasValue(true, maxAgeInSeconds, id)
 		},
 
-		IsFalse: func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
+		IsFalse: func(maxAgeInSeconds *int64, id *string) SessionClaimValidator {
 			return primitiveClaimValidators.HasValue(false, maxAgeInSeconds, id)
 		},
 	}
@@ -19,7 +19,7 @@ func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds 
 }
 
 type BooleanClaimValidators struct {
-	*PrimitiveClaimValidators
-	IsTrue  func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator
-	IsFalse func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator
+	PrimitiveClaimValidators
+	IsTrue  func(maxAgeInSeconds *int64, id *string) SessionClaimValidator
+	IsFalse func(maxAgeInSeconds *int64, id *string) SessionClaimValidator
 }

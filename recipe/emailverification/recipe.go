@@ -133,7 +133,7 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 
 				if config.Mode == "REQUIRED" {
 					sessionRecipe.AddClaimValidatorFromOtherRecipe(
-						*evclaims.EmailVerificationClaimValidators.IsVerified(nil),
+						evclaims.EmailVerificationClaimValidators.IsVerified(nil),
 					)
 				}
 			})

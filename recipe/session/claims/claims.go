@@ -4,8 +4,8 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SessionClaim(key string, fetchValue FetchValueFunc) *TypeSessionClaim {
-	sessionClaim := &TypeSessionClaim{
+func SessionClaim(key string, fetchValue FetchValueFunc) TypeSessionClaim {
+	sessionClaim := TypeSessionClaim{
 		Key:        key,
 		FetchValue: fetchValue,
 	}
