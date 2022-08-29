@@ -1,30 +1,21 @@
 package claims
 
-func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) *TypeBooleanClaim {
-	primitiveClaim := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
+func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, *BooleanClaimValidators) {
+	claim, primitiveClaimValidators := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
 
-	booleanClaim := &TypeBooleanClaim{
-		TypePrimitiveClaim: *primitiveClaim,
-	}
-
-	booleanClaim.Validators = &BooleanClaimValidators{
-		PrimitiveClaimValidators: primitiveClaim.Validators,
+	validators := &BooleanClaimValidators{
+		PrimitiveClaimValidators: primitiveClaimValidators,
 
 		IsTrue: func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
-			return primitiveClaim.Validators.HasValue(true, maxAgeInSeconds, id)
+			return primitiveClaimValidators.HasValue(true, maxAgeInSeconds, id)
 		},
 
 		IsFalse: func(maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
-			return primitiveClaim.Validators.HasValue(false, maxAgeInSeconds, id)
+			return primitiveClaimValidators.HasValue(false, maxAgeInSeconds, id)
 		},
 	}
 
-	return booleanClaim
-}
-
-type TypeBooleanClaim struct {
-	TypePrimitiveClaim
-	Validators *BooleanClaimValidators
+	return claim, validators
 }
 
 type BooleanClaimValidators struct {

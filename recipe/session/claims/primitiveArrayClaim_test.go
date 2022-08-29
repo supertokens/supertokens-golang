@@ -8,7 +8,7 @@ import (
 )
 
 func TestPrimitiveArrayClaim(t *testing.T) {
-	primArrayClaim := PrimitiveArrayClaim(
+	primArrayClaim, validators := PrimitiveArrayClaim(
 		"test",
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 			return map[string]interface{}{}, nil
@@ -22,7 +22,6 @@ func TestPrimitiveArrayClaim(t *testing.T) {
 		true,
 	}, nil)
 
-	validators := primArrayClaim.Validators
 	assert.True(t, validators.Includes(100, nil, nil).Validate(payload, nil).IsValid)
 	assert.True(t, validators.Includes("world", nil, nil).Validate(payload, nil).IsValid)
 	assert.True(t, validators.Includes(true, nil, nil).Validate(payload, nil).IsValid)

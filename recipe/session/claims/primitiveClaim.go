@@ -6,7 +6,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) *TypePrimitiveClaim {
+func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, *PrimitiveClaimValidators) {
 	if defaultMaxAgeInSeconds == nil {
 		val := int64(300)
 		defaultMaxAgeInSeconds = &val
@@ -47,16 +47,12 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 		return nil
 	}
 
-	primitiveClaim := &TypePrimitiveClaim{
-		TypeSessionClaim: sessionClaim,
-	}
-
-	primitiveClaim.Validators = &PrimitiveClaimValidators{
+	validators := &PrimitiveClaimValidators{
 		HasValue: func(val interface{}, maxAgeInSeconds *int64, id *string) *SessionClaimValidator {
 			if maxAgeInSeconds == nil {
 				maxAgeInSeconds = defaultMaxAgeInSeconds
 			}
-			validatorId := primitiveClaim.Key
+			validatorId := sessionClaim.Key
 			if id != nil {
 				validatorId = *id
 			}
@@ -83,7 +79,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 							},
 						}
 					}
-					ageInSeconds := (time.Now().UnixMilli() - *primitiveClaim.GetLastRefetchTime(payload, userContext)) / 1000
+					ageInSeconds := (time.Now().UnixMilli() - *sessionClaim.GetLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -112,12 +108,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 		},
 	}
 
-	return primitiveClaim
-}
-
-type TypePrimitiveClaim struct {
-	*TypeSessionClaim
-	Validators *PrimitiveClaimValidators
+	return sessionClaim, validators
 }
 
 type PrimitiveClaimValidators struct {
