@@ -23,6 +23,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -32,6 +33,7 @@ func resetAll() {
 	ResetForTest()
 	emailverification.ResetForTest()
 	session.ResetForTest()
+	usermetadata.ResetForTest()
 }
 
 func BeforeEach() {
