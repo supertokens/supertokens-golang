@@ -61,11 +61,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl))
 	}
 
-	supertokens.AddPostInitCallback(func() {
+	supertokens.AddPostInitCallback(func() error {
 		emailVerificationRecipe := emailverification.GetRecipeInstance()
 		if emailVerificationRecipe != nil {
 			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+		return nil
 	})
 
 	return *r, nil

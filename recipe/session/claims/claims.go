@@ -46,10 +46,10 @@ type SessionClaimValidator struct {
 
 type ClaimValidationResult struct {
 	IsValid bool
-	Reason  interface{}
+	Reason  interface{} // This can be nil, add checks when used
 }
 
 type ClaimValidationError struct {
 	ID     string
-	Reason interface{}
+	Reason interface{} // This can be nil, add checks when used
 }

@@ -123,10 +123,10 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 			}
 			singletonInstance = &recipe
 
-			supertokens.AddPostInitCallback(func() {
+			supertokens.AddPostInitCallback(func() error {
 				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
 				if err != nil {
-					return
+					return err
 				}
 
 				sessionRecipe.AddClaimFromOtherRecipe(evclaims.EmailVerificationClaim)
@@ -136,6 +136,7 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 						evclaims.EmailVerificationClaimValidators.IsVerified(nil),
 					)
 				}
+				return nil
 			})
 			return &singletonInstance.RecipeModule, nil
 		}
