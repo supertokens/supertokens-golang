@@ -55,7 +55,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
@@ -102,7 +102,7 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
@@ -143,7 +143,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 

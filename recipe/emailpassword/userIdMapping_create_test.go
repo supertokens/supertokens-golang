@@ -54,11 +54,11 @@ func TestCreateUserIdMapping(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	supertokensType := "SUPERTOKENS"
+	supertokensType := supertokens.UserIdTypeSupertokens
 	getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
 	assert.NoError(t, err)
 	assert.NotNil(t, getResp.OK)
@@ -88,7 +88,7 @@ func TestCreateUserIdMappingWithUnknownSupertokensUserId(t *testing.T) {
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
 
-	createResp, err := supertokens.CreateUserIdMapping(supertokensUserId, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(supertokensUserId, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.UnknownSupertokensUserIdError)
 }
@@ -117,7 +117,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 	{
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.OK)
 	}
@@ -125,7 +125,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 	{ // duplicate of both
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.UserIdMappingAlreadyExistsError)
 		assert.True(t, createResp.UserIdMappingAlreadyExistsError.DoesExternalUserIdExist)
@@ -135,7 +135,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 	{ // duplicate of supertokensUserId
 		externalUserId := "differentId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.UserIdMappingAlreadyExistsError)
 		assert.False(t, createResp.UserIdMappingAlreadyExistsError.DoesExternalUserIdExist)
@@ -150,7 +150,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.UserIdMappingAlreadyExistsError)
 		assert.True(t, createResp.UserIdMappingAlreadyExistsError.DoesExternalUserIdExist)
@@ -186,18 +186,29 @@ func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	metadataResp, err := usermetadata.UpdateUserMetadata(signUpResponse.OK.User.ID, userMetadata)
 	assert.NoError(t, err)
 	assert.NotNil(t, metadataResp)
-	{ // without force
+
+	{ // with force nil
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 		assert.Contains(t, err.Error(), "UserId is already in use in UserMetadata recipe")
 		assert.Nil(t, createResp.OK)
 	}
 
 	{ // without force
+		False := false
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, true)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, &False)
+		assert.Contains(t, err.Error(), "UserId is already in use in UserMetadata recipe")
+		assert.Nil(t, createResp.OK)
+	}
+
+	{ // with force
+		True := true
+		externalUserId := "externalId"
+		externalUserIdInfo := "externalIdInfo"
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, &True)
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.OK)
 	}

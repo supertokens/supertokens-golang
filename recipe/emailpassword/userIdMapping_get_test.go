@@ -32,12 +32,12 @@ func TestGetUserIdMapping(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
 	{
-		supertokensType := "SUPERTOKENS"
+		supertokensType := supertokens.UserIdTypeSupertokens
 		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -47,7 +47,7 @@ func TestGetUserIdMapping(t *testing.T) {
 	}
 
 	{
-		externalType := "EXTERNAL"
+		externalType := supertokens.UserIdTypeExternal
 		getResp, err := supertokens.GetUserIdMapping(externalUserId, &externalType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -57,7 +57,7 @@ func TestGetUserIdMapping(t *testing.T) {
 	}
 
 	{
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -67,7 +67,7 @@ func TestGetUserIdMapping(t *testing.T) {
 	}
 
 	{
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		getResp, err := supertokens.GetUserIdMapping(externalUserId, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -95,21 +95,21 @@ func TestGetUserIdMappingThatDoesNotExist(t *testing.T) {
 	}
 
 	{
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		getResp, err := supertokens.GetUserIdMapping("unknownId", &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}
 
 	{
-		supertokensType := "SUPERTOKENS"
+		supertokensType := supertokens.UserIdTypeSupertokens
 		getResp, err := supertokens.GetUserIdMapping("unknownId", &supertokensType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
 	}
 
 	{
-		externalType := "EXTERNAL"
+		externalType := supertokens.UserIdTypeExternal
 		getResp, err := supertokens.GetUserIdMapping("unknownId", &externalType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.UnknownMappingError)
@@ -139,12 +139,12 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	assert.NotNil(t, signUpResponse.OK)
 
 	externalUserId := "externalId"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, nil, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, nil, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
 	{
-		supertokensType := "SUPERTOKENS"
+		supertokensType := supertokens.UserIdTypeSupertokens
 		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -154,7 +154,7 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	}
 
 	{
-		externalType := "EXTERNAL"
+		externalType := supertokens.UserIdTypeExternal
 		getResp, err := supertokens.GetUserIdMapping(externalUserId, &externalType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -164,7 +164,7 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	}
 
 	{
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
@@ -174,7 +174,7 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 	}
 
 	{
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		getResp, err := supertokens.GetUserIdMapping(externalUserId, &anyType)
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)

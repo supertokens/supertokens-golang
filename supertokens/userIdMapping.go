@@ -4,7 +4,13 @@ import (
 	"errors"
 )
 
-var userIdTypeDefault = "ANY"
+type UserIdType string
+
+const (
+	UserIdTypeAny         UserIdType = "ANY"
+	UserIdTypeSupertokens UserIdType = "SUPERTOKENS"
+	UserIdTypeExternal    UserIdType = "EXTERNAL"
+)
 
 type CreateUserIdMappingResult struct {
 	OK                              *struct{}
@@ -15,7 +21,7 @@ type CreateUserIdMappingResult struct {
 	}
 }
 
-func CreateUserIdMapping(supertokensUserId string, externalUserId string, externalUserIdInfo *string, force bool) (CreateUserIdMappingResult, error) {
+func CreateUserIdMapping(supertokensUserId string, externalUserId string, externalUserIdInfo *string, force *bool) (CreateUserIdMappingResult, error) {
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return CreateUserIdMappingResult{}, err
@@ -31,7 +37,9 @@ func CreateUserIdMapping(supertokensUserId string, externalUserId string, extern
 	data := map[string]interface{}{
 		"superTokensUserId": supertokensUserId,
 		"externalUserId":    externalUserId,
-		"force":             force,
+	}
+	if force != nil {
+		data["force"] = *force
 	}
 	if externalUserIdInfo != nil {
 		data["externalUserIdInfo"] = *externalUserIdInfo
@@ -70,14 +78,7 @@ type GetUserIdMappingResult struct {
 	UnknownMappingError *struct{}
 }
 
-func GetUserIdMapping(userId string, userIdType *string) (GetUserIdMappingResult, error) {
-	if userIdType == nil {
-		userIdType = &userIdTypeDefault
-	}
-	err := validateUserIdType(*userIdType)
-	if err != nil {
-		return GetUserIdMappingResult{}, err
-	}
+func GetUserIdMapping(userId string, userIdType *UserIdType) (GetUserIdMappingResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
@@ -91,10 +92,13 @@ func GetUserIdMapping(userId string, userIdType *string) (GetUserIdMappingResult
 		return GetUserIdMappingResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
-	resp, err := querier.SendGetRequest("/recipe/userid/map", map[string]string{
-		"userId":     userId,
-		"userIdType": *userIdType,
-	})
+	data := map[string]string{
+		"userId": userId,
+	}
+	if userIdType != nil {
+		data["userIdType"] = string(*userIdType)
+	}
+	resp, err := querier.SendGetRequest("/recipe/userid/map", data)
 	if err != nil {
 		return GetUserIdMappingResult{}, err
 	}
@@ -127,15 +131,7 @@ type DeleteUserIdMappingResult struct {
 	}
 }
 
-func DeleteUserIdMapping(userId string, userIdType *string, force bool) (DeleteUserIdMappingResult, error) {
-	if userIdType == nil {
-		userIdType = &userIdTypeDefault
-	}
-	err := validateUserIdType(*userIdType)
-	if err != nil {
-		return DeleteUserIdMappingResult{}, err
-	}
-
+func DeleteUserIdMapping(userId string, userIdType *UserIdType, force *bool) (DeleteUserIdMappingResult, error) {
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return DeleteUserIdMappingResult{}, err
@@ -148,11 +144,16 @@ func DeleteUserIdMapping(userId string, userIdType *string, force bool) (DeleteU
 		return DeleteUserIdMappingResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
-	resp, err := querier.SendPostRequest("/recipe/userid/map/remove", map[string]interface{}{
-		"userId":     userId,
-		"userIdType": userIdType,
-		"force":      force,
-	})
+	data := map[string]interface{}{
+		"userId": userId,
+	}
+	if userIdType != nil {
+		data["userIdType"] = string(*userIdType)
+	}
+	if force != nil {
+		data["force"] = *force
+	}
+	resp, err := querier.SendPostRequest("/recipe/userid/map/remove", data)
 	if err != nil {
 		return DeleteUserIdMappingResult{}, err
 	}
@@ -168,15 +169,7 @@ type UpdateOrDeleteUserIdMappingInfoResult struct {
 	UnknownMappingError *struct{}
 }
 
-func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *string, externalUserIdInfo *string) (UpdateOrDeleteUserIdMappingInfoResult, error) {
-	if userIdType == nil {
-		userIdType = &userIdTypeDefault
-	}
-	err := validateUserIdType(*userIdType)
-	if err != nil {
-		return UpdateOrDeleteUserIdMappingInfoResult{}, err
-	}
-
+func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *UserIdType, externalUserIdInfo *string) (UpdateOrDeleteUserIdMappingInfoResult, error) {
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, err
@@ -189,11 +182,15 @@ func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *string, external
 		return UpdateOrDeleteUserIdMappingInfoResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
-	resp, err := querier.SendPutRequest("/recipe/userid/external-user-id-info", map[string]interface{}{
+	data := map[string]interface{}{
 		"userId":             userId,
-		"userIdType":         *userIdType,
 		"externalUserIdInfo": externalUserIdInfo,
-	})
+	}
+	if userIdType != nil {
+		data["userIdType"] = string(*userIdType)
+	}
+
+	resp, err := querier.SendPutRequest("/recipe/userid/external-user-id-info", data)
 	if err != nil {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, err
 	}
@@ -207,11 +204,4 @@ func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *string, external
 			UnknownMappingError: &struct{}{},
 		}, nil
 	}
-}
-
-func validateUserIdType(userIdType string) error {
-	if userIdType != "SUPERTOKENS" && userIdType != "EXTERNAL" && userIdType != "ANY" {
-		return errors.New("userIdType must be one of SUPERTOKENS, EXTERNAL or ANY")
-	}
-	return nil
 }

@@ -54,7 +54,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
@@ -111,7 +111,7 @@ func TestCreateUserIdMappingUsingPhone(t *testing.T) {
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.User.ID, externalUserId, &externalUserIdInfo, false)
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 

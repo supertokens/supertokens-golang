@@ -27,28 +27,28 @@ func TestUpdateUserIdMappingForUnknownUserId(t *testing.T) {
 
 	externalInfo := "someInfo"
 	{
-		supertokensType := "SUPERTOKENS"
+		supertokensType := supertokens.UserIdTypeSupertokens
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo("unknownUserId", &supertokensType, &externalInfo)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.UnknownMappingError)
 	}
 
 	{
-		externalType := "EXTERNAL"
+		externalType := supertokens.UserIdTypeExternal
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo("unknownUserId", &externalType, &externalInfo)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.UnknownMappingError)
 	}
 
 	{
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo("unknownUserId", &anyType, &externalInfo)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.UnknownMappingError)
 	}
 }
 
-func TestUpdateUserIdMapping(t *testing.T) {
+func TestUpdateInfoInUserIdMapping(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -72,14 +72,14 @@ func TestUpdateUserIdMapping(t *testing.T) {
 	{
 		externalUserId := "externalId"
 		externalUserIdInfo := "externalIdInfo"
-		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, createResp.OK)
 	}
 
 	{
 		infoA := "infoA"
-		supertokensType := "SUPERTOKENS"
+		supertokensType := supertokens.UserIdTypeSupertokens
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo(signUpResponse.OK.User.ID, &supertokensType, &infoA)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.OK)
@@ -92,7 +92,7 @@ func TestUpdateUserIdMapping(t *testing.T) {
 
 	{
 		infoB := "infoB"
-		externalType := "EXTERNAL"
+		externalType := supertokens.UserIdTypeExternal
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo("externalId", &externalType, &infoB)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.OK)
@@ -105,7 +105,7 @@ func TestUpdateUserIdMapping(t *testing.T) {
 
 	{
 		infoC := "infoC"
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo(signUpResponse.OK.User.ID, &anyType, &infoC)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.OK)
@@ -118,7 +118,7 @@ func TestUpdateUserIdMapping(t *testing.T) {
 
 	{
 		infoD := "infoD"
-		anyType := "ANY"
+		anyType := supertokens.UserIdTypeAny
 		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo("externalId", &anyType, &infoD)
 		assert.NoError(t, err)
 		assert.NotNil(t, updateResp.OK)
@@ -127,5 +127,47 @@ func TestUpdateUserIdMapping(t *testing.T) {
 		assert.NoError(t, err)
 		assert.NotNil(t, getResp.OK)
 		assert.Equal(t, infoD, *getResp.OK.ExternalUserIdInfo)
+	}
+}
+
+func TestDeleteInfoInUserIdMapping(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	initForUserIdMappingTest(t)
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	assert.NoError(t, err)
+
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	assert.NoError(t, err)
+
+	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+		return
+	}
+
+	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	assert.NoError(t, err)
+	assert.NotNil(t, signUpResponse.OK)
+
+	{
+		externalUserId := "externalId"
+		externalUserIdInfo := "externalIdInfo"
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, createResp.OK)
+	}
+
+	{ // set external Info to nil
+		supertokensType := supertokens.UserIdTypeSupertokens
+		updateResp, err := supertokens.UpdateOrDeleteUserIdMappingInfo(signUpResponse.OK.User.ID, &supertokensType, nil)
+		assert.NoError(t, err)
+		assert.NotNil(t, updateResp.OK)
+
+		getResp, err := supertokens.GetUserIdMapping(signUpResponse.OK.User.ID, &supertokensType)
+		assert.NoError(t, err)
+		assert.NotNil(t, getResp.OK)
+		assert.Nil(t, getResp.OK.ExternalUserIdInfo)
 	}
 }
