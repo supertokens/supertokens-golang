@@ -4,6 +4,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -19,7 +20,10 @@ func initForUserIdMappingTest(t *testing.T) {
 			AppName:       "SuperTokens",
 			WebsiteDomain: "supertokens.io",
 		},
-		RecipeList: []supertokens.Recipe{Init(nil)},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			usermetadata.Init(nil),
+		},
 	}
 
 	err := supertokens.Init(config)
@@ -151,5 +155,50 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 		assert.NotNil(t, createResp.UserIdMappingAlreadyExistsError)
 		assert.True(t, createResp.UserIdMappingAlreadyExistsError.DoesExternalUserIdExist)
 		assert.False(t, createResp.UserIdMappingAlreadyExistsError.DoesSuperTokensUserIdExist)
+	}
+}
+
+func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	initForUserIdMappingTest(t)
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	assert.NoError(t, err)
+
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	assert.NoError(t, err)
+
+	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+		return
+	}
+
+	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	assert.NoError(t, err)
+
+	assert.NotNil(t, signUpResponse.OK)
+
+	userMetadata := map[string]interface{}{
+		"role": "admin",
+	}
+	metadataResp, err := usermetadata.UpdateUserMetadata(signUpResponse.OK.User.ID, userMetadata)
+	assert.NoError(t, err)
+	assert.NotNil(t, metadataResp)
+	{ // without force
+		externalUserId := "externalId"
+		externalUserIdInfo := "externalIdInfo"
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, false)
+		assert.Contains(t, err.Error(), "UserId is already in use in UserMetadata recipe")
+		assert.Nil(t, createResp.OK)
+	}
+
+	{ // without force
+		externalUserId := "externalId"
+		externalUserIdInfo := "externalIdInfo"
+		createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, true)
+		assert.NoError(t, err)
+		assert.NotNil(t, createResp.OK)
 	}
 }
