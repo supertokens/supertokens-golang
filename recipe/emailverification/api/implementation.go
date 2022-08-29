@@ -59,10 +59,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
 
-		isVerified, err := sessionContainer.GetClaimValueWithContext(evclaims.EmailVerificationClaim, userContext)
-		if err != nil {
-			return evmodels.IsEmailVerifiedGETResponse{}, err
-		}
+		isVerified := sessionContainer.GetClaimValueWithContext(evclaims.EmailVerificationClaim, userContext)
 		if isVerified == nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, errors.New("should never come here: EmailVerificationClaim failed to set value")
 		}

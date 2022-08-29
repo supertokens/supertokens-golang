@@ -192,8 +192,8 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return mergeIntoAccessTokenPayloadWithContext(update, userContext)
 	}
 
-	getClaimValueWithContext := func(claim claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
-		return claim.GetValueFromPayload(getAccessTokenPayloadWithContext(userContext), userContext), nil
+	getClaimValueWithContext := func(claim claims.TypeSessionClaim, userContext supertokens.UserContext) interface{} {
+		return claim.GetValueFromPayload(getAccessTokenPayloadWithContext(userContext), userContext)
 	}
 
 	removeClaimWithContext := func(claim claims.TypeSessionClaim, userContext supertokens.UserContext) error {
@@ -263,7 +263,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		SetClaimValue: func(claim claims.TypeSessionClaim, value interface{}) error {
 			return setClaimValueWithContext(claim, value, &map[string]interface{}{})
 		},
-		GetClaimValue: func(claim claims.TypeSessionClaim) (interface{}, error) {
+		GetClaimValue: func(claim claims.TypeSessionClaim) interface{} {
 			return getClaimValueWithContext(claim, &map[string]interface{}{})
 		},
 		RemoveClaim: func(claim claims.TypeSessionClaim) error {
