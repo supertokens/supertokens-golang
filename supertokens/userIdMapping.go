@@ -74,6 +74,11 @@ func GetUserIdMapping(userId string, userIdType *string) (GetUserIdMappingResult
 	if userIdType == nil {
 		userIdType = &userIdTypeDefault
 	}
+	err := validateUserIdType(*userIdType)
+	if err != nil {
+		return GetUserIdMappingResult{}, err
+	}
+
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return GetUserIdMappingResult{}, err
@@ -126,6 +131,11 @@ func DeleteUserIdMapping(userId string, userIdType *string, force bool) (DeleteU
 	if userIdType == nil {
 		userIdType = &userIdTypeDefault
 	}
+	err := validateUserIdType(*userIdType)
+	if err != nil {
+		return DeleteUserIdMappingResult{}, err
+	}
+
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return DeleteUserIdMappingResult{}, err
@@ -162,6 +172,11 @@ func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *string, external
 	if userIdType == nil {
 		userIdType = &userIdTypeDefault
 	}
+	err := validateUserIdType(*userIdType)
+	if err != nil {
+		return UpdateOrDeleteUserIdMappingInfoResult{}, err
+	}
+
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, err
@@ -192,4 +207,11 @@ func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *string, external
 			UnknownMappingError: &struct{}{},
 		}, nil
 	}
+}
+
+func validateUserIdType(userIdType string) error {
+	if userIdType != "SUPERTOKENS" && userIdType != "EXTERNAL" && userIdType != "ANY" {
+		return errors.New("userIdType must be one of SUPERTOKENS, EXTERNAL or ANY")
+	}
+	return nil
 }
