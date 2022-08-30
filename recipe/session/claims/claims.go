@@ -50,6 +50,6 @@ type ClaimValidationResult struct {
 }
 
 type ClaimValidationError struct {
-	ID     string
-	Reason interface{} // This can be nil, add checks when used
+	ID     string      `json:"id"`
+	Reason interface{} `json:"reason"` // This can be nil, add checks when used
 }
