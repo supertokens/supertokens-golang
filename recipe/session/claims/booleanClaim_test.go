@@ -9,7 +9,7 @@ import (
 )
 
 func TestBooleanClaim(t *testing.T) {
-	boolClaim := BooleanClaim(
+	boolClaim, validators := BooleanClaim(
 		"test",
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 			return map[string]interface{}{}, nil
@@ -20,7 +20,6 @@ func TestBooleanClaim(t *testing.T) {
 	payload := map[string]interface{}{}
 	payload = boolClaim.AddToPayload_internal(payload, true, nil)
 
-	validators := boolClaim.Validators
 	assert.True(t, validators.IsTrue(nil, nil).Validate(payload, nil).IsValid)
 	assert.False(t, validators.IsFalse(nil, nil).Validate(payload, nil).IsValid)
 

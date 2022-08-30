@@ -66,7 +66,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		}
 	}
 
-	signOutPOST := func(options sessmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+	signOutPOST := func(sessionContainer *sessmodels.SessionContainer, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
 		if sessionContainer != nil {
 			err := sessionContainer.RevokeSessionWithContext(userContext)
 			if err != nil {
