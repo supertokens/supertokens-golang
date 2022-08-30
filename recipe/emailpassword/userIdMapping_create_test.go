@@ -43,7 +43,7 @@ func TestCreateUserIdMapping(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -80,7 +80,7 @@ func TestCreateUserIdMappingWithUnknownSupertokensUserId(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -106,7 +106,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -171,7 +171,7 @@ func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 

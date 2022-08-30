@@ -21,7 +21,7 @@ func TestCreateUserIdMappingGetUserById(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -62,7 +62,7 @@ func TestCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -95,7 +95,7 @@ func TestCreateUserIdMappingSignIn(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -129,7 +129,7 @@ func TestCreateUserIdMappingPasswordReset(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -171,7 +171,7 @@ func TestCreateUserIdMappingUpdateEmailPassword(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
