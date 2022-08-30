@@ -25,8 +25,8 @@ import (
 )
 
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput) (evmodels.TypeNormalisedInput, error) {
-	if config.Mode != "REQUIRED" && config.Mode != "OPTIONAL" {
-		return evmodels.TypeNormalisedInput{}, errors.New("mode must be either REQUIRED or OPTIONAL")
+	if config.Mode != evmodels.ModeRequired && config.Mode != evmodels.ModeOptional {
+		return evmodels.TypeNormalisedInput{}, errors.New("mode must be either ModeRequired or ModeOptional")
 	}
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
