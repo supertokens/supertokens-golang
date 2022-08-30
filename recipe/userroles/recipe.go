@@ -20,7 +20,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/userroles/claims"
+	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesclaims"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -69,19 +69,20 @@ func recipeInit(config *userrolesmodels.TypeInput) supertokens.Recipe {
 			}
 			singletonInstance = &recipe
 
-			supertokens.AddPostInitCallback(func() {
+			supertokens.AddPostInitCallback(func() error {
 				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
 				if err != nil {
-					return
+					return err
 				}
 
 				if !config.SkipAddingRolesToAccessToken {
-					sessionRecipe.AddClaimFromOtherRecipe(claims.UserRoleClaim.TypeSessionClaim)
+					sessionRecipe.AddClaimFromOtherRecipe(userrolesclaims.UserRoleClaim)
 				}
 
 				if !config.SkipAddingPermissionsToAccessToken {
-					sessionRecipe.AddClaimFromOtherRecipe(claims.PermissionClaim.TypeSessionClaim)
+					sessionRecipe.AddClaimFromOtherRecipe(userrolesclaims.PermissionClaim)
 				}
+				return nil
 			})
 
 			return &singletonInstance.RecipeModule, nil
