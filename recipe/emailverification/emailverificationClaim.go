@@ -36,6 +36,21 @@ func NewEmailVerificationClaim() (claims.TypeSessionClaim, evclaims.TypeEmailVer
 
 	evClaim, booleanClaimValidators := claims.BooleanClaim("st-ev", fetchValue, nil)
 
+	getValueFromPayload := func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
+		if value, ok := evClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
+			return value["v"]
+		}
+		return nil
+	}
+
+	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
+		if value, ok := evClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
+			val := value["t"].(int64)
+			return &val
+		}
+		return nil
+	}
+
 	validators := evclaims.TypeEmailVerificationClaimValidators{
 		BooleanClaimValidators: booleanClaimValidators,
 		IsVerified: func(refetchTimeOnFalseInSeconds *int64) claims.SessionClaimValidator {
@@ -46,8 +61,8 @@ func NewEmailVerificationClaim() (claims.TypeSessionClaim, evclaims.TypeEmailVer
 
 			claimValidator := booleanClaimValidators.HasValue(true, nil, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-				value := evClaim.GetValueFromPayload(payload, userContext)
-				return value == nil || (value == false && *evClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
+				value := getValueFromPayload(payload, userContext)
+				return value == nil || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
 			}
 			return claimValidator
 		},
