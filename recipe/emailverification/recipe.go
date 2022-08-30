@@ -21,7 +21,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/claims"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -123,19 +123,20 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 			}
 			singletonInstance = &recipe
 
-			supertokens.AddPostInitCallback(func() {
+			supertokens.AddPostInitCallback(func() error {
 				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
 				if err != nil {
-					return
+					return err
 				}
 
-				sessionRecipe.AddClaimFromOtherRecipe(claims.EmailVerificationClaim.TypeSessionClaim)
+				sessionRecipe.AddClaimFromOtherRecipe(evclaims.EmailVerificationClaim)
 
 				if config.Mode == "REQUIRED" {
 					sessionRecipe.AddClaimValidatorFromOtherRecipe(
-						*claims.EmailVerificationClaim.Validators.IsVerified(nil),
+						evclaims.EmailVerificationClaimValidators.IsVerified(nil),
 					)
 				}
+				return nil
 			})
 			return &singletonInstance.RecipeModule, nil
 		}

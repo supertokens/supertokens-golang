@@ -22,6 +22,13 @@ import (
 
 type TypeGetEmailForUserID func(userID string, userContext supertokens.UserContext) (TypeEmailInfo, error)
 
+type TypeMode string
+
+const (
+	ModeRequired TypeMode = "REQUIRED"
+	ModeOptional TypeMode = "OPTIONAL"
+)
+
 type TypeEmailInfo struct {
 	OK *struct {
 		Email string
@@ -31,7 +38,7 @@ type TypeEmailInfo struct {
 }
 
 type TypeInput struct {
-	Mode                     string
+	Mode                     TypeMode
 	GetEmailForUserID        TypeGetEmailForUserID
 	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
 	Override                 *OverrideStruct
@@ -39,7 +46,7 @@ type TypeInput struct {
 }
 
 type TypeNormalisedInput struct {
-	Mode                   string
+	Mode                   TypeMode
 	GetEmailForUserID      TypeGetEmailForUserID
 	Override               OverrideStruct
 	GetEmailDeliveryConfig func() emaildelivery.TypeInputWithService

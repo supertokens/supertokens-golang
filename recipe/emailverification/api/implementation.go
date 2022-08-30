@@ -20,7 +20,7 @@ import (
 	"fmt"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/claims"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -34,7 +34,10 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 		if resp.OK != nil {
 			if sessionContainer != nil {
-				sessionContainer.FetchAndSetClaimWithContext(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
+				err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
+				if err != nil {
+					return evmodels.VerifyEmailPOSTResponse{}, err
+				}
 			}
 			return evmodels.VerifyEmailPOSTResponse{
 				OK: resp.OK,
@@ -51,15 +54,12 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
 
-		err := sessionContainer.FetchAndSetClaimWithContext(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
+		err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 		if err != nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
 
-		isVerified, err := sessionContainer.GetClaimValueWithContext(claims.EmailVerificationClaim.TypeSessionClaim, userContext)
-		if err != nil {
-			return evmodels.IsEmailVerifiedGETResponse{}, err
-		}
+		isVerified := sessionContainer.GetClaimValueWithContext(evclaims.EmailVerificationClaim, userContext)
 		if isVerified == nil {
 			return evmodels.IsEmailVerifiedGETResponse{}, errors.New("should never come here: EmailVerificationClaim failed to set value")
 		}
