@@ -46,7 +46,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -91,7 +91,7 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -132,7 +132,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 

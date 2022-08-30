@@ -22,7 +22,7 @@ func TestDeleteUnknownUserIdMapping(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -64,7 +64,7 @@ func TestDeleteUserIdMappingOfSupertokensUserId(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -99,7 +99,7 @@ func TestDeleteUserIdMappingOfExternalUserId(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -134,7 +134,7 @@ func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
@@ -192,7 +192,7 @@ func TestDeleteUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	cdiVersion, err := querier.GetQuerierAPIVersion()
 	assert.NoError(t, err)
 
-	if unittesting.MaxVersion(cdiVersion, "2.14") != cdiVersion {
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
 		return
 	}
 
