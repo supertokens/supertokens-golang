@@ -37,9 +37,13 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
-				Mode: "OPTIONAL",
+				Mode: evmodels.ModeOptional,
 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-					return evmodels.TypeEmailInfo{}, nil
+					return evmodels.TypeEmailInfo{
+						OK: &struct{ Email string }{
+							Email: "someEmail",
+						},
+					}, nil
 				},
 			}),
 		},

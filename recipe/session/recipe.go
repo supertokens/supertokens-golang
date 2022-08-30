@@ -37,7 +37,7 @@ type Recipe struct {
 	OpenIdRecipe *openid.Recipe
 	APIImpl      sessmodels.APIInterface
 
-	claimsAddedByOtherRecipes          []claims.TypeSessionClaim
+	claimsAddedByOtherRecipes          []*claims.TypeSessionClaim
 	claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator
 }
 
@@ -47,7 +47,7 @@ var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{
-		claimsAddedByOtherRecipes:          []claims.TypeSessionClaim{},
+		claimsAddedByOtherRecipes:          []*claims.TypeSessionClaim{},
 		claimValidatorsAddedByOtherRecipes: []claims.SessionClaimValidator{},
 	}
 
@@ -104,6 +104,10 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 
 func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	return getRecipeInstanceOrThrowError()
+}
+
+func GetRecipeInstance() *Recipe {
+	return singletonInstance
 }
 
 func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
@@ -205,7 +209,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 }
 
 // Claim functions
-func (r *Recipe) AddClaimFromOtherRecipe(claim claims.TypeSessionClaim) error {
+func (r *Recipe) AddClaimFromOtherRecipe(claim *claims.TypeSessionClaim) error {
 	for _, existingClaim := range r.claimsAddedByOtherRecipes {
 		if claim.Key == existingClaim.Key {
 			return defaultErrors.New("claim already added by other recipe")
@@ -215,7 +219,7 @@ func (r *Recipe) AddClaimFromOtherRecipe(claim claims.TypeSessionClaim) error {
 	return nil
 }
 
-func (r *Recipe) getClaimsAddedByOtherRecipes() []claims.TypeSessionClaim {
+func (r *Recipe) getClaimsAddedByOtherRecipes() []*claims.TypeSessionClaim {
 	return r.claimsAddedByOtherRecipes
 }
 

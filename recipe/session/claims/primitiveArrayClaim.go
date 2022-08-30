@@ -6,7 +6,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (TypeSessionClaim, PrimitiveArrayClaimValidators) {
+func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, PrimitiveArrayClaimValidators) {
 	if defaultMaxAgeInSeconds == nil {
 		val := int64(300)
 		defaultMaxAgeInSeconds = &val
@@ -58,7 +58,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 			}
 			return &SessionClaimValidator{
 				ID:    claimId,
-				Claim: &sessionClaim,
+				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 					claimVal, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || claimVal == nil {
@@ -119,7 +119,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 			}
 			return &SessionClaimValidator{
 				ID:    claimId,
-				Claim: &sessionClaim,
+				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || val == nil {
@@ -180,7 +180,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 			}
 			return &SessionClaimValidator{
 				ID:    claimId,
-				Claim: &sessionClaim,
+				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || val == nil {
@@ -242,7 +242,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 			}
 			return &SessionClaimValidator{
 				ID:    claimId,
-				Claim: &sessionClaim,
+				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || val == nil {

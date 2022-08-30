@@ -90,6 +90,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 			if emailRes.UnknownUserIDError != nil {
 				return emailRes, nil
 			}
+			if emailRes.OK != nil {
+				return emailRes, nil
+			}
 		}
 		return evmodels.TypeEmailInfo{
 			UnknownUserIDError: &struct{}{},
@@ -124,17 +127,15 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 			singletonInstance = &recipe
 
 			supertokens.AddPostInitCallback(func() error {
-				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
-				if err != nil {
-					return err
-				}
+				sessionRecipe := session.GetRecipeInstance()
+				if sessionRecipe != nil {
+					sessionRecipe.AddClaimFromOtherRecipe(evclaims.EmailVerificationClaim)
 
-				sessionRecipe.AddClaimFromOtherRecipe(evclaims.EmailVerificationClaim)
-
-				if config.Mode == "REQUIRED" {
-					sessionRecipe.AddClaimValidatorFromOtherRecipe(
-						evclaims.EmailVerificationClaimValidators.IsVerified(nil),
-					)
+					if config.Mode == "REQUIRED" {
+						sessionRecipe.AddClaimValidatorFromOtherRecipe(
+							evclaims.EmailVerificationClaimValidators.IsVerified(nil),
+						)
+					}
 				}
 				return nil
 			})
