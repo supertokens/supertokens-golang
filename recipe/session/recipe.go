@@ -194,6 +194,10 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		supertokens.LogDebugMessage("errorHandler: returning TOKEN_THEFT_DETECTED")
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
+	} else if defaultErrors.As(err, &errors.InvalidClaimError{}) {
+		supertokens.LogDebugMessage("errorHandler: returning INVALID_CLAIMS")
+		errs := err.(errors.InvalidClaimError)
+		return true, r.Config.ErrorHandlers.OnInvalidClaim(errs.InvalidClaims, req, res)
 	} else if r.OpenIdRecipe != nil {
 		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res)
 	}
