@@ -57,11 +57,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
 	r.Providers = config.SignInAndUpFeature.Providers
 
-	supertokens.AddPostInitCallback(func() {
+	supertokens.AddPostInitCallback(func() error {
 		evRecipe := emailverification.GetRecipeInstance()
 		if evRecipe != nil {
 			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+		return nil
 	})
 
 	return *r, nil

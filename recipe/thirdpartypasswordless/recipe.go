@@ -134,11 +134,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 		}
 	}
 
-	supertokens.AddPostInitCallback(func() {
+	supertokens.AddPostInitCallback(func() error {
 		evRecipe := emailverification.GetRecipeInstance()
 		if evRecipe != nil {
 			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+		return nil
 	})
 
 	return *r, nil
