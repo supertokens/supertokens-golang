@@ -181,6 +181,28 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 	return nil
 }
 
+func SendNon200ResponseWithPayload(res http.ResponseWriter, payload map[string]interface{}, statusCode int) error {
+	dw := MakeDoneWriter(res)
+	if !dw.IsDone() {
+		if statusCode < 300 {
+			return errors.New("calling SendNon200ResponseWithPayload with status code < 300")
+		}
+
+		LogDebugMessage("Sending response to client with status code: " + strconv.Itoa(statusCode))
+
+		res.Header().Set("Content-Type", "application/json; charset=utf-8")
+		res.WriteHeader(statusCode)
+
+		bytes, err := json.Marshal(payload)
+		if err != nil {
+			return err
+		} else {
+			res.Write(bytes)
+		}
+	}
+	return nil
+}
+
 func ReadFromRequest(r *http.Request) ([]byte, error) {
 	f := r.Body
 	buf, err := ioutil.ReadAll(f)

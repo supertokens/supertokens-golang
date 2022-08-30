@@ -24,7 +24,10 @@ func Init(config TypeInput) error {
 	if err != nil {
 		return err
 	}
-	runPostInitCallbacks()
+	err = runPostInitCallbacks()
+	if err != nil {
+		return err
+	}
 	return nil
 }
 

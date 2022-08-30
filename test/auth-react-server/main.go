@@ -384,14 +384,14 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						ogSignOutPOST := *originalImplementation.SignOutPOST
-						(*originalImplementation.SignOutPOST) = func(options sessmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+						(*originalImplementation.SignOutPOST) = func(sessionContainer *sessmodels.SessionContainer, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from signout API", false)
 							if gr != nil {
 								return sessmodels.SignOutPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignOutPOST(options, sessionContainer, userContext)
+							return ogSignOutPOST(sessionContainer, options, userContext)
 						}
 						return originalImplementation
 					},

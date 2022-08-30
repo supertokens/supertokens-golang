@@ -78,19 +78,19 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		return originalSessionClass.AssertClaimsWithContext(claimValidators, userContext)
 	}
 
-	fetchAndSetClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+	fetchAndSetClaimWithContext := func(claim claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		return originalSessionClass.FetchAndSetClaimWithContext(claim, userContext)
 	}
 
-	setClaimValueWithContext := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
+	setClaimValueWithContext := func(claim claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
 		return originalSessionClass.SetClaimValueWithContext(claim, value, userContext)
 	}
 
-	getClaimValueWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+	getClaimValueWithContext := func(claim claims.TypeSessionClaim, userContext supertokens.UserContext) interface{} {
 		return originalSessionClass.GetClaimValueWithContext(claim, userContext)
 	}
 
-	removeClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+	removeClaimWithContext := func(claim claims.TypeSessionClaim, userContext supertokens.UserContext) error {
 		return originalSessionClass.RemoveClaimWithContext(claim, userContext)
 	}
 
@@ -133,16 +133,16 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		AssertClaims: func(claimValidators []claims.SessionClaimValidator) error {
 			return assertClaimsWithContext(claimValidators, &map[string]interface{}{})
 		},
-		FetchAndSetClaim: func(claim *claims.TypeSessionClaim) error {
+		FetchAndSetClaim: func(claim claims.TypeSessionClaim) error {
 			return fetchAndSetClaimWithContext(claim, &map[string]interface{}{})
 		},
-		SetClaimValue: func(claim *claims.TypeSessionClaim, value interface{}) error {
+		SetClaimValue: func(claim claims.TypeSessionClaim, value interface{}) error {
 			return setClaimValueWithContext(claim, value, &map[string]interface{}{})
 		},
-		GetClaimValue: func(claim *claims.TypeSessionClaim) (interface{}, error) {
+		GetClaimValue: func(claim claims.TypeSessionClaim) interface{} {
 			return getClaimValueWithContext(claim, &map[string]interface{}{})
 		},
-		RemoveClaim: func(claim *claims.TypeSessionClaim) error {
+		RemoveClaim: func(claim claims.TypeSessionClaim) error {
 			return removeClaimWithContext(claim, &map[string]interface{}{})
 		},
 	}

@@ -4,13 +4,13 @@ import (
 	"errors"
 	"time"
 
-	evclaims "github.com/supertokens/supertokens-golang/recipe/emailverification/claims"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 // key string, fetchValue claims.FetchValueFunc
-func NewEmailVerificationClaim() *evclaims.TypeEmailVerificationClaim {
+func NewEmailVerificationClaim() (claims.TypeSessionClaim, evclaims.TypeEmailVerificationClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -34,30 +34,43 @@ func NewEmailVerificationClaim() *evclaims.TypeEmailVerificationClaim {
 		}
 	}
 
-	booleanClaim := claims.BooleanClaim("st-ev", fetchValue, nil)
+	evClaim, booleanClaimValidators := claims.BooleanClaim("st-ev", fetchValue, nil)
 
-	emailVerificationClaim := &evclaims.TypeEmailVerificationClaim{
-		TypeBooleanClaim: booleanClaim,
+	getValueFromPayload := func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
+		if value, ok := evClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
+			return value["v"]
+		}
+		return nil
 	}
-	emailVerificationClaim.Validators = &evclaims.EmailVerificationClaimValidators{
-		BooleanClaimValidators: booleanClaim.Validators,
-		IsVerified: func(refetchTimeOnFalseInSeconds *int64) *claims.SessionClaimValidator {
+
+	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
+		if value, ok := evClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
+			val := value["t"].(int64)
+			return &val
+		}
+		return nil
+	}
+
+	validators := evclaims.TypeEmailVerificationClaimValidators{
+		BooleanClaimValidators: booleanClaimValidators,
+		IsVerified: func(refetchTimeOnFalseInSeconds *int64) claims.SessionClaimValidator {
 			if refetchTimeOnFalseInSeconds == nil {
 				var defaultTimeout int64 = 10
 				refetchTimeOnFalseInSeconds = &defaultTimeout
 			}
 
-			claimValidator := booleanClaim.Validators.HasValue(true, nil, nil)
+			claimValidator := booleanClaimValidators.HasValue(true, nil, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-				value := emailVerificationClaim.GetValueFromPayload(payload, userContext)
-				return value == nil || (value == false && *emailVerificationClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
+				value := getValueFromPayload(payload, userContext)
+				return value == nil || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
 			}
 			return claimValidator
 		},
 	}
-	return emailVerificationClaim
+	return evClaim, validators
 }
 
 func init() {
-	evclaims.EmailVerificationClaim = NewEmailVerificationClaim()
+	// this function is called automatically when the package is imported
+	evclaims.EmailVerificationClaim, evclaims.EmailVerificationClaimValidators = NewEmailVerificationClaim()
 }

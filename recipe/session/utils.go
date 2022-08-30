@@ -88,6 +88,11 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		sessionExpiredStatusCode = *config.SessionExpiredStatusCode
 	}
 
+	invalidClaimStatusCode := 403
+	if config != nil && config.InvalidClaimStatusCode != nil {
+		invalidClaimStatusCode = *config.InvalidClaimStatusCode
+	}
+
 	if config != nil && config.AntiCsrf != nil {
 		if *config.AntiCsrf != antiCSRF_NONE && *config.AntiCsrf != antiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != antiCSRF_VIA_TOKEN {
 			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
@@ -127,6 +132,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}
 			return sendUnauthorisedResponse(*recipeInstance, message, req, res)
 		},
+		OnInvalidClaim: func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error {
+			recipeInstance, err := getRecipeInstanceOrThrowError()
+			if err != nil {
+				return err
+			}
+			return sendInvalidClaimResponse(*recipeInstance, validationErrors, req, res)
+		},
 	}
 
 	if config != nil && config.ErrorHandlers != nil {
@@ -135,6 +147,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 		if config.ErrorHandlers.OnUnauthorised != nil {
 			errorHandlers.OnUnauthorised = config.ErrorHandlers.OnUnauthorised
+		}
+		if config.ErrorHandlers.OnInvalidClaim != nil {
+			errorHandlers.OnInvalidClaim = config.ErrorHandlers.OnInvalidClaim
 		}
 	}
 
@@ -178,6 +193,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		CookieSameSite:           cookieSameSite,
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
+		InvalidClaimStatusCode:   invalidClaimStatusCode,
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
 		Jwt:                      Jwt,
@@ -295,6 +311,13 @@ func sendTryRefreshTokenResponse(recipeInstance Recipe, _ string, _ *http.Reques
 
 func sendUnauthorisedResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
 	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func sendInvalidClaimResponse(recipeInstance Recipe, claimValidationErrors []claims.ClaimValidationError, _ *http.Request, response http.ResponseWriter) error {
+	return supertokens.SendNon200ResponseWithPayload(response, map[string]interface{}{
+		"message":               "invalid claim",
+		"claimValidationErrors": claimValidationErrors,
+	}, recipeInstance.Config.InvalidClaimStatusCode)
 }
 
 func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {

@@ -1,14 +1,18 @@
 package supertokens
 
-var postInitCallbacks = []func(){}
+var postInitCallbacks = []func() error{}
 
-func AddPostInitCallback(cb func()) {
+func AddPostInitCallback(cb func() error) {
 	postInitCallbacks = append(postInitCallbacks, cb)
 }
 
-func runPostInitCallbacks() {
+func runPostInitCallbacks() error {
 	for _, cb := range postInitCallbacks {
-		cb()
+		err := cb()
+		if err != nil {
+			return err
+		}
 	}
-	postInitCallbacks = []func(){}
+	postInitCallbacks = []func() error{}
+	return nil
 }

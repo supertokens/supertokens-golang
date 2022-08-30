@@ -2,16 +2,17 @@ package userroles
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
-	urclaims "github.com/supertokens/supertokens-golang/recipe/userroles/claims"
+	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesclaims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func init() {
-	urclaims.UserRoleClaim = NewUserRoleClaim()
-	urclaims.PermissionClaim = NewPermissionClaim()
+	// automatically called when this package is imported
+	userrolesclaims.UserRoleClaim, userrolesclaims.UserRoleClaimValidators = NewUserRoleClaim()
+	userrolesclaims.PermissionClaim, userrolesclaims.PermissionClaimValidators = NewPermissionClaim()
 }
 
-func NewUserRoleClaim() *urclaims.TypeUserRoleClaim {
+func NewUserRoleClaim() (claims.TypeSessionClaim, userrolesclaims.TypeUserRoleClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -29,16 +30,13 @@ func NewUserRoleClaim() *urclaims.TypeUserRoleClaim {
 		return rolesArray, nil
 	}
 
-	primitiveArrayClaim := claims.PrimitiveArrayClaim("st-role", fetchValue, nil)
-	return &urclaims.TypeUserRoleClaim{
-		TypePrimitiveArrayClaim: primitiveArrayClaim,
-		Validators: &urclaims.TypeUserRoleClaimValidators{
-			PrimitiveArrayClaimValidators: primitiveArrayClaim.Validators,
-		},
+	userRoleClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-role", fetchValue, nil)
+	return userRoleClaim, userrolesclaims.TypeUserRoleClaimValidators{
+		PrimitiveArrayClaimValidators: primitiveArrayClaimValidators,
 	}
 }
 
-func NewPermissionClaim() *urclaims.TypePermissionClaim {
+func NewPermissionClaim() (claims.TypeSessionClaim, userrolesclaims.TypePermissionClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -69,11 +67,8 @@ func NewPermissionClaim() *urclaims.TypePermissionClaim {
 		return result, nil
 	}
 
-	primitiveArrayClaim := claims.PrimitiveArrayClaim("st-perm", fetchValue, nil)
-	return &urclaims.TypePermissionClaim{
-		TypePrimitiveArrayClaim: primitiveArrayClaim,
-		Validators: &urclaims.TypePermissionClaimValidators{
-			PrimitiveArrayClaimValidators: primitiveArrayClaim.Validators,
-		},
+	permissionClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-perm", fetchValue, nil)
+	return permissionClaim, userrolesclaims.TypePermissionClaimValidators{
+		PrimitiveArrayClaimValidators: primitiveArrayClaimValidators,
 	}
 }
