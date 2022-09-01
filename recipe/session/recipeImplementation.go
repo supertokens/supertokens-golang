@@ -233,7 +233,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		for _, validator := range claimValidators {
 			supertokens.LogDebugMessage("updateClaimsInPayloadIfNeeded checking shouldRefetch for " + validator.ID)
 			claim := validator.Claim
-			if claim != nil {
+			if claim != nil && validator.ShouldRefetch != nil {
 				if validator.ShouldRefetch(accessTokenPayload, userContext) {
 					supertokens.LogDebugMessage("updateClaimsInPayloadIfNeeded refetching " + validator.ID)
 					value, err := claim.FetchValue(userId, userContext)
