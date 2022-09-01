@@ -34,20 +34,13 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 
 	sessionClaim.GetValueFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
-			return value
-		}
-		return nil
-	}
-
-	getValueFromPayload := func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
-		if value, ok := sessionClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
 			return value["v"]
 		}
 		return nil
 	}
 
 	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
-		if value, ok := sessionClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
+		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
 			val := value["t"].(int64)
 			return &val
 		}
@@ -67,7 +60,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 				ID:    claimId,
 				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-					claimVal, ok := getValueFromPayload(payload, userContext).([]interface{})
+					claimVal, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || claimVal == nil {
 						return true
 					}
@@ -77,7 +70,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal := getValueFromPayload(payload, userContext).([]interface{})
+					claimVal := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
@@ -128,7 +121,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 				ID:    claimId,
 				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-					val, ok := getValueFromPayload(payload, userContext).([]interface{})
+					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || val == nil {
 						return true
 					}
@@ -138,7 +131,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal := getValueFromPayload(payload, userContext).([]interface{})
+					claimVal := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
@@ -189,7 +182,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 				ID:    claimId,
 				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-					val, ok := getValueFromPayload(payload, userContext).([]interface{})
+					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || val == nil {
 						return true
 					}
@@ -199,7 +192,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal := getValueFromPayload(payload, userContext).([]interface{})
+					claimVal := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
@@ -251,7 +244,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 				ID:    claimId,
 				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-					val, ok := getValueFromPayload(payload, userContext).([]interface{})
+					val, ok := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 					if !ok || val == nil {
 						return true
 					}
@@ -261,7 +254,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 					return false
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
-					claimVal := getValueFromPayload(payload, userContext).([]interface{})
+					claimVal := sessionClaim.GetValueFromPayload(payload, userContext).([]interface{})
 
 					if claimVal == nil {
 						return ClaimValidationResult{
