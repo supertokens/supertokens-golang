@@ -23,6 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
@@ -41,6 +42,9 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			session.Init(nil),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -97,7 +101,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	assert.False(t, isVerfied1)
 }
 
-func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturnsTrueForBothEmailAndPhone(t *testing.T) {
+func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturnsTrueForPhoneAndFalseForEmail(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -108,6 +112,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+				},
+			}),
 			session.Init(nil),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -149,12 +158,12 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 
 	isVerified, err := emailverification.IsEmailVerified(response.User.ID, nil)
 	assert.NoError(t, err)
-	assert.True(t, isVerified)
+	assert.False(t, isVerified) // this is a change in behavior
 
 	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, nil)
 	assert.NoError(t, err)
-	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
-	assert.Nil(t, emailVerificationResp.OK)
+	assert.Nil(t, emailVerificationResp.EmailAlreadyVerifiedError)
+	assert.NotNil(t, emailVerificationResp.OK)
 
 	response, err = PasswordlessSignInUpByPhoneNumber("+123456789012")
 	assert.NoError(t, err)
