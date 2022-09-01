@@ -1,6 +1,6 @@
 package claims
 
-func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (TypeSessionClaim, BooleanClaimValidators) {
+func BooleanClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, BooleanClaimValidators) {
 	claim, primitiveClaimValidators := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
 
 	validators := BooleanClaimValidators{
