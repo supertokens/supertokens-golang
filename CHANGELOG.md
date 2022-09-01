@@ -6,10 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
-- Adds test to verify that session container uses overridden functions
 
+## [0.8.3] - 2022-07-30
 ### Added
+- Adds test to verify that session container uses overridden functions
 - Adds with-go-zero example: https://github.com/supertokens/supertokens-golang/issues/157
+- UserId Mapping functionality and compatibility with CDI 2.15
+- Adds `CreateUserIdMapping`, `GetUserIdMapping`, `DeleteUserIdMapping`, `UpdateOrDeleteUserIdMappingInfo` functions to supertokens package
+
 
 ## [0.8.2] - 2022-07-18
 
