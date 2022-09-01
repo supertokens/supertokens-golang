@@ -127,15 +127,18 @@ func recipeInit(config evmodels.TypeInput) supertokens.Recipe {
 			singletonInstance = &recipe
 
 			supertokens.AddPostInitCallback(func() error {
-				sessionRecipe := session.GetRecipeInstance()
-				if sessionRecipe != nil {
-					sessionRecipe.AddClaimFromOtherRecipe(evclaims.EmailVerificationClaim)
+				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
 
-					if config.Mode == "REQUIRED" {
-						sessionRecipe.AddClaimValidatorFromOtherRecipe(
-							evclaims.EmailVerificationClaimValidators.IsVerified(nil),
-						)
-					}
+				if err != nil {
+					return err
+				}
+
+				sessionRecipe.AddClaimFromOtherRecipe(evclaims.EmailVerificationClaim)
+
+				if config.Mode == "REQUIRED" {
+					sessionRecipe.AddClaimValidatorFromOtherRecipe(
+						evclaims.EmailVerificationClaimValidators.IsVerified(nil),
+					)
 				}
 				return nil
 			})

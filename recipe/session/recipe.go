@@ -106,10 +106,6 @@ func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	return getRecipeInstanceOrThrowError()
 }
 
-func GetRecipeInstance() *Recipe {
-	return singletonInstance
-}
-
 func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
