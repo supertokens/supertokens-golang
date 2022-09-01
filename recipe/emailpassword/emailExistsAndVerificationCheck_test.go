@@ -545,6 +545,9 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
@@ -660,6 +663,7 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					userInfo = user
 					emailToken = emailVerificationURLWithToken
@@ -731,6 +735,7 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -812,6 +817,9 @@ func TestTheEmailVerifyApiWithInvalidTokenAndCheckError(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
@@ -861,6 +869,9 @@ func TestEmailVerifyAPIWithTokenOfNotTypeString(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
@@ -913,6 +924,7 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -1015,6 +1027,7 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -1116,6 +1129,9 @@ func TestVerifySessionWithNoSessionUsingTheGetMethod(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
@@ -1168,6 +1184,7 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -1270,6 +1287,7 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -1372,6 +1390,7 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -1472,6 +1491,7 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
 				},
@@ -1570,8 +1590,10 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
-			emailverification.Init(evmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
 			}),
@@ -1623,6 +1645,7 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 	emailverification.RevokeEmailVerificationTokens(userId.(string), nil)
 
 	res1, err := emailverification.VerifyEmailUsingToken(verifyToken)
-	assert.Nil(t, res1)
-	assert.Equal(t, "email verification token is invalid", err.Error())
+	assert.NoError(t, err)
+	assert.NotNil(t, res1.EmailVerificationInvalidTokenError)
+	assert.Nil(t, res1.OK)
 }

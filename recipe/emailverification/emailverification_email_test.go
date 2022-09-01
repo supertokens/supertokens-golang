@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -46,6 +47,7 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 					}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -89,6 +91,7 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -143,6 +146,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -213,6 +217,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -283,6 +288,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
