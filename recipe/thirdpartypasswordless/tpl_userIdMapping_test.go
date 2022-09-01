@@ -55,7 +55,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartySignInUp("google", "googleID", tplmodels.EmailStruct{ID: "test@example.com"})
+	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"

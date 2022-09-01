@@ -50,7 +50,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignInUp("google", "googleID", tpmodels.EmailStruct{ID: "test@example.com"})
+	signUpResponse, err := SignInUp("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
