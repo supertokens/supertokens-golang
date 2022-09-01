@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -37,11 +38,16 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
-				Mode: "OPTIONAL",
+				Mode: evmodels.ModeOptional,
 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-					return evmodels.TypeEmailInfo{}, nil
+					return evmodels.TypeEmailInfo{
+						OK: &struct{ Email string }{
+							Email: "someEmail",
+						},
+					}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -85,6 +91,7 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -139,6 +146,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -209,6 +217,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -279,6 +288,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 

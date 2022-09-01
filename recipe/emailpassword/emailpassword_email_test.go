@@ -350,7 +350,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
+	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil), emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}))
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
@@ -380,6 +380,7 @@ func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
 		t,
 		session.Init(nil),
 		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
 			CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 				email = user.Email
 				emailVerifyLink = emailVerificationURLWithToken
@@ -418,22 +419,26 @@ func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	tpepConfig := &epmodels.TypeInput{
-		EmailDelivery: &emaildelivery.TypeInput{
-			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
-				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-					if input.EmailVerification != nil {
-						customCalled = true
-						email = input.EmailVerification.User.Email
-						emailVerifyLink = input.EmailVerification.EmailVerifyLink
+	testServer := supertokensInitForTest(t,
+		session.Init(nil),
+		Init(nil),
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+					*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+						if input.EmailVerification != nil {
+							customCalled = true
+							email = input.EmailVerification.User.Email
+							emailVerifyLink = input.EmailVerification.EmailVerifyLink
+						}
+						return nil
 					}
-					return nil
-				}
-				return originalImplementation
+					return originalImplementation
+				},
 			},
-		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+		}),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
@@ -492,12 +497,16 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 			return originalImplementation
 		},
 	})
-	tpepConfig := &epmodels.TypeInput{
-		EmailDelivery: &emaildelivery.TypeInput{
-			Service: smtpService,
-		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(t,
+		session.Init(nil),
+		Init(nil),
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Service: smtpService,
+			},
+		}),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
