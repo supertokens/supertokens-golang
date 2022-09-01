@@ -20,6 +20,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -44,6 +45,22 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 
 		user := response.OK.User
 
+		if user.Email != nil {
+			evInstance := emailverification.GetRecipeInstance()
+			if evInstance != nil {
+				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, userContext)
+				if err != nil {
+					return plessmodels.ConsumeCodePOSTResponse{}, err
+				}
+				if tokenResponse.OK != nil {
+					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
+					if err != nil {
+						return plessmodels.ConsumeCodePOSTResponse{}, err
+					}
+				}
+			}
+		}
+
 		session, err := session.CreateNewSessionWithContext(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
 			return plessmodels.ConsumeCodePOSTResponse{}, err
@@ -63,6 +80,10 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 	}
 
 	createCodePOST := func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+		stInstance, err := supertokens.GetInstanceOrThrowError()
+		if err != nil {
+			return plessmodels.CreateCodePOSTResponse{}, err
+		}
 
 		var userInputCodeInput *string
 		if options.Config.GetCustomUserInputCode != nil {
@@ -83,12 +104,14 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		var userInputCode *string
 		flowType := options.Config.FlowType
 		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
-			link, err := options.Config.GetLinkDomainAndPath(email, phoneNumber, userContext)
-			if err != nil {
-				return plessmodels.CreateCodePOSTResponse{}, err
-			}
-			link = link + "?rid=" + options.RecipeID + "&preAuthSessionId=" + response.OK.PreAuthSessionID + "#" + response.OK.LinkCode
-
+			link := fmt.Sprintf(
+				"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
+				stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+				stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+				options.RecipeID,
+				response.OK.PreAuthSessionID,
+				response.OK.LinkCode,
+			)
 			magicLink = &link
 		}
 
@@ -210,6 +233,10 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 	}
 
 	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+		stInstance, err := supertokens.GetInstanceOrThrowError()
+		if err != nil {
+			return plessmodels.ResendCodePOSTResponse{}, err
+		}
 		deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(deviceID, userContext)
 		if err != nil {
 			return plessmodels.ResendCodePOSTResponse{}, err
@@ -255,11 +282,14 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			var userInputCode *string
 			flowType := options.Config.FlowType
 			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
-				link, err := options.Config.GetLinkDomainAndPath(deviceInfo.Email, deviceInfo.PhoneNumber, userContext)
-				if err != nil {
-					return plessmodels.ResendCodePOSTResponse{}, err
-				}
-				link = link + "?rid=" + options.RecipeID + "&preAuthSessionId=" + response.OK.PreAuthSessionID + "#" + response.OK.LinkCode
+				link := fmt.Sprintf(
+					"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
+					stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+					stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+					options.RecipeID,
+					response.OK.PreAuthSessionID,
+					response.OK.LinkCode,
+				)
 
 				magicLink = &link
 			}

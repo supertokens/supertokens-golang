@@ -86,10 +86,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	// FlowType is initialized correctly in makeTypeNormalisedInput
 
-	if config.GetLinkDomainAndPath != nil {
-		typeNormalisedInput.GetLinkDomainAndPath = config.GetLinkDomainAndPath
-	}
-
 	// GetCustomUserInputCode is initialized correctly in makeTypeNormalisedInput
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
@@ -172,7 +168,6 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 			ValidateEmailAddress:     defaultValidateEmailAddress,
 			CreateAndSendCustomEmail: inputConfig.ContactMethodEmail.CreateAndSendCustomEmail,
 		},
-		GetLinkDomainAndPath:   getDefaultGetLinkDomainAndPath(appInfo),
 		GetCustomUserInputCode: inputConfig.GetCustomUserInputCode,
 		Override: plessmodels.OverrideStruct{
 			Functions: func(originalImplementation plessmodels.RecipeInterface) plessmodels.RecipeInterface {
