@@ -19,7 +19,6 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -47,14 +46,13 @@ type SignInUpPOSTResponse struct {
 }
 
 type APIOptions struct {
-	RecipeImplementation                  RecipeInterface
-	EmailVerificationRecipeImplementation evmodels.RecipeInterface
-	Config                                TypeNormalisedInput
-	RecipeID                              string
-	Providers                             []TypeProvider
-	Req                                   *http.Request
-	Res                                   http.ResponseWriter
-	OtherHandler                          http.HandlerFunc
-	AppInfo                               supertokens.NormalisedAppinfo
-	EmailDelivery                         emaildelivery.Ingredient
+	RecipeImplementation RecipeInterface
+	Config               TypeNormalisedInput
+	RecipeID             string
+	Providers            []TypeProvider
+	Req                  *http.Request
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
+	AppInfo              supertokens.NormalisedAppinfo
+	EmailDelivery        emaildelivery.Ingredient
 }

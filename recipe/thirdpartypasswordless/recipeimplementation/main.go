@@ -36,18 +36,15 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
 
-	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email tpmodels.EmailStruct, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogSignInUp = *thirdPartyImplementation.SignInUp
 	}
-	thirPartySignInUp := func(thirdPartyID, thirdPartyUserID string, email tplmodels.EmailStruct, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+	thirPartySignInUp := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
 		if ogSignInUp == nil {
 			return tplmodels.ThirdPartySignInUp{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, tpmodels.EmailStruct{
-			ID:         email.ID,
-			IsVerified: email.IsVerified,
-		}, userContext)
+		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, userContext)
 		if err != nil {
 			return tplmodels.ThirdPartySignInUp{}, err
 		}

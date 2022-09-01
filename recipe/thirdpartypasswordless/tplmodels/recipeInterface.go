@@ -25,7 +25,7 @@ type RecipeInterface struct {
 	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByPhoneNumber    *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
 	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email EmailStruct, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
 
 	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
 

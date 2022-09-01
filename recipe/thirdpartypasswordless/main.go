@@ -30,7 +30,7 @@ func Init(config tplmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email tplmodels.EmailStruct, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tplmodels.ThirdPartySignInUp{}, err
@@ -380,7 +380,7 @@ func SendSms(input smsdelivery.SmsType) error {
 	return SendSmsWithContext(input, &map[string]interface{}{})
 }
 
-func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email tplmodels.EmailStruct) (tplmodels.ThirdPartySignInUp, error) {
+func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tplmodels.ThirdPartySignInUp, error) {
 	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 

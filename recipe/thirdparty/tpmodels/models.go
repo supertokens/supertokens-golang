@@ -63,11 +63,6 @@ type User struct {
 	} `json:"thirdParty"`
 }
 
-type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
-}
-
 type TypeInputSignInAndUp struct {
 	Providers []TypeProvider
 }
