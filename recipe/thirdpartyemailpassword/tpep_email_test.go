@@ -27,6 +27,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
@@ -514,7 +516,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(nil))
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
@@ -540,7 +542,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 			customProviderForEmailVerification,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -671,6 +673,12 @@ func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	tpepConfig := &tpepmodels.TypeInput{
+		Providers: []tpmodels.TypeProvider{
+			customProviderForEmailVerification,
+		},
+	}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
 				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
@@ -684,8 +692,7 @@ func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 				return originalImplementation
 			},
 		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	}), session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
@@ -716,6 +723,12 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	tpepConfig := &tpepmodels.TypeInput{
+		Providers: []tpmodels.TypeProvider{
+			customProviderForEmailVerification,
+		},
+	}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
 				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
@@ -729,9 +742,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 				return originalImplementation
 			},
 		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	}), session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -772,7 +783,7 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+	smtpService := smtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
 		Settings: emaildelivery.SMTPSettings{
 			Host: "",
 			From: emaildelivery.SMTPFrom{
@@ -800,12 +811,13 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 			return originalImplementation
 		},
 	})
-	tpepConfig := &tpepmodels.TypeInput{
+	tpepConfig := &tpepmodels.TypeInput{}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Service: smtpService,
 		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	}), session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
@@ -837,7 +849,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+	smtpService := smtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
 		Settings: emaildelivery.SMTPSettings{
 			Host: "",
 			From: emaildelivery.SMTPFrom{
@@ -866,12 +878,14 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		},
 	})
 	tpepConfig := &tpepmodels.TypeInput{
+		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+	}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Service: smtpService,
 		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	}), session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{

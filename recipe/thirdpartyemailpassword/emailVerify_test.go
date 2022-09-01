@@ -24,6 +24,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -42,6 +43,9 @@ func TestTheGenerateTokenAPIwithValidInputEmailNotVerified(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
@@ -93,6 +97,9 @@ func TestGenerateTokenAPIwithValidInputEmailVerifiedAndTestError(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
@@ -150,6 +157,9 @@ func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
@@ -189,6 +199,9 @@ func TestEmailVerifyAPIwithInvalidTokenCheckError(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,

@@ -87,7 +87,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 			if err != nil {
 				return emailRes, err
 			}
-			if emailRes.UnknownUserIDError != nil {
+			if emailRes.EmailDoesNotExistError != nil {
 				return emailRes, nil
 			}
 			if emailRes.OK != nil {

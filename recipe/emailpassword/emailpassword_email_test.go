@@ -24,6 +24,7 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -469,7 +470,7 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+	smtpService := smtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
 		Settings: emaildelivery.SMTPSettings{
 			Host: "",
 			From: emaildelivery.SMTPFrom{
