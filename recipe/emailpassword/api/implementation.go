@@ -37,6 +37,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 	}
 
 	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+		stInstance, err := supertokens.GetInstanceOrThrowError()
+		if err != nil {
+			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
+		}
+
 		var email string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
@@ -66,7 +71,13 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}, nil
 		}
 
-		passwordResetLink, err := options.Config.ResetPasswordUsingTokenFeature.GetResetPasswordURL(*user, userContext)
+		passwordResetLink := fmt.Sprintf(
+			"%s%s/reset-password?token=%s&rid=%s",
+			stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+			stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+			response.OK.Token,
+			options.RecipeID,
+		)
 
 		if err != nil {
 			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err

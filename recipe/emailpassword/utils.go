@@ -33,14 +33,14 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	if config != nil && config.SignUpFeature != nil {
 		typeNormalisedInput.SignUpFeature = validateAndNormaliseSignupConfig(config.SignUpFeature)
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, nil)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
 	}
 
 	// we must call this after validateAndNormaliseSignupConfig
 	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)
 
 	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, config.ResetPasswordUsingTokenFeature)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
 	}
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
@@ -82,7 +82,7 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) epmodels.TypeNormalisedInpu
 	return epmodels.TypeNormalisedInput{
 		SignUpFeature:                  signUpConfig,
 		SignInFeature:                  validateAndNormaliseSignInConfig(signUpConfig),
-		ResetPasswordUsingTokenFeature: validateAndNormaliseResetPasswordUsingTokenConfig(recipeInstance.RecipeModule.GetAppInfo(), signUpConfig, nil),
+		ResetPasswordUsingTokenFeature: validateAndNormaliseResetPasswordUsingTokenConfig(signUpConfig),
 		Override: epmodels.OverrideStruct{
 			Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 				return originalImplementation
@@ -94,11 +94,10 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) epmodels.TypeNormalisedInpu
 	}
 }
 
-func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.NormalisedAppinfo, signUpConfig epmodels.TypeNormalisedInputSignUp, config *epmodels.TypeInputResetPasswordUsingTokenFeature) epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature {
+func validateAndNormaliseResetPasswordUsingTokenConfig(signUpConfig epmodels.TypeNormalisedInputSignUp) epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature {
 	normalisedInputResetPasswordUsingTokenFeature := epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature{
 		FormFieldsForGenerateTokenForm: nil,
 		FormFieldsForPasswordResetForm: nil,
-		GetResetPasswordURL:            defaultGetResetPasswordURL(appInfo),
 	}
 
 	if len(signUpConfig.FormFields) > 0 {
@@ -116,10 +115,6 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 		}
 		normalisedInputResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm = formFieldsForGenerateTokenForm
 		normalisedInputResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm = formFieldsForPasswordResetForm
-	}
-
-	if config != nil && config.GetResetPasswordURL != nil {
-		normalisedInputResetPasswordUsingTokenFeature.GetResetPasswordURL = config.GetResetPasswordURL
 	}
 
 	return normalisedInputResetPasswordUsingTokenFeature
