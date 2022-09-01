@@ -59,13 +59,19 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
 
-		isVerified := sessionContainer.GetClaimValueWithContext(evclaims.EmailVerificationClaim, userContext)
-		if isVerified == nil {
+		var isVerified bool = false
+		if isVerifiedVal, ok := sessionContainer.GetClaimValueWithContext(evclaims.EmailVerificationClaim, userContext).(map[string]interface{}); ok {
+			isVerified, ok = isVerifiedVal["v"].(bool)
+			if !ok {
+				return evmodels.IsEmailVerifiedGETResponse{}, errors.New("should never come here: EmailVerificationClaim failed to set value")
+			}
+		} else {
 			return evmodels.IsEmailVerifiedGETResponse{}, errors.New("should never come here: EmailVerificationClaim failed to set value")
 		}
+
 		return evmodels.IsEmailVerifiedGETResponse{
 			OK: &struct{ IsVerified bool }{
-				IsVerified: isVerified.(bool),
+				IsVerified: isVerified,
 			},
 		}, nil
 	}
