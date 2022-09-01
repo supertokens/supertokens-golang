@@ -36,13 +36,6 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 
 	evClaim, booleanClaimValidators := claims.BooleanClaim("st-ev", fetchValue, nil)
 
-	getValueFromPayload := func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
-		if value, ok := evClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
-			return value["v"]
-		}
-		return nil
-	}
-
 	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := evClaim.GetValueFromPayload(payload, userContext).(map[string]interface{}); ok {
 			val := value["t"].(int64)
@@ -53,16 +46,20 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 
 	validators := evclaims.TypeEmailVerificationClaimValidators{
 		BooleanClaimValidators: booleanClaimValidators,
-		IsVerified: func(refetchTimeOnFalseInSeconds *int64) claims.SessionClaimValidator {
+		IsVerified: func(refetchTimeOnFalseInSeconds *int64, maxAgeInSeconds *int64) claims.SessionClaimValidator {
 			if refetchTimeOnFalseInSeconds == nil {
 				var defaultTimeout int64 = 10
 				refetchTimeOnFalseInSeconds = &defaultTimeout
 			}
+			if maxAgeInSeconds == nil {
+				var defaultTimeout int64 = 300
+				maxAgeInSeconds = &defaultTimeout
+			}
 
 			claimValidator := booleanClaimValidators.HasValue(true, nil, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-				value := getValueFromPayload(payload, userContext)
-				return value == nil || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
+				value := evClaim.GetValueFromPayload(payload, userContext)
+				return value == nil || (*getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000) || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
 			}
 			return claimValidator
 		},

@@ -6,7 +6,7 @@ import (
 
 type TypeEmailVerificationClaimValidators struct {
 	claims.BooleanClaimValidators
-	IsVerified func(refetchTimeOnFalseInSeconds *int64) claims.SessionClaimValidator
+	IsVerified func(refetchTimeOnFalseInSeconds *int64, maxAgeInSeconds *int64) claims.SessionClaimValidator
 }
 
 var EmailVerificationClaim *claims.TypeSessionClaim
