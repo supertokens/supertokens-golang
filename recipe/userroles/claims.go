@@ -12,7 +12,7 @@ func init() {
 	userrolesclaims.PermissionClaim, userrolesclaims.PermissionClaimValidators = NewPermissionClaim()
 }
 
-func NewUserRoleClaim() (claims.TypeSessionClaim, userrolesclaims.TypeUserRoleClaimValidators) {
+func NewUserRoleClaim() (*claims.TypeSessionClaim, userrolesclaims.TypeUserRoleClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -36,7 +36,7 @@ func NewUserRoleClaim() (claims.TypeSessionClaim, userrolesclaims.TypeUserRoleCl
 	}
 }
 
-func NewPermissionClaim() (claims.TypeSessionClaim, userrolesclaims.TypePermissionClaimValidators) {
+func NewPermissionClaim() (*claims.TypeSessionClaim, userrolesclaims.TypePermissionClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {

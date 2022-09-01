@@ -6,7 +6,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (TypeSessionClaim, PrimitiveClaimValidators) {
+func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, PrimitiveClaimValidators) {
 	if defaultMaxAgeInSeconds == nil {
 		val := int64(300)
 		defaultMaxAgeInSeconds = &val
@@ -65,7 +65,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 			}
 			return SessionClaimValidator{
 				ID:    validatorId,
-				Claim: &sessionClaim,
+				Claim: sessionClaim,
 				ShouldRefetch: func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 					val := getValueFromPayload(payload, userContext)
 					if val == nil {

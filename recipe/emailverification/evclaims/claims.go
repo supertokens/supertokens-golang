@@ -9,6 +9,6 @@ type TypeEmailVerificationClaimValidators struct {
 	IsVerified func(refetchTimeOnFalseInSeconds *int64) claims.SessionClaimValidator
 }
 
-var EmailVerificationClaim claims.TypeSessionClaim
+var EmailVerificationClaim *claims.TypeSessionClaim
 
 var EmailVerificationClaimValidators TypeEmailVerificationClaimValidators
