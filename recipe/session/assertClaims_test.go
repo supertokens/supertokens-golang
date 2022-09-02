@@ -1,7 +1,6 @@
 package session
 
 import (
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -53,7 +52,6 @@ func TestEmptyClaimsArray(t *testing.T) {
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	fmt.Println(sessionContainer)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{})
 	assert.NoError(t, err)
@@ -102,7 +100,6 @@ func TestAssertClaimsWithPayload(t *testing.T) {
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
-	fmt.Println(sessionContainer)
 
 	validateCallCount := 0
 	var validationPayload map[string]interface{}

@@ -67,7 +67,11 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 	}
 
 	if sessionContainer != nil {
-		claimValidators, err := getRequiredClaimValidators(sessionContainer, options.OverrideGlobalClaimValidators, userContext)
+		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator = nil
+		if options != nil {
+			overrideGlobalClaimValidators = options.OverrideGlobalClaimValidators
+		}
+		claimValidators, err := getRequiredClaimValidators(sessionContainer, overrideGlobalClaimValidators, userContext)
 		if err != nil {
 			return nil, err
 		}
