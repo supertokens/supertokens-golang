@@ -36,7 +36,8 @@ func TestShouldRemoveNonExistantClaim(t *testing.T) {
 	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	err = sessionContainer.RemoveClaim(TrueClaim())
+	trueClaim, _ := TrueClaim()
+	err = sessionContainer.RemoveClaim(trueClaim)
 	assert.NoError(t, err)
 }
 
@@ -56,7 +57,8 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -86,7 +88,8 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
 	assert.Equal(t, 1, len(accessTokenPayload))
 
-	err = sessionContainer.RemoveClaim(TrueClaim())
+	trueClaim, _ := TrueClaim()
+	err = sessionContainer.RemoveClaim(trueClaim)
 	assert.NoError(t, err)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
@@ -109,7 +112,8 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -139,7 +143,8 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
 	assert.Equal(t, 1, len(accessTokenPayload))
 
-	ok, err := RemoveClaim(sessionContainer.GetHandle(), TrueClaim())
+	trueClaim, _ := TrueClaim()
+	ok, err := RemoveClaim(sessionContainer.GetHandle(), trueClaim)
 	assert.True(t, ok)
 	assert.NoError(t, err)
 
@@ -171,7 +176,8 @@ func TestShouldRemoveWorkForNonExistantHandle(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	ok, err := RemoveClaim("invalidHandle", TrueClaim())
+	trueClaim, _ := TrueClaim()
+	ok, err := RemoveClaim("invalidHandle", trueClaim)
 	assert.False(t, ok)
 	assert.NoError(t, err)
 }

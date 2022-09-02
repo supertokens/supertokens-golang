@@ -35,7 +35,8 @@ func TestShouldNotChangeIfFetchValueReturnsNil(t *testing.T) {
 	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	err = sessionContainer.FetchAndSetClaim(NilClaim())
+	nilClaim, _ := NilClaim()
+	err = sessionContainer.FetchAndSetClaim(nilClaim)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
 	assert.Equal(t, 0, len(accessTokenPayload))
@@ -67,7 +68,8 @@ func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
 	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	err = sessionContainer.FetchAndSetClaim(TrueClaim())
+	trueClaim, _ := TrueClaim()
+	err = sessionContainer.FetchAndSetClaim(trueClaim)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
 	assert.Equal(t, 1, len(accessTokenPayload))
@@ -102,7 +104,8 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	ok, err := FetchAndSetClaim(sessionContainer.GetHandle(), TrueClaim())
+	trueClaim, _ := TrueClaim()
+	ok, err := FetchAndSetClaim(sessionContainer.GetHandle(), trueClaim)
 	assert.NoError(t, err)
 	assert.True(t, ok)
 

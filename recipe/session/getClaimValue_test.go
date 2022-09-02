@@ -26,7 +26,8 @@ func TestGetClaimValueReturnsRightValue(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -54,7 +55,8 @@ func TestGetClaimValueReturnsRightValue(t *testing.T) {
 	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	assert.True(t, sessionContainer.GetClaimValue(TrueClaim()).(bool))
+	trueClaim, _ := TrueClaim()
+	assert.True(t, sessionContainer.GetClaimValue(trueClaim).(bool))
 }
 
 func TestGetClaimValueFromHandleReturnsRightValue(t *testing.T) {
@@ -73,7 +75,8 @@ func TestGetClaimValueFromHandleReturnsRightValue(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -101,7 +104,8 @@ func TestGetClaimValueFromHandleReturnsRightValue(t *testing.T) {
 	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	getRes, err := GetClaimValue(sessionContainer.GetHandle(), TrueClaim())
+	trueClaim, _ := TrueClaim()
+	getRes, err := GetClaimValue(sessionContainer.GetHandle(), trueClaim)
 	assert.NoError(t, err)
 	assert.NotNil(t, getRes.OK)
 	assert.True(t, getRes.OK.Value.(bool))
@@ -123,7 +127,8 @@ func TestGetClaimValueForNonExistantSessionhandle(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -147,7 +152,8 @@ func TestGetClaimValueForNonExistantSessionhandle(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	getRes, err := GetClaimValue("invalidSessionHandle", TrueClaim())
+	trueClaim, _ := TrueClaim()
+	getRes, err := GetClaimValue("invalidSessionHandle", trueClaim)
 	assert.NoError(t, err)
 	assert.Nil(t, getRes.OK)
 	assert.NotNil(t, getRes.SessionDoesNotExistError)

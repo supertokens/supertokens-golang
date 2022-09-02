@@ -5,26 +5,26 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func TrueClaim() *claims.TypeSessionClaim {
-	claim, _ := claims.BooleanClaim(
+func TrueClaim() (*claims.TypeSessionClaim, claims.BooleanClaimValidators) {
+	claim, validators := claims.BooleanClaim(
 		"st-true",
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 			return true, nil
 		},
 		nil,
 	)
-	return claim
+	return claim, validators
 }
 
-func NilClaim() *claims.TypeSessionClaim {
-	claim, _ := claims.PrimitiveClaim(
+func NilClaim() (*claims.TypeSessionClaim, claims.PrimitiveClaimValidators) {
+	claim, validators := claims.PrimitiveClaim(
 		"st-nil",
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 			return nil, nil
 		},
 		nil,
 	)
-	return claim
+	return claim, validators
 }
 
 func StubClaim(validate func(payload map[string]interface{}, userContext supertokens.UserContext) claims.ClaimValidationResult) (*claims.TypeSessionClaim, StubValidator) {

@@ -28,7 +28,8 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -96,7 +97,8 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							accessTokenPayloadUpdate, err := NilClaim().Build(userID, userContext)
+							nilClaim, _ := NilClaim()
+							accessTokenPayloadUpdate, err := nilClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}
@@ -178,7 +180,8 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 							for k, v := range accessTokenPayload {
 								nAccessTokenPayload[k] = v
 							}
-							accessTokenPayloadUpdate, err := TrueClaim().Build(userID, userContext)
+							trueClaim, _ := TrueClaim()
+							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}

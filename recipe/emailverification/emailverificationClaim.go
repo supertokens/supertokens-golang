@@ -38,8 +38,13 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 
 	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[evClaim.Key].(map[string]interface{}); ok {
-			val := value["t"].(int64)
-			return &val
+			switch t := value["t"].(type) {
+			case int64:
+				return &t
+			case float64:
+				it := int64(t)
+				return &it
+			}
 		}
 		return nil
 	}
