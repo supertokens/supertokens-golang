@@ -281,7 +281,7 @@ func MergeIntoAccessTokenPayloadWithContext(sessionHandle string, accessTokenPay
 	return (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 }
 
-func FetchAndSetClaimWithContext(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+func FetchAndSetClaimWithContext(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
@@ -290,7 +290,7 @@ func FetchAndSetClaimWithContext(sessionHandle string, claim claims.TypeSessionC
 	return (*instance.RecipeImpl.FetchAndSetClaim)(sessionHandle, claim, userContext)
 }
 
-func SetClaimValueWithContext(sessionHandle string, claim claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
+func SetClaimValueWithContext(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
@@ -299,16 +299,16 @@ func SetClaimValueWithContext(sessionHandle string, claim claims.TypeSessionClai
 	return (*instance.RecipeImpl.SetClaimValue)(sessionHandle, claim, value, userContext)
 }
 
-func GetClaimValueWithContext(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (interface{}, error) {
+func GetClaimValueWithContext(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return nil, err
+		return sessmodels.GetClaimValueResult{}, err
 	}
 
 	return (*instance.RecipeImpl.GetClaimValue)(sessionHandle, claim, userContext)
 }
 
-func RemoveClaimWithContext(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+func RemoveClaimWithContext(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
@@ -410,18 +410,18 @@ func MergeIntoAccessTokenPayload(sessionHandle string, accessTokenPayloadUpdate 
 	return MergeIntoAccessTokenPayloadWithContext(sessionHandle, accessTokenPayloadUpdate, &map[string]interface{}{})
 }
 
-func FetchAndSetClaim(sessionHandle string, claim claims.TypeSessionClaim) (bool, error) {
+func FetchAndSetClaim(sessionHandle string, claim *claims.TypeSessionClaim) (bool, error) {
 	return FetchAndSetClaimWithContext(sessionHandle, claim, &map[string]interface{}{})
 }
 
-func SetClaimValue(sessionHandle string, claim claims.TypeSessionClaim, value interface{}) (bool, error) {
+func SetClaimValue(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}) (bool, error) {
 	return SetClaimValueWithContext(sessionHandle, claim, value, &map[string]interface{}{})
 }
 
-func GetClaimValue(sessionHandle string, claim claims.TypeSessionClaim) (interface{}, error) {
+func GetClaimValue(sessionHandle string, claim *claims.TypeSessionClaim) (sessmodels.GetClaimValueResult, error) {
 	return GetClaimValueWithContext(sessionHandle, claim, &map[string]interface{}{})
 }
 
-func RemoveClaim(sessionHandle string, claim claims.TypeSessionClaim) (bool, error) {
+func RemoveClaim(sessionHandle string, claim *claims.TypeSessionClaim) (bool, error) {
 	return RemoveClaimWithContext(sessionHandle, claim, &map[string]interface{}{})
 }

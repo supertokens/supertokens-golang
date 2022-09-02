@@ -39,7 +39,6 @@ type TypeInput struct {
 	ContactMethodEmail        plessmodels.ContactMethodEmailConfig
 	ContactMethodEmailOrPhone plessmodels.ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Providers                 []tpmodels.TypeProvider
 	Override                  *OverrideStruct
@@ -52,7 +51,6 @@ type TypeNormalisedInput struct {
 	ContactMethodEmail        plessmodels.ContactMethodEmailConfig
 	ContactMethodEmailOrPhone plessmodels.ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Providers                 []tpmodels.TypeProvider
 	Override                  OverrideStruct

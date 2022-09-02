@@ -268,7 +268,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return invalidClaims, nil
 	}
 
-	fetchAndSetClaim := func(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+	fetchAndSetClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
 		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return false, err
@@ -283,12 +283,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
-	setClaimValue := func(sessionHandle string, claim claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
+	setClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
 		accessTokenPayloadUpdate := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
-	getClaimValue := func(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
+	getClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
 		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return sessmodels.GetClaimValueResult{}, err
@@ -306,7 +306,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}, nil
 	}
 
-	removeClaim := func(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+	removeClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
 		accessTokenPayloadUpdate := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}

@@ -94,7 +94,6 @@ func makeTypeNormalisedInput(recipeInstance *Recipe, inputConfig tplmodels.TypeI
 		ContactMethodEmail:        inputConfig.ContactMethodEmail,
 		ContactMethodEmailOrPhone: inputConfig.ContactMethodEmailOrPhone,
 		FlowType:                  inputConfig.FlowType,
-		GetLinkDomainAndPath:      inputConfig.GetLinkDomainAndPath,
 		GetCustomUserInputCode:    inputConfig.GetCustomUserInputCode,
 		Override: tplmodels.OverrideStruct{
 			Functions: func(originalImplementation tplmodels.RecipeInterface) tplmodels.RecipeInterface {
