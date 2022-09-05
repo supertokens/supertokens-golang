@@ -72,7 +72,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID", tpmodels.EmailStruct{})
+		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
