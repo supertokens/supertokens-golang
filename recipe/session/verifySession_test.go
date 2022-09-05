@@ -403,7 +403,389 @@ func TestShouldRejectIfAssertClaimsReturnsError(t *testing.T) {
 	}, res["claimValidationErrors"])
 }
 
+func TestShouldAllowIfAssertClaimsReturnsNoError(t *testing.T) {
+	customValidator := claims.SessionClaimValidator{
+		ID: "testid",
+		Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) claims.ClaimValidationResult {
+			return claims.ClaimValidationResult{
+				IsValid: true,
+			}
+		},
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+							result := []claims.SessionClaimValidator{}
+							result = append(result, claimValidatorsAddedByOtherRecipes...)
+							result = append(result, customValidator)
+							return result, nil
+						}
+						*originalImplementation.ValidateClaims = func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
+							return sessmodels.ValidateClaimsResult{
+								InvalidClaims: []claims.ClaimValidationError{},
+							}, nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{})
+	defer app.Close()
+
+	cookies := createSession(app, nil)
+
+	code, res, err := unittesting.GetRequestWithJSONResult(app.URL+"/default-claims", cookies)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, code)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res["message"].(string))
+	assert.NotEqual(t, "invalid claim", res["message"].(string))
+	assert.Nil(t, res["claimValidationErrors"])
+}
+
+func TestShouldAllowWithEmptyListAsOverride(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+							result := []claims.SessionClaimValidator{}
+							result = append(result, claimValidatorsAddedByOtherRecipes...)
+							_, nilValidators := NilClaim()
+
+							result = append(result, nilValidators.HasValue(true, nil, nil))
+							return result, nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{
+		{
+			path: "/no-claims",
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				return []claims.SessionClaimValidator{}
+			},
+		},
+	})
+	defer app.Close()
+
+	cookies := createSession(app, nil)
+
+	code, res, err := unittesting.GetRequestWithJSONResult(app.URL+"/no-claims", cookies)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, code)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res["message"].(string))
+	assert.NotEqual(t, "invalid claim", res["message"].(string))
+	assert.Nil(t, res["claimValidationErrors"])
+}
+
+func TestShouldAllowClaimValidAfterRefetchingWithOverride(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+							result := []claims.SessionClaimValidator{}
+							result = append(result, claimValidatorsAddedByOtherRecipes...)
+							_, trueValidators := TrueClaim()
+
+							result = append(result, trueValidators.HasValue(false, nil, nil))
+							return result, nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{
+		{
+			path: "/refetched-claim",
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				_, validators := TrueClaim()
+				return []claims.SessionClaimValidator{
+					validators.HasValue(true, nil, nil),
+				}
+			},
+		},
+	})
+	defer app.Close()
+
+	cookies := createSession(app, nil)
+
+	code, res, err := unittesting.GetRequestWithJSONResult(app.URL+"/refetched-claim", cookies)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, code)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res["message"].(string))
+}
+
+func TestShouldRejectClaimInvalidAfterRefetchingWithOverride(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+							result := []claims.SessionClaimValidator{}
+							result = append(result, claimValidatorsAddedByOtherRecipes...)
+							_, trueValidators := TrueClaim()
+
+							result = append(result, trueValidators.HasValue(true, nil, nil))
+							return result, nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{
+		{
+			path: "/refetched-claim",
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				_, validators := TrueClaim()
+				return []claims.SessionClaimValidator{
+					validators.HasValue(false, nil, nil),
+				}
+			},
+		},
+	})
+	defer app.Close()
+
+	cookies := createSession(app, nil)
+
+	code, res, err := unittesting.GetRequestWithJSONResult(app.URL+"/refetched-claim", cookies)
+	assert.NoError(t, err)
+	assert.Equal(t, 403, code)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res["message"].(string))
+	assert.Equal(t, "invalid claim", res["message"].(string))
+	assert.Equal(t, []interface{}{
+		map[string]interface{}{
+			"id": "st-true",
+			"reason": map[string]interface{}{
+				"actualValue":   true,
+				"expectedValue": false,
+				"message":       "wrong value",
+			},
+		},
+	}, res["claimValidationErrors"])
+}
+
+func TestShouldRejectCustomValidatorReturningFalseWithOverride(t *testing.T) {
+	customValidator := claims.SessionClaimValidator{
+		ID: "testid",
+		Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) claims.ClaimValidationResult {
+			return claims.ClaimValidationResult{
+				IsValid: false,
+			}
+		},
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+							result := []claims.SessionClaimValidator{}
+							result = append(result, claimValidatorsAddedByOtherRecipes...)
+							_, validator := TrueClaim()
+							result = append(result, validator.IsTrue(nil, nil))
+							return result, nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{
+		{
+			path: "/refetched-claim",
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				return []claims.SessionClaimValidator{
+					customValidator,
+				}
+			},
+		},
+	})
+	defer app.Close()
+
+	cookies := createSession(app, nil)
+
+	code, res, err := unittesting.GetRequestWithJSONResult(app.URL+"/refetched-claim", cookies)
+	assert.NoError(t, err)
+	assert.Equal(t, 403, code)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res["message"].(string))
+	assert.Equal(t, "invalid claim", res["message"].(string))
+	assert.Equal(t, []interface{}{
+		map[string]interface{}{
+			"id": "testid",
+		},
+	}, res["claimValidationErrors"])
+}
+
+func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
+	customValidator := claims.SessionClaimValidator{
+		ID: "testid",
+		Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) claims.ClaimValidationResult {
+			return claims.ClaimValidationResult{
+				IsValid: true,
+			}
+		},
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Override: &sessmodels.OverrideStruct{
+					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+							result := []claims.SessionClaimValidator{}
+							result = append(result, claimValidatorsAddedByOtherRecipes...)
+							_, validator := TrueClaim()
+
+							result = append(result, validator.IsFalse(nil, nil))
+							return result, nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{
+		{
+			path: "/refetched-claim",
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				return []claims.SessionClaimValidator{
+					customValidator,
+				}
+			},
+		},
+	})
+	defer app.Close()
+
+	cookies := createSession(app, nil)
+
+	code, res, err := unittesting.GetRequestWithJSONResult(app.URL+"/refetched-claim", cookies)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, code)
+	assert.NotNil(t, res)
+	assert.NotEmpty(t, res["message"].(string))
+}
+
 type typeTestEndpoint struct {
+	path                          string
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator
 }
 
 func createSession(app *httptest.Server, body map[string]interface{}) []*http.Cookie {
@@ -481,6 +863,25 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 		w.WriteHeader(http.StatusOK)
 		w.Write(respBytes)
 	}))
+
+	for _, endpoint := range endpoints {
+		mux.HandleFunc(endpoint.path, VerifySession(&sessmodels.VerifySessionOptions{
+			OverrideGlobalClaimValidators: endpoint.overrideGlobalClaimValidators,
+		}, func(w http.ResponseWriter, r *http.Request) {
+			sessionContainer := GetSessionFromRequestContext(r.Context())
+			resp := map[string]interface{}{
+				"message": sessionContainer.GetHandle(),
+			}
+			respBytes, err := json.Marshal(resp)
+			if err != nil {
+				return
+			}
+			w.Header().Set("Content-Type", "application/json")
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", (len(respBytes))))
+			w.WriteHeader(http.StatusOK)
+			w.Write(respBytes)
+		}))
+	}
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	return testServer
