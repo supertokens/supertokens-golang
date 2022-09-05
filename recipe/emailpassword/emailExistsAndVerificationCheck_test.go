@@ -931,8 +931,8 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, options, sessionContainer, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer *sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1191,8 +1191,8 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, options, sessionContainer, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer *sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1397,8 +1397,8 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, options, sessionContainer, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer *sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}

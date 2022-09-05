@@ -306,18 +306,18 @@ func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedI
 }
 
 func sendTryRefreshTokenResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
+	return supertokens.SendNon200ResponseWithMessage(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func sendUnauthorisedResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
+	return supertokens.SendNon200ResponseWithMessage(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func sendInvalidClaimResponse(recipeInstance Recipe, claimValidationErrors []claims.ClaimValidationError, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200ResponseWithPayload(response, map[string]interface{}{
+	return supertokens.SendNon200Response(response, recipeInstance.Config.InvalidClaimStatusCode, map[string]interface{}{
 		"message":               "invalid claim",
 		"claimValidationErrors": claimValidationErrors,
-	}, recipeInstance.Config.InvalidClaimStatusCode)
+	})
 }
 
 func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
@@ -325,7 +325,7 @@ func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string,
 	if err != nil {
 		return err
 	}
-	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
+	return supertokens.SendNon200ResponseWithMessage(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func frontendHasInterceptor(req *http.Request) bool {

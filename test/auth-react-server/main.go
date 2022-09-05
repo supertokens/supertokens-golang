@@ -139,24 +139,24 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogGenerateEmailVerifyTokenPOST := *originalImplementation.GenerateEmailVerifyTokenPOST
 						ogVerifyEmailPOST := *originalImplementation.VerifyEmailPOST
 
-						(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
+						(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(sessionContainer *sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verification code", false)
 							if gr != nil {
 								return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogGenerateEmailVerifyTokenPOST(options, sessionContainer, userContext)
+							return ogGenerateEmailVerifyTokenPOST(sessionContainer, options, userContext)
 						}
 
-						(*originalImplementation.VerifyEmailPOST) = func(token string, options evmodels.APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+						(*originalImplementation.VerifyEmailPOST) = func(token string, sessionContainer *sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
 							if gr != nil {
 								return evmodels.VerifyEmailPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogVerifyEmailPOST(token, options, sessionContainer, userContext)
+							return ogVerifyEmailPOST(token, sessionContainer, options, userContext)
 						}
 						return originalImplementation
 					},
