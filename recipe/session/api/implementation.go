@@ -24,9 +24,8 @@ import (
 )
 
 func MakeAPIImplementation() sessmodels.APIInterface {
-	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) error {
-		_, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
-		return err
+	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
 	}
 
 	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
@@ -58,7 +57,15 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			if verifySessionOptions != nil {
 				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
 			}
-			claimValidators, err := getRequiredClaimValidators(options.ClaimValidatorsAddedByOtherRecipes, options.RecipeImplementation, sessionContainer, overrideGlobalClaimValidators, userContext)
+			claimValidators := options.ClaimValidatorsAddedByOtherRecipes
+			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidators, userContext)
+			if err != nil {
+				return nil, err
+			}
+			if overrideGlobalClaimValidators != nil {
+				claimValidators = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
+			}
+
 			if err != nil {
 				return nil, err
 			}

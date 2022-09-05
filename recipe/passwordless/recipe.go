@@ -22,6 +22,8 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/api"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -68,6 +70,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 	} else {
 		r.SmsDelivery = smsdelivery.MakeIngredient(verifiedConfig.GetSmsDeliveryConfig())
 	}
+
+	supertokens.AddPostInitCallback(func() error {
+		emailVerificationRecipe := emailverification.GetRecipeInstance()
+		if emailVerificationRecipe != nil {
+			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
+		}
+		return nil
+	})
 
 	return *r, nil
 }
@@ -150,6 +160,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
+		AppInfo:              r.RecipeModule.GetAppInfo(),
 		Req:                  req,
 		Res:                  res,
 		OtherHandler:         theirHandler,
@@ -255,6 +266,28 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 			User             plessmodels.User
 		}{}, errors.New("failed to create user. Please try again")
 	}
+}
+
+func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
+	if err != nil {
+		return evmodels.TypeEmailInfo{}, err
+	}
+	if userInfo == nil {
+		return evmodels.TypeEmailInfo{
+			UnknownUserIDError: &struct{}{},
+		}, nil
+	}
+	if userInfo.Email == nil {
+		return evmodels.TypeEmailInfo{
+			EmailDoesNotExistError: &struct{}{},
+		}, nil
+	}
+	return evmodels.TypeEmailInfo{
+		OK: &struct{ Email string }{
+			Email: *userInfo.Email,
+		},
+	}, nil
 }
 
 func ResetForTest() {

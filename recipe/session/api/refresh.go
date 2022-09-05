@@ -25,7 +25,7 @@ func HandleRefreshAPI(apiImplementation sessmodels.APIInterface, options sessmod
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	err := (*apiImplementation.RefreshPOST)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	_, err := (*apiImplementation.RefreshPOST)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

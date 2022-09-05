@@ -71,10 +71,6 @@ func MakeAPIImplementation() evmodels.APIInterface {
 	}
 
 	generateEmailVerifyTokenPOST := func(sessionContainer *sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
-		stInstance, err := supertokens.GetInstanceOrThrowError()
-		if err != nil {
-			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
-		}
 		if sessionContainer == nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, supertokens.BadInputError{Msg: "Session is undefined. Should not come here."}
 		}
@@ -111,8 +107,8 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 		emailVerificationURL := fmt.Sprintf(
 			"%s%s/verify-email?token=%s&rid=%s",
-			stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-			stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+			options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 			response.OK.Token,
 			options.RecipeID,
 		)
