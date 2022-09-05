@@ -91,7 +91,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 							Reason: map[string]interface{}{
 								"message":         "expired",
 								"ageInSeconds":    ageInSeconds,
-								"maxAgeInSeconds": maxAgeInSeconds,
+								"maxAgeInSeconds": *maxAgeInSeconds,
 							},
 						}
 					}
