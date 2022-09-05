@@ -58,12 +58,9 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
+							err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
-							}
-							for k, v := range accessTokenPayloadUpdate {
-								accessTokenPayload[k] = v
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}
@@ -113,12 +110,9 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
+							err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
-							}
-							for k, v := range accessTokenPayloadUpdate {
-								accessTokenPayload[k] = v
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}

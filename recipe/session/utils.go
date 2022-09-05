@@ -93,6 +93,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		invalidClaimStatusCode = *config.InvalidClaimStatusCode
 	}
 
+	if sessionExpiredStatusCode == invalidClaimStatusCode {
+		return sessmodels.TypeNormalisedInput{}, errors.New("SessionExpiredStatusCode and InvalidClaimStatusCode cannot have the same value")
+	}
+
 	if config != nil && config.AntiCsrf != nil {
 		if *config.AntiCsrf != antiCSRF_NONE && *config.AntiCsrf != antiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != antiCSRF_VIA_TOKEN {
 			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
@@ -367,7 +371,7 @@ func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, new
 
 func getRequiredClaimValidators(
 	sessionContainer *sessmodels.SessionContainer,
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error),
 	userContext supertokens.UserContext,
 ) ([]claims.SessionClaimValidator, error) {
 	instance, err := getRecipeInstanceOrThrowError()
@@ -380,7 +384,10 @@ func getRequiredClaimValidators(
 		return nil, err
 	}
 	if overrideGlobalClaimValidators != nil {
-		globalClaimValidators = overrideGlobalClaimValidators(globalClaimValidators, sessionContainer, userContext)
+		globalClaimValidators, err = overrideGlobalClaimValidators(globalClaimValidators, sessionContainer, userContext)
+		if err != nil {
+			return nil, err
+		}
 	}
 	return globalClaimValidators, nil
 }

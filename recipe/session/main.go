@@ -44,12 +44,9 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 	}
 
 	for _, claim := range claimsAddedByOtherRecipes {
-		update, err := claim.Build(userID, userContext)
+		err = claim.Build(userID, finalAccessTokenPayload, userContext)
 		if err != nil {
 			return sessmodels.SessionContainer{}, err
-		}
-		for k, v := range update {
-			finalAccessTokenPayload[k] = v
 		}
 	}
 
@@ -67,7 +64,7 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 	}
 
 	if sessionContainer != nil {
-		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator = nil
+		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
 		if options != nil {
 			overrideGlobalClaimValidators = options.OverrideGlobalClaimValidators
 		}

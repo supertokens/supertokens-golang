@@ -29,12 +29,9 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
+							err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
-							}
-							for k, v := range accessTokenPayloadUpdate {
-								accessTokenPayload[k] = v
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}
@@ -98,12 +95,9 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							nilClaim, _ := NilClaim()
-							accessTokenPayloadUpdate, err := nilClaim.Build(userID, userContext)
+							err := nilClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
-							}
-							for k, v := range accessTokenPayloadUpdate {
-								accessTokenPayload[k] = v
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}
@@ -181,12 +175,9 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 								nAccessTokenPayload[k] = v
 							}
 							trueClaim, _ := TrueClaim()
-							accessTokenPayloadUpdate, err := trueClaim.Build(userID, userContext)
+							err := trueClaim.Build(userID, nAccessTokenPayload, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
-							}
-							for k, v := range accessTokenPayloadUpdate {
-								nAccessTokenPayload[k] = v
 							}
 							for k, v := range customClaims {
 								nAccessTokenPayload[k] = v

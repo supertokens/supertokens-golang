@@ -53,7 +53,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				return nil, nil
 			}
 
-			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator = nil
+			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
 			if verifySessionOptions != nil {
 				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
 			}
@@ -63,7 +63,10 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				return nil, err
 			}
 			if overrideGlobalClaimValidators != nil {
-				claimValidators = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
+				claimValidators, err = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
+				if err != nil {
+					return nil, err
+				}
 			}
 
 			if err != nil {

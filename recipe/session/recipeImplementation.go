@@ -276,7 +276,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if sessionInfo == nil {
 			return false, nil
 		}
-		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, userContext)
+		accessTokenPayloadUpdate := map[string]interface{}{}
+		err = claim.Build(sessionInfo.UserId, accessTokenPayloadUpdate, userContext)
 		if err != nil {
 			return false, err
 		}

@@ -10,15 +10,22 @@ func SessionClaim(key string, fetchValue FetchValueFunc) *TypeSessionClaim {
 		FetchValue: fetchValue,
 	}
 
-	sessionClaim.Build = func(userId string, userContext supertokens.UserContext) (map[string]interface{}, error) {
+	sessionClaim.Build = func(userId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+		if payloadToUpdate == nil {
+			payloadToUpdate = map[string]interface{}{}
+		}
 		value, err := sessionClaim.FetchValue(userId, userContext)
 		if err != nil {
-			return nil, err
+			return err
 		}
 		if value == nil {
-			return map[string]interface{}{}, nil
+			return nil
 		}
-		return sessionClaim.AddToPayload_internal(map[string]interface{}{}, value, userContext), nil
+		update := sessionClaim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+		for k, v := range update {
+			payloadToUpdate[k] = v
+		}
+		return nil
 	}
 
 	return sessionClaim
@@ -33,7 +40,7 @@ type TypeSessionClaim struct {
 	RemoveFromPayloadByMerge_internal func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	RemoveFromPayload                 func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	GetValueFromPayload               func(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
-	Build                             func(userId string, userContext supertokens.UserContext) (map[string]interface{}, error)
+	Build                             func(userId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) error
 }
 
 type SessionClaimValidator struct {
