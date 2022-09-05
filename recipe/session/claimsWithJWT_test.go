@@ -35,7 +35,7 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 								accessTokenPayload = map[string]interface{}{}
 							}
 							claim, _ := TrueClaim()
-							err := claim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := claim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return sessmodels.SessionContainer{}, err
 							}

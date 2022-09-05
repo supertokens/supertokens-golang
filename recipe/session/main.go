@@ -44,7 +44,7 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 	}
 
 	for _, claim := range claimsAddedByOtherRecipes {
-		err = claim.Build(userID, finalAccessTokenPayload, userContext)
+		finalAccessTokenPayload, err = claim.Build(userID, finalAccessTokenPayload, userContext)
 		if err != nil {
 			return sessmodels.SessionContainer{}, err
 		}

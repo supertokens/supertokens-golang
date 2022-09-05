@@ -180,8 +180,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	fetchAndSetClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		update := map[string]interface{}{}
-		err := claim.Build(getUserIDWithContext(userContext), update, userContext)
+		update, err := claim.Build(getUserIDWithContext(userContext), nil, userContext)
 		if err != nil {
 			return err
 		}
