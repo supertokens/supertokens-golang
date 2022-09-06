@@ -391,15 +391,3 @@ func getRequiredClaimValidators(
 	}
 	return globalClaimValidators, nil
 }
-
-type fakeRes struct{}
-
-func (f fakeRes) Header() http.Header {
-	return http.Header{}
-}
-
-func (f fakeRes) Write(body []byte) (int, error) {
-	return len(body), nil
-}
-
-func (f fakeRes) WriteHeader(statusCode int) {}
