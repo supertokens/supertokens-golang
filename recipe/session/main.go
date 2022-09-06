@@ -34,7 +34,7 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return sessmodels.SessionContainer{}, err
+		return nil, err
 	}
 
 	claimsAddedByOtherRecipes := instance.getClaimsAddedByOtherRecipes()
@@ -46,14 +46,14 @@ func CreateNewSessionWithContext(res http.ResponseWriter, userID string, accessT
 	for _, claim := range claimsAddedByOtherRecipes {
 		finalAccessTokenPayload, err = claim.Build(userID, finalAccessTokenPayload, userContext)
 		if err != nil {
-			return sessmodels.SessionContainer{}, err
+			return nil, err
 		}
 	}
 
 	return (*instance.RecipeImpl.CreateNewSession)(res, userID, finalAccessTokenPayload, sessionData, userContext)
 }
 
-func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -64,7 +64,7 @@ func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *
 	}
 
 	if sessionContainer != nil {
-		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
+		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
 		if options != nil {
 			overrideGlobalClaimValidators = options.OverrideGlobalClaimValidators
 		}
@@ -91,7 +91,7 @@ func GetSessionInformationWithContext(sessionHandle string, userContext supertok
 func RefreshSessionWithContext(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return sessmodels.SessionContainer{}, err
+		return nil, err
 	}
 	return (*instance.RecipeImpl.RefreshSession)(req, res, userContext)
 }
@@ -326,12 +326,12 @@ func VerifySession(options *sessmodels.VerifySessionOptions, otherHandler http.H
 	return VerifySessionHelper(*instance, options, otherHandler)
 }
 
-func GetSessionFromRequestContext(ctx context.Context) *sessmodels.SessionContainer {
+func GetSessionFromRequestContext(ctx context.Context) sessmodels.SessionContainer {
 	value := ctx.Value(sessmodels.SessionContext)
 	if value == nil {
 		return nil
 	}
-	temp := value.(*sessmodels.SessionContainer)
+	temp := value.(sessmodels.SessionContainer)
 	return temp
 }
 
@@ -339,7 +339,7 @@ func CreateNewSession(res http.ResponseWriter, userID string, accessTokenPayload
 	return CreateNewSessionWithContext(res, userID, accessTokenPayload, sessionData, &map[string]interface{}{})
 }
 
-func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (*sessmodels.SessionContainer, error) {
+func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
 	return GetSessionWithContext(req, res, options, &map[string]interface{}{})
 }
 

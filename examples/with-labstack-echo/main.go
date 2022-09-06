@@ -144,7 +144,7 @@ func verifySession(options *sessmodels.VerifySessionOptions) echo.MiddlewareFunc
 }
 
 func sessioninfo(c echo.Context) error {
-	sessionContainer := c.Get("session").(*sessmodels.SessionContainer)
+	sessionContainer := c.Get("session").(sessmodels.SessionContainer)
 
 	if sessionContainer == nil {
 		return errors.New("no session found")

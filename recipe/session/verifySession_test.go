@@ -503,7 +503,7 @@ func TestShouldAllowWithEmptyListAsOverride(t *testing.T) {
 	app := getTestApp([]typeTestEndpoint{
 		{
 			path: "/no-claims",
-			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				return []claims.SessionClaimValidator{}, nil
 			},
 		},
@@ -560,7 +560,7 @@ func TestShouldAllowClaimValidAfterRefetchingWithOverride(t *testing.T) {
 	app := getTestApp([]typeTestEndpoint{
 		{
 			path: "/refetched-claim",
-			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				_, validators := TrueClaim()
 				return []claims.SessionClaimValidator{
 					validators.HasValue(true, nil, nil),
@@ -618,7 +618,7 @@ func TestShouldRejectClaimInvalidAfterRefetchingWithOverride(t *testing.T) {
 	app := getTestApp([]typeTestEndpoint{
 		{
 			path: "/refetched-claim",
-			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				_, validators := TrueClaim()
 				return []claims.SessionClaimValidator{
 					validators.HasValue(false, nil, nil),
@@ -694,7 +694,7 @@ func TestShouldRejectCustomValidatorReturningFalseWithOverride(t *testing.T) {
 	app := getTestApp([]typeTestEndpoint{
 		{
 			path: "/refetched-claim",
-			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				return []claims.SessionClaimValidator{
 					customValidator,
 				}, nil
@@ -765,7 +765,7 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 	app := getTestApp([]typeTestEndpoint{
 		{
 			path: "/refetched-claim",
-			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+			overrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				return []claims.SessionClaimValidator{
 					customValidator,
 				}, nil
@@ -785,7 +785,7 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 
 type typeTestEndpoint struct {
 	path                          string
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 }
 
 func createSession(app *httptest.Server, body map[string]interface{}) []*http.Cookie {

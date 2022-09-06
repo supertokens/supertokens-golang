@@ -31,7 +31,7 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
-								return sessmodels.SessionContainer{}, err
+								return nil, err
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}
@@ -97,7 +97,7 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 							nilClaim, _ := NilClaim()
 							accessTokenPayload, err := nilClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
-								return sessmodels.SessionContainer{}, err
+								return nil, err
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}
@@ -177,7 +177,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 							trueClaim, _ := TrueClaim()
 							nAccessTokenPayload, err := trueClaim.Build(userID, nAccessTokenPayload, userContext)
 							if err != nil {
-								return sessmodels.SessionContainer{}, err
+								return nil, err
 							}
 							for k, v := range customClaims {
 								nAccessTokenPayload[k] = v

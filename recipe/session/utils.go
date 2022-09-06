@@ -370,8 +370,8 @@ func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, new
 }
 
 func getRequiredClaimValidators(
-	sessionContainer *sessmodels.SessionContainer,
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error),
+	sessionContainer sessmodels.SessionContainer,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error),
 	userContext supertokens.UserContext,
 ) ([]claims.SessionClaimValidator, error) {
 	instance, err := getRecipeInstanceOrThrowError()

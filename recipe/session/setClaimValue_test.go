@@ -63,7 +63,7 @@ func TestShouldSetClaimValueOverwriteClaimValue(t *testing.T) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
-								return sessmodels.SessionContainer{}, err
+								return nil, err
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}
@@ -116,7 +116,7 @@ func TestShouldSetClaimValueOverwriteClaimValueUsingHandle(t *testing.T) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
-								return sessmodels.SessionContainer{}, err
+								return nil, err
 							}
 							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
 						}

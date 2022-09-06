@@ -24,7 +24,7 @@ import (
 
 type RecipeInterface struct {
 	CreateNewSession            *func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (SessionContainer, error)
-	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (*SessionContainer, error)
+	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)
 	RefreshSession              *func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (*SessionInformation, error)
 	RevokeAllSessionsForUser    *func(userID string, userContext supertokens.UserContext) ([]string, error)
