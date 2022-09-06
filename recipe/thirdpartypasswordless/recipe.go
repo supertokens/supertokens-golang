@@ -21,8 +21,6 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
@@ -134,14 +132,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 		}
 	}
 
-	supertokens.AddPostInitCallback(func() error {
-		evRecipe := emailverification.GetRecipeInstance()
-		if evRecipe != nil {
-			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
-		}
-		return nil
-	})
-
 	return *r, nil
 }
 
@@ -224,39 +214,6 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		}
 	}
 	return false, err
-}
-
-func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
-	if err != nil {
-		return evmodels.TypeEmailInfo{}, err
-	}
-	if userInfo == nil {
-		return evmodels.TypeEmailInfo{
-			UnknownUserIDError: &struct{}{},
-		}, nil
-	}
-	if userInfo.ThirdParty == nil {
-		if userInfo.Email != nil {
-			return evmodels.TypeEmailInfo{
-				OK: &struct{ Email string }{
-					Email: *userInfo.Email,
-				},
-			}, nil
-		}
-		// this is a passwordless user with only a phone number.
-		// returning an empty string here is not a problem since
-		// we override the email verification functions above to
-		// send that the email is already verified for passwordless users.
-		return evmodels.TypeEmailInfo{
-			EmailDoesNotExistError: &struct{}{},
-		}, nil
-	}
-	return evmodels.TypeEmailInfo{
-		OK: &struct{ Email string }{
-			Email: *userInfo.Email,
-		},
-	}, nil
 }
 
 func ResetForTest() {

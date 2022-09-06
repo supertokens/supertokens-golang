@@ -43,14 +43,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	createNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, accessTokenPayload, sessionData)
 		if err != nil {
-			return sessmodels.SessionContainer{}, err
+			return nil, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
 		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
-	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("getSession: Started")
 		supertokens.LogDebugMessage("getSession: rid in header: " + strconv.FormatBool(frontendHasInterceptor((req))))
 		supertokens.LogDebugMessage("getSession: request method: " + req.Method)
@@ -112,7 +112,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		supertokens.LogDebugMessage("getSession: Success!")
-		return &sessionContainer, nil
+		return sessionContainer, nil
 	}
 
 	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
@@ -124,14 +124,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 		if inputIdRefreshToken == nil {
 			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because idRefreshToken from cookies is nil")
-			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 		}
 
 		inputRefreshToken := getRefreshTokenFromCookie(req)
 		if inputRefreshToken == nil {
 			clearSessionFromCookie(config, res)
 			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token from cookies is undefined")
-			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
+			return nil, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 		}
 
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
@@ -143,7 +143,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 				supertokens.LogDebugMessage("refreshSession: Clearing cookies because of UNAUTHORISED or TOKEN_THEFT_DETECTED response")
 				clearSessionFromCookie(config, res)
 			}
-			return sessmodels.SessionContainer{}, err
+			return nil, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
@@ -268,7 +268,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return invalidClaims, nil
 	}
 
-	fetchAndSetClaim := func(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+	fetchAndSetClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
 		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return false, err
@@ -276,19 +276,19 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if sessionInfo == nil {
 			return false, nil
 		}
-		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, userContext)
+		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, nil, userContext)
 		if err != nil {
 			return false, err
 		}
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
-	setClaimValue := func(sessionHandle string, claim claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
+	setClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
 		accessTokenPayloadUpdate := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
-	getClaimValue := func(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
+	getClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
 		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return sessmodels.GetClaimValueResult{}, err
@@ -306,7 +306,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}, nil
 	}
 
-	removeClaim := func(sessionHandle string, claim claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+	removeClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
 		accessTokenPayloadUpdate := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
 		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}

@@ -139,7 +139,7 @@ type JWTNormalisedConfig struct {
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
-	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator
+	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 }
 
 type APIOptions struct {
@@ -160,7 +160,7 @@ type NormalisedErrorHandlers struct {
 	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
 }
 
-type SessionContainer struct {
+type TypeSessionContainer struct {
 	RevokeSession            func() error
 	GetSessionData           func() (map[string]interface{}, error)
 	UpdateSessionData        func(newSessionData map[string]interface{}) error
@@ -199,6 +199,8 @@ type SessionContainer struct {
 	GetClaimValue    func(claim *claims.TypeSessionClaim) interface{}
 	RemoveClaim      func(claim *claims.TypeSessionClaim) error
 }
+
+type SessionContainer = *TypeSessionContainer
 
 type SessionInformation struct {
 	SessionHandle      string

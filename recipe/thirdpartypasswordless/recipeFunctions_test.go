@@ -26,6 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -57,6 +58,9 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 						return nil
 					},
 				},
+				Providers: []tpmodels.TypeProvider{
+					customProvider1,
+				},
 			}),
 		},
 	}
@@ -81,7 +85,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 		return
 	}
 
-	resp, err := ThirdPartySignInUp("customProvider", "verifiedUser", "test@example.com")
+	resp, err := ThirdPartySignInUp("custom", "verifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
 	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
@@ -93,7 +97,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	assert.NoError(t, err)
 	assert.True(t, isVerfied)
 
-	resp1, err := ThirdPartySignInUp("customProvider2", "NotVerifiedUser", "test@example.com")
+	resp1, err := ThirdPartySignInUp("custom2", "NotVerifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
 	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)

@@ -42,9 +42,9 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			options.Req, options.Res,
 			&sessmodels.VerifySessionOptions{
 				SessionRequired: &sessionRequired,
-				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 					validators := []claims.SessionClaimValidator{}
-					return validators
+					return validators, nil
 				},
 			},
 			userContext)
@@ -70,7 +70,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options, sessionContainer, userContext)
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, options, userContext)
 		if err != nil {
 			return err
 		}
@@ -100,9 +100,9 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			options.Req,
 			options.Res,
 			&sessmodels.VerifySessionOptions{
-				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 					validators := []claims.SessionClaimValidator{}
-					return validators
+					return validators, nil
 				},
 			},
 			userContext,
@@ -111,7 +111,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return err
 		}
 
-		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, sessionContainer, userContext)
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(sessionContainer, options, userContext)
 		if err != nil {
 			return err
 		}

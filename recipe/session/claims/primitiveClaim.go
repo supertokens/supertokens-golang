@@ -41,8 +41,13 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 
 	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
-			val := value["t"].(int64)
-			return &val
+			switch t := value["t"].(type) {
+			case int64:
+				return &t
+			case float64:
+				it := int64(t)
+				return &it
+			}
 		}
 		return nil
 	}
@@ -86,7 +91,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 							Reason: map[string]interface{}{
 								"message":         "expired",
 								"ageInSeconds":    ageInSeconds,
-								"maxAgeInSeconds": maxAgeInSeconds,
+								"maxAgeInSeconds": *maxAgeInSeconds,
 							},
 						}
 					}

@@ -18,7 +18,6 @@ package thirdpartypasswordless
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/backwardCompatibilityService"
 	smsBackwardCompatibilityService "github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/backwardCompatibilityService"
@@ -37,9 +36,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 			sendPasswordlessLoginEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
 		}
 
-		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
-
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendEmailVerificationEmail, sendPasswordlessLoginEmail)
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendPasswordlessLoginEmail)
 		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}
@@ -94,7 +91,6 @@ func makeTypeNormalisedInput(recipeInstance *Recipe, inputConfig tplmodels.TypeI
 		ContactMethodEmail:        inputConfig.ContactMethodEmail,
 		ContactMethodEmailOrPhone: inputConfig.ContactMethodEmailOrPhone,
 		FlowType:                  inputConfig.FlowType,
-		GetLinkDomainAndPath:      inputConfig.GetLinkDomainAndPath,
 		GetCustomUserInputCode:    inputConfig.GetCustomUserInputCode,
 		Override: tplmodels.OverrideStruct{
 			Functions: func(originalImplementation tplmodels.RecipeInterface) tplmodels.RecipeInterface {

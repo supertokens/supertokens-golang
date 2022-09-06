@@ -25,6 +25,7 @@ import (
 
 type APIOptions struct {
 	RecipeImplementation RecipeInterface
+	AppInfo              supertokens.NormalisedAppinfo
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request
@@ -35,9 +36,9 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	VerifyEmailPOST              *func(token string, options APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
-	IsEmailVerifiedGET           *func(options APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
-	GenerateEmailVerifyTokenPOST *func(options APIOptions, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
+	VerifyEmailPOST              *func(token string, sessionContainer sessmodels.SessionContainer, options APIOptions, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
+	IsEmailVerifiedGET           *func(sessionContainer sessmodels.SessionContainer, options APIOptions, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
+	GenerateEmailVerifyTokenPOST *func(sessionContainer sessmodels.SessionContainer, options APIOptions, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
 }
 
 type VerifyEmailPOSTResponse struct {

@@ -101,7 +101,7 @@ func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
 }
 
-//helper function to execute shell commands
+// helper function to execute shell commands
 func shellout(waitFor bool, name string, args ...string) {
 	cmd := exec.Command(name, args...)
 	cmd.Dir = getInstallationDir()
@@ -746,4 +746,27 @@ func PasswordlessLoginWithCodeRequest(deviceId string, preAuthSessionId string, 
 	}
 
 	return resp, nil
+}
+
+func GetRequestWithJSONResult(url string, cookies []*http.Cookie) (int, map[string]interface{}, error) {
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	for _, cookie := range cookies {
+		req.AddCookie(cookie)
+	}
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return 0, nil, err
+	}
+	respObj := map[string]interface{}{}
+	err = json.NewDecoder(res.Body).Decode(&respObj)
+	if err != nil {
+		return 0, nil, err
+	}
+	res.Body.Close()
+	return res.StatusCode, respObj, nil
 }

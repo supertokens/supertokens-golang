@@ -23,7 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/api"
@@ -125,14 +124,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		}
 	}
 
-	supertokens.AddPostInitCallback(func() error {
-		evRecipe := emailverification.GetRecipeInstance()
-		if evRecipe != nil {
-			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
-		}
-		return nil
-	})
-
 	return *r, nil
 }
 
@@ -215,23 +206,6 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		}
 	}
 	return false, err
-}
-
-func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
-	if err != nil {
-		return evmodels.TypeEmailInfo{}, err
-	}
-	if userInfo == nil {
-		return evmodels.TypeEmailInfo{
-			UnknownUserIDError: &struct{}{},
-		}, nil
-	}
-	return evmodels.TypeEmailInfo{
-		OK: &struct{ Email string }{
-			Email: userInfo.Email,
-		},
-	}, nil
 }
 
 func ResetForTest() {

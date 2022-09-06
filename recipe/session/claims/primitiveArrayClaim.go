@@ -12,37 +12,18 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 		defaultMaxAgeInSeconds = &val
 	}
 
-	sessionClaim := SessionClaim(key, fetchValue)
-
-	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
-		payload[sessionClaim.Key] = map[string]interface{}{
-			"v": value.([]interface{}),
-			"t": time.Now().UnixMilli(),
-		}
-		return payload
-	}
-
-	sessionClaim.RemoveFromPayloadByMerge_internal = func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
-		payload[sessionClaim.Key] = nil
-		return payload
-	}
-
-	sessionClaim.RemoveFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
-		delete(payload, sessionClaim.Key)
-		return payload
-	}
-
-	sessionClaim.GetValueFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
-		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
-			return value["v"]
-		}
-		return nil
-	}
+	// Claim functions are identical to primitive claim, only validators are different
+	sessionClaim, _ := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
 
 	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
-			val := value["t"].(int64)
-			return &val
+			switch t := value["t"].(type) {
+			case int64:
+				return &t
+			case float64:
+				it := int64(t)
+				return &it
+			}
 		}
 		return nil
 	}

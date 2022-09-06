@@ -12,7 +12,7 @@ func init() {
 	userrolesclaims.PermissionClaim, userrolesclaims.PermissionClaimValidators = NewPermissionClaim()
 }
 
-func NewUserRoleClaim() (*claims.TypeSessionClaim, userrolesclaims.TypeUserRoleClaimValidators) {
+func NewUserRoleClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -31,12 +31,11 @@ func NewUserRoleClaim() (*claims.TypeSessionClaim, userrolesclaims.TypeUserRoleC
 	}
 
 	userRoleClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-role", fetchValue, nil)
-	return userRoleClaim, userrolesclaims.TypeUserRoleClaimValidators{
-		PrimitiveArrayClaimValidators: primitiveArrayClaimValidators,
-	}
+	return userRoleClaim, primitiveArrayClaimValidators
+
 }
 
-func NewPermissionClaim() (*claims.TypeSessionClaim, userrolesclaims.TypePermissionClaimValidators) {
+func NewPermissionClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimValidators) {
 	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
@@ -68,7 +67,5 @@ func NewPermissionClaim() (*claims.TypeSessionClaim, userrolesclaims.TypePermiss
 	}
 
 	permissionClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-perm", fetchValue, nil)
-	return permissionClaim, userrolesclaims.TypePermissionClaimValidators{
-		PrimitiveArrayClaimValidators: primitiveArrayClaimValidators,
-	}
+	return permissionClaim, primitiveArrayClaimValidators
 }

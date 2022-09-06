@@ -75,7 +75,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 			if err != nil {
 				return evmodels.TypeEmailInfo{}, err
 			}
-			if emailRes.UnknownUserIDError != nil {
+			if emailRes.UnknownUserIDError == nil {
 				return emailRes, nil
 			}
 		}
@@ -87,10 +87,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 			if err != nil {
 				return emailRes, err
 			}
-			if emailRes.EmailDoesNotExistError != nil {
-				return emailRes, nil
-			}
-			if emailRes.OK != nil {
+			if emailRes.UnknownUserIDError == nil {
 				return emailRes, nil
 			}
 		}
@@ -183,6 +180,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
+		AppInfo:              r.RecipeModule.GetAppInfo(),
 		Req:                  req,
 		Res:                  res,
 		OtherHandler:         theirHandler,

@@ -7,7 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func TestPrimitiveArrayClaim(t *testing.T) {
+func TestPrimitiveArrayClaimValidators(t *testing.T) {
 	primArrayClaim, validators := PrimitiveArrayClaim(
 		"test",
 		func(userId string, userContext supertokens.UserContext) (interface{}, error) {

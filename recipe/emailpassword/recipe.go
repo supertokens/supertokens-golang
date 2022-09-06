@@ -150,6 +150,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		OtherHandler:         theirHandler,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
+		AppInfo:              r.RecipeModule.GetAppInfo(),
 		Req:                  req,
 		Res:                  res,
 		EmailDelivery:        r.EmailDelivery,

@@ -80,11 +80,6 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 	}
 
 	createCodePOST := func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
-		stInstance, err := supertokens.GetInstanceOrThrowError()
-		if err != nil {
-			return plessmodels.CreateCodePOSTResponse{}, err
-		}
-
 		var userInputCodeInput *string
 		if options.Config.GetCustomUserInputCode != nil {
 			c, err := options.Config.GetCustomUserInputCode(userContext)
@@ -106,8 +101,8 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
 			link := fmt.Sprintf(
 				"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
-				stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-				stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+				options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+				options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 				options.RecipeID,
 				response.OK.PreAuthSessionID,
 				response.OK.LinkCode,
@@ -233,10 +228,6 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 	}
 
 	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
-		stInstance, err := supertokens.GetInstanceOrThrowError()
-		if err != nil {
-			return plessmodels.ResendCodePOSTResponse{}, err
-		}
 		deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(deviceID, userContext)
 		if err != nil {
 			return plessmodels.ResendCodePOSTResponse{}, err
@@ -284,8 +275,8 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
 				link := fmt.Sprintf(
 					"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
-					stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-					stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+					options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+					options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 					options.RecipeID,
 					response.OK.PreAuthSessionID,
 					response.OK.LinkCode,

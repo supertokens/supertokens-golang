@@ -19,7 +19,6 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -46,9 +45,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
 		}
 
-		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
-
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, epRecipeImpl, appInfo, sendEmailVerificationEmail, sendPasswordResetEmail)
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, epRecipeImpl, appInfo, sendPasswordResetEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}

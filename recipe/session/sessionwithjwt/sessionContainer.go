@@ -20,14 +20,14 @@ import (
 
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
-	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, openidRecipeImplementation openidmodels.RecipeInterface) sessmodels.SessionContainer {
 
-	updateAccessTokenPayloadWithContext := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+	originalUpdateAccessTokenPayloadWithContext := originalSessionClass.UpdateAccessTokenPayloadWithContext
+	originalSessionClass.UpdateAccessTokenPayloadWithContext = func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 		if newAccessTokenPayload == nil {
 			newAccessTokenPayload = map[string]interface{}{}
 		}
@@ -35,7 +35,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
 		if !ok {
-			return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
+			return originalUpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 		}
 
 		existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
@@ -67,83 +67,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 			return err
 		}
 
-		return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
+		return originalUpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 	}
-
-	mergeIntoAccessTokenPayloadWithContext := func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
-		return originalSessionClass.MergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, userContext)
-	}
-
-	assertClaimsWithContext := func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
-		return originalSessionClass.AssertClaimsWithContext(claimValidators, userContext)
-	}
-
-	fetchAndSetClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		return originalSessionClass.FetchAndSetClaimWithContext(claim, userContext)
-	}
-
-	setClaimValueWithContext := func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
-		return originalSessionClass.SetClaimValueWithContext(claim, value, userContext)
-	}
-
-	getClaimValueWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) interface{} {
-		return originalSessionClass.GetClaimValueWithContext(claim, userContext)
-	}
-
-	removeClaimWithContext := func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		return originalSessionClass.RemoveClaimWithContext(claim, userContext)
-	}
-
-	return sessmodels.SessionContainer{
-		RevokeSessionWithContext:         originalSessionClass.RevokeSessionWithContext,
-		GetSessionDataWithContext:        originalSessionClass.GetSessionDataWithContext,
-		UpdateSessionDataWithContext:     originalSessionClass.UpdateSessionDataWithContext,
-		GetUserIDWithContext:             originalSessionClass.GetUserIDWithContext,
-		GetAccessTokenPayloadWithContext: originalSessionClass.GetAccessTokenPayloadWithContext,
-		GetHandleWithContext:             originalSessionClass.GetHandleWithContext,
-		GetAccessTokenWithContext:        originalSessionClass.GetAccessTokenWithContext,
-		GetTimeCreatedWithContext:        originalSessionClass.GetTimeCreatedWithContext,
-		GetExpiryWithContext:             originalSessionClass.GetExpiryWithContext,
-		RevokeSession:                    originalSessionClass.RevokeSession,
-		GetSessionData:                   originalSessionClass.GetSessionData,
-		UpdateSessionData:                originalSessionClass.UpdateSessionData,
-		GetUserID:                        originalSessionClass.GetUserID,
-		GetAccessTokenPayload:            originalSessionClass.GetAccessTokenPayload,
-		GetHandle:                        originalSessionClass.GetHandle,
-		GetAccessToken:                   originalSessionClass.GetAccessToken,
-		GetTimeCreated:                   originalSessionClass.GetTimeCreated,
-		GetExpiry:                        originalSessionClass.GetExpiry,
-
-		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
-		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
-		},
-
-		MergeIntoAccessTokenPayloadWithContext: mergeIntoAccessTokenPayloadWithContext,
-		MergeIntoAccessTokenPayload: func(accessTokenPayloadUpdate map[string]interface{}) error {
-			return mergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, &map[string]interface{}{})
-		},
-
-		AssertClaimsWithContext:     assertClaimsWithContext,
-		FetchAndSetClaimWithContext: fetchAndSetClaimWithContext,
-		SetClaimValueWithContext:    setClaimValueWithContext,
-		GetClaimValueWithContext:    getClaimValueWithContext,
-		RemoveClaimWithContext:      removeClaimWithContext,
-
-		AssertClaims: func(claimValidators []claims.SessionClaimValidator) error {
-			return assertClaimsWithContext(claimValidators, &map[string]interface{}{})
-		},
-		FetchAndSetClaim: func(claim *claims.TypeSessionClaim) error {
-			return fetchAndSetClaimWithContext(claim, &map[string]interface{}{})
-		},
-		SetClaimValue: func(claim *claims.TypeSessionClaim, value interface{}) error {
-			return setClaimValueWithContext(claim, value, &map[string]interface{}{})
-		},
-		GetClaimValue: func(claim *claims.TypeSessionClaim) interface{} {
-			return getClaimValueWithContext(claim, &map[string]interface{}{})
-		},
-		RemoveClaim: func(claim *claims.TypeSessionClaim) error {
-			return removeClaimWithContext(claim, &map[string]interface{}{})
-		},
-	}
+	return originalSessionClass
 }

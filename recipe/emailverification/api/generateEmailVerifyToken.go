@@ -35,9 +35,9 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 	sessionContainer, err := session.GetSessionWithContext(
 		options.Req, options.Res,
 		&sessmodels.VerifySessionOptions{
-			OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) []claims.SessionClaimValidator {
+			OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				validators := []claims.SessionClaimValidator{}
-				return validators
+				return validators, nil
 			},
 		},
 		userContext,
@@ -46,7 +46,7 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 		return err
 	}
 
-	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(options, sessionContainer, userContext)
+	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(sessionContainer, options, userContext)
 	if err != nil {
 		return err
 	}
