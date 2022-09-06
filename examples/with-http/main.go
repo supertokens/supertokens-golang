@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -24,6 +26,9 @@ func main() {
 			WebsiteDomain: "http://localhost:3000",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
 				/*
 				   We use different credentials for different platforms when required. For example the redirect URI for Github

@@ -23,6 +23,8 @@ import (
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/haberdasherserver"
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/hooks"
 	"github.com/supertokens/supertokens-golang/examples/with-twirp/internal/interceptor"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
@@ -44,6 +46,9 @@ func main() {
 			WebsiteDomain: "http://localhost:3000",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
 				/*
 				   We use different credentials for different platforms when required. For example the redirect URI for Github

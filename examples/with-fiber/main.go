@@ -7,6 +7,8 @@ import (
 	"github.com/gofiber/adaptor/v2"
 	"github.com/gofiber/fiber/v2"
 	"github.com/gofiber/fiber/v2/middleware/cors"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
@@ -28,6 +30,9 @@ func main() {
 			WebsiteDomain: "http://localhost:3000",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
 				/*
 				   We use different credentials for different platforms when required. For example the redirect URI for Github
@@ -113,7 +118,7 @@ func main() {
 	log.Fatal(app.Listen(":3001"))
 }
 
-//wrapper of the original implementation of verify session to match the required function signature
+// wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		return adaptor.HTTPHandlerFunc(http.HandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
@@ -156,7 +161,7 @@ func sessioninfo(c *fiber.Ctx) error {
 	} else {
 		counter = int(counter.(float64) + 1)
 	}
-	err = sessionContainer.UpdateAccessTokenPayload(map[string]interface{}{
+	err = sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{
 		"counter": counter.(int),
 	})
 	if err != nil {
@@ -170,7 +175,7 @@ func sessioninfo(c *fiber.Ctx) error {
 	})
 }
 
-//utility funtion to help convert an array of string to convert to comma separeted string format
+// utility funtion to help convert an array of string to convert to comma separeted string format
 func stringArrayToStringConvertor(stringArray []string) string {
 	var stringToBeReturned string
 	for _, val := range stringArray {
