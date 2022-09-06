@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Added
+
+- Added support for session claims with related interfaces and classes.
+- Added `EmailVerificationClaim`.
+- `Mode` config is added to `evmodels.TypeInput`
+- `GetEmailForUserID` config is added to `evmodels.TypeInput`
+- Added `onInvalidClaim` optional error handler to send InvalidClaim error responses.
+- Added `INVALID_CLAIMS` to `SessionErrors`.
+- Added `InvalidClaimStatusCode` optional config to set the status code of InvalidClaim errors.
+- Added `OverrideGlobalClaimValidators` to options of `getSession` and `verifySession`.
+- Added `MergeIntoAccessTokenPayload` to the Session recipe and session objects which should be preferred to the now deprecated `UpdateAccessTokenPayload`.
+- Added `AssertClaims`, `ValidateClaimsForSessionHandle`, `ValidateClaimsInJWTPayload` to the Session recipe to support validation of the newly added `EmailVerificationClaim`.
+- Added `FetchAndSetClaim`, `GetClaimValue`, `SetClaimValue` and `RemoveClaim` to the Session recipe to manage claims.
+- Added `AssertClaims`, `FetchAndSetClaim`, `GetClaimValue`, `SetClaimValue` and `RemoveClaim` to session objects to manage claims.
+- Added sessionContainer to the input of `GenerateEmailVerifyTokenPOST`, `VerifyEmailPOST`, `IsEmailVerifiedGET`.
+- Adds default UserContext for verifySession calls that contains the request object.
+- Added `UserRoleClaim` and `PermissionClaim` to user roles recipe.
+
+### Breaking changes
+- Changed `SignInUp` third party recipe function to accept an email string instead of an object that takes `{ID: string, IsVerified: boolean}`.
+- The frontend SDK should be updated to a version supporting session claims!
+  - supertokens-auth-react: >= 0.25.0
+  - supertokens-web-js: >= 0.2.0
+- `EmailVerification` recipe is now not initialized as part of auth recipes, it should be added to the `recipeList` directly instead.
+- Email verification related overrides (`EmailVerificationFeature` prop of `Override`) moved from auth recipes into the `EmailVerification` recipe config.
+- ThirdParty recipe no longer takes EmailDelivery config -> use Emailverification recipe's EmailDelivery instead.
+- Moved email verification related configs from the `EmailDelivery` config of auth recipes into a separate `EmailVerification` email delivery config.
+- Updated return type of `GetEmailForUserId` in the `EmailVerification` recipe config. It should now return `OK`, `EmailDoesNotExistError` or `UnknownUserIDError` as response.
+- Removed `GetResetPasswordURL`, `GetEmailVerificationURL`, `GetLinkDomainAndPath`. Changing these urls can be done in the email delivery configs instead.
+- Removed `UnverifyEmail`, `RevokeEmailVerificationTokens`, `IsEmailVerified`, `VerifyEmailUsingToken` and `CreateEmailVerificationToken` from auth recipes. These should be called on the `EmailVerification` recipe instead.
+- Changed function signature for email verification APIs to accept a sessionContainer as an input.
+- Changed Session API interface functions:
+  - `RefreshPOST` now returns a Session container object.
+  - `SignOutPOST` now takes in an optional session object as a parameter.
+- `SessionContainer` is renamed to `TypeSessionContainer` and `SessionContainer` is now an alias for `*TypeSessionContainer`. All `*SessionContainer` is now replaced with `SessionContainer`.
+- `SendNon200Response` is renamed to `SendNon200ResponseWithMessage` and `SendNon200Response` takes in a body parameter.
+
+
 ## [0.8.3] - 2022-07-30
 ### Added
 - Adds test to verify that session container uses overridden functions
