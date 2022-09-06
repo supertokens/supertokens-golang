@@ -28,7 +28,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
 	}
 
-	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		method := options.Req.Method
 		if method == http.MethodOptions || method == http.MethodTrace {
 			return nil, nil
@@ -42,7 +42,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		refreshTokenPath := options.Config.RefreshTokenPath
 		if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
 			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
-			return &session, err
+			return session, err
 		} else {
 			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
 			if err != nil {
@@ -53,7 +53,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				return nil, nil
 			}
 
-			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer *sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
+			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
 			if verifySessionOptions != nil {
 				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
 			}
@@ -81,7 +81,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		}
 	}
 
-	signOutPOST := func(sessionContainer *sessmodels.SessionContainer, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+	signOutPOST := func(sessionContainer sessmodels.SessionContainer, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
 		if sessionContainer != nil {
 			err := sessionContainer.RevokeSessionWithContext(userContext)
 			if err != nil {
