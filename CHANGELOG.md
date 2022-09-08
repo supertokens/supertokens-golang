@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `EmailVerificationClaim`.
 - `Mode` config is added to `evmodels.TypeInput`
 - `GetEmailForUserID` config is added to `evmodels.TypeInput`
-- Added `onInvalidClaim` optional error handler to send InvalidClaim error responses.
+- Added `OnInvalidClaim` optional error handler to send InvalidClaim error responses.
 - Added `INVALID_CLAIMS` to `SessionErrors`.
 - Added `InvalidClaimStatusCode` optional config to set the status code of InvalidClaim errors.
 - Added `OverrideGlobalClaimValidators` to options of `getSession` and `verifySession`.
@@ -42,7 +42,145 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `RefreshPOST` now returns a Session container object.
   - `SignOutPOST` now takes in an optional session object as a parameter.
 - `SessionContainer` is renamed to `TypeSessionContainer` and `SessionContainer` is now an alias for `*TypeSessionContainer`. All `*SessionContainer` is now replaced with `SessionContainer`.
-- `SendNon200Response` is renamed to `SendNon200ResponseWithMessage` and `SendNon200Response` takes in a body parameter.
+
+### Migration
+
+Before:
+
+```go
+
+supertokens.Init(supertokens.TypeInput{
+    AppInfo: supertokens.AppInfo{
+        AppName:       "...",
+        APIDomain:     "...",
+        WebsiteDomain: "...",
+    },
+
+    RecipeList: []supertokens.Recipe{
+        emailpassword.Init(&epmodels.TypeInput{
+            EmailVerificationFeature: evmodels.TypeInput{
+                // ...
+            },
+            Override: &epmodels.OverrideStruct{
+                EmailVerificationFeature: &evmodels.OverrideStruct{
+                    // ...
+                },
+            },
+        }),
+    },
+})
+
+```
+
+After the update:
+
+```go
+
+supertokens.Init(supertokens.TypeInput{
+    AppInfo: supertokens.AppInfo{
+        AppName:       "...",
+        APIDomain:     "...",
+        WebsiteDomain: "...",
+    },
+
+    RecipeList: []supertokens.Recipe{
+        emailverification.Init(evmodels.TypeInput{
+            // all config should be moved here from the emailVerificationFeature prop of the EmailPassword recipe config
+            Override: &evmodels.OverrideStruct{
+                // move the overrides from the emailVerificationFeature prop of the override config in the EmailPassword init here
+            },
+        }),
+        emailpassword.Init(nil),
+    },
+})
+
+```
+
+### Passwordless users and email verification
+
+If you turn on email verification your email-based passwordless users may be redirected to an email verification screen in their existing session.
+Logging out and logging in again will solve this problem or they could click the link in the email to verify themselves.
+
+You can avoid this by running a script that will:
+
+1. list all users of passwordless
+2. create an emailverification token for each of them if they have email addresses
+3. user the token to verify their address
+
+Something similar to this script:
+
+```go
+package main
+
+import (
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
+
+func main() {
+	supertokens.Init(supertokens.TypeInput{
+		AppInfo: supertokens.AppInfo{
+			AppName:       "...",
+			APIDomain:     "...",
+			WebsiteDomain: "...",
+		},
+
+		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			passwordless.Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+					Enabled: true,
+				},
+			}),
+			session.Init(nil),
+		},
+	})
+
+	var paginationToken *string
+	recipeList := []string{"passwordless"}
+	limit := 100
+	done := false
+
+	for !done {
+		userList, err := supertokens.GetUsersNewestFirst(paginationToken, &limit, &recipeList)
+		if err != nil {
+			panic(err)
+		}
+
+		for _, user := range userList.Users {
+			if user.RecipeId == "passwordless" && user.User["email"] != nil {
+				token, err := emailverification.CreateEmailVerificationToken(user.User["id"].(string), nil)
+				if err != nil {
+					panic(err)
+				}
+				if token.OK != nil {
+					_, err := emailverification.VerifyEmailUsingToken(token.OK.Token)
+					if err != nil {
+						panic(err)
+					}
+				}
+			}
+
+			done = (userList.NextPaginationToken == nil)
+			paginationToken = userList.NextPaginationToken
+		}
+	}
+}
+```
+
+#### User roles
+
+The UserRoles recipe now adds role and permission information into the access token payload by default. If you are already doing this manually, this will result in duplicate data in the access token.
+
+- You can disable this behaviour by setting `SkipAddingRolesToAccessToken` and `SkipAddingPermissionsToAccessToken` to true in the recipe init.
+- Check how to use the new claims in the updated guide: https://supertokens.com/docs/userroles/protecting-routes
 
 
 ## [0.8.3] - 2022-07-30
