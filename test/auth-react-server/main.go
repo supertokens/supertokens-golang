@@ -130,6 +130,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 		},
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					latestURLWithToken = emailVerificationURLWithToken
 				},

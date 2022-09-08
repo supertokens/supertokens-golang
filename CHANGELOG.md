@@ -42,6 +42,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - `RefreshPOST` now returns a Session container object.
   - `SignOutPOST` now takes in an optional session object as a parameter.
 - `SessionContainer` is renamed to `TypeSessionContainer` and `SessionContainer` is now an alias for `*TypeSessionContainer`. All `*SessionContainer` is now replaced with `SessionContainer`.
+- Removed unused parameter `email` from `thirdpartyemailpassword.GetUserByThirdPartyInfoWithContext` function.
 
 ### Migration
 
@@ -85,6 +86,7 @@ supertokens.Init(supertokens.TypeInput{
 
     RecipeList: []supertokens.Recipe{
         emailverification.Init(evmodels.TypeInput{
+            Mode: evmodels.ModeRequired, // or evmodels.ModeOptional
             // all config should be moved here from the emailVerificationFeature prop of the EmailPassword recipe config
             Override: &evmodels.OverrideStruct{
                 // move the overrides from the emailVerificationFeature prop of the override config in the EmailPassword init here
