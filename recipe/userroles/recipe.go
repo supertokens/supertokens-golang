@@ -75,11 +75,11 @@ func recipeInit(config *userrolesmodels.TypeInput) supertokens.Recipe {
 					return err
 				}
 
-				if !config.SkipAddingRolesToAccessToken {
+				if config == nil || !config.SkipAddingRolesToAccessToken {
 					sessionRecipe.AddClaimFromOtherRecipe(userrolesclaims.UserRoleClaim)
 				}
 
-				if !config.SkipAddingPermissionsToAccessToken {
+				if config == nil || !config.SkipAddingPermissionsToAccessToken {
 					sessionRecipe.AddClaimFromOtherRecipe(userrolesclaims.PermissionClaim)
 				}
 				return nil
