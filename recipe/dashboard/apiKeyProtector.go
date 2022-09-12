@@ -6,7 +6,7 @@ import (
 )
 
 func apiKeyProtector(apiImpl dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext, call func() error) error {
-	shouldAllowAccess, err := options.RecipeImplementation.ShouldAllowAccess(options.Req, userContext)
+	shouldAllowAccess, err := (*options.RecipeImplementation.ShouldAllowAccess)(options.Req, userContext)
 	if err != nil {
 		return err
 	}

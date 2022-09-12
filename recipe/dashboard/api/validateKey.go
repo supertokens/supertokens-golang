@@ -6,7 +6,7 @@ import (
 )
 
 func ValidateKey(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
-	shouldAllowAccess, err := options.RecipeImplementation.ShouldAllowAccess(options.Req, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	shouldAllowAccess, err := (*options.RecipeImplementation.ShouldAllowAccess)(options.Req, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

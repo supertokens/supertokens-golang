@@ -45,7 +45,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config dashboardmodel
 	}
 
 	return dashboardmodels.RecipeInterface{
-		GetDashboardBundleLocation: getDashboardBundleLocation,
-		ShouldAllowAccess:          shouldAllowAccess,
+		GetDashboardBundleLocation: &getDashboardBundleLocation,
+		ShouldAllowAccess:          &shouldAllowAccess,
 	}
 }

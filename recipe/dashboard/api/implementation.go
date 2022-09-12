@@ -22,7 +22,7 @@ import (
 
 func MakeAPIImplementation() dashboardmodels.APIInterface {
 	dashboardGET := func(options dashboardmodels.APIOptions, userContext supertokens.UserContext) (string, error) {
-		bundleBasePathString, err := options.RecipeImplementation.GetDashboardBundleLocation(userContext)
+		bundleBasePathString, err := (*options.RecipeImplementation.GetDashboardBundleLocation)(userContext)
 		if err != nil {
 			return "", err
 		}

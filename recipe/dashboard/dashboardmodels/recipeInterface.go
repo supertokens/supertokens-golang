@@ -22,6 +22,6 @@ import (
 )
 
 type RecipeInterface struct {
-	GetDashboardBundleLocation func(userContext supertokens.UserContext) (string, error)
-	ShouldAllowAccess          func(req *http.Request, userContext supertokens.UserContext) (bool, error)
+	GetDashboardBundleLocation *func(userContext supertokens.UserContext) (string, error)
+	ShouldAllowAccess          *func(req *http.Request, userContext supertokens.UserContext) (bool, error)
 }
