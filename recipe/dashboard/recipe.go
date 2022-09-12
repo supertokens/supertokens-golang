@@ -1,4 +1,4 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/* Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -13,33 +13,32 @@
  * under the License.
  */
 
-package jwt
+package dashboard
 
 import (
 	"errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/jwt/api"
-	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const RECIPE_ID = "jwt"
+const RECIPE_ID = "dashboard"
 
 type Recipe struct {
 	RecipeModule supertokens.RecipeModule
-	Config       jwtmodels.TypeNormalisedInput
-	RecipeImpl   jwtmodels.RecipeInterface
-	APIImpl      jwtmodels.APIInterface
+	Config       dashboardmodels.TypeNormalisedInput
+	RecipeImpl   dashboardmodels.RecipeInterface
+	APIImpl      dashboardmodels.APIInterface
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *jwtmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config dashboardmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
-	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
@@ -48,20 +47,15 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.getAPIIdIfCanHandleRequest, r.handleError, onSuperTokensAPIError)
 	r.RecipeModule = recipeModuleInstance
 
 	return *r, nil
 }
 
-func getRecipeInstanceOrThrowError() (*Recipe, error) {
-	if singletonInstance != nil {
-		return singletonInstance, nil
-	}
-	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
-}
-
-func recipeInit(config *jwtmodels.TypeInput) supertokens.Recipe {
+func recipeInit(config dashboardmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onSuperTokensAPIError)
@@ -71,36 +65,66 @@ func recipeInit(config *jwtmodels.TypeInput) supertokens.Recipe {
 			singletonInstance = &recipe
 			return &singletonInstance.RecipeModule, nil
 		}
-		return nil, errors.New("JWT recipe has already been initialised. Please check your code for bugs.")
+		return nil, errors.New("Dashboard recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
-// implement RecipeModule
-
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	getJWKSAPINormalised, err := supertokens.NewNormalisedURLPath(GetJWKSAPI)
+	return []supertokens.APIHandled{}, nil
+}
+
+func (r *Recipe) getAPIIdIfCanHandleRequest(path supertokens.NormalisedURLPath, method string) (*string, error) {
+	ok, err := isApiPath(path, r.RecipeModule.GetAppInfo())
 	if err != nil {
 		return nil, err
 	}
+	if ok {
+		return getApiIdIfMatched(path, method)
+	}
 
-	return []supertokens.APIHandled{{
-		Method:                 http.MethodGet,
-		PathWithoutAPIBasePath: getJWKSAPINormalised,
-		ID:                     GetJWKSAPI,
-		Disabled:               r.APIImpl.GetJWKSGET == nil,
-	}}, nil
+	dashboardAPIPath, err := supertokens.NewNormalisedURLPath(dashboardAPI)
+	if err != nil {
+		return nil, err
+	}
+	dashboardBundlePath := r.RecipeModule.GetAppInfo().APIBasePath.AppendPath(dashboardAPIPath)
+
+	if path.StartsWith(dashboardBundlePath) {
+		val := dashboardAPI
+		return &val, nil
+	}
+
+	return nil, nil
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
-	options := jwtmodels.APIOptions{
+	options := dashboardmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
 		RecipeImplementation: r.RecipeImpl,
+		AppInfo:              r.RecipeModule.GetAppInfo(),
 		Req:                  req,
 		Res:                  res,
 		OtherHandler:         theirHandler,
 	}
-	return api.GetJWKS(r.APIImpl, options)
+	if id == dashboardAPI {
+		return api.Dashboard(r.APIImpl, options)
+	} else if id == validateKeyAPI {
+		return api.ValidateKey(r.APIImpl, options)
+	}
+
+	// Do API key validation for the remaining APIs
+	if id == usersListGetAPI || id == usersCountAPI {
+		userContext := supertokens.MakeDefaultUserContextFromAPI(req)
+		return apiKeyProtector(r.APIImpl, options, userContext, func() error {
+			if id == usersListGetAPI {
+				return api.UsersGet(r.APIImpl, options)
+			} else if id == usersCountAPI {
+				return api.UsersCountGet(r.APIImpl, options)
+			}
+			return errors.New("should never come here")
+		})
+	}
+	return errors.New("should never come here")
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {

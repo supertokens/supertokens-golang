@@ -18,13 +18,14 @@ package supertokens
 import "net/http"
 
 type RecipeModule struct {
-	recipeID              string
-	appInfo               NormalisedAppinfo
-	HandleAPIRequest      func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
-	GetAllCORSHeaders     func() []string
-	GetAPIsHandled        func() ([]APIHandled, error)
-	HandleError           func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
-	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
+	recipeID                   string
+	appInfo                    NormalisedAppinfo
+	HandleAPIRequest           func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
+	GetAllCORSHeaders          func() []string
+	GetAPIsHandled             func() ([]APIHandled, error)
+	GetAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, error)
+	HandleError                func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
+	OnSuperTokensAPIError      func(err error, req *http.Request, res http.ResponseWriter)
 }
 
 func MakeRecipeModule(
@@ -33,6 +34,7 @@ func MakeRecipeModule(
 	handleAPIRequest func(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
+	getAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
 	onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
@@ -44,13 +46,14 @@ func MakeRecipeModule(
 		panic("nil passed for OnSuperTokensAPIError in recipe")
 	}
 	return RecipeModule{
-		recipeID:              recipeId,
-		appInfo:               appInfo,
-		HandleAPIRequest:      handleAPIRequest,
-		GetAllCORSHeaders:     getAllCORSHeaders,
-		GetAPIsHandled:        getAPIsHandled,
-		HandleError:           handleError,
-		OnSuperTokensAPIError: onSuperTokensAPIError,
+		recipeID:                   recipeId,
+		appInfo:                    appInfo,
+		HandleAPIRequest:           handleAPIRequest,
+		GetAllCORSHeaders:          getAllCORSHeaders,
+		GetAPIsHandled:             getAPIsHandled,
+		GetAPIIdIfCanHandleRequest: getAPIIdIfCanHandleRequest,
+		HandleError:                handleError,
+		OnSuperTokensAPIError:      onSuperTokensAPIError,
 	}
 }
 
@@ -73,5 +76,10 @@ func (r *RecipeModule) ReturnAPIIdIfCanHandleRequest(path NormalisedURLPath, met
 			return &APIshandled.ID, nil
 		}
 	}
+
+	if r.GetAPIIdIfCanHandleRequest != nil {
+		return r.GetAPIIdIfCanHandleRequest(path, method)
+	}
+
 	return nil, nil
 }

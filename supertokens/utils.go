@@ -181,6 +181,10 @@ func SendNon200Response(res http.ResponseWriter, message string, statusCode int)
 	return nil
 }
 
+func SendUnauthorisedAccess(res http.ResponseWriter) error {
+	return SendNon200Response(res, "unauthorised access", 401)
+}
+
 func ReadFromRequest(r *http.Request) ([]byte, error) {
 	f := r.Body
 	buf, err := ioutil.ReadAll(f)
