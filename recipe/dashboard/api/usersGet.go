@@ -2,6 +2,7 @@ package api
 
 import (
 	"strconv"
+	"sync"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
@@ -13,7 +14,9 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	limitStr := req.URL.Query().Get("limit")
 
 	if limitStr == "" {
-		return nil // TODO: return error
+		return supertokens.BadInputError{
+			Msg: "Missing required parameter 'limit'",
+		}
 	}
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
@@ -26,7 +29,9 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	}
 
 	if timeJoinedOrder != "ASC" && timeJoinedOrder != "DESC" {
-		return nil // TODO: return error
+		return supertokens.BadInputError{
+			Msg: "Invalid value recieved for 'timeJoinedOrder'",
+		}
 	}
 
 	paginationToken := req.URL.Query().Get("paginationToken")
@@ -56,23 +61,41 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 		})
 	}
 
+	var processingGroup sync.WaitGroup
+	processingGroup.Add(len(usersResponse.Users))
+
 	batchSize := 5
 	var sem = make(chan int, batchSize)
+	var errInBackground error
+
 	for i, userObj := range usersResponse.Users {
 		sem <- 1
+
+		if errInBackground != nil {
+			return errInBackground
+		}
+
 		go func(i int, userObj struct {
 			RecipeId string                 `json:"recipeId"`
 			User     map[string]interface{} `json:"user"`
 		}) {
+			defer processingGroup.Done()
 			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string))
 			<-sem
 			if err != nil {
-				return // TODO do something
+				errInBackground = err
+				return
 			}
 			usersResponse.Users[i].User["firstName"] = userMetadataResponse["first_name"]
 			usersResponse.Users[i].User["lastName"] = userMetadataResponse["last_name"]
 		}(i, userObj)
 	}
+
+	if errInBackground != nil {
+		return errInBackground
+	}
+
+	processingGroup.Wait()
 
 	return supertokens.Send200Response(options.Res, map[string]interface{}{
 		"status":              "OK",
