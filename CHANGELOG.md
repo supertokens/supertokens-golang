@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Adds:
+
+- Adds Dashboard recipe
+
+
 ## [0.8.3] - 2022-07-30
 ### Added
 - Adds test to verify that session container uses overridden functions
