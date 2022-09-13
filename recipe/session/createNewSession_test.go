@@ -223,7 +223,6 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	assert.Equal(t, 1, len(payloadParam))
 
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 4, len(accessTokenPayload))
 
 	// We have the prop from the payload param
 	assert.Equal(t, true, accessTokenPayload["initial"])
