@@ -129,35 +129,42 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			WebsiteDomain: "http://localhost:" + webPort,
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+					latestURLWithToken = emailVerificationURLWithToken
+				},
+
+				Override: &evmodels.OverrideStruct{
+					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
+						ogGenerateEmailVerifyTokenPOST := *originalImplementation.GenerateEmailVerifyTokenPOST
+						ogVerifyEmailPOST := *originalImplementation.VerifyEmailPOST
+
+						(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verification code", false)
+							if gr != nil {
+								return evmodels.GenerateEmailVerifyTokenPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogGenerateEmailVerifyTokenPOST(sessionContainer, options, userContext)
+						}
+
+						(*originalImplementation.VerifyEmailPOST) = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
+							if gr != nil {
+								return evmodels.VerifyEmailPOSTResponse{
+									GeneralError: gr,
+								}, nil
+							}
+							return ogVerifyEmailPOST(token, sessionContainer, options, userContext)
+						}
+						return originalImplementation
+					},
+				},
+			}),
 			emailpassword.Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
-					EmailVerificationFeature: &evmodels.OverrideStruct{
-						APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
-							ogGenerateEmailVerifyTokenPOST := *originalImplementation.GenerateEmailVerifyTokenPOST
-							ogVerifyEmailPOST := *originalImplementation.VerifyEmailPOST
-
-							(*originalImplementation.GenerateEmailVerifyTokenPOST) = func(options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.GenerateEmailVerifyTokenPOSTResponse, error) {
-								gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verification code", false)
-								if gr != nil {
-									return evmodels.GenerateEmailVerifyTokenPOSTResponse{
-										GeneralError: gr,
-									}, nil
-								}
-								return ogGenerateEmailVerifyTokenPOST(options, userContext)
-							}
-
-							(*originalImplementation.VerifyEmailPOST) = func(token string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-								gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
-								if gr != nil {
-									return evmodels.VerifyEmailPOSTResponse{
-										GeneralError: gr,
-									}, nil
-								}
-								return ogVerifyEmailPOST(token, options, userContext)
-							}
-							return originalImplementation
-						},
-					},
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
 						ogGeneratePasswordResetTokenPOST := *originalImplementation.GeneratePasswordResetTokenPOST
@@ -223,11 +230,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
 					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 						latestURLWithToken = passwordResetURLWithToken
-					},
-				},
-				EmailVerificationFeature: &epmodels.TypeInputEmailVerificationFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-						latestURLWithToken = emailVerificationURLWithToken
 					},
 				},
 			}),
@@ -383,14 +385,14 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						ogSignOutPOST := *originalImplementation.SignOutPOST
-						(*originalImplementation.SignOutPOST) = func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+						(*originalImplementation.SignOutPOST) = func(sessionContainer sessmodels.SessionContainer, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from signout API", false)
 							if gr != nil {
 								return sessmodels.SignOutPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignOutPOST(options, userContext)
+							return ogSignOutPOST(sessionContainer, options, userContext)
 						}
 						return originalImplementation
 					},
@@ -401,7 +403,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
-				GetLinkDomainAndPath:      passwordlessConfig.GetLinkDomainAndPath,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
 				Override: &plessmodels.OverrideStruct{
 					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
@@ -447,7 +448,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
-				GetLinkDomainAndPath:      passwordlessConfig.GetLinkDomainAndPath,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
 				Providers: []tpmodels.TypeProvider{
 					thirdparty.Google(tpmodels.GoogleConfig{

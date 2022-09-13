@@ -28,7 +28,7 @@ func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.Emai
 	emailPasswordServiceImpl := epsmtpService.MakeSMTPService(config)
 
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-		if input.EmailVerification != nil || input.PasswordReset != nil {
+		if input.PasswordReset != nil {
 			return (*emailPasswordServiceImpl.SendEmail)(input, userContext)
 
 		} else {

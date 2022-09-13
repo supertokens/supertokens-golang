@@ -50,7 +50,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartySignInUp("google", "googleID", tpepmodels.EmailStruct{ID: "test@example.com"})
+	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -72,7 +72,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID", tpmodels.EmailStruct{})
+		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}

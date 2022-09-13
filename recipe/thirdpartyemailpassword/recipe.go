@@ -34,14 +34,13 @@ import (
 const RECIPE_ID = "thirdpartyemailpassword"
 
 type Recipe struct {
-	RecipeModule            supertokens.RecipeModule
-	Config                  tpepmodels.TypeNormalisedInput
-	EmailVerificationRecipe emailverification.Recipe
-	emailPasswordRecipe     *emailpassword.Recipe
-	thirdPartyRecipe        *thirdparty.Recipe
-	RecipeImpl              tpepmodels.RecipeInterface
-	APIImpl                 tpepmodels.APIInterface
-	EmailDelivery           emaildelivery.Ingredient
+	RecipeModule        supertokens.RecipeModule
+	Config              tpepmodels.TypeNormalisedInput
+	emailPasswordRecipe *emailpassword.Recipe
+	thirdPartyRecipe    *thirdparty.Recipe
+	RecipeImpl          tpepmodels.RecipeInterface
+	APIImpl             tpepmodels.APIInterface
+	EmailDelivery       emaildelivery.Ingredient
 }
 
 var singletonInstance *Recipe
@@ -78,17 +77,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl, emailPasswordRecipeImpl))
 	}
 
-	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onSuperTokensAPIError)
-		if err != nil {
-			return Recipe{}, err
-		}
-		r.EmailVerificationRecipe = emailVerificationRecipe
-
-	} else {
-		r.EmailVerificationRecipe = *emailVerificationInstance
-	}
-
 	if emailPasswordInstance == nil {
 		emailPasswordConfig := &epmodels.TypeInput{
 			SignUpFeature:                  verifiedConfig.SignUpFeature,
@@ -100,10 +88,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				APIs: func(_ epmodels.APIInterface) epmodels.APIInterface {
 					return api.GetEmailPasswordIterfaceImpl(r.APIImpl)
 				},
-				EmailVerificationFeature: nil,
 			},
 		}
-		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailVerificationRecipe, &r.EmailDelivery, onSuperTokensAPIError)
+		emailPasswordRecipe, err = emailpassword.MakeRecipe(recipeId, appInfo, emailPasswordConfig, &r.EmailDelivery, onSuperTokensAPIError)
 		if err != nil {
 			return Recipe{}, err
 		}
@@ -125,10 +112,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 					APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
 						return api.GetThirdPartyIterfaceImpl(r.APIImpl)
 					},
-					EmailVerificationFeature: nil,
 				},
 			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, &r.EmailDelivery, onSuperTokensAPIError)
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailDelivery, onSuperTokensAPIError)
 			if err != nil {
 				return Recipe{}, err
 			}
@@ -169,11 +155,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	emailverificationAPIhandled, err := r.EmailVerificationRecipe.RecipeModule.GetAPIsHandled()
-	if err != nil {
-		return nil, err
-	}
-	apisHandled := append(emailpasswordAPIhandled, emailverificationAPIhandled...)
+	apisHandled := append(emailpasswordAPIhandled)
 	if r.thirdPartyRecipe != nil {
 		thirdpartyAPIhandled, err := r.thirdPartyRecipe.RecipeModule.GetAPIsHandled()
 		if err != nil {
@@ -201,11 +183,11 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return r.thirdPartyRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
 		}
 	}
-	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+	return errors.New("should not come here")
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
-	corsHeaders := append(r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders(), r.emailPasswordRecipe.RecipeModule.GetAllCORSHeaders()...)
+	corsHeaders := r.emailPasswordRecipe.RecipeModule.GetAllCORSHeaders()
 	if r.thirdPartyRecipe != nil {
 		corsHeaders = append(corsHeaders, r.thirdPartyRecipe.RecipeModule.GetAllCORSHeaders()...)
 	}
@@ -223,18 +205,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 			return handleError, err
 		}
 	}
-	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
-}
-
-func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (string, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
-	if err != nil {
-		return "", err
-	}
-	if userInfo == nil {
-		return "", errors.New("Unknown User ID provided")
-	}
-	return userInfo.Email, nil
+	return false, err
 }
 
 func ResetForTest() {

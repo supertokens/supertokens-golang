@@ -20,7 +20,6 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	evsmtpService "github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -31,16 +30,8 @@ func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.Emai
 		serviceImpl = config.Override(serviceImpl)
 	}
 
-	emailVerificationServiceImpl := evsmtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
-		Settings: config.Settings,
-		Override: makeEmailverificationServiceImplementation(serviceImpl),
-	})
-
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-		if input.EmailVerification != nil {
-			return (*emailVerificationServiceImpl.SendEmail)(input, userContext)
-
-		} else if input.PasswordReset != nil {
+		if input.PasswordReset != nil {
 			content, err := (*serviceImpl.GetContent)(input, userContext)
 			if err != nil {
 				return err

@@ -33,7 +33,6 @@ type TypeInput struct {
 	ContactMethodEmail        ContactMethodEmailConfig
 	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Override                  *OverrideStruct
 	EmailDelivery             *emaildelivery.TypeInput
@@ -45,7 +44,6 @@ type TypeNormalisedInput struct {
 	ContactMethodEmail        ContactMethodEmailConfig
 	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetLinkDomainAndPath      func(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error)
 	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
 	Override                  OverrideStruct
 	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService

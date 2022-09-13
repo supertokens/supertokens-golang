@@ -26,6 +26,7 @@ import (
 	"strings"
 
 	"github.com/derekstavis/go-qs"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -143,20 +144,23 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, *emailInfo, userContext)
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ID, emailInfo.ID, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
 
 		if emailInfo.IsVerified {
-			tokenResponse, err := (*options.EmailVerificationRecipeImplementation.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email, userContext)
-			if err != nil {
-				return tpmodels.SignInUpPOSTResponse{}, err
-			}
-			if tokenResponse.OK != nil {
-				_, err := (*options.EmailVerificationRecipeImplementation.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
+			evInstance := emailverification.GetRecipeInstance()
+			if evInstance != nil {
+				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email, userContext)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
+				}
+				if tokenResponse.OK != nil {
+					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
+					if err != nil {
+						return tpmodels.SignInUpPOSTResponse{}, err
+					}
 				}
 			}
 		}

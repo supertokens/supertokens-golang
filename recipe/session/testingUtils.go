@@ -16,6 +16,8 @@
 package session
 
 import (
+	"net/http"
+
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -36,3 +38,15 @@ func AfterEach() {
 	resetAll()
 	unittesting.CleanST()
 }
+
+type fakeRes struct{}
+
+func (f fakeRes) Header() http.Header {
+	return http.Header{}
+}
+
+func (f fakeRes) Write(body []byte) (int, error) {
+	return len(body), nil
+}
+
+func (f fakeRes) WriteHeader(statusCode int) {}

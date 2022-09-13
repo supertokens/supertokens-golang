@@ -8,6 +8,8 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/supertokens/supertokens-golang/examples/with-chi-oso/database"
 	"github.com/supertokens/supertokens-golang/examples/with-chi-oso/service"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -32,6 +34,9 @@ func main() {
 			WebsiteDomain: "http://localhost:3000",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
 				Providers: []tpmodels.TypeProvider{
 					// We have provided you with development keys which you can use for testsing.

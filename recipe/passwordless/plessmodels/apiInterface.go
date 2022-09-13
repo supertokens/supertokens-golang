@@ -26,6 +26,7 @@ import (
 
 type APIOptions struct {
 	RecipeImplementation RecipeInterface
+	AppInfo              supertokens.NormalisedAppinfo
 	Config               TypeNormalisedInput
 	RecipeID             string
 	Req                  *http.Request

@@ -19,6 +19,7 @@ import (
 	"net/http"
 	"reflect"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -46,7 +47,8 @@ func makeSessionContainerInput(accessToken string, sessionHandle string, userID 
 
 func newSessionContainer(config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
-	revokeSessionWithContext := func(userContext supertokens.UserContext) error {
+	sessionContainer := &sessmodels.TypeSessionContainer{}
+	sessionContainer.RevokeSessionWithContext = func(userContext supertokens.UserContext) error {
 		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
 		if err != nil {
 			return err
@@ -55,7 +57,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	getSessionDataWithContext := func(userContext supertokens.UserContext) (map[string]interface{}, error) {
+	sessionContainer.GetSessionDataWithContext = func(userContext supertokens.UserContext) (map[string]interface{}, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
 			return nil, err
@@ -67,7 +69,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return sessionInformation.SessionData, nil
 	}
 
-	updateSessionDataWithContext := func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+	sessionContainer.UpdateSessionDataWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
 		updated, err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, userContext)
 		if err != nil {
 			return err
@@ -79,7 +81,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	updateAccessTokenPayloadWithContext := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+	sessionContainer.UpdateAccessTokenPayloadWithContext = func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 		if newAccessTokenPayload == nil {
 			newAccessTokenPayload = map[string]interface{}{}
 		}
@@ -105,7 +107,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	getTimeCreatedWithContext := func(userContext supertokens.UserContext) (uint64, error) {
+	sessionContainer.GetTimeCreatedWithContext = func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
 			return 0, err
@@ -117,7 +119,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return sessionInformation.TimeCreated, nil
 	}
 
-	getExpiryWithContext := func(userContext supertokens.UserContext) (uint64, error) {
+	sessionContainer.GetExpiryWithContext = func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
 			return 0, err
@@ -129,60 +131,127 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return sessionInformation.Expiry, nil
 	}
 
-	getUserIDWithContext := func(userContext supertokens.UserContext) string {
+	sessionContainer.GetUserIDWithContext = func(userContext supertokens.UserContext) string {
 		return session.userID
 	}
-	getAccessTokenPayloadWithContext := func(userContext supertokens.UserContext) map[string]interface{} {
+	sessionContainer.GetAccessTokenPayloadWithContext = func(userContext supertokens.UserContext) map[string]interface{} {
 		return session.userDataInAccessToken
 	}
 
-	getHandleWithContext := func(userContext supertokens.UserContext) string {
+	sessionContainer.MergeIntoAccessTokenPayloadWithContext = func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
+		accessTokenPayload := sessionContainer.GetAccessTokenPayloadWithContext(userContext)
+		for k, v := range accessTokenPayloadUpdate {
+			if v == nil {
+				delete(accessTokenPayload, k)
+			} else {
+				accessTokenPayload[k] = v
+			}
+		}
+		return sessionContainer.UpdateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
+	}
+
+	sessionContainer.GetHandleWithContext = func(userContext supertokens.UserContext) string {
 		return session.sessionHandle
 	}
-	getAccessTokenWithContext := func(userContext supertokens.UserContext) string {
+	sessionContainer.GetAccessTokenWithContext = func(userContext supertokens.UserContext) string {
 		return session.accessToken
 	}
 
-	return sessmodels.SessionContainer{
-		RevokeSessionWithContext:            revokeSessionWithContext,
-		GetSessionDataWithContext:           getSessionDataWithContext,
-		UpdateSessionDataWithContext:        updateSessionDataWithContext,
-		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
-		GetUserIDWithContext:                getUserIDWithContext,
-		GetAccessTokenPayloadWithContext:    getAccessTokenPayloadWithContext,
-		GetHandleWithContext:                getHandleWithContext,
-		GetAccessTokenWithContext:           getAccessTokenWithContext,
-		GetTimeCreatedWithContext:           getTimeCreatedWithContext,
-		GetExpiryWithContext:                getExpiryWithContext,
-		RevokeSession: func() error {
-			return revokeSessionWithContext(&map[string]interface{}{})
-		},
-		GetSessionData: func() (map[string]interface{}, error) {
-			return getSessionDataWithContext(&map[string]interface{}{})
-		},
-		UpdateSessionData: func(newSessionData map[string]interface{}) error {
-			return updateSessionDataWithContext(newSessionData, &map[string]interface{}{})
-		},
-		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
-		},
-		GetUserID: func() string {
-			return getUserIDWithContext(&map[string]interface{}{})
-		},
-		GetAccessTokenPayload: func() map[string]interface{} {
-			return getAccessTokenPayloadWithContext(&map[string]interface{}{})
-		},
-		GetHandle: func() string {
-			return getHandleWithContext(&map[string]interface{}{})
-		},
-		GetAccessToken: func() string {
-			return getAccessTokenWithContext(&map[string]interface{}{})
-		},
-		GetTimeCreated: func() (uint64, error) {
-			return getTimeCreatedWithContext(&map[string]interface{}{})
-		},
-		GetExpiry: func() (uint64, error) {
-			return getExpiryWithContext(&map[string]interface{}{})
-		},
+	sessionContainer.AssertClaimsWithContext = func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
+		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, sessionContainer.GetAccessTokenPayloadWithContext(userContext), claimValidators, userContext)
+		if err != nil {
+			return err
+		}
+
+		if validateClaimResponse.AccessTokenPayloadUpdate != nil {
+			err := sessionContainer.MergeIntoAccessTokenPayloadWithContext(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
+			if err != nil {
+				return err
+			}
+		}
+
+		if len(validateClaimResponse.InvalidClaims) > 0 {
+			return errors.InvalidClaimError{
+				Msg:           "invalid claims",
+				InvalidClaims: validateClaimResponse.InvalidClaims,
+			}
+		}
+
+		return nil
 	}
+
+	sessionContainer.FetchAndSetClaimWithContext = func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), nil, userContext)
+		if err != nil {
+			return err
+		}
+		return sessionContainer.MergeIntoAccessTokenPayloadWithContext(update, userContext)
+	}
+
+	sessionContainer.SetClaimValueWithContext = func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error {
+		update := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+		return sessionContainer.MergeIntoAccessTokenPayloadWithContext(update, userContext)
+	}
+
+	sessionContainer.GetClaimValueWithContext = func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) interface{} {
+		return claim.GetValueFromPayload(sessionContainer.GetAccessTokenPayloadWithContext(userContext), userContext)
+	}
+
+	sessionContainer.RemoveClaimWithContext = func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
+		update := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
+		return sessionContainer.MergeIntoAccessTokenPayloadWithContext(update, userContext)
+	}
+
+	sessionContainer.RevokeSession = func() error {
+		return sessionContainer.RevokeSessionWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetSessionData = func() (map[string]interface{}, error) {
+		return sessionContainer.GetSessionDataWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.UpdateSessionData = func(newSessionData map[string]interface{}) error {
+		return sessionContainer.UpdateSessionDataWithContext(newSessionData, &map[string]interface{}{})
+	}
+	sessionContainer.UpdateAccessTokenPayload = func(newAccessTokenPayload map[string]interface{}) error {
+		return sessionContainer.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
+	}
+	sessionContainer.GetUserID = func() string {
+		return sessionContainer.GetUserIDWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetAccessTokenPayload = func() map[string]interface{} {
+		return sessionContainer.GetAccessTokenPayloadWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetHandle = func() string {
+		return sessionContainer.GetHandleWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetAccessToken = func() string {
+		return sessionContainer.GetAccessTokenWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetTimeCreated = func() (uint64, error) {
+		return sessionContainer.GetTimeCreatedWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetExpiry = func() (uint64, error) {
+		return sessionContainer.GetExpiryWithContext(&map[string]interface{}{})
+	}
+
+	sessionContainer.MergeIntoAccessTokenPayload = func(accessTokenPayloadUpdate map[string]interface{}) error {
+		return sessionContainer.MergeIntoAccessTokenPayloadWithContext(accessTokenPayloadUpdate, &map[string]interface{}{})
+	}
+
+	sessionContainer.AssertClaims = func(claimValidators []claims.SessionClaimValidator) error {
+		return sessionContainer.AssertClaimsWithContext(claimValidators, &map[string]interface{}{})
+	}
+	sessionContainer.FetchAndSetClaim = func(claim *claims.TypeSessionClaim) error {
+		return sessionContainer.FetchAndSetClaimWithContext(claim, &map[string]interface{}{})
+	}
+	sessionContainer.SetClaimValue = func(claim *claims.TypeSessionClaim, value interface{}) error {
+		return sessionContainer.SetClaimValueWithContext(claim, value, &map[string]interface{}{})
+	}
+	sessionContainer.GetClaimValue = func(claim *claims.TypeSessionClaim) interface{} {
+		return sessionContainer.GetClaimValueWithContext(claim, &map[string]interface{}{})
+	}
+	sessionContainer.RemoveClaim = func(claim *claims.TypeSessionClaim) error {
+		return sessionContainer.RemoveClaimWithContext(claim, &map[string]interface{}{})
+	}
+
+	return sessionContainer
 }

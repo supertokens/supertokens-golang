@@ -26,7 +26,8 @@ import (
 
 func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer, openidRecipeImplementation openidmodels.RecipeInterface) sessmodels.SessionContainer {
 
-	updateAccessTokenPayloadWithContext := func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
+	originalUpdateAccessTokenPayloadWithContext := originalSessionClass.UpdateAccessTokenPayloadWithContext
+	originalSessionClass.UpdateAccessTokenPayloadWithContext = func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
 		if newAccessTokenPayload == nil {
 			newAccessTokenPayload = map[string]interface{}{}
 		}
@@ -34,7 +35,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 		jwtPropertyName, ok := accessTokenPayload[ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY]
 
 		if !ok {
-			return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
+			return originalUpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 		}
 
 		existingJWT := accessTokenPayload[jwtPropertyName.(string)].(string)
@@ -66,30 +67,7 @@ func newSessionWithJWTContainer(originalSessionClass sessmodels.SessionContainer
 			return err
 		}
 
-		return originalSessionClass.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
+		return originalUpdateAccessTokenPayloadWithContext(newAccessTokenPayload, userContext)
 	}
-	return sessmodels.SessionContainer{
-		RevokeSessionWithContext:            originalSessionClass.RevokeSessionWithContext,
-		GetSessionDataWithContext:           originalSessionClass.GetSessionDataWithContext,
-		UpdateSessionDataWithContext:        originalSessionClass.UpdateSessionDataWithContext,
-		GetUserIDWithContext:                originalSessionClass.GetUserIDWithContext,
-		GetAccessTokenPayloadWithContext:    originalSessionClass.GetAccessTokenPayloadWithContext,
-		GetHandleWithContext:                originalSessionClass.GetHandleWithContext,
-		GetAccessTokenWithContext:           originalSessionClass.GetAccessTokenWithContext,
-		GetTimeCreatedWithContext:           originalSessionClass.GetTimeCreatedWithContext,
-		GetExpiryWithContext:                originalSessionClass.GetExpiryWithContext,
-		RevokeSession:                       originalSessionClass.RevokeSession,
-		GetSessionData:                      originalSessionClass.GetSessionData,
-		UpdateSessionData:                   originalSessionClass.UpdateSessionData,
-		GetUserID:                           originalSessionClass.GetUserID,
-		GetAccessTokenPayload:               originalSessionClass.GetAccessTokenPayload,
-		GetHandle:                           originalSessionClass.GetHandle,
-		GetAccessToken:                      originalSessionClass.GetAccessToken,
-		GetTimeCreated:                      originalSessionClass.GetTimeCreated,
-		GetExpiry:                           originalSessionClass.GetExpiry,
-		UpdateAccessTokenPayloadWithContext: updateAccessTokenPayloadWithContext,
-		UpdateAccessTokenPayload: func(newAccessTokenPayload map[string]interface{}) error {
-			return updateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
-		},
-	}
+	return originalSessionClass
 }

@@ -15,10 +15,13 @@
 
 package errors
 
+import "github.com/supertokens/supertokens-golang/recipe/session/claims"
+
 const (
 	UnauthorizedErrorStr       = "UNAUTHORISED"
 	TryRefreshTokenErrorStr    = "TRY_REFRESH_TOKEN"
 	TokenTheftDetectedErrorStr = "TOKEN_THEFT_DETECTED"
+	InvalidClaimsErrorStr      = "INVALID_CLAIMS"
 )
 
 // TryRefreshTokenError used for when the refresh API needs to be called
@@ -52,5 +55,14 @@ type UnauthorizedError struct {
 }
 
 func (err UnauthorizedError) Error() string {
+	return err.Msg
+}
+
+type InvalidClaimError struct {
+	Msg           string
+	InvalidClaims []claims.ClaimValidationError
+}
+
+func (err InvalidClaimError) Error() string {
 	return err.Msg
 }
