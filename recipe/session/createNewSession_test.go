@@ -223,6 +223,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	assert.Equal(t, 1, len(payloadParam))
 
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
+	assert.Equal(t, 5, len(accessTokenPayload))
 
 	// We have the prop from the payload param
 	assert.Equal(t, true, accessTokenPayload["initial"])
@@ -235,6 +236,5 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	// We have the custom claim
 	// The resulting payload is different from the input: it doesn't container nil values
 	assert.Equal(t, "asdf", accessTokenPayload["user-custom"])
-	assert.Equal(t, "asdf", accessTokenPayload["user-custom2"].(map[string]interface{})["inner"])
-	assert.Nil(t, accessTokenPayload["user-custom2"].(map[string]interface{})["nilProp"])
+	assert.Equal(t, custom2, accessTokenPayload["user-custom2"])
 }
