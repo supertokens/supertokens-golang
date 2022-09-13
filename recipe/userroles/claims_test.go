@@ -149,7 +149,6 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 
 	assert.NotNil(t, permissionClaimValue.OK)
 	assert.Equal(t, 2, len(permissionClaimValue.OK.Value.([]interface{})))
-	assert.Equal(t, []interface{}{"a", "b"}, permissionClaimValue.OK.Value)
 	assert.Contains(t, permissionClaimValue.OK.Value, "a")
 	assert.Contains(t, permissionClaimValue.OK.Value, "b")
 }

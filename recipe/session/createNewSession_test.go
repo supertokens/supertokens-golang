@@ -236,5 +236,6 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	// We have the custom claim
 	// The resulting payload is different from the input: it doesn't container nil values
 	assert.Equal(t, "asdf", accessTokenPayload["user-custom"])
-	assert.Equal(t, map[string]interface{}{"inner": "asdf"}, accessTokenPayload["user-custom2"])
+	assert.Equal(t, "asdf", accessTokenPayload["user-custom2"].(map[string]interface{})["inner"])
+	assert.Nil(t, accessTokenPayload["user-custom2"].(map[string]interface{})["nilProp"])
 }
