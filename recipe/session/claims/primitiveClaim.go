@@ -14,6 +14,9 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 	sessionClaim := SessionClaim(key, fetchValue)
 
 	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
+		if payload == nil {
+			payload = map[string]interface{}{}
+		}
 		payload[sessionClaim.Key] = map[string]interface{}{
 			"v": value,
 			"t": time.Now().UnixMilli(),
@@ -23,11 +26,17 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 	}
 
 	sessionClaim.RemoveFromPayloadByMerge_internal = func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
+		if payload == nil {
+			payload = map[string]interface{}{}
+		}
 		payload[sessionClaim.Key] = nil
 		return payload
 	}
 
 	sessionClaim.RemoveFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{} {
+		if payload == nil {
+			return nil
+		}
 		delete(payload, sessionClaim.Key)
 		return payload
 	}

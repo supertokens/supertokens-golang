@@ -224,7 +224,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
-		accessTokenPayloadUpdate := map[string]interface{}{}
+		var accessTokenPayloadUpdate map[string]interface{} = nil
 		origSessionClaimPayloadJSON, err := json.Marshal(accessTokenPayload)
 		if err != nil {
 			return sessmodels.ValidateClaimsResult{}, err
