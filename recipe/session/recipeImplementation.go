@@ -256,11 +256,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			accessTokenPayloadUpdate = accessTokenPayload
 		}
 
+		invalidClaims := validateClaimsInPayload(claimValidators, accessTokenPayload, userContext)
+
 		if len(accessTokenPayload) == 0 {
 			accessTokenPayload = nil
 		}
 
-		invalidClaims := validateClaimsInPayload(claimValidators, accessTokenPayload, userContext)
 		return sessmodels.ValidateClaimsResult{
 			InvalidClaims:            invalidClaims,
 			AccessTokenPayloadUpdate: accessTokenPayloadUpdate,
