@@ -222,7 +222,7 @@ func ValidateClaimsForSessionHandleWithContext(
 	if err != nil {
 		return sessmodels.ValidateClaimsResponse{}, err
 	}
-	if claimValidationResponse.AccessTokenPayloadUpdate != nil && len(claimValidationResponse.AccessTokenPayloadUpdate) > 0 {
+	if claimValidationResponse.AccessTokenPayloadUpdate != nil {
 		ok, err := (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, claimValidationResponse.AccessTokenPayloadUpdate, userContext)
 		if err != nil {
 			return sessmodels.ValidateClaimsResponse{}, err
