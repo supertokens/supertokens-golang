@@ -163,7 +163,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return err
 		}
 
-		if validateClaimResponse.AccessTokenPayloadUpdate != nil {
+		if validateClaimResponse.AccessTokenPayloadUpdate != nil && len(validateClaimResponse.AccessTokenPayloadUpdate) > 0 {
 			err := sessionContainer.MergeIntoAccessTokenPayloadWithContext(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
 			if err != nil {
 				return err
