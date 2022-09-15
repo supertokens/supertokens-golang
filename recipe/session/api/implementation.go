@@ -19,6 +19,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
+	"github.com/supertokens/supertokens-golang/recipe/session/cookiesandheaders"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -87,6 +88,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			if err != nil {
 				return sessmodels.SignOutPOSTResponse{}, err
 			}
+			cookiesandheaders.ClearSessionFromCookie(options.Config, options.Res)
 		}
 
 		return sessmodels.SignOutPOSTResponse{
