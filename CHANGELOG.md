@@ -28,6 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `UserRoleClaim` and `PermissionClaim` to user roles recipe.
 
 ### Breaking changes
+- Removes support for FDI < 1.15
 - Changed `SignInUp` third party recipe function to accept an email string instead of an object that takes `{ID: string, IsVerified: boolean}`.
 - The frontend SDK should be updated to a version supporting session claims!
   - supertokens-auth-react: >= 0.25.0
