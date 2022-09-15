@@ -313,11 +313,12 @@ func TestShouldValidatePermissions(t *testing.T) {
 	invalidClaimErr := err.(sessErrors.InvalidClaimError)
 	assert.Equal(t, 1, len(invalidClaimErr.InvalidClaims))
 	assert.Equal(t, "st-perm", invalidClaimErr.InvalidClaims[0].ID)
-	assert.Equal(t, map[string]interface{}{
-		"actualValue":       []interface{}{"a", "b"},
-		"expectedToInclude": "nope",
-		"message":           "wrong value",
-	}, invalidClaimErr.InvalidClaims[0].Reason)
+	reason := invalidClaimErr.InvalidClaims[0].Reason.(map[string]interface{})
+	assert.Equal(t, "wrong value", reason["message"])
+	assert.Equal(t, "nope", reason["expectedToInclude"])
+	assert.Equal(t, 2, len(reason["actualValue"].([]interface{})))
+	assert.Contains(t, reason["actualValue"], "a")
+	assert.Contains(t, reason["actualValue"], "b")
 }
 
 func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
@@ -370,9 +371,10 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 	invalidClaimErr := err.(sessErrors.InvalidClaimError)
 	assert.Equal(t, 1, len(invalidClaimErr.InvalidClaims))
 	assert.Equal(t, "st-perm", invalidClaimErr.InvalidClaims[0].ID)
-	assert.Equal(t, map[string]interface{}{
-		"actualValue":       []interface{}{"a", "b"},
-		"expectedToInclude": "nope",
-		"message":           "wrong value",
-	}, invalidClaimErr.InvalidClaims[0].Reason)
+	reason := invalidClaimErr.InvalidClaims[0].Reason.(map[string]interface{})
+	assert.Equal(t, "wrong value", reason["message"])
+	assert.Equal(t, "nope", reason["expectedToInclude"])
+	assert.Equal(t, 2, len(reason["actualValue"].([]interface{})))
+	assert.Contains(t, reason["actualValue"], "a")
+	assert.Contains(t, reason["actualValue"], "b")
 }
