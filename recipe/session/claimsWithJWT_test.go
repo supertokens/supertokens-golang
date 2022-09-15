@@ -57,6 +57,17 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.8", cdiVersion) == "2.8" {
+		return
+	}
 
 	mux := http.NewServeMux()
 	var sessionContainer sessmodels.SessionContainer
@@ -111,6 +122,17 @@ func TestAssertClaimsWithPayloadWithJWTAndCallRightUpdateAccessTokenPayload(t *t
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.8", cdiVersion) == "2.8" {
+		return
 	}
 
 	mux := http.NewServeMux()
