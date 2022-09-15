@@ -200,6 +200,17 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 		t.Error(err.Error())
 	}
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	includesNullInPayload := unittesting.MaxVersion(cdiVersion, "2.14") != "2.14"
+
 	mux := http.NewServeMux()
 	var sessionContainer sessmodels.SessionContainer
 
@@ -223,7 +234,11 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	assert.Equal(t, 1, len(payloadParam))
 
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 5, len(accessTokenPayload))
+	if includesNullInPayload {
+		assert.Equal(t, 5, len(accessTokenPayload))
+	} else {
+		assert.Equal(t, 4, len(accessTokenPayload))
+	}
 
 	// We have the prop from the payload param
 	assert.Equal(t, true, accessTokenPayload["initial"])
@@ -236,5 +251,11 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	// We have the custom claim
 	// The resulting payload is different from the input: it doesn't container nil values
 	assert.Equal(t, "asdf", accessTokenPayload["user-custom"])
-	assert.Equal(t, custom2, accessTokenPayload["user-custom2"])
+	if includesNullInPayload {
+		assert.Equal(t, custom2, accessTokenPayload["user-custom2"])
+	} else {
+		assert.Equal(t, map[string]interface{}{
+			"inner": "asdf",
+		}, accessTokenPayload["user-custom2"])
+	}
 }
