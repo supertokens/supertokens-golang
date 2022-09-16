@@ -148,7 +148,7 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	return false, err
+	return false, nil
 }
 
 func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
