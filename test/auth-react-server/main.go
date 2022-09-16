@@ -28,11 +28,13 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/jwt"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -40,6 +42,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
+	"github.com/supertokens/supertokens-golang/recipe/userroles"
+	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesclaims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -86,6 +90,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	thirdparty.ResetForTest()
 	thirdpartyemailpassword.ResetForTest()
 	thirdpartypasswordless.ResetForTest()
+	userroles.ResetForTest()
 
 	if passwordlessConfig == nil {
 		passwordlessConfig = &plessmodels.TypeInput{
@@ -525,6 +530,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					},
 				},
 			}),
+			userroles.Init(nil),
 		},
 	})
 
@@ -556,9 +562,119 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			rw.WriteHeader(200)
 			rw.Header().Add("content-type", "application/json")
 			bytes, _ := json.Marshal(map[string]interface{}{
-				"available": []string{"passwordless", "thirdpartypasswordless", "generalerror"},
+				"available": []string{"passwordless", "thirdpartypasswordless", "generalerror", "userroles"},
 			})
 			rw.Write(bytes)
+
+		} else if r.URL.Path == "/unverifyEmail" && r.Method == "GET" {
+			session.VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
+				sessionContainer := session.GetSessionFromRequestContext(r.Context())
+				emailverification.UnverifyEmail(sessionContainer.GetUserID(), nil)
+				sessionContainer.FetchAndSetClaim(evclaims.EmailVerificationClaim)
+				rw.Header().Add("content-type", "application/json")
+				rw.WriteHeader(200)
+				rw.Write([]byte("{\"status\": \"OK\"}"))
+			}).ServeHTTP(rw, r)
+
+		} else if r.URL.Path == "/setRole" && r.Method == "POST" {
+			session.VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
+				sessionContainer := session.GetSessionFromRequestContext(r.Context())
+				bodyBytes, err := ioutil.ReadAll(r.Body)
+				if err != nil {
+					return
+				}
+				var body map[string]interface{}
+				err = json.Unmarshal(bodyBytes, &body)
+				if err != nil {
+					return
+				}
+				role := body["role"].(string)
+				permissions := body["permissions"].([]interface{})
+				permissionsStr := make([]string, len(permissions))
+				for i, p := range permissions {
+					permissionsStr[i] = p.(string)
+				}
+				_, err = userroles.CreateNewRoleOrAddPermissions(role, permissionsStr, &map[string]interface{}{})
+				if err != nil {
+					return
+				}
+				_, err = userroles.AddRoleToUser(sessionContainer.GetUserID(), role, &map[string]interface{}{})
+				if err != nil {
+					return
+				}
+				err = sessionContainer.FetchAndSetClaim(userrolesclaims.UserRoleClaim)
+				if err != nil {
+					return
+				}
+				err = sessionContainer.FetchAndSetClaim(userrolesclaims.PermissionClaim)
+				if err != nil {
+					return
+				}
+				rw.Header().Add("content-type", "application/json")
+				rw.WriteHeader(200)
+				rw.Write([]byte("{\"status\": \"OK\"}"))
+			}).ServeHTTP(rw, r)
+
+		} else if r.URL.Path == "/checkRole" && r.Method == "POST" {
+			session.VerifySession(&sessmodels.VerifySessionOptions{
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+					req := (*userContext)["_default"].(map[string]interface{})["request"].(*http.Request)
+					bodyBytes, err := ioutil.ReadAll(req.Body)
+					if err != nil {
+						return nil, err
+					}
+					var body map[string]interface{}
+					err = json.Unmarshal(bodyBytes, &body)
+					if err != nil {
+						return nil, err
+					}
+
+					getValidator := func(validator claims.PrimitiveArrayClaimValidators, validatorStr string, args []interface{}) claims.SessionClaimValidator {
+						var maxAge *int64 = nil
+						var id *string = nil
+						if len(args) > 1 {
+							maxAgeFloat := args[1].(float64)
+							maxAgeInt := int64(maxAgeFloat)
+							maxAge = &maxAgeInt
+						}
+						if len(args) > 2 {
+							idStr := args[2].(string)
+							id = &idStr
+						}
+
+						switch validatorStr {
+						case "includes":
+							return validator.Includes(args[0].(string), maxAge, id)
+						case "excludes":
+							return validator.Excludes(args[0].(string), maxAge, id)
+						case "includesAll":
+							return validator.IncludesAll(args[0].([]interface{}), maxAge, id)
+						case "excludesAll":
+							return validator.ExcludesAll(args[0].([]interface{}), maxAge, id)
+						}
+
+						return claims.SessionClaimValidator{}
+					}
+
+					if role, ok := body["role"].(map[string]interface{}); ok {
+						validatorStr := role["validator"].(string)
+						args := role["args"].([]interface{})
+						globalClaimValidators = append(globalClaimValidators, getValidator(userrolesclaims.UserRoleClaimValidators, validatorStr, args))
+					}
+
+					if permission, ok := body["permission"].(map[string]interface{}); ok {
+						validatorStr := permission["validator"].(string)
+						args := permission["args"].([]interface{})
+						globalClaimValidators = append(globalClaimValidators, getValidator(userrolesclaims.PermissionClaimValidators, validatorStr, args))
+					}
+
+					return globalClaimValidators, nil
+				},
+			}, func(w http.ResponseWriter, r *http.Request) {
+				rw.Header().Add("content-type", "application/json")
+				rw.WriteHeader(200)
+				rw.Write([]byte("{\"status\": \"OK\"}"))
+			}).ServeHTTP(rw, r)
 		}
 	}))
 

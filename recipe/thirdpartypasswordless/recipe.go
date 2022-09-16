@@ -213,7 +213,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 			return handleError, err
 		}
 	}
-	return false, err
+	return false, nil
 }
 
 func ResetForTest() {
