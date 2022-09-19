@@ -44,7 +44,7 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		}
 		connectionURI := stInstance.SuperTokens.ConnectionURI
 
-		normalizedDashboardPath, err := supertokens.NewNormalisedURLPath("/dashboard")
+		normalizedDashboardPath, err := supertokens.NewNormalisedURLPath(dashboardAPI)
 		if err != nil {
 			return "", err
 		}

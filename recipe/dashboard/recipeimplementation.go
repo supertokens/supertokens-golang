@@ -24,13 +24,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeRecipeImplementation(querier supertokens.Querier, config dashboardmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) dashboardmodels.RecipeInterface {
+func makeRecipeImplementation() dashboardmodels.RecipeInterface {
 
 	getDashboardBundleLocation := func(userContext supertokens.UserContext) (string, error) {
 		return fmt.Sprintf("https://cdn.jsdelivr.net/gh/supertokens/dashboard@v%s/build/", supertokens.DashboardVersion), nil
 	}
 
-	shouldAllowAccess := func(req *http.Request, userContext supertokens.UserContext) (bool, error) {
+	shouldAllowAccess := func(req *http.Request, config dashboardmodels.TypeNormalisedInput, userContext supertokens.UserContext) (bool, error) {
 		apiKeyHeaderValue := req.Header.Get("authorization")
 
 		// We receieve the api key as `Bearer API_KEY`, this retrieves just the key

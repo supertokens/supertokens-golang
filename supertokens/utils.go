@@ -157,6 +157,20 @@ func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
 	return nil
 }
 
+func SendHTMLResponse(res http.ResponseWriter, statusCode int, htmlString string) error {
+	LogDebugMessage(fmt.Sprintf("Sending HTML response to client with status code: %d", statusCode))
+	dw := MakeDoneWriter(res)
+	if !dw.IsDone() {
+		res.Header().Set("Content-Type", "text/html; charset=utf-8")
+		res.WriteHeader(200)
+		_, err := fmt.Fprint(res, htmlString)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func SendNon200ResponseWithMessage(res http.ResponseWriter, message string, statusCode int) error {
 	return SendNon200Response(res, statusCode, map[string]interface{}{"message": message})
 }
@@ -184,7 +198,7 @@ func SendNon200Response(res http.ResponseWriter, statusCode int, body map[string
 }
 
 func SendUnauthorisedAccess(res http.ResponseWriter) error {
-	return SendNon200Response(res, "unauthorised access", 401)
+	return SendNon200ResponseWithMessage(res, "unauthorised access", 401)
 }
 
 func ReadFromRequest(r *http.Request) ([]byte, error) {

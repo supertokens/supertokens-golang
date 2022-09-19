@@ -16,8 +16,6 @@
 package api
 
 import (
-	"fmt"
-
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -33,9 +31,7 @@ func Dashboard(apiImplementation dashboardmodels.APIInterface, options dashboard
 		return err
 	}
 
-	options.Res.Header().Set("Content-Type", "text/html; charset=utf-8")
-	options.Res.WriteHeader(200)
+	supertokens.SendHTMLResponse(options.Res, 200, htmlString)
 
-	_, err = fmt.Fprint(options.Res, htmlString)
 	return err
 }
