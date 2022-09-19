@@ -21,6 +21,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -29,18 +30,16 @@ import (
 const RECIPE_ID = "thirdparty"
 
 type Recipe struct {
-	RecipeModule            supertokens.RecipeModule
-	Config                  tpmodels.TypeNormalisedInput
-	RecipeImpl              tpmodels.RecipeInterface
-	APIImpl                 tpmodels.APIInterface
-	EmailVerificationRecipe emailverification.Recipe
-	Providers               []tpmodels.TypeProvider
-	EmailDelivery           emaildelivery.Ingredient
+	RecipeModule supertokens.RecipeModule
+	Config       tpmodels.TypeNormalisedInput
+	RecipeImpl   tpmodels.RecipeInterface
+	APIImpl      tpmodels.APIInterface
+	Providers    []tpmodels.TypeProvider
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
@@ -58,22 +57,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
 	r.Providers = config.SignInAndUpFeature.Providers
 
-	if emailDeliveryIngredient != nil {
-		r.EmailDelivery = *emailDeliveryIngredient
-	} else {
-		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig(r.RecipeImpl))
-	}
-
-	if emailVerificationInstance == nil {
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onSuperTokensAPIError)
-		if err != nil {
-			return Recipe{}, err
+	supertokens.AddPostInitCallback(func() error {
+		evRecipe := emailverification.GetRecipeInstance()
+		if evRecipe != nil {
+			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
-		r.EmailVerificationRecipe = emailVerificationRecipe
-
-	} else {
-		r.EmailVerificationRecipe = *emailVerificationInstance
-	}
+		return nil
+	})
 
 	return *r, nil
 }
@@ -81,7 +71,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 func recipeInit(config *tpmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, onSuperTokensAPIError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, onSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}
@@ -114,10 +104,6 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	emailverificationAPIhandled, err := r.EmailVerificationRecipe.RecipeModule.GetAPIsHandled()
-	if err != nil {
-		return nil, err
-	}
 	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: signInUpAPI,
@@ -133,21 +119,19 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: appleRedirectHandlerAPI,
 		ID:                     AppleRedirectHandlerAPI,
 		Disabled:               r.APIImpl.AppleRedirectHandlerPOST == nil,
-	}}, emailverificationAPIhandled...), nil
+	}}), nil
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
 	options := tpmodels.APIOptions{
-		Config:                                r.Config,
-		OtherHandler:                          theirHandler,
-		RecipeID:                              r.RecipeModule.GetRecipeID(),
-		RecipeImplementation:                  r.RecipeImpl,
-		EmailVerificationRecipeImplementation: r.EmailVerificationRecipe.RecipeImpl,
-		Providers:                             r.Providers,
-		Req:                                   req,
-		Res:                                   res,
-		AppInfo:                               r.RecipeModule.GetAppInfo(),
-		EmailDelivery:                         r.EmailDelivery,
+		Config:               r.Config,
+		OtherHandler:         theirHandler,
+		RecipeID:             r.RecipeModule.GetRecipeID(),
+		RecipeImplementation: r.RecipeImpl,
+		Providers:            r.Providers,
+		Req:                  req,
+		Res:                  res,
+		AppInfo:              r.RecipeModule.GetAppInfo(),
 	}
 	if id == SignInUpAPI {
 		return api.SignInUpAPI(r.APIImpl, options)
@@ -156,26 +140,32 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 	} else if id == AppleRedirectHandlerAPI {
 		return api.AppleRedirectHandler(r.APIImpl, options)
 	}
-	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+	return errors.New("should never come here")
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
-	return r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders()
+	return []string{}
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
+	return false, nil
 }
 
-func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (string, error) {
+func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
 	if err != nil {
-		return "", err
+		return evmodels.TypeEmailInfo{}, err
 	}
 	if userInfo == nil {
-		return "", errors.New("unknown User ID provided")
+		return evmodels.TypeEmailInfo{
+			UnknownUserIDError: &struct{}{},
+		}, nil
 	}
-	return userInfo.Email, nil
+	return evmodels.TypeEmailInfo{
+		OK: &struct{ Email string }{
+			Email: userInfo.Email,
+		},
+	}, nil
 }
 
 func ResetForTest() {

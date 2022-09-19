@@ -24,12 +24,14 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput) evmodels.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config evmodels.TypeInput) (evmodels.TypeNormalisedInput, error) {
+	if config.Mode != evmodels.ModeRequired && config.Mode != evmodels.ModeOptional {
+		return evmodels.TypeNormalisedInput{}, errors.New("mode must be either ModeRequired or ModeOptional")
+	}
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if config.GetEmailVerificationURL != nil {
-		typeNormalisedInput.GetEmailVerificationURL = config.GetEmailVerificationURL
-	}
+	typeNormalisedInput.Mode = config.Mode
+	typeNormalisedInput.GetEmailForUserID = config.GetEmailForUserID
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
@@ -61,16 +63,15 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	if config.GetEmailForUserID != nil {
 		typeNormalisedInput.GetEmailForUserID = config.GetEmailForUserID
 	}
-	return typeNormalisedInput
+	return typeNormalisedInput, nil
 }
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) evmodels.TypeNormalisedInput {
 	return evmodels.TypeNormalisedInput{
-		GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-			return "", errors.New("not defined by user")
+		GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+			return evmodels.TypeEmailInfo{}, errors.New("not defined by user")
 		},
-		GetEmailVerificationURL: DefaultGetEmailVerificationURL(appInfo),
-		GetEmailDeliveryConfig:  nil,
+		GetEmailDeliveryConfig: nil,
 		Override: evmodels.OverrideStruct{
 			Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 				return originalImplementation

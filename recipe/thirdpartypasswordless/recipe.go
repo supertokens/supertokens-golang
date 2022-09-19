@@ -21,8 +21,6 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
@@ -36,20 +34,19 @@ import (
 const RECIPE_ID = "thirdpartypasswordless"
 
 type Recipe struct {
-	RecipeModule            supertokens.RecipeModule
-	Config                  tplmodels.TypeNormalisedInput
-	EmailVerificationRecipe emailverification.Recipe
-	passwordlessRecipe      *passwordless.Recipe
-	thirdPartyRecipe        *thirdparty.Recipe
-	RecipeImpl              tplmodels.RecipeInterface
-	APIImpl                 tplmodels.APIInterface
-	EmailDelivery           emaildelivery.Ingredient
-	SmsDelivery             smsdelivery.Ingredient
+	RecipeModule       supertokens.RecipeModule
+	Config             tplmodels.TypeNormalisedInput
+	passwordlessRecipe *passwordless.Recipe
+	thirdPartyRecipe   *thirdparty.Recipe
+	RecipeImpl         tplmodels.RecipeInterface
+	APIImpl            tplmodels.APIInterface
+	EmailDelivery      emaildelivery.Ingredient
+	SmsDelivery        smsdelivery.Ingredient
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config tplmodels.TypeInput, emailVerificationInstance *emailverification.Recipe, thirdPartyInstance *thirdparty.Recipe, passwordlessInstance *passwordless.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, smsDeliveryIngredient *smsdelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config tplmodels.TypeInput, thirdPartyInstance *thirdparty.Recipe, passwordlessInstance *passwordless.Recipe, emailDeliveryIngredient *emaildelivery.Ingredient, smsDeliveryIngredient *smsdelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 
@@ -84,68 +81,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 		r.SmsDelivery = smsdelivery.MakeIngredient(verifiedConfig.GetSmsDeliveryConfig())
 	}
 
-	if emailVerificationInstance == nil {
-		// we override the recipe function for email verification
-		// to return true for is email verified for passwordless users.
-		var apiInterfaceFunc func(originalImplementation evmodels.APIInterface) evmodels.APIInterface
-		var recipeInterfaceFunc func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface
-		if config.Override != nil && config.Override.EmailVerificationFeature != nil {
-			apiInterfaceFunc = config.Override.EmailVerificationFeature.APIs
-			recipeInterfaceFunc = config.Override.EmailVerificationFeature.Functions
-		}
-		verifiedConfig.EmailVerificationFeature.Override = &evmodels.OverrideStruct{
-			APIs: apiInterfaceFunc,
-			Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
-				ogIsEmailVerified := *originalImplementation.IsEmailVerified
-				(*originalImplementation.IsEmailVerified) = func(userID, email string, userContext supertokens.UserContext) (bool, error) {
-					user, err := (*(*r).RecipeImpl.GetUserByID)(userID, userContext)
-					if err != nil {
-						return false, err
-					}
-
-					if user == nil || user.ThirdParty != nil {
-						return ogIsEmailVerified(userID, email, userContext)
-					}
-					// this is a passwordless user, so we always want
-					// to return that their info / email is verified
-					return true, nil
-				}
-
-				ogCreateEmailVerificationToken := *originalImplementation.CreateEmailVerificationToken
-				(*originalImplementation.CreateEmailVerificationToken) = func(userID, email string, userContext supertokens.UserContext) (evmodels.CreateEmailVerificationTokenResponse, error) {
-					user, err := (*(*r).RecipeImpl.GetUserByID)(userID, userContext)
-					if err != nil {
-						return evmodels.CreateEmailVerificationTokenResponse{}, err
-					}
-
-					if user == nil || user.ThirdParty != nil {
-						return ogCreateEmailVerificationToken(userID, email, userContext)
-					}
-
-					return evmodels.CreateEmailVerificationTokenResponse{
-						EmailAlreadyVerifiedError: &struct{}{},
-					}, nil
-				}
-
-				if recipeInterfaceFunc != nil {
-					// we call the user's function override as well post our change.
-					return recipeInterfaceFunc(originalImplementation)
-				} else {
-					return originalImplementation
-				}
-			},
-		}
-
-		emailVerificationRecipe, err := emailverification.MakeRecipe(recipeId, appInfo, verifiedConfig.EmailVerificationFeature, &r.EmailDelivery, onSuperTokensAPIError)
-		if err != nil {
-			return Recipe{}, err
-		}
-		r.EmailVerificationRecipe = emailVerificationRecipe
-
-	} else {
-		r.EmailVerificationRecipe = *emailVerificationInstance
-	}
-
 	var passwordlessRecipe passwordless.Recipe
 	if passwordlessInstance == nil {
 		passwordlessConfig := plessmodels.TypeInput{
@@ -153,7 +88,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 			ContactMethodEmail:        verifiedConfig.ContactMethodEmail,
 			ContactMethodEmailOrPhone: verifiedConfig.ContactMethodEmailOrPhone,
 			FlowType:                  verifiedConfig.FlowType,
-			GetLinkDomainAndPath:      verifiedConfig.GetLinkDomainAndPath,
 			GetCustomUserInputCode:    verifiedConfig.GetCustomUserInputCode,
 			Override: &plessmodels.OverrideStruct{
 				Functions: func(originalImplementation plessmodels.RecipeInterface) plessmodels.RecipeInterface {
@@ -186,10 +120,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 					APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
 						return api.GetThirdPartyIterfaceImpl(r.APIImpl)
 					},
-					EmailVerificationFeature: nil,
 				},
 			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailVerificationRecipe, &r.EmailDelivery, onSuperTokensAPIError)
+			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailDelivery, onSuperTokensAPIError)
 			if err != nil {
 				return Recipe{}, err
 			}
@@ -205,7 +138,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 func recipeInit(config tplmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
-			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, nil, nil, onSuperTokensAPIError)
+			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, nil, nil, nil, nil, onSuperTokensAPIError)
 			if err != nil {
 				return nil, err
 			}
@@ -230,11 +163,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	emailverificationAPIhandled, err := r.EmailVerificationRecipe.RecipeModule.GetAPIsHandled()
-	if err != nil {
-		return nil, err
-	}
-	apisHandled := append(passwordlessAPIhandled, emailverificationAPIhandled...)
+	apisHandled := passwordlessAPIhandled
 	if r.thirdPartyRecipe != nil {
 		thirdpartyAPIhandled, err := r.thirdPartyRecipe.RecipeModule.GetAPIsHandled()
 		if err != nil {
@@ -262,11 +191,11 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return r.thirdPartyRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
 		}
 	}
-	return r.EmailVerificationRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+	return errors.New("should not come here")
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
-	corsHeaders := append(r.EmailVerificationRecipe.RecipeModule.GetAllCORSHeaders(), r.passwordlessRecipe.RecipeModule.GetAllCORSHeaders()...)
+	corsHeaders := r.passwordlessRecipe.RecipeModule.GetAllCORSHeaders()
 	if r.thirdPartyRecipe != nil {
 		corsHeaders = append(corsHeaders, r.thirdPartyRecipe.RecipeModule.GetAllCORSHeaders()...)
 	}
@@ -284,28 +213,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 			return handleError, err
 		}
 	}
-	return r.EmailVerificationRecipe.RecipeModule.HandleError(err, req, res)
-}
-
-func (r *Recipe) getEmailForUserIdForEmailVerification(userID string, userContext supertokens.UserContext) (string, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
-	if err != nil {
-		return "", err
-	}
-	if userInfo == nil {
-		return "", errors.New("Unknown User ID provided")
-	}
-	if userInfo.ThirdParty == nil {
-		if userInfo.Email != nil {
-			return *userInfo.Email, nil
-		}
-		// this is a passwordless user with only a phone number.
-		// returning an empty string here is not a problem since
-		// we override the email verification functions above to
-		// send that the email is already verified for passwordless users.
-		return "", nil
-	}
-	return *userInfo.Email, nil
+	return false, nil
 }
 
 func ResetForTest() {

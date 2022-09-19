@@ -17,15 +17,12 @@ package emailpassword
 
 import (
 	"encoding/json"
-	"errors"
 	"reflect"
 	"regexp"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -35,17 +32,15 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	if config != nil && config.SignUpFeature != nil {
 		typeNormalisedInput.SignUpFeature = validateAndNormaliseSignupConfig(config.SignUpFeature)
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, nil)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
 	}
 
 	// we must call this after validateAndNormaliseSignupConfig
 	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)
 
 	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(appInfo, typeNormalisedInput.SignUpFeature, config.ResetPasswordUsingTokenFeature)
+		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
 	}
-
-	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordResetEmail := DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
@@ -53,12 +48,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
 		}
 
-		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
-		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
-		}
-
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendPasswordResetEmail, sendEmailVerificationEmail)
+		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendPasswordResetEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
 		}
@@ -79,9 +69,6 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
 		}
-		if config.Override.EmailVerificationFeature != nil {
-			typeNormalisedInput.Override.EmailVerificationFeature = config.Override.EmailVerificationFeature
-		}
 	}
 
 	return typeNormalisedInput
@@ -92,8 +79,7 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) epmodels.TypeNormalisedInpu
 	return epmodels.TypeNormalisedInput{
 		SignUpFeature:                  signUpConfig,
 		SignInFeature:                  validateAndNormaliseSignInConfig(signUpConfig),
-		ResetPasswordUsingTokenFeature: validateAndNormaliseResetPasswordUsingTokenConfig(recipeInstance.RecipeModule.GetAppInfo(), signUpConfig, nil),
-		EmailVerificationFeature:       validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
+		ResetPasswordUsingTokenFeature: validateAndNormaliseResetPasswordUsingTokenConfig(signUpConfig),
 		Override: epmodels.OverrideStruct{
 			Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 				return originalImplementation
@@ -101,58 +87,14 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) epmodels.TypeNormalisedInpu
 			APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 				return originalImplementation
 			},
-			EmailVerificationFeature: nil,
 		},
 	}
 }
 
-func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *epmodels.TypeInput) evmodels.TypeInput {
-	emailverificationTypeInput := evmodels.TypeInput{
-		GetEmailForUserID: recipeInstance.getEmailForUserId,
-		Override:          nil,
-	}
-
-	if config != nil {
-		if config.Override != nil {
-			emailverificationTypeInput.Override = config.Override.EmailVerificationFeature
-		}
-		if config.EmailVerificationFeature != nil {
-			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string, userContext supertokens.UserContext) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
-					if err != nil {
-						return
-					}
-					if userInfo == nil {
-						return
-					}
-					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link, userContext)
-				}
-			}
-
-			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
-				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
-					if err != nil {
-						return "", err
-					}
-					if userInfo == nil {
-						return "", errors.New("Unknown User ID provided")
-					}
-					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo, userContext)
-				}
-			}
-		}
-	}
-
-	return emailverificationTypeInput
-}
-
-func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.NormalisedAppinfo, signUpConfig epmodels.TypeNormalisedInputSignUp, config *epmodels.TypeInputResetPasswordUsingTokenFeature) epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature {
+func validateAndNormaliseResetPasswordUsingTokenConfig(signUpConfig epmodels.TypeNormalisedInputSignUp) epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature {
 	normalisedInputResetPasswordUsingTokenFeature := epmodels.TypeNormalisedInputResetPasswordUsingTokenFeature{
 		FormFieldsForGenerateTokenForm: nil,
 		FormFieldsForPasswordResetForm: nil,
-		GetResetPasswordURL:            defaultGetResetPasswordURL(appInfo),
 	}
 
 	if len(signUpConfig.FormFields) > 0 {
@@ -170,10 +112,6 @@ func validateAndNormaliseResetPasswordUsingTokenConfig(appInfo supertokens.Norma
 		}
 		normalisedInputResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm = formFieldsForGenerateTokenForm
 		normalisedInputResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm = formFieldsForPasswordResetForm
-	}
-
-	if config != nil && config.GetResetPasswordURL != nil {
-		normalisedInputResetPasswordUsingTokenFeature.GetResetPasswordURL = config.GetResetPasswordURL
 	}
 
 	return normalisedInputResetPasswordUsingTokenFeature

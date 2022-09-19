@@ -131,14 +131,8 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", tplmodels.EmailStruct{
-		ID:         "john.doe@example.com",
-		IsVerified: true,
-	})
-	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", tplmodels.EmailStruct{
-		ID:         "john.doe@example.com",
-		IsVerified: true,
-	})
+	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
 
 	users, err := GetUsersByEmail("john.doe@example.com")
 	assert.NoError(t, err)

@@ -19,20 +19,19 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type APIOptions struct {
-	RecipeImplementation                  RecipeInterface
-	EmailVerificationRecipeImplementation evmodels.RecipeInterface
-	Config                                TypeNormalisedInput
-	RecipeID                              string
-	Req                                   *http.Request
-	Res                                   http.ResponseWriter
-	OtherHandler                          http.HandlerFunc
-	EmailDelivery                         emaildelivery.Ingredient
+	RecipeImplementation RecipeInterface
+	AppInfo              supertokens.NormalisedAppinfo
+	Config               TypeNormalisedInput
+	RecipeID             string
+	Req                  *http.Request
+	Res                  http.ResponseWriter
+	OtherHandler         http.HandlerFunc
+	EmailDelivery        emaildelivery.Ingredient
 }
 
 type APIInterface struct {

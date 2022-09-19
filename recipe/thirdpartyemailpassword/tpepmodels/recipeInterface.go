@@ -24,7 +24,7 @@ type RecipeInterface struct {
 	GetUserByID              *func(userID string, userContext supertokens.UserContext) (*User, error)
 	GetUsersByEmail          *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByThirdPartyInfo  *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp       *func(thirdPartyID string, thirdPartyUserID string, email EmailStruct, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ThirdPartySignInUp       *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (SignInUpResponse, error)
 	EmailPasswordSignUp      *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
 	EmailPasswordSignIn      *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
 	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)

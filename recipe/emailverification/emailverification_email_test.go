@@ -22,6 +22,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -37,10 +38,16 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				Mode: evmodels.ModeOptional,
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{
+						OK: &struct{ Email string }{
+							Email: "someEmail",
+						},
+					}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -76,13 +83,15 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
+				Mode: "OPTIONAL",
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					funcCalled = true
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -120,6 +129,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
+				Mode: "OPTIONAL",
 				EmailDelivery: &emaildelivery.TypeInput{
 					Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
 						(*originalImplementation.SendEmail) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
@@ -132,10 +142,11 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					funcCalled = true
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -198,13 +209,15 @@ func TestSMTPServiceOverride(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
+				Mode: "OPTIONAL",
 				EmailDelivery: &emaildelivery.TypeInput{
 					Service: smtpService,
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 
@@ -267,13 +280,15 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
+				Mode: "OPTIONAL",
 				EmailDelivery: &emaildelivery.TypeInput{
 					Service: smtpService,
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (string, error) {
-					return "", nil
+				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
+			session.Init(nil),
 		},
 	}
 

@@ -16,12 +16,16 @@
 package session
 
 import (
+	"bytes"
+	"encoding/json"
 	defaultErrors "errors"
+	"fmt"
 	"net/http"
 	"reflect"
 	"strconv"
 	"sync"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -39,14 +43,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	createNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		response, err := createNewSessionHelper(recipeImplHandshakeInfo, config, querier, userID, accessTokenPayload, sessionData)
 		if err != nil {
-			return sessmodels.SessionContainer{}, err
+			return nil, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
 		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
-	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("getSession: Started")
 		supertokens.LogDebugMessage("getSession: rid in header: " + strconv.FormatBool(frontendHasInterceptor((req))))
 		supertokens.LogDebugMessage("getSession: request method: " + req.Method)
@@ -108,7 +112,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		supertokens.LogDebugMessage("getSession: Success!")
-		return &sessionContainer, nil
+		return sessionContainer, nil
 	}
 
 	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
@@ -120,14 +124,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
 		if inputIdRefreshToken == nil {
 			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because idRefreshToken from cookies is nil")
-			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
 		}
 
 		inputRefreshToken := getRefreshTokenFromCookie(req)
 		if inputRefreshToken == nil {
 			clearSessionFromCookie(config, res)
 			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token from cookies is undefined")
-			return sessmodels.SessionContainer{}, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
+			return nil, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 		}
 
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
@@ -139,7 +143,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 				supertokens.LogDebugMessage("refreshSession: Clearing cookies because of UNAUTHORISED or TOKEN_THEFT_DETECTED response")
 				clearSessionFromCookie(config, res)
 			}
-			return sessmodels.SessionContainer{}, err
+			return nil, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
@@ -193,6 +197,124 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return regenerateAccessTokenHelper(querier, newAccessTokenPayload, accessToken)
 	}
 
+	mergeIntoAccessTokenPayload := func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
+		if err != nil {
+			return false, err
+		}
+		if sessionInfo == nil {
+			return false, nil
+		}
+		newAccessTokenPayload := map[string]interface{}{}
+		for k, v := range sessionInfo.AccessTokenPayload {
+			newAccessTokenPayload[k] = v
+		}
+		for k, v := range accessTokenPayloadUpdate {
+			if v == nil {
+				delete(newAccessTokenPayload, k)
+			} else {
+				newAccessTokenPayload[k] = v
+			}
+		}
+		return (*result.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
+	}
+
+	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+		return claimValidatorsAddedByOtherRecipes, nil
+	}
+
+	validateClaims := func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
+		accessTokenPayloadUpdate := map[string]interface{}{}
+		origSessionClaimPayloadJSON, err := json.Marshal(accessTokenPayload)
+		if err != nil {
+			return sessmodels.ValidateClaimsResult{}, err
+		}
+
+		for _, validator := range claimValidators {
+			supertokens.LogDebugMessage("updateClaimsInPayloadIfNeeded checking shouldRefetch for " + validator.ID)
+			claim := validator.Claim
+			if claim != nil && validator.ShouldRefetch != nil {
+				if validator.ShouldRefetch(accessTokenPayload, userContext) {
+					supertokens.LogDebugMessage("updateClaimsInPayloadIfNeeded refetching " + validator.ID)
+					value, err := claim.FetchValue(userId, userContext)
+					if err != nil {
+						return sessmodels.ValidateClaimsResult{}, err
+					}
+					supertokens.LogDebugMessage(fmt.Sprint("updateClaimsInPayloadIfNeeded ", validator.ID, " refetch result ", value))
+					if value != nil {
+						accessTokenPayload = claim.AddToPayload_internal(accessTokenPayload, value, userContext)
+					}
+				}
+			}
+		}
+
+		newSessionClaimPayloadJSON, err := json.Marshal(accessTokenPayload)
+		if err != nil {
+			return sessmodels.ValidateClaimsResult{}, err
+		}
+		if !bytes.Equal(origSessionClaimPayloadJSON, newSessionClaimPayloadJSON) {
+			accessTokenPayloadUpdate = accessTokenPayload
+		}
+
+		invalidClaims := validateClaimsInPayload(claimValidators, accessTokenPayload, userContext)
+
+		if len(accessTokenPayloadUpdate) == 0 {
+			accessTokenPayloadUpdate = nil
+		}
+
+		return sessmodels.ValidateClaimsResult{
+			InvalidClaims:            invalidClaims,
+			AccessTokenPayloadUpdate: accessTokenPayloadUpdate,
+		}, nil
+	}
+
+	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.ClaimValidationError, error) {
+		invalidClaims := validateClaimsInPayload(claimValidators, jwtPayload, userContext)
+		return invalidClaims, nil
+	}
+
+	fetchAndSetClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
+		if err != nil {
+			return false, err
+		}
+		if sessionInfo == nil {
+			return false, nil
+		}
+		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, nil, userContext)
+		if err != nil {
+			return false, err
+		}
+		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+	}
+
+	setClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
+		accessTokenPayloadUpdate := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
+		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+	}
+
+	getClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
+		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
+		if err != nil {
+			return sessmodels.GetClaimValueResult{}, err
+		}
+		if sessionInfo == nil {
+			return sessmodels.GetClaimValueResult{
+				SessionDoesNotExistError: &struct{}{},
+			}, nil
+		}
+
+		return sessmodels.GetClaimValueResult{
+			OK: &struct{ Value interface{} }{
+				Value: claim.GetValueFromPayload(sessionInfo.AccessTokenPayload, userContext),
+			},
+		}, nil
+	}
+
+	removeClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+		accessTokenPayloadUpdate := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
+		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+	}
 	result = sessmodels.RecipeInterface{
 		CreateNewSession:            &createNewSession,
 		GetSession:                  &getSession,
@@ -207,10 +329,18 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		GetAccessTokenLifeTimeMS:    &getAccessTokenLifeTimeMS,
 		GetRefreshTokenLifeTimeMS:   &getRefreshTokenLifeTimeMS,
 		RegenerateAccessToken:       &regenerateAccessToken,
+
+		MergeIntoAccessTokenPayload: &mergeIntoAccessTokenPayload,
+		GetGlobalClaimValidators:    &getGlobalClaimValidators,
+		ValidateClaims:              &validateClaims,
+		ValidateClaimsInJWTPayload:  &validateClaimsInJWTPayload,
+		FetchAndSetClaim:            &fetchAndSetClaim,
+		SetClaimValue:               &setClaimValue,
+		GetClaimValue:               &getClaimValue,
+		RemoveClaim:                 &removeClaim,
 	}
 
 	return result
-
 }
 
 // updates recipeImplHandshakeInfo in place.
@@ -260,5 +390,4 @@ func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.Handshak
 	handshakeInfoLock.Lock()
 	defer handshakeInfoLock.Unlock()
 	updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, keyList, newKey, newExpiry)
-
 }

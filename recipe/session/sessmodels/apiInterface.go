@@ -23,9 +23,9 @@ import "github.com/supertokens/supertokens-golang/supertokens"
  * frontend anyway
  */
 type APIInterface struct {
-	RefreshPOST   *func(options APIOptions, userContext supertokens.UserContext) error
-	SignOutPOST   *func(options APIOptions, userContext supertokens.UserContext) (SignOutPOSTResponse, error)
-	VerifySession *func(verifySessionOptions *VerifySessionOptions, options APIOptions, userContext supertokens.UserContext) (*SessionContainer, error)
+	RefreshPOST   *func(options APIOptions, userContext supertokens.UserContext) (SessionContainer, error)
+	SignOutPOST   *func(sessionContainer SessionContainer, options APIOptions, userContext supertokens.UserContext) (SignOutPOSTResponse, error)
+	VerifySession *func(verifySessionOptions *VerifySessionOptions, options APIOptions, userContext supertokens.UserContext) (SessionContainer, error)
 }
 
 type SignOutPOSTResponse struct {

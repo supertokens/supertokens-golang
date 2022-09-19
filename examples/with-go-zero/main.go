@@ -6,6 +6,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -26,6 +28,9 @@ func main() {
 			WebsiteDomain: "http://localhost:3000",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
 				/*
 				   We use different credentials for different platforms when required. For example the redirect URI for Github
@@ -95,7 +100,7 @@ func main() {
 	server := rest.MustNewServer(
 		rest.RestConf{
 			Host: "0.0.0.0",
-			Port: 8000,
+			Port: 3001,
 		},
 	)
 	defer server.Stop()
@@ -105,9 +110,18 @@ func main() {
 	addSupertokensRoutes("/auth", server) // go-zero doesn't execute middlewares if matching routes are not found
 	server.AddRoute(rest.Route{
 		Method: http.MethodGet,
-		Path:   "/sessionInfo",
+		Path:   "/sessioninfo",
 		Handler: func(rw http.ResponseWriter, r *http.Request) {
 			session.VerifySession(nil, sessioninfo).ServeHTTP(rw, r)
+		},
+	})
+
+	// go-zero does not honour middlewares for CORS requests unless we explicitly add a route for it.
+	server.AddRoute(rest.Route{
+		Method: http.MethodOptions,
+		Path:   "/sessioninfo",
+		Handler: func(rw http.ResponseWriter, r *http.Request) {
+			rw.WriteHeader(http.StatusOK)
 		},
 	})
 	server.Start()
@@ -148,12 +162,11 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 
 func corsMiddleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(response http.ResponseWriter, r *http.Request) {
-		response.Header().Set("Access-Control-Allow-Origin", "localhost:8000")
+		response.Header().Set("Access-Control-Allow-Origin", "http://localhost:3000")
 		response.Header().Set("Access-Control-Allow-Credentials", "true")
 		if r.Method == "OPTIONS" {
 			response.Header().Set("Access-Control-Allow-Headers", strings.Join(append([]string{"Content-Type"}, supertokens.GetAllCORSHeaders()...), ","))
-			response.Header().Set("Access-Control-Allow-Methods", "*")
-			response.Write([]byte(""))
+			response.Header().Set("Access-Control-Allow-Methods", "GET,POST,PUT,HEAD,OPTIONS")
 		} else {
 			next.ServeHTTP(response, r)
 		}

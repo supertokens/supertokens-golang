@@ -16,21 +16,19 @@
 package api
 
 import (
-	defaultErrors "errors"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() sessmodels.APIInterface {
-	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) error {
-		_, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
-		return err
+	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
 	}
 
-	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		method := options.Req.Method
 		if method == http.MethodOptions || method == http.MethodTrace {
 			return nil, nil
@@ -44,29 +42,51 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		refreshTokenPath := options.Config.RefreshTokenPath
 		if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
 			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
-			return &session, err
+			return session, err
 		} else {
-			return (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			if err != nil {
+				return nil, err
+			}
+
+			if sessionContainer == nil {
+				return nil, nil
+			}
+
+			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
+			if verifySessionOptions != nil {
+				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
+			}
+			claimValidators := options.ClaimValidatorsAddedByOtherRecipes
+			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidators, userContext)
+			if err != nil {
+				return nil, err
+			}
+			if overrideGlobalClaimValidators != nil {
+				claimValidators, err = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
+				if err != nil {
+					return nil, err
+				}
+			}
+
+			if err != nil {
+				return nil, err
+			}
+			err = sessionContainer.AssertClaimsWithContext(claimValidators, userContext)
+			if err != nil {
+				return nil, err
+			}
+
+			return sessionContainer, nil
 		}
 	}
 
-	signOutPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
-		session, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, nil, userContext)
-		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				return sessmodels.SignOutPOSTResponse{
-					OK: &struct{}{},
-				}, nil
+	signOutPOST := func(sessionContainer sessmodels.SessionContainer, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SignOutPOSTResponse, error) {
+		if sessionContainer != nil {
+			err := sessionContainer.RevokeSessionWithContext(userContext)
+			if err != nil {
+				return sessmodels.SignOutPOSTResponse{}, err
 			}
-			return sessmodels.SignOutPOSTResponse{}, err
-		}
-		if session == nil {
-			return sessmodels.SignOutPOSTResponse{}, defaultErrors.New("session is nil. Should not come here")
-		}
-
-		err = session.RevokeSessionWithContext(userContext)
-		if err != nil {
-			return sessmodels.SignOutPOSTResponse{}, err
 		}
 
 		return sessmodels.SignOutPOSTResponse{

@@ -21,6 +21,9 @@ import (
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -31,6 +34,22 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			(*apiImplementation.VerifyEmailPOST) == nil {
 			options.OtherHandler(options.Res, options.Req)
 			return nil
+		}
+
+		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+		sessionRequired := false
+		sessionContainer, err := session.GetSessionWithContext(
+			options.Req, options.Res,
+			&sessmodels.VerifySessionOptions{
+				SessionRequired: &sessionRequired,
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+					validators := []claims.SessionClaimValidator{}
+					return validators, nil
+				},
+			},
+			userContext)
+		if err != nil {
+			return err
 		}
 
 		body, err := supertokens.ReadFromRequest(options.Req)
@@ -51,7 +70,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, options, userContext)
 		if err != nil {
 			return err
 		}
@@ -76,7 +95,23 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+		sessionContainer, err := session.GetSessionWithContext(
+			options.Req,
+			options.Res,
+			&sessmodels.VerifySessionOptions{
+				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+					validators := []claims.SessionClaimValidator{}
+					return validators, nil
+				},
+			},
+			userContext,
+		)
+		if err != nil {
+			return err
+		}
+
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(sessionContainer, options, userContext)
 		if err != nil {
 			return err
 		}

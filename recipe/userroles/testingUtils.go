@@ -16,6 +16,7 @@
 package userroles
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -55,3 +56,15 @@ func canRunTest(t *testing.T) bool {
 	}
 	return true
 }
+
+type fakeRes struct{}
+
+func (f fakeRes) Header() http.Header {
+	return http.Header{}
+}
+
+func (f fakeRes) Write(body []byte) (int, error) {
+	return len(body), nil
+}
+
+func (f fakeRes) WriteHeader(statusCode int) {}

@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -360,6 +362,9 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
 			}),
@@ -433,7 +438,7 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 
 	user := result["user"].(map[string]interface{})
 
-	isVerified, err := IsEmailVerified(user["id"].(string))
+	isVerified, err := emailverification.IsEmailVerified(user["id"].(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

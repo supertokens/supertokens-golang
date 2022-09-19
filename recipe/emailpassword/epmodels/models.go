@@ -17,7 +17,6 @@ package epmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -25,20 +24,13 @@ type TypeNormalisedInput struct {
 	SignUpFeature                  TypeNormalisedInputSignUp
 	SignInFeature                  TypeNormalisedInputSignIn
 	ResetPasswordUsingTokenFeature TypeNormalisedInputResetPasswordUsingTokenFeature
-	EmailVerificationFeature       evmodels.TypeInput
 	Override                       OverrideStruct
 	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {
-	Functions                func(originalImplementation RecipeInterface) RecipeInterface
-	APIs                     func(originalImplementation APIInterface) APIInterface
-	EmailVerificationFeature *evmodels.OverrideStruct
-}
-
-type TypeInputEmailVerificationFeature struct {
-	GetEmailVerificationURL  func(user User, userContext supertokens.UserContext) (string, error)
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
+	Functions func(originalImplementation RecipeInterface) RecipeInterface
+	APIs      func(originalImplementation APIInterface) APIInterface
 }
 
 type TypeInputFormField struct {
@@ -66,12 +58,10 @@ type TypeNormalisedInputSignIn struct {
 }
 
 type TypeInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL      func(user User, userContext supertokens.UserContext) (string, error)
 	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
 }
 
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
-	GetResetPasswordURL            func(user User, userContext supertokens.UserContext) (string, error)
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }
@@ -85,7 +75,6 @@ type User struct {
 type TypeInput struct {
 	SignUpFeature                  *TypeInputSignUp
 	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
-	EmailVerificationFeature       *TypeInputEmailVerificationFeature
 	Override                       *OverrideStruct
 	EmailDelivery                  *emaildelivery.TypeInput
 }

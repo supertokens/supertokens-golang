@@ -129,15 +129,9 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	SignInUp("mock", "thirdPartyJohnDoe", tpmodels.EmailStruct{
-		ID:         "john.doe@example.com",
-		IsVerified: true,
-	})
+	SignInUp("mock", "thirdPartyJohnDoe", "john.doe@example.com")
 
-	SignInUp("mock2", "thirdPartyDaveDoe", tpmodels.EmailStruct{
-		ID:         "john.doe@example.com",
-		IsVerified: false,
-	})
+	SignInUp("mock2", "thirdPartyDaveDoe", "john.doe@example.com")
 
 	users, err := GetUsersByEmail("john.doe@example.com")
 

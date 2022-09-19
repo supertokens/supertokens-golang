@@ -17,11 +17,13 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
 
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -86,6 +88,15 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		sessionExpiredStatusCode = *config.SessionExpiredStatusCode
 	}
 
+	invalidClaimStatusCode := 403
+	if config != nil && config.InvalidClaimStatusCode != nil {
+		invalidClaimStatusCode = *config.InvalidClaimStatusCode
+	}
+
+	if sessionExpiredStatusCode == invalidClaimStatusCode {
+		return sessmodels.TypeNormalisedInput{}, errors.New("SessionExpiredStatusCode and InvalidClaimStatusCode cannot have the same value")
+	}
+
 	if config != nil && config.AntiCsrf != nil {
 		if *config.AntiCsrf != antiCSRF_NONE && *config.AntiCsrf != antiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != antiCSRF_VIA_TOKEN {
 			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
@@ -125,6 +136,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}
 			return sendUnauthorisedResponse(*recipeInstance, message, req, res)
 		},
+		OnInvalidClaim: func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error {
+			recipeInstance, err := getRecipeInstanceOrThrowError()
+			if err != nil {
+				return err
+			}
+			return sendInvalidClaimResponse(*recipeInstance, validationErrors, req, res)
+		},
 	}
 
 	if config != nil && config.ErrorHandlers != nil {
@@ -133,6 +151,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 		if config.ErrorHandlers.OnUnauthorised != nil {
 			errorHandlers.OnUnauthorised = config.ErrorHandlers.OnUnauthorised
+		}
+		if config.ErrorHandlers.OnInvalidClaim != nil {
+			errorHandlers.OnInvalidClaim = config.ErrorHandlers.OnInvalidClaim
 		}
 	}
 
@@ -176,6 +197,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		CookieSameSite:           cookieSameSite,
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
+		InvalidClaimStatusCode:   invalidClaimStatusCode,
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
 		Jwt:                      Jwt,
@@ -288,11 +310,18 @@ func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedI
 }
 
 func sendTryRefreshTokenResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200Response(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
+	return supertokens.SendNon200ResponseWithMessage(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func sendUnauthorisedResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
-	return supertokens.SendNon200Response(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
+	return supertokens.SendNon200ResponseWithMessage(response, "unauthorised", recipeInstance.Config.SessionExpiredStatusCode)
+}
+
+func sendInvalidClaimResponse(recipeInstance Recipe, claimValidationErrors []claims.ClaimValidationError, _ *http.Request, response http.ResponseWriter) error {
+	return supertokens.SendNon200Response(response, recipeInstance.Config.InvalidClaimStatusCode, map[string]interface{}{
+		"message":               "invalid claim",
+		"claimValidationErrors": claimValidationErrors,
+	})
 }
 
 func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
@@ -300,7 +329,7 @@ func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string,
 	if err != nil {
 		return err
 	}
-	return supertokens.SendNon200Response(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
+	return supertokens.SendNon200ResponseWithMessage(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
 func frontendHasInterceptor(req *http.Request) bool {
@@ -322,4 +351,43 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 	}
 
 	return keyList
+}
+
+func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []claims.ClaimValidationError {
+	validationErrors := []claims.ClaimValidationError{}
+
+	for _, validator := range claimValidators {
+		claimValidationResult := validator.Validate(newAccessTokenPayload, userContext)
+		supertokens.LogDebugMessage(fmt.Sprint("validateClaimsInPayload ", validator.ID, " validation res ", claimValidationResult))
+		if !claimValidationResult.IsValid {
+			validationErrors = append(validationErrors, claims.ClaimValidationError{
+				ID:     validator.ID,
+				Reason: claimValidationResult.Reason,
+			})
+		}
+	}
+	return validationErrors
+}
+
+func getRequiredClaimValidators(
+	sessionContainer sessmodels.SessionContainer,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error),
+	userContext supertokens.UserContext,
+) ([]claims.SessionClaimValidator, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
+	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
+	if err != nil {
+		return nil, err
+	}
+	if overrideGlobalClaimValidators != nil {
+		globalClaimValidators, err = overrideGlobalClaimValidators(globalClaimValidators, sessionContainer, userContext)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return globalClaimValidators, nil
 }

@@ -26,6 +26,8 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -378,7 +380,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T
 			Enabled: true,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -436,7 +438,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 			customProviderForEmailVerification,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -461,137 +463,137 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 	assert.NotEmpty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
 }
 
-func TestBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
+// func TestBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T) {
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
 
-	customCalled := false
-	email := ""
-	emailVerifyLink := ""
+// 	customCalled := false
+// 	email := ""
+// 	emailVerifyLink := ""
 
-	tplConfig := tplmodels.TypeInput{
-		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-			Enabled: true,
-		},
-		EmailVerificationFeature: &tplmodels.TypeInputEmailVerificationFeature{
-			CreateAndSendCustomEmail: func(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-				email = *user.Email
-				emailVerifyLink = emailVerificationURLWithToken
-				customCalled = true
-			},
-		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
-	defer testServer.Close()
+// 	tplConfig := tplmodels.TypeInput{
+// 		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+// 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+// 			Enabled: true,
+// 		},
+// 		EmailVerificationFeature: &tplmodels.TypeInputEmailVerificationFeature{
+// 			CreateAndSendCustomEmail: func(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+// 				email = *user.Email
+// 				emailVerifyLink = emailVerificationURLWithToken
+// 				customCalled = true
+// 			},
+// 		},
+// 	}
+// 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+// 	defer testServer.Close()
 
-	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	cdiVersion, err := querier.GetQuerierAPIVersion()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
-		return
-	}
+// 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	cdiVersion, err := querier.GetQuerierAPIVersion()
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// 	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+// 		return
+// 	}
 
-	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	bodyBytes, err := ioutil.ReadAll(resp.Body)
-	assert.NoError(t, err)
+// 	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+// 	bodyBytes, err := ioutil.ReadAll(resp.Body)
+// 	assert.NoError(t, err)
 
-	var response map[string]interface{}
-	json.Unmarshal(bodyBytes, &response)
+// 	var response map[string]interface{}
+// 	json.Unmarshal(bodyBytes, &response)
 
-	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+// 	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *passwordless.PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	cookies := resp.Cookies()
-	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+// 	cookies := resp.Cookies()
+// 	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	bodyBytes, err = ioutil.ReadAll(resp.Body)
-	assert.NoError(t, err)
+// 	bodyBytes, err = ioutil.ReadAll(resp.Body)
+// 	assert.NoError(t, err)
 
-	json.Unmarshal(bodyBytes, &response)
-	assert.Equal(t, response["status"], "EMAIL_ALREADY_VERIFIED_ERROR")
+// 	json.Unmarshal(bodyBytes, &response)
+// 	assert.Equal(t, response["status"], "EMAIL_ALREADY_VERIFIED_ERROR")
 
-	// Default handler not called
-	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
-	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
-	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+// 	// Default handler not called
+// 	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+// 	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+// 	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
 
-	// Custom handler called
-	assert.Empty(t, email)
-	assert.Empty(t, emailVerifyLink)
-	assert.False(t, customCalled)
-}
+// 	// Custom handler called
+// 	assert.Empty(t, email)
+// 	assert.Empty(t, emailVerifyLink)
+// 	assert.False(t, customCalled)
+// }
 
-func TestBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
+// func TestBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
 
-	customCalled := false
-	email := ""
-	emailVerifyLink := ""
-	var thirdparty *struct {
-		ID     string `json:"id"`
-		UserID string `json:"userId"`
-	}
+// 	customCalled := false
+// 	email := ""
+// 	emailVerifyLink := ""
+// 	var thirdparty *struct {
+// 		ID     string `json:"id"`
+// 		UserID string `json:"userId"`
+// 	}
 
-	tplConfig := tplmodels.TypeInput{
-		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-			Enabled: true,
-		},
-		EmailVerificationFeature: &tplmodels.TypeInputEmailVerificationFeature{
-			CreateAndSendCustomEmail: func(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-				email = *user.Email
-				emailVerifyLink = emailVerificationURLWithToken
-				thirdparty = user.ThirdParty
-				customCalled = true
-			},
-		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
-	defer testServer.Close()
+// 	tplConfig := tplmodels.TypeInput{
+// 		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+// 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+// 			Enabled: true,
+// 		},
+// 		EmailVerificationFeature: &tplmodels.TypeInputEmailVerificationFeature{
+// 			CreateAndSendCustomEmail: func(user tplmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
+// 				email = *user.Email
+// 				emailVerifyLink = emailVerificationURLWithToken
+// 				thirdparty = user.ThirdParty
+// 				customCalled = true
+// 			},
+// 		},
+// 		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+// 	}
+// 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+// 	defer testServer.Close()
 
-	signinupPostData := PostDataForCustomProvider{
-		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
-			"access_token": "saodiasjodai",
-		},
-		RedirectUri: "http://127.0.0.1/callback",
-	}
+// 	signinupPostData := PostDataForCustomProvider{
+// 		ThirdPartyId: "custom",
+// 		AuthCodeResponse: map[string]string{
+// 			"access_token": "saodiasjodai",
+// 		},
+// 		RedirectUri: "http://127.0.0.1/callback",
+// 	}
 
-	postBody, err := json.Marshal(signinupPostData)
-	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
-	assert.NoError(t, err)
+// 	postBody, err := json.Marshal(signinupPostData)
+// 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+// 	assert.NoError(t, err)
 
-	cookies := resp.Cookies()
-	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+// 	cookies := resp.Cookies()
+// 	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+// 	assert.NoError(t, err)
+// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
-	// Default handler not called
-	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
-	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
-	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+// 	// Default handler not called
+// 	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+// 	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+// 	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
 
-	// Custom handler called
-	assert.Equal(t, email, "test@example.com")
-	assert.NotEmpty(t, emailVerifyLink)
-	assert.NotNil(t, thirdparty)
-	assert.True(t, customCalled)
-}
+// 	// Custom handler called
+// 	assert.Equal(t, email, "test@example.com")
+// 	assert.NotEmpty(t, emailVerifyLink)
+// 	assert.NotNil(t, thirdparty)
+// 	assert.True(t, customCalled)
+// }
 
 func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	BeforeEach()
@@ -607,6 +609,9 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
+	}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
 				sendEmail := *originalImplementation.SendEmail
@@ -622,8 +627,7 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 				return originalImplementation
 			},
 		},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	}), session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -687,6 +691,11 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
+
+		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+	}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
 				sendEmail := *originalImplementation.SendEmail
@@ -702,9 +711,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 				return originalImplementation
 			},
 		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	}), session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -746,7 +753,7 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	emailVerifyLink := ""
 	var userInputCode *string
 
-	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+	evSmtpService := smtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
 		Settings: emaildelivery.SMTPSettings{
 			Host: "",
 			From: emaildelivery.SMTPFrom{
@@ -762,7 +769,31 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 					email = input.EmailVerification.User.Email
 					emailVerifyLink = input.EmailVerification.EmailVerifyLink
 					getContentCalled = true
-				} else if input.PasswordlessLogin != nil {
+				}
+				return emaildelivery.EmailContent{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tplSmtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
+			Host: "",
+			From: emaildelivery.SMTPFrom{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
+				if input.PasswordlessLogin != nil {
 					userInputCode = input.PasswordlessLogin.UserInputCode
 				}
 				return emaildelivery.EmailContent{}, nil
@@ -782,10 +813,15 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 			Enabled: true,
 		},
 		EmailDelivery: &emaildelivery.TypeInput{
-			Service: smtpService,
+			Service: tplSmtpService,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: evSmtpService,
+		},
+	}), session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -848,7 +884,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
-	smtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+	smtpService := smtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
 		Settings: emaildelivery.SMTPSettings{
 			Host: "",
 			From: emaildelivery.SMTPFrom{
@@ -881,12 +917,14 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
+		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+	}
+	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
+		Mode: evmodels.ModeOptional,
 		EmailDelivery: &emaildelivery.TypeInput{
 			Service: smtpService,
 		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
-	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	}), session.Init(nil), Init(tplConfig))
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{

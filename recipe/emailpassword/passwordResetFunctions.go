@@ -34,12 +34,6 @@ var PasswordResetDataForTest = struct {
 	UserContext               supertokens.UserContext
 }{}
 
-func defaultGetResetPasswordURL(appInfo supertokens.NormalisedAppinfo) func(_ epmodels.User, userContext supertokens.UserContext) (string, error) {
-	return func(_ epmodels.User, userContext supertokens.UserContext) (string, error) {
-		return appInfo.WebsiteDomain.GetAsStringDangerous() + appInfo.WebsiteBasePath.GetAsStringDangerous() + "/reset-password", nil
-	}
-}
-
 func DefaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.NormalisedAppinfo) func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 	return func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
 		if supertokens.IsRunningInTestMode() {

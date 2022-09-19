@@ -17,12 +17,7 @@ package thirdparty
 
 import (
 	"encoding/json"
-	"errors"
 
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/emaildelivery/backwardCompatibilityService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -36,37 +31,12 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	}
 	typeNormalisedInput.SignInAndUpFeature = signInAndUpFeature
 
-	typeNormalisedInput.EmailVerificationFeature = validateAndNormaliseEmailVerificationConfig(recipeInstance, config)
-
-	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tpmodels.RecipeInterface) emaildelivery.TypeInputWithService {
-		sendEmailVerificationEmail := emailverification.DefaultCreateAndSendCustomEmail(appInfo)
-		if typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-			sendEmailVerificationEmail = typeNormalisedInput.EmailVerificationFeature.CreateAndSendCustomEmail
-		}
-
-		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendEmailVerificationEmail)
-		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
-			emailService = *config.EmailDelivery.Service
-		}
-		result := emaildelivery.TypeInputWithService{
-			Service: emailService,
-		}
-		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Override != nil {
-			result.Override = config.EmailDelivery.Override
-		}
-
-		return result
-	}
-
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
 			typeNormalisedInput.Override.Functions = config.Override.Functions
 		}
 		if config.Override.APIs != nil {
 			typeNormalisedInput.Override.APIs = config.Override.APIs
-		}
-		if config.Override.EmailVerificationFeature != nil {
-			typeNormalisedInput.Override.EmailVerificationFeature = config.Override.EmailVerificationFeature
 		}
 	}
 
@@ -75,8 +45,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 func makeTypeNormalisedInput(recipeInstance *Recipe) tpmodels.TypeNormalisedInput {
 	return tpmodels.TypeNormalisedInput{
-		SignInAndUpFeature:       tpmodels.TypeNormalisedInputSignInAndUp{},
-		EmailVerificationFeature: validateAndNormaliseEmailVerificationConfig(recipeInstance, nil),
+		SignInAndUpFeature: tpmodels.TypeNormalisedInputSignInAndUp{},
 		Override: tpmodels.OverrideStruct{
 			Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
 				return originalImplementation
@@ -84,51 +53,8 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) tpmodels.TypeNormalisedInpu
 			APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
 				return originalImplementation
 			},
-			EmailVerificationFeature: nil,
 		},
 	}
-}
-
-func validateAndNormaliseEmailVerificationConfig(recipeInstance *Recipe, config *tpmodels.TypeInput) evmodels.TypeInput {
-	emailverificationTypeInput := evmodels.TypeInput{
-		GetEmailForUserID: recipeInstance.getEmailForUserId,
-		Override:          nil,
-	}
-
-	if config != nil {
-		if config.Override != nil {
-			emailverificationTypeInput.Override = config.Override.EmailVerificationFeature
-		}
-		if config.EmailVerificationFeature != nil {
-			if config.EmailVerificationFeature.CreateAndSendCustomEmail != nil {
-				emailverificationTypeInput.CreateAndSendCustomEmail = func(user evmodels.User, link string, userContext supertokens.UserContext) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
-					if err != nil {
-						return
-					}
-					if userInfo == nil {
-						return
-					}
-					config.EmailVerificationFeature.CreateAndSendCustomEmail(*userInfo, link, userContext)
-				}
-			}
-
-			if config.EmailVerificationFeature.GetEmailVerificationURL != nil {
-				emailverificationTypeInput.GetEmailVerificationURL = func(user evmodels.User, userContext supertokens.UserContext) (string, error) {
-					userInfo, err := (*recipeInstance.RecipeImpl.GetUserByID)(user.ID, userContext)
-					if err != nil {
-						return "", err
-					}
-					if userInfo == nil {
-						return "", errors.New("unknown User ID provided")
-					}
-					return config.EmailVerificationFeature.GetEmailVerificationURL(*userInfo, userContext)
-				}
-			}
-		}
-	}
-
-	return emailverificationTypeInput
 }
 
 func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp) (tpmodels.TypeNormalisedInputSignInAndUp, error) {

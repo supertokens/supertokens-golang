@@ -17,6 +17,9 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -27,7 +30,23 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 		return nil
 	}
 
-	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+
+	sessionContainer, err := session.GetSessionWithContext(
+		options.Req, options.Res,
+		&sessmodels.VerifySessionOptions{
+			OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+				validators := []claims.SessionClaimValidator{}
+				return validators, nil
+			},
+		},
+		userContext,
+	)
+	if err != nil {
+		return err
+	}
+
+	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(sessionContainer, options, userContext)
 	if err != nil {
 		return err
 	}

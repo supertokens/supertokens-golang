@@ -285,7 +285,7 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 	LogDebugMessage("errorHandler: Started")
 	if errors.As(originalError, &BadInputError{}) {
 		LogDebugMessage("errorHandler: Sending 400 status code response")
-		err := SendNon200Response(res, originalError.Error(), 400)
+		err := SendNon200ResponseWithMessage(res, originalError.Error(), 400)
 		if err != nil {
 			// this function can return an error, so we should return
 			// the error here. Once returned, either the user will handle
