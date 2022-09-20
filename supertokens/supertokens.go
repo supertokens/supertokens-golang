@@ -27,6 +27,7 @@ import (
 
 type superTokens struct {
 	AppInfo               NormalisedAppinfo
+	SuperTokens           ConnectionInfo
 	RecipeModules         []RecipeModule
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 }
@@ -78,6 +79,7 @@ func supertokensInit(config TypeInput) error {
 				})
 			}
 			initQuerier(hosts, config.Supertokens.APIKey)
+			superTokens.SuperTokens = *config.Supertokens
 		} else {
 			return errors.New("please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
 		}
@@ -311,8 +313,8 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 
 type UserPaginationResult struct {
 	Users []struct {
-		RecipeId string
-		User     map[string]interface{}
+		RecipeId string                 `json:"recipeId"`
+		User     map[string]interface{} `json:"user"`
 	}
 	NextPaginationToken *string
 }

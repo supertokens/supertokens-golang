@@ -51,7 +51,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		claimValidatorsAddedByOtherRecipes: []claims.SessionClaimValidator{},
 	}
 
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 
 	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {

@@ -44,7 +44,7 @@ var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *epmodels.TypeInput, emailDeliveryIngredient *emaildelivery.Ingredient, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
-	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.handleError, onSuperTokensAPIError)
+	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {

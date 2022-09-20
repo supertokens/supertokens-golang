@@ -1,4 +1,4 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/* Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -13,18 +13,13 @@
  * under the License.
  */
 
-package supertokens
+package dashboard
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.9.0"
-
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14", "2.15"}
-)
-
-const DashboardVersion = "0.1"
+func Init(config dashboardmodels.TypeInput) supertokens.Recipe {
+	return recipeInit(config)
+}
