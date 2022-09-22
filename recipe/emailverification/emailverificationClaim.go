@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/everrors"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -31,7 +30,7 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 			// We consider people without email addresses as validated
 			return true, nil
 		} else {
-			return false, errors.New(everrors.UnknownUserIdErrorStr)
+			return false, errors.New("UNKNOWN_USER_ID")
 		}
 	}
 

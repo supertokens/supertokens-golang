@@ -21,7 +21,6 @@ import (
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
-	"github.com/supertokens/supertokens-golang/recipe/emailverification/everrors"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	sessErrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -38,7 +37,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			if sessionContainer != nil {
 				err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 				if err != nil {
-					if err.Error() == everrors.UnknownUserIdErrorStr {
+					if err.Error() == "UNKNOWN_USER_ID" {
 						return evmodels.VerifyEmailPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
 					}
 					return evmodels.VerifyEmailPOSTResponse{}, err
@@ -61,7 +60,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 
 		err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 		if err != nil {
-			if err.Error() == everrors.UnknownUserIdErrorStr {
+			if err.Error() == "UNKNOWN_USER_ID" {
 				return evmodels.IsEmailVerifiedGETResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
 			}
 			return evmodels.IsEmailVerifiedGETResponse{}, err
