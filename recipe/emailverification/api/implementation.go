@@ -38,7 +38,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			if sessionContainer != nil {
 				err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 				if err != nil {
-					if errors.As(err, &everrors.UnknownUserIdError{}) {
+					if err.Error() == everrors.UnknownUserIdErrorStr {
 						return evmodels.VerifyEmailPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
 					}
 					return evmodels.VerifyEmailPOSTResponse{}, err
@@ -61,7 +61,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 
 		err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 		if err != nil {
-			if errors.As(err, &everrors.UnknownUserIdError{}) {
+			if err.Error() == everrors.UnknownUserIdErrorStr {
 				return evmodels.IsEmailVerifiedGETResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
 			}
 			return evmodels.IsEmailVerifiedGETResponse{}, err

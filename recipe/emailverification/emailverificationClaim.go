@@ -1,6 +1,7 @@
 package emailverification
 
 import (
+	"errors"
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
@@ -30,7 +31,7 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 			// We consider people without email addresses as validated
 			return true, nil
 		} else {
-			return false, everrors.UnknownUserIdError{Msg: everrors.UnknownUserIdErrorStr}
+			return false, errors.New(everrors.UnknownUserIdErrorStr)
 		}
 	}
 

@@ -11,10 +11,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Email verification endpoints will now clear the session if called by a deleted/unknown user
 
-### Fixes
-
-- Adds default userContext for VerifySession (missed in the 0.8.0 release)
-
 
 ## [0.9.1] - 2022-09-20
 
