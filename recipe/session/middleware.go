@@ -26,7 +26,6 @@ import (
 func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessionOptions, otherHandler http.HandlerFunc) http.HandlerFunc {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dw := supertokens.MakeDoneWriter(w)
-		userContext := supertokens.MakeDefaultUserContextFromAPI(r)
 		session, err := (*recipeInstance.APIImpl.VerifySession)(options, sessmodels.APIOptions{
 			Config:               recipeInstance.Config,
 			OtherHandler:         otherHandler,
@@ -34,7 +33,7 @@ func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessio
 			Res:                  dw,
 			RecipeID:             recipeInstance.RecipeModule.GetRecipeID(),
 			RecipeImplementation: recipeInstance.RecipeImpl,
-		}, userContext)
+		}, &map[string]interface{}{})
 		if err != nil {
 			err = supertokens.ErrorHandler(err, r, dw)
 			if err != nil {

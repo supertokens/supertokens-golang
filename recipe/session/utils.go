@@ -24,6 +24,7 @@ import (
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
+	"github.com/supertokens/supertokens-golang/recipe/session/cookiesandheaders"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -300,12 +301,12 @@ func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedI
 	accessToken := response.AccessToken
 	refreshToken := response.RefreshToken
 	idRefreshToken := response.IDRefreshToken
-	setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
-	attachAccessTokenToCookie(config, res, accessToken.Token, accessToken.Expiry)
-	attachRefreshTokenToCookie(config, res, refreshToken.Token, refreshToken.Expiry)
-	setIDRefreshTokenInHeaderAndCookie(config, res, idRefreshToken.Token, idRefreshToken.Expiry)
+	cookiesandheaders.SetFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
+	cookiesandheaders.AttachAccessTokenToCookie(config, res, accessToken.Token, accessToken.Expiry)
+	cookiesandheaders.AttachRefreshTokenToCookie(config, res, refreshToken.Token, refreshToken.Expiry)
+	cookiesandheaders.SetIDRefreshTokenInHeaderAndCookie(config, res, idRefreshToken.Token, idRefreshToken.Expiry)
 	if response.AntiCsrfToken != nil {
-		setAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
+		cookiesandheaders.SetAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
 	}
 }
 
@@ -333,7 +334,7 @@ func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string,
 }
 
 func frontendHasInterceptor(req *http.Request) bool {
-	return getRidFromHeader(req) != nil
+	return cookiesandheaders.GetRidFromHeader(req) != nil
 }
 
 func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
