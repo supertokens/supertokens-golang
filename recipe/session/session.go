@@ -20,7 +20,6 @@ import (
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
-	"github.com/supertokens/supertokens-golang/recipe/session/cookiesandheaders"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -54,7 +53,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if err != nil {
 			return err
 		}
-		cookiesandheaders.ClearSessionFromCookie(config, session.res)
+		clearSessionFromCookie(config, session.res)
 		return nil
 	}
 
@@ -64,7 +63,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return nil, err
 		}
 		if sessionInformation == nil {
-			cookiesandheaders.ClearSessionFromCookie(config, session.res)
+			clearSessionFromCookie(config, session.res)
 			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.SessionData, nil
@@ -76,7 +75,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return err
 		}
 		if !updated {
-			cookiesandheaders.ClearSessionFromCookie(config, session.res)
+			clearSessionFromCookie(config, session.res)
 			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return nil
@@ -94,7 +93,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 
 		if resp == nil {
-			cookiesandheaders.ClearSessionFromCookie(config, session.res)
+			clearSessionFromCookie(config, session.res)
 			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 
@@ -102,8 +101,8 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 		if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
 			session.accessToken = resp.AccessToken.Token
-			cookiesandheaders.SetFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-			cookiesandheaders.AttachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
+			setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
+			attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
 		}
 		return nil
 	}
@@ -114,7 +113,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
-			cookiesandheaders.ClearSessionFromCookie(config, session.res)
+			clearSessionFromCookie(config, session.res)
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.TimeCreated, nil
@@ -126,7 +125,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
-			cookiesandheaders.ClearSessionFromCookie(config, session.res)
+			clearSessionFromCookie(config, session.res)
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.Expiry, nil

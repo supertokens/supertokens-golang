@@ -24,7 +24,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
-	"github.com/supertokens/supertokens-golang/recipe/session/cookiesandheaders"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -177,7 +176,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
-	resp := cookiesandheaders.GetCORSAllowedHeaders()
+	resp := getCORSAllowedHeaders()
 	if r.OpenIdRecipe != nil {
 		resp = append(resp, r.OpenIdRecipe.RecipeModule.GetAllCORSHeaders()...)
 	}

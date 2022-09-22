@@ -1680,6 +1680,18 @@ func TestEmailVerifyWithDeletedUser(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) != cdiVersion {
+		return
+	}
+
 	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
 	if err != nil {
 		t.Error(err.Error())

@@ -13,7 +13,7 @@
  * under the License.
  */
 
-package cookiesandheaders
+package session
 
 import (
 	"encoding/base64"
@@ -51,7 +51,7 @@ type TokenInfo struct {
 	Up  interface{} `json:"up"`
 }
 
-func ClearSessionFromCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter) {
+func clearSessionFromCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter) {
 	setCookie(config, res, accessTokenCookieKey, "", 0, "accessTokenPath")
 	setCookie(config, res, refreshTokenCookieKey, "", 0, "refreshTokenPath")
 	setCookie(config, res, idRefreshTokenCookieKey, "", 0, "accessTokenPath")
@@ -59,47 +59,47 @@ func ClearSessionFromCookie(config sessmodels.TypeNormalisedInput, res http.Resp
 	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
 }
 
-func AttachAccessTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
+func attachAccessTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
 	setCookie(config, res, accessTokenCookieKey, token, expiry, "accessTokenPath")
 }
 
-func AttachRefreshTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
+func attachRefreshTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
 	setCookie(config, res, refreshTokenCookieKey, token, expiry, "refreshTokenPath")
 }
 
-func GetAccessTokenFromCookie(req *http.Request) *string {
+func getAccessTokenFromCookie(req *http.Request) *string {
 	return getCookieValue(req, accessTokenCookieKey)
 }
 
-func GetRefreshTokenFromCookie(req *http.Request) *string {
+func getRefreshTokenFromCookie(req *http.Request) *string {
 	return getCookieValue(req, refreshTokenCookieKey)
 }
 
-func GetAntiCsrfTokenFromHeaders(req *http.Request) *string {
+func getAntiCsrfTokenFromHeaders(req *http.Request) *string {
 	return getHeader(req, antiCsrfHeaderKey)
 }
 
-func GetRidFromHeader(req *http.Request) *string {
+func getRidFromHeader(req *http.Request) *string {
 	return getHeader(req, ridHeaderKey)
 }
 
-func GetIDRefreshTokenFromCookie(req *http.Request) *string {
+func getIDRefreshTokenFromCookie(req *http.Request) *string {
 	return getCookieValue(req, idRefreshTokenCookieKey)
 }
 
-func SetAntiCsrfTokenInHeaders(res http.ResponseWriter, antiCsrfToken string) {
+func setAntiCsrfTokenInHeaders(res http.ResponseWriter, antiCsrfToken string) {
 	setHeader(res, antiCsrfHeaderKey, antiCsrfToken, false)
 	setHeader(res, "Access-Control-Expose-Headers", antiCsrfHeaderKey, true)
 }
 
-func SetIDRefreshTokenInHeaderAndCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
+func setIDRefreshTokenInHeaderAndCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
 	setHeader(res, idRefreshTokenHeaderKey, idRefreshToken+";"+fmt.Sprint(expiry), false)
 	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
 
 	setCookie(config, res, idRefreshTokenCookieKey, idRefreshToken, expiry, "accessTokenPath")
 }
 
-func SetFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uint64, jwtPayload interface{}) {
+func setFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uint64, jwtPayload interface{}) {
 	tokenInfo := &TokenInfo{
 		Uid: userId,
 		Ate: atExpiry,
@@ -111,7 +111,7 @@ func SetFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uin
 	setHeader(res, "Access-Control-Expose-Headers", frontTokenHeaderKey, true)
 }
 
-func GetCORSAllowedHeaders() []string {
+func getCORSAllowedHeaders() []string {
 	return []string{
 		antiCsrfHeaderKey, ridHeaderKey,
 	}
