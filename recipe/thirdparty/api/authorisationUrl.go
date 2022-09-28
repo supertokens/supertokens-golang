@@ -28,26 +28,35 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 
 	queryParams := options.Req.URL.Query()
 	thirdPartyId := queryParams.Get("thirdPartyId")
+	redirectURIOnProviderDashboard := queryParams.Get("redirectURIOnProviderDashboard")
 
+	var clientID *string
+	if clientIDStr := queryParams.Get("clientId"); clientIDStr != "" {
+		clientID = &clientIDStr
+	}
 	if len(thirdPartyId) == 0 {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
+	var err error
 
-	var provider *tpmodels.TypeProvider = findRightProvider(options.Providers, thirdPartyId, nil)
-
-	if provider == nil {
-		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+	provider, err := findProvider(options, thirdPartyId)
+	if err != nil {
+		return err
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, clientID, redirectURIOnProviderDashboard, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}
 	if result.OK != nil {
-		return supertokens.Send200Response(options.Res, map[string]interface{}{
+		respBody := map[string]interface{}{
 			"status": "OK",
-			"url":    result.OK.Url,
-		})
+			"url":    result.OK.URLWithQueryParams,
+		}
+		if result.OK.PKCECodeVerifier != nil {
+			respBody["pkceCodeVerifier"] = *result.OK.PKCECodeVerifier
+		}
+		return supertokens.Send200Response(options.Res, respBody)
 	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}

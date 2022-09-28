@@ -19,38 +19,37 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type UserInfo struct {
-	ID    string
-	Email *EmailStruct
+type TypeRedirectURIQueryParams = map[string]interface{}
+type TypeOAuthTokens = map[string]interface{}
+
+type TypeUserInfo struct {
+	ThirdPartyUserId        string                 `json:"thirdPartyUserId"`
+	EmailInfo               *TypeEmailInfo         `json:"emailInfo"`
+	RawResponseFromProvider map[string]interface{} `json:"rawResponseFromProvider"`
 }
 
-type EmailStruct struct {
-	ID         string `json:"id"`
+type TypeEmailInfo struct {
+	Email      string `json:"id"`
 	IsVerified bool   `json:"isVerified"`
 }
 
-type TypeProviderGetResponse struct {
-	AccessTokenAPI        AccessTokenAPI
-	AuthorisationRedirect AuthorisationRedirect
-	GetProfileInfo        func(authCodeResponse interface{}, userContext supertokens.UserContext) (UserInfo, error)
-	GetClientId           func(userContext supertokens.UserContext) string
-	GetRedirectURI        func(userContext supertokens.UserContext) (string, error)
-}
-
-type AccessTokenAPI struct {
-	URL    string
-	Params map[string]string
-}
-
-type AuthorisationRedirect struct {
-	URL    string
-	Params map[string]interface{}
+type TypeAuthorisationRedirect struct {
+	URLWithQueryParams string
+	PKCECodeVerifier   *string
 }
 
 type TypeProvider struct {
-	ID        string
-	Get       func(redirectURI *string, authCodeFromRequest *string, userContext supertokens.UserContext) TypeProviderGetResponse
-	IsDefault bool
+	ID string
+
+	GetAuthorisationRedirectURL    func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(clientID *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(clientID *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+}
+
+type TypeRedirectURIInfo struct {
+	RedirectURIOnProviderDashboard string                     `json:"redirectURIOnProviderDashboard"`
+	RedirectURIQueryParams         TypeRedirectURIQueryParams `json:"redirectURIQueryParams"`
+	PKCECodeVerifier               *string                    `json:"pkceCodeVerifier"`
 }
 
 type User struct {
@@ -84,4 +83,9 @@ type TypeNormalisedInput struct {
 type OverrideStruct struct {
 	Functions func(originalImplementation RecipeInterface) RecipeInterface
 	APIs      func(originalImplementation APIInterface) APIInterface
+}
+
+type TypeResponsesFromProvider struct {
+	OAuthTokens             TypeOAuthTokens
+	RawResponseFromProvider map[string]interface{}
 }

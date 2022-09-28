@@ -1,8 +1,13 @@
 package api
 
-import "github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
-func findRightProvider(providers []tpmodels.TypeProvider, thirdPartyId string, clientId *string) *tpmodels.TypeProvider {
+func findProvider(options tpmodels.APIOptions, thirdPartyId string) (*tpmodels.TypeProvider, error) {
+	providers := options.Providers
+
 	for i := 0; i < len(providers); i++ {
 		id := providers[i].ID
 
@@ -18,17 +23,9 @@ func findRightProvider(providers []tpmodels.TypeProvider, thirdPartyId string, c
 			}
 		}
 		if len(otherProvidersWithSameId) == 0 {
-			return &providers[i]
-		}
-
-		if clientId == nil && providers[i].IsDefault {
-			return &providers[i]
-		}
-
-		if *clientId == providers[i].Get(nil, nil, &map[string]interface{}{}).GetClientId(&map[string]interface{}{}) {
-			return &providers[i]
+			return &providers[i], nil
 		}
 	}
 
-	return nil
+	return nil, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
 }

@@ -241,45 +241,47 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			thirdparty.Init(&tpmodels.TypeInput{
 				Override: &tpmodels.OverrideStruct{
 					APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
-						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
-						ogSignInUpPOST := *originalImplementation.SignInUpPOST
+						// FIXME
+						// ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+						// ogSignInUpPOST := *originalImplementation.SignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
-							if gr != nil {
-								return tpmodels.AuthorisationUrlGETResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogAuthorisationUrlGET(provider, options, userContext)
-						}
+						// (*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+						// 	gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+						// 	if gr != nil {
+						// 		return tpmodels.AuthorisationUrlGETResponse{
+						// 			GeneralError: gr,
+						// 		}, nil
+						// 	}
+						// 	return ogAuthorisationUrlGET(provider, options, userContext)
+						// }
 
-						(*originalImplementation.SignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
-							if gr != nil {
-								return tpmodels.SignInUpPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
-						}
+						// (*originalImplementation.SignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+						// 	gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+						// 	if gr != nil {
+						// 		return tpmodels.SignInUpPOSTResponse{
+						// 			GeneralError: gr,
+						// 		}, nil
+						// 	}
+						// 	return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+						// }
 						return originalImplementation
 					},
 				},
 				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
 					Providers: []tpmodels.TypeProvider{
-						thirdparty.Google(tpmodels.GoogleConfig{
-							ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-							ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-						}),
-						thirdparty.Github(tpmodels.GithubConfig{
-							ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-							ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-						}),
-						thirdparty.Facebook(tpmodels.FacebookConfig{
-							ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-							ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-						}),
+						// FIXME
+						// thirdparty.Google(tpmodels.GoogleConfig{
+						// 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+						// 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+						// }),
+						// thirdparty.Github(tpmodels.GithubConfig{
+						// 	ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+						// 	ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+						// }),
+						// thirdparty.Facebook(tpmodels.FacebookConfig{
+						// 	ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+						// 	ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+						// }),
 						customAuth0Provider(),
 					},
 				},
@@ -292,28 +294,29 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogEmailExistsGET := *originalImplementation.EmailPasswordEmailExistsGET
 						ogSignUpPOST := *originalImplementation.EmailPasswordSignUpPOST
 						ogSignInPOST := *originalImplementation.EmailPasswordSignInPOST
-						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
-						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
+						// FIXME
+						// ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+						// ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
-							if gr != nil {
-								return tpmodels.AuthorisationUrlGETResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogAuthorisationUrlGET(provider, options, userContext)
-						}
+						// (*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+						// 	gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+						// 	if gr != nil {
+						// 		return tpmodels.AuthorisationUrlGETResponse{
+						// 			GeneralError: gr,
+						// 		}, nil
+						// 	}
+						// 	return ogAuthorisationUrlGET(provider, options, userContext)
+						// }
 
-						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
-							if gr != nil {
-								return tpepmodels.ThirdPartyOutput{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
-						}
+						// (*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
+						// 	gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+						// 	if gr != nil {
+						// 		return tpepmodels.ThirdPartyOutput{
+						// 			GeneralError: gr,
+						// 		}, nil
+						// 	}
+						// 	return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+						// }
 
 						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password consume", false)
@@ -371,18 +374,19 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					FormFields: formFields,
 				},
 				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-					}),
-					thirdparty.Github(tpmodels.GithubConfig{
-						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-					}),
-					thirdparty.Facebook(tpmodels.FacebookConfig{
-						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-					}),
+					// FIXME
+					// thirdparty.Google(tpmodels.GoogleConfig{
+					// 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+					// 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+					// }),
+					// thirdparty.Github(tpmodels.GithubConfig{
+					// 	ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+					// 	ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+					// }),
+					// thirdparty.Facebook(tpmodels.FacebookConfig{
+					// 	ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+					// 	ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+					// }),
 					customAuth0Provider(),
 				},
 			}),
@@ -455,18 +459,19 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
 				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-					}),
-					thirdparty.Github(tpmodels.GithubConfig{
-						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-					}),
-					thirdparty.Facebook(tpmodels.FacebookConfig{
-						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-					}),
+					// FIXME
+					// thirdparty.Google(tpmodels.GoogleConfig{
+					// 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+					// 	ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+					// }),
+					// thirdparty.Github(tpmodels.GithubConfig{
+					// 	ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+					// 	ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+					// }),
+					// thirdparty.Facebook(tpmodels.FacebookConfig{
+					// 	ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+					// 	ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+					// }),
 					customAuth0Provider(),
 				},
 				Override: &tplmodels.OverrideStruct{
@@ -474,28 +479,30 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
 						ogCreateCodePOST := *originalImplementation.CreateCodePOST
 						ogResendCodePOST := *originalImplementation.ResendCodePOST
-						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
-						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
-							if gr != nil {
-								return tpmodels.AuthorisationUrlGETResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogAuthorisationUrlGET(provider, options, userContext)
-						}
+						// FIXME
+						// ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+						// ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
-							if gr != nil {
-								return tplmodels.ThirdPartySignInUpOutput{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
-						}
+						// (*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+						// 	gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+						// 	if gr != nil {
+						// 		return tpmodels.AuthorisationUrlGETResponse{
+						// 			GeneralError: gr,
+						// 		}, nil
+						// 	}
+						// 	return ogAuthorisationUrlGET(provider, options, userContext)
+						// }
+
+						// (*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
+						// 	gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+						// 	if gr != nil {
+						// 		return tplmodels.ThirdPartySignInUpOutput{
+						// 			GeneralError: gr,
+						// 		}, nil
+						// 	}
+						// 	return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+						// }
 
 						(*originalImplementation.ConsumeCodePOST) = func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API consume code", false)
@@ -714,78 +721,79 @@ func customAuth0Provider() tpmodels.TypeProvider {
 	var response tpmodels.TypeProvider
 
 	response.ID = "auth0"
-	response.Get = func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-		if redirectURI == nil {
-			temp := ""
-			redirectURI = &temp
-		}
+	// FIXME
+	// response.Get = func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+	// 	if redirectURI == nil {
+	// 		temp := ""
+	// 		redirectURI = &temp
+	// 	}
 
-		if authCodeFromRequest == nil {
-			temp := ""
-			authCodeFromRequest = &temp
-		}
+	// 	if authCodeFromRequest == nil {
+	// 		temp := ""
+	// 		authCodeFromRequest = &temp
+	// 	}
 
-		return tpmodels.TypeProviderGetResponse{
+	// 	return tpmodels.TypeProviderGetResponse{
 
-			AccessTokenAPI: tpmodels.AccessTokenAPI{
-				URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
-				Params: map[string]string{
-					"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
-					"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
-					"grant_type":    "authorization_code",
-					"redirect_uri":  *redirectURI,
-					"code":          *authCodeFromRequest,
-				},
-			},
-			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-				URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize",
-				Params: map[string]interface{}{
-					"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
-					"scope":         "openid profile",
-					"response_type": "code",
-				},
-			},
-			GetClientId: func(userContext supertokens.UserContext) string {
-				return os.Getenv("AUTH0_CLIENT_ID")
-			},
-			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+	// 		AccessTokenAPI: tpmodels.AccessTokenAPI{
+	// 			URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
+	// 			Params: map[string]string{
+	// 				"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+	// 				"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
+	// 				"grant_type":    "authorization_code",
+	// 				"redirect_uri":  *redirectURI,
+	// 				"code":          *authCodeFromRequest,
+	// 			},
+	// 		},
+	// 		AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+	// 			URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize",
+	// 			Params: map[string]interface{}{
+	// 				"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
+	// 				"scope":         "openid profile",
+	// 				"response_type": "code",
+	// 			},
+	// 		},
+	// 		GetClientId: func(userContext supertokens.UserContext) string {
+	// 			return os.Getenv("AUTH0_CLIENT_ID")
+	// 		},
+	// 		GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
 
-				authCodeResponseJson, err := json.Marshal(authCodeResponse)
-				if err != nil {
-					return tpmodels.UserInfo{}, err
-				}
+	// 			authCodeResponseJson, err := json.Marshal(authCodeResponse)
+	// 			if err != nil {
+	// 				return tpmodels.UserInfo{}, err
+	// 			}
 
-				var accessTokenAPIResponse auth0GetProfileInfoInput
-				err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+	// 			var accessTokenAPIResponse auth0GetProfileInfoInput
+	// 			err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
 
-				if err != nil {
-					return tpmodels.UserInfo{}, err
-				}
+	// 			if err != nil {
+	// 				return tpmodels.UserInfo{}, err
+	// 			}
 
-				accessToken := accessTokenAPIResponse.AccessToken
-				authHeader := "Bearer " + accessToken
+	// 			accessToken := accessTokenAPIResponse.AccessToken
+	// 			authHeader := "Bearer " + accessToken
 
-				response, err := getAuth0AuthRequest(authHeader)
+	// 			response, err := getAuth0AuthRequest(authHeader)
 
-				if err != nil {
-					return tpmodels.UserInfo{}, err
-				}
+	// 			if err != nil {
+	// 				return tpmodels.UserInfo{}, err
+	// 			}
 
-				userInfo := response.(map[string]interface{})
+	// 			userInfo := response.(map[string]interface{})
 
-				ID := userInfo["sub"].(string)
-				email := userInfo["name"].(string)
+	// 			ID := userInfo["sub"].(string)
+	// 			email := userInfo["name"].(string)
 
-				return tpmodels.UserInfo{
-					ID: ID,
-					Email: &tpmodels.EmailStruct{
-						ID:         email,
-						IsVerified: true, // true if email is verified already
-					},
-				}, nil
-			},
-		}
-	}
+	// 			return tpmodels.UserInfo{
+	// 				ID: ID,
+	// 				Email: &tpmodels.EmailStruct{
+	// 					ID:         email,
+	// 					IsVerified: true, // true if email is verified already
+	// 				},
+	// 			}, nil
+	// 		},
+	// 	}
+	// }
 	return response
 
 }

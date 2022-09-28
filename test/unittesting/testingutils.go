@@ -497,65 +497,67 @@ func SessionRefresh(testUrl string, refreshToken string, idRefreshToken string, 
 }
 
 func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
+	// FIXME
 	return tpmodels.TypeProvider{
 		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL: "https://test.com/oauth/token",
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL: "https://test.com/oauth/auth",
-					Params: map[string]interface{}{
-						"scope":     "test",
-						"client_id": "supertokens",
-						"dynamic": func(req *http.Request) string {
-							return req.URL.Query().Get("dynamic")
-						},
-					},
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-					return tpmodels.UserInfo{
-						ID: "user",
-						Email: &tpmodels.EmailStruct{
-							ID:         "email@test.com",
-							IsVerified: true,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext *map[string]interface{}) string {
-					return "supertokens"
-				},
-			}
-		},
+		// Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
+		// 	return tpmodels.TypeProviderGetResponse{
+		// 		AccessTokenAPI: tpmodels.AccessTokenAPI{
+		// 			URL: "https://test.com/oauth/token",
+		// 		},
+		// 		AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+		// 			URL: "https://test.com/oauth/auth",
+		// 			Params: map[string]interface{}{
+		// 				"scope":     "test",
+		// 				"client_id": "supertokens",
+		// 				"dynamic": func(req *http.Request) string {
+		// 					return req.URL.Query().Get("dynamic")
+		// 				},
+		// 			},
+		// 		},
+		// 		GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
+		// 			return tpmodels.UserInfo{
+		// 				ID: "user",
+		// 				Email: &tpmodels.EmailStruct{
+		// 					ID:         "email@test.com",
+		// 					IsVerified: true,
+		// 				},
+		// 			}, nil
+		// 		},
+		// 		GetClientId: func(userContext *map[string]interface{}) string {
+		// 			return "supertokens"
+		// 		},
+		// 	}
+		// },
 	}
 }
 
 func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
+	// FIXME
 	return tpmodels.TypeProvider{
 		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL: "https://test.com/oauth/token",
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL: "https://test.com/oauth/auth",
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-					return tpmodels.UserInfo{
-						ID: "user",
-						Email: &tpmodels.EmailStruct{
-							ID:         "email@test.com",
-							IsVerified: true,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext *map[string]interface{}) string {
-					return "supertokens"
-				},
-			}
-		},
+		// Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
+		// 	return tpmodels.TypeProviderGetResponse{
+		// 		AccessTokenAPI: tpmodels.AccessTokenAPI{
+		// 			URL: "https://test.com/oauth/token",
+		// 		},
+		// 		AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+		// 			URL: "https://test.com/oauth/auth",
+		// 		},
+		// 		GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
+		// 			return tpmodels.UserInfo{
+		// 				ID: "user",
+		// 				Email: &tpmodels.EmailStruct{
+		// 					ID:         "email@test.com",
+		// 					IsVerified: true,
+		// 				},
+		// 			}, nil
+		// 		},
+		// 		GetClientId: func(userContext *map[string]interface{}) string {
+		// 			return "supertokens"
+		// 		},
+		// 	}
+		// },
 	}
 }
 

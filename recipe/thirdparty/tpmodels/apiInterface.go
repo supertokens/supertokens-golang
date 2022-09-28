@@ -24,22 +24,28 @@ import (
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET      *func(provider TypeProvider, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST             *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
-	AppleRedirectHandlerPOST *func(code string, state string, options APIOptions, userContext supertokens.UserContext) error
+	AuthorisationUrlGET      *func(provider TypeProvider, clientID *string, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider TypeProvider, clientID *string, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+	AppleRedirectHandlerPOST *func(infoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
 }
 
 type AuthorisationUrlGETResponse struct {
-	OK           *struct{ Url string }
+	OK           *TypeAuthorisationRedirect
 	GeneralError *supertokens.GeneralErrorResponse
+}
+
+type TypeSignInUpInput struct {
+	// Either of the below
+	RedirectURIInfo *TypeRedirectURIInfo `json:"redirectURIInfo"`
+	OAuthTokens     *TypeOAuthTokens     `json:"oAuthTokens"`
 }
 
 type SignInUpPOSTResponse struct {
 	OK *struct {
-		CreatedNewUser   bool
-		User             User
-		Session          sessmodels.SessionContainer
-		AuthCodeResponse interface{}
+		CreatedNewUser        bool
+		User                  User
+		Session               sessmodels.SessionContainer
+		ResponsesFromProvider TypeResponsesFromProvider
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse

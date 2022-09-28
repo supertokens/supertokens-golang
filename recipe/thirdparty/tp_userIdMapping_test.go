@@ -10,27 +10,27 @@ import (
 )
 
 func initForUserIdMappingTest(t *testing.T) {
+	// FIXME
+	// config := supertokens.TypeInput{
+	// 	Supertokens: &supertokens.ConnectionInfo{
+	// 		ConnectionURI: "http://localhost:8080",
+	// 	},
+	// 	AppInfo: supertokens.AppInfo{
+	// 		APIDomain:     "api.supertokens.io",
+	// 		AppName:       "SuperTokens",
+	// 		WebsiteDomain: "supertokens.io",
+	// 	},
+	// 	RecipeList: []supertokens.Recipe{Init(&tpmodels.TypeInput{
+	// 		SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+	// 			Providers: []tpmodels.TypeProvider{
+	// 				Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
+	// 			},
+	// 		},
+	// 	})},
+	// }
 
-	config := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{Init(&tpmodels.TypeInput{
-			SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-				Providers: []tpmodels.TypeProvider{
-					Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
-				},
-			},
-		})},
-	}
-
-	err := supertokens.Init(config)
-	assert.NoError(t, err)
+	// err := supertokens.Init(config)
+	// assert.NoError(t, err)
 }
 
 func TestCreateUserIdMappingUsingEmail(t *testing.T) {
@@ -50,7 +50,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignInUp("google", "googleID", "test@example.com")
+	signUpResponse, err := SignInUp("google", "googleID", "test@example.com", tpmodels.TypeResponsesFromProvider{})
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"

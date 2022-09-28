@@ -31,8 +31,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 		}
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
-		result, err := (*apiImplmentation.ThirdPartySignInUpPOST)(provider, code, authCodeResponse, redirectURI, options, userContext)
+	signInUpPOST := func(provider tpmodels.TypeProvider, clientID *string, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+		result, err := (*apiImplmentation.ThirdPartySignInUpPOST)(provider, clientID, input, options, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -40,10 +40,10 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 		if result.OK != nil {
 			return tpmodels.SignInUpPOSTResponse{
 				OK: &struct {
-					CreatedNewUser   bool
-					User             tpmodels.User
-					Session          sessmodels.SessionContainer
-					AuthCodeResponse interface{}
+					CreatedNewUser        bool
+					User                  tpmodels.User
+					Session               sessmodels.SessionContainer
+					ResponsesFromProvider tpmodels.TypeResponsesFromProvider
 				}{
 					CreatedNewUser: result.OK.CreatedNewUser,
 					User: tpmodels.User{
@@ -52,7 +52,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 						Email:      *result.OK.User.Email,
 						ThirdParty: *result.OK.User.ThirdParty,
 					},
-					Session: result.OK.Session,
+					Session:               result.OK.Session,
+					ResponsesFromProvider: result.OK.ResponsesFromProvider,
 				},
 			}, nil
 		} else if result.NoEmailGivenByProviderError != nil {

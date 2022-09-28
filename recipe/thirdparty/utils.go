@@ -66,29 +66,7 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 	isDefaultProvidersSet := map[string]bool{}
 	allProvidersSet := map[string]bool{}
 
-	for i := 0; i < len(providers); i++ {
-		id := providers[i].ID
-		allProvidersSet[id] = true
-		isDefault := providers[i].IsDefault
-
-		// if this is the only provider with this ID, then we mark this as default
-		var otherProvidersWithSameId []tpmodels.TypeProvider = []tpmodels.TypeProvider{}
-		for y := 0; y < len(providers); y++ {
-			if providers[y].ID == id && &providers[y] != &providers[i] {
-				otherProvidersWithSameId = append(otherProvidersWithSameId, providers[y])
-			}
-		}
-		if len(otherProvidersWithSameId) == 0 {
-			isDefault = true
-		}
-
-		if isDefault {
-			if isDefaultProvidersSet[id] {
-				return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "You have provided multiple third party providers that have the id: " + providers[i].ID + " and are marked as 'IsDefault: true'. Please only mark one of them as isDefault"}
-			}
-			isDefaultProvidersSet[id] = true
-		}
-	}
+	// TODO: check if all the provider IDs are unique
 
 	if len(isDefaultProvidersSet) != len(allProvidersSet) {
 		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "The providers array has multiple entries for the same third party provider. Please mark one of them as the default one by using 'IsDefault: true'"}

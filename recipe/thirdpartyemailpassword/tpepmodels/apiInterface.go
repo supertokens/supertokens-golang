@@ -23,12 +23,12 @@ import (
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET            *func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
-	AppleRedirectHandlerPOST       *func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error
+	AuthorisationUrlGET            *func(provider tpmodels.TypeProvider, clientID *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
+	AppleRedirectHandlerPOST       *func(infoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error
 	EmailPasswordEmailExistsGET    *func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error)
 	GeneratePasswordResetTokenPOST *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error)
 	PasswordResetPOST              *func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error)
-	ThirdPartySignInUpPOST         *func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (ThirdPartyOutput, error)
+	ThirdPartySignInUpPOST         *func(provider tpmodels.TypeProvider, clientID *string, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (ThirdPartyOutput, error)
 	EmailPasswordSignInPOST        *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (SignInPOSTResponse, error)
 	EmailPasswordSignUpPOST        *func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (SignUpPOSTResponse, error)
 }
@@ -68,10 +68,10 @@ type EmailpasswordOutput struct {
 
 type ThirdPartyOutput struct {
 	OK *struct {
-		CreatedNewUser   bool
-		User             User
-		AuthCodeResponse interface{}
-		Session          sessmodels.SessionContainer
+		CreatedNewUser        bool
+		User                  User
+		Session               sessmodels.SessionContainer
+		ResponsesFromProvider tpmodels.TypeResponsesFromProvider
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse

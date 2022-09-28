@@ -39,8 +39,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		}, nil
 	}
 
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, userContext)
 		if err != nil {
 			return tpmodels.SignInUpResponse{}, err
 		}

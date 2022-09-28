@@ -21,7 +21,7 @@ import (
 )
 
 func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterface {
-	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
