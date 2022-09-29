@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixes
+- Clears cookies before calling onUnauthorizedError handler if ClearCookies is nil or set to true
+- Email verification endpoints will now clear the session if called by a deleted/unknown user
+
 ## [0.9.2] - 2022-09-22
 ### Changed
 
