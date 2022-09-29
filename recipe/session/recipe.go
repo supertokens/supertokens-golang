@@ -196,7 +196,6 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		supertokens.LogDebugMessage("errorHandler: returning TRY_REFRESH_TOKEN")
 		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
-		supertokens.LogDebugMessage("errorHandler: returning TOKEN_THEFT_DETECTED")
 		supertokens.LogDebugMessage("errorHandler: clearing cookies because of TOKEN_THEFT_DETECTED response")
 		clearSessionFromCookie(r.Config, res)
 		errs := err.(errors.TokenTheftDetectedError)
