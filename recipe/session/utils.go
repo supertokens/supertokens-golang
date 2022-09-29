@@ -129,10 +129,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}
 			return sendTryRefreshTokenResponse(*recipeInstance, message, req, res)
 		},
-		OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
+		OnUnauthorised: func(message string, clearCookies bool, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
 			if err != nil {
 				return err
+			}
+			if clearCookies {
+				clearSessionFromCookie(recipeInstance.Config, res)
 			}
 			return sendUnauthorisedResponse(*recipeInstance, message, req, res)
 		},
