@@ -79,13 +79,13 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 }
 
 // TODO: enable below once implemented
-// func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
-// 	return providers.Apple(input)
-// }
+func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
+	return providers.Apple(input)
+}
 
-// func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
-// 	return providers.Facebook(input)
-// }
+func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
+	return providers.Facebook(input)
+}
 
 // func Github(input tpmodels.TypeGithubInput) tpmodels.TypeProvider {
 // 	return providers.Github(input)
