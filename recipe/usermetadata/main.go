@@ -25,7 +25,7 @@ func Init(config *usermetadatamodels.TypeInput) supertokens.Recipe {
 }
 
 func GetUserMetadata(userID string) (map[string]interface{}, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -33,7 +33,7 @@ func GetUserMetadata(userID string) (map[string]interface{}, error) {
 }
 
 func GetUserMetadataWithContext(userID string, userContext supertokens.UserContext) (map[string]interface{}, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -41,7 +41,7 @@ func GetUserMetadataWithContext(userID string, userContext supertokens.UserConte
 }
 
 func UpdateUserMetadata(userID string, metadataUpdate map[string]interface{}) (map[string]interface{}, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -49,7 +49,7 @@ func UpdateUserMetadata(userID string, metadataUpdate map[string]interface{}) (m
 }
 
 func UpdateUserMetadataWithContext(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
@@ -57,7 +57,7 @@ func UpdateUserMetadataWithContext(userID string, metadataUpdate map[string]inte
 }
 
 func ClearUserMetadata(userID string) error {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
@@ -65,7 +65,7 @@ func ClearUserMetadata(userID string) error {
 }
 
 func ClearUserMetadataWithContext(userID string, userContext supertokens.UserContext) error {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}

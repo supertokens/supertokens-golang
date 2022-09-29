@@ -22,6 +22,7 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	sessErrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -36,6 +37,9 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			if sessionContainer != nil {
 				err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 				if err != nil {
+					if err.Error() == "UNKNOWN_USER_ID" {
+						return evmodels.VerifyEmailPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
+					}
 					return evmodels.VerifyEmailPOSTResponse{}, err
 				}
 			}
@@ -56,6 +60,9 @@ func MakeAPIImplementation() evmodels.APIInterface {
 
 		err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 		if err != nil {
+			if err.Error() == "UNKNOWN_USER_ID" {
+				return evmodels.IsEmailVerifiedGETResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
+			}
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
 
@@ -81,7 +88,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
 		if email.UnknownUserIDError != nil {
-			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, errors.New("unknown userid")
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
 		}
 		if email.EmailDoesNotExistError != nil {
 			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to user %s because it doesn't have an email address.", userID))

@@ -30,7 +30,7 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 			// We consider people without email addresses as validated
 			return true, nil
 		} else {
-			return false, errors.New("should never come here: UnknownUserIdError or invalid result from getEmailForUserId")
+			return false, errors.New("UNKNOWN_USER_ID")
 		}
 	}
 

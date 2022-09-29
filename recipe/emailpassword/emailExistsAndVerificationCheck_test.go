@@ -1649,3 +1649,69 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 	assert.NotNil(t, res1.EmailVerificationInvalidTokenError)
 	assert.Nil(t, res1.OK)
 }
+
+func TestEmailVerifyWithDeletedUser(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
+			Init(&epmodels.TypeInput{}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) != cdiVersion {
+		return
+	}
+
+	resp, err := unittesting.SignupRequest("test@gmail.com", "testPass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	assert.Equal(t, 200, resp.StatusCode)
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	var response map[string]interface{}
+	_ = json.Unmarshal(data, &response)
+	assert.Equal(t, "OK", response["status"])
+
+	userId := response["user"].(map[string]interface{})["id"]
+	cookieData := unittesting.ExtractInfoFromResponse(resp)
+	supertokens.DeleteUser(userId.(string))
+
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, 401, resp1.StatusCode)
+}

@@ -13,18 +13,25 @@
  * under the License.
  */
 
-package supertokens
+package api
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.9.2"
+func Dashboard(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
+	if apiImplementation.DashboardGET == nil {
+		options.OtherHandler(options.Res, options.Req)
+		return nil
+	}
 
-var (
-	cdiSupported = []string{"2.8", "2.9", "2.10", "2.11", "2.12", "2.13", "2.14", "2.15"}
-)
+	htmlString, err := (*apiImplementation.DashboardGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	if err != nil {
+		return err
+	}
 
-const DashboardVersion = "0.1"
+	supertokens.SendHTMLResponse(options.Res, 200, htmlString)
+
+	return err
+}
