@@ -98,7 +98,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if err != nil {
 			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 				supertokens.LogDebugMessage("getSession: Clearing cookies because of UNAUTHORISED response")
-				clearSessionFromCookie(config, res)
 			}
 			return nil, err
 		}
@@ -129,7 +128,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		inputRefreshToken := getRefreshTokenFromCookie(req)
 		if inputRefreshToken == nil {
-			clearSessionFromCookie(config, res)
 			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token from cookies is undefined")
 			return nil, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 		}
@@ -141,7 +139,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			// we clear cookies if it is TokenTheftDetectedError
 			if (defaultErrors.As(err, &errors.UnauthorizedError{}) && (err.(errors.UnauthorizedError).ClearCookies == nil || *err.(errors.UnauthorizedError).ClearCookies)) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 				supertokens.LogDebugMessage("refreshSession: Clearing cookies because of UNAUTHORISED or TOKEN_THEFT_DETECTED response")
-				clearSessionFromCookie(config, res)
 			}
 			return nil, err
 		}

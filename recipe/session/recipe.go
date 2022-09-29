@@ -187,7 +187,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning UNAUTHORISED")
 		unauthErr := err.(errors.UnauthorizedError)
-		if unauthErr.ClearCookies != nil && *unauthErr.ClearCookies {
+		if unauthErr.ClearCookies == nil || *unauthErr.ClearCookies {
 			clearSessionFromCookie(r.Config, res)
 		}
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
