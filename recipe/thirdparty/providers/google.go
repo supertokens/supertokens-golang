@@ -29,7 +29,7 @@ import (
 const googleID = "google"
 
 func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
-	googleProvider := tpmodels.GoogleProvider{}
+	googleProvider := &tpmodels.GoogleProvider{}
 
 	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GoogleConfig, error) {
 		if input.Config == nil || len(input.Config) == 0 {
@@ -167,12 +167,10 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 		return userInfoResult, nil
 	}
 
-	googleProvider = tpmodels.GoogleProvider{
-		GetConfig:                      getConfig,
-		GetAuthorisationRedirectURL:    getAuthorisationRedirectURL,
-		ExchangeAuthCodeForOAuthTokens: exchangeAuthCodeForOAuthTokens,
-		GetUserInfo:                    getUserInfo,
-	}
+	googleProvider.GetConfig = getConfig
+	googleProvider.GetAuthorisationRedirectURL = getAuthorisationRedirectURL
+	googleProvider.ExchangeAuthCodeForOAuthTokens = exchangeAuthCodeForOAuthTokens
+	googleProvider.GetUserInfo = getUserInfo
 
 	if input.Override != nil {
 		googleProvider = input.Override(googleProvider)

@@ -21,7 +21,7 @@ import (
 
 type TypeGoogleInput struct {
 	Config   []GoogleConfig
-	Override func(provider GoogleProvider) GoogleProvider
+	Override func(provider *GoogleProvider) *GoogleProvider
 }
 
 type GoogleConfig struct {
@@ -40,7 +40,7 @@ type GoogleProvider struct {
 
 type TypeGoogleWorkspacesInput struct {
 	Config   []GoogleWorkspacesConfig
-	Override func(provider GoogleWorkspacesProvider) GoogleWorkspacesProvider
+	Override func(provider *GoogleWorkspacesProvider) *GoogleWorkspacesProvider
 }
 
 type GoogleWorkspacesConfig struct {
@@ -60,7 +60,7 @@ type GoogleWorkspacesProvider struct {
 
 type TypeGithubInput struct {
 	Config   []GithubConfig
-	Override func(provider GithubProvider) GithubProvider
+	Override func(provider *GithubProvider) *GithubProvider
 }
 
 type GithubConfig struct {
@@ -79,7 +79,7 @@ type GithubProvider struct {
 
 type TypeDiscordInput struct {
 	Config   []DiscordConfig
-	Override func(provider DiscordProvider) DiscordProvider
+	Override func(provider *DiscordProvider) *DiscordProvider
 }
 
 type DiscordConfig struct {
@@ -98,7 +98,7 @@ type DiscordProvider struct {
 
 type TypeFacebookInput struct {
 	Config   []FacebookConfig
-	Override func(provider FacebookProvider) FacebookProvider
+	Override func(provider *FacebookProvider) *FacebookProvider
 }
 
 type FacebookConfig struct {
@@ -117,7 +117,7 @@ type FacebookProvider struct {
 
 type TypeAppleInput struct {
 	Config   []AppleConfig
-	Override func(provider AppleProvider) AppleProvider
+	Override func(provider *AppleProvider) *AppleProvider
 }
 
 type AppleConfig struct {
@@ -142,7 +142,7 @@ type AppleProvider struct {
 
 type TypeOktaInput struct {
 	Config   []OktaConfig
-	Override func(provider OktaProvider) OktaProvider
+	Override func(provider *OktaProvider) *OktaProvider
 }
 
 type OktaConfig struct {
