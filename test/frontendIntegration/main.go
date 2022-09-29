@@ -86,7 +86,7 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 						PropertyNameInAccessTokenPayload: &jwtPropertyName,
 					},
 					ErrorHandlers: &sessmodels.ErrorHandlers{
-						OnUnauthorised: func(message string, clearCookies bool, req *http.Request, res http.ResponseWriter) error {
+						OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
 							res.Header().Set("Content-Type", "text/html; charset=utf-8")
 							res.WriteHeader(401)
 							res.Write([]byte(""))
@@ -140,7 +140,7 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			RecipeList: []supertokens.Recipe{
 				session.Init(&sessmodels.TypeInput{
 					ErrorHandlers: &sessmodels.ErrorHandlers{
-						OnUnauthorised: func(message string, clearCookies bool, req *http.Request, res http.ResponseWriter) error {
+						OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
 							res.Header().Set("Content-Type", "text/html; charset=utf-8")
 							res.WriteHeader(401)
 							res.Write([]byte(""))

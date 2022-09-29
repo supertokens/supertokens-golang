@@ -112,7 +112,7 @@ type OverrideStruct struct {
 }
 
 type ErrorHandlers struct {
-	OnUnauthorised       func(message string, clearCookies bool, req *http.Request, res http.ResponseWriter) error
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
 	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
 	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
 }
@@ -154,7 +154,7 @@ type APIOptions struct {
 }
 
 type NormalisedErrorHandlers struct {
-	OnUnauthorised       func(message string, clearCookies bool, req *http.Request, res http.ResponseWriter) error
+	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
 	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter) error
 	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
 	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
