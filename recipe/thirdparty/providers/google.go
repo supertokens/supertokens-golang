@@ -71,11 +71,7 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 			"client_id":              getActualClientIdFromDevelopmentClientId(config.ClientID),
 		}
 
-		url := "https://accounts.google.com/o/oauth2/v2/auth?%s"
-		if isUsingDevelopmentClientId(config.ClientID) {
-			redirectURIOnProviderDashboard = DevOauthRedirectUrl
-		}
-
+		url := "https://accounts.google.com/o/oauth2/v2/auth"
 		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 
 		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
