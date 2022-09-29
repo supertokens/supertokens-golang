@@ -38,7 +38,8 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 				if err != nil {
 					if err.Error() == "UNKNOWN_USER_ID" {
-						return evmodels.VerifyEmailPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
+						True := true
+						return evmodels.VerifyEmailPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided", ClearCookies: &True}
 					}
 					return evmodels.VerifyEmailPOSTResponse{}, err
 				}
@@ -61,7 +62,8 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		err := sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 		if err != nil {
 			if err.Error() == "UNKNOWN_USER_ID" {
-				return evmodels.IsEmailVerifiedGETResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
+				True := true
+				return evmodels.IsEmailVerifiedGETResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided", ClearCookies: &True}
 			}
 			return evmodels.IsEmailVerifiedGETResponse{}, err
 		}
@@ -88,7 +90,8 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
 		if email.UnknownUserIDError != nil {
-			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided"}
+			True := true
+			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, sessErrors.UnauthorizedError{Msg: "Unknown User ID provided", ClearCookies: &True}
 		}
 		if email.EmailDoesNotExistError != nil {
 			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to user %s because it doesn't have an email address.", userID))

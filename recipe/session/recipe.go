@@ -186,6 +186,10 @@ func (r *Recipe) getAllCORSHeaders() []string {
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning UNAUTHORISED")
+		unauthErr := err.(errors.UnauthorizedError)
+		if unauthErr.ClearCookies != nil && *unauthErr.ClearCookies {
+			clearSessionFromCookie(r.Config, res)
+		}
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning TRY_REFRESH_TOKEN")
