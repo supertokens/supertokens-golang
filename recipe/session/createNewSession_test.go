@@ -75,7 +75,7 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 	assert.Equal(t, 1, len(accessTokenPayload))
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
-	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixMilli()-1000))
+	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixNano()/1000000-1000))
 }
 
 func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
@@ -246,7 +246,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	// We have the boolean claim
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
-	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixMilli()-1000))
+	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixNano()/1000000-1000))
 
 	// We have the custom claim
 	// The resulting payload is different from the input: it doesn't container nil values
