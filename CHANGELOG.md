@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixes
+- Using UnixNano instead of UnixMilli to support go version < 1.17
+
 ## [0.9.3] - 2022-09-29
 ### Fixes
 - Clears cookies before calling onUnauthorizedError handler if ClearCookies is nil or set to true
