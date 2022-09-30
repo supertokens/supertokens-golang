@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.9.4] - 2022-09-30
 ### Fixes
 - Using UnixNano instead of UnixMilli to support go version < 1.17
 
