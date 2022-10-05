@@ -63,7 +63,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return nil, err
 		}
 		if sessionInformation == nil {
-			clearSessionFromCookie(config, session.res)
 			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.SessionData, nil
@@ -75,7 +74,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return err
 		}
 		if !updated {
-			clearSessionFromCookie(config, session.res)
 			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return nil
@@ -93,7 +91,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 
 		if resp == nil {
-			clearSessionFromCookie(config, session.res)
 			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 
@@ -113,7 +110,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
-			clearSessionFromCookie(config, session.res)
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.TimeCreated, nil
@@ -125,7 +121,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
-			clearSessionFromCookie(config, session.res)
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.Expiry, nil

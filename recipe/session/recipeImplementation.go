@@ -18,7 +18,6 @@ package session
 import (
 	"bytes"
 	"encoding/json"
-	defaultErrors "errors"
 	"fmt"
 	"net/http"
 	"reflect"
@@ -68,7 +67,9 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 				return nil, nil
 			}
 			supertokens.LogDebugMessage("getSession: UNAUTHORISED because idRefreshToken from cookies is nil")
-			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+
+			clearCookies := false
+			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?", ClearCookies: &clearCookies}
 		}
 
 		accessToken := getAccessTokenFromCookie(req)
@@ -96,10 +97,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 		if err != nil {
-			if defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				supertokens.LogDebugMessage("getSession: Clearing cookies because of UNAUTHORISED response")
-				clearSessionFromCookie(config, res)
-			}
 			return nil, err
 		}
 
@@ -129,7 +126,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		inputRefreshToken := getRefreshTokenFromCookie(req)
 		if inputRefreshToken == nil {
-			clearSessionFromCookie(config, res)
 			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token from cookies is undefined")
 			return nil, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
 		}
@@ -137,12 +133,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
 		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
 		if err != nil {
-			// we clear cookies if it is UnauthorizedError & ClearCookies in it is nil or true
-			// we clear cookies if it is TokenTheftDetectedError
-			if (defaultErrors.As(err, &errors.UnauthorizedError{}) && (err.(errors.UnauthorizedError).ClearCookies == nil || *err.(errors.UnauthorizedError).ClearCookies)) || defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
-				supertokens.LogDebugMessage("refreshSession: Clearing cookies because of UNAUTHORISED or TOKEN_THEFT_DETECTED response")
-				clearSessionFromCookie(config, res)
-			}
 			return nil, err
 		}
 		attachCreateOrRefreshSessionResponseToRes(config, res, response)

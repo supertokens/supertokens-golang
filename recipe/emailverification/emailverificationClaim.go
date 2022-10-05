@@ -64,7 +64,7 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 			claimValidator := booleanClaimValidators.HasValue(true, nil, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 				value := evClaim.GetValueFromPayload(payload, userContext)
-				return value == nil || (*getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000) || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*refetchTimeOnFalseInSeconds*1000)
+				return value == nil || (*getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000) || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*refetchTimeOnFalseInSeconds*1000)
 			}
 			return claimValidator
 		},
