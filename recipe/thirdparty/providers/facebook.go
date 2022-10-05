@@ -70,9 +70,6 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 		}
 
 		url := "https://www.facebook.com/v9.0/dialog/oauth"
-		if isUsingDevelopmentClientId(config.ClientID) {
-			redirectURIOnProviderDashboard = DevOauthRedirectUrl
-		}
 
 		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 

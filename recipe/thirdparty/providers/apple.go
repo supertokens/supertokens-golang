@@ -76,10 +76,6 @@ func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
 			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
 		}
 
-		if isUsingDevelopmentClientId(config.ClientID) {
-			redirectURIOnProviderDashboard = DevOauthRedirectUrl
-		}
-
 		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 
 		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
