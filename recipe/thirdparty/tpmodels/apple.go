@@ -23,5 +23,5 @@ type AppleClientSecret struct {
 
 type AppleProvider struct {
 	GetConfig func(clientID *string, userContext supertokens.UserContext) (AppleConfig, error)
-	TypeProvider
+	*TypeProvider
 }

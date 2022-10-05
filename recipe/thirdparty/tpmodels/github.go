@@ -17,5 +17,5 @@ type GithubConfig struct {
 
 type GithubProvider struct {
 	GetConfig func(clientID *string, userContext supertokens.UserContext) (GithubConfig, error)
-	TypeProvider
+	*TypeProvider
 }

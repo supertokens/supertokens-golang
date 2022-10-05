@@ -17,5 +17,5 @@ type GoogleConfig struct {
 
 type GoogleProvider struct {
 	GetConfig func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error)
-	TypeProvider
+	*TypeProvider
 }

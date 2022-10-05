@@ -17,5 +17,5 @@ type DiscordConfig struct {
 
 type DiscordProvider struct {
 	GetConfig func(clientID *string, userContext supertokens.UserContext) (DiscordConfig, error)
-	TypeProvider
+	*TypeProvider
 }

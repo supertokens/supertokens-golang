@@ -30,7 +30,7 @@ const googleID = "google"
 
 func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 	googleProvider := &tpmodels.GoogleProvider{
-		TypeProvider: tpmodels.TypeProvider{
+		TypeProvider: &tpmodels.TypeProvider{
 			ID: googleID,
 		},
 	}
@@ -55,7 +55,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 		scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-		config, err := (googleProvider.GetConfig)(clientID, userContext)
+		config, err := googleProvider.GetConfig(clientID, userContext)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
@@ -68,7 +68,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 			"access_type":            "offline",
 			"include_granted_scopes": "true",
 			"response_type":          "code",
-			"client_id":              getActualClientIdFromDevelopmentClientId(config.ClientID),
+			"client_id":              config.ClientID,
 		}
 
 		url := "https://accounts.google.com/o/oauth2/v2/auth"
@@ -177,7 +177,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 		return tpmodels.TypeProvider{}, errors.New("please specify a config or override GetConfig")
 	}
 
-	return googleProvider.TypeProvider, nil
+	return *googleProvider.TypeProvider, nil
 }
 
 func getGoogleAuthRequest(authHeader string) (interface{}, error) {

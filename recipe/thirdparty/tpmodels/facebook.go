@@ -17,5 +17,5 @@ type FacebookConfig struct {
 
 type FacebookProvider struct {
 	GetConfig func(clientID *string, userContext supertokens.UserContext) (FacebookConfig, error)
-	TypeProvider
+	*TypeProvider
 }

@@ -18,5 +18,5 @@ type GoogleWorkspacesConfig struct {
 
 type GoogleWorkspacesProvider struct {
 	GetConfig func(clientID *string, userContext supertokens.UserContext) (GoogleWorkspacesConfig, error)
-	TypeProvider
+	*TypeProvider
 }
