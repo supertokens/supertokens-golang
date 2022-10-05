@@ -71,6 +71,18 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 			"client_id":              config.ClientID,
 		}
 
+		var codeVerifier *string
+		if config.ClientSecret == "" {
+			challenge, verifier, err := generateCodeChallengeS256(32)
+			if err != nil {
+				return tpmodels.TypeAuthorisationRedirect{}, err
+			}
+			queryParams["access_type"] = "online"
+			queryParams["code_challenge"] = challenge
+			queryParams["code_challenge_method"] = "S256"
+			codeVerifier = &verifier
+		}
+
 		url := "https://accounts.google.com/o/oauth2/v2/auth"
 		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 
@@ -86,6 +98,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 
 		return tpmodels.TypeAuthorisationRedirect{
 			URLWithQueryParams: url + "?" + queryParamsStr,
+			PKCECodeVerifier:   codeVerifier,
 		}, nil
 	}
 
@@ -101,6 +114,12 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 			"client_secret": config.ClientSecret,
 			"grant_type":    "authorization_code",
 			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+		}
+		if config.ClientSecret == "" {
+			if redirectURIInfo.PKCECodeVerifier == nil {
+				return nil, errors.New("code verifier not found")
+			}
+			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
 		}
 		redirectURI := checkDevAndGetRedirectURI(
 			config.ClientID,
