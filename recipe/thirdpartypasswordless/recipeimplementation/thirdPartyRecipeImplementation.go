@@ -47,8 +47,9 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 
 		return tpmodels.SignInUpResponse{
 			OK: &struct {
-				CreatedNewUser bool
-				User           tpmodels.User
+				CreatedNewUser        bool
+				User                  tpmodels.User
+				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tpmodels.User{
@@ -57,6 +58,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 					TimeJoined: result.OK.User.TimeJoined,
 					ThirdParty: *result.OK.User.ThirdParty,
 				},
+				ResponsesFromProvider: result.OK.ResponsesFromProvider,
 			},
 		}, nil
 	}

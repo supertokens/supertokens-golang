@@ -36,11 +36,13 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		}
 		return tpmodels.SignInUpResponse{
 			OK: &struct {
-				CreatedNewUser bool
-				User           tpmodels.User
+				CreatedNewUser        bool
+				User                  tpmodels.User
+				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
 			}{
-				CreatedNewUser: response["createdNewUser"].(bool),
-				User:           *user,
+				CreatedNewUser:        response["createdNewUser"].(bool),
+				User:                  *user,
+				ResponsesFromProvider: responsesFromProvider,
 			},
 		}, nil
 	}

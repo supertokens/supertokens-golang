@@ -16,8 +16,7 @@
 package api
 
 import (
-	"errors"
-	"fmt"
+	"net/http"
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -43,15 +42,13 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		var oAuthTokens map[string]interface{} = nil
 		var err error
 
-		if input.RedirectURIInfo != nil && input.OAuthTokens == nil {
+		if input.RedirectURIInfo != nil {
 			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(clientID, *input.RedirectURIInfo, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
-		} else if input.OAuthTokens != nil {
-			oAuthTokens = *input.OAuthTokens
 		} else {
-			return tpmodels.SignInUpPOSTResponse{}, errors.New("should never come here")
+			oAuthTokens = *input.OAuthTokens
 		}
 
 		userInfo, err := provider.GetUserInfo(clientID, oAuthTokens, userContext)
@@ -66,9 +63,9 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.Email, tpmodels.TypeResponsesFromProvider{
-			OAuthTokens:             oAuthTokens,
-			RawResponseFromProvider: userInfo.RawResponseFromProvider,
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, tpmodels.TypeResponsesFromProvider{
+			OAuthTokens: oAuthTokens,
+			UserInfo:    userInfo.ResponseFromProvider,
 		}, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
@@ -105,25 +102,25 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 				User:           response.OK.User,
 				Session:        session,
 				ResponsesFromProvider: tpmodels.TypeResponsesFromProvider{
-					OAuthTokens:             oAuthTokens,
-					RawResponseFromProvider: userInfo.RawResponseFromProvider,
+					OAuthTokens: oAuthTokens,
+					UserInfo:    userInfo.ResponseFromProvider,
 				},
 			},
 		}, nil
 	}
 
-	appleRedirectHandlerPOST := func(infoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		queryParams, err := qs.Marshal(infoFromProvider)
+	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		queryParams, err := qs.Marshal(formPostInfoFromProvider)
 		if err != nil {
 			return err
 		}
+		// TODO extract redirect url from state
 		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?" + queryParams
 
-		options.Res.Header().Set("Content-Type", "text/html; charset=utf-8")
-		options.Res.WriteHeader(200)
+		options.Res.Header().Set("Location", redirectURL)
+		options.Res.WriteHeader(http.StatusFound)
 
-		fmt.Fprint(options.Res, "<html><head><script>window.location.replace(\""+redirectURL+"\");</script></head></html>")
 		return nil
 	}
 
@@ -132,12 +129,4 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		SignInUpPOST:             &signInUpPOST,
 		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
 	}
-}
-
-func getParamString(paramsMap map[string]string) (string, error) {
-	params := map[string]interface{}{}
-	for key, value := range paramsMap {
-		params[key] = value
-	}
-	return qs.Marshal(params)
 }

@@ -54,8 +54,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 					},
 					Session: result.OK.Session,
 					ResponsesFromProvider: tpmodels.TypeResponsesFromProvider{
-						OAuthTokens:             result.OK.ResponsesFromProvider.OAuthTokens,
-						RawResponseFromProvider: result.OK.ResponsesFromProvider.RawResponseFromProvider,
+						OAuthTokens: result.OK.ResponsesFromProvider.OAuthTokens,
+						UserInfo:    result.OK.ResponsesFromProvider.UserInfo,
 					},
 				},
 			}, nil
