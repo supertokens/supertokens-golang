@@ -29,7 +29,11 @@ import (
 const facebookID = "facebook"
 
 func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
-	facebookProvider := &tpmodels.FacebookProvider{}
+	facebookProvider := &tpmodels.FacebookProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: facebookID,
+		},
+	}
 
 	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.FacebookConfig, error) {
 		if input.Config == nil || len(input.Config) == 0 {
@@ -69,8 +73,19 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
 		}
 
-		url := "https://www.facebook.com/v9.0/dialog/oauth"
+		var codeVerifier *string
+		if config.ClientSecret == "" {
+			challenge, verifier, err := generateCodeChallengeS256(32)
+			if err != nil {
+				return tpmodels.TypeAuthorisationRedirect{}, err
+			}
+			queryParams["access_type"] = "online"
+			queryParams["code_challenge"] = challenge
+			queryParams["code_challenge_method"] = "S256"
+			codeVerifier = &verifier
+		}
 
+		url := "https://www.facebook.com/v9.0/dialog/oauth"
 		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 
 		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
@@ -85,6 +100,7 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 
 		return tpmodels.TypeAuthorisationRedirect{
 			URLWithQueryParams: url + "?" + queryParamsStr,
+			PKCECodeVerifier:   codeVerifier,
 		}, nil
 	}
 
@@ -99,6 +115,12 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
 			"client_secret": config.ClientSecret,
 			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+		}
+		if config.ClientSecret == "" {
+			if redirectURIInfo.PKCECodeVerifier == nil {
+				return nil, errors.New("code verifier not found")
+			}
+			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
 		}
 		redirectURI := checkDevAndGetRedirectURI(
 			config.ClientID,
@@ -132,9 +154,7 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		accessToken := accessTokenAPIResponse.AccessToken
-		authHeader := "Bearer " + accessToken
-		response, err := getFacebookAuthRequest(authHeader)
+		response, err := getFacebookAuthRequest(accessTokenAPIResponse.AccessToken)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
@@ -149,12 +169,12 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 			return userInfoResult, nil
 		}
 
-		isVerified := userInfo["verified_email"].(bool)
+		isVerified, isVerifiedOk := userInfo["verified_email"].(bool)
 		userInfoResult := tpmodels.TypeUserInfo{
 			ThirdPartyUserId: ID,
 			EmailInfo: &tpmodels.EmailStruct{
 				ID:         email,
-				IsVerified: isVerified,
+				IsVerified: isVerifiedOk && isVerified,
 			},
 			ResponseFromProvider: userInfo,
 		}
@@ -170,100 +190,8 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 		facebookProvider = input.Override(facebookProvider)
 	}
 
-	return tpmodels.TypeProvider{
-		ID: facebookID,
-
-		GetAuthorisationRedirectURL: func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return facebookProvider.GetAuthorisationRedirectURL(clientID, redirectURIOnProviderDashboard, userContext)
-		},
-
-		ExchangeAuthCodeForOAuthTokens: func(clientID *string, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return facebookProvider.ExchangeAuthCodeForOAuthTokens(clientID, redirectInfo, userContext)
-		},
-
-		GetUserInfo: func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			return facebookProvider.GetUserInfo(clientID, oAuthTokens, userContext)
-		},
-	}
+	return *facebookProvider.TypeProvider
 }
-
-// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-// 	return tpmodels.TypeProvider{
-// 		ID: facebookID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
-// 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
-// 			}
-
-// 			authorisationRedirectURL := "https://www.facebook.com/v9.0/dialog/oauth"
-// 			scopes := []string{"email"}
-// 			if config.Scope != nil {
-// 				scopes = config.Scope
-// 			}
-
-// 			authorizationRedirectParams := map[string]interface{}{
-// 				"scope":         strings.Join(scopes, " "),
-// 				"response_type": "code",
-// 				"client_id":     config.ClientID,
-// 			}
-
-// 			return tpmodels.TypeProviderGetResponse{
-// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 					URL:    accessTokenAPIURL,
-// 					Params: accessTokenAPIParams,
-// 				},
-// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 					URL:    authorisationRedirectURL,
-// 					Params: authorizationRedirectParams,
-// 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					var accessTokenAPIResponse facebookGetProfileInfoInput
-// 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					accessToken := accessTokenAPIResponse.AccessToken
-// 					response, err := getFacebookAuthRequest(accessToken)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					userInfo := response.(map[string]interface{})
-// 					ID := userInfo["id"].(string)
-// 					email, emailOk := userInfo["email"].(string)
-// 					if !emailOk {
-// 						return tpmodels.UserInfo{
-// 							ID: ID,
-// 						}, nil
-// 					}
-// 					isVerified, isVerifiedOk := userInfo["verified_email"].(bool)
-// 					return tpmodels.UserInfo{
-// 						ID: ID,
-// 						Email: &tpmodels.EmailStruct{
-// 							ID:         email,
-// 							IsVerified: isVerified && isVerifiedOk,
-// 						},
-// 					}, nil
-// 				},
-// 				GetClientId: func(userContext supertokens.UserContext) string {
-// 					return config.ClientID
-// 				},
-// 			}
-// 		},
-// 		IsDefault: config.IsDefault,
-// 	}
-// }
 
 func getFacebookAuthRequest(accessToken string) (interface{}, error) {
 	url := "https://graph.facebook.com/me"

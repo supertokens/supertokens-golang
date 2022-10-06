@@ -34,7 +34,11 @@ import (
 const appleID = "apple"
 
 func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
-	appleProvider := &tpmodels.AppleProvider{}
+	appleProvider := &tpmodels.AppleProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: appleID,
+		},
+	}
 
 	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.AppleConfig, error) {
 		if input.Config == nil || len(input.Config) == 0 {
@@ -179,21 +183,7 @@ func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
 		appleProvider = input.Override(appleProvider)
 	}
 
-	return tpmodels.TypeProvider{
-		ID: appleID,
-
-		GetAuthorisationRedirectURL: func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return appleProvider.GetAuthorisationRedirectURL(clientID, redirectURIOnProviderDashboard, userContext)
-		},
-
-		ExchangeAuthCodeForOAuthTokens: func(clientID *string, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return appleProvider.ExchangeAuthCodeForOAuthTokens(clientID, redirectInfo, userContext)
-		},
-
-		GetUserInfo: func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			return appleProvider.GetUserInfo(clientID, oAuthTokens, userContext)
-		},
-	}
+	return *appleProvider.TypeProvider
 }
 
 func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error) {
