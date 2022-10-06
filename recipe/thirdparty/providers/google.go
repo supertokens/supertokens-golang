@@ -28,19 +28,19 @@ import (
 
 const googleID = "google"
 
-func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
-	googleProvider := &tpmodels.GoogleProvider{}
+func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
+	googleProvider := &tpmodels.GoogleProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: googleID,
+		},
+	}
 
 	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GoogleConfig, error) {
-		if input.Config == nil || len(input.Config) == 0 {
-			return tpmodels.GoogleConfig{}, errors.New("please specify a config or override GetConfig")
-		}
-
 		if clientID == nil && len(input.Config) > 1 {
 			return tpmodels.GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
-		if clientID == nil && len(input.Config) == 1 {
+		if clientID == nil {
 			return input.Config[0], nil
 		}
 
@@ -55,7 +55,7 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 		scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-		config, err := (googleProvider.GetConfig)(clientID, userContext)
+		config, err := googleProvider.GetConfig(clientID, userContext)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
@@ -68,7 +68,19 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 			"access_type":            "offline",
 			"include_granted_scopes": "true",
 			"response_type":          "code",
-			"client_id":              getActualClientIdFromDevelopmentClientId(config.ClientID),
+			"client_id":              config.ClientID,
+		}
+
+		var codeVerifier *string
+		if config.ClientSecret == "" {
+			challenge, verifier, err := generateCodeChallengeS256(32)
+			if err != nil {
+				return tpmodels.TypeAuthorisationRedirect{}, err
+			}
+			queryParams["access_type"] = "online"
+			queryParams["code_challenge"] = challenge
+			queryParams["code_challenge_method"] = "S256"
+			codeVerifier = &verifier
 		}
 
 		url := "https://accounts.google.com/o/oauth2/v2/auth"
@@ -86,6 +98,7 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 
 		return tpmodels.TypeAuthorisationRedirect{
 			URLWithQueryParams: url + "?" + queryParamsStr,
+			PKCECodeVerifier:   codeVerifier,
 		}, nil
 	}
 
@@ -101,6 +114,12 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 			"client_secret": config.ClientSecret,
 			"grant_type":    "authorization_code",
 			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+		}
+		if config.ClientSecret == "" {
+			if redirectURIInfo.PKCECodeVerifier == nil {
+				return nil, errors.New("code verifier not found")
+			}
+			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
 		}
 		redirectURI := checkDevAndGetRedirectURI(
 			config.ClientID,
@@ -145,8 +164,8 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 		email := userInfo["email"].(string)
 		if email == "" {
 			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId:        ID,
-				RawResponseFromProvider: userInfo,
+				ThirdPartyUserId:     ID,
+				ResponseFromProvider: userInfo,
 			}
 			return userInfoResult, nil
 		}
@@ -154,11 +173,11 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 		isVerified := userInfo["verified_email"].(bool)
 		userInfoResult := tpmodels.TypeUserInfo{
 			ThirdPartyUserId: ID,
-			EmailInfo: &tpmodels.TypeEmailInfo{
-				Email:      email,
+			EmailInfo: &tpmodels.EmailStruct{
+				ID:         email,
 				IsVerified: isVerified,
 			},
-			RawResponseFromProvider: userInfo,
+			ResponseFromProvider: userInfo,
 		}
 		return userInfoResult, nil
 	}
@@ -172,21 +191,12 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 		googleProvider = input.Override(googleProvider)
 	}
 
-	return tpmodels.TypeProvider{
-		ID: googleID,
-
-		GetAuthorisationRedirectURL: func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return googleProvider.GetAuthorisationRedirectURL(clientID, redirectURIOnProviderDashboard, userContext)
-		},
-
-		ExchangeAuthCodeForOAuthTokens: func(clientID *string, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return googleProvider.ExchangeAuthCodeForOAuthTokens(clientID, redirectInfo, userContext)
-		},
-
-		GetUserInfo: func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			return googleProvider.GetUserInfo(clientID, oAuthTokens, userContext)
-		},
+	if len(input.Config) == 0 && (&googleProvider.GetConfig == &getConfig) {
+		// no config is provided and GetConfig is not overridden
+		return tpmodels.TypeProvider{}, errors.New("please specify a config or override GetConfig")
 	}
+
+	return *googleProvider.TypeProvider, nil
 }
 
 func getGoogleAuthRequest(authHeader string) (interface{}, error) {

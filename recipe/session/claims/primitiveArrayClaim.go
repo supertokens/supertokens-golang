@@ -46,7 +46,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
+						return *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -63,7 +63,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 							},
 						}
 					}
-					ageInSeconds := (time.Now().UnixMilli() - *getLastRefetchTime(payload, userContext)) / 1000
+					ageInSeconds := (time.Now().UnixNano()/1000000 - *getLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -107,7 +107,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
+						return *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -124,7 +124,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 							},
 						}
 					}
-					ageInSeconds := (time.Now().UnixMilli() - *getLastRefetchTime(payload, userContext)) / 1000
+					ageInSeconds := (time.Now().UnixNano()/1000000 - *getLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -168,7 +168,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
+						return *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -185,7 +185,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 							},
 						}
 					}
-					ageInSeconds := (time.Now().UnixMilli() - *getLastRefetchTime(payload, userContext)) / 1000
+					ageInSeconds := (time.Now().UnixNano()/1000000 - *getLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,
@@ -230,7 +230,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 						return true
 					}
 					if maxAgeInSeconds != nil {
-						return *getLastRefetchTime(payload, userContext) < time.Now().UnixMilli()-*maxAgeInSeconds*1000
+						return *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000
 					}
 					return false
 				},
@@ -247,7 +247,7 @@ func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInS
 							},
 						}
 					}
-					ageInSeconds := (time.Now().UnixMilli() - *getLastRefetchTime(payload, userContext)) / 1000
+					ageInSeconds := (time.Now().UnixNano()/1000000 - *getLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,

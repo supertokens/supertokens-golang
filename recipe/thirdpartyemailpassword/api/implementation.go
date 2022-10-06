@@ -151,8 +151,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-	appleRedirectHandlerPOST := func(infoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		return ogAppleRedirectHandlerPOST(infoFromProvider, options, userContext)
+	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(formPostInfoFromProvider, options, userContext)
 	}
 	result := tpepmodels.APIInterface{
 		AuthorisationUrlGET:            &authorisationUrlGET,

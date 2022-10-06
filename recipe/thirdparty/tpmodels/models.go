@@ -23,13 +23,13 @@ type TypeRedirectURIQueryParams = map[string]interface{}
 type TypeOAuthTokens = map[string]interface{}
 
 type TypeUserInfo struct {
-	ThirdPartyUserId        string                 `json:"thirdPartyUserId"`
-	EmailInfo               *TypeEmailInfo         `json:"emailInfo"`
-	RawResponseFromProvider map[string]interface{} `json:"rawResponseFromProvider"`
+	ThirdPartyUserId     string                 `json:"thirdPartyUserId"`
+	EmailInfo            *EmailStruct           `json:"emailInfo"`
+	ResponseFromProvider map[string]interface{} `json:"responseFromProvider"`
 }
 
-type TypeEmailInfo struct {
-	Email      string `json:"id"`
+type EmailStruct struct {
+	ID         string `json:"id"`
 	IsVerified bool   `json:"isVerified"`
 }
 
@@ -86,6 +86,6 @@ type OverrideStruct struct {
 }
 
 type TypeResponsesFromProvider struct {
-	OAuthTokens             TypeOAuthTokens
-	RawResponseFromProvider map[string]interface{}
+	OAuthTokens TypeOAuthTokens
+	UserInfo    map[string]interface{}
 }

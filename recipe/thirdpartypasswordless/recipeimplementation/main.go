@@ -50,8 +50,9 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		}
 		return tplmodels.ThirdPartySignInUp{
 			OK: &struct {
-				CreatedNewUser bool
-				User           tplmodels.User
+				CreatedNewUser        bool
+				User                  tplmodels.User
+				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tplmodels.User{
@@ -60,6 +61,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 					TimeJoined: result.OK.User.TimeJoined,
 					ThirdParty: &result.OK.User.ThirdParty,
 				},
+				ResponsesFromProvider: result.OK.ResponsesFromProvider,
 			},
 		}, nil
 	}

@@ -26,7 +26,8 @@ type RecipeInterface struct {
 
 type SignInUpResponse struct {
 	OK *struct {
-		CreatedNewUser bool
-		User           User
+		CreatedNewUser        bool
+		User                  User
+		ResponsesFromProvider TypeResponsesFromProvider
 	}
 }

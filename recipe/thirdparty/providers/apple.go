@@ -161,11 +161,11 @@ func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
 		}
 		userInfo := tpmodels.TypeUserInfo{
 			ThirdPartyUserId: id,
-			EmailInfo: &tpmodels.TypeEmailInfo{
-				Email:      email,
+			EmailInfo: &tpmodels.EmailStruct{
+				ID:         email,
 				IsVerified: isVerified,
 			},
-			RawResponseFromProvider: claims,
+			ResponseFromProvider: claims,
 		}
 		return userInfo, nil
 	}

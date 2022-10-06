@@ -143,8 +143,8 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 		email := userInfo["email"].(string)
 		if email == "" {
 			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId:        ID,
-				RawResponseFromProvider: userInfo,
+				ThirdPartyUserId:     ID,
+				ResponseFromProvider: userInfo,
 			}
 			return userInfoResult, nil
 		}
@@ -152,11 +152,11 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 		isVerified := userInfo["verified_email"].(bool)
 		userInfoResult := tpmodels.TypeUserInfo{
 			ThirdPartyUserId: ID,
-			EmailInfo: &tpmodels.TypeEmailInfo{
-				Email:      email,
+			EmailInfo: &tpmodels.EmailStruct{
+				ID:         email,
 				IsVerified: isVerified,
 			},
-			RawResponseFromProvider: userInfo,
+			ResponseFromProvider: userInfo,
 		}
 		return userInfoResult, nil
 	}

@@ -1713,5 +1713,18 @@ func TestEmailVerifyWithDeletedUser(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	cookieData1 := unittesting.ExtractInfoFromResponse(resp1)
+
 	assert.Equal(t, 401, resp1.StatusCode)
+	assert.Equal(t, "", cookieData1["sAccessToken"])
+	assert.Equal(t, "", cookieData1["sRefreshToken"])
+	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
+
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
+
+	assert.Equal(t, "", cookieData1["accessTokenDomain"])
+	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
+	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
 }

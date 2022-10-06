@@ -64,7 +64,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 	} else if bodyParams.OAuthTokens != nil {
 		input.OAuthTokens = bodyParams.OAuthTokens
 	} else {
-		return supertokens.BadInputError{Msg: "Please provide one of callbackParams or authResponse in the request body"}
+		return supertokens.BadInputError{Msg: "Please provide one of redirectURIInfo or oAuthTokens in the request body"}
 	}
 
 	provider, err := findProvider(options, bodyParams.ThirdPartyId)

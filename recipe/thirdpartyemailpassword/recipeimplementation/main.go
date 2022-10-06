@@ -99,8 +99,9 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 
 		return tpepmodels.SignInUpResponse{
 			OK: &struct {
-				CreatedNewUser bool
-				User           tpepmodels.User
+				CreatedNewUser        bool
+				User                  tpepmodels.User
+				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tpepmodels.User{
@@ -109,6 +110,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 					TimeJoined: result.OK.User.TimeJoined,
 					ThirdParty: &result.OK.User.ThirdParty,
 				},
+				ResponsesFromProvider: result.OK.ResponsesFromProvider,
 			},
 		}, nil
 	}
