@@ -91,9 +91,9 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 // 	return providers.Github(input)
 // }
 
-// func Discord(input tpmodels.TypeDiscordInput) tpmodels.TypeProvider {
-// 	return providers.Discord(input)
-// }
+func Discord(input tpmodels.TypeDiscordInput) tpmodels.TypeProvider {
+	return providers.Discord(input)
+}
 
 // func GoogleWorkspaces(input tpmodels.TypeGoogleWorkspacesInput) tpmodels.TypeProvider {
 // 	return providers.GoogleWorkspaces(input)
