@@ -15,136 +15,196 @@
 
 package providers
 
+import (
+	"errors"
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/derekstavis/go-qs"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
+
 const githubID = "github"
 
-// func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-// 	return tpmodels.TypeProvider{
-// 		ID: githubID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://github.com/login/oauth/access_token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
-// 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
-// 			}
+func Github(input tpmodels.TypeGithubInput) tpmodels.TypeProvider {
+	githubProvider := &tpmodels.GithubProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: githubID,
+		},
+	}
 
-// 			authorisationRedirectURL := "https://github.com/login/oauth/authorize"
-// 			scopes := []string{"read:user", "user:email"}
-// 			if config.Scope != nil {
-// 				scopes = config.Scope
-// 			}
+	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GithubConfig, error) {
+		if input.Config == nil || len(input.Config) == 0 {
+			return tpmodels.GithubConfig{}, errors.New("please specify a config or override GetConfig")
+		}
 
-// 			var additionalParams map[string]interface{} = nil
-// 			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-// 				additionalParams = config.AuthorisationRedirect.Params
-// 			}
+		if clientID == nil && len(input.Config) > 1 {
+			return tpmodels.GithubConfig{}, errors.New("please specify a clientID as there are multiple configs")
+		}
 
-// 			authorizationRedirectParams := map[string]interface{}{
-// 				"scope":     strings.Join(scopes, " "),
-// 				"client_id": config.ClientID,
-// 			}
-// 			for key, value := range additionalParams {
-// 				authorizationRedirectParams[key] = value
-// 			}
+		if clientID == nil && len(input.Config) == 1 {
+			return input.Config[0], nil
+		}
 
-// 			return tpmodels.TypeProviderGetResponse{
-// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 					URL:    accessTokenAPIURL,
-// 					Params: accessTokenAPIParams,
-// 				},
-// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 					URL:    authorisationRedirectURL,
-// 					Params: authorizationRedirectParams,
-// 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					var accessTokenAPIResponse githubGetProfileInfoInput
-// 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					accessToken := accessTokenAPIResponse.AccessToken
-// 					authHeader := "Bearer " + accessToken
-// 					response, err := getGithubAuthRequest(authHeader)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					userInfo := response.(map[string]interface{})
-// 					emailsInfoResponse, err := getGithubEmailsInfo(authHeader)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					emailsInfo := emailsInfoResponse.([]interface{})
-// 					ID := fmt.Sprintf("%f", userInfo["id"].(float64)) // github userId will be a number
-// 					// if user has choosen not to show their email publicly, userInfo here will
-// 					// have email as null. So we instead get the info from the emails api and
-// 					// use the email which is maked as primary one.
-// 					var emailInfo map[string]interface{}
-// 					for _, info := range emailsInfo {
-// 						emailInfoMap := info.(map[string]interface{})
-// 						if emailInfoMap["primary"].(bool) {
-// 							emailInfo = emailInfoMap
-// 							break
-// 						}
-// 					}
-// 					if emailInfo == nil {
-// 						return tpmodels.UserInfo{
-// 							ID: ID,
-// 						}, nil
-// 					}
-// 					isVerified := false
-// 					if emailInfo != nil {
-// 						isVerified = emailInfo["verified"].(bool)
-// 					}
-// 					return tpmodels.UserInfo{
-// 						ID: ID,
-// 						Email: &tpmodels.EmailStruct{
-// 							ID:         emailInfo["email"].(string),
-// 							IsVerified: isVerified,
-// 						},
-// 					}, nil
-// 				},
-// 				GetClientId: func(userContext supertokens.UserContext) string {
-// 					return config.ClientID
-// 				},
-// 			}
-// 		},
-// 		IsDefault: config.IsDefault,
-// 	}
-// }
+		for _, config := range input.Config {
+			if config.ClientID == *clientID {
+				return config, nil
+			}
+		}
 
-// func getGithubAuthRequest(authHeader string) (interface{}, error) {
-// 	url := "https://api.github.com/user"
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	req.Header.Add("Authorization", authHeader)
-// 	req.Header.Add("Accept", "application/vnd.github.v3+json")
-// 	return doGetRequest(req)
-// }
+		return tpmodels.GithubConfig{}, errors.New("config for specified clientID not found")
+	}
 
-// func getGithubEmailsInfo(authHeader string) (interface{}, error) {
-// 	url := "https://api.github.com/user/emails"
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	req.Header.Add("Authorization", authHeader)
-// 	req.Header.Add("Accept", "application/vnd.github.v3+json")
-// 	return doGetRequest(req)
-// }
+	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		scopes := []string{"read:user", "user:email"}
+		config, err := (githubProvider.GetConfig)(clientID, userContext)
+		if err != nil {
+			return tpmodels.TypeAuthorisationRedirect{}, err
+		}
+		if config.Scope != nil {
+			scopes = config.Scope
+		}
 
-// type githubGetProfileInfoInput struct {
-// 	AccessToken string `json:"access_token"`
-// 	ExpiresIn   int    `json:"expires_in"`
-// 	TokenType   string `json:"token_type"`
-// }
+		queryParams := map[string]interface{}{
+			"scope":     strings.Join(scopes, " "),
+			"client_id": getActualClientIdFromDevelopmentClientId(config.ClientID),
+		}
+
+		url := "https://github.com/login/oauth/authorize"
+		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
+
+		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
+		if err != nil {
+			return tpmodels.TypeAuthorisationRedirect{}, err
+		}
+
+		queryParamsStr, err := qs.Marshal(queryParams)
+		if err != nil {
+			return tpmodels.TypeAuthorisationRedirect{}, err
+		}
+
+		return tpmodels.TypeAuthorisationRedirect{
+			URLWithQueryParams: url + "?" + queryParamsStr,
+			PKCECodeVerifier:   nil,
+		}, nil
+	}
+
+	exchangeAuthCodeForOAuthTokens := func(clientID *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		config, err := githubProvider.GetConfig(clientID, userContext)
+		if err != nil {
+			return nil, err
+		}
+
+		accessTokenAPIURL := "https://github.com/login/oauth/access_token"
+		accessTokenAPIParams := map[string]string{
+			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
+			"client_secret": config.ClientSecret,
+			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+		}
+
+		redirectURI := checkDevAndGetRedirectURI(
+			config.ClientID,
+			redirectURIInfo.RedirectURIOnProviderDashboard,
+			userContext,
+		)
+
+		accessTokenAPIParams["redirect_uri"] = redirectURI
+
+		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
+		if err != nil {
+			return nil, err
+		}
+
+		authResponse := tpmodels.TypeOAuthTokens{}
+
+		for k, v := range authResponseFromRequest {
+			authResponse[k] = v
+		}
+
+		return authResponse, nil
+	}
+
+	getUserInfo := func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		authHeader := "Bearer " + oAuthTokens["access_token"].(string)
+		response, err := getGithubAuthRequest(authHeader)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+		userInfo := response.(map[string]interface{})
+		ID := fmt.Sprint(userInfo["id"]) // github userId will be a number
+
+		emailsInfoResponse, err := getGithubEmailsInfo(authHeader)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+
+		emailsInfo := emailsInfoResponse.([]interface{})
+		var emailInfo map[string]interface{}
+		for _, info := range emailsInfo {
+			emailInfoMap := info.(map[string]interface{})
+			if primary, ok := emailInfoMap["primary"].(bool); primary && ok {
+				emailInfo = emailInfoMap
+				break
+			}
+		}
+		if emailInfo == nil {
+			return tpmodels.TypeUserInfo{
+				ThirdPartyUserId: ID,
+				ResponseFromProvider: map[string]interface{}{
+					"userInfo":  userInfo,
+					"emailInfo": emailsInfo,
+				},
+			}, nil
+		}
+
+		email := emailInfo["email"].(string)
+		isVerified, isVerifiedOk := emailInfo["verified"].(bool)
+		userInfoResult := tpmodels.TypeUserInfo{
+			ThirdPartyUserId: ID,
+			EmailInfo: &tpmodels.EmailStruct{
+				ID:         email,
+				IsVerified: isVerifiedOk && isVerified,
+			},
+			ResponseFromProvider: map[string]interface{}{
+				"userInfo":  userInfo,
+				"emailInfo": emailsInfo,
+			},
+		}
+		return userInfoResult, nil
+	}
+
+	githubProvider.GetConfig = getConfig
+	githubProvider.GetAuthorisationRedirectURL = getAuthorisationRedirectURL
+	githubProvider.ExchangeAuthCodeForOAuthTokens = exchangeAuthCodeForOAuthTokens
+	githubProvider.GetUserInfo = getUserInfo
+
+	if input.Override != nil {
+		githubProvider = input.Override(githubProvider)
+	}
+
+	return *githubProvider.TypeProvider
+}
+
+func getGithubAuthRequest(authHeader string) (interface{}, error) {
+	url := "https://api.github.com/user"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	return doGetRequest(req)
+}
+
+func getGithubEmailsInfo(authHeader string) (interface{}, error) {
+	url := "https://api.github.com/user/emails"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Accept", "application/vnd.github.v3+json")
+	return doGetRequest(req)
+}
