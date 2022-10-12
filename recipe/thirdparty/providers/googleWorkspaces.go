@@ -15,143 +15,263 @@
 
 package providers
 
+import (
+	"encoding/json"
+	"errors"
+	"fmt"
+	"strings"
+
+	"github.com/derekstavis/go-qs"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
+
 const googleWorkspacesID = "google-workspaces"
 
-// func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
+func GoogleWorkspaces(input tpmodels.TypeGoogleWorkspacesInput) (tpmodels.TypeProvider, error) {
+	googleWorkspacesProvider := &tpmodels.GoogleWorkspacesProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: googleWorkspacesID,
+		},
+	}
 
-// 	domain := "*"
-// 	if config.Domain != nil {
-// 		domain = *config.Domain
-// 	}
+	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GoogleWorkspacesConfig, error) {
+		if clientID == nil && len(input.Config) > 1 {
+			return tpmodels.GoogleWorkspacesConfig{}, errors.New("please specify a clientID as there are multiple configs")
+		}
 
-// 	return tpmodels.TypeProvider{
-// 		ID: googleWorkspacesID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 				"grant_type":    "authorization_code",
-// 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
-// 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
-// 			}
+		if clientID == nil {
+			return input.Config[0], nil
+		}
 
-// 			authorisationRedirectURL := "https://accounts.google.com/o/oauth2/v2/auth"
-// 			scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-// 			if config.Scope != nil {
-// 				scopes = config.Scope
-// 			}
+		for _, config := range input.Config {
+			if config.ClientID == *clientID {
+				return config, nil
+			}
+		}
 
-// 			var additionalParams map[string]interface{} = nil
-// 			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-// 				additionalParams = config.AuthorisationRedirect.Params
-// 			}
+		return tpmodels.GoogleWorkspacesConfig{}, errors.New("config for specified clientID not found")
+	}
 
-// 			authorizationRedirectParams := map[string]interface{}{
-// 				"scope":                  strings.Join(scopes, " "),
-// 				"access_type":            "offline",
-// 				"include_granted_scopes": "true",
-// 				"response_type":          "code",
-// 				"client_id":              config.ClientID,
-// 				"hd":                     domain,
-// 			}
-// 			for key, value := range additionalParams {
-// 				authorizationRedirectParams[key] = value
-// 			}
+	getTenantID := func(clientID *string, userContext supertokens.UserContext) (string, error) {
+		return "none", nil
+	}
 
-// 			return tpmodels.TypeProviderGetResponse{
-// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 					URL:    accessTokenAPIURL,
-// 					Params: accessTokenAPIParams,
-// 				},
-// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 					URL:    authorisationRedirectURL,
-// 					Params: authorizationRedirectParams,
-// 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 					claims, err := verifyAndGetClaims(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
+	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
+		config, err := googleWorkspacesProvider.GetConfig(clientID, userContext)
+		if err != nil {
+			return tpmodels.TypeAuthorisationRedirect{}, err
+		}
+		if config.Scope != nil {
+			scopes = config.Scope
+		}
 
-// 					var email string
-// 					var isVerified bool
-// 					var id string
-// 					var hd string
-// 					for key, val := range claims {
-// 						if key == "sub" {
-// 							id = val.(string)
-// 						} else if key == "email" {
-// 							email = val.(string)
-// 						} else if key == "email_verified" {
-// 							isVerified = val.(bool)
-// 						} else if key == "hd" {
-// 							hd = val.(string)
-// 						}
-// 					}
+		queryParams := map[string]interface{}{
+			"scope":                  strings.Join(scopes, " "),
+			"access_type":            "offline",
+			"include_granted_scopes": "true",
+			"response_type":          "code",
+			"client_id":              config.ClientID,
+			"hd":                     "*",
+		}
 
-// 					if email == "" {
-// 						return tpmodels.UserInfo{}, errors.New("Could not get email. Please use a different login method")
-// 					}
+		if config.Domain != nil {
+			queryParams["hd"] = *config.Domain
+		}
 
-// 					if hd == "" {
-// 						return tpmodels.UserInfo{}, errors.New("Please use a Google Workspace ID to login")
-// 					}
+		var codeVerifier *string
+		if config.ClientSecret == "" {
+			challenge, verifier, err := generateCodeChallengeS256(32)
+			if err != nil {
+				return tpmodels.TypeAuthorisationRedirect{}, err
+			}
+			queryParams["access_type"] = "online"
+			queryParams["code_challenge"] = challenge
+			queryParams["code_challenge_method"] = "S256"
+			codeVerifier = &verifier
+		}
 
-// 					if !strings.Contains(domain, "*") && hd != domain {
-// 						return tpmodels.UserInfo{}, errors.New("Please use emails from " + domain + " to login")
-// 					}
+		url := "https://accounts.google.com/o/oauth2/v2/auth"
+		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 
-// 					return tpmodels.UserInfo{
-// 						ID: id,
-// 						Email: &tpmodels.EmailStruct{
-// 							ID:         email,
-// 							IsVerified: isVerified,
-// 						},
-// 					}, nil
-// 				},
-// 				GetClientId: func(userContext supertokens.UserContext) string {
-// 					return config.ClientID
-// 				},
-// 			}
-// 		},
-// 		IsDefault: config.IsDefault,
-// 	}
-// }
+		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
+		if err != nil {
+			return tpmodels.TypeAuthorisationRedirect{}, err
+		}
 
-// func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) {
-// 	claims := jwt.MapClaims{}
-// 	// Get the JWKS URL.
-// 	jwksURL := "https://www.googleapis.com/oauth2/v3/certs"
+		queryParamsStr, err := qs.Marshal(queryParams)
+		if err != nil {
+			return tpmodels.TypeAuthorisationRedirect{}, err
+		}
 
-// 	// Create the JWKS from the resource at the given URL.
-// 	jwks, err := getJWKSFromURL(jwksURL)
-// 	if err != nil {
-// 		return claims, err
-// 	}
+		return tpmodels.TypeAuthorisationRedirect{
+			URLWithQueryParams: url + "?" + queryParamsStr,
+			PKCECodeVerifier:   codeVerifier,
+		}, nil
+	}
 
-// 	// Parse the JWT.
-// 	token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
-// 	if err != nil {
-// 		return claims, err
-// 	}
+	exchangeAuthCodeForOAuthTokens := func(clientID *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		config, err := googleWorkspacesProvider.GetConfig(clientID, userContext)
+		if err != nil {
+			return nil, err
+		}
 
-// 	// Check if the token is valid.
-// 	if !token.Valid {
-// 		return claims, errors.New("invalid id_token supplied")
-// 	}
+		accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
+		accessTokenAPIParams := map[string]string{
+			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
+			"client_secret": config.ClientSecret,
+			"grant_type":    "authorization_code",
+			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+		}
+		if config.ClientSecret == "" {
+			if redirectURIInfo.PKCECodeVerifier == nil {
+				return nil, errors.New("code verifier not found")
+			}
+			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
+		}
+		redirectURI := checkDevAndGetRedirectURI(
+			config.ClientID,
+			redirectURIInfo.RedirectURIOnProviderDashboard,
+			userContext,
+		)
 
-// 	if claims["iss"].(string) != "https://accounts.google.com" && claims["iss"].(string) != "accounts.google.com" {
-// 		return claims, errors.New("invalid iss field")
-// 	}
+		accessTokenAPIParams["redirect_uri"] = redirectURI
 
-// 	if claims["aud"].(string) != clientId {
-// 		return claims, errors.New("the client for whom this key is for is different than the one provided")
-// 	}
+		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
+		if err != nil {
+			return nil, err
+		}
 
-// 	return claims, nil
-// }
+		authResponse := tpmodels.TypeOAuthTokens{}
+
+		for k, v := range authResponseFromRequest {
+			authResponse[k] = v
+		}
+
+		return authResponse, nil
+	}
+
+	getUserInfo := func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		config, err := googleWorkspacesProvider.GetConfig(clientID, userContext)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+
+		authResponseJson, err := json.Marshal(oAuthTokens)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+		var accessTokenAPIResponse googleGetProfileInfoInput
+		err = json.Unmarshal(authResponseJson, &accessTokenAPIResponse)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+
+		claims, err := verifyAndGetClaims(oAuthTokens["id_token"].(string), getActualClientIdFromDevelopmentClientId(config.ClientID))
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+		var email string
+		var isVerified bool
+		var id string
+		var hd string
+
+		for key, val := range claims {
+			if key == "sub" {
+				id = val.(string)
+			} else if key == "email" {
+				email = val.(string)
+			} else if key == "email_verified" {
+				isVerified = val.(bool)
+			} else if key == "hd" {
+				hd = val.(string)
+			}
+		}
+
+		if email == "" {
+			return tpmodels.TypeUserInfo{}, errors.New("Could not get email. Please use a different login method")
+		}
+
+		if hd == "" {
+			return tpmodels.TypeUserInfo{}, errors.New("Please use a GoogleWorkspaces Workspace ID to login")
+		}
+
+		domain := "*"
+		if config.Domain != nil {
+			domain = *config.Domain
+		}
+
+		if !strings.Contains(domain, "*") && hd != domain {
+			return tpmodels.TypeUserInfo{}, errors.New("Please use emails from " + domain + " to login")
+		}
+
+		tenantID, err := googleWorkspacesProvider.GetTenantID(clientID, userContext)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+
+		id = fmt.Sprintf("%s-%s", tenantID, id)
+
+		return tpmodels.TypeUserInfo{
+			ThirdPartyUserId: id,
+			EmailInfo: &tpmodels.EmailStruct{
+				ID:         email,
+				IsVerified: isVerified,
+			},
+			ResponseFromProvider: claims,
+		}, nil
+
+	}
+
+	googleWorkspacesProvider.GetConfig = getConfig
+	googleWorkspacesProvider.GetAuthorisationRedirectURL = getAuthorisationRedirectURL
+	googleWorkspacesProvider.ExchangeAuthCodeForOAuthTokens = exchangeAuthCodeForOAuthTokens
+	googleWorkspacesProvider.GetUserInfo = getUserInfo
+	googleWorkspacesProvider.GetTenantID = getTenantID
+
+	if input.Override != nil {
+		googleWorkspacesProvider = input.Override(googleWorkspacesProvider)
+	}
+
+	if len(input.Config) == 0 && (&googleWorkspacesProvider.GetConfig == &getConfig) {
+		// no config is provided and GetConfig is not overridden
+		return tpmodels.TypeProvider{}, errors.New("please specify a config or override GetConfig")
+	}
+
+	return *googleWorkspacesProvider.TypeProvider, nil
+}
+
+func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) {
+	claims := jwt.MapClaims{}
+	// Get the JWKS URL.
+	jwksURL := "https://www.googleapis.com/oauth2/v3/certs"
+
+	// Create the JWKS from the resource at the given URL.
+	jwks, err := getJWKSFromURL(jwksURL)
+	if err != nil {
+		return claims, err
+	}
+
+	// Parse the JWT.
+	token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
+	if err != nil {
+		return claims, err
+	}
+
+	// Check if the token is valid.
+	if !token.Valid {
+		return claims, errors.New("invalid id_token supplied")
+	}
+
+	if claims["iss"].(string) != "https://accounts.google.com" && claims["iss"].(string) != "accounts.google.com" {
+		return claims, errors.New("invalid iss field")
+	}
+
+	if claims["aud"].(string) != clientId {
+		return claims, errors.New("the client for whom this key is for is different than the one provided")
+	}
+
+	return claims, nil
+}

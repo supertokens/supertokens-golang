@@ -17,6 +17,7 @@ type OktaConfig struct {
 }
 
 type OktaProvider struct {
-	GetConfig func(clientID *string, userContext supertokens.UserContext) (OktaConfig, error)
+	GetConfig   func(clientID *string, userContext supertokens.UserContext) (OktaConfig, error)
+	GetTenantID func(clientID *string, userContext supertokens.UserContext) (string, error)
 	TypeProvider
 }
