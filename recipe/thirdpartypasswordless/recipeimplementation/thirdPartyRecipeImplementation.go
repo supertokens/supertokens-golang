@@ -39,17 +39,18 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		}, nil
 	}
 
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, userContext)
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
 		if err != nil {
 			return tpmodels.SignInUpResponse{}, err
 		}
 
 		return tpmodels.SignInUpResponse{
 			OK: &struct {
-				CreatedNewUser        bool
-				User                  tpmodels.User
-				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+				CreatedNewUser          bool
+				User                    tpmodels.User
+				OAuthTokens             tpmodels.TypeOAuthTokens
+				RawUserInfoFromProvider map[string]interface{}
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tpmodels.User{
@@ -58,7 +59,30 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 					TimeJoined: result.OK.User.TimeJoined,
 					ThirdParty: *result.OK.User.ThirdParty,
 				},
-				ResponsesFromProvider: result.OK.ResponsesFromProvider,
+				OAuthTokens:             result.OK.OAuthTokens,
+				RawUserInfoFromProvider: result.OK.RawUserInfoFromProvider,
+			},
+		}, nil
+	}
+
+	createOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateUserResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+		if err != nil {
+			return tpmodels.CreateOrUpdateUserResponse{}, err
+		}
+
+		return tpmodels.CreateOrUpdateUserResponse{
+			OK: &struct {
+				CreatedNewUser bool
+				User           tpmodels.User
+			}{
+				CreatedNewUser: result.OK.CreatedNewUser,
+				User: tpmodels.User{
+					ID:         result.OK.User.ID,
+					Email:      *result.OK.User.Email,
+					TimeJoined: result.OK.User.TimeJoined,
+					ThirdParty: *result.OK.User.ThirdParty,
+				},
 			},
 		}, nil
 	}
@@ -105,5 +129,6 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		GetUsersByEmail:         &getUserByEmail,
 		GetUserByThirdPartyInfo: &getUserByThirdPartyInfo,
 		SignInUp:                &signInUp,
+		CreateOrUpdateUser:      &createOrUpdateUser,
 	}
 }

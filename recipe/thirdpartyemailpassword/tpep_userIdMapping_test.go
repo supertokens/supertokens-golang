@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -49,17 +48,17 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com", tpmodels.TypeResponsesFromProvider{})
+	createUserResponse, err := ThirdPartyCreateOrUpdateUser("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
 	externalUserIdInfo := "externalIdInfo"
-	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
+	createResp, err := supertokens.CreateUserIdMapping(createUserResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserById(signUpResponse.OK.User.ID)
+		userResp, err := GetUserById(createUserResponse.OK.User.ID)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}

@@ -28,7 +28,6 @@ import (
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func doGetRequest(req *http.Request) (interface{}, error) {
@@ -150,20 +149,4 @@ func getActualClientIdFromDevelopmentClientId(clientId string) string {
 		return strings.Split(clientId, DevKeyIdentifier)[1]
 	}
 	return clientId
-}
-
-func getAuthRedirectForDev(clientId string, url string, queryParams map[string]interface{}) (string, map[string]interface{}, error) {
-	if !isUsingDevelopmentClientId(clientId) {
-		return url, queryParams, nil
-	}
-	queryParams["actual_redirect_uri"] = url
-	return DevOauthAuthorisationUrl, queryParams, nil
-}
-
-func checkDevAndGetRedirectURI(clientId string, redirectURI string, userContext supertokens.UserContext) string {
-	if isUsingDevelopmentClientId(clientId) {
-		return DevOauthRedirectUrl
-	}
-
-	return redirectURI
 }

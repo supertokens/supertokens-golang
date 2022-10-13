@@ -131,8 +131,8 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", "john.doe@example.com", tpmodels.TypeResponsesFromProvider{})
-	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", "john.doe@example.com", tpmodels.TypeResponsesFromProvider{})
+	ThirdPartyCreateOrUpdateUser("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartyCreateOrUpdateUser("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
 
 	users, err := GetUsersByEmail("john.doe@example.com")
 	assert.NoError(t, err)

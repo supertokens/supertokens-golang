@@ -126,10 +126,11 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 		} else {
 			return tpepmodels.ThirdPartyOutput{
 				OK: &struct {
-					CreatedNewUser        bool
-					User                  tpepmodels.User
-					Session               *sessmodels.TypeSessionContainer
-					ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+					CreatedNewUser          bool
+					User                    tpepmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             tpmodels.TypeOAuthTokens
+					RawUserInfoFromProvider map[string]interface{}
 				}{
 					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tpepmodels.User{
@@ -138,8 +139,9 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 						Email:      response.OK.User.Email,
 						ThirdParty: &response.OK.User.ThirdParty,
 					},
-					Session:               response.OK.Session,
-					ResponsesFromProvider: response.OK.ResponsesFromProvider,
+					Session:                 response.OK.Session,
+					OAuthTokens:             response.OK.OAuthTokens,
+					RawUserInfoFromProvider: response.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		}
