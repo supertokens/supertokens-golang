@@ -90,10 +90,13 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 		url := "https://accounts.google.com/o/oauth2/v2/auth"
 		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
 
-		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			queryParams["actual_redirect_uri"] = url
+			url = DevOauthAuthorisationUrl
 		}
+		/* Transformation needed for dev keys END */
 
 		queryParamsStr, err := qs.Marshal(queryParams)
 		if err != nil {
@@ -114,10 +117,11 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 
 		accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
 		accessTokenAPIParams := map[string]string{
-			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
+			"client_id":     config.ClientID,
 			"client_secret": config.ClientSecret,
 			"grant_type":    "authorization_code",
 			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"redirect_url":  redirectURIInfo.RedirectURIOnProviderDashboard,
 		}
 		if config.ClientSecret == "" {
 			if redirectURIInfo.PKCECodeVerifier == nil {
@@ -125,13 +129,13 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 			}
 			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
 		}
-		redirectURI := checkDevAndGetRedirectURI(
-			config.ClientID,
-			redirectURIInfo.RedirectURIOnProviderDashboard,
-			userContext,
-		)
 
-		accessTokenAPIParams["redirect_uri"] = redirectURI
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			accessTokenAPIParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			accessTokenAPIParams["redirect_uri"] = DevOauthRedirectUrl
+		}
+		/* Transformation needed for dev keys END */
 
 		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
 		if err != nil {
