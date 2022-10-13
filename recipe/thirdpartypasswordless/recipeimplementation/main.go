@@ -68,19 +68,19 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		}, nil
 	}
 
-	var ogThirdPartyCreateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateUserResponse, error) = nil
+	var ogThirdPartyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateUserResponse, error) = nil
 	if thirdPartyImplementation != nil {
-		ogThirdPartyCreateUser = *thirdPartyImplementation.CreateUser
+		ogThirdPartyCreateOrUpdateUser = *thirdPartyImplementation.CreateOrUpdateUser
 	}
-	thirdPartyCreateUser := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartyCreateUserResponse, error) {
+	thirdPartyCreateOrUpdateUser := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartyCreateOrUpdateUserResponse, error) {
 		if ogSignInUp == nil {
-			return tplmodels.ThirdPartyCreateUserResponse{}, errors.New("no thirdparty provider configured")
+			return tplmodels.ThirdPartyCreateOrUpdateUserResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogThirdPartyCreateUser(thirdPartyID, thirdPartyUserID, email, userContext)
+		result, err := ogThirdPartyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, userContext)
 		if err != nil {
-			return tplmodels.ThirdPartyCreateUserResponse{}, err
+			return tplmodels.ThirdPartyCreateOrUpdateUserResponse{}, err
 		}
-		return tplmodels.ThirdPartyCreateUserResponse{
+		return tplmodels.ThirdPartyCreateOrUpdateUserResponse{
 			OK: &struct {
 				CreatedNewUser bool
 				User           tplmodels.User
@@ -358,7 +358,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	result.GetUsersByEmail = &getUsersByEmail
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
 	result.ThirdPartySignInUp = &thirPartySignInUp
-	result.ThirdPartyCreateUser = &thirdPartyCreateUser
+	result.ThirdPartyCreateOrUpdateUser = &thirdPartyCreateOrUpdateUser
 	result.ConsumeCode = &consumeCode
 	result.CreateCode = &createCode
 	result.CreateNewCodeForDevice = &createNewCodeForDevice
@@ -396,7 +396,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		(*thirdPartyImplementation.GetUserByThirdPartyInfo) = *modifiedTp.GetUserByThirdPartyInfo
 		(*thirdPartyImplementation.GetUsersByEmail) = *modifiedTp.GetUsersByEmail
 		(*thirdPartyImplementation.SignInUp) = *modifiedTp.SignInUp
-		(*thirdPartyImplementation.CreateUser) = *modifiedTp.CreateUser
+		(*thirdPartyImplementation.CreateOrUpdateUser) = *modifiedTp.CreateOrUpdateUser
 	}
 
 	return result

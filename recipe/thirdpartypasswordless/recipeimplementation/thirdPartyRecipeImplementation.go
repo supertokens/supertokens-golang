@@ -65,13 +65,13 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		}, nil
 	}
 
-	createUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateUserResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartyCreateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	createOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateUserResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 		if err != nil {
-			return tpmodels.CreateUserResponse{}, err
+			return tpmodels.CreateOrUpdateUserResponse{}, err
 		}
 
-		return tpmodels.CreateUserResponse{
+		return tpmodels.CreateOrUpdateUserResponse{
 			OK: &struct {
 				CreatedNewUser bool
 				User           tpmodels.User
@@ -129,6 +129,6 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		GetUsersByEmail:         &getUserByEmail,
 		GetUserByThirdPartyInfo: &getUserByThirdPartyInfo,
 		SignInUp:                &signInUp,
-		CreateUser:              &createUser,
+		CreateOrUpdateUser:      &createOrUpdateUser,
 	}
 }

@@ -25,12 +25,12 @@ func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateUserResponse, error) {
+func CreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpmodels.CreateUserResponse{}, err
+		return tpmodels.CreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.CreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
@@ -57,8 +57,8 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func CreateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.CreateUserResponse, error) {
-	return CreateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func CreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.CreateOrUpdateUserResponse, error) {
+	return CreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
 func GetUserByID(userID string) (*tpmodels.User, error) {

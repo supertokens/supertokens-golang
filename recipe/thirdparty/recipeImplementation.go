@@ -49,20 +49,20 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		}, nil
 	}
 
-	createUser := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateUserResponse, error) {
+	createOrUpdateUser := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateUserResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
 			"email":            map[string]interface{}{"id": email},
 		})
 		if err != nil {
-			return tpmodels.CreateUserResponse{}, err
+			return tpmodels.CreateOrUpdateUserResponse{}, err
 		}
 		user, err := parseUser(response["user"])
 		if err != nil {
-			return tpmodels.CreateUserResponse{}, err
+			return tpmodels.CreateOrUpdateUserResponse{}, err
 		}
-		return tpmodels.CreateUserResponse{
+		return tpmodels.CreateOrUpdateUserResponse{
 			OK: &struct {
 				CreatedNewUser bool
 				User           tpmodels.User
@@ -127,6 +127,6 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		GetUsersByEmail:         &getUsersByEmail,
 		GetUserByThirdPartyInfo: &getUserByThirdPartyInfo,
 		SignInUp:                &signInUp,
-		CreateUser:              &createUser,
+		CreateOrUpdateUser:      &createOrUpdateUser,
 	}
 }

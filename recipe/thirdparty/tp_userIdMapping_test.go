@@ -49,7 +49,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	createUserResponse, err := CreateUser("google", "googleID", "test@example.com")
+	createUserResponse, err := CreateOrUpdateUser("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
