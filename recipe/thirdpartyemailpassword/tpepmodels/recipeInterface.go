@@ -25,7 +25,8 @@ type RecipeInterface struct {
 	GetUserByID              *func(userID string, userContext supertokens.UserContext) (*User, error)
 	GetUsersByEmail          *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByThirdPartyInfo  *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp       *func(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ThirdPartySignInUp       *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ThirdPartyCreateUser     *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartyCreateUserResponse, error)
 	EmailPasswordSignUp      *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
 	EmailPasswordSignIn      *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
 	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
@@ -35,9 +36,17 @@ type RecipeInterface struct {
 
 type SignInUpResponse struct {
 	OK *struct {
-		CreatedNewUser        bool
-		User                  User
-		ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             tpmodels.TypeOAuthTokens
+		RawUserInfoFromProvider map[string]interface{}
+	}
+}
+
+type ThirdPartyCreateUserResponse struct {
+	OK *struct {
+		CreatedNewUser bool
+		User           User
 	}
 }
 

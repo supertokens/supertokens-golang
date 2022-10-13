@@ -60,10 +60,11 @@ type ConsumeCodePOSTResponse struct {
 
 type ThirdPartySignInUpOutput struct {
 	OK *struct {
-		CreatedNewUser        bool
-		User                  User
-		Session               sessmodels.SessionContainer
-		ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+		CreatedNewUser          bool
+		User                    User
+		Session                 sessmodels.SessionContainer
+		OAuthTokens             tpmodels.TypeOAuthTokens
+		RawUserInfoFromProvider map[string]interface{}
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse

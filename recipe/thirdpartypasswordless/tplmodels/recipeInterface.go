@@ -26,7 +26,8 @@ type RecipeInterface struct {
 	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByPhoneNumber    *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
 	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	ThirdPartyCreateUser    *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartyCreateUserResponse, error)
 
 	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
 
@@ -71,9 +72,17 @@ type ConsumeCodeResponse struct {
 
 type ThirdPartySignInUp struct {
 	OK *struct {
-		CreatedNewUser        bool
-		User                  User
-		ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             tpmodels.TypeOAuthTokens
+		RawUserInfoFromProvider map[string]interface{}
+	}
+}
+
+type ThirdPartyCreateUserResponse struct {
+	OK *struct {
+		CreatedNewUser bool
+		User           User
 	}
 }
 

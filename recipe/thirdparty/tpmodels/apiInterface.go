@@ -42,10 +42,11 @@ type TypeSignInUpInput struct {
 
 type SignInUpPOSTResponse struct {
 	OK *struct {
-		CreatedNewUser        bool
-		User                  User
-		Session               sessmodels.SessionContainer
-		ResponsesFromProvider TypeResponsesFromProvider
+		CreatedNewUser          bool
+		User                    User
+		Session                 sessmodels.SessionContainer
+		OAuthTokens             TypeOAuthTokens
+		RawUserInfoFromProvider map[string]interface{}
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse

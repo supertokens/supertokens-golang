@@ -23,9 +23,9 @@ type TypeRedirectURIQueryParams = map[string]interface{}
 type TypeOAuthTokens = map[string]interface{}
 
 type TypeUserInfo struct {
-	ThirdPartyUserId     string                 `json:"thirdPartyUserId"`
-	EmailInfo            *EmailStruct           `json:"emailInfo"`
-	ResponseFromProvider map[string]interface{} `json:"responseFromProvider"`
+	ThirdPartyUserId        string                 `json:"thirdPartyUserId"`
+	EmailInfo               *EmailStruct           `json:"emailInfo"`
+	RawUserInfoFromProvider map[string]interface{} `json:"rawUserInfoFromProvider"`
 }
 
 type EmailStruct struct {
@@ -83,9 +83,4 @@ type TypeNormalisedInput struct {
 type OverrideStruct struct {
 	Functions func(originalImplementation RecipeInterface) RecipeInterface
 	APIs      func(originalImplementation APIInterface) APIInterface
-}
-
-type TypeResponsesFromProvider struct {
-	OAuthTokens TypeOAuthTokens
-	UserInfo    map[string]interface{}
 }

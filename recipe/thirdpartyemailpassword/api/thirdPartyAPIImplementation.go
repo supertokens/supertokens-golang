@@ -40,10 +40,11 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 		if result.OK != nil {
 			return tpmodels.SignInUpPOSTResponse{
 				OK: &struct {
-					CreatedNewUser        bool
-					User                  tpmodels.User
-					Session               *sessmodels.TypeSessionContainer
-					ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+					CreatedNewUser          bool
+					User                    tpmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             tpmodels.TypeOAuthTokens
+					RawUserInfoFromProvider map[string]interface{}
 				}{
 					CreatedNewUser: result.OK.CreatedNewUser,
 					User: tpmodels.User{
@@ -52,11 +53,9 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tpepmodels.APIInterface) tpmodel
 						Email:      result.OK.User.Email,
 						ThirdParty: *result.OK.User.ThirdParty,
 					},
-					Session: result.OK.Session,
-					ResponsesFromProvider: tpmodels.TypeResponsesFromProvider{
-						OAuthTokens: result.OK.ResponsesFromProvider.OAuthTokens,
-						UserInfo:    result.OK.ResponsesFromProvider.UserInfo,
-					},
+					Session:                 result.OK.Session,
+					OAuthTokens:             result.OK.OAuthTokens,
+					RawUserInfoFromProvider: result.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		} else if result.NoEmailGivenByProviderError != nil {

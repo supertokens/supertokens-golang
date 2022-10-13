@@ -19,7 +19,6 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/supertokensService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/twilioService"
@@ -31,12 +30,12 @@ func Init(config tplmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+func ThirdPartyCreateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartyCreateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tplmodels.ThirdPartySignInUp{}, err
+		return tplmodels.ThirdPartyCreateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, userContext)
+	return (*instance.RecipeImpl.ThirdPartyCreateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
@@ -381,8 +380,8 @@ func SendSms(input smsdelivery.SmsType) error {
 	return SendSmsWithContext(input, &map[string]interface{}{})
 }
 
-func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider) (tplmodels.ThirdPartySignInUp, error) {
-	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, &map[string]interface{}{})
+func ThirdPartyCreateUser(thirdPartyID string, thirdPartyUserID string, email string) (tplmodels.ThirdPartyCreateUserResponse, error) {
+	return ThirdPartyCreateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tplmodels.User, error) {

@@ -36,23 +36,24 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
 
-	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogSignInUp = *thirdPartyImplementation.SignInUp
 	}
-	thirPartySignInUp := func(thirdPartyID, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+	thirPartySignInUp := func(thirdPartyID, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
 		if ogSignInUp == nil {
 			return tplmodels.ThirdPartySignInUp{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, userContext)
+		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
 		if err != nil {
 			return tplmodels.ThirdPartySignInUp{}, err
 		}
 		return tplmodels.ThirdPartySignInUp{
 			OK: &struct {
-				CreatedNewUser        bool
-				User                  tplmodels.User
-				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+				CreatedNewUser          bool
+				User                    tplmodels.User
+				OAuthTokens             tpmodels.TypeOAuthTokens
+				RawUserInfoFromProvider map[string]interface{}
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tplmodels.User{
@@ -61,7 +62,36 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 					TimeJoined: result.OK.User.TimeJoined,
 					ThirdParty: &result.OK.User.ThirdParty,
 				},
-				ResponsesFromProvider: result.OK.ResponsesFromProvider,
+				OAuthTokens:             result.OK.OAuthTokens,
+				RawUserInfoFromProvider: result.OK.RawUserInfoFromProvider,
+			},
+		}, nil
+	}
+
+	var ogThirdPartyCreateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateUserResponse, error) = nil
+	if thirdPartyImplementation != nil {
+		ogThirdPartyCreateUser = *thirdPartyImplementation.CreateUser
+	}
+	thirdPartyCreateUser := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartyCreateUserResponse, error) {
+		if ogSignInUp == nil {
+			return tplmodels.ThirdPartyCreateUserResponse{}, errors.New("no thirdparty provider configured")
+		}
+		result, err := ogThirdPartyCreateUser(thirdPartyID, thirdPartyUserID, email, userContext)
+		if err != nil {
+			return tplmodels.ThirdPartyCreateUserResponse{}, err
+		}
+		return tplmodels.ThirdPartyCreateUserResponse{
+			OK: &struct {
+				CreatedNewUser bool
+				User           tplmodels.User
+			}{
+				CreatedNewUser: result.OK.CreatedNewUser,
+				User: tplmodels.User{
+					ID:         result.OK.User.ID,
+					Email:      &result.OK.User.Email,
+					TimeJoined: result.OK.User.TimeJoined,
+					ThirdParty: &result.OK.User.ThirdParty,
+				},
 			},
 		}, nil
 	}
@@ -328,6 +358,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	result.GetUsersByEmail = &getUsersByEmail
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
 	result.ThirdPartySignInUp = &thirPartySignInUp
+	result.ThirdPartyCreateUser = &thirdPartyCreateUser
 	result.ConsumeCode = &consumeCode
 	result.CreateCode = &createCode
 	result.CreateNewCodeForDevice = &createNewCodeForDevice
@@ -365,6 +396,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		(*thirdPartyImplementation.GetUserByThirdPartyInfo) = *modifiedTp.GetUserByThirdPartyInfo
 		(*thirdPartyImplementation.GetUsersByEmail) = *modifiedTp.GetUsersByEmail
 		(*thirdPartyImplementation.SignInUp) = *modifiedTp.SignInUp
+		(*thirdPartyImplementation.CreateUser) = *modifiedTp.CreateUser
 	}
 
 	return result

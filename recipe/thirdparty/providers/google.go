@@ -28,7 +28,7 @@ import (
 
 const googleID = "google"
 
-func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
+func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 	googleProvider := &tpmodels.GoogleProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: googleID,
@@ -36,6 +36,10 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 	}
 
 	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GoogleConfig, error) {
+		if len(input.Config) == 0 {
+			return tpmodels.GoogleConfig{}, errors.New("please specify a config or override GetConfig")
+		}
+
 		if clientID == nil && len(input.Config) > 1 {
 			return tpmodels.GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
@@ -164,8 +168,8 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 		email := userInfo["email"].(string)
 		if email == "" {
 			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId:     ID,
-				ResponseFromProvider: userInfo,
+				ThirdPartyUserId:        ID,
+				RawUserInfoFromProvider: userInfo,
 			}
 			return userInfoResult, nil
 		}
@@ -177,7 +181,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 				ID:         email,
 				IsVerified: isVerified,
 			},
-			ResponseFromProvider: userInfo,
+			RawUserInfoFromProvider: userInfo,
 		}
 		return userInfoResult, nil
 	}
@@ -191,12 +195,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 		googleProvider = input.Override(googleProvider)
 	}
 
-	if len(input.Config) == 0 && (&googleProvider.GetConfig == &getConfig) {
-		// no config is provided and GetConfig is not overridden
-		return tpmodels.TypeProvider{}, errors.New("please specify a config or override GetConfig")
-	}
-
-	return *googleProvider.TypeProvider, nil
+	return *googleProvider.TypeProvider
 }
 
 func getGoogleAuthRequest(authHeader string) (interface{}, error) {
