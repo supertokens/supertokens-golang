@@ -30,7 +30,8 @@ func NewUserRoleClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimVal
 		return rolesArray, nil
 	}
 
-	userRoleClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-role", fetchValue, nil)
+	var defaultMaxAge int64 = 300
+	userRoleClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-role", fetchValue, &defaultMaxAge)
 	return userRoleClaim, primitiveArrayClaimValidators
 
 }
@@ -66,6 +67,7 @@ func NewPermissionClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimV
 		return result, nil
 	}
 
-	permissionClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-perm", fetchValue, nil)
+	var defaultMaxAge int64 = 300
+	permissionClaim, primitiveArrayClaimValidators := claims.PrimitiveArrayClaim("st-perm", fetchValue, &defaultMaxAge)
 	return permissionClaim, primitiveArrayClaimValidators
 }

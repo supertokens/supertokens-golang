@@ -7,10 +7,6 @@ import (
 )
 
 func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, PrimitiveClaimValidators) {
-	if defaultMaxAgeInSeconds == nil {
-		val := int64(300)
-		defaultMaxAgeInSeconds = &val
-	}
 	sessionClaim := SessionClaim(key, fetchValue)
 
 	sessionClaim.AddToPayload_internal = func(payload map[string]interface{}, value interface{}, userContext supertokens.UserContext) map[string]interface{} {
