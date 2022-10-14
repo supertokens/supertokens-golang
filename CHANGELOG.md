@@ -6,7 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+### Fixes
 - Fixes crash in findRightProvider
+
+### Changed:
+
+-   Removed default defaultMaxAge from session claim base classes
+-   Added a 5 minute defaultMaxAge to UserRoleClaim, PermissionClaim and EmailVerificationClaim
 
 ## [0.9.4] - 2022-09-30
 ### Fixes

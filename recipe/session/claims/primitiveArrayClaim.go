@@ -7,11 +7,6 @@ import (
 )
 
 func PrimitiveArrayClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSeconds *int64) (*TypeSessionClaim, PrimitiveArrayClaimValidators) {
-	if defaultMaxAgeInSeconds == nil {
-		val := int64(300)
-		defaultMaxAgeInSeconds = &val
-	}
-
 	// Claim functions are identical to primitive claim, only validators are different
 	sessionClaim, _ := PrimitiveClaim(key, fetchValue, defaultMaxAgeInSeconds)
 
