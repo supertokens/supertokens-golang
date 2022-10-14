@@ -112,7 +112,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		if err != nil {
 			return err
 		}
-		// TODO extract redirect url from state
+
 		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?" + queryParams
 
@@ -128,7 +128,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 
 		options.Res.Header().Set("Location", redirectURL)
-		options.Res.WriteHeader(http.StatusFound)
+		options.Res.WriteHeader(http.StatusSeeOther)
 
 		return nil
 	}

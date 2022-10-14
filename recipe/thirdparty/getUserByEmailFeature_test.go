@@ -129,9 +129,9 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	CreateOrUpdateUser("mock", "thirdPartyJohnDoe", "john.doe@example.com")
+	ManuallyCreateOrUpdateUser("mock", "thirdPartyJohnDoe", "john.doe@example.com")
 
-	CreateOrUpdateUser("mock2", "thirdPartyDaveDoe", "john.doe@example.com")
+	ManuallyCreateOrUpdateUser("mock2", "thirdPartyDaveDoe", "john.doe@example.com")
 
 	users, err := GetUsersByEmail("john.doe@example.com")
 
