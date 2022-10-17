@@ -44,22 +44,6 @@ type FacebookProvider struct {
 	*tpmodels.TypeProvider
 }
 
-// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-// 	return tpmodels.TypeProvider{
-// 		ID: facebookID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
-// 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
-// 			}
-
 func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 	facebookProvider := &FacebookProvider{
 		TypeProvider: &tpmodels.TypeProvider{
@@ -68,7 +52,7 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 	}
 
 	getConfig := func(clientID *string, userContext supertokens.UserContext) (FacebookConfig, error) {
-		if input.Config == nil || len(input.Config) == 0 {
+		if len(input.Config) == 0 {
 			return FacebookConfig{}, errors.New("please specify a config or override GetConfig")
 		}
 
@@ -91,7 +75,7 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 		scopes := []string{"email"}
-		config, err := (facebookProvider.GetConfig)(clientID, userContext)
+		config, err := facebookProvider.GetConfig(clientID, userContext)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}

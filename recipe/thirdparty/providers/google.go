@@ -177,9 +177,7 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		accessToken := accessTokenAPIResponse.AccessToken
-		authHeader := "Bearer " + accessToken
-		response, err := getGoogleAuthRequest(authHeader)
+		response, err := getGoogleAuthRequest(accessTokenAPIResponse.AccessToken)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
@@ -194,12 +192,12 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 			return userInfoResult, nil
 		}
 
-		isVerified := userInfo["verified_email"].(bool)
+		isVerified, isVerifiedOk := userInfo["verified_email"].(bool)
 		userInfoResult := tpmodels.TypeUserInfo{
 			ThirdPartyUserId: ID,
 			EmailInfo: &tpmodels.EmailStruct{
 				ID:         email,
-				IsVerified: isVerified,
+				IsVerified: isVerified && isVerifiedOk,
 			},
 			RawUserInfoFromProvider: userInfo,
 		}
@@ -218,13 +216,13 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 	return *googleProvider.TypeProvider
 }
 
-func getGoogleAuthRequest(authHeader string) (interface{}, error) {
+func getGoogleAuthRequest(accessToken string) (interface{}, error) {
 	url := "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-	req.Header.Add("Authorization", authHeader)
+	req.Header.Add("Authorization", "Bearer "+accessToken)
 	return doGetRequest(req)
 }
 
