@@ -82,18 +82,18 @@ func Facebook(input providers.TypeFacebookInput) tpmodels.TypeProvider {
 	return providers.Facebook(input)
 }
 
-// func Github(input tpmodels.TypeGithubInput) tpmodels.TypeProvider {
-// 	return providers.Github(input)
-// }
+func Github(input providers.TypeGithubInput) tpmodels.TypeProvider {
+	return providers.Github(input)
+}
 
-// func Discord(input tpmodels.TypeDiscordInput) tpmodels.TypeProvider {
-// 	return providers.Discord(input)
-// }
-
-// func GoogleWorkspaces(input tpmodels.TypeGoogleWorkspacesInput) tpmodels.TypeProvider {
-// 	return providers.GoogleWorkspaces(input)
-// }
+func Discord(input providers.TypeDiscordInput) tpmodels.TypeProvider {
+	return providers.Discord(input)
+}
 
 func Google(input providers.TypeGoogleInput) tpmodels.TypeProvider {
 	return providers.Google(input)
 }
+
+// func GoogleWorkspaces(input tpmodels.TypeGoogleWorkspacesInput) tpmodels.TypeProvider {
+// 	return providers.GoogleWorkspaces(input)
+// }
