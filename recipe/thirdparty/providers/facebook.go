@@ -28,20 +28,52 @@ import (
 
 const facebookID = "facebook"
 
-func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
-	facebookProvider := &tpmodels.FacebookProvider{
+type TypeFacebookInput struct {
+	Config   []FacebookConfig
+	Override func(provider *FacebookProvider) *FacebookProvider
+}
+
+type FacebookConfig struct {
+	ClientID     string
+	ClientSecret string
+	Scope        []string
+}
+
+type FacebookProvider struct {
+	GetConfig func(clientID *string, userContext supertokens.UserContext) (FacebookConfig, error)
+	*tpmodels.TypeProvider
+}
+
+// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
+// 	return tpmodels.TypeProvider{
+// 		ID: facebookID,
+// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+// 			accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
+// 			accessTokenAPIParams := map[string]string{
+// 				"client_id":     config.ClientID,
+// 				"client_secret": config.ClientSecret,
+// 			}
+// 			if authCodeFromRequest != nil {
+// 				accessTokenAPIParams["code"] = *authCodeFromRequest
+// 			}
+// 			if redirectURI != nil {
+// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
+// 			}
+
+func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
+	facebookProvider := &FacebookProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: facebookID,
 		},
 	}
 
-	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.FacebookConfig, error) {
+	getConfig := func(clientID *string, userContext supertokens.UserContext) (FacebookConfig, error) {
 		if input.Config == nil || len(input.Config) == 0 {
-			return tpmodels.FacebookConfig{}, errors.New("please specify a config or override GetConfig")
+			return FacebookConfig{}, errors.New("please specify a config or override GetConfig")
 		}
 
 		if clientID == nil && len(input.Config) > 1 {
-			return tpmodels.FacebookConfig{}, errors.New("please specify a clientID as there are multiple configs")
+			return FacebookConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
 		if clientID == nil && len(input.Config) == 1 {
@@ -54,7 +86,7 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 			}
 		}
 
-		return tpmodels.FacebookConfig{}, errors.New("config for specified clientID not found")
+		return FacebookConfig{}, errors.New("config for specified clientID not found")
 	}
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
@@ -67,10 +99,12 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 			scopes = config.Scope
 		}
 
+		url := "https://www.facebook.com/v9.0/dialog/oauth"
 		queryParams := map[string]interface{}{
+			"client_id":     config.ClientID,
 			"scope":         strings.Join(scopes, " "),
+			"redirect_uri":  redirectURIOnProviderDashboard,
 			"response_type": "code",
-			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
 		}
 
 		var codeVerifier *string
@@ -85,13 +119,13 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 			codeVerifier = &verifier
 		}
 
-		url := "https://www.facebook.com/v9.0/dialog/oauth"
-		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
-
-		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			queryParams["actual_redirect_uri"] = url
+			url = DevOauthAuthorisationUrl
 		}
+		/* Transformation needed for dev keys END */
 
 		queryParamsStr, err := qs.Marshal(queryParams)
 		if err != nil {
@@ -112,23 +146,25 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 
 		accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
 		accessTokenAPIParams := map[string]string{
-			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
-			"client_secret": config.ClientSecret,
-			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"client_id":    config.ClientID,
+			"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"redirect_url": redirectURIInfo.RedirectURIOnProviderDashboard,
 		}
 		if config.ClientSecret == "" {
 			if redirectURIInfo.PKCECodeVerifier == nil {
 				return nil, errors.New("code verifier not found")
 			}
 			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
+		} else {
+			accessTokenAPIParams["client_secret"] = config.ClientSecret
 		}
-		redirectURI := checkDevAndGetRedirectURI(
-			config.ClientID,
-			redirectURIInfo.RedirectURIOnProviderDashboard,
-			userContext,
-		)
 
-		accessTokenAPIParams["redirect_uri"] = redirectURI
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			accessTokenAPIParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			accessTokenAPIParams["redirect_uri"] = DevOauthRedirectUrl
+		}
+		/* Transformation needed for dev keys END */
 
 		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
 		if err != nil {
@@ -163,8 +199,8 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 		email := userInfo["email"].(string)
 		if email == "" {
 			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId:     ID,
-				ResponseFromProvider: userInfo,
+				ThirdPartyUserId:        ID,
+				RawUserInfoFromProvider: userInfo,
 			}
 			return userInfoResult, nil
 		}
@@ -176,7 +212,7 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 				ID:         email,
 				IsVerified: isVerifiedOk && isVerified,
 			},
-			ResponseFromProvider: userInfo,
+			RawUserInfoFromProvider: userInfo,
 		}
 		return userInfoResult, nil
 	}

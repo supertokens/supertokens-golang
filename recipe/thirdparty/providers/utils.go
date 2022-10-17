@@ -17,9 +17,13 @@ package providers
 
 import (
 	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -28,7 +32,6 @@ import (
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func doGetRequest(req *http.Request) (interface{}, error) {
@@ -152,18 +155,49 @@ func getActualClientIdFromDevelopmentClientId(clientId string) string {
 	return clientId
 }
 
-func getAuthRedirectForDev(clientId string, url string, queryParams map[string]interface{}) (string, map[string]interface{}, error) {
-	if !isUsingDevelopmentClientId(clientId) {
-		return url, queryParams, nil
+// PKCE related functions
+// Ref: https://github.com/nirasan/go-oauth-pkce-code-verifier/blob/master/verifier.go
+
+func randomBytes(length int) ([]byte, error) {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	const csLen = byte(len(charset))
+	output := make([]byte, 0, length)
+	for {
+		buf := make([]byte, length)
+		if _, err := io.ReadFull(rand.Reader, buf); err != nil {
+			return nil, fmt.Errorf("failed to read random bytes: %v", err)
+		}
+		for _, b := range buf {
+			// Avoid bias by using a value range that's a multiple of 62
+			if b < (csLen * 4) {
+				output = append(output, charset[b%csLen])
+
+				if len(output) == length {
+					return output, nil
+				}
+			}
+		}
 	}
-	queryParams["actual_redirect_uri"] = url
-	return DevOauthAuthorisationUrl, queryParams, nil
 }
 
-func checkDevAndGetRedirectURI(clientId string, redirectURI string, userContext supertokens.UserContext) string {
-	if isUsingDevelopmentClientId(clientId) {
-		return DevOauthRedirectUrl
+func encode(msg []byte) string {
+	encoded := base64.StdEncoding.EncodeToString(msg)
+	encoded = strings.Replace(encoded, "+", "-", -1)
+	encoded = strings.Replace(encoded, "/", "_", -1)
+	encoded = strings.Replace(encoded, "=", "", -1)
+	return encoded
+}
+
+func generateCodeChallengeS256(length int) (codeChallenge string, codeVerifier string, err error) {
+	buf, err := randomBytes(length)
+	if err != nil {
+		return "", "", err
 	}
 
-	return redirectURI
+	codeVerifier = encode(buf)
+	h := sha256.New()
+	h.Write([]byte(codeVerifier))
+	codeChallenge = encode(h.Sum(nil))
+	err = nil
+	return
 }

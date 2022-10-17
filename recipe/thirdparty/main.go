@@ -21,21 +21,16 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type signInUpResponse struct {
-	CreatedNewUser bool
-	User           tpmodels.User
-}
-
 func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+func ManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpmodels.SignInUpResponse{}, err
+		return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, userContext)
+	return (*instance.RecipeImpl.ManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
@@ -62,8 +57,8 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider tpmodels.TypeResponsesFromProvider) (tpmodels.SignInUpResponse, error) {
-	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, responsesFromProvider, &map[string]interface{}{})
+func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	return ManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
 func GetUserByID(userID string) (*tpmodels.User, error) {
@@ -99,6 +94,6 @@ func Facebook(input tpmodels.TypeFacebookInput) tpmodels.TypeProvider {
 // 	return providers.GoogleWorkspaces(input)
 // }
 
-func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
+func Google(input providers.TypeGoogleInput) tpmodels.TypeProvider {
 	return providers.Google(input)
 }

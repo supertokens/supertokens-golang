@@ -33,20 +33,63 @@ import (
 
 const appleID = "apple"
 
-func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
-	appleProvider := &tpmodels.AppleProvider{
+type TypeAppleInput struct {
+	Config   []AppleConfig
+	Override func(provider *AppleProvider) *AppleProvider
+}
+
+type AppleConfig struct {
+	ClientID     string
+	ClientSecret AppleClientSecret
+	Scope        []string
+}
+
+type AppleClientSecret struct {
+	KeyId      string
+	PrivateKey string
+	TeamId     string
+}
+
+type AppleProvider struct {
+	GetConfig func(clientID *string, userContext supertokens.UserContext) (AppleConfig, error)
+	*tpmodels.TypeProvider
+}
+
+// func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
+// 	return tpmodels.TypeProvider{
+// 		ID: appleID,
+// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+// 			accessTokenAPIURL := "https://appleid.apple.com/auth/token"
+// 			clientSecret, err := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
+// 			if err != nil {
+// 				panic(err)
+// 			}
+// 			accessTokenAPIParams := map[string]string{
+// 				"client_id":     config.ClientID,
+// 				"client_secret": clientSecret,
+// 				"grant_type":    "authorization_code",
+// 			}
+// 			if authCodeFromRequest != nil {
+// 				accessTokenAPIParams["code"] = *authCodeFromRequest
+// 			}
+// 			if redirectURI != nil {
+// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
+// 			}
+
+func Apple(input TypeAppleInput) tpmodels.TypeProvider {
+	appleProvider := &AppleProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: appleID,
 		},
 	}
 
-	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.AppleConfig, error) {
+	getConfig := func(clientID *string, userContext supertokens.UserContext) (AppleConfig, error) {
 		if input.Config == nil || len(input.Config) == 0 {
-			return tpmodels.AppleConfig{}, errors.New("please specify a config or override GetConfig")
+			return AppleConfig{}, errors.New("please specify a config or override GetConfig")
 		}
 
 		if clientID == nil && len(input.Config) > 1 {
-			return tpmodels.AppleConfig{}, errors.New("please specify a clientID as there are multiple configs")
+			return AppleConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
 		if clientID == nil && len(input.Config) == 1 {
@@ -59,7 +102,7 @@ func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
 			}
 		}
 
-		return tpmodels.AppleConfig{}, errors.New("config for specified clientID not found")
+		return AppleConfig{}, errors.New("config for specified clientID not found")
 	}
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
@@ -74,18 +117,20 @@ func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
 
 		url := "https://appleid.apple.com/auth/authorize"
 		queryParams := map[string]interface{}{
+			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
 			"scope":         strings.Join(scopes, " "),
+			"redirect_uri":  redirectURIOnProviderDashboard,
 			"response_mode": "form_post",
 			"response_type": "code",
-			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
 		}
 
-		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
-
-		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			queryParams["actual_redirect_uri"] = url
+			url = DevOauthAuthorisationUrl
 		}
+		/* Transformation needed for dev keys END */
 
 		queryParamsStr, err := qs.Marshal(queryParams)
 		if err != nil {
@@ -109,19 +154,19 @@ func Apple(input tpmodels.TypeAppleInput) tpmodels.TypeProvider {
 		}
 		accessTokenAPIURL := "https://appleid.apple.com/auth/token"
 		accessTokenAPIParams := map[string]string{
-			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
+			"client_id":     config.ClientID,
 			"client_secret": clientSecret,
-			"grant_type":    "authorization_code",
 			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"redirect_url":  redirectURIInfo.RedirectURIOnProviderDashboard,
+			"grant_type":    "authorization_code",
 		}
 
-		redirectURI := checkDevAndGetRedirectURI(
-			config.ClientID,
-			redirectURIInfo.RedirectURIOnProviderDashboard,
-			userContext,
-		)
-
-		accessTokenAPIParams["redirect_uri"] = redirectURI
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			accessTokenAPIParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			accessTokenAPIParams["redirect_uri"] = DevOauthRedirectUrl
+		}
+		/* Transformation needed for dev keys END */
 
 		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
 		if err != nil {

@@ -16,6 +16,8 @@
 package api
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"net/http"
 
 	"github.com/derekstavis/go-qs"
@@ -63,10 +65,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, tpmodels.TypeResponsesFromProvider{
-			OAuthTokens: oAuthTokens,
-			UserInfo:    userInfo.ResponseFromProvider,
-		}, userContext)
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, oAuthTokens, userInfo.RawUserInfoFromProvider, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -93,18 +92,17 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 		return tpmodels.SignInUpPOSTResponse{
 			OK: &struct {
-				CreatedNewUser        bool
-				User                  tpmodels.User
-				Session               sessmodels.SessionContainer
-				ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+				CreatedNewUser          bool
+				User                    tpmodels.User
+				Session                 sessmodels.SessionContainer
+				OAuthTokens             tpmodels.TypeOAuthTokens
+				RawUserInfoFromProvider map[string]interface{}
 			}{
-				CreatedNewUser: response.OK.CreatedNewUser,
-				User:           response.OK.User,
-				Session:        session,
-				ResponsesFromProvider: tpmodels.TypeResponsesFromProvider{
-					OAuthTokens: oAuthTokens,
-					UserInfo:    userInfo.ResponseFromProvider,
-				},
+				CreatedNewUser:          response.OK.CreatedNewUser,
+				User:                    response.OK.User,
+				Session:                 session,
+				OAuthTokens:             oAuthTokens,
+				RawUserInfoFromProvider: userInfo.RawUserInfoFromProvider,
 			},
 		}, nil
 	}
@@ -114,12 +112,23 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		if err != nil {
 			return err
 		}
-		// TODO extract redirect url from state
+
 		redirectURL := options.AppInfo.WebsiteDomain.GetAsStringDangerous() +
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous() + "/callback/apple?" + queryParams
 
+		state := formPostInfoFromProvider["state"].(string)
+		stateBytes, err := base64.RawStdEncoding.DecodeString(state)
+
+		if err == nil {
+			stateObj := map[string]interface{}{}
+			err = json.Unmarshal(stateBytes, &stateObj)
+			if err == nil {
+				redirectURL = stateObj["redirectURI"].(string) + "?" + queryParams
+			}
+		}
+
 		options.Res.Header().Set("Location", redirectURL)
-		options.Res.WriteHeader(http.StatusFound)
+		options.Res.WriteHeader(http.StatusSeeOther)
 
 		return nil
 	}

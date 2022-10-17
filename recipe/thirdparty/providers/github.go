@@ -15,7 +15,28 @@
 
 package providers
 
+import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
+
 const githubID = "github"
+
+type TypeGithubInput struct {
+	Config   []GithubConfig
+	Override func(provider *GithubProvider) *GithubProvider
+}
+
+type GithubConfig struct {
+	ClientID     string
+	ClientSecret string
+	Scope        []string
+}
+
+type GithubProvider struct {
+	GetConfig func(clientID *string, userContext supertokens.UserContext) (GithubConfig, error)
+	*tpmodels.TypeProvider
+}
 
 // func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
 // 	return tpmodels.TypeProvider{

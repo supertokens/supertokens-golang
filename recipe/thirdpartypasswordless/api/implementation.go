@@ -46,10 +46,11 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 		} else {
 			return tplmodels.ThirdPartySignInUpOutput{
 				OK: &struct {
-					CreatedNewUser        bool
-					User                  tplmodels.User
-					Session               *sessmodels.TypeSessionContainer
-					ResponsesFromProvider tpmodels.TypeResponsesFromProvider
+					CreatedNewUser          bool
+					User                    tplmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             tpmodels.TypeOAuthTokens
+					RawUserInfoFromProvider map[string]interface{}
 				}{
 					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tplmodels.User{
@@ -59,8 +60,9 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 						PhoneNumber: nil,
 						ThirdParty:  &response.OK.User.ThirdParty,
 					},
-					Session:               response.OK.Session,
-					ResponsesFromProvider: response.OK.ResponsesFromProvider,
+					Session:                 response.OK.Session,
+					OAuthTokens:             response.OK.OAuthTokens,
+					RawUserInfoFromProvider: response.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		}

@@ -85,7 +85,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 		return
 	}
 
-	resp, err := ThirdPartySignInUp("custom", "verifiedUser", "test@example.com", tpmodels.TypeResponsesFromProvider{})
+	resp, err := ThirdPartyManuallyCreateOrUpdateUser("custom", "verifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
 	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
@@ -97,7 +97,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	assert.NoError(t, err)
 	assert.True(t, isVerfied)
 
-	resp1, err := ThirdPartySignInUp("custom2", "NotVerifiedUser", "test@example.com", tpmodels.TypeResponsesFromProvider{})
+	resp1, err := ThirdPartyManuallyCreateOrUpdateUser("custom2", "NotVerifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
 	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)

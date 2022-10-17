@@ -18,16 +18,25 @@ package tpmodels
 import "github.com/supertokens/supertokens-golang/supertokens"
 
 type RecipeInterface struct {
-	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	SignInUp                *func(thirdPartyID string, thirdPartyUserID string, email string, responsesFromProvider TypeResponsesFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
+	GetUserByID                *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail            *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByThirdPartyInfo    *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	SignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyIserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
 }
 
 type SignInUpResponse struct {
 	OK *struct {
-		CreatedNewUser        bool
-		User                  User
-		ResponsesFromProvider TypeResponsesFromProvider
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             TypeOAuthTokens
+		RawUserInfoFromProvider map[string]interface{}
+	}
+}
+
+type ManuallyCreateOrUpdateUserResponse struct {
+	OK *struct {
+		CreatedNewUser bool
+		User           User
 	}
 }
