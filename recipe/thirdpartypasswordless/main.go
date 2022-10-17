@@ -30,12 +30,12 @@ func Init(config tplmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartyCreateOrUpdateUserResponse, error) {
+func ThirdPartyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartyManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tplmodels.ThirdPartyCreateOrUpdateUserResponse{}, err
+		return tplmodels.ThirdPartyManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ThirdPartyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
@@ -380,7 +380,7 @@ func SendSms(input smsdelivery.SmsType) error {
 	return SendSmsWithContext(input, &map[string]interface{}{})
 }
 
-func ThirdPartyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tplmodels.ThirdPartyCreateOrUpdateUserResponse, error) {
+func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tplmodels.ThirdPartyManuallyCreateOrUpdateUserResponse, error) {
 	return ThirdPartyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 

@@ -22,16 +22,16 @@ import (
 )
 
 type RecipeInterface struct {
-	GetUserByID                  *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail              *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByThirdPartyInfo      *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp           *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (SignInUpResponse, error)
-	ThirdPartyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartyCreateOrUpdateUserResponse, error)
-	EmailPasswordSignUp          *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
-	EmailPasswordSignIn          *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
-	CreateResetPasswordToken     *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
-	ResetPasswordUsingToken      *func(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
-	UpdateEmailOrPassword        *func(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error)
+	GetUserByID                          *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail                      *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByThirdPartyInfo              *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartyManuallyCreateOrUpdateUserResponse, error)
+	EmailPasswordSignUp                  *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
+	EmailPasswordSignIn                  *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
+	CreateResetPasswordToken             *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
+	ResetPasswordUsingToken              *func(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
+	UpdateEmailOrPassword                *func(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error)
 }
 
 type SignInUpResponse struct {
@@ -43,7 +43,7 @@ type SignInUpResponse struct {
 	}
 }
 
-type ThirdPartyCreateOrUpdateUserResponse struct {
+type ThirdPartyManuallyCreateOrUpdateUserResponse struct {
 	OK *struct {
 		CreatedNewUser bool
 		User           User

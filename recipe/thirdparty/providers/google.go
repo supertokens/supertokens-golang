@@ -28,20 +28,36 @@ import (
 
 const googleID = "google"
 
-func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
-	googleProvider := &tpmodels.GoogleProvider{
+type TypeGoogleInput struct {
+	Config   []GoogleConfig
+	Override func(provider *GoogleProvider) *GoogleProvider
+}
+
+type GoogleConfig struct {
+	ClientID     string
+	ClientSecret string
+	Scope        []string
+}
+
+type GoogleProvider struct {
+	GetConfig func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error)
+	*tpmodels.TypeProvider
+}
+
+func Google(input TypeGoogleInput) tpmodels.TypeProvider {
+	googleProvider := &GoogleProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: googleID,
 		},
 	}
 
-	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GoogleConfig, error) {
+	getConfig := func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error) {
 		if len(input.Config) == 0 {
-			return tpmodels.GoogleConfig{}, errors.New("please specify a config or override GetConfig")
+			return GoogleConfig{}, errors.New("please specify a config or override GetConfig")
 		}
 
 		if clientID == nil && len(input.Config) > 1 {
-			return tpmodels.GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
+			return GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
 		if clientID == nil {
@@ -54,7 +70,7 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 			}
 		}
 
-		return tpmodels.GoogleConfig{}, errors.New("config for specified clientID not found")
+		return GoogleConfig{}, errors.New("config for specified clientID not found")
 	}
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
@@ -117,17 +133,18 @@ func Google(input tpmodels.TypeGoogleInput) tpmodels.TypeProvider {
 
 		accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
 		accessTokenAPIParams := map[string]string{
-			"client_id":     config.ClientID,
-			"client_secret": config.ClientSecret,
-			"grant_type":    "authorization_code",
-			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
-			"redirect_url":  redirectURIInfo.RedirectURIOnProviderDashboard,
+			"client_id":    config.ClientID,
+			"grant_type":   "authorization_code",
+			"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"redirect_url": redirectURIInfo.RedirectURIOnProviderDashboard,
 		}
 		if config.ClientSecret == "" {
 			if redirectURIInfo.PKCECodeVerifier == nil {
 				return nil, errors.New("code verifier not found")
 			}
 			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
+		} else {
+			accessTokenAPIParams["client_secret"] = config.ClientSecret
 		}
 
 		/* Transformation needed for dev keys BEGIN */

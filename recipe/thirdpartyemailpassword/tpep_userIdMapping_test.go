@@ -48,7 +48,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	createUserResponse, err := ThirdPartyCreateOrUpdateUser("google", "googleID", "test@example.com")
+	createUserResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"

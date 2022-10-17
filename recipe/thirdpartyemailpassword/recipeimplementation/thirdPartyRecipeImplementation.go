@@ -65,13 +65,13 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	createOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateUserResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 		if err != nil {
-			return tpmodels.CreateOrUpdateUserResponse{}, err
+			return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 		}
 
-		return tpmodels.CreateOrUpdateUserResponse{
+		return tpmodels.ManuallyCreateOrUpdateUserResponse{
 			OK: &struct {
 				CreatedNewUser bool
 				User           tpmodels.User
@@ -125,10 +125,10 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 	}
 
 	return tpmodels.RecipeInterface{
-		GetUserByID:             &getUserByID,
-		GetUsersByEmail:         &getUserByEmail,
-		GetUserByThirdPartyInfo: &getUserByThirdPartyInfo,
-		SignInUp:                &signInUp,
-		CreateOrUpdateUser:      &createOrUpdateUser,
+		GetUserByID:                &getUserByID,
+		GetUsersByEmail:            &getUserByEmail,
+		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
+		SignInUp:                   &signInUp,
+		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
 	}
 }

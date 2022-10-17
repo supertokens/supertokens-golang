@@ -15,7 +15,34 @@
 
 package providers
 
+import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
+
 const appleID = "apple"
+
+type TypeAppleInput struct {
+	Config   []AppleConfig
+	Override func(provider *AppleProvider) *AppleProvider
+}
+
+type AppleConfig struct {
+	ClientID     string
+	ClientSecret AppleClientSecret
+	Scope        []string
+}
+
+type AppleClientSecret struct {
+	KeyId      string
+	PrivateKey string
+	TeamId     string
+}
+
+type AppleProvider struct {
+	GetConfig func(clientID *string, userContext supertokens.UserContext) (AppleConfig, error)
+	*tpmodels.TypeProvider
+}
 
 // func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
 // 	return tpmodels.TypeProvider{
