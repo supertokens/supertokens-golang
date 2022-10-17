@@ -28,16 +28,36 @@ import (
 
 const googleID = "google"
 
-func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
-	googleProvider := &tpmodels.GoogleProvider{
+type TypeGoogleInput struct {
+	Config   []GoogleConfig
+	Override func(provider *GoogleProvider) *GoogleProvider
+}
+
+type GoogleConfig struct {
+	ClientID     string
+	ClientSecret string
+	Scope        []string
+}
+
+type GoogleProvider struct {
+	GetConfig func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error)
+	*tpmodels.TypeProvider
+}
+
+func Google(input TypeGoogleInput) tpmodels.TypeProvider {
+	googleProvider := &GoogleProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: googleID,
 		},
 	}
 
-	getConfig := func(clientID *string, userContext supertokens.UserContext) (tpmodels.GoogleConfig, error) {
+	getConfig := func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error) {
+		if len(input.Config) == 0 {
+			return GoogleConfig{}, errors.New("please specify a config or override GetConfig")
+		}
+
 		if clientID == nil && len(input.Config) > 1 {
-			return tpmodels.GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
+			return GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
 		if clientID == nil {
@@ -50,7 +70,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 			}
 		}
 
-		return tpmodels.GoogleConfig{}, errors.New("config for specified clientID not found")
+		return GoogleConfig{}, errors.New("config for specified clientID not found")
 	}
 
 	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
@@ -63,12 +83,14 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 			scopes = config.Scope
 		}
 
+		url := "https://accounts.google.com/o/oauth2/v2/auth"
 		queryParams := map[string]interface{}{
+			"client_id":              config.ClientID,
 			"scope":                  strings.Join(scopes, " "),
+			"redirect_uri":           redirectURIOnProviderDashboard,
+			"response_type":          "code",
 			"access_type":            "offline",
 			"include_granted_scopes": "true",
-			"response_type":          "code",
-			"client_id":              config.ClientID,
 		}
 
 		var codeVerifier *string
@@ -83,13 +105,13 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 			codeVerifier = &verifier
 		}
 
-		url := "https://accounts.google.com/o/oauth2/v2/auth"
-		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
-
-		url, queryParams, err = getAuthRedirectForDev(config.ClientID, url, queryParams)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			queryParams["actual_redirect_uri"] = url
+			url = DevOauthAuthorisationUrl
 		}
+		/* Transformation needed for dev keys END */
 
 		queryParamsStr, err := qs.Marshal(queryParams)
 		if err != nil {
@@ -110,24 +132,26 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 
 		accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
 		accessTokenAPIParams := map[string]string{
-			"client_id":     getActualClientIdFromDevelopmentClientId(config.ClientID),
-			"client_secret": config.ClientSecret,
-			"grant_type":    "authorization_code",
-			"code":          redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"client_id":    config.ClientID,
+			"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"redirect_url": redirectURIInfo.RedirectURIOnProviderDashboard,
+			"grant_type":   "authorization_code",
 		}
 		if config.ClientSecret == "" {
 			if redirectURIInfo.PKCECodeVerifier == nil {
 				return nil, errors.New("code verifier not found")
 			}
 			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
+		} else {
+			accessTokenAPIParams["client_secret"] = config.ClientSecret
 		}
-		redirectURI := checkDevAndGetRedirectURI(
-			config.ClientID,
-			redirectURIInfo.RedirectURIOnProviderDashboard,
-			userContext,
-		)
 
-		accessTokenAPIParams["redirect_uri"] = redirectURI
+		/* Transformation needed for dev keys BEGIN */
+		if isUsingDevelopmentClientId(config.ClientID) {
+			accessTokenAPIParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
+			accessTokenAPIParams["redirect_uri"] = DevOauthRedirectUrl
+		}
+		/* Transformation needed for dev keys END */
 
 		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
 		if err != nil {
@@ -164,8 +188,8 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 		email := userInfo["email"].(string)
 		if email == "" {
 			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId:     ID,
-				ResponseFromProvider: userInfo,
+				ThirdPartyUserId:        ID,
+				RawUserInfoFromProvider: userInfo,
 			}
 			return userInfoResult, nil
 		}
@@ -177,7 +201,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 				ID:         email,
 				IsVerified: isVerified,
 			},
-			ResponseFromProvider: userInfo,
+			RawUserInfoFromProvider: userInfo,
 		}
 		return userInfoResult, nil
 	}
@@ -191,12 +215,7 @@ func Google(input tpmodels.TypeGoogleInput) (tpmodels.TypeProvider, error) {
 		googleProvider = input.Override(googleProvider)
 	}
 
-	if len(input.Config) == 0 && (&googleProvider.GetConfig == &getConfig) {
-		// no config is provided and GetConfig is not overridden
-		return tpmodels.TypeProvider{}, errors.New("please specify a config or override GetConfig")
-	}
-
-	return *googleProvider.TypeProvider, nil
+	return *googleProvider.TypeProvider
 }
 
 func getGoogleAuthRequest(authHeader string) (interface{}, error) {

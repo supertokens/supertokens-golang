@@ -214,7 +214,7 @@ func Apple(input TypeAppleInput) tpmodels.TypeProvider {
 				ID:         email,
 				IsVerified: isVerified,
 			},
-			ResponseFromProvider: claims,
+			RawUserInfoFromProvider: claims,
 		}
 		return userInfo, nil
 	}
