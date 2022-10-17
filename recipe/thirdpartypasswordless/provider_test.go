@@ -89,7 +89,7 @@ func TestForThirdPartyPasswordlessTheMinimumConfigForThirdPartyProviderGoogle(t 
 
 	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
 
 	assert.Equal(t, "test", providerInfoGetResult.AccessTokenAPI.Params["client_id"])

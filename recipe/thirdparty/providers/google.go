@@ -30,7 +30,7 @@ func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 	return tpmodels.TypeProvider{
 		ID: googleID,
 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
+			accessTokenAPIURL := "https://oauth2.googleapis.com/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
 				"client_secret": config.ClientSecret,

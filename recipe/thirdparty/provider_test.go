@@ -71,7 +71,7 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 
 	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
 
 	assert.Equal(t, map[string]string{
@@ -141,7 +141,7 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 
 	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
 
 	assert.Equal(t, map[string]string{
@@ -210,7 +210,7 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 
 	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
 
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/token", providerInfoGetResult.AccessTokenAPI.URL)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
 	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
 
 	assert.Equal(t, map[string]string{

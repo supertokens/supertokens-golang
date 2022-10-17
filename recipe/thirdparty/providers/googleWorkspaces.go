@@ -37,7 +37,7 @@ func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvi
 	return tpmodels.TypeProvider{
 		ID: googleWorkspacesID,
 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
+			accessTokenAPIURL := "https://oauth2.googleapis.com/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
 				"client_secret": config.ClientSecret,
