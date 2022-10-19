@@ -98,7 +98,6 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 					DefaultScope:     []string{"read:user", "user:email"},
 
 					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-						fmt.Println(rawResponse)
 						result := tpmodels.TypeUserInfo{
 							ThirdPartyUserId: fmt.Sprint(rawResponse["user"].(map[string]interface{})["id"]),
 						}
