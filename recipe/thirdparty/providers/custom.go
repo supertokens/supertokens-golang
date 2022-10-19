@@ -77,6 +77,35 @@ func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderCon
 			"grant_type": "authorization_code",
 		}
 	}
+	if config.OIDCEndpoint != nil {
+		status, oidcInfo, err := doGetRequest(*config.OIDCEndpoint, nil, nil)
+
+		if err == nil && status < 300 {
+			oidcInfoMap := oidcInfo.(map[string]interface{})
+			if authURL, ok := oidcInfoMap["authorization_endpoint"].(string); ok {
+				if config.AuthorizationURL == nil {
+					config.AuthorizationURL = &authURL
+				}
+			}
+
+			if tokenURL, ok := oidcInfoMap["token_endpoint"].(string); ok {
+				if config.AccessTokenURL == nil {
+					config.AccessTokenURL = &tokenURL
+				}
+			}
+
+			if userInfoURL, ok := oidcInfoMap["userinfo_endpoint"].(string); ok {
+				if config.UserInfoURL == nil {
+					config.UserInfoURL = &userInfoURL
+				}
+			}
+
+			if jwksUrl, ok := oidcInfoMap["jwks_uri"].(string); ok {
+				config.JwksURL = &jwksUrl
+			}
+		}
+	}
+
 	if config.ScopeParameter == nil {
 		scope := "scope"
 		config.ScopeParameter = &scope
