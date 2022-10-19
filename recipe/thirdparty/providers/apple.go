@@ -16,6 +16,14 @@
 package providers
 
 import (
+	"crypto/ecdsa"
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
+	"fmt"
+	"time"
+
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -40,8 +48,113 @@ type AppleClientSecret struct {
 }
 
 type AppleProvider struct {
-	GetConfig func(clientID *string, userContext supertokens.UserContext) (AppleConfig, error)
+	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error)
 	*tpmodels.TypeProvider
+}
+
+func Apple(input TypeAppleInput) tpmodels.TypeProvider {
+	appleProvider := &AppleProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: appleID,
+		},
+	}
+
+	appleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error) {
+		if id == nil && len(input.Config) == 0 {
+			return AppleConfig{}, errors.New("please specify a config or override GetConfig")
+		}
+
+		if id == nil && len(input.Config) > 1 {
+			return AppleConfig{}, errors.New("please specify a clientID as there are multiple configs")
+		}
+
+		if id == nil {
+			return input.Config[0], nil
+		}
+
+		if id.Type == tpmodels.TypeClientID {
+			for _, config := range input.Config {
+				if config.ClientID == id.ID {
+					return config, nil
+				}
+			}
+		} else {
+			// TODO Multitenant
+		}
+
+		return AppleConfig{}, errors.New("config for specified clientID not found")
+	}
+
+	customProvider := CustomProvider(TypeCustomProviderInput{
+		ThirdPartyID: appleID,
+		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
+			provider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+				appleConfig, err := appleProvider.GetConfig(ID, userContext)
+				if err != nil {
+					return CustomProviderConfig{}, err
+				}
+
+				authURL := "https://appleid.apple.com/auth/authorize"
+				tokenURL := "https://appleid.apple.com/auth/token"
+				userInfoURL := "https://apple.com/api/users/@me"
+				jwksURL := "https://appleid.apple.com/auth/keys"
+
+				clientSecret, err := getClientSecret(appleConfig.ClientID, appleConfig.ClientSecret)
+				if err != nil {
+					return CustomProviderConfig{}, err
+				}
+
+				return CustomProviderConfig{
+					ClientID:     appleConfig.ClientID,
+					ClientSecret: clientSecret,
+					Scope:        appleConfig.Scope,
+
+					AuthorizationURL: &authURL,
+					AccessTokenURL:   &tokenURL,
+					UserInfoURL:      &userInfoURL,
+					JwksURL:          &jwksURL,
+					DefaultScope:     []string{"email"},
+
+					AuthorizationURLQueryParams: map[string]interface{}{
+						"response_mode": "form_post",
+						"response_type": "code",
+					},
+
+					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+						result := tpmodels.TypeUserInfo{}
+						result.ThirdPartyUserId = fmt.Sprint(rawResponse["sub"])
+						result.EmailInfo = &tpmodels.EmailStruct{
+							ID: fmt.Sprint(rawResponse["email"]),
+						}
+						emailVerified, emailVerifiedOk := rawResponse["email_verified"].(bool)
+						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
+
+						return result, nil
+					},
+				}, nil
+			}
+
+			return provider
+		},
+	})
+
+	appleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+	}
+
+	appleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+	}
+
+	appleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+	}
+
+	if input.Override != nil {
+		appleProvider = input.Override(appleProvider)
+	}
+
+	return customProvider
 }
 
 // func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
@@ -137,47 +250,47 @@ type AppleProvider struct {
 // 	}
 // }
 
-// func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error) {
-// 	claims := jwt.StandardClaims{
-// 		ExpiresAt: time.Now().Unix() + 86400*180,
-// 		IssuedAt:  time.Now().Unix(),
-// 		Audience:  "https://appleid.apple.com",
-// 		Id:        keyId,
-// 		Subject:   api.GetActualClientIdFromDevelopmentClientId(clientId),
-// 		Issuer:    teamId,
-// 	}
-// 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+func getClientSecret(clientId string, secret AppleClientSecret) (string, error) {
+	claims := jwt.StandardClaims{
+		ExpiresAt: time.Now().Unix() + 86400*180,
+		IssuedAt:  time.Now().Unix(),
+		Audience:  "https://appleid.apple.com",
+		Id:        secret.KeyId,
+		Subject:   getActualClientIdFromDevelopmentClientId(clientId),
+		Issuer:    secret.TeamId,
+	}
+	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
 
-// 	ecdsaPrivateKey, err := getECDSPrivateKey(privateKey)
-// 	if err != nil {
-// 		return "", err
-// 	}
+	ecdsaPrivateKey, err := getECDSPrivateKey(secret.PrivateKey)
+	if err != nil {
+		return "", err
+	}
 
-// 	// Finally sign the token with the value of type *ecdsa.PrivateKey
-// 	return token.SignedString(ecdsaPrivateKey)
-// }
+	// Finally sign the token with the value of type *ecdsa.PrivateKey
+	return token.SignedString(ecdsaPrivateKey)
+}
 
-// func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
-// 	block, _ := pem.Decode([]byte(privateKey))
-// 	// Check if it's a private key
-// 	if block == nil || block.Type != "PRIVATE KEY" {
-// 		return nil, errors.New("failed to decode PEM block containing private key")
-// 	}
-// 	// Get the encoded bytes
-// 	x509Encoded := block.Bytes
+func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
+	block, _ := pem.Decode([]byte(privateKey))
+	// Check if it's a private key
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return nil, errors.New("failed to decode PEM block containing private key")
+	}
+	// Get the encoded bytes
+	x509Encoded := block.Bytes
 
-// 	// Now you need an instance of *ecdsa.PrivateKey
-// 	parsedKey, err := x509.ParsePKCS8PrivateKey(x509Encoded) // EDIT to x509Encoded from p8bytes
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	// Now you need an instance of *ecdsa.PrivateKey
+	parsedKey, err := x509.ParsePKCS8PrivateKey(x509Encoded) // EDIT to x509Encoded from p8bytes
+	if err != nil {
+		return nil, err
+	}
 
-// 	ecdsaPrivateKey, ok := parsedKey.(*ecdsa.PrivateKey)
-// 	if !ok {
-// 		return nil, errors.New("not ecdsa private key")
-// 	}
-// 	return ecdsaPrivateKey, nil
-// }
+	ecdsaPrivateKey, ok := parsedKey.(*ecdsa.PrivateKey)
+	if !ok {
+		return nil, errors.New("not ecdsa private key")
+	}
+	return ecdsaPrivateKey, nil
+}
 
 // func verifyAndGetClaimsAppleIdToken(idToken string, clientId string) (jwt.MapClaims, error) {
 // 	/*

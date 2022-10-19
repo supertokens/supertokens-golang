@@ -98,7 +98,6 @@ func Discord(input TypeDiscordInput) tpmodels.TypeProvider {
 					DefaultScope:     []string{"email", "identify"},
 
 					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-						fmt.Println(rawResponse)
 						result := tpmodels.TypeUserInfo{}
 						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
 						result.EmailInfo = &tpmodels.EmailStruct{

@@ -98,7 +98,6 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 					DefaultScope:     []string{"email"},
 
 					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-						fmt.Println(rawResponse)
 						result := tpmodels.TypeUserInfo{}
 						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
 						result.EmailInfo = &tpmodels.EmailStruct{
