@@ -45,13 +45,14 @@ type CustomProviderConfig struct {
 	UserInfoURL                 *string
 	UserInfoMethod              *string
 	DefaultScope                []string
-	ScopeParameter              *string
-	ScopeSeparator              *string
 	JwksURL                     *string
 	OIDCEndpoint                *string
 
 	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error)
 }
+
+const ScopeParameter = "scope"
+const ScopeSeparator = " "
 
 type TypeCustomProvider struct {
 	GetConfig func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error)
@@ -107,14 +108,6 @@ func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderCon
 		}
 	}
 
-	if config.ScopeParameter == nil {
-		scope := "scope"
-		config.ScopeParameter = &scope
-	}
-	if config.ScopeSeparator == nil {
-		separator := " "
-		config.ScopeSeparator = &separator
-	}
 	return config
 }
 
@@ -168,8 +161,8 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		}
 
 		queryParams := map[string]interface{}{
-			*config.ScopeParameter: strings.Join(scopes, *config.ScopeSeparator),
-			"client_id":            config.ClientID,
+			ScopeParameter: strings.Join(scopes, ScopeSeparator),
+			"client_id":    config.ClientID,
 		}
 		for k, v := range config.AuthorizationURLQueryParams {
 			queryParams[k] = v
