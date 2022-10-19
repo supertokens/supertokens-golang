@@ -41,9 +41,9 @@ type TypeAuthorisationRedirect struct {
 type TypeProvider struct {
 	ID string
 
-	GetAuthorisationRedirectURL    func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(clientID *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(clientID *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+	GetAuthorisationRedirectURL    func(id *TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(id *TypeID, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(id *TypeID, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
 type TypeRedirectURIInfo struct {
@@ -83,4 +83,16 @@ type TypeNormalisedInput struct {
 type OverrideStruct struct {
 	Functions func(originalImplementation RecipeInterface) RecipeInterface
 	APIs      func(originalImplementation APIInterface) APIInterface
+}
+
+type IDTypeEnum string
+
+const (
+	TypeClientID IDTypeEnum = "CLIENT_ID"
+	TypeTenantID IDTypeEnum = "TENANT_ID"
+)
+
+type TypeID struct {
+	ID   string
+	Type IDTypeEnum
 }

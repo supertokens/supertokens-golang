@@ -54,7 +54,7 @@ type CustomProviderConfig struct {
 }
 
 type TypeCustomProvider struct {
-	GetConfig func(clientID *string, userContext supertokens.UserContext) (CustomProviderConfig, error)
+	GetConfig func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error)
 	*tpmodels.TypeProvider
 }
 
@@ -64,36 +64,40 @@ func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderCon
 
 func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 
-	customProviderProvider := &TypeCustomProvider{
+	customProvider := &TypeCustomProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: input.ThirdPartyID,
 		},
 	}
 
-	getConfig := func(clientID *string, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-		if len(input.Config) == 0 {
+	customProvider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+		if ID == nil && len(input.Config) == 0 {
 			return CustomProviderConfig{}, errors.New("please specify a config or override GetConfig")
 		}
 
-		if clientID == nil && len(input.Config) > 1 {
+		if ID == nil && len(input.Config) > 1 {
 			return CustomProviderConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
-		if clientID == nil {
+		if ID == nil {
 			return input.Config[0], nil
 		}
 
-		for _, config := range input.Config {
-			if config.ClientID == *clientID {
-				return config, nil
+		if ID.Type == tpmodels.TypeClientID {
+			for _, config := range input.Config {
+				if config.ClientID == ID.ID {
+					return config, nil
+				}
 			}
+		} else {
+			// TODO Multitenant
 		}
 
-		return CustomProviderConfig{}, errors.New("config for specified clientID not found")
+		return CustomProviderConfig{}, errors.New("config for specified ID not found")
 	}
 
-	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		config, err := customProviderProvider.GetConfig(clientID, userContext)
+	customProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		config, err := customProvider.GetConfig(id, userContext)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
@@ -137,8 +141,8 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		}, nil
 	}
 
-	exchangeAuthCodeForOAuthTokens := func(clientID *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		config, err := customProviderProvider.GetConfig(clientID, userContext)
+	customProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		config, err := customProvider.GetConfig(id, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -188,8 +192,8 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		return oAuthTokens, nil
 	}
 
-	getUserInfo := func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		config, err := customProviderProvider.GetConfig(clientID, userContext)
+	customProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		config, err := customProvider.GetConfig(id, userContext)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
@@ -229,12 +233,15 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 				}
 				status, userInfo, err = doPostRequest(*config.UserInfoURL, params, nil)
 			}
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
 
 			if status >= 300 {
 				return tpmodels.TypeUserInfo{}, errors.New("UserInfo API returned a non 2xx response")
 			}
 		} else {
-			return tpmodels.TypeUserInfo{}, errors.New("Misconfigured custom provider. Unable to fetch user info using access_token or id_token.")
+			return tpmodels.TypeUserInfo{}, errors.New("misconfigured custom provider, unable to fetch user info using access_token or id_token")
 		}
 
 		userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo, userContext)
@@ -245,14 +252,9 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		return userInfoResult, nil
 	}
 
-	customProviderProvider.GetConfig = getConfig
-	customProviderProvider.GetAuthorisationRedirectURL = getAuthorisationRedirectURL
-	customProviderProvider.ExchangeAuthCodeForOAuthTokens = exchangeAuthCodeForOAuthTokens
-	customProviderProvider.GetUserInfo = getUserInfo
-
 	if input.Override != nil {
-		customProviderProvider = input.Override(customProviderProvider)
+		customProvider = input.Override(customProvider)
 	}
 
-	return *customProviderProvider.TypeProvider
+	return *customProvider.TypeProvider
 }

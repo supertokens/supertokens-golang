@@ -30,7 +30,17 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 	authorisationUrlGET := func(provider tpmodels.TypeProvider, clientID *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		authRedirect, err := provider.GetAuthorisationRedirectURL(clientID, redirectURIOnProviderDashboard, userContext)
+		var id *tpmodels.TypeID
+		if clientID != nil {
+			id = &tpmodels.TypeID{
+				ID:   *clientID,
+				Type: tpmodels.TypeClientID,
+			}
+		}
+
+		// TODO multitenancy
+
+		authRedirect, err := provider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
 		if err != nil {
 			return tpmodels.AuthorisationUrlGETResponse{}, err
 		}
@@ -43,9 +53,18 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	signInUpPOST := func(provider tpmodels.TypeProvider, clientID *string, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		var oAuthTokens map[string]interface{} = nil
 		var err error
+		var id *tpmodels.TypeID
+		if clientID != nil {
+			id = &tpmodels.TypeID{
+				ID:   *clientID,
+				Type: tpmodels.TypeClientID,
+			}
+		}
+
+		// TODO multitenancy
 
 		if input.RedirectURIInfo != nil {
-			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(clientID, *input.RedirectURIInfo, userContext)
+			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(id, *input.RedirectURIInfo, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
@@ -53,7 +72,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			oAuthTokens = *input.OAuthTokens
 		}
 
-		userInfo, err := provider.GetUserInfo(clientID, oAuthTokens, userContext)
+		userInfo, err := provider.GetUserInfo(id, oAuthTokens, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}

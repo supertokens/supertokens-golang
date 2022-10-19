@@ -3,6 +3,7 @@ package providers
 import (
 	"errors"
 
+	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -21,7 +22,7 @@ type GoogleConfig struct {
 }
 
 type GoogleProvider struct {
-	GetConfig func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error)
+	GetConfig func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error)
 	*tpmodels.TypeProvider
 }
 
@@ -32,23 +33,27 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		},
 	}
 
-	googleProvider.GetConfig = func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error) {
-		if len(input.Config) == 0 {
+	googleProvider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error) {
+		if ID == nil && len(input.Config) == 0 {
 			return GoogleConfig{}, errors.New("please specify a config or override GetConfig")
 		}
 
-		if clientID == nil && len(input.Config) > 1 {
+		if ID == nil && len(input.Config) > 1 {
 			return GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
 		}
 
-		if clientID == nil {
+		if ID == nil {
 			return input.Config[0], nil
 		}
 
-		for _, config := range input.Config {
-			if config.ClientID == *clientID {
-				return config, nil
+		if ID.Type == tpmodels.TypeClientID {
+			for _, config := range input.Config {
+				if config.ClientID == ID.ID {
+					return config, nil
+				}
 			}
+		} else {
+			// TODO Multitenant
 		}
 
 		return GoogleConfig{}, errors.New("config for specified clientID not found")
@@ -57,8 +62,8 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 	customProvider := CustomProvider(TypeCustomProviderInput{
 		ThirdPartyID: googleID,
 		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
-			provider.GetConfig = func(clientID *string, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-				googleConfig, err := googleProvider.GetConfig(clientID, userContext)
+			provider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+				googleConfig, err := googleProvider.GetConfig(ID, userContext)
 				if err != nil {
 					return CustomProviderConfig{}, err
 				}
@@ -91,20 +96,50 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 				}, nil
 			}
 
+			oGetAuthorisationRedirectURL := provider.GetAuthorisationRedirectURL
+			provider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+				config, err := provider.GetConfig(id, userContext)
+				if err != nil {
+					return tpmodels.TypeAuthorisationRedirect{}, err
+				}
+				result, err := oGetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+				if err != nil {
+					return tpmodels.TypeAuthorisationRedirect{}, err
+				}
+
+				if config.ClientSecret == "" {
+					challenge, verifier, err := generateCodeChallengeS256(32)
+					if err != nil {
+						return tpmodels.TypeAuthorisationRedirect{}, err
+					}
+					extraQueryParams, err := qs.Marshal(map[string]interface{}{
+						"code_challenge":        challenge,
+						"code_challenge_method": "S256",
+					})
+					if err != nil {
+						return tpmodels.TypeAuthorisationRedirect{}, err
+					}
+					result.URLWithQueryParams += "&" + extraQueryParams
+					result.PKCECodeVerifier = &verifier
+				}
+
+				return result, nil
+			}
+
 			return provider
 		},
 	})
 
-	googleProvider.GetAuthorisationRedirectURL = func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		return customProvider.GetAuthorisationRedirectURL(clientID, redirectURIOnProviderDashboard, userContext)
+	googleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
 	}
 
-	googleProvider.ExchangeAuthCodeForOAuthTokens = func(clientID *string, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		return customProvider.ExchangeAuthCodeForOAuthTokens(clientID, redirectInfo, userContext)
+	googleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
 	}
 
-	googleProvider.GetUserInfo = func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		return customProvider.GetUserInfo(clientID, oAuthTokens, userContext)
+	googleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return customProvider.GetUserInfo(id, oAuthTokens, userContext)
 	}
 
 	if input.Override != nil {
