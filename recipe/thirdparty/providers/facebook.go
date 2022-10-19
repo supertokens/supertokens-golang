@@ -97,16 +97,16 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 					UserInfoURL:      &userInfoURL,
 					DefaultScope:     []string{"email"},
 
-					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+					GetSupertokensUserInfoFromRawUserInfoResponse: func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 						result := tpmodels.TypeUserInfo{}
-						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
+						result.ThirdPartyUserId = fmt.Sprint(rawUserInfoResponse["id"])
 						result.EmailInfo = &tpmodels.EmailStruct{
-							ID: fmt.Sprint(rawResponse["email"]),
+							ID: fmt.Sprint(rawUserInfoResponse["email"]),
 						}
-						emailVerified, emailVerifiedOk := rawResponse["email_verified"].(bool)
+						emailVerified, emailVerifiedOk := rawUserInfoResponse["email_verified"].(bool)
 						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
 
-						result.RawUserInfoFromProvider = rawResponse
+						result.RawUserInfoFromProvider = rawUserInfoResponse
 
 						return result, nil
 					},
@@ -136,7 +136,7 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 					return tpmodels.TypeUserInfo{}, errors.New("get user info returned a non 2xx response")
 				}
 
-				userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo.(map[string]interface{}), userContext)
+				userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(userInfo.(map[string]interface{}), userContext)
 				if err != nil {
 					return tpmodels.TypeUserInfo{}, err
 				}

@@ -97,12 +97,12 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 					UserInfoURL:      &userInfoURL,
 					DefaultScope:     []string{"read:user", "user:email"},
 
-					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+					GetSupertokensUserInfoFromRawUserInfoResponse: func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 						result := tpmodels.TypeUserInfo{
-							ThirdPartyUserId: fmt.Sprint(rawResponse["user"].(map[string]interface{})["id"]),
+							ThirdPartyUserId: fmt.Sprint(rawUserInfoResponse["user"].(map[string]interface{})["id"]),
 						}
 
-						emailsInfo := rawResponse["emails"].([]interface{})
+						emailsInfo := rawUserInfoResponse["emails"].([]interface{})
 						for _, info := range emailsInfo {
 							emailInfoMap := info.(map[string]interface{})
 							if emailInfoMap["primary"].(bool) {
@@ -115,7 +115,7 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 							}
 						}
 
-						result.RawUserInfoFromProvider = rawResponse
+						result.RawUserInfoFromProvider = rawUserInfoResponse
 
 						return result, nil
 					},
@@ -151,7 +151,7 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 				}
 				rawResponse["user"] = userInfo
 
-				userInfoResult, err := config.GetSupertokensUserFromRawResponse(rawResponse, userContext)
+				userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(rawResponse, userContext)
 				if err != nil {
 					return tpmodels.TypeUserInfo{}, err
 				}

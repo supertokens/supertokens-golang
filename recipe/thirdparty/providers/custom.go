@@ -50,7 +50,7 @@ type CustomProviderConfig struct {
 	JwksURL                     *string
 	OIDCEndpoint                *string
 
-	GetSupertokensUserFromRawResponse func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error)
+	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error)
 }
 
 type TypeCustomProvider struct {
@@ -270,7 +270,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 			return tpmodels.TypeUserInfo{}, errors.New("misconfigured custom provider, unable to fetch user info using access_token or id_token")
 		}
 
-		userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo.(map[string]interface{}), userContext)
+		userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(userInfo.(map[string]interface{}), userContext)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}

@@ -92,16 +92,16 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 					AccessTokenURL: &tokenURL,
 					UserInfoURL:    &userInfoURL,
 					DefaultScope:   []string{"https://www.googleapis.com/auth/userinfo.email"},
-					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+					GetSupertokensUserInfoFromRawUserInfoResponse: func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 						result := tpmodels.TypeUserInfo{}
-						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
+						result.ThirdPartyUserId = fmt.Sprint(rawUserInfoResponse["id"])
 						result.EmailInfo = &tpmodels.EmailStruct{
-							ID: fmt.Sprint(rawResponse["email"]),
+							ID: fmt.Sprint(rawUserInfoResponse["email"]),
 						}
-						emailVerified, emailVerifiedOk := rawResponse["email_verified"].(bool)
+						emailVerified, emailVerifiedOk := rawUserInfoResponse["email_verified"].(bool)
 						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
 
-						result.RawUserInfoFromProvider = rawResponse
+						result.RawUserInfoFromProvider = rawUserInfoResponse
 
 						return result, nil
 					},
