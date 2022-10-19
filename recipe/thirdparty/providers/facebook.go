@@ -136,7 +136,7 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 					return tpmodels.TypeUserInfo{}, errors.New("get user info returned a non 2xx response")
 				}
 
-				userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo, userContext)
+				userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo.(map[string]interface{}), userContext)
 				if err != nil {
 					return tpmodels.TypeUserInfo{}, err
 				}

@@ -201,7 +201,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		/* Transformation needed for dev keys END */
 
 		var status int
-		var oAuthTokens map[string]interface{}
+		var oAuthTokens interface{}
 		if *config.AccessTokenMethod == http.MethodPost {
 			status, oAuthTokens, err = doPostRequest(accessTokenAPIURL, accessTokenAPIParams, nil)
 		} else {
@@ -215,7 +215,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 			return nil, errors.New("AccessToken API returned a non 2xx response")
 		}
 
-		return oAuthTokens, nil
+		return oAuthTokens.(map[string]interface{}), nil
 	}
 
 	customProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
@@ -225,7 +225,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		}
 		config = normalizeCustomProviderInput(config)
 
-		var userInfo map[string]interface{}
+		var userInfo interface{}
 		accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 		idToken, idTokenOk := oAuthTokens["id_token"].(string)
 
@@ -270,7 +270,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 			return tpmodels.TypeUserInfo{}, errors.New("misconfigured custom provider, unable to fetch user info using access_token or id_token")
 		}
 
-		userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo, userContext)
+		userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo.(map[string]interface{}), userContext)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}

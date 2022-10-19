@@ -33,11 +33,16 @@ import (
 	"github.com/derekstavis/go-qs"
 )
 
-func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (int, map[string]interface{}, error) {
-	querystring, err := qs.Marshal(queryParams)
-	url = url + "?" + querystring
+func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (int, interface{}, error) {
+	if queryParams != nil {
+		querystring, err := qs.Marshal(queryParams)
+		if err != nil {
+			return 0, nil, err
+		}
+		url = url + "?" + querystring
+	}
 
-	req, err := http.NewRequest("GET", url+"?"+querystring, nil)
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return 0, nil, err
 	}
@@ -56,7 +61,7 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 		return 0, nil, err
 	}
 
-	var result map[string]interface{}
+	var result interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
 		return 0, nil, err
