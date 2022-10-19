@@ -78,6 +78,7 @@ func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderCon
 		}
 	}
 	if config.OIDCEndpoint != nil {
+		// TODO cache this value for 24 hours
 		status, oidcInfo, err := doGetRequest(*config.OIDCEndpoint, nil, nil)
 
 		if err == nil && status < 300 {
