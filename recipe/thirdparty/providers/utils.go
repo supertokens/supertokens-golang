@@ -21,7 +21,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -34,67 +33,71 @@ import (
 	"github.com/derekstavis/go-qs"
 )
 
-func doGetRequest(req *http.Request) (interface{}, error) {
+func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (int, map[string]interface{}, error) {
+	querystring, err := qs.Marshal(queryParams)
+	url = url + "?" + querystring
+
+	req, err := http.NewRequest("GET", url+"?"+querystring, nil)
+	if err != nil {
+		return 0, nil, err
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
-	}
-
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode >= 300 {
-		return nil, errors.New(fmt.Sprintf("Provider API returned response with status `%s` and body `%s`", resp.Status, string(body)))
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return 0, nil, err
 	}
 
-	var result interface{}
+	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	return result, nil
+	return resp.StatusCode, result, nil
 }
 
-func postRequest(url string, params map[string]string) (map[string]interface{}, error) {
-	querystring, err := getParamString(params)
+func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (int, map[string]interface{}, error) {
+	postBody, err := qs.Marshal(params)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(querystring)))
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(postBody)))
 	if err != nil {
-		return nil, err
+		return 0, nil, err
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value.(string))
 	}
 	req.Header.Set("content-type", "application/x-www-form-urlencoded")
 	req.Header.Set("accept", "application/json") // few providers like github don't send back json response by default
 
 	client := &http.Client{}
-	response, err := client.Do(req)
+	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	defer response.Body.Close()
-	body, err := ioutil.ReadAll(response.Body)
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
+
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return nil, err
+		return 0, nil, err
 	}
-	return result, nil
-}
 
-func getParamString(paramsMap map[string]string) (string, error) {
-	params := map[string]interface{}{}
-	for key, value := range paramsMap {
-		params[key] = value
-	}
-	return qs.Marshal(params)
+	return resp.StatusCode, result, nil
 }
 
 var jwksKeys = map[string]*keyfunc.JWKS{}

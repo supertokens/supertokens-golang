@@ -1,27 +1,8 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
- *
- * This software is licensed under the Apache License, Version 2.0 (the
- * "License") as published by the Apache Software Foundation.
- *
- * You may not use this file except in compliance with the License. You may
- * obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package providers
 
 import (
-	"encoding/json"
 	"errors"
-	"net/http"
-	"strings"
 
-	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -51,7 +32,7 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		},
 	}
 
-	getConfig := func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error) {
+	googleProvider.GetConfig = func(clientID *string, userContext supertokens.UserContext) (GoogleConfig, error) {
 		if len(input.Config) == 0 {
 			return GoogleConfig{}, errors.New("please specify a config or override GetConfig")
 		}
@@ -73,166 +54,62 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		return GoogleConfig{}, errors.New("config for specified clientID not found")
 	}
 
-	getAuthorisationRedirectURL := func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-		config, err := googleProvider.GetConfig(clientID, userContext)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
-		}
-		if config.Scope != nil {
-			scopes = config.Scope
-		}
+	customProvider := CustomProvider(TypeCustomProviderInput{
+		ThirdPartyID: googleID,
+		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
+			provider.GetConfig = func(clientID *string, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+				googleConfig, err := googleProvider.GetConfig(clientID, userContext)
+				if err != nil {
+					return CustomProviderConfig{}, err
+				}
 
-		queryParams := map[string]interface{}{
-			"scope":                  strings.Join(scopes, " "),
-			"access_type":            "offline",
-			"include_granted_scopes": "true",
-			"response_type":          "code",
-			"client_id":              config.ClientID,
-		}
+				authURL := "https://accounts.google.com/o/oauth2/v2/auth"
+				tokenURL := "https://oauth2.googleapis.com/token"
+				userInfoURL := "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
 
-		var codeVerifier *string
-		if config.ClientSecret == "" {
-			challenge, verifier, err := generateCodeChallengeS256(32)
-			if err != nil {
-				return tpmodels.TypeAuthorisationRedirect{}, err
+				accessType := "offline"
+				if googleConfig.ClientSecret == "" {
+					accessType = "online"
+				}
+
+				return CustomProviderConfig{
+					ClientID:     googleConfig.ClientID,
+					ClientSecret: googleConfig.ClientSecret,
+					Scope:        googleConfig.Scope,
+
+					AuthorizationURL: &authURL,
+					AuthorizationURLQueryParams: map[string]interface{}{
+						"access_type":            accessType,
+						"include_granted_scopes": "true",
+						"response_type":          "code",
+					},
+					AccessTokenURL: &tokenURL,
+					AccessTokenParams: map[string]interface{}{
+						"grant_type": "authorization_code",
+					},
+					UserInfoURL: &userInfoURL,
+				}, nil
 			}
-			queryParams["access_type"] = "online"
-			queryParams["code_challenge"] = challenge
-			queryParams["code_challenge_method"] = "S256"
-			codeVerifier = &verifier
-		}
 
-		url := "https://accounts.google.com/o/oauth2/v2/auth"
-		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
+			return provider
+		},
+	})
 
-		/* Transformation needed for dev keys BEGIN */
-		if isUsingDevelopmentClientId(config.ClientID) {
-			queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
-			queryParams["actual_redirect_uri"] = url
-			url = DevOauthAuthorisationUrl
-		}
-		/* Transformation needed for dev keys END */
-
-		queryParamsStr, err := qs.Marshal(queryParams)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
-		}
-
-		return tpmodels.TypeAuthorisationRedirect{
-			URLWithQueryParams: url + "?" + queryParamsStr,
-			PKCECodeVerifier:   codeVerifier,
-		}, nil
+	googleProvider.GetAuthorisationRedirectURL = func(clientID *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return customProvider.GetAuthorisationRedirectURL(clientID, redirectURIOnProviderDashboard, userContext)
 	}
 
-	exchangeAuthCodeForOAuthTokens := func(clientID *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		config, err := googleProvider.GetConfig(clientID, userContext)
-		if err != nil {
-			return nil, err
-		}
-
-		accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
-		accessTokenAPIParams := map[string]string{
-			"client_id":    config.ClientID,
-			"grant_type":   "authorization_code",
-			"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
-			"redirect_url": redirectURIInfo.RedirectURIOnProviderDashboard,
-		}
-		if config.ClientSecret == "" {
-			if redirectURIInfo.PKCECodeVerifier == nil {
-				return nil, errors.New("code verifier not found")
-			}
-			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
-		} else {
-			accessTokenAPIParams["client_secret"] = config.ClientSecret
-		}
-
-		/* Transformation needed for dev keys BEGIN */
-		if isUsingDevelopmentClientId(config.ClientID) {
-			accessTokenAPIParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
-			accessTokenAPIParams["redirect_uri"] = DevOauthRedirectUrl
-		}
-		/* Transformation needed for dev keys END */
-
-		authResponseFromRequest, err := postRequest(accessTokenAPIURL, accessTokenAPIParams)
-		if err != nil {
-			return nil, err
-		}
-
-		authResponse := tpmodels.TypeOAuthTokens{}
-
-		for k, v := range authResponseFromRequest {
-			authResponse[k] = v
-		}
-
-		return authResponse, nil
+	googleProvider.ExchangeAuthCodeForOAuthTokens = func(clientID *string, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return customProvider.ExchangeAuthCodeForOAuthTokens(clientID, redirectInfo, userContext)
 	}
 
-	getUserInfo := func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		authResponseJson, err := json.Marshal(oAuthTokens)
-		if err != nil {
-			return tpmodels.TypeUserInfo{}, err
-		}
-		var accessTokenAPIResponse googleGetProfileInfoInput
-		err = json.Unmarshal(authResponseJson, &accessTokenAPIResponse)
-		if err != nil {
-			return tpmodels.TypeUserInfo{}, err
-		}
-		accessToken := accessTokenAPIResponse.AccessToken
-		authHeader := "Bearer " + accessToken
-		response, err := getGoogleAuthRequest(authHeader)
-		if err != nil {
-			return tpmodels.TypeUserInfo{}, err
-		}
-		userInfo := response.(map[string]interface{})
-		ID := userInfo["id"].(string)
-		email := userInfo["email"].(string)
-		if email == "" {
-			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId:        ID,
-				RawUserInfoFromProvider: userInfo,
-			}
-			return userInfoResult, nil
-		}
-
-		isVerified := userInfo["verified_email"].(bool)
-		userInfoResult := tpmodels.TypeUserInfo{
-			ThirdPartyUserId: ID,
-			EmailInfo: &tpmodels.EmailStruct{
-				ID:         email,
-				IsVerified: isVerified,
-			},
-			RawUserInfoFromProvider: userInfo,
-		}
-		return userInfoResult, nil
+	googleProvider.GetUserInfo = func(clientID *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return customProvider.GetUserInfo(clientID, oAuthTokens, userContext)
 	}
-
-	googleProvider.GetConfig = getConfig
-	googleProvider.GetAuthorisationRedirectURL = getAuthorisationRedirectURL
-	googleProvider.ExchangeAuthCodeForOAuthTokens = exchangeAuthCodeForOAuthTokens
-	googleProvider.GetUserInfo = getUserInfo
 
 	if input.Override != nil {
 		googleProvider = input.Override(googleProvider)
 	}
 
-	return *googleProvider.TypeProvider
-}
-
-func getGoogleAuthRequest(authHeader string) (interface{}, error) {
-	url := "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
-}
-
-type googleGetProfileInfoInput struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
-	Scope        string `json:"scope"`
-	RefreshToken string `json:"refresh_token"`
+	return customProvider
 }
