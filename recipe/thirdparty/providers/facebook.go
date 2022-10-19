@@ -16,6 +16,9 @@
 package providers
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -34,104 +37,130 @@ type FacebookConfig struct {
 }
 
 type FacebookProvider struct {
-	GetConfig func(clientID *string, userContext supertokens.UserContext) (FacebookConfig, error)
+	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (FacebookConfig, error)
 	*tpmodels.TypeProvider
 }
 
-// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-// 	return tpmodels.TypeProvider{
-// 		ID: facebookID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
-// 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
-// 			}
+func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
+	facebookProvider := &FacebookProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: facebookID,
+		},
+	}
 
-// 			authorisationRedirectURL := "https://www.facebook.com/v9.0/dialog/oauth"
-// 			scopes := []string{"email"}
-// 			if config.Scope != nil {
-// 				scopes = config.Scope
-// 			}
+	facebookProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (FacebookConfig, error) {
+		if id == nil && len(input.Config) == 0 {
+			return FacebookConfig{}, errors.New("please specify a config or override GetConfig")
+		}
 
-// 			authorizationRedirectParams := map[string]interface{}{
-// 				"scope":         strings.Join(scopes, " "),
-// 				"response_type": "code",
-// 				"client_id":     config.ClientID,
-// 			}
+		if id == nil && len(input.Config) > 1 {
+			return FacebookConfig{}, errors.New("please specify a clientID as there are multiple configs")
+		}
 
-// 			return tpmodels.TypeProviderGetResponse{
-// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 					URL:    accessTokenAPIURL,
-// 					Params: accessTokenAPIParams,
-// 				},
-// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 					URL:    authorisationRedirectURL,
-// 					Params: authorizationRedirectParams,
-// 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					var accessTokenAPIResponse facebookGetProfileInfoInput
-// 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					accessToken := accessTokenAPIResponse.AccessToken
-// 					response, err := getFacebookAuthRequest(accessToken)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					userInfo := response.(map[string]interface{})
-// 					ID := userInfo["id"].(string)
-// 					email, emailOk := userInfo["email"].(string)
-// 					if !emailOk {
-// 						return tpmodels.UserInfo{
-// 							ID: ID,
-// 						}, nil
-// 					}
-// 					isVerified, isVerifiedOk := userInfo["verified_email"].(bool)
-// 					return tpmodels.UserInfo{
-// 						ID: ID,
-// 						Email: &tpmodels.EmailStruct{
-// 							ID:         email,
-// 							IsVerified: isVerified && isVerifiedOk,
-// 						},
-// 					}, nil
-// 				},
-// 				GetClientId: func(userContext supertokens.UserContext) string {
-// 					return config.ClientID
-// 				},
-// 			}
-// 		},
-// 		IsDefault: config.IsDefault,
-// 	}
-// }
+		if id == nil {
+			return input.Config[0], nil
+		}
 
-// func getFacebookAuthRequest(accessToken string) (interface{}, error) {
-// 	url := "https://graph.facebook.com/me"
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	q := req.URL.Query()
-// 	q.Add("access_token", accessToken)
-// 	q.Add("fields", "id,email")
-// 	q.Add("format", "json")
-// 	req.URL.RawQuery = q.Encode()
-// 	return doGetRequest(req)
-// }
+		if id.Type == tpmodels.TypeClientID {
+			for _, config := range input.Config {
+				if config.ClientID == id.ID {
+					return config, nil
+				}
+			}
+		} else {
+			// TODO Multitenant
+		}
 
-// type facebookGetProfileInfoInput struct {
-// 	AccessToken string `json:"access_token"`
-// 	ExpiresIn   int    `json:"expires_in"`
-// 	TokenType   string `json:"token_type"`
-// }
+		return FacebookConfig{}, errors.New("config for specified clientID not found")
+	}
+
+	customProvider := CustomProvider(TypeCustomProviderInput{
+		ThirdPartyID: facebookID,
+		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
+			provider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+				facebookConfig, err := facebookProvider.GetConfig(ID, userContext)
+				if err != nil {
+					return CustomProviderConfig{}, err
+				}
+
+				authURL := "https://www.facebook.com/v12.0/dialog/oauth"
+				tokenURL := "https://graph.facebook.com/v12.0/oauth/access_token"
+				userInfoURL := "https://graph.facebook.com/me"
+
+				return CustomProviderConfig{
+					ClientID:     facebookConfig.ClientID,
+					ClientSecret: facebookConfig.ClientSecret,
+					Scope:        facebookConfig.Scope,
+
+					AuthorizationURL: &authURL,
+					AccessTokenURL:   &tokenURL,
+					UserInfoURL:      &userInfoURL,
+					DefaultScope:     []string{"email"},
+
+					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+						fmt.Println(rawResponse)
+						result := tpmodels.TypeUserInfo{}
+						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
+						result.EmailInfo = &tpmodels.EmailStruct{
+							ID: fmt.Sprint(rawResponse["email"]),
+						}
+						emailVerified, emailVerifiedOk := rawResponse["email_verified"].(bool)
+						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
+
+						return result, nil
+					},
+				}, nil
+			}
+
+			provider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+				config, err := provider.GetConfig(id, userContext)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+
+				accessToken := oAuthTokens["access_token"].(string)
+
+				queryParams := map[string]interface{}{
+					"access_token": accessToken,
+					"fields":       "id,email",
+					"format":       "json",
+				}
+
+				status, userInfo, err := doGetRequest(*config.UserInfoURL, queryParams, nil)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+
+				if status >= 300 {
+					return tpmodels.TypeUserInfo{}, errors.New("get user info returned a non 2xx response")
+				}
+
+				userInfoResult, err := config.GetSupertokensUserFromRawResponse(userInfo, userContext)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+				return userInfoResult, nil
+			}
+
+			return provider
+		},
+	})
+
+	facebookProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+	}
+
+	facebookProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+	}
+
+	facebookProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+	}
+
+	if input.Override != nil {
+		facebookProvider = input.Override(facebookProvider)
+	}
+
+	return customProvider
+}
