@@ -2,6 +2,7 @@ package providers
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -70,7 +71,7 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 
 				authURL := "https://accounts.google.com/o/oauth2/v2/auth"
 				tokenURL := "https://oauth2.googleapis.com/token"
-				userInfoURL := "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
+				userInfoURL := "https://www.googleapis.com/oauth2/v1/userinfo"
 
 				accessType := "offline"
 				if googleConfig.ClientSecret == "" {
@@ -92,7 +93,19 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 					AccessTokenParams: map[string]interface{}{
 						"grant_type": "authorization_code",
 					},
-					UserInfoURL: &userInfoURL,
+					UserInfoURL:  &userInfoURL,
+					DefaultScope: []string{"https://www.googleapis.com/auth/userinfo.email"},
+					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+						result := tpmodels.TypeUserInfo{}
+						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
+						result.EmailInfo = &tpmodels.EmailStruct{
+							ID: fmt.Sprint(rawResponse["email"]),
+						}
+						emailVerified, emailVerifiedOk := rawResponse["email_verified"].(bool)
+						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
+
+						return result, nil
+					},
 				}, nil
 			}
 

@@ -59,6 +59,22 @@ type TypeCustomProvider struct {
 }
 
 func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderConfig {
+	if config.AccessTokenMethod == nil {
+		post := http.MethodPost
+		config.AccessTokenMethod = &post
+	}
+	if config.UserInfoMethod == nil {
+		get := http.MethodGet
+		config.UserInfoMethod = &get
+	}
+	if config.ScopeParameter == nil {
+		scope := "scope"
+		config.ScopeParameter = &scope
+	}
+	if config.ScopeSeparator == nil {
+		separator := " "
+		config.ScopeSeparator = &separator
+	}
 	return config
 }
 
@@ -176,7 +192,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 
 		var status int
 		var oAuthTokens map[string]interface{}
-		if *config.AccessTokenMethod == "POST" {
+		if *config.AccessTokenMethod == http.MethodPost {
 			status, oAuthTokens, err = doPostRequest(accessTokenAPIURL, accessTokenAPIParams, nil)
 		} else {
 			status, oAuthTokens, err = doGetRequest(accessTokenAPIURL, accessTokenAPIParams, nil)
