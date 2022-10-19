@@ -106,6 +106,8 @@ func Discord(input TypeDiscordInput) tpmodels.TypeProvider {
 						emailVerified, emailVerifiedOk := rawResponse["verified"].(bool)
 						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
 
+						result.RawUserInfoFromProvider = rawResponse
+
 						return result, nil
 					},
 				}, nil
