@@ -67,6 +67,16 @@ func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderCon
 		get := http.MethodGet
 		config.UserInfoMethod = &get
 	}
+	if config.AuthorizationURLQueryParams == nil {
+		config.AuthorizationURLQueryParams = map[string]interface{}{
+			"response_type": "code",
+		}
+	}
+	if config.AccessTokenParams == nil {
+		config.AccessTokenParams = map[string]interface{}{
+			"grant_type": "authorization_code",
+		}
+	}
 	if config.ScopeParameter == nil {
 		scope := "scope"
 		config.ScopeParameter = &scope

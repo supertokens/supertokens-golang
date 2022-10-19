@@ -90,11 +90,8 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 						"response_type":          "code",
 					},
 					AccessTokenURL: &tokenURL,
-					AccessTokenParams: map[string]interface{}{
-						"grant_type": "authorization_code",
-					},
-					UserInfoURL:  &userInfoURL,
-					DefaultScope: []string{"https://www.googleapis.com/auth/userinfo.email"},
+					UserInfoURL:    &userInfoURL,
+					DefaultScope:   []string{"https://www.googleapis.com/auth/userinfo.email"},
 					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 						result := tpmodels.TypeUserInfo{}
 						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])

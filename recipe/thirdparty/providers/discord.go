@@ -16,6 +16,9 @@
 package providers
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -34,95 +37,100 @@ type DiscordConfig struct {
 }
 
 type DiscordProvider struct {
-	GetConfig func(clientID *string, userContext supertokens.UserContext) (DiscordConfig, error)
+	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (DiscordConfig, error)
 	*tpmodels.TypeProvider
 }
 
-// func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-// 	return tpmodels.TypeProvider{
-// 		ID: discordID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://discord.com/api/oauth2/token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 				"grant_type":    "authorization_code",
-// 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
-// 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
-// 			}
+func Discord(input TypeDiscordInput) tpmodels.TypeProvider {
+	discordProvider := &DiscordProvider{
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: discordID,
+		},
+	}
 
-// 			authorisationRedirectURL := "https://discord.com/api/oauth2/authorize"
-// 			scopes := []string{"email", "identify"}
-// 			if config.Scope != nil {
-// 				scopes = config.Scope
-// 			}
+	discordProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (DiscordConfig, error) {
+		if id == nil && len(input.Config) == 0 {
+			return DiscordConfig{}, errors.New("please specify a config or override GetConfig")
+		}
 
-// 			var additionalParams map[string]interface{} = nil
-// 			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-// 				additionalParams = config.AuthorisationRedirect.Params
-// 			}
+		if id == nil && len(input.Config) > 1 {
+			return DiscordConfig{}, errors.New("please specify a clientID as there are multiple configs")
+		}
 
-// 			authorizationRedirectParams := map[string]interface{}{
-// 				"scope":         strings.Join(scopes, " "),
-// 				"client_id":     config.ClientID,
-// 				"response_type": "code",
-// 			}
-// 			for key, value := range additionalParams {
-// 				authorizationRedirectParams[key] = value
-// 			}
+		if id == nil {
+			return input.Config[0], nil
+		}
 
-// 			return tpmodels.TypeProviderGetResponse{
-// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 					URL:    accessTokenAPIURL,
-// 					Params: accessTokenAPIParams,
-// 				},
-// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 					URL:    authorisationRedirectURL,
-// 					Params: authorizationRedirectParams,
-// 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+		if id.Type == tpmodels.TypeClientID {
+			for _, config := range input.Config {
+				if config.ClientID == id.ID {
+					return config, nil
+				}
+			}
+		} else {
+			// TODO Multitenant
+		}
 
-// 					accessToken := authCodeResponse.(map[string]interface{})["access_token"].(string)
-// 					authHeader := "Bearer " + accessToken
-// 					response, err := getAuthRequest(authHeader)
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
-// 					userInfo := response.(map[string]interface{})
-// 					_, emailOk := userInfo["email"]
-// 					if !emailOk {
-// 						return tpmodels.UserInfo{
-// 							ID:    userInfo["id"].(string),
-// 							Email: nil,
-// 						}, nil
-// 					}
-// 					return tpmodels.UserInfo{
-// 						ID: userInfo["id"].(string),
-// 						Email: &tpmodels.EmailStruct{
-// 							ID:         userInfo["email"].(string),
-// 							IsVerified: userInfo["verified"].(bool),
-// 						},
-// 					}, nil
-// 				},
-// 				GetClientId: func(userContext supertokens.UserContext) string {
-// 					return config.ClientID
-// 				},
-// 			}
-// 		},
-// 		IsDefault: config.IsDefault,
-// 	}
-// }
+		return DiscordConfig{}, errors.New("config for specified clientID not found")
+	}
 
-// func getAuthRequest(authHeader string) (interface{}, error) {
-// 	url := "https://discord.com/api/users/@me"
-// 	req, err := http.NewRequest("GET", url, nil)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	req.Header.Add("Authorization", authHeader)
-// 	return doGetRequest(req)
-// }
+	customProvider := CustomProvider(TypeCustomProviderInput{
+		ThirdPartyID: discordID,
+		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
+			provider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+				discordConfig, err := discordProvider.GetConfig(ID, userContext)
+				if err != nil {
+					return CustomProviderConfig{}, err
+				}
+
+				authURL := "https://discord.com/api/oauth2/authorize"
+				tokenURL := "https://discord.com/api/oauth2/token"
+				userInfoURL := "https://discord.com/api/users/@me"
+
+				return CustomProviderConfig{
+					ClientID:     discordConfig.ClientID,
+					ClientSecret: discordConfig.ClientSecret,
+					Scope:        discordConfig.Scope,
+
+					AuthorizationURL: &authURL,
+					AccessTokenURL:   &tokenURL,
+					UserInfoURL:      &userInfoURL,
+					DefaultScope:     []string{"email", "identify"},
+
+					GetSupertokensUserFromRawResponse: func(rawResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+						fmt.Println(rawResponse)
+						result := tpmodels.TypeUserInfo{}
+						result.ThirdPartyUserId = fmt.Sprint(rawResponse["id"])
+						result.EmailInfo = &tpmodels.EmailStruct{
+							ID: fmt.Sprint(rawResponse["email"]),
+						}
+						emailVerified, emailVerifiedOk := rawResponse["verified"].(bool)
+						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
+
+						return result, nil
+					},
+				}, nil
+			}
+
+			return provider
+		},
+	})
+
+	discordProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+	}
+
+	discordProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+	}
+
+	discordProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+	}
+
+	if input.Override != nil {
+		discordProvider = input.Override(discordProvider)
+	}
+
+	return customProvider
+}
