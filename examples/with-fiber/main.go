@@ -128,7 +128,7 @@ func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 		}))(c)
 
 		if !sessionVerified {
-			return
+			return &fiber.Error{Message: "unauthorized"}
 		}
 		return c.Next()
 	}
