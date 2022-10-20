@@ -211,10 +211,17 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 		} else if r.URL.Path == "/featureFlags" && r.Method == "GET" {
 			featureFlag(rw, r)
 		} else if r.URL.Path == "/testError" && r.Method == "GET" {
-			rw.WriteHeader(http.StatusInternalServerError)
+			code := 500
+			codeStr := r.URL.Query().Get("code")
+			if codeStr != "" {
+				code, _ = strconv.Atoi(codeStr)
+			}
+			rw.WriteHeader(code)
 			rw.Write([]byte("test error message"))
 		} else if r.URL.Path == "/reinitialiseBackendConfig" && r.Method == "POST" {
 			reinitialiseBackendConfig(rw, r)
+		} else if strings.HasPrefix(r.URL.Path, "/angular") {
+			angular(rw, r)
 		} else {
 			fail(rw, r)
 		}
@@ -278,6 +285,12 @@ func index(w http.ResponseWriter, r *http.Request) {
 	dat, _ := ioutil.ReadFile("./static/index.html")
 	w.Header().Set("Content-Type", "text/html")
 	w.Write(dat)
+}
+
+func angular(w http.ResponseWriter, r *http.Request) {
+	fs := http.FileServer(http.Dir("./angular"))
+	r.URL.Path = strings.TrimPrefix(r.URL.Path, "/angular")
+	fs.ServeHTTP(w, r)
 }
 
 func testHeader(response http.ResponseWriter, request *http.Request) {
