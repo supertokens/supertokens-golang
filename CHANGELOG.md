@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 - Updated Frontend integration test server for angular tests
 
+### Fixes
+- Fixes Apple secret key computation
+
 ## [0.9.6] - 2022-10-17
 - Updated google token endpoint
 

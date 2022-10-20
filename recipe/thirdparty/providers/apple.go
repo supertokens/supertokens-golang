@@ -129,11 +129,12 @@ func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error)
 		ExpiresAt: time.Now().Unix() + 86400*180,
 		IssuedAt:  time.Now().Unix(),
 		Audience:  "https://appleid.apple.com",
-		Id:        keyId,
 		Subject:   api.GetActualClientIdFromDevelopmentClientId(clientId),
 		Issuer:    teamId,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token.Header["alg"] = "ES256"
+	token.Header["kid"] = keyId
 
 	ecdsaPrivateKey, err := getECDSPrivateKey(privateKey)
 	if err != nil {
