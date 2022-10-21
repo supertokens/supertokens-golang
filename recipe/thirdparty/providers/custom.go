@@ -65,30 +65,28 @@ func normalizeCustomProviderInput(config CustomProviderConfig) (CustomProviderCo
 		config.Scope = []string{}
 	}
 	if config.OIDCEndpoint != "" {
-		// TODO cache this value for 24 hours
-		oidcInfo, err := doGetRequest(config.OIDCEndpoint, nil, nil)
+		oidcInfo, err := getOIDCDiscoveryInfo(config.OIDCEndpoint)
 
 		if err == nil {
-			oidcInfoMap := oidcInfo.(map[string]interface{})
-			if authURL, ok := oidcInfoMap["authorization_endpoint"].(string); ok {
+			if authURL, ok := oidcInfo["authorization_endpoint"].(string); ok {
 				if config.AuthorizationEndpoint == "" {
 					config.AuthorizationEndpoint = authURL
 				}
 			}
 
-			if tokenURL, ok := oidcInfoMap["token_endpoint"].(string); ok {
+			if tokenURL, ok := oidcInfo["token_endpoint"].(string); ok {
 				if config.TokenEndpoint == "" {
 					config.TokenEndpoint = tokenURL
 				}
 			}
 
-			if userInfoURL, ok := oidcInfoMap["userinfo_endpoint"].(string); ok {
+			if userInfoURL, ok := oidcInfo["userinfo_endpoint"].(string); ok {
 				if config.UserInfoEndpoint == "" {
 					config.UserInfoEndpoint = userInfoURL
 				}
 			}
 
-			if jwksUri, ok := oidcInfoMap["jwks_uri"].(string); ok {
+			if jwksUri, ok := oidcInfo["jwks_uri"].(string); ok {
 				config.JwksURI = jwksUri
 			}
 		}

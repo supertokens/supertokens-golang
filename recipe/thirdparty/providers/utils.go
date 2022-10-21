@@ -71,7 +71,7 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 		return nil, err
 	}
 	if resp.StatusCode >= 300 {
-		return nil, errors.New(fmt.Sprintf("GET request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body)))
+		return nil, fmt.Errorf("GET request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
 	}
 	return result, nil
 }
@@ -110,7 +110,7 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	}
 
 	if resp.StatusCode >= 300 {
-		return nil, errors.New(fmt.Sprintf("POST request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body)))
+		return nil, fmt.Errorf("POST request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
 	}
 
 	return result, nil
@@ -145,9 +145,31 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 }
 
 // OIDC utils
+var oidcInfoMap = map[string]map[string]interface{}{}
+var oidcInfoMapLock = sync.Mutex{}
+
+func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
+	oidcInfoMapLock.Lock()
+	defer oidcInfoMapLock.Unlock()
+
+	// Check again to see if it was added while we were waiting for the lock
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
+	oidcInfo, err := doGetRequest(issuer+"/.well-known/openid-configuration", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
+	return oidcInfoMap[issuer], nil
+}
 
 // User map utils
-
 func accessField(obj interface{}, key string) interface{} {
 	keyParts := strings.Split(key, ".")
 	for _, k := range keyParts {
