@@ -241,6 +241,9 @@ func customProvider(input TypeCustomProviderInput) *TypeCustomProvider {
 			return tpmodels.TypeUserInfo{}, err
 		}
 		config, err = normalizeCustomProviderInput(config)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
 
 		accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 		idToken, idTokenOk := oAuthTokens["id_token"].(string)
