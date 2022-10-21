@@ -44,7 +44,7 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 					User                    tpmodels.User
 					Session                 sessmodels.SessionContainer
 					OAuthTokens             tpmodels.TypeOAuthTokens
-					RawUserInfoFromProvider map[string]interface{}
+					RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 				}{
 					CreatedNewUser: result.OK.CreatedNewUser,
 					User: tpmodels.User{

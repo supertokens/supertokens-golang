@@ -50,7 +50,7 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 					User                    tplmodels.User
 					Session                 *sessmodels.TypeSessionContainer
 					OAuthTokens             tpmodels.TypeOAuthTokens
-					RawUserInfoFromProvider map[string]interface{}
+					RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 				}{
 					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tplmodels.User{

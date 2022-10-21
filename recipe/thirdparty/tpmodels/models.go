@@ -22,10 +22,20 @@ import (
 type TypeRedirectURIQueryParams = map[string]interface{}
 type TypeOAuthTokens = map[string]interface{}
 
+type TypeRawUserInfoFromProvider struct {
+	FromIdToken     map[string]interface{}
+	FromAccessToken map[string]interface{}
+}
+
+type TypeSupertokensUserInfo struct {
+	ThirdPartyUserId string
+	EmailInfo        *EmailStruct
+}
+
 type TypeUserInfo struct {
-	ThirdPartyUserId        string                 `json:"thirdPartyUserId"`
-	EmailInfo               *EmailStruct           `json:"emailInfo"`
-	RawUserInfoFromProvider map[string]interface{} `json:"rawUserInfoFromProvider"`
+	ThirdPartyUserId        string
+	EmailInfo               *EmailStruct
+	RawUserInfoFromProvider TypeRawUserInfoFromProvider
 }
 
 type EmailStruct struct {

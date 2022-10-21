@@ -20,7 +20,6 @@ import (
 	"crypto/x509"
 	"encoding/pem"
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
@@ -39,6 +38,21 @@ type AppleConfig struct {
 	ClientID     string
 	ClientSecret AppleClientSecret
 	Scope        []string
+
+	AuthorizationEndpoint            string
+	AuthorizationEndpointQueryParams map[string]interface{}
+
+	TokenEndpoint string
+	TokenParams   map[string]interface{}
+
+	UserInfoEndpoint string
+
+	JwksURI      string
+	OIDCEndpoint string
+
+	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error)
+
+	AdditionalConfig map[string]interface{}
 }
 
 type AppleClientSecret struct {
@@ -59,104 +73,102 @@ func Apple(input TypeAppleInput) tpmodels.TypeProvider {
 		},
 	}
 
-	appleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error) {
-		if id == nil && len(input.Config) == 0 {
-			return AppleConfig{}, errors.New("please specify a config or override GetConfig")
+	var customProviderConfig []CustomProviderConfig
+	if input.Config != nil {
+		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
+		for idx, config := range input.Config {
+			customProviderConfig[idx] = appleConfigToCustomProviderConfig(config)
 		}
-
-		if id == nil && len(input.Config) > 1 {
-			return AppleConfig{}, errors.New("please specify a clientID as there are multiple configs")
-		}
-
-		if id == nil {
-			return input.Config[0], nil
-		}
-
-		if id.Type == tpmodels.TypeClientID {
-			for _, config := range input.Config {
-				if config.ClientID == id.ID {
-					return config, nil
-				}
-			}
-		} else {
-			// TODO Multitenant
-		}
-
-		return AppleConfig{}, errors.New("config for specified clientID not found")
 	}
 
-	customProvider := CustomProvider(TypeCustomProviderInput{
-		ThirdPartyID: appleID,
-		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
-			provider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-				appleConfig, err := appleProvider.GetConfig(ID, userContext)
-				if err != nil {
-					return CustomProviderConfig{}, err
-				}
-
-				authURL := "https://appleid.apple.com/auth/authorize"
-				tokenURL := "https://appleid.apple.com/auth/token"
-				userInfoURL := "https://apple.com/api/users/@me"
-				jwksURL := "https://appleid.apple.com/auth/keys"
-
-				clientSecret, err := getClientSecret(appleConfig.ClientID, appleConfig.ClientSecret)
-				if err != nil {
-					return CustomProviderConfig{}, err
-				}
-
-				return CustomProviderConfig{
-					ClientID:     appleConfig.ClientID,
-					ClientSecret: clientSecret,
-					Scope:        appleConfig.Scope,
-
-					AuthorizationURL: &authURL,
-					AccessTokenURL:   &tokenURL,
-					UserInfoURL:      &userInfoURL,
-					JwksURL:          &jwksURL,
-					DefaultScope:     []string{"email"},
-
-					AuthorizationURLQueryParams: map[string]interface{}{
-						"response_mode": "form_post",
-						"response_type": "code",
-					},
-
-					GetSupertokensUserInfoFromRawUserInfoResponse: func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-						result := tpmodels.TypeUserInfo{}
-						result.ThirdPartyUserId = fmt.Sprint(rawUserInfoResponse["sub"])
-						result.EmailInfo = &tpmodels.EmailStruct{
-							ID: fmt.Sprint(rawUserInfoResponse["email"]),
-						}
-						emailVerified, emailVerifiedOk := rawUserInfoResponse["email_verified"].(bool)
-						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
-
-						result.RawUserInfoFromProvider = rawUserInfoResponse
-
-						return result, nil
-					},
-				}, nil
-			}
-
-			return provider
-		},
+	customProvider := customProvider(TypeCustomProviderInput{
+		ThirdPartyID: googleID,
+		Config:       customProviderConfig,
 	})
 
-	appleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+	{
+		// Custom provider needs to use the config returned by apple provider GetConfig
+		// Also, apple provider needs to use the default implementation of GetConfig provided by custom provider
+		oGetConfigFromCustomProvider := customProvider.GetConfig
+		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+			config, err := appleProvider.GetConfig(id, userContext)
+			if err != nil {
+				return CustomProviderConfig{}, err
+			}
+			return appleConfigToCustomProviderConfig(config), nil
+		}
+		appleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error) {
+			config, err := oGetConfigFromCustomProvider(id, userContext)
+			if err != nil {
+				return AppleConfig{}, err
+			}
+			return appleConfigFromCustomProviderConfig(config), nil
+		}
 	}
 
-	appleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
-	}
+	{
+		// Apple provider APIs call into custom provider APIs
 
-	appleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		appleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		}
+
+		appleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		}
+
+		appleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		}
 	}
 
 	if input.Override != nil {
 		appleProvider = input.Override(appleProvider)
 	}
 
+	{
+		// We want to always normalize (for apple) the config before returning it
+		oGetConfig := appleProvider.GetConfig
+		appleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error) {
+			config, err := oGetConfig(id, userContext)
+			if err != nil {
+				return AppleConfig{}, err
+			}
+			return normalizeAppleConfig(config), nil
+		}
+	}
+
 	return *appleProvider.TypeProvider
+}
+
+func normalizeAppleConfig(config AppleConfig) AppleConfig {
+	if config.AuthorizationEndpoint == "" {
+		config.AuthorizationEndpoint = "https://appleid.apple.com/auth/authorize"
+	}
+
+	if config.AuthorizationEndpointQueryParams == nil {
+		config.AuthorizationEndpointQueryParams = map[string]interface{}{
+			"response_mode": "form_post",
+		}
+	}
+
+	if config.TokenEndpoint == "" {
+		config.TokenEndpoint = "https://appleid.apple.com/auth/token"
+	}
+
+	if config.JwksURI == "" {
+		config.JwksURI = "https://appleid.apple.com/auth/keys"
+	}
+
+	if len(config.Scope) == 0 {
+		config.Scope = []string{"email"}
+	}
+
+	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
+		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfo("sub", "email", "email_verified", "id_token")
+	}
+
+	return config
 }
 
 func getClientSecret(clientId string, secret AppleClientSecret) (string, error) {
@@ -164,11 +176,12 @@ func getClientSecret(clientId string, secret AppleClientSecret) (string, error) 
 		ExpiresAt: time.Now().Unix() + 86400*180,
 		IssuedAt:  time.Now().Unix(),
 		Audience:  "https://appleid.apple.com",
-		Id:        secret.KeyId,
 		Subject:   getActualClientIdFromDevelopmentClientId(clientId),
 		Issuer:    secret.TeamId,
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token.Header["kid"] = secret.KeyId
+	token.Header["alg"] = "ES256"
 
 	ecdsaPrivateKey, err := getECDSPrivateKey(secret.PrivateKey)
 	if err != nil {
@@ -199,4 +212,60 @@ func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 		return nil, errors.New("not ecdsa private key")
 	}
 	return ecdsaPrivateKey, nil
+}
+
+func appleConfigToCustomProviderConfig(appleConfig AppleConfig) CustomProviderConfig {
+	clientSecret, _ := getClientSecret(appleConfig.ClientID, appleConfig.ClientSecret)
+
+	additionalConfig := map[string]interface{}{}
+
+	for k, v := range appleConfig.AdditionalConfig {
+		additionalConfig[k] = v
+	}
+	additionalConfig["_clientSecret"] = appleConfig.ClientSecret
+
+	return CustomProviderConfig{
+		ClientID:     appleConfig.ClientID,
+		ClientSecret: clientSecret,
+		Scope:        appleConfig.Scope,
+
+		AuthorizationEndpoint:            appleConfig.AuthorizationEndpoint,
+		AuthorizationEndpointQueryParams: appleConfig.AuthorizationEndpointQueryParams,
+
+		TokenEndpoint: appleConfig.TokenEndpoint,
+		TokenParams:   appleConfig.TokenParams,
+
+		UserInfoEndpoint: appleConfig.UserInfoEndpoint,
+
+		JwksURI:      appleConfig.JwksURI,
+		OIDCEndpoint: appleConfig.OIDCEndpoint,
+
+		GetSupertokensUserInfoFromRawUserInfoResponse: appleConfig.GetSupertokensUserInfoFromRawUserInfoResponse,
+
+		AdditionalConfig: additionalConfig,
+	}
+}
+
+func appleConfigFromCustomProviderConfig(config CustomProviderConfig) AppleConfig {
+	return AppleConfig{
+		ClientID:     config.ClientID,
+		ClientSecret: config.AdditionalConfig["_clientSecret"].(AppleClientSecret),
+
+		Scope: config.Scope,
+
+		AuthorizationEndpoint:            config.AuthorizationEndpoint,
+		AuthorizationEndpointQueryParams: config.AuthorizationEndpointQueryParams,
+
+		TokenEndpoint: config.TokenEndpoint,
+		TokenParams:   config.TokenParams,
+
+		UserInfoEndpoint: config.UserInfoEndpoint,
+
+		JwksURI:      config.JwksURI,
+		OIDCEndpoint: config.OIDCEndpoint,
+
+		GetSupertokensUserInfoFromRawUserInfoResponse: config.GetSupertokensUserInfoFromRawUserInfoResponse,
+
+		AdditionalConfig: config.AdditionalConfig,
+	}
 }

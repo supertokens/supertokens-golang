@@ -115,7 +115,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 				User                    tpmodels.User
 				Session                 sessmodels.SessionContainer
 				OAuthTokens             tpmodels.TypeOAuthTokens
-				RawUserInfoFromProvider map[string]interface{}
+				RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 			}{
 				CreatedNewUser:          response.OK.CreatedNewUser,
 				User:                    response.OK.User,

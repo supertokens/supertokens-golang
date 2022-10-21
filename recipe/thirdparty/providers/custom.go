@@ -17,7 +17,6 @@ package providers
 
 import (
 	"errors"
-	"net/http"
 	"strings"
 
 	"github.com/derekstavis/go-qs"
@@ -37,82 +36,68 @@ type CustomProviderConfig struct {
 	ClientSecret string
 	Scope        []string
 
-	AuthorizationURL            *string
-	AuthorizationURLQueryParams map[string]interface{}
-	AccessTokenURL              *string
-	AccessTokenMethod           *string
-	AccessTokenParams           map[string]interface{}
-	UserInfoURL                 *string
-	UserInfoMethod              *string
-	DefaultScope                []string
-	JwksURL                     *string
-	OIDCEndpoint                *string
+	AuthorizationEndpoint            string
+	AuthorizationEndpointQueryParams map[string]interface{}
 
-	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error)
+	TokenEndpoint string
+	TokenParams   map[string]interface{}
+
+	UserInfoEndpoint string
+
+	JwksURI      string
+	OIDCEndpoint string
+
+	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error)
+
+	AdditionalConfig map[string]interface{}
 }
 
 const ScopeParameter = "scope"
 const ScopeSeparator = " "
 
 type TypeCustomProvider struct {
-	GetConfig func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error)
+	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error)
 	*tpmodels.TypeProvider
 }
 
-func normalizeCustomProviderInput(config CustomProviderConfig) CustomProviderConfig {
-	if config.AccessTokenMethod == nil {
-		post := http.MethodPost
-		config.AccessTokenMethod = &post
+func normalizeCustomProviderInput(config CustomProviderConfig) (CustomProviderConfig, error) {
+	if config.Scope == nil {
+		config.Scope = []string{}
 	}
-	if config.UserInfoMethod == nil {
-		get := http.MethodGet
-		config.UserInfoMethod = &get
-	}
-	if config.AuthorizationURLQueryParams == nil {
-		config.AuthorizationURLQueryParams = map[string]interface{}{
-			"response_type": "code",
-		}
-	}
-	if config.AccessTokenParams == nil {
-		config.AccessTokenParams = map[string]interface{}{
-			"grant_type": "authorization_code",
-		}
-	}
-	if config.OIDCEndpoint != nil {
+	if config.OIDCEndpoint != "" {
 		// TODO cache this value for 24 hours
-		status, oidcInfo, err := doGetRequest(*config.OIDCEndpoint, nil, nil)
+		status, oidcInfo, err := doGetRequest(config.OIDCEndpoint, nil, nil)
 
 		if err == nil && status < 300 {
 			oidcInfoMap := oidcInfo.(map[string]interface{})
 			if authURL, ok := oidcInfoMap["authorization_endpoint"].(string); ok {
-				if config.AuthorizationURL == nil {
-					config.AuthorizationURL = &authURL
+				if config.AuthorizationEndpoint == "" {
+					config.AuthorizationEndpoint = authURL
 				}
 			}
 
 			if tokenURL, ok := oidcInfoMap["token_endpoint"].(string); ok {
-				if config.AccessTokenURL == nil {
-					config.AccessTokenURL = &tokenURL
+				if config.TokenEndpoint == "" {
+					config.TokenEndpoint = tokenURL
 				}
 			}
 
 			if userInfoURL, ok := oidcInfoMap["userinfo_endpoint"].(string); ok {
-				if config.UserInfoURL == nil {
-					config.UserInfoURL = &userInfoURL
+				if config.UserInfoEndpoint == "" {
+					config.UserInfoEndpoint = userInfoURL
 				}
 			}
 
-			if jwksUrl, ok := oidcInfoMap["jwks_uri"].(string); ok {
-				config.JwksURL = &jwksUrl
+			if jwksUri, ok := oidcInfoMap["jwks_uri"].(string); ok {
+				config.JwksURI = jwksUri
 			}
 		}
 	}
 
-	return config
+	return config, nil
 }
 
-func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
-
+func customProvider(input TypeCustomProviderInput) *TypeCustomProvider {
 	customProvider := &TypeCustomProvider{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: input.ThirdPartyID,
@@ -120,15 +105,11 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 	}
 
 	customProvider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-		if ID == nil && len(input.Config) == 0 {
-			return CustomProviderConfig{}, errors.New("please specify a config or override GetConfig")
-		}
-
-		if ID == nil && len(input.Config) > 1 {
-			return CustomProviderConfig{}, errors.New("please specify a clientID as there are multiple configs")
-		}
-
 		if ID == nil {
+			if len(input.Config) == 0 || len(input.Config) > 1 {
+				return CustomProviderConfig{}, errors.New("please provide exactly one config or pass ClientID or TenantID")
+			}
+
 			return input.Config[0], nil
 		}
 
@@ -138,11 +119,12 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 					return config, nil
 				}
 			}
+
+			return CustomProviderConfig{}, errors.New("config for specified ClientID not found")
 		} else {
 			// TODO Multitenant
+			return CustomProviderConfig{}, errors.New("needs implementation")
 		}
-
-		return CustomProviderConfig{}, errors.New("config for specified ID not found")
 	}
 
 	customProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
@@ -150,26 +132,37 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
-		config = normalizeCustomProviderInput(config)
-
-		scopes := config.DefaultScope
+		config, err = normalizeCustomProviderInput(config)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
-		if config.Scope != nil {
-			scopes = config.Scope
-		}
 
 		queryParams := map[string]interface{}{
-			ScopeParameter: strings.Join(scopes, ScopeSeparator),
-			"client_id":    config.ClientID,
+			ScopeParameter:  strings.Join(config.Scope, ScopeSeparator),
+			"client_id":     config.ClientID,
+			"redirect_uri":  redirectURIOnProviderDashboard,
+			"response_type": "code",
 		}
-		for k, v := range config.AuthorizationURLQueryParams {
-			queryParams[k] = v
+		var pkceCodeVerifier *string
+		if config.ClientSecret == "" {
+			challenge, verifier, err := generateCodeChallengeS256(32)
+			if err != nil {
+				return tpmodels.TypeAuthorisationRedirect{}, err
+			}
+			queryParams["code_challenge"] = challenge
+			queryParams["code_challenge_method"] = "S256"
+			pkceCodeVerifier = &verifier
 		}
 
-		url := *config.AuthorizationURL
-		queryParams["redirect_uri"] = redirectURIOnProviderDashboard
+		for k, v := range config.AuthorizationEndpointQueryParams {
+			if v == nil {
+				delete(queryParams, k)
+			} else {
+				queryParams[k] = v
+			}
+		}
+
+		url := config.AuthorizationEndpoint
 
 		/* Transformation needed for dev keys BEGIN */
 		if isUsingDevelopmentClientId(config.ClientID) {
@@ -186,7 +179,7 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 
 		return tpmodels.TypeAuthorisationRedirect{
 			URLWithQueryParams: url + "?" + queryParamsStr,
-			PKCECodeVerifier:   nil,
+			PKCECodeVerifier:   pkceCodeVerifier,
 		}, nil
 	}
 
@@ -195,25 +188,31 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		if err != nil {
 			return nil, err
 		}
-		config = normalizeCustomProviderInput(config)
+		config, err = normalizeCustomProviderInput(config)
+		if err != nil {
+			return nil, err
+		}
 
-		accessTokenAPIURL := *config.AccessTokenURL
+		tokenAPIURL := config.TokenEndpoint
 		accessTokenAPIParams := map[string]interface{}{
 			"client_id":    config.ClientID,
-			"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
 			"redirect_uri": redirectURIInfo.RedirectURIOnProviderDashboard,
+			"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
+			"grant_type":   "authorization_code",
 		}
-
-		for k, v := range config.AccessTokenParams {
-			accessTokenAPIParams[k] = v
-		}
-
 		if config.ClientSecret != "" {
 			accessTokenAPIParams["client_secret"] = config.ClientSecret
 		}
-
 		if redirectURIInfo.PKCECodeVerifier != nil {
 			accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
+		}
+
+		for k, v := range config.TokenParams {
+			if v == nil {
+				delete(accessTokenAPIParams, k)
+			} else {
+				accessTokenAPIParams[k] = v
+			}
 		}
 
 		/* Transformation needed for dev keys BEGIN */
@@ -223,22 +222,17 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		}
 		/* Transformation needed for dev keys END */
 
-		var status int
-		var oAuthTokens interface{}
-		if *config.AccessTokenMethod == http.MethodPost {
-			status, oAuthTokens, err = doPostRequest(accessTokenAPIURL, accessTokenAPIParams, nil)
-		} else {
-			status, oAuthTokens, err = doGetRequest(accessTokenAPIURL, accessTokenAPIParams, nil)
-		}
+		status, oAuthTokens, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
 		if err != nil {
 			return nil, err
 		}
 
 		if status >= 300 {
-			return nil, errors.New("AccessToken API returned a non 2xx response")
+			// TODO add debug logs
+			return nil, errors.New("AccessToken API returned a non 2xx response") // TODO add status code and response
 		}
 
-		return oAuthTokens.(map[string]interface{}), nil
+		return oAuthTokens, nil
 	}
 
 	customProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
@@ -246,15 +240,16 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		config = normalizeCustomProviderInput(config)
+		config, err = normalizeCustomProviderInput(config)
 
-		var userInfo interface{}
 		accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 		idToken, idTokenOk := oAuthTokens["id_token"].(string)
 
-		if idTokenOk && config.JwksURL != nil {
+		rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{}
+
+		if idTokenOk && config.JwksURI != "" {
 			claims := jwt.MapClaims{}
-			jwksURL := *config.JwksURL
+			jwksURL := config.JwksURI
 			jwks, err := getJWKSFromURL(jwksURL)
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
@@ -267,43 +262,43 @@ func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
 			if !token.Valid {
 				return tpmodels.TypeUserInfo{}, errors.New("invalid id_token supplied")
 			}
-			userInfo = map[string]interface{}(claims)
-		} else if accessTokenOk && config.UserInfoURL != nil {
-			var status int
-
-			if *config.UserInfoMethod == http.MethodGet {
-				headers := map[string]string{
-					"Authorization": "Bearer " + accessToken,
-				}
-				status, userInfo, err = doGetRequest(*config.UserInfoURL, nil, headers)
-			} else {
-				params := map[string]interface{}{
-					"access_token": accessToken,
-				}
-				status, userInfo, err = doPostRequest(*config.UserInfoURL, params, nil)
+			rawUserInfoFromProvider.FromIdToken = map[string]interface{}(claims)
+		}
+		if accessTokenOk && config.UserInfoEndpoint != "" {
+			headers := map[string]string{
+				"Authorization": "Bearer " + accessToken,
 			}
+			status, userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, nil, headers)
+			rawUserInfoFromProvider.FromAccessToken = userInfoFromAccessToken.(map[string]interface{})
+
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
 
 			if status >= 300 {
-				return tpmodels.TypeUserInfo{}, errors.New("UserInfo API returned a non 2xx response")
+				return tpmodels.TypeUserInfo{}, errors.New("UserInfo API returned a non 2xx response") // TODO Add status code and response
 			}
-		} else {
-			return tpmodels.TypeUserInfo{}, errors.New("misconfigured custom provider, unable to fetch user info using access_token or id_token")
 		}
 
-		userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(userInfo.(map[string]interface{}), userContext)
+		userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(rawUserInfoFromProvider, userContext)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
 
-		return userInfoResult, nil
+		return tpmodels.TypeUserInfo{
+			ThirdPartyUserId:        userInfoResult.ThirdPartyUserId,
+			EmailInfo:               userInfoResult.EmailInfo,
+			RawUserInfoFromProvider: rawUserInfoFromProvider,
+		}, nil
 	}
 
 	if input.Override != nil {
 		customProvider = input.Override(customProvider)
 	}
 
-	return *customProvider.TypeProvider
+	return customProvider
+}
+
+func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
+	return *customProvider(input).TypeProvider
 }

@@ -84,11 +84,11 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
-	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogSignInUp = *thirdPartyImplementation.SignInUp
 	}
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 		if ogSignInUp == nil {
 			return tpepmodels.SignInUpResponse{}, errors.New("no thirdparty provider configured")
 		}
@@ -102,7 +102,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				CreatedNewUser          bool
 				User                    tpepmodels.User
 				OAuthTokens             tpmodels.TypeOAuthTokens
-				RawUserInfoFromProvider map[string]interface{}
+				RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tpepmodels.User{

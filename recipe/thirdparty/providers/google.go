@@ -1,29 +1,21 @@
 package providers
 
 import (
-	"errors"
-	"fmt"
-
-	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const googleID = "google"
 
+type GoogleConfig = CustomProviderConfig
+
 type TypeGoogleInput struct {
 	Config   []GoogleConfig
 	Override func(provider *GoogleProvider) *GoogleProvider
 }
 
-type GoogleConfig struct {
-	ClientID     string
-	ClientSecret string
-	Scope        []string
-}
-
 type GoogleProvider struct {
-	GetConfig func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error)
+	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error)
 	*tpmodels.TypeProvider
 }
 
@@ -34,129 +26,98 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		},
 	}
 
-	googleProvider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error) {
-		if ID == nil && len(input.Config) == 0 {
-			return GoogleConfig{}, errors.New("please specify a config or override GetConfig")
+	var customProviderConfig []CustomProviderConfig
+	if input.Config != nil {
+		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
+		for idx, config := range input.Config {
+			customProviderConfig[idx] = config
 		}
-
-		if ID == nil && len(input.Config) > 1 {
-			return GoogleConfig{}, errors.New("please specify a clientID as there are multiple configs")
-		}
-
-		if ID == nil {
-			return input.Config[0], nil
-		}
-
-		if ID.Type == tpmodels.TypeClientID {
-			for _, config := range input.Config {
-				if config.ClientID == ID.ID {
-					return config, nil
-				}
-			}
-		} else {
-			// TODO Multitenant
-		}
-
-		return GoogleConfig{}, errors.New("config for specified clientID not found")
 	}
 
-	customProvider := CustomProvider(TypeCustomProviderInput{
+	customProvider := customProvider(TypeCustomProviderInput{
 		ThirdPartyID: googleID,
-		Override: func(provider *TypeCustomProvider) *TypeCustomProvider {
-			provider.GetConfig = func(ID *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-				googleConfig, err := googleProvider.GetConfig(ID, userContext)
-				if err != nil {
-					return CustomProviderConfig{}, err
-				}
-
-				authURL := "https://accounts.google.com/o/oauth2/v2/auth"
-				tokenURL := "https://oauth2.googleapis.com/token"
-				userInfoURL := "https://www.googleapis.com/oauth2/v1/userinfo"
-
-				accessType := "offline"
-				if googleConfig.ClientSecret == "" {
-					accessType = "online"
-				}
-
-				return CustomProviderConfig{
-					ClientID:     googleConfig.ClientID,
-					ClientSecret: googleConfig.ClientSecret,
-					Scope:        googleConfig.Scope,
-
-					AuthorizationURL: &authURL,
-					AuthorizationURLQueryParams: map[string]interface{}{
-						"access_type":            accessType,
-						"include_granted_scopes": "true",
-						"response_type":          "code",
-					},
-					AccessTokenURL: &tokenURL,
-					UserInfoURL:    &userInfoURL,
-					DefaultScope:   []string{"https://www.googleapis.com/auth/userinfo.email"},
-					GetSupertokensUserInfoFromRawUserInfoResponse: func(rawUserInfoResponse map[string]interface{}, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-						result := tpmodels.TypeUserInfo{}
-						result.ThirdPartyUserId = fmt.Sprint(rawUserInfoResponse["id"])
-						result.EmailInfo = &tpmodels.EmailStruct{
-							ID: fmt.Sprint(rawUserInfoResponse["email"]),
-						}
-						emailVerified, emailVerifiedOk := rawUserInfoResponse["email_verified"].(bool)
-						result.EmailInfo.IsVerified = emailVerified && emailVerifiedOk
-
-						result.RawUserInfoFromProvider = rawUserInfoResponse
-
-						return result, nil
-					},
-				}, nil
-			}
-
-			oGetAuthorisationRedirectURL := provider.GetAuthorisationRedirectURL
-			provider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-				config, err := provider.GetConfig(id, userContext)
-				if err != nil {
-					return tpmodels.TypeAuthorisationRedirect{}, err
-				}
-				result, err := oGetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
-				if err != nil {
-					return tpmodels.TypeAuthorisationRedirect{}, err
-				}
-
-				if config.ClientSecret == "" {
-					challenge, verifier, err := generateCodeChallengeS256(32)
-					if err != nil {
-						return tpmodels.TypeAuthorisationRedirect{}, err
-					}
-					extraQueryParams, err := qs.Marshal(map[string]interface{}{
-						"code_challenge":        challenge,
-						"code_challenge_method": "S256",
-					})
-					if err != nil {
-						return tpmodels.TypeAuthorisationRedirect{}, err
-					}
-					result.URLWithQueryParams += "&" + extraQueryParams
-					result.PKCECodeVerifier = &verifier
-				}
-
-				return result, nil
-			}
-
-			return provider
-		},
+		Config:       customProviderConfig,
 	})
 
-	googleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+	{
+		// Custom provider needs to use the config returned by google provider GetConfig
+		// Also, google provider needs to use the default implementation of GetConfig provided by custom provider
+		oGetConfig := customProvider.GetConfig
+		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
+			return googleProvider.GetConfig(id, userContext)
+		}
+		googleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error) {
+			return oGetConfig(id, userContext)
+		}
 	}
 
-	googleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
-	}
+	{
+		// Google provider APIs call into custom provider APIs
 
-	googleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		googleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		}
+
+		googleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		}
+
+		googleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		}
 	}
 
 	if input.Override != nil {
 		googleProvider = input.Override(googleProvider)
 	}
 
+	{
+		// We want to always normalize (for google) the config before returning it
+		oGetConfig := googleProvider.GetConfig
+		googleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error) {
+			config, err := oGetConfig(id, userContext)
+			if err != nil {
+				return GoogleConfig{}, err
+			}
+			return normalizeGoogleConfig(config), nil
+		}
+	}
+
 	return *googleProvider.TypeProvider
+}
+
+func normalizeGoogleConfig(config GoogleConfig) GoogleConfig {
+	if config.AuthorizationEndpoint == "" {
+		config.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
+	}
+
+	if config.AuthorizationEndpointQueryParams == nil {
+		accessType := "offline"
+		if config.ClientSecret == "" {
+			accessType = "online"
+		}
+		config.AuthorizationEndpointQueryParams = map[string]interface{}{
+			"access_type":            accessType,
+			"include_granted_scopes": "true",
+			"response_type":          "code",
+		}
+	}
+
+	if len(config.Scope) == 0 {
+		config.Scope = []string{"https://www.googleapis.com/auth/userinfo.email"}
+	}
+
+	if config.TokenEndpoint == "" {
+		config.TokenEndpoint = "https://oauth2.googleapis.com/token"
+	}
+
+	if config.UserInfoEndpoint == "" {
+		config.UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo"
+	}
+
+	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
+		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfo("id", "email", "email_verified", "access_token")
+	}
+
+	return config
 }

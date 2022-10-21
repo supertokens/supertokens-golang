@@ -64,7 +64,7 @@ type ThirdPartySignInUpOutput struct {
 		User                    User
 		Session                 sessmodels.SessionContainer
 		OAuthTokens             tpmodels.TypeOAuthTokens
-		RawUserInfoFromProvider map[string]interface{}
+		RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse

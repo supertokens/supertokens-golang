@@ -11,5 +11,5 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string) (*tpmodels.T
 			return &provider, nil
 		}
 	}
-	return nil, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
+	return nil, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
 }

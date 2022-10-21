@@ -46,7 +46,7 @@ type SignInUpPOSTResponse struct {
 		User                    User
 		Session                 sessmodels.SessionContainer
 		OAuthTokens             TypeOAuthTokens
-		RawUserInfoFromProvider map[string]interface{}
+		RawUserInfoFromProvider TypeRawUserInfoFromProvider
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse

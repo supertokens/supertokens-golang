@@ -21,6 +21,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -31,8 +32,11 @@ import (
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+// Network utils
 func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (int, interface{}, error) {
 	if queryParams != nil {
 		querystring, err := qs.Marshal(queryParams)
@@ -105,6 +109,7 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	return resp.StatusCode, result, nil
 }
 
+// JWKS utils
 var jwksKeys = map[string]*keyfunc.JWKS{}
 var jwksKeysLock = sync.Mutex{}
 
@@ -130,6 +135,47 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 	}
 	jwksKeys[url] = jwks
 	return jwks, nil
+}
+
+// OIDC utils
+
+// User map utils
+
+func accessField(obj interface{}, key string) interface{} {
+	keyParts := strings.Split(key, ".")
+	for _, k := range keyParts {
+		obj = obj.(map[string]interface{})[k]
+	}
+	return obj
+}
+
+func getSupertokensUserInfoFromRawUserInfo(idField string, emailField string, emailVerifiedField string, from string) func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
+	return func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
+		var rawUserInfo map[string]interface{}
+
+		if from == "id_token" {
+			if rawUserInfoResponse.FromIdToken == nil {
+				return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
+			}
+			rawUserInfo = rawUserInfoResponse.FromIdToken
+		} else {
+			if rawUserInfoResponse.FromAccessToken == nil {
+				return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
+			}
+			rawUserInfo = rawUserInfoResponse.FromAccessToken
+		}
+		result := tpmodels.TypeSupertokensUserInfo{}
+		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, idField))
+		result.EmailInfo = &tpmodels.EmailStruct{
+			ID: fmt.Sprint(accessField(rawUserInfo, emailField)),
+		}
+		if emailVerified, ok := accessField(rawUserInfo, emailVerifiedField).(bool); ok {
+			result.EmailInfo.IsVerified = emailVerified
+		} else if emailVerified, ok := accessField(rawUserInfo, emailVerifiedField).(string); ok {
+			result.EmailInfo.IsVerified = emailVerified == "true"
+		}
+		return result, nil
+	}
 }
 
 var DevOauthClientIds = [...]string{

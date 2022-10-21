@@ -39,7 +39,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		}, nil
 	}
 
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider map[string]interface{}, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
 		if err != nil {
 			return tpmodels.SignInUpResponse{}, err
@@ -50,7 +50,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 				CreatedNewUser          bool
 				User                    tpmodels.User
 				OAuthTokens             tpmodels.TypeOAuthTokens
-				RawUserInfoFromProvider map[string]interface{}
+				RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 			}{
 				CreatedNewUser: result.OK.CreatedNewUser,
 				User: tpmodels.User{
