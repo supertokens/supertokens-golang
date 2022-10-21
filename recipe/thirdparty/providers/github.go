@@ -178,5 +178,5 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 		githubProvider = input.Override(githubProvider)
 	}
 
-	return customProvider
+	return *githubProvider.TypeProvider
 }

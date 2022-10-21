@@ -133,5 +133,5 @@ func Discord(input TypeDiscordInput) tpmodels.TypeProvider {
 		discordProvider = input.Override(discordProvider)
 	}
 
-	return customProvider
+	return *discordProvider.TypeProvider
 }

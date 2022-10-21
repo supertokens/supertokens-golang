@@ -163,5 +163,5 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 		facebookProvider = input.Override(facebookProvider)
 	}
 
-	return customProvider
+	return *facebookProvider.TypeProvider
 }

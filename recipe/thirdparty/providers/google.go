@@ -158,5 +158,5 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		googleProvider = input.Override(googleProvider)
 	}
 
-	return customProvider
+	return *googleProvider.TypeProvider
 }
