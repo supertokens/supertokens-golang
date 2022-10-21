@@ -66,9 +66,9 @@ func normalizeCustomProviderInput(config CustomProviderConfig) (CustomProviderCo
 	}
 	if config.OIDCEndpoint != "" {
 		// TODO cache this value for 24 hours
-		status, oidcInfo, err := doGetRequest(config.OIDCEndpoint, nil, nil)
+		oidcInfo, err := doGetRequest(config.OIDCEndpoint, nil, nil)
 
-		if err == nil && status < 300 {
+		if err == nil {
 			oidcInfoMap := oidcInfo.(map[string]interface{})
 			if authURL, ok := oidcInfoMap["authorization_endpoint"].(string); ok {
 				if config.AuthorizationEndpoint == "" {
@@ -222,14 +222,9 @@ func customProvider(input TypeCustomProviderInput) *TypeCustomProvider {
 		}
 		/* Transformation needed for dev keys END */
 
-		status, oAuthTokens, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
+		oAuthTokens, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
 		if err != nil {
 			return nil, err
-		}
-
-		if status >= 300 {
-			// TODO add debug logs
-			return nil, errors.New("AccessToken API returned a non 2xx response") // TODO add status code and response
 		}
 
 		return oAuthTokens, nil
@@ -271,15 +266,11 @@ func customProvider(input TypeCustomProviderInput) *TypeCustomProvider {
 			headers := map[string]string{
 				"Authorization": "Bearer " + accessToken,
 			}
-			status, userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, nil, headers)
+			userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, nil, headers)
 			rawUserInfoFromProvider.FromAccessToken = userInfoFromAccessToken.(map[string]interface{})
 
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
-			}
-
-			if status >= 300 {
-				return tpmodels.TypeUserInfo{}, errors.New("UserInfo API returned a non 2xx response") // TODO Add status code and response
 			}
 		}
 

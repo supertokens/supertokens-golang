@@ -90,21 +90,15 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 			"Accept":        "application/vnd.github.v3+json",
 		}
 		rawResponse := map[string]interface{}{}
-		status, emailInfo, err := doGetRequest("https://api.github.com/user/emails", nil, headers)
+		emailInfo, err := doGetRequest("https://api.github.com/user/emails", nil, headers)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
-		}
-		if status >= 300 {
-			return tpmodels.TypeUserInfo{}, errors.New("get email info returned a non 2xx status")
 		}
 		rawResponse["emails"] = emailInfo
 
-		status, userInfo, err := doGetRequest("https://api.github.com/user", nil, headers)
+		userInfo, err := doGetRequest("https://api.github.com/user", nil, headers)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
-		}
-		if status >= 300 {
-			return tpmodels.TypeUserInfo{}, errors.New("get user info returned a non 2xx status")
 		}
 		rawResponse["user"] = userInfo
 

@@ -16,8 +16,6 @@
 package providers
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -94,13 +92,9 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 			"format":       "json",
 		}
 
-		status, userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, queryParams, nil)
+		userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, queryParams, nil)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
-		}
-
-		if status >= 300 {
-			return tpmodels.TypeUserInfo{}, errors.New("get user info returned a non 2xx response") // TODO return code and response
 		}
 
 		rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{

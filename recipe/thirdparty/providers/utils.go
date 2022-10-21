@@ -37,18 +37,18 @@ import (
 )
 
 // Network utils
-func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (int, interface{}, error) {
+func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (interface{}, error) {
 	if queryParams != nil {
 		querystring, err := qs.Marshal(queryParams)
 		if err != nil {
-			return 0, nil, err
+			return nil, err
 		}
 		url = url + "?" + querystring
 	}
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	for key, value := range headers {
 		req.Header.Set(key, value)
@@ -56,31 +56,34 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 
 	var result interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
-	return resp.StatusCode, result, nil
+	if resp.StatusCode >= 300 {
+		return nil, errors.New(fmt.Sprintf("GET request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body)))
+	}
+	return result, nil
 }
 
-func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (int, map[string]interface{}, error) {
+func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, error) {
 	postBody, err := qs.Marshal(params)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(postBody)))
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	for key, value := range headers {
 		req.Header.Set(key, value.(string))
@@ -91,22 +94,26 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return 0, nil, err
+		return nil, err
 	}
 
-	return resp.StatusCode, result, nil
+	if resp.StatusCode >= 300 {
+		return nil, errors.New(fmt.Sprintf("POST request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body)))
+	}
+
+	return result, nil
 }
 
 // JWKS utils
