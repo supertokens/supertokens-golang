@@ -22,63 +22,42 @@ import (
 
 const discordID = "discord"
 
-type DiscordConfig = CustomProviderConfig
+type DiscordConfig = OAuth2ProviderConfig
 
 type TypeDiscordInput struct {
-	Config   []DiscordConfig
+	Config   DiscordConfig
 	Override func(provider *DiscordProvider) *DiscordProvider
 }
 
-type DiscordProvider struct {
-	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (DiscordConfig, error)
-	*tpmodels.TypeProvider
-}
+type DiscordProvider = tpmodels.TypeProvider
 
 func Discord(input TypeDiscordInput) tpmodels.TypeProvider {
 	discordProvider := &DiscordProvider{
-		TypeProvider: &tpmodels.TypeProvider{
-			ID: discordID,
-		},
+		ID: discordID,
 	}
 
-	var customProviderConfig []CustomProviderConfig
-	if input.Config != nil {
-		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
-		for idx, config := range input.Config {
-			customProviderConfig[idx] = config
-		}
-	}
-
-	customProvider := customProvider(TypeCustomProviderInput{
+	oAuth2Provider := oAuth2Provider(TypeOAuth2ProviderInput{
 		ThirdPartyID: discordID,
-		Config:       customProviderConfig,
+		Config:       input.Config,
 	})
 
 	{
-		// Custom provider needs to use the config returned by discord provider GetConfig
-		// Also, discord provider needs to use the default implementation of GetConfig provided by custom provider
-		oGetConfig := customProvider.GetConfig
-		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-			return discordProvider.GetConfig(id, userContext)
-		}
-		discordProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (DiscordConfig, error) {
-			return oGetConfig(id, userContext)
-		}
-	}
+		// Discord provider APIs call into oAuth2 provider APIs
 
-	{
-		// Discord provider APIs call into custom provider APIs
-
-		discordProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		discordProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			return oAuth2Provider.GetConfig(clientType, tenantId, userContext)
 		}
 
-		discordProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		discordProvider.GetAuthorisationRedirectURL = func(config tpmodels.TypeNormalisedProviderConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return oAuth2Provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 		}
 
-		discordProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		discordProvider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.TypeNormalisedProviderConfig, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return oAuth2Provider.ExchangeAuthCodeForOAuthTokens(config, redirectInfo, userContext)
+		}
+
+		discordProvider.GetUserInfo = func(config tpmodels.TypeNormalisedProviderConfig, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return oAuth2Provider.GetUserInfo(config, oAuthTokens, userContext)
 		}
 	}
 
@@ -89,19 +68,19 @@ func Discord(input TypeDiscordInput) tpmodels.TypeProvider {
 	{
 		// We want to always normalize (for discord) the config before returning it
 		oGetConfig := discordProvider.GetConfig
-		discordProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (DiscordConfig, error) {
-			config, err := oGetConfig(id, userContext)
+		discordProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			config, err := oGetConfig(clientType, tenantId, userContext)
 			if err != nil {
-				return DiscordConfig{}, err
+				return tpmodels.TypeNormalisedProviderConfig{}, err
 			}
 			return normalizeDiscordConfig(config), nil
 		}
 	}
 
-	return *discordProvider.TypeProvider
+	return *discordProvider
 }
 
-func normalizeDiscordConfig(config DiscordConfig) DiscordConfig {
+func normalizeDiscordConfig(config tpmodels.TypeNormalisedProviderConfig) tpmodels.TypeNormalisedProviderConfig {
 	if config.AuthorizationEndpoint == "" {
 		config.AuthorizationEndpoint = "https://discord.com/api/oauth2/authorize"
 	}
@@ -114,8 +93,21 @@ func normalizeDiscordConfig(config DiscordConfig) DiscordConfig {
 	if len(config.Scope) == 0 {
 		config.Scope = []string{"identify", "email"}
 	}
-	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
-		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfo("id", "email", "verified", "access_token")
+
+	if config.UserInfoMap.From == "" {
+		config.UserInfoMap.From = tpmodels.FromAccessTokenPayload
+	}
+
+	if config.UserInfoMap.IdField == "" {
+		config.UserInfoMap.IdField = "id"
+	}
+
+	if config.UserInfoMap.EmailField == "" {
+		config.UserInfoMap.EmailField = "email"
+	}
+
+	if config.UserInfoMap.EmailVerifiedField == "" {
+		config.UserInfoMap.EmailVerifiedField = "verified"
 	}
 	return config
 }

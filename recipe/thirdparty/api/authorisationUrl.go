@@ -30,10 +30,16 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	thirdPartyId := queryParams.Get("thirdPartyId")
 	redirectURIOnProviderDashboard := queryParams.Get("redirectURIOnProviderDashboard")
 
-	var clientID *string
-	if clientIDStr := queryParams.Get("clientId"); clientIDStr != "" {
-		clientID = &clientIDStr
+	var clientType *string
+	if clientTypeStr := queryParams.Get("clientType"); clientTypeStr != "" {
+		clientType = &clientTypeStr
 	}
+
+	var tenantId *string
+	if tenantIdStr := queryParams.Get("tenantId"); tenantIdStr != "" {
+		tenantId = &tenantIdStr
+	}
+
 	if len(thirdPartyId) == 0 {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
@@ -44,7 +50,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return err
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, clientID, redirectURIOnProviderDashboard, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, clientType, tenantId, redirectURIOnProviderDashboard, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

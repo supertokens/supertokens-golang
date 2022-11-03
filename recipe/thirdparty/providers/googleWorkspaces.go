@@ -15,143 +15,216 @@
 
 package providers
 
-const googleWorkspacesID = "google-workspaces"
+// import (
+// 	"errors"
 
-// func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
+// 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+// 	"github.com/supertokens/supertokens-golang/supertokens"
+// )
 
-// 	domain := "*"
-// 	if config.Domain != nil {
-// 		domain = *config.Domain
+// const googleWorkspacesID = "google-workspaces"
+
+// type GoogleWorkspacesConfig struct {
+// 	ClientID     string
+// 	ClientSecret string
+// 	Scope        []string
+// 	Domain       string
+
+// 	AuthorizationEndpoint            string
+// 	AuthorizationEndpointQueryParams map[string]interface{}
+
+// 	TokenEndpoint string
+// 	TokenParams   map[string]interface{}
+
+// 	UserInfoEndpoint string
+
+// 	JwksURI      string
+// 	OIDCEndpoint string
+
+// 	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error)
+
+// 	AdditionalConfig map[string]interface{}
+// }
+
+// type TypeGoogleWorkspacesInput struct {
+// 	Config   []GoogleWorkspacesConfig
+// 	Override func(provider *GoogleWorkspacesProvider) *GoogleWorkspacesProvider
+// }
+
+// type GoogleWorkspacesProvider struct {
+// 	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleWorkspacesConfig, error)
+// 	*tpmodels.TypeProvider
+// }
+
+// func GoogleWorkspaces(input TypeGoogleWorkspacesInput) tpmodels.TypeProvider {
+// 	googleWorkspacesProvider := &GoogleWorkspacesProvider{
+// 		TypeProvider: &tpmodels.TypeProvider{
+// 			ID: googleWorkspacesID,
+// 		},
 // 	}
 
-// 	return tpmodels.TypeProvider{
-// 		ID: googleWorkspacesID,
-// 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 			accessTokenAPIURL := "https://accounts.google.com/o/oauth2/token"
-// 			accessTokenAPIParams := map[string]string{
-// 				"client_id":     config.ClientID,
-// 				"client_secret": config.ClientSecret,
-// 				"grant_type":    "authorization_code",
+// 	var oAuth2ProviderConfig []OAuth2ProviderConfig
+// 	if input.Config != nil {
+// 		oAuth2ProviderConfig = make([]OAuth2ProviderConfig, len(input.Config))
+// 		for idx, config := range input.Config {
+// 			oAuth2ProviderConfig[idx] = googleWorkspacesConfigToOAuth2ProviderConfig(config)
+// 		}
+// 	}
+
+// 	oAuth2Provider := oAuth2Provider(TypeOAuth2ProviderInput{
+// 		ThirdPartyID: googleWorkspacesID,
+// 		Config:       oAuth2ProviderConfig,
+// 	})
+
+// 	{
+// 		// OAuth2 provider needs to use the config returned by google provider GetConfig
+// 		// Also, google provider needs to use the default implementation of GetConfig provided by oAuth2 provider
+// 		oGetConfig := oAuth2Provider.GetConfig
+// 		oAuth2Provider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (OAuth2ProviderConfig, error) {
+// 			config, err := googleWorkspacesProvider.GetConfig(id, userContext)
+// 			if err != nil {
+// 				return OAuth2ProviderConfig{}, err
 // 			}
-// 			if authCodeFromRequest != nil {
-// 				accessTokenAPIParams["code"] = *authCodeFromRequest
+// 			return googleWorkspacesConfigToOAuth2ProviderConfig(config), nil
+// 		}
+// 		googleWorkspacesProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleWorkspacesConfig, error) {
+// 			config, err := oGetConfig(id, userContext)
+// 			if err != nil {
+// 				return GoogleWorkspacesConfig{}, err
 // 			}
-// 			if redirectURI != nil {
-// 				accessTokenAPIParams["redirect_uri"] = *redirectURI
+// 			return googleWorkspacesConfigFromOAuth2ProviderConfig(config), nil
+// 		}
+// 	}
+
+// 	{
+// 		// GoogleWorkspaces provider APIs call into oAuth2 provider APIs
+
+// 		googleWorkspacesProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+// 			return oAuth2Provider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+// 		}
+
+// 		googleWorkspacesProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+// 			return oAuth2Provider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+// 		}
+
+// 		googleWorkspacesProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+// 			return oAuth2Provider.GetUserInfo(id, oAuthTokens, userContext)
+// 		}
+// 	}
+
+// 	if input.Override != nil {
+// 		googleWorkspacesProvider = input.Override(googleWorkspacesProvider)
+// 	}
+
+// 	{
+// 		// We want to always normalize (for google) the config before returning it
+// 		oGetConfig := googleWorkspacesProvider.GetConfig
+// 		googleWorkspacesProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleWorkspacesConfig, error) {
+// 			config, err := oGetConfig(id, userContext)
+// 			if err != nil {
+// 				return GoogleWorkspacesConfig{}, err
 // 			}
+// 			return normalizeGoogleWorkspacesConfig(config), nil
+// 		}
+// 	}
 
-// 			authorisationRedirectURL := "https://accounts.google.com/o/oauth2/v2/auth"
-// 			scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-// 			if config.Scope != nil {
-// 				scopes = config.Scope
+// 	return *googleWorkspacesProvider.TypeProvider
+// }
+
+// func normalizeGoogleWorkspacesConfig(config GoogleWorkspacesConfig) GoogleWorkspacesConfig {
+// 	if config.OIDCEndpoint == "" {
+// 		config.OIDCEndpoint = "https://accounts.google.com"
+// 	}
+
+// 	if config.Domain == "" {
+// 		config.Domain = "*"
+// 	}
+
+// 	if config.AuthorizationEndpointQueryParams == nil {
+// 		accessType := "offline"
+// 		if config.ClientSecret == "" {
+// 			accessType = "online"
+// 		}
+// 		config.AuthorizationEndpointQueryParams = map[string]interface{}{
+// 			"access_type":            accessType,
+// 			"include_granted_scopes": "true",
+// 			"response_type":          "code",
+// 			"hd":                     config.Domain,
+// 		}
+// 	}
+
+// 	if len(config.Scope) == 0 {
+// 		config.Scope = []string{"openid", "https://www.googleapis.com/auth/userinfo.email"}
+// 	}
+
+// 	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
+// 		config.GetSupertokensUserInfoFromRawUserInfoResponse = func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
+// 			result, err := getSupertokensUserInfoFromRawUserInfo("sub", "email", "email_verified", "id_token")(rawUserInfoResponse, userContext)
+// 			if err != nil {
+// 				return tpmodels.TypeSupertokensUserInfo{}, err
 // 			}
-
-// 			var additionalParams map[string]interface{} = nil
-// 			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-// 				additionalParams = config.AuthorisationRedirect.Params
+// 			if config.Domain != "*" {
+// 				if rawUserInfoResponse.FromIdToken["hd"] != config.Domain {
+// 					return tpmodels.TypeSupertokensUserInfo{}, errors.New("Please use emails from " + config.Domain + " to login")
+// 				}
 // 			}
+// 			return result, nil
+// 		}
+// 	}
 
-// 			authorizationRedirectParams := map[string]interface{}{
-// 				"scope":                  strings.Join(scopes, " "),
-// 				"access_type":            "offline",
-// 				"include_granted_scopes": "true",
-// 				"response_type":          "code",
-// 				"client_id":              config.ClientID,
-// 				"hd":                     domain,
-// 			}
-// 			for key, value := range additionalParams {
-// 				authorizationRedirectParams[key] = value
-// 			}
+// 	return config
+// }
 
-// 			return tpmodels.TypeProviderGetResponse{
-// 				AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 					URL:    accessTokenAPIURL,
-// 					Params: accessTokenAPIParams,
-// 				},
-// 				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 					URL:    authorisationRedirectURL,
-// 					Params: authorizationRedirectParams,
-// 				},
-// 				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 					claims, err := verifyAndGetClaims(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
-// 					if err != nil {
-// 						return tpmodels.UserInfo{}, err
-// 					}
+// func googleWorkspacesConfigToOAuth2ProviderConfig(googleWorkspacesConfig GoogleWorkspacesConfig) OAuth2ProviderConfig {
+// 	additionalConfig := map[string]interface{}{}
 
-// 					var email string
-// 					var isVerified bool
-// 					var id string
-// 					var hd string
-// 					for key, val := range claims {
-// 						if key == "sub" {
-// 							id = val.(string)
-// 						} else if key == "email" {
-// 							email = val.(string)
-// 						} else if key == "email_verified" {
-// 							isVerified = val.(bool)
-// 						} else if key == "hd" {
-// 							hd = val.(string)
-// 						}
-// 					}
+// 	for k, v := range googleWorkspacesConfig.AdditionalConfig {
+// 		additionalConfig[k] = v
+// 	}
+// 	additionalConfig["_domain"] = googleWorkspacesConfig.Domain
 
-// 					if email == "" {
-// 						return tpmodels.UserInfo{}, errors.New("Could not get email. Please use a different login method")
-// 					}
+// 	return OAuth2ProviderConfig{
+// 		ClientID:     googleWorkspacesConfig.ClientID,
+// 		ClientSecret: googleWorkspacesConfig.ClientSecret,
+// 		Scope:        googleWorkspacesConfig.Scope,
 
-// 					if hd == "" {
-// 						return tpmodels.UserInfo{}, errors.New("Please use a Google Workspace ID to login")
-// 					}
+// 		AuthorizationEndpoint:            googleWorkspacesConfig.AuthorizationEndpoint,
+// 		AuthorizationEndpointQueryParams: googleWorkspacesConfig.AuthorizationEndpointQueryParams,
 
-// 					if !strings.Contains(domain, "*") && hd != domain {
-// 						return tpmodels.UserInfo{}, errors.New("Please use emails from " + domain + " to login")
-// 					}
+// 		TokenEndpoint: googleWorkspacesConfig.TokenEndpoint,
+// 		TokenParams:   googleWorkspacesConfig.TokenParams,
 
-// 					return tpmodels.UserInfo{
-// 						ID: id,
-// 						Email: &tpmodels.EmailStruct{
-// 							ID:         email,
-// 							IsVerified: isVerified,
-// 						},
-// 					}, nil
-// 				},
-// 				GetClientId: func(userContext supertokens.UserContext) string {
-// 					return config.ClientID
-// 				},
-// 			}
-// 		},
-// 		IsDefault: config.IsDefault,
+// 		UserInfoEndpoint: googleWorkspacesConfig.UserInfoEndpoint,
+
+// 		JwksURI:      googleWorkspacesConfig.JwksURI,
+// 		OIDCEndpoint: googleWorkspacesConfig.OIDCEndpoint,
+
+// 		GetSupertokensUserInfoFromRawUserInfoResponse: googleWorkspacesConfig.GetSupertokensUserInfoFromRawUserInfoResponse,
+
+// 		AdditionalConfig: additionalConfig,
 // 	}
 // }
 
-// func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) {
-// 	claims := jwt.MapClaims{}
-// 	// Get the JWKS URL.
-// 	jwksURL := "https://www.googleapis.com/oauth2/v3/certs"
+// func googleWorkspacesConfigFromOAuth2ProviderConfig(config OAuth2ProviderConfig) GoogleWorkspacesConfig {
+// 	return GoogleWorkspacesConfig{
+// 		ClientID:     config.ClientID,
+// 		ClientSecret: config.ClientSecret,
+// 		Scope:        config.Scope,
+// 		Domain:       config.AdditionalConfig["_domain"].(string),
 
-// 	// Create the JWKS from the resource at the given URL.
-// 	jwks, err := getJWKSFromURL(jwksURL)
-// 	if err != nil {
-// 		return claims, err
+// 		AuthorizationEndpoint:            config.AuthorizationEndpoint,
+// 		AuthorizationEndpointQueryParams: config.AuthorizationEndpointQueryParams,
+
+// 		TokenEndpoint: config.TokenEndpoint,
+// 		TokenParams:   config.TokenParams,
+
+// 		UserInfoEndpoint: config.UserInfoEndpoint,
+
+// 		JwksURI:      config.JwksURI,
+// 		OIDCEndpoint: config.OIDCEndpoint,
+
+// 		GetSupertokensUserInfoFromRawUserInfoResponse: config.GetSupertokensUserInfoFromRawUserInfoResponse,
+
+// 		AdditionalConfig: config.AdditionalConfig,
 // 	}
-
-// 	// Parse the JWT.
-// 	token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
-// 	if err != nil {
-// 		return claims, err
-// 	}
-
-// 	// Check if the token is valid.
-// 	if !token.Valid {
-// 		return claims, errors.New("invalid id_token supplied")
-// 	}
-
-// 	if claims["iss"].(string) != "https://accounts.google.com" && claims["iss"].(string) != "accounts.google.com" {
-// 		return claims, errors.New("invalid iss field")
-// 	}
-
-// 	if claims["aud"].(string) != clientId {
-// 		return claims, errors.New("the client for whom this key is for is different than the one provided")
-// 	}
-
-// 	return claims, nil
 // }

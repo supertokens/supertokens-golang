@@ -30,28 +30,29 @@ import (
 const appleID = "apple"
 
 type TypeAppleInput struct {
-	Config   []AppleConfig
+	Config   AppleConfig
 	Override func(provider *AppleProvider) *AppleProvider
 }
 
 type AppleConfig struct {
-	ClientID     string
-	ClientSecret AppleClientSecret
-	Scope        []string
+	Clients []AppleClientConfig
 
 	AuthorizationEndpoint            string
 	AuthorizationEndpointQueryParams map[string]interface{}
+	TokenEndpoint                    string
+	TokenParams                      map[string]interface{}
+	ForcePKCE                        *bool
+	UserInfoEndpoint                 string
+	JwksURI                          string
+	OIDCDiscoveryEndpoint            string
+	UserInfoMap                      tpmodels.TypeUserInfoMap
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, config tpmodels.TypeNormalisedProviderConfig) (bool, error)
+}
 
-	TokenEndpoint string
-	TokenParams   map[string]interface{}
-
-	UserInfoEndpoint string
-
-	JwksURI      string
-	OIDCEndpoint string
-
-	GetSupertokensUserInfoFromRawUserInfoResponse func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error)
-
+type AppleClientConfig struct {
+	ClientID         string
+	ClientSecret     AppleClientSecret
+	Scope            []string
 	AdditionalConfig map[string]interface{}
 }
 
@@ -62,7 +63,6 @@ type AppleClientSecret struct {
 }
 
 type AppleProvider struct {
-	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error)
 	*tpmodels.TypeProvider
 }
 
@@ -73,52 +73,48 @@ func Apple(input TypeAppleInput) tpmodels.TypeProvider {
 		},
 	}
 
-	var customProviderConfig []CustomProviderConfig
-	if input.Config != nil {
-		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
-		for idx, config := range input.Config {
-			customProviderConfig[idx] = appleConfigToCustomProviderConfig(config)
+	var oAuth2ProviderClientConfig []OAuth2ProviderClientConfig
+	if input.Config.Clients != nil {
+		oAuth2ProviderClientConfig = make([]OAuth2ProviderClientConfig, len(input.Config.Clients))
+		for idx, client := range input.Config.Clients {
+			oAuth2ProviderClientConfig[idx] = appleConfigToOAuth2ProviderConfig(client) // TODO: recompute this after 180 days
 		}
 	}
 
-	customProvider := customProvider(TypeCustomProviderInput{
+	oAuth2Provider := oAuth2Provider(TypeOAuth2ProviderInput{
 		ThirdPartyID: googleID,
-		Config:       customProviderConfig,
+		Config: OAuth2ProviderConfig{
+			Clients:                          oAuth2ProviderClientConfig,
+			AuthorizationEndpoint:            input.Config.AuthorizationEndpoint,
+			AuthorizationEndpointQueryParams: input.Config.AuthorizationEndpointQueryParams,
+			TokenEndpoint:                    input.Config.TokenEndpoint,
+			TokenParams:                      input.Config.TokenParams,
+			ForcePKCE:                        input.Config.ForcePKCE,
+			UserInfoEndpoint:                 input.Config.UserInfoEndpoint,
+			JwksURI:                          input.Config.JwksURI,
+			OIDCDiscoveryEndpoint:            input.Config.OIDCDiscoveryEndpoint,
+			UserInfoMap:                      input.Config.UserInfoMap,
+			ValidateIdTokenPayload:           input.Config.ValidateIdTokenPayload,
+		},
 	})
 
 	{
-		// Custom provider needs to use the config returned by apple provider GetConfig
-		// Also, apple provider needs to use the default implementation of GetConfig provided by custom provider
-		oGetConfigFromCustomProvider := customProvider.GetConfig
-		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-			config, err := appleProvider.GetConfig(id, userContext)
-			if err != nil {
-				return CustomProviderConfig{}, err
-			}
-			return appleConfigToCustomProviderConfig(config), nil
-		}
-		appleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error) {
-			config, err := oGetConfigFromCustomProvider(id, userContext)
-			if err != nil {
-				return AppleConfig{}, err
-			}
-			return appleConfigFromCustomProviderConfig(config), nil
-		}
-	}
+		// Apple provider APIs call into oAuth2 provider APIs
 
-	{
-		// Apple provider APIs call into custom provider APIs
-
-		appleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		appleProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			return oAuth2Provider.GetConfig(clientType, tenantId, userContext)
 		}
 
-		appleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		appleProvider.GetAuthorisationRedirectURL = func(config tpmodels.TypeNormalisedProviderConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return oAuth2Provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 		}
 
-		appleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		appleProvider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.TypeNormalisedProviderConfig, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return oAuth2Provider.ExchangeAuthCodeForOAuthTokens(config, redirectInfo, userContext)
+		}
+
+		appleProvider.GetUserInfo = func(config tpmodels.TypeNormalisedProviderConfig, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return oAuth2Provider.GetUserInfo(config, oAuthTokens, userContext)
 		}
 	}
 
@@ -129,10 +125,10 @@ func Apple(input TypeAppleInput) tpmodels.TypeProvider {
 	{
 		// We want to always normalize (for apple) the config before returning it
 		oGetConfig := appleProvider.GetConfig
-		appleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (AppleConfig, error) {
-			config, err := oGetConfig(id, userContext)
+		appleProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			config, err := oGetConfig(clientType, tenantId, userContext)
 			if err != nil {
-				return AppleConfig{}, err
+				return config, err
 			}
 			return normalizeAppleConfig(config), nil
 		}
@@ -141,7 +137,7 @@ func Apple(input TypeAppleInput) tpmodels.TypeProvider {
 	return *appleProvider.TypeProvider
 }
 
-func normalizeAppleConfig(config AppleConfig) AppleConfig {
+func normalizeAppleConfig(config tpmodels.TypeNormalisedProviderConfig) tpmodels.TypeNormalisedProviderConfig {
 	if config.AuthorizationEndpoint == "" {
 		config.AuthorizationEndpoint = "https://appleid.apple.com/auth/authorize"
 	}
@@ -164,8 +160,20 @@ func normalizeAppleConfig(config AppleConfig) AppleConfig {
 		config.Scope = []string{"email"}
 	}
 
-	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
-		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfo("sub", "email", "email_verified", "id_token")
+	if config.UserInfoMap.From == "" {
+		config.UserInfoMap.From = tpmodels.FromIdTokenPayload
+	}
+
+	if config.UserInfoMap.IdField == "" {
+		config.UserInfoMap.IdField = "sub"
+	}
+
+	if config.UserInfoMap.EmailField == "" {
+		config.UserInfoMap.EmailField = "email"
+	}
+
+	if config.UserInfoMap.EmailVerifiedField == "" {
+		config.UserInfoMap.EmailVerifiedField = "email_verified"
 	}
 
 	return config
@@ -214,7 +222,7 @@ func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 	return ecdsaPrivateKey, nil
 }
 
-func appleConfigToCustomProviderConfig(appleConfig AppleConfig) CustomProviderConfig {
+func appleConfigToOAuth2ProviderConfig(appleConfig AppleClientConfig) OAuth2ProviderClientConfig {
 	clientSecret, _ := getClientSecret(appleConfig.ClientID, appleConfig.ClientSecret)
 
 	additionalConfig := map[string]interface{}{}
@@ -224,48 +232,11 @@ func appleConfigToCustomProviderConfig(appleConfig AppleConfig) CustomProviderCo
 	}
 	additionalConfig["_clientSecret"] = appleConfig.ClientSecret
 
-	return CustomProviderConfig{
+	return OAuth2ProviderClientConfig{
 		ClientID:     appleConfig.ClientID,
 		ClientSecret: clientSecret,
 		Scope:        appleConfig.Scope,
 
-		AuthorizationEndpoint:            appleConfig.AuthorizationEndpoint,
-		AuthorizationEndpointQueryParams: appleConfig.AuthorizationEndpointQueryParams,
-
-		TokenEndpoint: appleConfig.TokenEndpoint,
-		TokenParams:   appleConfig.TokenParams,
-
-		UserInfoEndpoint: appleConfig.UserInfoEndpoint,
-
-		JwksURI:      appleConfig.JwksURI,
-		OIDCEndpoint: appleConfig.OIDCEndpoint,
-
-		GetSupertokensUserInfoFromRawUserInfoResponse: appleConfig.GetSupertokensUserInfoFromRawUserInfoResponse,
-
 		AdditionalConfig: additionalConfig,
-	}
-}
-
-func appleConfigFromCustomProviderConfig(config CustomProviderConfig) AppleConfig {
-	return AppleConfig{
-		ClientID:     config.ClientID,
-		ClientSecret: config.AdditionalConfig["_clientSecret"].(AppleClientSecret),
-
-		Scope: config.Scope,
-
-		AuthorizationEndpoint:            config.AuthorizationEndpoint,
-		AuthorizationEndpointQueryParams: config.AuthorizationEndpointQueryParams,
-
-		TokenEndpoint: config.TokenEndpoint,
-		TokenParams:   config.TokenParams,
-
-		UserInfoEndpoint: config.UserInfoEndpoint,
-
-		JwksURI:      config.JwksURI,
-		OIDCEndpoint: config.OIDCEndpoint,
-
-		GetSupertokensUserInfoFromRawUserInfoResponse: config.GetSupertokensUserInfoFromRawUserInfoResponse,
-
-		AdditionalConfig: config.AdditionalConfig,
 	}
 }

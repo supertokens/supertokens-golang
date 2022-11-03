@@ -24,9 +24,22 @@ import (
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET      *func(provider TypeProvider, clientID *string, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST             *func(provider TypeProvider, clientID *string, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+	ProvidersGET             *func(tenantId string) (ProvidersGetResponse, error)
+	AuthorisationUrlGET      *func(provider TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider TypeProvider, clientType *string, tenantId *string, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
 	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
+}
+
+type ProvidersGetResponse struct {
+	OK *struct {
+		Providers []struct {
+			ID              string `json:"id"`
+			Name            string `json:"name"`
+			ButtonStyle     string `json:"buttonStyle,omitempty"`
+			ButtonComponent string `json:"buttonComponent,omitempty"`
+		} `json:"providers"`
+	}
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type AuthorisationUrlGETResponse struct {

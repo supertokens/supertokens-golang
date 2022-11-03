@@ -51,15 +51,49 @@ type TypeAuthorisationRedirect struct {
 type TypeProvider struct {
 	ID string
 
-	GetAuthorisationRedirectURL    func(id *TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(id *TypeID, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(id *TypeID, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+	GetConfig                      func(clientType *string, tenantId *string, userContext supertokens.UserContext) (TypeNormalisedProviderConfig, error)
+	GetAuthorisationRedirectURL    func(config TypeNormalisedProviderConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(config TypeNormalisedProviderConfig, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(config TypeNormalisedProviderConfig, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
 type TypeRedirectURIInfo struct {
 	RedirectURIOnProviderDashboard string                     `json:"redirectURIOnProviderDashboard"`
 	RedirectURIQueryParams         TypeRedirectURIQueryParams `json:"redirectURIQueryParams"`
 	PKCECodeVerifier               *string                    `json:"pkceCodeVerifier"`
+}
+
+type TypeNormalisedProviderConfig struct {
+	ClientType       string
+	ClientID         string
+	ClientSecret     string
+	Scope            []string
+	AdditionalConfig map[string]interface{}
+
+	AuthorizationEndpoint            string
+	AuthorizationEndpointQueryParams map[string]interface{}
+	TokenEndpoint                    string
+	TokenParams                      map[string]interface{}
+	ForcePKCE                        *bool
+	UserInfoEndpoint                 string
+	JwksURI                          string
+	OIDCDiscoveryEndpoint            string
+	UserInfoMap                      TypeUserInfoMap
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, config TypeNormalisedProviderConfig) (bool, error)
+}
+
+type TypeFrom string
+
+const (
+	FromIdTokenPayload     TypeFrom = "idTokenPayload"
+	FromAccessTokenPayload TypeFrom = "accessTokenPayload"
+)
+
+type TypeUserInfoMap struct {
+	From               TypeFrom
+	IdField            string
+	EmailField         string
+	EmailVerifiedField string
 }
 
 type User struct {
@@ -93,16 +127,4 @@ type TypeNormalisedInput struct {
 type OverrideStruct struct {
 	Functions func(originalImplementation RecipeInterface) RecipeInterface
 	APIs      func(originalImplementation APIInterface) APIInterface
-}
-
-type IDTypeEnum string
-
-const (
-	TypeClientID IDTypeEnum = "CLIENT_ID"
-	TypeTenantID IDTypeEnum = "TENANT_ID"
-)
-
-type TypeID struct {
-	ID   string
-	Type IDTypeEnum
 }

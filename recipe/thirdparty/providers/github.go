@@ -25,15 +25,14 @@ import (
 
 const githubID = "github"
 
-type GithubConfig = CustomProviderConfig
+type GithubConfig = OAuth2ProviderConfig
 
 type TypeGithubInput struct {
-	Config   []GithubConfig
+	Config   GithubConfig
 	Override func(provider *GithubProvider) *GithubProvider
 }
 
 type GithubProvider struct {
-	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GithubConfig, error)
 	*tpmodels.TypeProvider
 }
 
@@ -44,47 +43,28 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 		},
 	}
 
-	var customProviderConfig []CustomProviderConfig
-	if input.Config != nil {
-		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
-		copy(customProviderConfig, input.Config)
-	}
-
-	customProvider := customProvider(TypeCustomProviderInput{
-		ThirdPartyID: googleID,
-		Config:       customProviderConfig,
+	oAuth2Provider := OAuth2Provider(TypeOAuth2ProviderInput{
+		ThirdPartyID: githubID,
+		Config:       input.Config,
 	})
 
 	{
-		// Custom provider needs to use the config returned by google provider GetConfig
-		// Also, google provider needs to use the default implementation of GetConfig provided by custom provider
-		oGetConfig := customProvider.GetConfig
-		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-			return githubProvider.GetConfig(id, userContext)
-		}
-		githubProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GithubConfig, error) {
-			return oGetConfig(id, userContext)
-		}
-	}
+		// Github provider APIs call into OAuth2 provider APIs
 
-	{
-		// Github provider APIs call into custom provider APIs
-
-		githubProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		githubProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			return oAuth2Provider.GetConfig(clientType, tenantId, userContext)
 		}
 
-		githubProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		githubProvider.GetAuthorisationRedirectURL = func(config tpmodels.TypeNormalisedProviderConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return oAuth2Provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
+		}
+
+		githubProvider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.TypeNormalisedProviderConfig, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return oAuth2Provider.ExchangeAuthCodeForOAuthTokens(config, redirectInfo, userContext)
 		}
 	}
 
-	githubProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		config, err := githubProvider.GetConfig(id, userContext)
-		if err != nil {
-			return tpmodels.TypeUserInfo{}, err
-		}
-
+	githubProvider.GetUserInfo = func(config tpmodels.TypeNormalisedProviderConfig, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 		headers := map[string]string{
 			"Authorization": fmt.Sprintf("Bearer %s", oAuthTokens["access_token"]),
 			"Accept":        "application/vnd.github.v3+json",
@@ -103,7 +83,7 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 		rawResponse["user"] = userInfo
 
 		rawUserInfoResponseFromProvider := tpmodels.TypeRawUserInfoFromProvider{FromAccessToken: rawResponse}
-		userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(rawUserInfoResponseFromProvider, userContext)
+		userInfoResult, err := getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponseFromProvider, userContext)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
@@ -121,10 +101,10 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 	{
 		// We want to always normalize (for github) the config before returning it
 		oGetConfig := githubProvider.GetConfig
-		githubProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GithubConfig, error) {
-			config, err := oGetConfig(id, userContext)
+		githubProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			config, err := oGetConfig(clientType, tenantId, userContext)
 			if err != nil {
-				return GithubConfig{}, err
+				return tpmodels.TypeNormalisedProviderConfig{}, err
 			}
 			return normalizeGithubConfig(config), nil
 		}
@@ -133,7 +113,7 @@ func Github(input TypeGithubInput) tpmodels.TypeProvider {
 	return *githubProvider.TypeProvider
 }
 
-func normalizeGithubConfig(config GithubConfig) GithubConfig {
+func normalizeGithubConfig(config tpmodels.TypeNormalisedProviderConfig) tpmodels.TypeNormalisedProviderConfig {
 	if config.AuthorizationEndpoint == "" {
 		config.AuthorizationEndpoint = "https://github.com/login/oauth/authorize"
 	}
@@ -142,9 +122,6 @@ func normalizeGithubConfig(config GithubConfig) GithubConfig {
 	}
 	if len(config.Scope) == 0 {
 		config.Scope = []string{"read:user", "user:email"}
-	}
-	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
-		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfoResponseForGithub
 	}
 	return config
 }

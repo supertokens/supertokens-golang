@@ -24,7 +24,8 @@ import (
 
 type bodyParams struct {
 	ThirdPartyId    string                        `json:"thirdPartyId"`
-	ClientId        string                        `json:"clientId"`
+	ClientType      string                        `json:"clientType"`
+	TenantId        string                        `json:"tenantId"`
 	RedirectURIInfo *tpmodels.TypeRedirectURIInfo `json:"redirectURIInfo"`
 	OAuthTokens     *tpmodels.TypeOAuthTokens     `json:"oAuthTokens"`
 }
@@ -45,9 +46,14 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return err
 	}
 
-	var clientId *string = nil
-	if bodyParams.ClientId != "" {
-		clientId = &bodyParams.ClientId
+	var clientType *string = nil
+	if bodyParams.ClientType != "" {
+		clientType = &bodyParams.ClientType
+	}
+
+	var tenantId *string = nil
+	if bodyParams.TenantId != "" {
+		tenantId = &bodyParams.TenantId
 	}
 
 	if bodyParams.ThirdPartyId == "" {
@@ -72,7 +78,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return err
 	}
 
-	result, err := (*apiImplementation.SignInUpPOST)(*provider, clientId, input, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.SignInUpPOST)(*provider, clientType, tenantId, input, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 
 	if err != nil {
 		return err

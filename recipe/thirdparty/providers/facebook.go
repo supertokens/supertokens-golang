@@ -22,68 +22,42 @@ import (
 
 const facebookID = "facebook"
 
-type FacebookConfig = CustomProviderConfig
+type FacebookConfig = OAuth2ProviderConfig
 
 type TypeFacebookInput struct {
-	Config   []FacebookConfig
+	Config   FacebookConfig
 	Override func(provider *FacebookProvider) *FacebookProvider
 }
 
-type FacebookProvider struct {
-	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (FacebookConfig, error)
-	*tpmodels.TypeProvider
-}
+type FacebookProvider = tpmodels.TypeProvider
 
 func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 	facebookProvider := &FacebookProvider{
-		TypeProvider: &tpmodels.TypeProvider{
-			ID: facebookID,
-		},
+		ID: facebookID,
 	}
 
-	var customProviderConfig []CustomProviderConfig
-	if input.Config != nil {
-		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
-		for idx, config := range input.Config {
-			customProviderConfig[idx] = config
-		}
-	}
-
-	customProvider := customProvider(TypeCustomProviderInput{
-		ThirdPartyID: googleID,
-		Config:       customProviderConfig,
+	oAuth2Provider := oAuth2Provider(TypeOAuth2ProviderInput{
+		ThirdPartyID: facebookID,
+		Config:       input.Config,
 	})
 
 	{
-		// Custom provider needs to use the config returned by facebook provider GetConfig
-		// Also, facebook provider needs to use the default implementation of GetConfig provided by custom provider
-		oGetConfig := customProvider.GetConfig
-		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-			return facebookProvider.GetConfig(id, userContext)
-		}
-		facebookProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (FacebookConfig, error) {
-			return oGetConfig(id, userContext)
-		}
-	}
+		// Facebook provider APIs call into oAuth2 provider APIs
 
-	{
-		// Facebook provider APIs call into custom provider APIs
-
-		facebookProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		facebookProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			return oAuth2Provider.GetConfig(clientType, tenantId, userContext)
 		}
 
-		facebookProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		facebookProvider.GetAuthorisationRedirectURL = func(config tpmodels.TypeNormalisedProviderConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return oAuth2Provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
+		}
+
+		facebookProvider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.TypeNormalisedProviderConfig, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return oAuth2Provider.ExchangeAuthCodeForOAuthTokens(config, redirectInfo, userContext)
 		}
 	}
 
-	facebookProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		config, err := facebookProvider.GetConfig(id, userContext)
-		if err != nil {
-			return tpmodels.TypeUserInfo{}, err
-		}
-
+	facebookProvider.GetUserInfo = func(config tpmodels.TypeNormalisedProviderConfig, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 		accessToken := oAuthTokens["access_token"].(string)
 
 		queryParams := map[string]interface{}{
@@ -100,7 +74,7 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 		rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{
 			FromAccessToken: userInfoFromAccessToken.(map[string]interface{}),
 		}
-		userInfoResult, err := config.GetSupertokensUserInfoFromRawUserInfoResponse(rawUserInfoFromProvider, userContext)
+		userInfoResult, err := getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoFromProvider, config)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
@@ -118,19 +92,19 @@ func Facebook(input TypeFacebookInput) tpmodels.TypeProvider {
 	{
 		// We want to always normalize (for apple) the config before returning it
 		oGetConfig := facebookProvider.GetConfig
-		facebookProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (FacebookConfig, error) {
-			config, err := oGetConfig(id, userContext)
+		facebookProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			config, err := oGetConfig(clientType, tenantId, userContext)
 			if err != nil {
-				return FacebookConfig{}, err
+				return tpmodels.TypeNormalisedProviderConfig{}, err
 			}
 			return normalizeFacebookConfig(config), nil
 		}
 	}
 
-	return *facebookProvider.TypeProvider
+	return *facebookProvider
 }
 
-func normalizeFacebookConfig(config FacebookConfig) FacebookConfig {
+func normalizeFacebookConfig(config tpmodels.TypeNormalisedProviderConfig) tpmodels.TypeNormalisedProviderConfig {
 	if config.AuthorizationEndpoint == "" {
 		config.AuthorizationEndpoint = "https://www.facebook.com/v12.0/dialog/oauth"
 	}
@@ -147,8 +121,20 @@ func normalizeFacebookConfig(config FacebookConfig) FacebookConfig {
 		config.Scope = []string{"email"}
 	}
 
-	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
-		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfo("id", "email", "email_verified", "access_token")
+	if config.UserInfoMap.From == "" {
+		config.UserInfoMap.From = tpmodels.FromAccessTokenPayload
+	}
+
+	if config.UserInfoMap.IdField == "" {
+		config.UserInfoMap.IdField = "id"
+	}
+
+	if config.UserInfoMap.EmailField == "" {
+		config.UserInfoMap.EmailField = "email"
+	}
+
+	if config.UserInfoMap.EmailVerifiedField == "" {
+		config.UserInfoMap.EmailVerifiedField = "email_verified"
 	}
 
 	return config

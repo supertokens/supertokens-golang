@@ -7,15 +7,14 @@ import (
 
 const googleID = "google"
 
-type GoogleConfig = CustomProviderConfig
+type GoogleConfig = OAuth2ProviderConfig
 
 type TypeGoogleInput struct {
-	Config   []GoogleConfig
+	Config   GoogleConfig
 	Override func(provider *GoogleProvider) *GoogleProvider
 }
 
 type GoogleProvider struct {
-	GetConfig func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error)
 	*tpmodels.TypeProvider
 }
 
@@ -26,44 +25,28 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 		},
 	}
 
-	var customProviderConfig []CustomProviderConfig
-	if input.Config != nil {
-		customProviderConfig = make([]CustomProviderConfig, len(input.Config))
-		for idx, config := range input.Config {
-			customProviderConfig[idx] = config
-		}
-	}
-
-	customProvider := customProvider(TypeCustomProviderInput{
+	oAuth2Provider := oAuth2Provider(TypeOAuth2ProviderInput{
 		ThirdPartyID: googleID,
-		Config:       customProviderConfig,
+		Config:       input.Config,
 	})
 
 	{
-		// Custom provider needs to use the config returned by google provider GetConfig
-		// Also, google provider needs to use the default implementation of GetConfig provided by custom provider
-		oGetConfig := customProvider.GetConfig
-		customProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (CustomProviderConfig, error) {
-			return googleProvider.GetConfig(id, userContext)
-		}
-		googleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error) {
-			return oGetConfig(id, userContext)
-		}
-	}
+		// Google provider APIs call into oAuth2 provider APIs
 
-	{
-		// Google provider APIs call into custom provider APIs
-
-		googleProvider.GetAuthorisationRedirectURL = func(id *tpmodels.TypeID, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-			return customProvider.GetAuthorisationRedirectURL(id, redirectURIOnProviderDashboard, userContext)
+		googleProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			return oAuth2Provider.GetConfig(clientType, tenantId, userContext)
 		}
 
-		googleProvider.ExchangeAuthCodeForOAuthTokens = func(id *tpmodels.TypeID, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			return customProvider.ExchangeAuthCodeForOAuthTokens(id, redirectInfo, userContext)
+		googleProvider.GetAuthorisationRedirectURL = func(config tpmodels.TypeNormalisedProviderConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+			return oAuth2Provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 		}
 
-		googleProvider.GetUserInfo = func(id *tpmodels.TypeID, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			return customProvider.GetUserInfo(id, oAuthTokens, userContext)
+		googleProvider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.TypeNormalisedProviderConfig, redirectInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			return oAuth2Provider.ExchangeAuthCodeForOAuthTokens(config, redirectInfo, userContext)
+		}
+
+		googleProvider.GetUserInfo = func(config tpmodels.TypeNormalisedProviderConfig, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return oAuth2Provider.GetUserInfo(config, oAuthTokens, userContext)
 		}
 	}
 
@@ -74,10 +57,10 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 	{
 		// We want to always normalize (for google) the config before returning it
 		oGetConfig := googleProvider.GetConfig
-		googleProvider.GetConfig = func(id *tpmodels.TypeID, userContext supertokens.UserContext) (GoogleConfig, error) {
-			config, err := oGetConfig(id, userContext)
+		googleProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (tpmodels.TypeNormalisedProviderConfig, error) {
+			config, err := oGetConfig(clientType, tenantId, userContext)
 			if err != nil {
-				return GoogleConfig{}, err
+				return tpmodels.TypeNormalisedProviderConfig{}, err
 			}
 			return normalizeGoogleConfig(config), nil
 		}
@@ -86,7 +69,7 @@ func Google(input TypeGoogleInput) tpmodels.TypeProvider {
 	return *googleProvider.TypeProvider
 }
 
-func normalizeGoogleConfig(config GoogleConfig) GoogleConfig {
+func normalizeGoogleConfig(config tpmodels.TypeNormalisedProviderConfig) tpmodels.TypeNormalisedProviderConfig {
 	if config.AuthorizationEndpoint == "" {
 		config.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
 	}
@@ -115,8 +98,20 @@ func normalizeGoogleConfig(config GoogleConfig) GoogleConfig {
 		config.UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo"
 	}
 
-	if config.GetSupertokensUserInfoFromRawUserInfoResponse == nil {
-		config.GetSupertokensUserInfoFromRawUserInfoResponse = getSupertokensUserInfoFromRawUserInfo("id", "email", "email_verified", "access_token")
+	if config.UserInfoMap.From == "" {
+		config.UserInfoMap.From = tpmodels.FromAccessTokenPayload
+	}
+
+	if config.UserInfoMap.IdField == "" {
+		config.UserInfoMap.IdField = "id"
+	}
+
+	if config.UserInfoMap.EmailField == "" {
+		config.UserInfoMap.EmailField = "email"
+	}
+
+	if config.UserInfoMap.EmailVerifiedField == "" {
+		config.UserInfoMap.EmailVerifiedField = "email_verified"
 	}
 
 	return config
