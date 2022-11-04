@@ -119,14 +119,19 @@ func main() {
 
 // wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
+	shouldCallNext := false
 	return func(c *fiber.Ctx) error {
 		err := adaptor.HTTPHandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.SetUserContext(r.Context())
+			shouldCallNext = true
 		}))(c)
 		if err != nil {
 			return err
 		}
-		return c.Next()
+		if shouldCallNext {
+			return c.Next()
+		}
+		return nil
 	}
 }
 
