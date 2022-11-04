@@ -16,7 +16,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"github.com/valyala/fasthttp"
 )
 
 func main() {
@@ -121,25 +120,13 @@ func main() {
 // wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
 	return func(c *fiber.Ctx) error {
-		return adaptor.HTTPHandlerFunc(http.HandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
+		err := adaptor.HTTPHandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.SetUserContext(r.Context())
-			err := c.Next()
-			if err != nil {
-				err = supertokens.ErrorHandler(err, r, rw)
-				if err != nil {
-					rw.WriteHeader(500)
-					_, _ = rw.Write([]byte(err.Error()))
-				}
-				return
-			}
-			c.Response().Header.VisitAll(func(k, v []byte) {
-				if string(k) == fasthttp.HeaderContentType {
-					rw.Header().Set(string(k), string(v))
-				}
-			})
-			rw.WriteHeader(c.Response().StatusCode())
-			_, _ = rw.Write(c.Response().Body())
-		})))(c)
+		}))(c)
+		if err != nil {
+			return err
+		}
+		return c.Next()
 	}
 }
 
