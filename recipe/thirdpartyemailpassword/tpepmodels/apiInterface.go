@@ -23,7 +23,7 @@ import (
 )
 
 type APIInterface struct {
-	ThirdPartyProvidersForTenantGET *func(tenantId string) (tpmodels.ProvidersForTenantGetResponse, error)
+	ThirdPartyProvidersForTenantGET *func(tenantId string, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error)
 	AuthorisationUrlGET             *func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
 	AppleRedirectHandlerPOST        *func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error
 	EmailPasswordEmailExistsGET     *func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error)

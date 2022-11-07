@@ -31,7 +31,7 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	providersForTenantGET := func(tenantId string) (tpmodels.ProvidersForTenantGetResponse, error) {
+	providersForTenantGET := func(tenantId string, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
 		// TODO implement
 		return tpmodels.ProvidersForTenantGetResponse{}, errors.New("needs implementation")
 	}
