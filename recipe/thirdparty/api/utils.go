@@ -5,11 +5,11 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string) (*tpmodels.TypeProvider, error) {
+func findProvider(options tpmodels.APIOptions, thirdPartyId string) (tpmodels.TypeProvider, error) {
 	for _, provider := range options.Providers {
 		if provider.ID == thirdPartyId {
-			return &provider, nil
+			return provider, nil
 		}
 	}
-	return nil, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+	return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
 }

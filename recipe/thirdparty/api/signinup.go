@@ -78,7 +78,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return err
 	}
 
-	result, err := (*apiImplementation.SignInUpPOST)(*provider, clientType, tenantId, input, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.SignInUpPOST)(provider, clientType, tenantId, input, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 
 	if err != nil {
 		return err

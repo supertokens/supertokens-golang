@@ -49,7 +49,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return err
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, clientType, tenantId, redirectURIOnProviderDashboard, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, clientType, tenantId, redirectURIOnProviderDashboard, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}
