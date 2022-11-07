@@ -16,26 +16,20 @@
 package thirdparty
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
-
-type signInUpResponse struct {
-	CreatedNewUser bool
-	User           tpmodels.User
-}
 
 func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+func ManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpmodels.SignInUpResponse{}, err
+		return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
@@ -62,8 +56,8 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.SignInUpResponse, error) {
-	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	return ManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
 func GetUserByID(userID string) (*tpmodels.User, error) {
@@ -78,26 +72,27 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
-	return providers.Apple(config)
-}
+// TODO enable later
+// func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
+// 	return providers.Apple(config)
+// }
 
-func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-	return providers.Facebook(config)
-}
+// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
+// 	return providers.Facebook(config)
+// }
 
-func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-	return providers.Github(config)
-}
+// func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
+// 	return providers.Github(config)
+// }
 
-func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-	return providers.Discord(config)
-}
+// func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
+// 	return providers.Discord(config)
+// }
 
-func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
-	return providers.GoogleWorkspaces(config)
-}
+// func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
+// 	return providers.GoogleWorkspaces(config)
+// }
 
-func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-	return providers.Google(config)
-}
+// func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
+// 	return providers.Google(config)
+// }

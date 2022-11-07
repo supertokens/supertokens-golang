@@ -17,22 +17,33 @@ package tpepmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type RecipeInterface struct {
-	GetUserByID              *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail          *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByThirdPartyInfo  *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp       *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (SignInUpResponse, error)
-	EmailPasswordSignUp      *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
-	EmailPasswordSignIn      *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
-	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
-	ResetPasswordUsingToken  *func(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
-	UpdateEmailOrPassword    *func(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error)
+	GetUserByID                          *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail                      *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByThirdPartyInfo              *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartyManuallyCreateOrUpdateUserResponse, error)
+	EmailPasswordSignUp                  *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
+	EmailPasswordSignIn                  *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
+	CreateResetPasswordToken             *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
+	ResetPasswordUsingToken              *func(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
+	UpdateEmailOrPassword                *func(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error)
 }
 
 type SignInUpResponse struct {
+	OK *struct {
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             tpmodels.TypeOAuthTokens
+		RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
+	}
+}
+
+type ThirdPartyManuallyCreateOrUpdateUserResponse struct {
 	OK *struct {
 		CreatedNewUser bool
 		User           User

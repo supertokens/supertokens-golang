@@ -19,9 +19,23 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type UserInfo struct {
-	ID    string
-	Email *EmailStruct
+type TypeRedirectURIQueryParams = map[string]interface{}
+type TypeOAuthTokens = map[string]interface{}
+
+type TypeRawUserInfoFromProvider struct {
+	FromIdToken     map[string]interface{}
+	FromAccessToken map[string]interface{}
+}
+
+type TypeSupertokensUserInfo struct {
+	ThirdPartyUserId string
+	EmailInfo        *EmailStruct
+}
+
+type TypeUserInfo struct {
+	ThirdPartyUserId        string
+	EmailInfo               *EmailStruct
+	RawUserInfoFromProvider TypeRawUserInfoFromProvider
 }
 
 type EmailStruct struct {
@@ -29,28 +43,37 @@ type EmailStruct struct {
 	IsVerified bool   `json:"isVerified"`
 }
 
-type TypeProviderGetResponse struct {
-	AccessTokenAPI        AccessTokenAPI
-	AuthorisationRedirect AuthorisationRedirect
-	GetProfileInfo        func(authCodeResponse interface{}, userContext supertokens.UserContext) (UserInfo, error)
-	GetClientId           func(userContext supertokens.UserContext) string
-	GetRedirectURI        func(userContext supertokens.UserContext) (string, error)
-}
-
-type AccessTokenAPI struct {
-	URL    string
-	Params map[string]string
-}
-
-type AuthorisationRedirect struct {
-	URL    string
-	Params map[string]interface{}
+type TypeAuthorisationRedirect struct {
+	URLWithQueryParams string
+	PKCECodeVerifier   *string
 }
 
 type TypeProvider struct {
-	ID        string
-	Get       func(redirectURI *string, authCodeFromRequest *string, userContext supertokens.UserContext) TypeProviderGetResponse
-	IsDefault bool
+	ID string
+
+	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+}
+
+type TypeRedirectURIInfo struct {
+	RedirectURIOnProviderDashboard string                     `json:"redirectURIOnProviderDashboard"`
+	RedirectURIQueryParams         TypeRedirectURIQueryParams `json:"redirectURIQueryParams"`
+	PKCECodeVerifier               *string                    `json:"pkceCodeVerifier"`
+}
+
+type TypeFrom string
+
+const (
+	FromIdTokenPayload     TypeFrom = "idTokenPayload"
+	FromAccessTokenPayload TypeFrom = "accessTokenPayload"
+)
+
+type TypeUserInfoMap struct {
+	From               TypeFrom
+	IdField            string
+	EmailField         string
+	EmailVerifiedField string
 }
 
 type User struct {

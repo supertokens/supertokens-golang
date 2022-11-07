@@ -30,8 +30,8 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
-		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
+		response, err := ogSignInUpPOST(provider, clientType, tenantId, input, options, userContext)
 		if err != nil {
 			return tplmodels.ThirdPartySignInUpOutput{}, err
 		}
@@ -46,13 +46,13 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 		} else {
 			return tplmodels.ThirdPartySignInUpOutput{
 				OK: &struct {
-					CreatedNewUser   bool
-					User             tplmodels.User
-					AuthCodeResponse interface{}
-					Session          sessmodels.SessionContainer
+					CreatedNewUser          bool
+					User                    tplmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             tpmodels.TypeOAuthTokens
+					RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 				}{
-					CreatedNewUser:   response.OK.CreatedNewUser,
-					AuthCodeResponse: response.OK.AuthCodeResponse,
+					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tplmodels.User{
 						ID:          response.OK.User.ID,
 						TimeJoined:  response.OK.User.TimeJoined,
@@ -60,20 +60,22 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 						PhoneNumber: nil,
 						ThirdParty:  &response.OK.User.ThirdParty,
 					},
-					Session: response.OK.Session,
+					Session:                 response.OK.Session,
+					OAuthTokens:             response.OK.OAuthTokens,
+					RawUserInfoFromProvider: response.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		}
 	}
 
 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return ogAuthorisationUrlGET(provider, options, userContext)
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, clientType, tenantId, redirectURIOnProviderDashboard, options, userContext)
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
+	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(formPostInfoFromProvider, options, userContext)
 	}
 
 	ogConsumeCodePOST := *passwordlessImplementation.ConsumeCodePOST

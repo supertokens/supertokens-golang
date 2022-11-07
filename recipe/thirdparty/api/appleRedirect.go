@@ -26,9 +26,16 @@ func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmod
 		return nil
 	}
 
-	options.Req.ParseMultipartForm(0)
-	state := options.Req.FormValue("state")
-	code := options.Req.FormValue("code")
+	err := options.Req.ParseMultipartForm(0)
+	if err != nil {
+		return err
+	}
 
-	return (*apiImplementation.AppleRedirectHandlerPOST)(code, state, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	formPostInfoFromProvider := map[string]interface{}{}
+
+	for key, value := range options.Req.PostForm {
+		formPostInfoFromProvider[key] = value[0]
+	}
+
+	return (*apiImplementation.AppleRedirectHandlerPOST)(formPostInfoFromProvider, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 }
