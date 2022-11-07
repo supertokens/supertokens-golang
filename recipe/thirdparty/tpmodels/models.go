@@ -34,7 +34,7 @@ type TypeSupertokensUserInfo struct {
 
 type TypeUserInfo struct {
 	ThirdPartyUserId        string
-	EmailInfo               *EmailStruct
+	Email                   *EmailStruct
 	RawUserInfoFromProvider TypeRawUserInfoFromProvider
 }
 

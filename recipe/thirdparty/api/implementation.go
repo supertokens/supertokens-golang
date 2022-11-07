@@ -65,7 +65,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
 
-		emailInfo := userInfo.EmailInfo
+		emailInfo := userInfo.Email
 		if emailInfo == nil {
 			return tpmodels.SignInUpPOSTResponse{
 				NoEmailGivenByProviderError: &struct{}{},
