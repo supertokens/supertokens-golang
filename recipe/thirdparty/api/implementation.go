@@ -31,9 +31,9 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	providersForTenantGET := func(tenantId string) (tpmodels.ProvidersGetResponse, error) {
+	providersForTenantGET := func(tenantId string) (tpmodels.ProvidersForTenantGetResponse, error) {
 		// TODO implement
-		return tpmodels.ProvidersGetResponse{}, errors.New("needs implementation")
+		return tpmodels.ProvidersForTenantGetResponse{}, errors.New("needs implementation")
 	}
 
 	authorisationUrlGET := func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {

@@ -23,7 +23,7 @@ import (
 )
 
 type APIInterface struct {
-	ThirdPartyProvidersForTenantGET *func(tenantId string) (tpmodels.ProvidersGetResponse, error)
+	ThirdPartyProvidersForTenantGET *func(tenantId string) (tpmodels.ProvidersForTenantGetResponse, error)
 
 	AuthorisationUrlGET *func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
 
