@@ -16,6 +16,7 @@
 package thirdparty
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -93,6 +94,10 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 // 	return providers.GoogleWorkspaces(config)
 // }
 
-// func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-// 	return providers.Google(config)
-// }
+func Google(input providers.TypeGoogleInput) tpmodels.TypeProvider {
+	return providers.Google(input)
+}
+
+func CustomProvider(input providers.TypeCustomProviderInput) tpmodels.TypeProvider {
+	return providers.CustomProvider(input)
+}
