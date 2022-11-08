@@ -68,6 +68,19 @@ type TypeUserInfoMap struct {
 	EmailVerifiedField string
 }
 
+type TypeProvider struct {
+	ID string
+
+	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+}
+
+type TypeProviderInterface interface {
+	GetID() string
+	Build() TypeProvider
+}
+
 type User struct {
 	ID         string `json:"id"`
 	TimeJoined uint64 `json:"timeJoined"`

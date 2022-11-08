@@ -7,35 +7,35 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProviderInterface, error) {
+func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
 	if tenantId == nil {
 		for _, provider := range options.Providers {
-			if provider.GetId() == thirdPartyId {
-				return provider, nil
+			if provider.GetID() == thirdPartyId {
+				return provider.Build(), nil
 			}
 		}
-		return nil, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
 	}
 
 	var definedProvider tpmodels.TypeProviderInterface = nil
 	for _, provider := range options.Providers {
-		if provider.GetId() == thirdPartyId {
+		if provider.GetID() == thirdPartyId {
 			definedProvider = provider
 		}
 	}
 
 	result, err := supertokens.FetchTenantIDConfigMapping(thirdPartyId, *tenantId)
 	if err != nil {
-		return nil, err
+		return tpmodels.TypeProvider{}, err
 	}
 
 	if result.UnknownMappingError != nil {
-		return nil, supertokens.BadInputError{Msg: "The tenantId " + *tenantId + " seems to be missing from the backend configs."}
+		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The tenantId " + *tenantId + " seems to be missing from the backend configs."}
 	}
 
 	if definedProvider == nil {
 		definedProvider = createProvider(thirdPartyId, result.OK.Config)
-		return definedProvider, nil
+		return definedProvider.Build(), nil
 	}
 
 	// TODO
@@ -44,7 +44,7 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *st
 	// 	definedProvider.AddOrUpdateClient(client)
 	// }
 
-	return nil, errors.New("needs implementation")
+	return tpmodels.TypeProvider{}, errors.New("needs implementation")
 }
 
 func createProvider(thirdPartyId string, config interface{}) tpmodels.TypeProviderInterface {

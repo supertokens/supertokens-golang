@@ -66,10 +66,10 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 	thirdPartyIdSet := map[string]bool{}
 
 	for _, provider := range providers {
-		if thirdPartyIdSet[provider.GetId()] {
+		if thirdPartyIdSet[provider.GetID()] {
 			return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "The providers array has multiple entries for the same third party provider."}
 		}
-		thirdPartyIdSet[provider.GetId()] = true
+		thirdPartyIdSet[provider.GetID()] = true
 	}
 
 	if config.GetUserPoolForTenant == nil {
