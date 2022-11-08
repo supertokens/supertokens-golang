@@ -7,46 +7,47 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
+func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProviderInterface, error) {
 	if tenantId == nil {
 		for _, provider := range options.Providers {
-			if provider.ID == thirdPartyId {
+			if provider.GetId() == thirdPartyId {
 				return provider, nil
 			}
 		}
-		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+		return nil, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
 	}
 
-	var definedProvider *tpmodels.TypeProvider = nil
+	var definedProvider tpmodels.TypeProviderInterface = nil
 	for _, provider := range options.Providers {
-		if provider.ID == thirdPartyId {
-			definedProvider = &provider
+		if provider.GetId() == thirdPartyId {
+			definedProvider = provider
 		}
 	}
 
 	result, err := supertokens.FetchTenantIDConfigMapping(thirdPartyId, *tenantId)
 	if err != nil {
-		return tpmodels.TypeProvider{}, err
+		return nil, err
 	}
 
 	if result.UnknownMappingError != nil {
-		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The tenantId " + *tenantId + " seems to be missing from the backend configs."}
+		return nil, supertokens.BadInputError{Msg: "The tenantId " + *tenantId + " seems to be missing from the backend configs."}
 	}
 
 	if definedProvider == nil {
 		definedProvider = createProvider(thirdPartyId, result.OK.Config)
-		return *definedProvider, nil
+		return definedProvider, nil
 	}
 
 	// TODO
 	// for _, client := range result.OK.Config.Clients {
+	//  check if it's a built-in provider and if it is, add or update config by clientType
 	// 	definedProvider.AddOrUpdateClient(client)
 	// }
 
-	return tpmodels.TypeProvider{}, errors.New("needs implementation")
+	return nil, errors.New("needs implementation")
 }
 
-func createProvider(thirdPartyId string, config interface{}) *tpmodels.TypeProvider {
+func createProvider(thirdPartyId string, config interface{}) tpmodels.TypeProviderInterface {
 	// TODO impl
 	switch thirdPartyId {
 	case "active-directory":
@@ -61,7 +62,7 @@ func createProvider(thirdPartyId string, config interface{}) *tpmodels.TypeProvi
 	return createCustomProvider(thirdPartyId, config)
 }
 
-func createCustomProvider(thirdPartyId string, config interface{}) *tpmodels.TypeProvider {
+func createCustomProvider(thirdPartyId string, config interface{}) tpmodels.TypeProviderInterface {
 	// TODO impl
 	return nil
 }

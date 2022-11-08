@@ -48,14 +48,6 @@ type TypeAuthorisationRedirect struct {
 	PKCECodeVerifier   *string
 }
 
-type TypeProvider struct {
-	ID string
-
-	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
-}
-
 type TypeRedirectURIInfo struct {
 	RedirectURIOnProviderDashboard string                     `json:"redirectURIOnProviderDashboard"`
 	RedirectURIQueryParams         TypeRedirectURIQueryParams `json:"redirectURIQueryParams"`
@@ -89,12 +81,12 @@ type User struct {
 }
 
 type TypeInputSignInAndUp struct {
-	Providers            []TypeProvider
+	Providers            []TypeProviderInterface
 	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers            []TypeProvider
+	Providers            []TypeProviderInterface
 	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 

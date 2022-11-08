@@ -28,7 +28,7 @@ func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmo
 	queryParams := options.Req.URL.Query()
 	tenantId := queryParams.Get("tenantId")
 
-	if len(tenantId) == 0 {
+	if tenantId == "" {
 		return supertokens.BadInputError{Msg: "Please provide the tenantId as a GET param"}
 	}
 

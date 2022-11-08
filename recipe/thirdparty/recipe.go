@@ -34,7 +34,7 @@ type Recipe struct {
 	Config       tpmodels.TypeNormalisedInput
 	RecipeImpl   tpmodels.RecipeInterface
 	APIImpl      tpmodels.APIInterface
-	Providers    []tpmodels.TypeProvider
+	Providers    []tpmodels.TypeProviderInterface
 }
 
 var singletonInstance *Recipe
