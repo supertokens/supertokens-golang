@@ -38,7 +38,8 @@ func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmo
 	}
 	if result.OK != nil {
 		respBody := map[string]interface{}{
-			"status": "OK",
+			"status":    "OK",
+			"providers": result.OK.Providers,
 		}
 		return supertokens.Send200Response(options.Res, respBody)
 	} else if result.GeneralError != nil {

@@ -44,7 +44,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
 
-	provider, err := findProvider(options, thirdPartyId)
+	provider, err := findProvider(options, thirdPartyId, tenantId)
 	if err != nil {
 		return err
 	}

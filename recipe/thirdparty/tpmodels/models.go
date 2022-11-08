@@ -81,17 +81,21 @@ type User struct {
 	TimeJoined uint64 `json:"timeJoined"`
 	Email      string `json:"email"`
 	ThirdParty struct {
-		ID     string `json:"id"`
-		UserID string `json:"userId"`
+		ID        string   `json:"id"`
+		UserID    string   `json:"userId"`
+		UserPool  string   `json:"userPool"`
+		TenantIDs []string `json:"tenantIds"`
 	} `json:"thirdParty"`
 }
 
 type TypeInputSignInAndUp struct {
-	Providers []TypeProvider
+	Providers            []TypeProvider
+	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers []TypeProvider
+	Providers            []TypeProvider
+	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 
 type TypeInput struct {
