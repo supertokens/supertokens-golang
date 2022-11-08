@@ -23,13 +23,11 @@ import (
 )
 
 type APIInterface struct {
-	ThirdPartyProvidersForTenantGET *func(tenantId string, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error)
+	AuthorisationUrlGET *func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
 
-	AuthorisationUrlGET *func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error)
+	AppleRedirectHandlerPOST *func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error
 
-	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error
-
-	ThirdPartySignInUpPOST *func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (ThirdPartySignInUpOutput, error)
+	ThirdPartySignInUpPOST *func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (ThirdPartySignInUpOutput, error)
 
 	CreateCodePOST *func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error)
 
@@ -62,11 +60,10 @@ type ConsumeCodePOSTResponse struct {
 
 type ThirdPartySignInUpOutput struct {
 	OK *struct {
-		CreatedNewUser          bool
-		User                    User
-		Session                 sessmodels.SessionContainer
-		OAuthTokens             tpmodels.TypeOAuthTokens
-		RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
+		CreatedNewUser   bool
+		User             User
+		AuthCodeResponse interface{}
+		Session          sessmodels.SessionContainer
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse
