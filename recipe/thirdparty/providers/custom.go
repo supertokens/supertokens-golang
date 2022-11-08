@@ -33,7 +33,7 @@ type CustomProviderConfig struct {
 	AuthorizationEndpointQueryParams map[string]interface{}
 	TokenEndpoint                    string
 	TokenParams                      map[string]interface{}
-	ForcePKCE                        *bool
+	ForcePKCE                        bool
 	UserInfoEndpoint                 string
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
