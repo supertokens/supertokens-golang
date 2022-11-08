@@ -76,6 +76,15 @@ type TypeProvider struct {
 	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
+/*
+TypeProviderInterface allows us to define the config directly in the thirdparty.Init
+instead of calling a function that returns the instance of TypeProvider. This is
+needed because we may have to update the client config array from the `findProvider`,
+which wouldn't be possible with the baked TypeProvider. findProvider also now builds
+based on the updated client configs.
+
+GetID needs to be a function because golang interface can contain only methods
+*/
 type TypeProviderInterface interface {
 	GetID() string
 	Build() TypeProvider

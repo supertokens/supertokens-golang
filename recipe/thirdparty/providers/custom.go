@@ -12,7 +12,7 @@ type CustomConfig struct {
 	AuthorizationEndpointQueryParams map[string]interface{}
 	TokenEndpoint                    string
 	TokenParams                      map[string]interface{}
-	ForcePKCE                        bool
+	ForcePKCE                        bool // Providers like twitter expects PKCE to be used along with secret
 	UserInfoEndpoint                 string
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string

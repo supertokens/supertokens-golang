@@ -14,29 +14,29 @@ type CreateOrUpdateTenantIDConfigResponse struct {
 type TenantConfig struct {
 	ThirdPartyId string `json:"thirdPartyId"`
 
-	AuthorizationEndpoint            string                 `json:"authorizationEndpoint"`
-	AuthorizationEndpointQueryParams map[string]interface{} `json:"authorizationEndpointQueryParams"`
-	TokenEndpoint                    string                 `json:"tokenEndpoint"`
-	TokenParams                      map[string]interface{} `json:"tokenParams"`
-	ForcePKCE                        bool                   `json:"forcePKCE"`
-	UserInfoEndpoint                 string                 `json:"userInfoEndpoint"`
-	JwksURI                          string                 `json:"jwksURI"`
-	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint"`
+	Clients []TenantClient `json:"clients"`
 
-	UserInfoMap struct {
+	// Fields below are optional for built-in providers
+	AuthorizationEndpoint            string                 `json:"authorizationEndpoint,omitempty"`
+	AuthorizationEndpointQueryParams map[string]interface{} `json:"authorizationEndpointQueryParams,omitempty"`
+	TokenEndpoint                    string                 `json:"tokenEndpoint,omitempty"`
+	TokenParams                      map[string]interface{} `json:"tokenParams,omitempty"`
+	ForcePKCE                        bool                   `json:"forcePKCE,omitempty"`
+	UserInfoEndpoint                 string                 `json:"userInfoEndpoint,omitempty"`
+	JwksURI                          string                 `json:"jwksURI,omitempty"`
+	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint,omitempty"`
+	UserInfoMap                      struct {
 		From               string `json:"from"`
 		IdField            string `json:"idField"`
 		EmailField         string `json:"emailField"`
 		EmailVerifiedField string `json:"emailVerifiedField"`
-	} `json:"userInfoMap"`
+	} `json:"userInfoMap,omitempty"`
 
-	Clients []TenantClient `json:"clients"`
-
-	Frontend struct {
+	FrontendInfo struct {
 		Name            string `json:"name"`
 		ButtonStyle     string `json:"buttonStyle"`
 		ButtonComponent string `json:"buttonComponent"`
-	} `json:"frontend"`
+	} `json:"frontendInfo"`
 }
 
 type TenantClient struct {

@@ -24,6 +24,13 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *st
 		}
 	}
 
+	// TODO
+	/*
+		To be able to allow users to use their own mapping, we have a few options:
+		1. Expose a recipe function that calls supertokens.FetchTenantConfigMapping and allow user to override it
+		2. Expose a config on thirdparty.init that is similar to supertokens.FetchTenantConfigMapping and use that if is not nil
+		3. Expose a flag to disable usage of supertokens.FetchTenantConfigMapping and let user handle it by overriding GetConfig on the corresponding provider
+	*/
 	result, err := supertokens.FetchTenantIDConfigMapping(thirdPartyId, *tenantId)
 	if err != nil {
 		return tpmodels.TypeProvider{}, err
@@ -39,6 +46,11 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *st
 	}
 
 	// TODO
+	/*
+		Here we would typecast the definedProvider to various built-in types
+		and if we find a matching type, we add or update the config based on
+		the clientType
+	*/
 	// for _, client := range result.OK.Config.Clients {
 	//  check if it's a built-in provider and if it is, add or update config by clientType
 	// 	definedProvider.AddOrUpdateClient(client)
