@@ -24,10 +24,11 @@ import (
 )
 
 type APIInterface struct {
-	ProvidersForTenantGET    *func(tenantId string, userContext supertokens.UserContext) (ProvidersForTenantGetResponse, error)
-	AuthorisationUrlGET      *func(provider TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST             *func(provider TypeProvider, clientType *string, tenantId *string, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+	AuthorisationUrlGET *func(provider TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST        *func(provider TypeProvider, clientType *string, tenantId *string, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+
 	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
+	ProvidersForTenantGET    *func(tenantId string, userContext supertokens.UserContext) (ProvidersForTenantGetResponse, error)
 }
 
 type ProvidersForTenantGetResponse struct {
@@ -69,7 +70,7 @@ type APIOptions struct {
 	RecipeImplementation RecipeInterface
 	Config               TypeNormalisedInput
 	RecipeID             string
-	Providers            []TypeProvider
+	Providers            []TypeProviderInterface
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc

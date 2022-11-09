@@ -48,14 +48,6 @@ type TypeAuthorisationRedirect struct {
 	PKCECodeVerifier   *string
 }
 
-type TypeProvider struct {
-	ID string
-
-	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
-}
-
 type TypeRedirectURIInfo struct {
 	RedirectURIOnProviderDashboard string                     `json:"redirectURIOnProviderDashboard"`
 	RedirectURIQueryParams         TypeRedirectURIQueryParams `json:"redirectURIQueryParams"`
@@ -76,22 +68,48 @@ type TypeUserInfoMap struct {
 	EmailVerifiedField string
 }
 
+type TypeProvider struct {
+	ID string
+
+	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+}
+
+/*
+TypeProviderInterface allows us to define the config directly in the thirdparty.Init
+instead of calling a function that returns the instance of TypeProvider. This is
+needed because we may have to update the client config array from the `findProvider`,
+which wouldn't be possible with the baked TypeProvider. findProvider also now builds
+based on the updated client configs.
+
+GetID needs to be a function because golang interface can contain only methods
+*/
+type TypeProviderInterface interface {
+	GetID() string
+	Build() TypeProvider
+}
+
 type User struct {
 	ID         string `json:"id"`
 	TimeJoined uint64 `json:"timeJoined"`
 	Email      string `json:"email"`
 	ThirdParty struct {
-		ID     string `json:"id"`
-		UserID string `json:"userId"`
+		ID        string   `json:"id"`
+		UserID    string   `json:"userId"`
+		UserPool  string   `json:"userPool"`
+		TenantIDs []string `json:"tenantIds"`
 	} `json:"thirdParty"`
 }
 
 type TypeInputSignInAndUp struct {
-	Providers []TypeProvider
+	Providers            []TypeProviderInterface
+	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers []TypeProvider
+	Providers            []TypeProviderInterface
+	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 
 type TypeInput struct {

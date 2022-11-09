@@ -1,15 +1,80 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string) (tpmodels.TypeProvider, error) {
+func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
+	if tenantId == nil {
+		for _, provider := range options.Providers {
+			if provider.GetID() == thirdPartyId {
+				return provider.Build(), nil
+			}
+		}
+		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+	}
+
+	var definedProvider tpmodels.TypeProviderInterface = nil
 	for _, provider := range options.Providers {
-		if provider.ID == thirdPartyId {
-			return provider, nil
+		if provider.GetID() == thirdPartyId {
+			definedProvider = provider
 		}
 	}
-	return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+
+	// TODO
+	/*
+		To be able to allow users to use their own mapping, we have a few options:
+		1. Expose a recipe function that calls supertokens.FetchTenantConfigMapping and allow user to override it
+		2. Expose a config on thirdparty.init that is similar to supertokens.FetchTenantConfigMapping and use that if is not nil
+		3. Expose a flag to disable usage of supertokens.FetchTenantConfigMapping and let user handle it by overriding GetConfig on the corresponding provider
+	*/
+	result, err := supertokens.FetchTenantIDConfigMapping(thirdPartyId, *tenantId)
+	if err != nil {
+		return tpmodels.TypeProvider{}, err
+	}
+
+	if result.UnknownMappingError != nil {
+		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The tenantId " + *tenantId + " seems to be missing from the backend configs."}
+	}
+
+	if definedProvider == nil {
+		definedProvider = createProvider(thirdPartyId, result.OK.Config)
+		return definedProvider.Build(), nil
+	}
+
+	// TODO
+	/*
+		Here we would typecast the definedProvider to various built-in types
+		and if we find a matching type, we add or update the config based on
+		the clientType
+	*/
+	// for _, client := range result.OK.Config.Clients {
+	//  check if it's a built-in provider and if it is, add or update config by clientType
+	// 	definedProvider.AddOrUpdateClient(client)
+	// }
+
+	return tpmodels.TypeProvider{}, errors.New("needs implementation")
+}
+
+func createProvider(thirdPartyId string, config interface{}) tpmodels.TypeProviderInterface {
+	// TODO impl
+	switch thirdPartyId {
+	case "active-directory":
+	case "apple":
+	case "discord":
+	case "facebook":
+	case "github":
+	case "google":
+	case "google-workspaces":
+	case "okta":
+	}
+	return createCustomProvider(thirdPartyId, config)
+}
+
+func createCustomProvider(thirdPartyId string, config interface{}) tpmodels.TypeProviderInterface {
+	// TODO impl
+	return nil
 }
