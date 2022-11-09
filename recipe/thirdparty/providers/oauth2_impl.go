@@ -14,6 +14,8 @@ import (
 const scopeParameter = "scope"
 const scopeSeparator = " "
 
+// typeCombinedOAuth2Config implements the core functionality of OAuth2. Other providers,
+
 type typeCombinedOAuth2Config struct {
 	ClientType       string
 	ClientID         string

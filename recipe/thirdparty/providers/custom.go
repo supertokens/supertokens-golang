@@ -43,6 +43,11 @@ type CustomClientConfig struct {
 	AdditionalConfig map[string]interface{}
 }
 
+/*
+ToCustomProviderClientConfig and UpdateFromCustomProviderClientConfig are used to convert between
+CustomClientConfig and Provider specific client config. This helps us re-use a lot of code,
+including the logic for GetConfig using the findConfig function.
+*/
 func (config CustomClientConfig) ToCustomProviderClientConfig() (CustomClientConfig, error) {
 	return config, nil
 }
@@ -65,7 +70,7 @@ type Custom struct {
 	Config       CustomConfig
 	Override     func(provider *TypeCustom) *TypeCustom
 
-	// for internal use
+	// for internal use: to be used by built-in providers to populate provider specific config
 	oAuth2Normalize func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config
 }
 
