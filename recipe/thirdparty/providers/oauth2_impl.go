@@ -11,6 +11,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+const scopeParameter = "scope"
+const scopeSeparator = " "
+
 type typeCombinedOAuth2Config struct {
 	ClientType       string
 	ClientID         string
@@ -156,7 +159,7 @@ func (config *typeCombinedOAuth2Config) GetUserInfo(oAuthTokens tpmodels.TypeOAu
 		}
 	}
 
-	userInfoResult, err := getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoFromProvider, config)
+	userInfoResult, err := config.getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoFromProvider)
 	if err != nil {
 		return tpmodels.TypeUserInfo{}, err
 	}
@@ -198,7 +201,7 @@ func (config *typeCombinedOAuth2Config) discoverEndpoints() {
 	}
 }
 
-func getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, config *typeCombinedOAuth2Config) (tpmodels.TypeSupertokensUserInfo, error) {
+func (config *typeCombinedOAuth2Config) getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
 	var rawUserInfo map[string]interface{}
 
 	if config.UserInfoMap.From == tpmodels.FromIdTokenPayload {

@@ -6,22 +6,35 @@ import (
 
 const googleID = "google"
 
-type GoogleConfig = CustomProviderConfig
-type GoogleClientConfig = CustomProviderClientConfig
+type GoogleConfig = CustomConfig
+type GoogleClientConfig = CustomClientConfig
 
-type GoogleProvider = TypeCustomProvider
+type TypeGoogle = TypeCustom
 
-type TypeGoogleInput struct {
-	Config   GoogleConfig
-	Override func(provider *GoogleProvider) *GoogleProvider
+type Google struct {
+	Config   CustomConfig
+	Override func(provider *TypeGoogle) *TypeGoogle
 }
 
-func Google(input TypeGoogleInput) tpmodels.TypeProvider {
-	return *customProvider(TypeCustomProviderInput{
+func (input Google) GetID() string {
+	return googleID
+}
+
+func (input Google) Build() tpmodels.TypeProvider {
+	googleImpl := input.buildInternal()
+	if input.Override != nil {
+		googleImpl = input.Override(googleImpl)
+	}
+	return *googleImpl.TypeProvider
+}
+
+func (input Google) buildInternal() *TypeGoogle {
+	return (Custom{
 		ThirdPartyID: googleID,
 		Config:       input.Config,
-		Override:     input.Override,
-	}, normalizeOAuth2ConfigForGoogle).TypeProvider
+
+		oAuth2Normalize: normalizeOAuth2ConfigForGoogle,
+	}).buildInternal()
 }
 
 func normalizeOAuth2ConfigForGoogle(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config {

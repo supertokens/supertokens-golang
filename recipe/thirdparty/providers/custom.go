@@ -20,28 +20,22 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type TypeCustomProviderInput struct {
-	ThirdPartyID string
-	Config       CustomProviderConfig
-	Override     func(provider *TypeCustomProvider) *TypeCustomProvider
-}
-
-type CustomProviderConfig struct {
-	Clients []CustomProviderClientConfig
+type CustomConfig struct {
+	Clients []CustomClientConfig
 
 	AuthorizationEndpoint            string
 	AuthorizationEndpointQueryParams map[string]interface{}
 	TokenEndpoint                    string
 	TokenParams                      map[string]interface{}
-	ForcePKCE                        bool
+	ForcePKCE                        bool // Providers like twitter expects PKCE to be used along with secret
 	UserInfoEndpoint                 string
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      tpmodels.TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig CustomProviderClientConfig) (bool, error)
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig CustomClientConfig) (bool, error)
 }
 
-type CustomProviderClientConfig struct {
+type CustomClientConfig struct {
 	ClientType       string
 	ClientID         string
 	ClientSecret     string
@@ -49,11 +43,11 @@ type CustomProviderClientConfig struct {
 	AdditionalConfig map[string]interface{}
 }
 
-func (config CustomProviderClientConfig) ToCustomProviderClientConfig() (CustomProviderClientConfig, error) {
+func (config CustomClientConfig) ToCustomProviderClientConfig() (CustomClientConfig, error) {
 	return config, nil
 }
 
-func (config *CustomProviderClientConfig) UpdateFromCustomProviderClientConfig(input CustomProviderClientConfig) {
+func (config *CustomClientConfig) UpdateFromCustomProviderClientConfig(input CustomClientConfig) {
 	config.ClientType = input.ClientType
 	config.ClientID = input.ClientID
 	config.ClientSecret = input.ClientSecret
@@ -61,35 +55,47 @@ func (config *CustomProviderClientConfig) UpdateFromCustomProviderClientConfig(i
 	config.AdditionalConfig = input.AdditionalConfig
 }
 
-type TypeSupertokensUserInfoMap struct {
-	IdField            string
-	EmailField         string
-	EmailVerifiedField string
-}
-
-const scopeParameter = "scope"
-const scopeSeparator = " "
-
-type TypeCustomProvider struct {
-	GetConfig func(clientType *string, tenantId *string, userContext supertokens.UserContext) (CustomProviderClientConfig, error)
+type TypeCustom struct {
+	GetConfig func(clientType *string, tenantId *string, userContext supertokens.UserContext) (CustomClientConfig, error)
 	*tpmodels.TypeProvider
 }
 
-func customProvider(input TypeCustomProviderInput, oAuth2Normalize func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config) *TypeCustomProvider {
-	if oAuth2Normalize == nil {
-		oAuth2Normalize = func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config {
+type Custom struct {
+	ThirdPartyID string
+	Config       CustomConfig
+	Override     func(provider *TypeCustom) *TypeCustom
+
+	// for internal use
+	oAuth2Normalize func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config
+}
+
+func (input Custom) GetID() string {
+	return input.ThirdPartyID
+}
+
+func (input Custom) Build() tpmodels.TypeProvider {
+	customImpl := input.buildInternal()
+	if input.Override != nil {
+		customImpl = input.Override(customImpl)
+	}
+	return *customImpl.TypeProvider
+}
+
+func (input Custom) buildInternal() *TypeCustom {
+	if input.oAuth2Normalize == nil {
+		input.oAuth2Normalize = func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config {
 			return config
 		}
 	}
 
-	customProvider := &TypeCustomProvider{
+	customProvider := &TypeCustom{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: input.ThirdPartyID,
 		},
 	}
 
-	customProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (CustomProviderClientConfig, error) {
-		clientConfig := CustomProviderClientConfig{}
+	customProvider.GetConfig = func(clientType, tenantId *string, userContext supertokens.UserContext) (CustomClientConfig, error) {
+		clientConfig := CustomClientConfig{}
 		clients := make([]TypeToCustomProvider, len(input.Config.Clients))
 		for i, client := range input.Config.Clients {
 			clients[i] = client
@@ -97,35 +103,34 @@ func customProvider(input TypeCustomProviderInput, oAuth2Normalize func(config *
 
 		err := findConfig(&clientConfig, clientType, tenantId, userContext, clients)
 		if err != nil {
-			return CustomProviderClientConfig{}, err
+			return CustomClientConfig{}, err
 		}
 		return clientConfig, nil
 	}
 
-	customProvider.GetAuthorisationRedirectURL = func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+	customProvider.GetAuthorisationRedirectURL = func(clientType, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 		clientConfig, err := customProvider.GetConfig(clientType, tenantId, userContext)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
-		return oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).GetAuthorisationRedirectURL(redirectURIOnProviderDashboard, userContext)
+		return input.oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).GetAuthorisationRedirectURL(redirectURIOnProviderDashboard, userContext)
 	}
 
-	customProvider.ExchangeAuthCodeForOAuthTokens = func(clientType *string, tenantId *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+	customProvider.ExchangeAuthCodeForOAuthTokens = func(clientType, tenantId *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
 		clientConfig, err := customProvider.GetConfig(clientType, tenantId, userContext)
 		if err != nil {
 			return tpmodels.TypeOAuthTokens{}, err
 		}
 
-		return oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).ExchangeAuthCodeForOAuthTokens(redirectURIInfo, userContext)
-
+		return input.oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).ExchangeAuthCodeForOAuthTokens(redirectURIInfo, userContext)
 	}
 
-	customProvider.GetUserInfo = func(clientType *string, tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+	customProvider.GetUserInfo = func(clientType, tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 		clientConfig, err := customProvider.GetConfig(clientType, tenantId, userContext)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		return oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).GetUserInfo(oAuthTokens, userContext)
+		return input.oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).GetUserInfo(oAuthTokens, userContext)
 	}
 
 	if input.Override != nil {
@@ -133,8 +138,4 @@ func customProvider(input TypeCustomProviderInput, oAuth2Normalize func(config *
 	}
 
 	return customProvider
-}
-
-func CustomProvider(input TypeCustomProviderInput) tpmodels.TypeProvider {
-	return *customProvider(input, nil).TypeProvider
 }

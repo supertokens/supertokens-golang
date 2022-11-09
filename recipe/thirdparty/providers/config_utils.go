@@ -7,11 +7,11 @@ import (
 )
 
 type TypeToCustomProvider interface {
-	ToCustomProviderClientConfig() (CustomProviderClientConfig, error)
+	ToCustomProviderClientConfig() (CustomClientConfig, error)
 }
 
 type TypeFromCustomProvider interface {
-	UpdateFromCustomProviderClientConfig(config CustomProviderClientConfig)
+	UpdateFromCustomProviderClientConfig(config CustomClientConfig)
 }
 
 func findConfig(out TypeFromCustomProvider, clientType *string, tenantId *string, userContext supertokens.UserContext, clients []TypeToCustomProvider) error {
@@ -48,7 +48,7 @@ func findConfig(out TypeFromCustomProvider, clientType *string, tenantId *string
 	}
 }
 
-func getCombinedOAuth2Config(config CustomProviderConfig, clientConfig CustomProviderClientConfig) *typeCombinedOAuth2Config {
+func getCombinedOAuth2Config(config CustomConfig, clientConfig CustomClientConfig) *typeCombinedOAuth2Config {
 	combinedConfig := &typeCombinedOAuth2Config{
 		ClientType:       clientConfig.ClientType,
 		ClientID:         clientConfig.ClientID,

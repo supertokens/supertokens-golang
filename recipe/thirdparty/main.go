@@ -94,10 +94,6 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 // 	return providers.GoogleWorkspaces(config)
 // }
 
-func Google(input providers.TypeGoogleInput) tpmodels.TypeProvider {
-	return providers.Google(input)
-}
+type Google = providers.Google
 
-func CustomProvider(input providers.TypeCustomProviderInput) tpmodels.TypeProvider {
-	return providers.CustomProvider(input)
-}
+type Custom = providers.Custom
