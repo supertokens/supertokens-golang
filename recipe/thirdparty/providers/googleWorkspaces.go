@@ -123,14 +123,16 @@ func (input GoogleWorkspaces) Build() tpmodels.TypeProvider {
 
 func (input GoogleWorkspaces) buildInternal() *TypeGoogleWorkspaces {
 	customProvider := (CustomProvider{
-		ThirdPartyID: googleID,
+		ThirdPartyID: googleWorkspacesID,
 		Config:       input.Config.ToCustomConfig(),
 
 		oAuth2Normalize: normalizeOAuth2ConfigForGoogleWorkspaces,
 	}).buildInternal()
 
 	googleWorkspacesImpl := &TypeGoogleWorkspaces{
-		TypeProvider: &tpmodels.TypeProvider{},
+		TypeProvider: &tpmodels.TypeProvider{
+			ID: googleWorkspacesID,
+		},
 	}
 
 	{
