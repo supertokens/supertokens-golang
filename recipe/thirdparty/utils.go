@@ -72,15 +72,8 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 		thirdPartyIdSet[provider.GetID()] = true
 	}
 
-	if config.GetUserPoolForTenant == nil {
-		config.GetUserPoolForTenant = func(tenantId string, userContext supertokens.UserContext) (string, error) {
-			return tenantId, nil
-		}
-	}
-
 	return tpmodels.TypeNormalisedInputSignInAndUp{
-		Providers:            providers,
-		GetUserPoolForTenant: config.GetUserPoolForTenant,
+		Providers: providers,
 	}, nil
 }
 

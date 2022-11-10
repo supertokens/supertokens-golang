@@ -34,10 +34,8 @@ type APIInterface struct {
 type ProvidersForTenantGetResponse struct {
 	OK *struct {
 		Providers []struct {
-			ID              string `json:"id"`
-			Name            string `json:"name"`
-			ButtonStyle     string `json:"buttonStyle,omitempty"`
-			ButtonComponent string `json:"buttonComponent,omitempty"`
+			ID   string `json:"id"`
+			Name string `json:"name"`
 		} `json:"providers"`
 	}
 	GeneralError *supertokens.GeneralErrorResponse

@@ -21,25 +21,25 @@ type CustomConfig struct {
 }
 
 type CustomClientConfig struct {
-	ClientType       string
+	ClientType       string // optional
 	ClientID         string
 	ClientSecret     string
 	Scope            []string
 	AdditionalConfig map[string]interface{}
 }
 
-type TypeCustom struct {
+type TypeCustomProviderImplementation struct {
 	GetConfig func(clientType *string, tenantId *string, userContext supertokens.UserContext) (CustomClientConfig, error)
 	*tpmodels.TypeProvider
 }
 
-type Custom struct {
+type CustomProvider struct {
 	ThirdPartyID string
 	Config       CustomConfig
-	Override     func(provider *TypeCustom) *TypeCustom
+	Override     func(provider *TypeCustomProviderImplementation) *TypeCustomProviderImplementation
 }
 
-func (input Custom) Build() *tpmodels.TypeProvider {
+func (input CustomProvider) Build() *tpmodels.TypeProvider {
 	customImpl := input.buildInternal()
 	if input.Override != nil {
 		customImpl = input.Override(customImpl)
@@ -47,6 +47,6 @@ func (input Custom) Build() *tpmodels.TypeProvider {
 	return customImpl.TypeProvider
 }
 
-func (input Custom) buildInternal() *TypeCustom {
+func (input CustomProvider) buildInternal() *TypeCustomProviderImplementation {
 	return nil // TODO impl
 }
