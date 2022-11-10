@@ -147,14 +147,14 @@ func (config *typeCombinedOAuth2Config) GetUserInfo(oAuthTokens tpmodels.TypeOAu
 		if !token.Valid {
 			return tpmodels.TypeUserInfo{}, errors.New("invalid id_token supplied")
 		}
-		rawUserInfoFromProvider.FromIdToken = map[string]interface{}(claims)
+		rawUserInfoFromProvider.FromIdTokenPayload = map[string]interface{}(claims)
 	}
 	if accessTokenOk && config.UserInfoEndpoint != "" {
 		headers := map[string]string{
 			"Authorization": "Bearer " + accessToken,
 		}
 		userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, nil, headers)
-		rawUserInfoFromProvider.FromAccessToken = userInfoFromAccessToken.(map[string]interface{})
+		rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
 
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
@@ -207,10 +207,10 @@ func (config *typeCombinedOAuth2Config) getSupertokensUserInfoResultFromRawUserI
 	var rawUserInfo map[string]interface{}
 
 	if config.UserInfoMap.From == tpmodels.FromIdTokenPayload {
-		if rawUserInfoResponse.FromIdToken == nil {
+		if rawUserInfoResponse.FromIdTokenPayload == nil {
 			return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
 		}
-		rawUserInfo = rawUserInfoResponse.FromIdToken
+		rawUserInfo = rawUserInfoResponse.FromIdTokenPayload
 
 		if config.ValidateIdTokenPayload != nil {
 			valid, err := config.ValidateIdTokenPayload(rawUserInfo, config)
@@ -222,20 +222,20 @@ func (config *typeCombinedOAuth2Config) getSupertokensUserInfoResultFromRawUserI
 			}
 		}
 	} else {
-		if rawUserInfoResponse.FromAccessToken == nil {
+		if rawUserInfoResponse.FromUserInfoAPI == nil {
 			return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
 		}
-		rawUserInfo = rawUserInfoResponse.FromAccessToken
+		rawUserInfo = rawUserInfoResponse.FromUserInfoAPI
 	}
 
 	result := tpmodels.TypeSupertokensUserInfo{}
-	result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.IdField))
+	result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.UserId))
 	result.EmailInfo = &tpmodels.EmailStruct{
-		ID: fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.EmailField)),
+		ID: fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.Email)),
 	}
-	if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerifiedField).(bool); ok {
+	if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(bool); ok {
 		result.EmailInfo.IsVerified = emailVerified
-	} else if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerifiedField).(string); ok {
+	} else if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(string); ok {
 		result.EmailInfo.IsVerified = emailVerified == "true"
 	}
 	return result, nil

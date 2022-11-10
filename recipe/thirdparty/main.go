@@ -96,4 +96,4 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 
 type Google = providers.Google
 
-type Custom = providers.Custom
+type Custom = providers.CustomProvider

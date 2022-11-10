@@ -178,20 +178,20 @@ func accessField(obj interface{}, key string) interface{} {
 	return obj
 }
 
-func getSupertokensUserInfoFromRawUserInfo(idField string, emailField string, emailVerifiedField string, from string) func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
+func getSupertokensUserInfoFromRawUserInfo(idField string, emailField string, emailVerifiedField string, from tpmodels.TypeFrom) func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
 	return func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
 		var rawUserInfo map[string]interface{}
 
-		if from == "id_token" {
-			if rawUserInfoResponse.FromIdToken == nil {
+		if from == tpmodels.FromIdTokenPayload {
+			if rawUserInfoResponse.FromIdTokenPayload == nil {
 				return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
 			}
-			rawUserInfo = rawUserInfoResponse.FromIdToken
+			rawUserInfo = rawUserInfoResponse.FromIdTokenPayload
 		} else {
-			if rawUserInfoResponse.FromAccessToken == nil {
+			if rawUserInfoResponse.FromUserInfoAPI == nil {
 				return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
 			}
-			rawUserInfo = rawUserInfoResponse.FromAccessToken
+			rawUserInfo = rawUserInfoResponse.FromUserInfoAPI
 		}
 		result := tpmodels.TypeSupertokensUserInfo{}
 		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, idField))

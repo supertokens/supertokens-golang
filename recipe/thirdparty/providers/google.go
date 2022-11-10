@@ -9,7 +9,7 @@ const googleID = "google"
 type GoogleConfig = CustomConfig
 type GoogleClientConfig = CustomClientConfig
 
-type TypeGoogle = TypeCustom
+type TypeGoogle = TypeCustomProviderImplementation
 
 type Google struct {
 	Config   CustomConfig
@@ -29,7 +29,7 @@ func (input Google) Build() tpmodels.TypeProvider {
 }
 
 func (input Google) buildInternal() *TypeGoogle {
-	return (Custom{
+	return (CustomProvider{
 		ThirdPartyID: googleID,
 		Config:       input.Config,
 
@@ -67,19 +67,19 @@ func normalizeOAuth2ConfigForGoogle(config *typeCombinedOAuth2Config) *typeCombi
 	}
 
 	if config.UserInfoMap.From == "" {
-		config.UserInfoMap.From = tpmodels.FromAccessTokenPayload
+		config.UserInfoMap.From = tpmodels.FromUserInfoAPI
 	}
 
-	if config.UserInfoMap.IdField == "" {
-		config.UserInfoMap.IdField = "id"
+	if config.UserInfoMap.UserId == "" {
+		config.UserInfoMap.UserId = "id"
 	}
 
-	if config.UserInfoMap.EmailField == "" {
-		config.UserInfoMap.EmailField = "email"
+	if config.UserInfoMap.Email == "" {
+		config.UserInfoMap.Email = "email"
 	}
 
-	if config.UserInfoMap.EmailVerifiedField == "" {
-		config.UserInfoMap.EmailVerifiedField = "email_verified"
+	if config.UserInfoMap.EmailVerified == "" {
+		config.UserInfoMap.EmailVerified = "email_verified"
 	}
 
 	return config

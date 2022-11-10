@@ -60,7 +60,7 @@ func (config *CustomClientConfig) UpdateFromCustomProviderClientConfig(input Cus
 	config.AdditionalConfig = input.AdditionalConfig
 }
 
-type TypeCustom struct {
+type TypeCustomProviderImplementation struct {
 	GetConfig func(clientType *string, tenantId *string, userContext supertokens.UserContext) (CustomClientConfig, error)
 	*tpmodels.TypeProvider
 }
@@ -68,17 +68,17 @@ type TypeCustom struct {
 type CustomProvider struct {
 	ThirdPartyID string
 	Config       CustomConfig
-	Override     func(provider *TypeCustom) *TypeCustom
+	Override     func(provider *TypeCustomProviderImplementation) *TypeCustomProviderImplementation
 
 	// for internal use: to be used by built-in providers to populate provider specific config
 	oAuth2Normalize func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config
 }
 
-func (input Custom) GetID() string {
+func (input CustomProvider) GetID() string {
 	return input.ThirdPartyID
 }
 
-func (input Custom) Build() tpmodels.TypeProvider {
+func (input CustomProvider) Build() tpmodels.TypeProvider {
 	customImpl := input.buildInternal()
 	if input.Override != nil {
 		customImpl = input.Override(customImpl)
@@ -86,14 +86,14 @@ func (input Custom) Build() tpmodels.TypeProvider {
 	return *customImpl.TypeProvider
 }
 
-func (input Custom) buildInternal() *TypeCustom {
+func (input CustomProvider) buildInternal() *TypeCustomProviderImplementation {
 	if input.oAuth2Normalize == nil {
 		input.oAuth2Normalize = func(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config {
 			return config
 		}
 	}
 
-	customProvider := &TypeCustom{
+	customProvider := &TypeCustomProviderImplementation{
 		TypeProvider: &tpmodels.TypeProvider{
 			ID: input.ThirdPartyID,
 		},
