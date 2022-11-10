@@ -36,7 +36,7 @@ type CustomConfig struct {
 }
 
 type CustomClientConfig struct {
-	ClientType       string
+	ClientType       string // optional
 	ClientID         string
 	ClientSecret     string
 	Scope            []string
@@ -65,7 +65,7 @@ type TypeCustom struct {
 	*tpmodels.TypeProvider
 }
 
-type Custom struct {
+type CustomProvider struct {
 	ThirdPartyID string
 	Config       CustomConfig
 	Override     func(provider *TypeCustom) *TypeCustom

@@ -19,9 +19,10 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
+	"net/url"
 
-	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -115,13 +116,6 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		queryParams, err := qs.Marshal(formPostInfoFromProvider)
-		if err != nil {
-			return err
-		}
-
-		var redirectURL string
-
 		state := formPostInfoFromProvider["state"].(string)
 		stateBytes, err := base64.RawStdEncoding.DecodeString(state)
 
@@ -135,9 +129,21 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return err
 		}
 
-		redirectURL = stateObj["redirectURI"].(string) + "?" + queryParams
+		redirectURL := stateObj["redirectURI"].(string)
+		parsedRedirectURL, err := url.Parse(redirectURL)
+		if err != nil {
+			return err
+		}
 
-		options.Res.Header().Set("Location", redirectURL)
+		query := parsedRedirectURL.Query()
+
+		for k, v := range formPostInfoFromProvider {
+			query.Add(k, fmt.Sprint(v))
+		}
+
+		parsedRedirectURL.RawQuery = query.Encode()
+
+		options.Res.Header().Set("Location", parsedRedirectURL.String())
 		options.Res.WriteHeader(http.StatusSeeOther)
 
 		return nil

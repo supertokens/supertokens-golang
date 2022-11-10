@@ -23,8 +23,8 @@ type TypeRedirectURIQueryParams = map[string]interface{}
 type TypeOAuthTokens = map[string]interface{}
 
 type TypeRawUserInfoFromProvider struct {
-	FromIdToken     map[string]interface{}
-	FromAccessToken map[string]interface{}
+	FromIdTokenPayload map[string]interface{}
+	FromUserInfoAPI    map[string]interface{}
 }
 
 type TypeSupertokensUserInfo struct {
@@ -57,15 +57,15 @@ type TypeRedirectURIInfo struct {
 type TypeFrom string
 
 const (
-	FromIdTokenPayload     TypeFrom = "idTokenPayload"
-	FromAccessTokenPayload TypeFrom = "accessTokenPayload"
+	FromIdTokenPayload TypeFrom = "idTokenPayload"
+	FromUserInfoAPI    TypeFrom = "userInfoAPI"
 )
 
 type TypeUserInfoMap struct {
-	From               TypeFrom
-	IdField            string
-	EmailField         string
-	EmailVerifiedField string
+	From          TypeFrom
+	UserId        string
+	Email         string
+	EmailVerified string
 }
 
 type TypeProvider struct {
@@ -95,16 +95,13 @@ type User struct {
 	TimeJoined uint64 `json:"timeJoined"`
 	Email      string `json:"email"`
 	ThirdParty struct {
-		ID        string   `json:"id"`
-		UserID    string   `json:"userId"`
-		UserPool  string   `json:"userPool"`
-		TenantIDs []string `json:"tenantIds"`
+		ID     string `json:"id"`
+		UserID string `json:"userId"`
 	} `json:"thirdParty"`
 }
 
 type TypeInputSignInAndUp struct {
-	Providers            []TypeProviderInterface
-	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
+	Providers []TypeProviderInterface
 }
 
 type TypeNormalisedInputSignInAndUp struct {
