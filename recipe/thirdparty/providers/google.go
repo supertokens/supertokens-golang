@@ -2,85 +2,80 @@ package providers
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const googleID = "google"
 
-type GoogleConfig = CustomConfig
-type GoogleClientConfig = CustomClientConfig
-
-type TypeGoogle = TypeCustomProviderImplementation
-
-type Google struct {
-	Config   CustomConfig
-	Override func(provider *TypeGoogle) *TypeGoogle
-}
-
-func (input Google) GetID() string {
-	return googleID
-}
-
-func (input Google) Build() tpmodels.TypeProvider {
-	googleImpl := input.buildInternal()
-	if input.Override != nil {
-		googleImpl = input.Override(googleImpl)
-	}
-	return *googleImpl.TypeProvider
-}
-
-func (input Google) buildInternal() *TypeGoogle {
-	return (CustomProvider{
-		ThirdPartyID: googleID,
-		Config:       input.Config,
-
-		oAuth2Normalize: normalizeOAuth2ConfigForGoogle,
-	}).buildInternal()
-}
-
-func normalizeOAuth2ConfigForGoogle(config *typeCombinedOAuth2Config) *typeCombinedOAuth2Config {
-	if config.AuthorizationEndpoint == "" {
-		config.AuthorizationEndpoint = "https://accounts.google.com/o/oauth2/v2/auth"
+func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	if input.ThirdPartyID == "" {
+		input.ThirdPartyID = googleID
 	}
 
-	if config.AuthorizationEndpointQueryParams == nil {
-		accessType := "offline"
-		if config.ClientSecret == "" {
-			accessType = "online"
+	if input.Config.OIDCDiscoveryEndpoint == "" {
+		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
+	}
+	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
+	}
+
+	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
+		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
+	}
+	if input.Config.UserInfoMap.FromIdTokenPayload.Email == "" {
+		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
+	}
+
+	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
+		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams == nil {
+		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams["response_type"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["response_type"] = "code"
+	}
+	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
+	}
+	if input.Config.AuthorizationEndpointQueryParams["access_type"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := provider.GetConfig
+		provider.GetConfig = func(clientType, tenantId *string, input tpmodels.ProviderConfigInput, userContext supertokens.UserContext) (tpmodels.ProviderClientConfig, error) {
+			config, err := oGetConfig(clientType, tenantId, input, userContext)
+			if err != nil {
+				return tpmodels.ProviderClientConfig{}, err
+			}
+
+			if config.ClientSecret != "" {
+				return config, err
+			}
+
+			config.AuthorizationEndpointQueryParams["acces_type"] = "online"
+
+			return config, err
 		}
-		config.AuthorizationEndpointQueryParams = map[string]interface{}{
-			"access_type":            accessType,
-			"include_granted_scopes": "true",
-			"response_type":          "code",
+
+		if oOverride != nil {
+			provider = oOverride(provider)
 		}
+		return provider
 	}
 
-	if len(config.Scope) == 0 {
-		config.Scope = []string{"https://www.googleapis.com/auth/userinfo.email"}
-	}
-
-	if config.TokenEndpoint == "" {
-		config.TokenEndpoint = "https://oauth2.googleapis.com/token"
-	}
-
-	if config.UserInfoEndpoint == "" {
-		config.UserInfoEndpoint = "https://www.googleapis.com/oauth2/v1/userinfo"
-	}
-
-	if config.UserInfoMap.From == "" {
-		config.UserInfoMap.From = tpmodels.FromUserInfoAPI
-	}
-
-	if config.UserInfoMap.UserId == "" {
-		config.UserInfoMap.UserId = "id"
-	}
-
-	if config.UserInfoMap.Email == "" {
-		config.UserInfoMap.Email = "email"
-	}
-
-	if config.UserInfoMap.EmailVerified == "" {
-		config.UserInfoMap.EmailVerified = "email_verified"
-	}
-
-	return config
+	return NewProvider(input)
 }

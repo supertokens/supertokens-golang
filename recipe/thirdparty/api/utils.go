@@ -8,8 +8,8 @@ import (
 func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
 
 	for _, provider := range options.Providers {
-		if provider.GetID() == thirdPartyId {
-			return provider.Build(), nil
+		if provider.ID == thirdPartyId {
+			return provider, nil
 		}
 	}
 
@@ -19,11 +19,10 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *st
 
 	// If tenantId is not nil, we need to create the provider on the fly,
 	// so that the GetConfig function will make use of the core to fetch the config
-	newProvider := createProvider(thirdPartyId)
-	return newProvider.Build(), nil
+	return createProvider(thirdPartyId), nil
 }
 
-func createProvider(thirdPartyId string) tpmodels.TypeProviderInterface {
+func createProvider(thirdPartyId string) tpmodels.TypeProvider {
 	// TODO impl
 	switch thirdPartyId {
 	case "active-directory":
@@ -38,7 +37,7 @@ func createProvider(thirdPartyId string) tpmodels.TypeProviderInterface {
 	return createCustomProvider(thirdPartyId)
 }
 
-func createCustomProvider(thirdPartyId string) tpmodels.TypeProviderInterface {
+func createCustomProvider(thirdPartyId string) tpmodels.TypeProvider {
 	// TODO impl
-	return nil
+	return tpmodels.TypeProvider{}
 }

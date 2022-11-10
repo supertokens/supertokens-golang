@@ -62,32 +62,16 @@ const (
 )
 
 type TypeUserInfoMap struct {
-	From          TypeFrom
-	UserId        string
-	Email         string
-	EmailVerified string
-}
-
-type TypeProvider struct {
-	ID string
-
-	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
-}
-
-/*
-TypeProviderInterface allows us to define the config directly in the thirdparty.Init
-instead of calling a function that returns the instance of TypeProvider. This is
-needed because we may have to update the client config array from the `findProvider`,
-which wouldn't be possible with the baked TypeProvider. findProvider also now builds
-based on the updated client configs.
-
-GetID needs to be a function because golang interface can contain only methods
-*/
-type TypeProviderInterface interface {
-	GetID() string
-	Build() TypeProvider
+	FromIdTokenPayload struct {
+		UserId        string
+		Email         string
+		EmailVerified string
+	}
+	FromUserInfoAPI struct {
+		UserId        string
+		Email         string
+		EmailVerified string
+	}
 }
 
 type User struct {
@@ -101,11 +85,11 @@ type User struct {
 }
 
 type TypeInputSignInAndUp struct {
-	Providers []TypeProviderInterface
+	Providers []TypeProvider
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers            []TypeProviderInterface
+	Providers            []TypeProvider
 	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 

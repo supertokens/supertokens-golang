@@ -68,7 +68,7 @@ type APIOptions struct {
 	RecipeImplementation RecipeInterface
 	Config               TypeNormalisedInput
 	RecipeID             string
-	Providers            []TypeProviderInterface
+	Providers            []TypeProvider
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc

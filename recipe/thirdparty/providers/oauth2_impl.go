@@ -2,7 +2,6 @@ package providers
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 
 	"github.com/derekstavis/go-qs"
@@ -14,30 +13,7 @@ import (
 const scopeParameter = "scope"
 const scopeSeparator = " "
 
-// typeCombinedOAuth2Config implements the core functionality of OAuth2. Other providers,
-
-type typeCombinedOAuth2Config struct {
-	ClientType       string
-	ClientID         string
-	ClientSecret     string
-	Scope            []string
-	AdditionalConfig map[string]interface{}
-
-	AuthorizationEndpoint            string
-	AuthorizationEndpointQueryParams map[string]interface{}
-	TokenEndpoint                    string
-	TokenParams                      map[string]interface{}
-	ForcePKCE                        bool
-	UserInfoEndpoint                 string
-	JwksURI                          string
-	OIDCDiscoveryEndpoint            string
-	UserInfoMap                      tpmodels.TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, config *typeCombinedOAuth2Config) (bool, error)
-}
-
-func (config *typeCombinedOAuth2Config) GetAuthorisationRedirectURL(redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-	config.discoverEndpoints()
-
+func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderClientConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 	queryParams := map[string]interface{}{
 		scopeParameter:  strings.Join(config.Scope, scopeSeparator),
 		"client_id":     config.ClientID,
@@ -84,9 +60,7 @@ func (config *typeCombinedOAuth2Config) GetAuthorisationRedirectURL(redirectURIO
 	}, nil
 }
 
-func (config *typeCombinedOAuth2Config) ExchangeAuthCodeForOAuthTokens(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-	config.discoverEndpoints()
-
+func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderClientConfig, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
 	tokenAPIURL := config.TokenEndpoint
 	accessTokenAPIParams := map[string]interface{}{
 		"client_id":    config.ClientID,
@@ -124,9 +98,7 @@ func (config *typeCombinedOAuth2Config) ExchangeAuthCodeForOAuthTokens(redirectU
 	return oAuthTokens, nil
 }
 
-func (config *typeCombinedOAuth2Config) GetUserInfo(tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-	config.discoverEndpoints()
-
+func oauth2_GetUserInfo(config tpmodels.ProviderClientConfig, tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 	accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 	idToken, idTokenOk := oAuthTokens["id_token"].(string)
 
@@ -161,7 +133,7 @@ func (config *typeCombinedOAuth2Config) GetUserInfo(tenantId *string, oAuthToken
 		}
 	}
 
-	userInfoResult, err := config.getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoFromProvider)
+	userInfoResult, err := oauth2_getSupertokensUserInfoResultFromRawUserInfo(config, rawUserInfoFromProvider)
 	if err != nil {
 		return tpmodels.TypeUserInfo{}, err
 	}
@@ -177,70 +149,42 @@ func (config *typeCombinedOAuth2Config) GetUserInfo(tenantId *string, oAuthToken
 	}, nil
 }
 
-func (config *typeCombinedOAuth2Config) discoverEndpoints() {
-	if config.OIDCDiscoveryEndpoint != "" {
-		oidcInfo, err := getOIDCDiscoveryInfo(config.OIDCDiscoveryEndpoint)
+func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderClientConfig, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
+	// var rawUserInfo map[string]interface{}
 
-		if err == nil {
-			if authURL, ok := oidcInfo["authorization_endpoint"].(string); ok {
-				if config.AuthorizationEndpoint == "" {
-					config.AuthorizationEndpoint = authURL
-				}
-			}
+	// if config.UserInfoMap.From == tpmodels.FromIdTokenPayload {
+	// 	if rawUserInfoResponse.FromIdTokenPayload == nil {
+	// 		return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
+	// 	}
+	// 	rawUserInfo = rawUserInfoResponse.FromIdTokenPayload
 
-			if tokenURL, ok := oidcInfo["token_endpoint"].(string); ok {
-				if config.TokenEndpoint == "" {
-					config.TokenEndpoint = tokenURL
-				}
-			}
-
-			if userInfoURL, ok := oidcInfo["userinfo_endpoint"].(string); ok {
-				if config.UserInfoEndpoint == "" {
-					config.UserInfoEndpoint = userInfoURL
-				}
-			}
-
-			if jwksUri, ok := oidcInfo["jwks_uri"].(string); ok {
-				config.JwksURI = jwksUri
-			}
-		}
-	}
-}
-
-func (config *typeCombinedOAuth2Config) getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
-	var rawUserInfo map[string]interface{}
-
-	if config.UserInfoMap.From == tpmodels.FromIdTokenPayload {
-		if rawUserInfoResponse.FromIdTokenPayload == nil {
-			return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
-		}
-		rawUserInfo = rawUserInfoResponse.FromIdTokenPayload
-
-		if config.ValidateIdTokenPayload != nil {
-			valid, err := config.ValidateIdTokenPayload(rawUserInfo, config)
-			if err != nil {
-				return tpmodels.TypeSupertokensUserInfo{}, err
-			}
-			if !valid {
-				return tpmodels.TypeSupertokensUserInfo{}, errors.New("id_token payload is invalid")
-			}
-		}
-	} else {
-		if rawUserInfoResponse.FromUserInfoAPI == nil {
-			return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
-		}
-		rawUserInfo = rawUserInfoResponse.FromUserInfoAPI
-	}
+	// 	if config.ValidateIdTokenPayload != nil {
+	// 		valid, err := config.ValidateIdTokenPayload(rawUserInfo, config)
+	// 		if err != nil {
+	// 			return tpmodels.TypeSupertokensUserInfo{}, err
+	// 		}
+	// 		if !valid {
+	// 			return tpmodels.TypeSupertokensUserInfo{}, errors.New("id_token payload is invalid")
+	// 		}
+	// 	}
+	// } else {
+	// 	if rawUserInfoResponse.FromUserInfoAPI == nil {
+	// 		return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
+	// 	}
+	// 	rawUserInfo = rawUserInfoResponse.FromUserInfoAPI
+	// }
 
 	result := tpmodels.TypeSupertokensUserInfo{}
-	result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.UserId))
-	result.EmailInfo = &tpmodels.EmailStruct{
-		ID: fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.Email)),
-	}
-	if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(bool); ok {
-		result.EmailInfo.IsVerified = emailVerified
-	} else if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(string); ok {
-		result.EmailInfo.IsVerified = emailVerified == "true"
-	}
+	// result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.UserId))
+	// result.EmailInfo = &tpmodels.EmailStruct{
+	// 	ID: fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.Email)),
+	// }
+	// if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(bool); ok {
+	// 	result.EmailInfo.IsVerified = emailVerified
+	// } else if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(string); ok {
+	// 	result.EmailInfo.IsVerified = emailVerified == "true"
+	// }
+
+	// TODO impl
 	return result, nil
 }
