@@ -135,7 +135,7 @@ func (input CustomProvider) buildInternal() *TypeCustomProviderImplementation {
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		return input.oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).GetUserInfo(oAuthTokens, userContext)
+		return input.oAuth2Normalize(getCombinedOAuth2Config(input.Config, clientConfig)).GetUserInfo(tenantId, oAuthTokens, userContext)
 	}
 
 	if input.Override != nil {

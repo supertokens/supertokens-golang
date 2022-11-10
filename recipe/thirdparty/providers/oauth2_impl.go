@@ -124,7 +124,7 @@ func (config *typeCombinedOAuth2Config) ExchangeAuthCodeForOAuthTokens(redirectU
 	return oAuthTokens, nil
 }
 
-func (config *typeCombinedOAuth2Config) GetUserInfo(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+func (config *typeCombinedOAuth2Config) GetUserInfo(tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 	config.discoverEndpoints()
 
 	accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
@@ -164,6 +164,10 @@ func (config *typeCombinedOAuth2Config) GetUserInfo(oAuthTokens tpmodels.TypeOAu
 	userInfoResult, err := config.getSupertokensUserInfoResultFromRawUserInfo(rawUserInfoFromProvider)
 	if err != nil {
 		return tpmodels.TypeUserInfo{}, err
+	}
+
+	if tenantId != nil {
+		userInfoResult.ThirdPartyUserId += "|" + *tenantId // TODO delimiter
 	}
 
 	return tpmodels.TypeUserInfo{

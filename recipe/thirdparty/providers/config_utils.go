@@ -66,11 +66,17 @@ func getCombinedOAuth2Config(config CustomConfig, clientConfig CustomClientConfi
 		OIDCDiscoveryEndpoint:            config.OIDCDiscoveryEndpoint,
 		UserInfoMap:                      config.UserInfoMap,
 	}
-	combinedConfig.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, config *typeCombinedOAuth2Config) (bool, error) {
-		if config.ValidateIdTokenPayload != nil {
-			return config.ValidateIdTokenPayload(idTokenPayload, combinedConfig)
+
+	if config.ValidateIdTokenPayload != nil {
+		combinedConfig.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, oAuth2Config *typeCombinedOAuth2Config) (bool, error) {
+			return config.ValidateIdTokenPayload(idTokenPayload, CustomClientConfig{
+				ClientType:       oAuth2Config.ClientType,
+				ClientID:         oAuth2Config.ClientID,
+				ClientSecret:     oAuth2Config.ClientSecret,
+				Scope:            oAuth2Config.Scope,
+				AdditionalConfig: oAuth2Config.AdditionalConfig,
+			})
 		}
-		return true, nil
 	}
 	return combinedConfig
 }
