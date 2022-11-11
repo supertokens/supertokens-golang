@@ -35,7 +35,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.TenantId = *tenantId
 
 		// TODO impl
-		return tpmodels.ProviderConfig{}, errors.New("not implemented")
+		return input.Config, nil
 	}
 
 	impl.GetConfig = func(clientType *string, inputConfig tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {

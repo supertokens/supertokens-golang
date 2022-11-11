@@ -14,10 +14,6 @@ func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.ThirdPartyID = activeDirectoryID
 	}
 
-	if input.Config.TenantId != "" && input.Config.OIDCDiscoveryEndpoint == "" {
-		input.Config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://login.microsoftonline.com/%s/v2.0/", input.Config.TenantId)
-	}
-
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
 		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "sub"
 	}
@@ -49,24 +45,15 @@ func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetProviderConfig := provider.GetProviderConfig
-		provider.GetProviderConfig = func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
-			config, err := oGetProviderConfig(tenantId, userContext)
-			if err != nil {
-				return config, err
-			}
-
-			if tenantId != nil && input.Config.OIDCDiscoveryEndpoint == "" {
-				config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://login.microsoftonline.com/%s/v2.0/", *tenantId)
-			}
-			return config, nil
-		}
-
 		oGetConfig := provider.GetConfig
 		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClient{}, err
+			}
+
+			if config.OIDCDiscoveryEndpoint == "" {
+				config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://login.microsoftonline.com/%s/v2.0/", config.AdditionalConfig["directoryId"])
 			}
 
 			if len(config.Scope) == 0 {
