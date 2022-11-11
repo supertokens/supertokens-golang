@@ -73,7 +73,10 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-// TODO enable later
+func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.ActiveDirectory(input)
+}
+
 func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Apple(input)
 }
