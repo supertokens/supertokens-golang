@@ -86,9 +86,9 @@ func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Facebook(input)
 }
 
-// func Github(input tpmodels.GithubConfig) tpmodels.TypeProvider {
-// 	return providers.Github(input)
-// }
+func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Github(input)
+}
 
 func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Google(input)
