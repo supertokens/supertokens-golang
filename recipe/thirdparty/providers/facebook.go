@@ -16,110 +16,103 @@
 package providers
 
 import (
-	"encoding/json"
-	"net/http"
-	"strings"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const facebookID = "facebook"
 
-func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: facebookID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://graph.facebook.com/v9.0/oauth/access_token"
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": config.ClientSecret,
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
-			}
-
-			authorisationRedirectURL := "https://www.facebook.com/v9.0/dialog/oauth"
-			scopes := []string{"email"}
-			if config.Scope != nil {
-				scopes = config.Scope
-			}
-
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":         strings.Join(scopes, " "),
-				"response_type": "code",
-				"client_id":     config.ClientID,
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					var accessTokenAPIResponse facebookGetProfileInfoInput
-					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					accessToken := accessTokenAPIResponse.AccessToken
-					response, err := getFacebookAuthRequest(accessToken)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					userInfo := response.(map[string]interface{})
-					ID := userInfo["id"].(string)
-					email, emailOk := userInfo["email"].(string)
-					if !emailOk {
-						return tpmodels.UserInfo{
-							ID: ID,
-						}, nil
-					}
-					isVerified, isVerifiedOk := userInfo["verified_email"].(bool)
-					return tpmodels.UserInfo{
-						ID: ID,
-						Email: &tpmodels.EmailStruct{
-							ID:         email,
-							IsVerified: isVerified && isVerifiedOk,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
+func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	if input.ThirdPartyID == "" {
+		input.ThirdPartyID = facebookID
 	}
-}
 
-func getFacebookAuthRequest(accessToken string) (interface{}, error) {
-	url := "https://graph.facebook.com/me"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	if input.Config.AuthorizationEndpoint == "" {
+		input.Config.AuthorizationEndpoint = "https://www.facebook.com/v12.0/dialog/oauth"
 	}
-	q := req.URL.Query()
-	q.Add("access_token", accessToken)
-	q.Add("fields", "id,email")
-	q.Add("format", "json")
-	req.URL.RawQuery = q.Encode()
-	return doGetRequest(req)
-}
 
-type facebookGetProfileInfoInput struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-	TokenType   string `json:"token_type"`
+	if input.Config.TokenEndpoint == "" {
+		input.Config.TokenEndpoint = "https://graph.facebook.com/v12.0/oauth/access_token"
+	}
+
+	if input.Config.UserInfoEndpoint == "" {
+		input.Config.UserInfoEndpoint = "https://graph.facebook.com/me"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams == nil {
+		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams["response_type"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["response_type"] = "code"
+	}
+	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
+	}
+	if input.Config.AuthorizationEndpointQueryParams["access_type"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := provider.GetConfig
+		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+			config, err := oGetConfig(clientType, input, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClient{}, err
+			}
+
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"email"}
+			}
+
+			return config, err
+		}
+
+		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClient, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			queryParams := map[string]interface{}{
+				"access_token": oAuthTokens["access_token"].(string),
+				"fields":       "id,email",
+				"format":       "json",
+			}
+
+			userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, queryParams, nil)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+
+			rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{
+				FromUserInfoAPI: userInfoFromAccessToken.(map[string]interface{}),
+			}
+			userInfoResult, err := oauth2_getSupertokensUserInfoResultFromRawUserInfo(config, rawUserInfoFromProvider)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			return tpmodels.TypeUserInfo{
+				ThirdPartyUserId:        userInfoResult.ThirdPartyUserId,
+				Email:                   userInfoResult.EmailInfo,
+				RawUserInfoFromProvider: rawUserInfoFromProvider,
+			}, nil
+		}
+
+		if oOverride != nil {
+			provider = oOverride(provider)
+		}
+		return provider
+	}
+
+	return NewProvider(input)
 }

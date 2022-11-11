@@ -1,30 +1,24 @@
 package providers
 
 import (
+	"fmt"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const googleID = "google"
+const activeDirectoryID = "active-directory"
 
-func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = googleID
-	}
-
-	if input.Config.OIDCDiscoveryEndpoint == "" {
-		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/"
+		input.ThirdPartyID = activeDirectoryID
 	}
 
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "sub"
 	}
 	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
 		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
-	}
-
-	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
 	}
 
 	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
@@ -32,10 +26,6 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	}
 	if input.Config.UserInfoMap.FromIdTokenPayload.Email == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
-	}
-
-	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
 	}
 
 	if input.Config.AuthorizationEndpointQueryParams == nil {
@@ -60,6 +50,10 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClient{}, err
+			}
+
+			if config.OIDCDiscoveryEndpoint == "" {
+				config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://login.microsoftonline.com/%s/v2.0/", config.AdditionalConfig["directoryId"])
 			}
 
 			if len(config.Scope) == 0 {

@@ -49,7 +49,18 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return err
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, clientType, tenantId, redirectURIOnProviderDashboard, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+	providerConfig, err := provider.GetProviderConfig(tenantId, userContext)
+	if err != nil {
+		return err
+	}
+	config, err := provider.GetConfig(clientType, providerConfig, userContext)
+	if err != nil {
+		return err
+	}
+	config = discoverOIDCEndpoints(config)
+
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, config, redirectURIOnProviderDashboard, options, userContext)
 	if err != nil {
 		return err
 	}

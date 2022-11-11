@@ -1,167 +1,43 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
- *
- * This software is licensed under the Apache License, Version 2.0 (the
- * "License") as published by the Apache Software Foundation.
- *
- * You may not use this file except in compliance with the License. You may
- * obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package providers
 
 import (
-	"errors"
-	"strings"
-
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const googleWorkspacesID = "google-workspaces"
+func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	input.ThirdPartyID = "google-workspaces"
 
-func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
-
-	domain := "*"
-	if config.Domain != nil {
-		domain = *config.Domain
+	if input.Config.ValidateIdTokenPayload == nil {
+		input.Config.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, clientConfig tpmodels.ProviderConfigForClient) (bool, error) {
+			return idTokenPayload["hd"] == clientConfig.AdditionalConfig["domain"], nil
+		}
 	}
 
-	return tpmodels.TypeProvider{
-		ID: googleWorkspacesID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://oauth2.googleapis.com/token"
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": config.ClientSecret,
-				"grant_type":    "authorization_code",
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
+	oOverride := input.Override
+
+	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := provider.GetConfig
+		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+			config, err := oGetConfig(clientType, input, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClient{}, err
 			}
 
-			authorisationRedirectURL := "https://accounts.google.com/o/oauth2/v2/auth"
-			scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-			if config.Scope != nil {
-				scopes = config.Scope
+			if config.AdditionalConfig == nil || config.AdditionalConfig["domain"] == nil || config.AdditionalConfig["domain"] == "" {
+				config.AuthorizationEndpointQueryParams["hd"] = "*"
+			} else {
+				config.AuthorizationEndpointQueryParams["hd"] = config.AdditionalConfig["domain"]
 			}
 
-			var additionalParams map[string]interface{} = nil
-			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-				additionalParams = config.AuthorisationRedirect.Params
-			}
+			return config, err
+		}
 
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":                  strings.Join(scopes, " "),
-				"access_type":            "offline",
-				"include_granted_scopes": "true",
-				"response_type":          "code",
-				"client_id":              config.ClientID,
-				"hd":                     domain,
-			}
-			for key, value := range additionalParams {
-				authorizationRedirectParams[key] = value
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-					claims, err := verifyAndGetClaims(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-
-					var email string
-					var isVerified bool
-					var id string
-					var hd string
-					for key, val := range claims {
-						if key == "sub" {
-							id = val.(string)
-						} else if key == "email" {
-							email = val.(string)
-						} else if key == "email_verified" {
-							isVerified = val.(bool)
-						} else if key == "hd" {
-							hd = val.(string)
-						}
-					}
-
-					if email == "" {
-						return tpmodels.UserInfo{}, errors.New("Could not get email. Please use a different login method")
-					}
-
-					if hd == "" {
-						return tpmodels.UserInfo{}, errors.New("Please use a Google Workspace ID to login")
-					}
-
-					if !strings.Contains(domain, "*") && hd != domain {
-						return tpmodels.UserInfo{}, errors.New("Please use emails from " + domain + " to login")
-					}
-
-					return tpmodels.UserInfo{
-						ID: id,
-						Email: &tpmodels.EmailStruct{
-							ID:         email,
-							IsVerified: isVerified,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
-	}
-}
-
-func verifyAndGetClaims(idToken string, clientId string) (jwt.MapClaims, error) {
-	claims := jwt.MapClaims{}
-	// Get the JWKS URL.
-	jwksURL := "https://www.googleapis.com/oauth2/v3/certs"
-
-	// Create the JWKS from the resource at the given URL.
-	jwks, err := getJWKSFromURL(jwksURL)
-	if err != nil {
-		return claims, err
+		if oOverride != nil {
+			provider = oOverride(provider)
+		}
+		return provider
 	}
 
-	// Parse the JWT.
-	token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
-	if err != nil {
-		return claims, err
-	}
-
-	// Check if the token is valid.
-	if !token.Valid {
-		return claims, errors.New("invalid id_token supplied")
-	}
-
-	if claims["iss"].(string) != "https://accounts.google.com" && claims["iss"].(string) != "accounts.google.com" {
-		return claims, errors.New("invalid iss field")
-	}
-
-	if claims["aud"].(string) != clientId {
-		return claims, errors.New("the client for whom this key is for is different than the one provided")
-	}
-
-	return claims, nil
+	return Google(input)
 }

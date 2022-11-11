@@ -16,6 +16,7 @@
 package thirdparty
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -72,27 +73,34 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-// TODO enable later
-// func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
-// 	return providers.Apple(config)
-// }
+func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.ActiveDirectory(input)
+}
 
-// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-// 	return providers.Facebook(config)
-// }
+func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Apple(input)
+}
 
-// func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-// 	return providers.Github(config)
-// }
+func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Discord(input)
+}
 
-// func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-// 	return providers.Discord(config)
-// }
+func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Facebook(input)
+}
 
-// func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
-// 	return providers.GoogleWorkspaces(config)
-// }
+func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Github(input)
+}
 
-// func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-// 	return providers.Google(config)
-// }
+func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Google(input)
+}
+
+func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.GoogleWorkspaces(input)
+}
+
+func CustomProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.NewProvider(input)
+}
