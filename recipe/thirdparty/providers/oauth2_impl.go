@@ -151,6 +151,17 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClient, oAuthTokens tpm
 }
 
 func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClient, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
+
+	if config.ValidateIdTokenPayload != nil {
+		ok, err := config.ValidateIdTokenPayload(rawUserInfoResponse.FromIdTokenPayload, config)
+		if err != nil {
+			return tpmodels.TypeSupertokensUserInfo{}, err
+		}
+		if !ok {
+			return tpmodels.TypeSupertokensUserInfo{}, errors.New("id_token payload validation failed")
+		}
+	}
+
 	result := tpmodels.TypeSupertokensUserInfo{}
 	if config.UserInfoMap.FromIdTokenPayload.UserId != "" {
 		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.UserId))

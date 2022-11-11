@@ -62,11 +62,9 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClient{}, err
 			}
 
-			if config.ClientSecret != "" {
-				return config, err
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"openid", "email"}
 			}
-
-			config.AuthorizationEndpointQueryParams["access_type"] = "online"
 
 			return config, err
 		}

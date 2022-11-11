@@ -1,6 +1,13 @@
 package api
 
 import (
+	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"net/http"
+	"sync"
+
+	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -40,4 +47,99 @@ func createProvider(thirdPartyId string) tpmodels.TypeProvider {
 func createCustomProvider(thirdPartyId string) tpmodels.TypeProvider {
 	// TODO impl
 	return tpmodels.TypeProvider{}
+}
+
+func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClient) tpmodels.ProviderConfigForClient {
+	if config.OIDCDiscoveryEndpoint != "" {
+		oidcInfo, err := getOIDCDiscoveryInfo(config.OIDCDiscoveryEndpoint)
+
+		if err == nil {
+			if authURL, ok := oidcInfo["authorization_endpoint"].(string); ok {
+				if config.AuthorizationEndpoint == "" {
+					config.AuthorizationEndpoint = authURL
+				}
+			}
+
+			if tokenURL, ok := oidcInfo["token_endpoint"].(string); ok {
+				if config.TokenEndpoint == "" {
+					config.TokenEndpoint = tokenURL
+				}
+			}
+
+			if userInfoURL, ok := oidcInfo["userinfo_endpoint"].(string); ok {
+				if config.UserInfoEndpoint == "" {
+					config.UserInfoEndpoint = userInfoURL
+				}
+			}
+
+			if jwksUri, ok := oidcInfo["jwks_uri"].(string); ok {
+				config.JwksURI = jwksUri
+			}
+		}
+	}
+	return config
+}
+
+// OIDC utils
+var oidcInfoMap = map[string]map[string]interface{}{}
+var oidcInfoMapLock = sync.Mutex{}
+
+func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
+	oidcInfoMapLock.Lock()
+	defer oidcInfoMapLock.Unlock()
+
+	// Check again to see if it was added while we were waiting for the lock
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
+	oidcInfo, err := doGetRequest(issuer+"/.well-known/openid-configuration", nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
+	return oidcInfoMap[issuer], nil
+}
+
+func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (interface{}, error) {
+	if queryParams != nil {
+		querystring, err := qs.Marshal(queryParams)
+		if err != nil {
+			return nil, err
+		}
+		url = url + "?" + querystring
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("GET request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
+	}
+	return result, nil
 }
