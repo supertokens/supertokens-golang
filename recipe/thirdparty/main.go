@@ -74,28 +74,28 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 }
 
 // TODO enable later
-func Apple(config tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Apple(config)
+func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Apple(input)
 }
 
-func Discord(config tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Discord(config)
+func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Discord(input)
 }
 
-// func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-// 	return providers.Facebook(config)
-// }
+func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Facebook(input)
+}
 
-// func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-// 	return providers.Github(config)
+// func Github(input tpmodels.GithubConfig) tpmodels.TypeProvider {
+// 	return providers.Github(input)
 // }
 
 func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Google(input)
 }
 
-func GoogleWorkspaces(config tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.GoogleWorkspaces(config)
+func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.GoogleWorkspaces(input)
 }
 
 func CustomProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
