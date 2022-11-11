@@ -7,8 +7,10 @@ import (
 func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	input.ThirdPartyID = "google-workspaces"
 
-	input.Config.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, clientConfig tpmodels.ProviderClientConfig) (bool, error) {
-		return idTokenPayload["hd"] == clientConfig.AdditionalConfig["domain"], nil
+	if input.Config.ValidateIdTokenPayload == nil {
+		input.Config.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, clientConfig tpmodels.ProviderConfigForClient) (bool, error) {
+			return idTokenPayload["hd"] == clientConfig.AdditionalConfig["domain"], nil
+		}
 	}
 
 	return Google(input)

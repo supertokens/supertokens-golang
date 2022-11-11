@@ -2,6 +2,7 @@ package providers
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/derekstavis/go-qs"
@@ -13,7 +14,7 @@ import (
 const scopeParameter = "scope"
 const scopeSeparator = " "
 
-func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderClientConfig, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClient, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 	queryParams := map[string]interface{}{
 		scopeParameter:  strings.Join(config.Scope, scopeSeparator),
 		"client_id":     config.ClientID,
@@ -60,7 +61,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderClientConfig, re
 	}, nil
 }
 
-func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderClientConfig, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClient, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
 	tokenAPIURL := config.TokenEndpoint
 	accessTokenAPIParams := map[string]interface{}{
 		"client_id":    config.ClientID,
@@ -98,7 +99,7 @@ func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderClientConfig,
 	return oAuthTokens, nil
 }
 
-func oauth2_GetUserInfo(config tpmodels.ProviderClientConfig, tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClient, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 	accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 	idToken, idTokenOk := oAuthTokens["id_token"].(string)
 
@@ -138,8 +139,8 @@ func oauth2_GetUserInfo(config tpmodels.ProviderClientConfig, tenantId *string, 
 		return tpmodels.TypeUserInfo{}, err
 	}
 
-	if tenantId != nil {
-		userInfoResult.ThirdPartyUserId += "|" + *tenantId // TODO delimiter
+	if config.TenantId != "" {
+		userInfoResult.ThirdPartyUserId += "|" + config.TenantId // TODO delimiter
 	}
 
 	return tpmodels.TypeUserInfo{
@@ -149,42 +150,43 @@ func oauth2_GetUserInfo(config tpmodels.ProviderClientConfig, tenantId *string, 
 	}, nil
 }
 
-func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderClientConfig, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
-	// var rawUserInfo map[string]interface{}
-
-	// if config.UserInfoMap.From == tpmodels.FromIdTokenPayload {
-	// 	if rawUserInfoResponse.FromIdTokenPayload == nil {
-	// 		return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
-	// 	}
-	// 	rawUserInfo = rawUserInfoResponse.FromIdTokenPayload
-
-	// 	if config.ValidateIdTokenPayload != nil {
-	// 		valid, err := config.ValidateIdTokenPayload(rawUserInfo, config)
-	// 		if err != nil {
-	// 			return tpmodels.TypeSupertokensUserInfo{}, err
-	// 		}
-	// 		if !valid {
-	// 			return tpmodels.TypeSupertokensUserInfo{}, errors.New("id_token payload is invalid")
-	// 		}
-	// 	}
-	// } else {
-	// 	if rawUserInfoResponse.FromUserInfoAPI == nil {
-	// 		return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
-	// 	}
-	// 	rawUserInfo = rawUserInfoResponse.FromUserInfoAPI
-	// }
-
+func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClient, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
 	result := tpmodels.TypeSupertokensUserInfo{}
-	// result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.UserId))
-	// result.EmailInfo = &tpmodels.EmailStruct{
-	// 	ID: fmt.Sprint(accessField(rawUserInfo, config.UserInfoMap.Email)),
-	// }
-	// if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(bool); ok {
-	// 	result.EmailInfo.IsVerified = emailVerified
-	// } else if emailVerified, ok := accessField(rawUserInfo, config.UserInfoMap.EmailVerified).(string); ok {
-	// 	result.EmailInfo.IsVerified = emailVerified == "true"
-	// }
+	if config.UserInfoMap.FromIdTokenPayload.UserId != "" {
+		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.UserId))
+	} else if config.UserInfoMap.FromUserInfoAPI.UserId != "" {
+		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.UserId))
+	} else {
+		return tpmodels.TypeSupertokensUserInfo{}, errors.New("userId field is not specified in the UserInfoMap config")
+	}
 
-	// TODO impl
+	if config.UserInfoMap.FromIdTokenPayload.Email != "" {
+		result.EmailInfo = &tpmodels.EmailStruct{
+			ID: fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.Email)),
+		}
+	} else if config.UserInfoMap.FromUserInfoAPI.Email != "" {
+		result.EmailInfo = &tpmodels.EmailStruct{
+			ID: fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.Email)),
+		}
+	} else {
+		result.EmailInfo = nil
+	}
+
+	if result.EmailInfo != nil {
+		if config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
+			if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(bool); ok {
+				result.EmailInfo.IsVerified = emailVerified
+			} else if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(string); ok {
+				result.EmailInfo.IsVerified = emailVerified == "true"
+			}
+		} else if config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
+			if emailVerified, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified).(bool); ok {
+				result.EmailInfo.IsVerified = emailVerified
+			} else if emailVerified, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified).(string); ok {
+				result.EmailInfo.IsVerified = emailVerified == "true"
+			}
+		}
+	}
+
 	return result, nil
 }

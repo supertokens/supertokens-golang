@@ -27,52 +27,44 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		ID: input.ThirdPartyID,
 	}
 
-	impl.GetConfig = func(clientType, tenantId *string, inputConfig tpmodels.ProviderConfigInput, userContext supertokens.UserContext) (tpmodels.ProviderClientConfig, error) {
+	impl.GetProviderConfig = func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		if tenantId == nil {
-			if clientType == nil {
-
-				if len(input.Config.Clients) == 0 || len(input.Config.Clients) > 1 {
-					return tpmodels.ProviderClientConfig{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
-				}
-				for _, client := range input.Config.Clients {
-					if client.ClientType == *clientType {
-						config := getCombinedProviderConfig(input.Config, client)
-						// Discover the end points here
-						return config, nil
-					}
-				}
-			}
-
-			return tpmodels.ProviderClientConfig{}, errors.New("Could not find client config for clientType: " + *clientType)
+			return input.Config, nil
 		}
 
 		// TODO impl
-		return tpmodels.ProviderClientConfig{}, errors.New("needs implementation")
+		return tpmodels.ProviderConfig{}, errors.New("not implemented")
 	}
 
-	impl.GetAuthorisationRedirectURL = func(clientType, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		clientConfig, err := impl.GetConfig(clientType, tenantId, input.Config, userContext)
-		if err != nil {
-			return tpmodels.TypeAuthorisationRedirect{}, err
+	impl.GetConfig = func(clientType *string, inputConfig tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+		if clientType == nil {
+			if len(inputConfig.Clients) == 0 || len(inputConfig.Clients) > 1 {
+				return tpmodels.ProviderConfigForClient{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
+			}
+
+			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
 		}
-		return oauth2_GetAuthorisationRedirectURL(clientConfig, redirectURIOnProviderDashboard, userContext)
+
+		for _, client := range inputConfig.Clients {
+			if client.ClientType == *clientType {
+				config := getProviderConfigForClient(input.Config, client)
+				return config, nil
+			}
+		}
+
+		return tpmodels.ProviderConfigForClient{}, errors.New("Could not find client config for clientType: " + *clientType)
 	}
 
-	impl.ExchangeAuthCodeForOAuthTokens = func(clientType, tenantId *string, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		clientConfig, err := impl.GetConfig(clientType, tenantId, input.Config, userContext)
-		if err != nil {
-			return tpmodels.TypeOAuthTokens{}, err
-		}
-
-		return oauth2_ExchangeAuthCodeForOAuthTokens(clientConfig, redirectURIInfo, userContext)
+	impl.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClient, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return oauth2_GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 	}
 
-	impl.GetUserInfo = func(clientType, tenantId *string, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		clientConfig, err := impl.GetConfig(clientType, tenantId, input.Config, userContext)
-		if err != nil {
-			return tpmodels.TypeUserInfo{}, err
-		}
-		return oauth2_GetUserInfo(clientConfig, tenantId, oAuthTokens, userContext)
+	impl.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClient, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return oauth2_ExchangeAuthCodeForOAuthTokens(config, redirectURIInfo, userContext)
+	}
+
+	impl.GetUserInfo = func(config tpmodels.ProviderConfigForClient, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return oauth2_GetUserInfo(config, oAuthTokens, userContext)
 	}
 
 	if input.Override != nil {

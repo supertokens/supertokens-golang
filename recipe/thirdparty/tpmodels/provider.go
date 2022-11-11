@@ -4,12 +4,12 @@ import "github.com/supertokens/supertokens-golang/supertokens"
 
 type ProviderInput struct {
 	ThirdPartyID string
-	Config       ProviderConfigInput
+	Config       ProviderConfig
 	Override     func(provider *TypeProvider) *TypeProvider
 }
 
-type ProviderConfigInput struct {
-	Clients []ProviderClientConfigInput
+type ProviderConfig struct {
+	Clients []ProviderClientConfig
 
 	AuthorizationEndpoint            string
 	AuthorizationEndpointQueryParams map[string]interface{}
@@ -20,15 +20,8 @@ type ProviderConfigInput struct {
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderClientConfig) (bool, error)
-}
-
-type ProviderClientConfigInput struct {
-	ClientType       string // optional
-	ClientID         string
-	ClientSecret     string
-	Scope            []string
-	AdditionalConfig map[string]interface{}
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClient) (bool, error)
+	TenantId                         string
 }
 
 type ProviderClientConfig struct {
@@ -37,6 +30,14 @@ type ProviderClientConfig struct {
 	ClientSecret     string
 	Scope            []string
 	AdditionalConfig map[string]interface{}
+}
+
+type ProviderConfigForClient struct {
+	ClientType       string // optional
+	ClientID         string
+	ClientSecret     string
+	Scope            []string
+	AdditionalConfig map[string]interface{}
 
 	AuthorizationEndpoint            string
 	AuthorizationEndpointQueryParams map[string]interface{}
@@ -47,14 +48,16 @@ type ProviderClientConfig struct {
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderClientConfig) (bool, error)
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClient) (bool, error)
+	TenantId                         string
 }
 
 type TypeProvider struct {
 	ID string
 
-	GetConfig                      func(clientType *string, tenantId *string, input ProviderConfigInput, userContext supertokens.UserContext) (ProviderClientConfig, error)
-	GetAuthorisationRedirectURL    func(clientType *string, tenantId *string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(clientType *string, tenantId *string, redirectInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(clientType *string, tenantId *string, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+	GetProviderConfig              func(tenantId *string, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetConfig                      func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClient, error)
+	GetAuthorisationRedirectURL    func(config ProviderConfigForClient, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(config ProviderConfigForClient, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(config ProviderConfigForClient, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }

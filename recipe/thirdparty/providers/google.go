@@ -56,17 +56,17 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 		oGetConfig := provider.GetConfig
-		provider.GetConfig = func(clientType, tenantId *string, input tpmodels.ProviderConfigInput, userContext supertokens.UserContext) (tpmodels.ProviderClientConfig, error) {
-			config, err := oGetConfig(clientType, tenantId, input, userContext)
+		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
-				return tpmodels.ProviderClientConfig{}, err
+				return tpmodels.ProviderConfigForClient{}, err
 			}
 
 			if config.ClientSecret != "" {
 				return config, err
 			}
 
-			config.AuthorizationEndpointQueryParams["acces_type"] = "online"
+			config.AuthorizationEndpointQueryParams["access_type"] = "online"
 
 			return config, err
 		}

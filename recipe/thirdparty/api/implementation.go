@@ -37,8 +37,8 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		return tpmodels.ProvidersForTenantGetResponse{}, errors.New("needs implementation")
 	}
 
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		authRedirect, err := provider.GetAuthorisationRedirectURL(clientType, tenantId, redirectURIOnProviderDashboard, userContext)
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClient, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		authRedirect, err := provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 		if err != nil {
 			return tpmodels.AuthorisationUrlGETResponse{}, err
 		}
@@ -48,12 +48,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, clientType *string, tenantId *string, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+	signInUpPOST := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClient, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		var oAuthTokens map[string]interface{} = nil
 		var err error
 
 		if input.RedirectURIInfo != nil {
-			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(clientType, tenantId, *input.RedirectURIInfo, userContext)
+			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(config, *input.RedirectURIInfo, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
@@ -61,7 +61,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			oAuthTokens = *input.OAuthTokens
 		}
 
-		userInfo, err := provider.GetUserInfo(clientType, tenantId, oAuthTokens, userContext)
+		userInfo, err := provider.GetUserInfo(config, oAuthTokens, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
