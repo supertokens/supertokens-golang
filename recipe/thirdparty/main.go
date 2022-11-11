@@ -78,9 +78,9 @@ func Apple(config tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Apple(config)
 }
 
-// func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-// 	return providers.Discord(config)
-// }
+func Discord(config tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Discord(config)
+}
 
 // func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
 // 	return providers.Facebook(config)
