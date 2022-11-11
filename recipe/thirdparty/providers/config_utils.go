@@ -22,5 +22,6 @@ func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpm
 		OIDCDiscoveryEndpoint:            config.OIDCDiscoveryEndpoint,
 		UserInfoMap:                      config.UserInfoMap,
 		ValidateIdTokenPayload:           config.ValidateIdTokenPayload,
+		TenantId:                         config.TenantId,
 	}
 }

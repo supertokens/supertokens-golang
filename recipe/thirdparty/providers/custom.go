@@ -32,6 +32,8 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			return input.Config, nil
 		}
 
+		input.Config.TenantId = *tenantId
+
 		// TODO impl
 		return tpmodels.ProviderConfig{}, errors.New("not implemented")
 	}
