@@ -27,15 +27,69 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		ID: input.ThirdPartyID,
 	}
 
-	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		if tenantId == nil {
 			return input.Config, nil
 		}
 
 		input.Config.TenantId = *tenantId
 
-		// TODO impl
-		return input.Config, nil
+		configs, err := (*options.RecipeImplementation.FetchTenantIdConfigMapping)(input.ThirdPartyID, *tenantId, userContext)
+		if err != nil {
+			return tpmodels.ProviderConfig{}, err
+		}
+
+		if configs.UnknownMappingError != nil {
+			// Return the static config as core doesn't have a mapping
+			return input.Config, err
+		}
+
+		clientConfigs := []tpmodels.ProviderClientConfig{}
+		copy(clientConfigs, input.Config.Clients)
+
+		for _, config := range configs.OK.Config.Clients {
+			found := false
+			for i := range clientConfigs {
+				if clientConfigs[i].ClientType == config.ClientType {
+					clientConfigs[i].ClientID = config.ClientID
+					clientConfigs[i].ClientSecret = config.ClientSecret
+					clientConfigs[i].Scope = config.Scope
+					clientConfigs[i].AdditionalConfig = config.AdditionalConfig
+					found = true
+					break
+				}
+			}
+			if !found {
+				clientConfigs = append(clientConfigs, tpmodels.ProviderClientConfig{
+					ClientType:       config.ClientType,
+					ClientID:         config.ClientID,
+					ClientSecret:     config.ClientSecret,
+					Scope:            config.Scope,
+					AdditionalConfig: config.AdditionalConfig,
+				})
+			}
+		}
+
+		// Copy provider config
+		config := tpmodels.ProviderConfig{
+			Clients:                          clientConfigs,
+			AuthorizationEndpoint:            configs.OK.Config.AuthorizationEndpoint,
+			AuthorizationEndpointQueryParams: configs.OK.Config.AuthorizationEndpointQueryParams,
+			TokenEndpoint:                    configs.OK.Config.TokenEndpoint,
+			TokenParams:                      configs.OK.Config.TokenParams,
+			ForcePKCE:                        configs.OK.Config.ForcePKCE,
+			UserInfoEndpoint:                 configs.OK.Config.UserInfoEndpoint,
+			UserInfoEndpointQueryParams:      configs.OK.Config.UserInfoEndpointQueryParams,
+			UserInfoEndpointHeaders:          configs.OK.Config.UserInfoEndpointHeaders,
+			JwksURI:                          configs.OK.Config.JwksURI,
+			OIDCDiscoveryEndpoint:            configs.OK.Config.OIDCDiscoveryEndpoint,
+			UserInfoMap:                      configs.OK.Config.UserInfoMap,
+			TenantId:                         *tenantId,
+
+			ValidateIdTokenPayload: input.Config.ValidateIdTokenPayload, // We may want to use this from static config
+		}
+
+		return config, nil
 	}
 
 	impl.GetConfigForClientType = func(clientType *string, inputConfig tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {

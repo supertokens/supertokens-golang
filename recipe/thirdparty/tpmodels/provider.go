@@ -17,6 +17,8 @@ type ProviderConfig struct {
 	TokenParams                      map[string]interface{}
 	ForcePKCE                        bool // Providers like twitter expects PKCE to be used along with secret
 	UserInfoEndpoint                 string
+	UserInfoEndpointQueryParams      map[string]interface{}
+	UserInfoEndpointHeaders          map[string]interface{}
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
@@ -42,10 +44,10 @@ type ProviderConfigForClientType struct {
 	AuthorizationEndpointQueryParams map[string]interface{}
 	TokenEndpoint                    string
 	TokenParams                      map[string]interface{}
-	UserInfoEndpointQueryParams      map[string]interface{}
-	UserInfoEndpointHeaders          map[string]interface{}
 	ForcePKCE                        bool // Providers like twitter expects PKCE to be used along with secret
 	UserInfoEndpoint                 string
+	UserInfoEndpointQueryParams      map[string]interface{}
+	UserInfoEndpointHeaders          map[string]interface{}
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
@@ -56,7 +58,7 @@ type ProviderConfigForClientType struct {
 type TypeProvider struct {
 	ID string
 
-	GetAllClientTypeConfigForTenant func(tenantId *string, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetAllClientTypeConfigForTenant func(tenantId *string, options APIOptions, userContext supertokens.UserContext) (ProviderConfig, error)
 	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
 	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
 	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens

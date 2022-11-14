@@ -118,6 +118,8 @@ type TenantConfig struct {
 	TokenParams                      map[string]interface{} `json:"tokenParams,omitempty"`
 	ForcePKCE                        bool                   `json:"forcePKCE,omitempty"`
 	UserInfoEndpoint                 string                 `json:"userInfoEndpoint,omitempty"`
+	UserInfoEndpointQueryParams      map[string]interface{} `json:"userInfoEndpointQueryParams,omitempty"`
+	UserInfoEndpointHeaders          map[string]interface{} `json:"userInfoEndpointHeaders,omitempty"`
 	JwksURI                          string                 `json:"jwksURI,omitempty"`
 	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint,omitempty"`
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
