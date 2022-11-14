@@ -14,7 +14,7 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	if input.Config.ValidateIdTokenPayload == nil {
 		input.Config.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, clientConfig tpmodels.ProviderConfigForClientType) error {
-			if idTokenPayload["hd"] != clientConfig.AdditionalConfig["hd"] {
+			if clientConfig.AdditionalConfig != nil && clientConfig.AdditionalConfig["hd"] != nil && clientConfig.AdditionalConfig["hd"] != "*" && idTokenPayload["hd"] != clientConfig.AdditionalConfig["hd"] {
 				return errors.New("invalid id token payload")
 			}
 			return nil
