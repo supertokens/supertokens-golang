@@ -4,9 +4,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 )
 
-func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpmodels.ProviderClientConfig) tpmodels.ProviderConfigForClient {
-	return tpmodels.ProviderConfigForClient{
-		ClientType:       clientConfig.ClientType,
+func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpmodels.ProviderClientConfig) tpmodels.ProviderConfigForClientType {
+	return tpmodels.ProviderConfigForClientType{
 		ClientID:         clientConfig.ClientID,
 		ClientSecret:     clientConfig.ClientSecret,
 		Scope:            clientConfig.Scope,

@@ -27,7 +27,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		ID: input.ThirdPartyID,
 	}
 
-	impl.GetProviderConfig = func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		if tenantId == nil {
 			return input.Config, nil
 		}
@@ -38,10 +38,10 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		return input.Config, nil
 	}
 
-	impl.GetConfig = func(clientType *string, inputConfig tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+	impl.GetConfigForClientType = func(clientType *string, inputConfig tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 		if clientType == nil {
-			if len(inputConfig.Clients) == 0 || len(inputConfig.Clients) > 1 {
-				return tpmodels.ProviderConfigForClient{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
+			if len(inputConfig.Clients) != 1 {
+				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
 			}
 
 			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
@@ -54,18 +54,18 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			}
 		}
 
-		return tpmodels.ProviderConfigForClient{}, errors.New("Could not find client config for clientType: " + *clientType)
+		return tpmodels.ProviderConfigForClientType{}, errors.New("Could not find client config for clientType: " + *clientType)
 	}
 
-	impl.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClient, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+	impl.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 		return oauth2_GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 	}
 
-	impl.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClient, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+	impl.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
 		return oauth2_ExchangeAuthCodeForOAuthTokens(config, redirectURIInfo, userContext)
 	}
 
-	impl.GetUserInfo = func(config tpmodels.ProviderConfigForClient, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+	impl.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 		return oauth2_GetUserInfo(config, oAuthTokens, userContext)
 	}
 

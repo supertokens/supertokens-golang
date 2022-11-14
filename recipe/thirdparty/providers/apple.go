@@ -53,9 +53,6 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams["response_type"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["response_type"] = "code"
-	}
 	if input.Config.AuthorizationEndpointQueryParams["response_mode"] == nil {
 		input.Config.AuthorizationEndpointQueryParams["response_mode"] = "form_post"
 	}
@@ -63,11 +60,11 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfig
-		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+		oGetConfig := provider.GetConfigForClientType
+		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
-				return tpmodels.ProviderConfigForClient{}, err
+				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
 			if len(config.Scope) == 0 {
@@ -75,9 +72,9 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			}
 
 			if config.ClientSecret == "" {
-				clientSecret, err := getClientSecret(config.ClientID, config.AdditionalConfig["clientSecret"].(map[string]interface{}))
+				clientSecret, err := getClientSecret(config.ClientID, config.AdditionalConfig)
 				if err != nil {
-					return tpmodels.ProviderConfigForClient{}, err
+					return tpmodels.ProviderConfigForClientType{}, err
 				}
 				config.ClientSecret = clientSecret
 			}
@@ -94,19 +91,19 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return NewProvider(input)
 }
 
-func getClientSecret(clientId string, secret map[string]interface{}) (string, error) {
+func getClientSecret(clientId string, additionalConfig map[string]interface{}) (string, error) {
 	claims := jwt.StandardClaims{
 		ExpiresAt: time.Now().Unix() + 86400*180,
 		IssuedAt:  time.Now().Unix(),
 		Audience:  "https://appleid.apple.com",
 		Subject:   getActualClientIdFromDevelopmentClientId(clientId),
-		Issuer:    secret["teamId"].(string),
+		Issuer:    additionalConfig["teamId"].(string),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
-	token.Header["kid"] = secret["keyId"].(string)
+	token.Header["kid"] = additionalConfig["keyId"].(string)
 	token.Header["alg"] = "ES256"
 
-	ecdsaPrivateKey, err := getECDSPrivateKey(secret["privateKey"].(string))
+	ecdsaPrivateKey, err := getECDSPrivateKey(additionalConfig["privateKey"].(string))
 	if err != nil {
 		return "", err
 	}

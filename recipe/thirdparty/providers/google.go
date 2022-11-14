@@ -42,9 +42,6 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams["response_type"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["response_type"] = "code"
-	}
 	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
 		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
 	}
@@ -55,11 +52,11 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfig
-		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+		oGetConfig := provider.GetConfigForClientType
+		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
-				return tpmodels.ProviderConfigForClient{}, err
+				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
 			if len(config.Scope) == 0 {

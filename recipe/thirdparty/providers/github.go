@@ -41,11 +41,11 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfig
-		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+		oGetConfig := provider.GetConfigForClientType
+		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
-				return tpmodels.ProviderConfigForClient{}, err
+				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
 			if len(config.Scope) == 0 {
@@ -55,7 +55,7 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			return config, err
 		}
 
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClient, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 			headers := map[string]string{
 				"Authorization": fmt.Sprintf("Bearer %s", oAuthTokens["access_token"]),
 				"Accept":        "application/vnd.github.v3+json",

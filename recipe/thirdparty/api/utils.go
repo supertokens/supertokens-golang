@@ -8,6 +8,7 @@ import (
 	"sync"
 
 	"github.com/derekstavis/go-qs"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -30,54 +31,64 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *st
 }
 
 func createProvider(thirdPartyId string) tpmodels.TypeProvider {
-	// TODO impl
 	switch thirdPartyId {
 	case "active-directory":
+		return providers.ActiveDirectory(tpmodels.ProviderInput{})
 	case "apple":
+		return providers.Apple(tpmodels.ProviderInput{})
 	case "discord":
+		return providers.Discord(tpmodels.ProviderInput{})
 	case "facebook":
+		return providers.Facebook(tpmodels.ProviderInput{})
 	case "github":
+		return providers.Github(tpmodels.ProviderInput{})
 	case "google":
+		return providers.Google(tpmodels.ProviderInput{})
 	case "google-workspaces":
+		return providers.GoogleWorkspaces(tpmodels.ProviderInput{})
 	case "okta":
+		// TODO
+	case "linkedin":
+		// TODO
+	case "boxyhq":
+		// TODO
 	}
-	return createCustomProvider(thirdPartyId)
+
+	return providers.NewProvider(tpmodels.ProviderInput{
+		ThirdPartyID: thirdPartyId,
+	})
 }
 
-func createCustomProvider(thirdPartyId string) tpmodels.TypeProvider {
-	// TODO impl
-	return tpmodels.TypeProvider{}
-}
-
-func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClient) tpmodels.ProviderConfigForClient {
+func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {
 	if config.OIDCDiscoveryEndpoint != "" {
 		oidcInfo, err := getOIDCDiscoveryInfo(config.OIDCDiscoveryEndpoint)
+		if err != nil {
+			return tpmodels.ProviderConfigForClientType{}, err
+		}
 
-		if err == nil {
-			if authURL, ok := oidcInfo["authorization_endpoint"].(string); ok {
-				if config.AuthorizationEndpoint == "" {
-					config.AuthorizationEndpoint = authURL
-				}
-			}
-
-			if tokenURL, ok := oidcInfo["token_endpoint"].(string); ok {
-				if config.TokenEndpoint == "" {
-					config.TokenEndpoint = tokenURL
-				}
-			}
-
-			if userInfoURL, ok := oidcInfo["userinfo_endpoint"].(string); ok {
-				if config.UserInfoEndpoint == "" {
-					config.UserInfoEndpoint = userInfoURL
-				}
-			}
-
-			if jwksUri, ok := oidcInfo["jwks_uri"].(string); ok {
-				config.JwksURI = jwksUri
+		if authURL, ok := oidcInfo["authorization_endpoint"].(string); ok {
+			if config.AuthorizationEndpoint == "" {
+				config.AuthorizationEndpoint = authURL
 			}
 		}
+
+		if tokenURL, ok := oidcInfo["token_endpoint"].(string); ok {
+			if config.TokenEndpoint == "" {
+				config.TokenEndpoint = tokenURL
+			}
+		}
+
+		if userInfoURL, ok := oidcInfo["userinfo_endpoint"].(string); ok {
+			if config.UserInfoEndpoint == "" {
+				config.UserInfoEndpoint = userInfoURL
+			}
+		}
+
+		if jwksUri, ok := oidcInfo["jwks_uri"].(string); ok {
+			config.JwksURI = jwksUri
+		}
 	}
-	return config
+	return config, nil
 }
 
 // OIDC utils

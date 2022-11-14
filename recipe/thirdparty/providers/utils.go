@@ -21,7 +21,6 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -32,8 +31,6 @@ import (
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 // Network utils
@@ -144,31 +141,6 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 	return jwks, nil
 }
 
-// OIDC utils
-var oidcInfoMap = map[string]map[string]interface{}{}
-var oidcInfoMapLock = sync.Mutex{}
-
-func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
-		return oidcInfo, nil
-	}
-
-	oidcInfoMapLock.Lock()
-	defer oidcInfoMapLock.Unlock()
-
-	// Check again to see if it was added while we were waiting for the lock
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
-		return oidcInfo, nil
-	}
-
-	oidcInfo, err := doGetRequest(issuer+"/.well-known/openid-configuration", nil, nil)
-	if err != nil {
-		return nil, err
-	}
-	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
-	return oidcInfoMap[issuer], nil
-}
-
 // User map utils
 func accessField(obj interface{}, key string) interface{} {
 	keyParts := strings.Split(key, ".")
@@ -176,35 +148,6 @@ func accessField(obj interface{}, key string) interface{} {
 		obj = obj.(map[string]interface{})[k]
 	}
 	return obj
-}
-
-func getSupertokensUserInfoFromRawUserInfo(idField string, emailField string, emailVerifiedField string, from tpmodels.TypeFrom) func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
-	return func(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.TypeSupertokensUserInfo, error) {
-		var rawUserInfo map[string]interface{}
-
-		if from == tpmodels.FromIdTokenPayload {
-			if rawUserInfoResponse.FromIdTokenPayload == nil {
-				return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromIdToken is not available")
-			}
-			rawUserInfo = rawUserInfoResponse.FromIdTokenPayload
-		} else {
-			if rawUserInfoResponse.FromUserInfoAPI == nil {
-				return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
-			}
-			rawUserInfo = rawUserInfoResponse.FromUserInfoAPI
-		}
-		result := tpmodels.TypeSupertokensUserInfo{}
-		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfo, idField))
-		result.EmailInfo = &tpmodels.EmailStruct{
-			ID: fmt.Sprint(accessField(rawUserInfo, emailField)),
-		}
-		if emailVerified, ok := accessField(rawUserInfo, emailVerifiedField).(bool); ok {
-			result.EmailInfo.IsVerified = emailVerified
-		} else if emailVerified, ok := accessField(rawUserInfo, emailVerifiedField).(string); ok {
-			result.EmailInfo.IsVerified = emailVerified == "true"
-		}
-		return result, nil
-	}
 }
 
 var DevOauthClientIds = [...]string{

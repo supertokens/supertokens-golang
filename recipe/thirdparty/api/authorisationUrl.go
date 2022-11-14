@@ -50,15 +50,18 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	}
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-	providerConfig, err := provider.GetProviderConfig(tenantId, userContext)
+	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, userContext)
 	if err != nil {
 		return err
 	}
-	config, err := provider.GetConfig(clientType, providerConfig, userContext)
+	config, err := provider.GetConfigForClientType(clientType, providerConfig, userContext)
 	if err != nil {
 		return err
 	}
-	config = discoverOIDCEndpoints(config)
+	config, err = discoverOIDCEndpoints(config)
+	if err != nil {
+		return err
+	}
 
 	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, config, redirectURIOnProviderDashboard, options, userContext)
 	if err != nil {

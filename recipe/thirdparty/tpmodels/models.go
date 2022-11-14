@@ -63,15 +63,15 @@ const (
 
 type TypeUserInfoMap struct {
 	FromIdTokenPayload struct {
-		UserId        string
-		Email         string
-		EmailVerified string
-	}
+		UserId        string `json:"userId"`
+		Email         string `json:"email"`
+		EmailVerified string `json:"emailVerified"`
+	} `json:"fromIdTokenPayload"`
 	FromUserInfoAPI struct {
-		UserId        string
-		Email         string
-		EmailVerified string
-	}
+		UserId        string `json:"userId"`
+		Email         string `json:"email"`
+		EmailVerified string `json:"emailVerified"`
+	} `json:"fromUserInfoAPI"`
 }
 
 type User struct {
@@ -106,4 +106,31 @@ type TypeNormalisedInput struct {
 type OverrideStruct struct {
 	Functions func(originalImplementation RecipeInterface) RecipeInterface
 	APIs      func(originalImplementation APIInterface) APIInterface
+}
+
+type TenantConfig struct {
+	Clients []TenantClientConfig `json:"clients"`
+
+	// Fields below are optional for built-in providers
+	AuthorizationEndpoint            string                 `json:"authorizationEndpoint,omitempty"`
+	AuthorizationEndpointQueryParams map[string]interface{} `json:"authorizationEndpointQueryParams,omitempty"`
+	TokenEndpoint                    string                 `json:"tokenEndpoint,omitempty"`
+	TokenParams                      map[string]interface{} `json:"tokenParams,omitempty"`
+	ForcePKCE                        bool                   `json:"forcePKCE,omitempty"`
+	UserInfoEndpoint                 string                 `json:"userInfoEndpoint,omitempty"`
+	JwksURI                          string                 `json:"jwksURI,omitempty"`
+	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint,omitempty"`
+	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
+
+	FrontendInfo struct {
+		Name string `json:"name"`
+	} `json:"frontendInfo"`
+}
+
+type TenantClientConfig struct {
+	ClientType       string                 // optional
+	ClientID         string                 `json:"clientId"`
+	ClientSecret     string                 `json:"clientSecret"`
+	Scope            []string               `json:"scope"`
+	AdditionalConfig map[string]interface{} `json:"additionalConfig"`
 }

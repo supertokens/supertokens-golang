@@ -122,11 +122,37 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		return users, nil
 	}
 
+	// Multi-tenancy
+	createOrUpdateTenantIdConfigMapping := func(thirdPartyId string, tenantId string, config tpmodels.TenantConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
+		// TODO impl
+		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, nil
+	}
+
+	fetchTenantIdConfigMapping := func(thirdPartyId string, tenantId string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
+		// TODO impl
+		return tpmodels.FetchTenantIdConfigResponse{}, nil
+	}
+
+	deleteTenantIdConfigMapping := func(thirdPartyId string, tenantId string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
+		// TODO impl
+		return tpmodels.DeleteTenantIdConfigResponse{}, nil
+	}
+
+	listConfigMappingsForTenant := func(tenantId string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
+		// TODO impl
+		return tpmodels.ListTenantConfigMappingsResponse{}, nil
+	}
+
 	return tpmodels.RecipeInterface{
 		GetUserByID:                &getUserByID,
 		GetUsersByEmail:            &getUsersByEmail,
 		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
+
+		CreateOrUpdateTenantIdConfigMapping: &createOrUpdateTenantIdConfigMapping,
+		FetchTenantIdConfigMapping:          &fetchTenantIdConfigMapping,
+		DeleteTenantIdConfigMapping:         &deleteTenantIdConfigMapping,
+		ListConfigMappingsForTenant:         &listConfigMappingsForTenant,
 	}
 }

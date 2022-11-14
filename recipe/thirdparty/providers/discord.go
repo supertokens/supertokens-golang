@@ -16,6 +16,8 @@
 package providers
 
 import (
+	"fmt"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -51,22 +53,14 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "verified"
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams == nil {
-		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
-	}
-
-	if input.Config.AuthorizationEndpointQueryParams["response_type"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["response_type"] = "code"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfig
-		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+		oGetConfig := provider.GetConfigForClientType
+		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
-				return tpmodels.ProviderConfigForClient{}, err
+				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
 			if len(config.Scope) == 0 {
@@ -74,6 +68,25 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			}
 
 			return config, err
+		}
+
+		oGetUserInfo := provider.GetUserInfo
+		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			result, err := oGetUserInfo(config, oAuthTokens, userContext)
+			if err != nil {
+				return result, err
+			}
+
+			if config.AdditionalConfig != nil && config.AdditionalConfig["requireEmail"] == true {
+				if result.Email == nil {
+					result.Email = &tpmodels.EmailStruct{
+						ID:         fmt.Sprintf("%s@fakediscorduser.com", result.ThirdPartyUserId),
+						IsVerified: true,
+					}
+				}
+			}
+
+			return result, nil
 		}
 
 		if oOverride != nil {

@@ -18,7 +18,6 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -32,12 +31,60 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	providersForTenantGET := func(tenantId string, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
-		// TODO implement
-		return tpmodels.ProvidersForTenantGetResponse{}, errors.New("needs implementation")
+	providersForTenantGET := func(tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
+		result, err := (*options.RecipeImplementation.ListConfigMappingsForTenant)(tenantId, userContext)
+		if err != nil {
+			return tpmodels.ProvidersForTenantGetResponse{}, err
+		}
+
+		providers := make(
+			[]struct {
+				ID   string `json:"id"`
+				Name string `json:"name,omitempty"`
+			},
+			len(result.OK.Configs),
+		)
+
+		if len(result.OK.Configs) > 0 {
+			// If tenant exists in the db, return the providers from the db
+
+			for i, config := range result.OK.Configs {
+				providers[i] = struct {
+					ID   string `json:"id"`
+					Name string `json:"name,omitempty"`
+				}{
+					ID:   config.ThirdPartyId,
+					Name: config.Config.FrontendInfo.Name,
+				}
+			}
+
+		} else {
+			// else return statically configured providers
+			for _, provider := range options.Providers {
+				providerResult := struct {
+					ID   string `json:"id"`
+					Name string `json:"name,omitempty"`
+				}{
+					ID:   provider.ID,
+					Name: "", // Name is unavailable in the statically configured providers
+				}
+				providers = append(providers, providerResult)
+			}
+		}
+
+		return tpmodels.ProvidersForTenantGetResponse{
+			OK: &struct {
+				Providers []struct {
+					ID   string `json:"id"`
+					Name string `json:"name,omitempty"`
+				} `json:"providers"`
+			}{
+				Providers: providers,
+			},
+		}, nil
 	}
 
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClient, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
 		authRedirect, err := provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
 		if err != nil {
 			return tpmodels.AuthorisationUrlGETResponse{}, err
@@ -48,7 +95,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClient, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+	signInUpPOST := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		var oAuthTokens map[string]interface{} = nil
 		var err error
 

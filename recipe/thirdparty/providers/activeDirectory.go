@@ -28,28 +28,14 @@ func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams == nil {
-		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
-	}
-
-	if input.Config.AuthorizationEndpointQueryParams["response_type"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["response_type"] = "code"
-	}
-	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
-	}
-	if input.Config.AuthorizationEndpointQueryParams["access_type"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfig
-		provider.GetConfig = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClient, error) {
+		oGetConfig := provider.GetConfigForClientType
+		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, input, userContext)
 			if err != nil {
-				return tpmodels.ProviderConfigForClient{}, err
+				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
 			if config.OIDCDiscoveryEndpoint == "" {

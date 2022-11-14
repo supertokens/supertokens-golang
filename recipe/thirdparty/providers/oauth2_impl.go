@@ -11,12 +11,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const scopeParameter = "scope"
-const scopeSeparator = " "
-
-func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClient, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
 	queryParams := map[string]interface{}{
-		scopeParameter:  strings.Join(config.Scope, scopeSeparator),
+		"scope":         strings.Join(config.Scope, " "),
 		"client_id":     config.ClientID,
 		"redirect_uri":  redirectURIOnProviderDashboard,
 		"response_type": "code",
@@ -61,7 +58,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClient,
 	}, nil
 }
 
-func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClient, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
 	tokenAPIURL := config.TokenEndpoint
 	accessTokenAPIParams := map[string]interface{}{
 		"client_id":    config.ClientID,
@@ -99,7 +96,7 @@ func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClie
 	return oAuthTokens, nil
 }
 
-func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClient, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 	accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 	idToken, idTokenOk := oAuthTokens["id_token"].(string)
 
@@ -121,12 +118,37 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClient, oAuthTokens tpm
 			return tpmodels.TypeUserInfo{}, errors.New("invalid id_token supplied")
 		}
 		rawUserInfoFromProvider.FromIdTokenPayload = map[string]interface{}(claims)
+		if config.ValidateIdTokenPayload != nil {
+			err := config.ValidateIdTokenPayload(rawUserInfoFromProvider.FromIdTokenPayload, config)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+		}
 	}
+
 	if accessTokenOk && config.UserInfoEndpoint != "" {
 		headers := map[string]string{
 			"Authorization": "Bearer " + accessToken,
 		}
-		userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, nil, headers)
+		queryParams := map[string]interface{}{}
+
+		for k, v := range config.UserInfoEndpointHeaders {
+			if v == nil {
+				delete(headers, k)
+			} else {
+				headers[k] = fmt.Sprint(v)
+			}
+		}
+
+		for k, v := range config.UserInfoEndpointQueryParams {
+			if v == nil {
+				delete(queryParams, k)
+			} else {
+				queryParams[k] = v
+			}
+		}
+
+		userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, queryParams, headers)
 		rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
 
 		if err != nil {
@@ -140,7 +162,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClient, oAuthTokens tpm
 	}
 
 	if config.TenantId != "" {
-		userInfoResult.ThirdPartyUserId += "|" + config.TenantId // TODO delimiter
+		userInfoResult.ThirdPartyUserId += "|" + config.TenantId
 	}
 
 	return tpmodels.TypeUserInfo{
@@ -150,18 +172,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClient, oAuthTokens tpm
 	}, nil
 }
 
-func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClient, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
-
-	if config.ValidateIdTokenPayload != nil {
-		ok, err := config.ValidateIdTokenPayload(rawUserInfoResponse.FromIdTokenPayload, config)
-		if err != nil {
-			return tpmodels.TypeSupertokensUserInfo{}, err
-		}
-		if !ok {
-			return tpmodels.TypeSupertokensUserInfo{}, errors.New("id_token payload validation failed")
-		}
-	}
-
+func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClientType, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
 	result := tpmodels.TypeSupertokensUserInfo{}
 	if config.UserInfoMap.FromIdTokenPayload.UserId != "" {
 		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.UserId))
@@ -171,19 +182,21 @@ func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.Provider
 		return tpmodels.TypeSupertokensUserInfo{}, errors.New("userId field is not specified in the UserInfoMap config")
 	}
 
+	var email string
 	if config.UserInfoMap.FromIdTokenPayload.Email != "" {
-		result.EmailInfo = &tpmodels.EmailStruct{
-			ID: fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.Email)),
-		}
+		email = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.Email))
 	} else if config.UserInfoMap.FromUserInfoAPI.Email != "" {
-		result.EmailInfo = &tpmodels.EmailStruct{
-			ID: fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.Email)),
-		}
+		email = fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.Email))
 	} else {
 		result.EmailInfo = nil
 	}
 
-	if result.EmailInfo != nil {
+	if email != "" {
+		result.EmailInfo = &tpmodels.EmailStruct{
+			ID:         email,
+			IsVerified: false,
+		}
+
 		if config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
 			if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(bool); ok {
 				result.EmailInfo.IsVerified = emailVerified

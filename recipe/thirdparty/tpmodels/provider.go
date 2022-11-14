@@ -20,7 +20,7 @@ type ProviderConfig struct {
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClient) (bool, error)
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
 	TenantId                         string
 }
 
@@ -32,8 +32,7 @@ type ProviderClientConfig struct {
 	AdditionalConfig map[string]interface{}
 }
 
-type ProviderConfigForClient struct {
-	ClientType       string // optional
+type ProviderConfigForClientType struct {
 	ClientID         string
 	ClientSecret     string
 	Scope            []string
@@ -43,21 +42,23 @@ type ProviderConfigForClient struct {
 	AuthorizationEndpointQueryParams map[string]interface{}
 	TokenEndpoint                    string
 	TokenParams                      map[string]interface{}
+	UserInfoEndpointQueryParams      map[string]interface{}
+	UserInfoEndpointHeaders          map[string]interface{}
 	ForcePKCE                        bool // Providers like twitter expects PKCE to be used along with secret
 	UserInfoEndpoint                 string
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClient) (bool, error)
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
 	TenantId                         string
 }
 
 type TypeProvider struct {
 	ID string
 
-	GetProviderConfig              func(tenantId *string, userContext supertokens.UserContext) (ProviderConfig, error)
-	GetConfig                      func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClient, error)
-	GetAuthorisationRedirectURL    func(config ProviderConfigForClient, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens func(config ProviderConfigForClient, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                    func(config ProviderConfigForClient, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+	GetAllClientTypeConfigForTenant func(tenantId *string, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
+	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
