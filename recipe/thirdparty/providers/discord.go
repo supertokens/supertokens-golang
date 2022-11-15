@@ -17,6 +17,7 @@ package providers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -77,10 +78,11 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				return result, err
 			}
 
-			if config.AdditionalConfig != nil && config.AdditionalConfig["requireEmail"] == true {
+			if config.AdditionalConfig == nil || config.AdditionalConfig["requireEmail"] == false {
 				if result.Email == nil {
+					thirdPartyUserId := strings.ReplaceAll(result.ThirdPartyUserId, "|", ".tenant-")
 					result.Email = &tpmodels.EmailStruct{
-						ID:         fmt.Sprintf("%s@fakediscorduser.com", result.ThirdPartyUserId),
+						ID:         fmt.Sprintf("%s@fakediscorduser.com", thirdPartyUserId),
 						IsVerified: true,
 					}
 				}

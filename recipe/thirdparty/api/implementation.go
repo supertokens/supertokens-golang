@@ -54,7 +54,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 					Name string `json:"name,omitempty"`
 				}{
 					ID:   config.ThirdPartyId,
-					Name: config.Config.FrontendInfo.Name,
+					Name: config.Config.Name,
 				}
 			}
 

@@ -79,7 +79,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 	}
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options, userContext)
+	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options.RecipeImplementation, userContext)
 	if err != nil {
 		return err
 	}

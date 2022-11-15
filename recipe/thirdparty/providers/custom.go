@@ -27,14 +27,24 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		ID: input.ThirdPartyID,
 	}
 
-	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
+		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
+	}
+	if input.Config.UserInfoMap.FromIdTokenPayload.Email == "" {
+		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
+	}
+	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
+		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email_verified"
+	}
+
+	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		if tenantId == nil {
 			return input.Config, nil
 		}
 
 		input.Config.TenantId = *tenantId
 
-		configs, err := (*options.RecipeImplementation.FetchTenantIdConfigMapping)(input.ThirdPartyID, *tenantId, userContext)
+		configs, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, *tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProviderConfig{}, err
 		}
@@ -44,49 +54,77 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			return input.Config, err
 		}
 
-		clientConfigs := []tpmodels.ProviderClientConfig{}
-		copy(clientConfigs, input.Config.Clients)
-
-		for _, config := range configs.OK.Config.Clients {
-			found := false
-			for i := range clientConfigs {
-				if clientConfigs[i].ClientType == config.ClientType {
-					clientConfigs[i].ClientID = config.ClientID
-					clientConfigs[i].ClientSecret = config.ClientSecret
-					clientConfigs[i].Scope = config.Scope
-					clientConfigs[i].AdditionalConfig = config.AdditionalConfig
-					found = true
-					break
-				}
-			}
-			if !found {
-				clientConfigs = append(clientConfigs, tpmodels.ProviderClientConfig{
-					ClientType:       config.ClientType,
-					ClientID:         config.ClientID,
-					ClientSecret:     config.ClientSecret,
-					Scope:            config.Scope,
-					AdditionalConfig: config.AdditionalConfig,
-				})
+		// We use the client configs frpm the db and ignore the static
+		clientConfigsFromDb := make([]tpmodels.ProviderClientConfig, len(configs.OK.Config.Clients))
+		for i, config := range configs.OK.Config.Clients {
+			clientConfigsFromDb[i] = tpmodels.ProviderClientConfig{
+				ClientType:       config.ClientType,
+				ClientID:         config.ClientID,
+				ClientSecret:     config.ClientSecret,
+				Scope:            config.Scope,
+				AdditionalConfig: config.AdditionalConfig,
 			}
 		}
 
-		// Copy provider config
-		config := tpmodels.ProviderConfig{
-			Clients:                          clientConfigs,
-			AuthorizationEndpoint:            configs.OK.Config.AuthorizationEndpoint,
-			AuthorizationEndpointQueryParams: configs.OK.Config.AuthorizationEndpointQueryParams,
-			TokenEndpoint:                    configs.OK.Config.TokenEndpoint,
-			TokenParams:                      configs.OK.Config.TokenParams,
-			ForcePKCE:                        configs.OK.Config.ForcePKCE,
-			UserInfoEndpoint:                 configs.OK.Config.UserInfoEndpoint,
-			UserInfoEndpointQueryParams:      configs.OK.Config.UserInfoEndpointQueryParams,
-			UserInfoEndpointHeaders:          configs.OK.Config.UserInfoEndpointHeaders,
-			JwksURI:                          configs.OK.Config.JwksURI,
-			OIDCDiscoveryEndpoint:            configs.OK.Config.OIDCDiscoveryEndpoint,
-			UserInfoMap:                      configs.OK.Config.UserInfoMap,
-			TenantId:                         *tenantId,
+		// Merge the config from DB
+		config := input.Config
+		config.Clients = clientConfigsFromDb
 
-			ValidateIdTokenPayload: input.Config.ValidateIdTokenPayload, // We may want to use this from static config
+		if configs.OK.Config.AuthorizationEndpoint != "" {
+			config.AuthorizationEndpoint = configs.OK.Config.AuthorizationEndpoint
+		}
+		if configs.OK.Config.AuthorizationEndpointQueryParams != nil {
+			config.AuthorizationEndpointQueryParams = configs.OK.Config.AuthorizationEndpointQueryParams
+		}
+		if configs.OK.Config.TokenEndpoint != "" {
+			config.TokenEndpoint = configs.OK.Config.TokenEndpoint
+		}
+		if configs.OK.Config.TokenEndpointBodyParams != nil {
+			config.TokenEndpointBodyParams = configs.OK.Config.TokenEndpointBodyParams
+		}
+		if configs.OK.Config.ForcePKCE != nil {
+			config.ForcePKCE = configs.OK.Config.ForcePKCE
+		}
+		if configs.OK.Config.UserInfoEndpoint != "" {
+			config.UserInfoEndpoint = configs.OK.Config.UserInfoEndpoint
+		}
+		if configs.OK.Config.UserInfoEndpointQueryParams != nil {
+			config.UserInfoEndpointQueryParams = configs.OK.Config.UserInfoEndpointQueryParams
+		}
+		if configs.OK.Config.UserInfoEndpointHeaders != nil {
+			config.UserInfoEndpointHeaders = configs.OK.Config.UserInfoEndpointHeaders
+		}
+		if configs.OK.Config.JwksURI != "" {
+			config.JwksURI = configs.OK.Config.JwksURI
+		}
+		if configs.OK.Config.OIDCDiscoveryEndpoint != "" {
+			config.OIDCDiscoveryEndpoint = configs.OK.Config.OIDCDiscoveryEndpoint
+		}
+		if configs.OK.Config.TenantId != "" {
+			config.TenantId = configs.OK.Config.TenantId
+		}
+		if configs.OK.Config.UserInfoMap.FromIdTokenPayload.UserId != "" {
+			config.UserInfoMap.FromIdTokenPayload.UserId = configs.OK.Config.UserInfoMap.FromIdTokenPayload.UserId
+		}
+		if configs.OK.Config.UserInfoMap.FromIdTokenPayload.Email != "" {
+			config.UserInfoMap.FromIdTokenPayload.Email = configs.OK.Config.UserInfoMap.FromIdTokenPayload.Email
+		}
+		if configs.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
+			config.UserInfoMap.FromIdTokenPayload.EmailVerified = configs.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified
+		}
+
+		if configs.OK.Config.UserInfoMap.FromUserInfoAPI.UserId != "" {
+			config.UserInfoMap.FromUserInfoAPI.UserId = configs.OK.Config.UserInfoMap.FromUserInfoAPI.UserId
+		}
+		if configs.OK.Config.UserInfoMap.FromUserInfoAPI.Email != "" {
+			config.UserInfoMap.FromUserInfoAPI.Email = configs.OK.Config.UserInfoMap.FromUserInfoAPI.Email
+		}
+		if configs.OK.Config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
+			config.UserInfoMap.FromUserInfoAPI.EmailVerified = configs.OK.Config.UserInfoMap.FromUserInfoAPI.EmailVerified
+		}
+
+		if configs.OK.Config.Name != "" {
+			config.Name = configs.OK.Config.Name
 		}
 
 		return config, nil

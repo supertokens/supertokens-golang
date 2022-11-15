@@ -24,6 +24,7 @@
 -   [ ] Changes to the version if needed
     -   In `supertokens/constants.go > version variable`
 -   [ ] Had installed and ran the pre-commit hook
+-   [ ] If new thirdparty provider is added, update switch statement in `recipe/thirdparty/api/utils.go` file, `createProvider` function.
 -   [ ] Issue this PR against the latest non released version branch.
     -   To know which one it is, run find the latest released tag (`git tag`) in the format `vX.Y.Z`, and then find the latest branch (`git branch --all`) whose `X.Y` is greater than the latest released tag.
     -   If no such branch exists, then create one from the latest released branch.

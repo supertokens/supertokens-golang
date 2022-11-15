@@ -27,17 +27,6 @@ func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
 	}
 
-	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
-	}
-	if input.Config.UserInfoMap.FromIdTokenPayload.Email == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
-	}
-
-	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
-	}
-
 	if input.Config.AuthorizationEndpointQueryParams == nil {
 		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
 	}

@@ -80,7 +80,7 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			}
 			return tpmodels.TypeUserInfo{
 				ThirdPartyUserId:        userInfoResult.ThirdPartyUserId,
-				Email:                   userInfoResult.EmailInfo,
+				Email:                   userInfoResult.Email,
 				RawUserInfoFromProvider: rawUserInfoResponseFromProvider,
 			}, nil
 		}
@@ -94,12 +94,12 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return NewProvider(input)
 }
 
-func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
+func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeUserInfo, error) {
 	if rawUserInfoResponse.FromUserInfoAPI == nil {
-		return tpmodels.TypeSupertokensUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
+		return tpmodels.TypeUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
 	}
 
-	result := tpmodels.TypeSupertokensUserInfo{
+	result := tpmodels.TypeUserInfo{
 		ThirdPartyUserId: fmt.Sprint(rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})["id"]),
 	}
 
@@ -108,7 +108,7 @@ func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse 
 		emailInfoMap := info.(map[string]interface{})
 		if emailInfoMap["primary"].(bool) {
 			verified, verifiedOk := emailInfoMap["verified"].(bool)
-			result.EmailInfo = &tpmodels.EmailStruct{
+			result.Email = &tpmodels.EmailStruct{
 				ID:         emailInfoMap["email"].(string),
 				IsVerified: verified && verifiedOk,
 			}

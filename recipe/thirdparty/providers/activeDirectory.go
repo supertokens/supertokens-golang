@@ -27,13 +27,6 @@ func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
 	}
 
-	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
-	}
-	if input.Config.UserInfoMap.FromIdTokenPayload.Email == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
@@ -53,15 +46,15 @@ func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			}
 
 			if config.ClientSecret == "" && config.AdditionalConfig["certificate"] != nil {
-				if config.TokenParams == nil {
-					config.TokenParams = map[string]interface{}{}
+				if config.TokenEndpointBodyParams == nil {
+					config.TokenEndpointBodyParams = map[string]interface{}{}
 				}
-				config.TokenParams["client_assertion_type"] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+				config.TokenEndpointBodyParams["client_assertion_type"] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 				ca, err := getADClientAssertion(config)
 				if err != nil {
 					return tpmodels.ProviderConfigForClientType{}, err
 				}
-				config.TokenParams["client_assertion"] = ca
+				config.TokenEndpointBodyParams["client_assertion"] = ca
 			}
 
 			return config, err

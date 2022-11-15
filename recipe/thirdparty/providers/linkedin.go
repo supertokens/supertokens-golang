@@ -22,16 +22,6 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.TokenEndpoint = "https://www.linkedin.com/oauth/v2/accessToken"
 	}
 
-	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
-	}
-	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
-	}
-	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
@@ -87,9 +77,11 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				rawUserInfoFromProvider.FromUserInfoAPI[k] = v
 			}
 
-			userInfoResult, err := oauth2_getSupertokensUserInfoResultFromRawUserInfo(config, rawUserInfoFromProvider)
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
+			userInfoResult := tpmodels.TypeUserInfo{
+				ThirdPartyUserId: rawUserInfoFromProvider.FromUserInfoAPI["id"].(string),
+				Email: &tpmodels.EmailStruct{
+					ID: rawUserInfoFromProvider.FromUserInfoAPI["email"].(string),
+				},
 			}
 
 			if config.TenantId != "" {
@@ -98,7 +90,7 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 			return tpmodels.TypeUserInfo{
 				ThirdPartyUserId:        userInfoResult.ThirdPartyUserId,
-				Email:                   userInfoResult.EmailInfo,
+				Email:                   userInfoResult.Email,
 				RawUserInfoFromProvider: rawUserInfoFromProvider,
 			}, nil
 		}

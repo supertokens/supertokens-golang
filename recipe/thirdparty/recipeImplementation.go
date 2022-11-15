@@ -123,7 +123,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 	}
 
 	// Multi-tenancy
-	createOrUpdateTenantIdConfigMapping := func(thirdPartyId string, tenantId string, config tpmodels.TenantConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
+	createOrUpdateTenantIdConfigMapping := func(thirdPartyId string, tenantId string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
 		// TODO impl
 		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, nil
 	}

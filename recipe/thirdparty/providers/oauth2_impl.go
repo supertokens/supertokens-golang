@@ -19,7 +19,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 		"response_type": "code",
 	}
 	var pkceCodeVerifier *string
-	if config.ClientSecret == "" || config.ForcePKCE {
+	if config.ClientSecret == "" || (config.ForcePKCE != nil && *config.ForcePKCE) {
 		challenge, verifier, err := generateCodeChallengeS256(32)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
@@ -73,7 +73,7 @@ func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClie
 		accessTokenAPIParams["code_verifier"] = *redirectURIInfo.PKCECodeVerifier
 	}
 
-	for k, v := range config.TokenParams {
+	for k, v := range config.TokenEndpointBodyParams {
 		if v == nil {
 			delete(accessTokenAPIParams, k)
 		} else {
@@ -167,19 +167,19 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 
 	return tpmodels.TypeUserInfo{
 		ThirdPartyUserId:        userInfoResult.ThirdPartyUserId,
-		Email:                   userInfoResult.EmailInfo,
+		Email:                   userInfoResult.Email,
 		RawUserInfoFromProvider: rawUserInfoFromProvider,
 	}, nil
 }
 
-func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClientType, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeSupertokensUserInfo, error) {
-	result := tpmodels.TypeSupertokensUserInfo{}
+func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClientType, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeUserInfo, error) {
+	result := tpmodels.TypeUserInfo{}
 	if config.UserInfoMap.FromIdTokenPayload.UserId != "" {
 		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.UserId))
 	} else if config.UserInfoMap.FromUserInfoAPI.UserId != "" {
 		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.UserId))
 	} else {
-		return tpmodels.TypeSupertokensUserInfo{}, errors.New("userId field is not specified in the UserInfoMap config")
+		return tpmodels.TypeUserInfo{}, errors.New("userId field is not specified in the UserInfoMap config")
 	}
 
 	var email string
@@ -188,26 +188,26 @@ func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.Provider
 	} else if config.UserInfoMap.FromUserInfoAPI.Email != "" {
 		email = fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.Email))
 	} else {
-		result.EmailInfo = nil
+		result.Email = nil
 	}
 
 	if email != "" {
-		result.EmailInfo = &tpmodels.EmailStruct{
+		result.Email = &tpmodels.EmailStruct{
 			ID:         email,
 			IsVerified: false,
 		}
 
 		if config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
 			if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(bool); ok {
-				result.EmailInfo.IsVerified = emailVerified
+				result.Email.IsVerified = emailVerified
 			} else if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(string); ok {
-				result.EmailInfo.IsVerified = emailVerified == "true"
+				result.Email.IsVerified = emailVerified == "true"
 			}
 		} else if config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
 			if emailVerified, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified).(bool); ok {
-				result.EmailInfo.IsVerified = emailVerified
+				result.Email.IsVerified = emailVerified
 			} else if emailVerified, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified).(string); ok {
-				result.EmailInfo.IsVerified = emailVerified == "true"
+				result.Email.IsVerified = emailVerified == "true"
 			}
 		}
 	}

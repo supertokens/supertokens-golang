@@ -27,11 +27,6 @@ type TypeRawUserInfoFromProvider struct {
 	FromUserInfoAPI    map[string]interface{}
 }
 
-type TypeSupertokensUserInfo struct {
-	ThirdPartyUserId string
-	EmailInfo        *EmailStruct
-}
-
 type TypeUserInfo struct {
 	ThirdPartyUserId        string
 	Email                   *EmailStruct
@@ -108,15 +103,21 @@ type OverrideStruct struct {
 	APIs      func(originalImplementation APIInterface) APIInterface
 }
 
-type TenantConfig struct {
-	Clients []TenantClientConfig `json:"clients"`
+type ProviderInput struct {
+	ThirdPartyID string
+	Config       ProviderConfig
+	Override     func(provider *TypeProvider) *TypeProvider
+}
+
+type ProviderConfig struct {
+	Clients []ProviderClientConfig `json:"clients"`
 
 	// Fields below are optional for built-in providers
 	AuthorizationEndpoint            string                 `json:"authorizationEndpoint,omitempty"`
 	AuthorizationEndpointQueryParams map[string]interface{} `json:"authorizationEndpointQueryParams,omitempty"`
 	TokenEndpoint                    string                 `json:"tokenEndpoint,omitempty"`
-	TokenParams                      map[string]interface{} `json:"tokenParams,omitempty"`
-	ForcePKCE                        bool                   `json:"forcePKCE,omitempty"`
+	TokenEndpointBodyParams          map[string]interface{} `json:"tokenEndpointBodyParams,omitempty"`
+	ForcePKCE                        *bool                  `json:"forcePKCE,omitempty"`
 	UserInfoEndpoint                 string                 `json:"userInfoEndpoint,omitempty"`
 	UserInfoEndpointQueryParams      map[string]interface{} `json:"userInfoEndpointQueryParams,omitempty"`
 	UserInfoEndpointHeaders          map[string]interface{} `json:"userInfoEndpointHeaders,omitempty"`
@@ -124,15 +125,47 @@ type TenantConfig struct {
 	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint,omitempty"`
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
 
-	FrontendInfo struct {
-		Name string `json:"name"`
-	} `json:"frontendInfo"`
+	Name string `json:"name"`
+
+	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
+	TenantId               string
 }
 
-type TenantClientConfig struct {
-	ClientType       string                 // optional
+type ProviderClientConfig struct {
+	ClientType       string                 `json:"clientType,omitempty"` // optional
 	ClientID         string                 `json:"clientId"`
 	ClientSecret     string                 `json:"clientSecret"`
 	Scope            []string               `json:"scope"`
 	AdditionalConfig map[string]interface{} `json:"additionalConfig"`
+}
+
+type ProviderConfigForClientType struct {
+	ClientID         string
+	ClientSecret     string
+	Scope            []string
+	AdditionalConfig map[string]interface{}
+
+	AuthorizationEndpoint            string
+	AuthorizationEndpointQueryParams map[string]interface{}
+	TokenEndpoint                    string
+	TokenEndpointBodyParams          map[string]interface{}
+	ForcePKCE                        *bool // Providers like twitter expects PKCE to be used along with secret
+	UserInfoEndpoint                 string
+	UserInfoEndpointQueryParams      map[string]interface{}
+	UserInfoEndpointHeaders          map[string]interface{}
+	JwksURI                          string
+	OIDCDiscoveryEndpoint            string
+	UserInfoMap                      TypeUserInfoMap
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
+	TenantId                         string
+}
+
+type TypeProvider struct {
+	ID string
+
+	GetAllClientTypeConfigForTenant func(tenantId *string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
+	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }

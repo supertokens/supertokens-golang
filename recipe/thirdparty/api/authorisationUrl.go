@@ -50,7 +50,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	}
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options, userContext)
+	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options.RecipeImplementation, userContext)
 	if err != nil {
 		return err
 	}
