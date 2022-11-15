@@ -1,8 +1,13 @@
 package providers
 
 import (
+	"crypto/x509"
+	"encoding/pem"
+	"errors"
 	"fmt"
+	"time"
 
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -49,12 +54,12 @@ func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.Scope = []string{"openid", "email"}
 			}
 
-			if config.ClientSecret == "" && config.AdditionalConfig["certificate"] != nil {
+			if config.ClientSecret == "" && config.AdditionalConfig["privateKey"] != nil {
 				if config.TokenParams == nil {
 					config.TokenParams = map[string]interface{}{}
 				}
 				config.TokenParams["client_assertion_type"] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
-				ca, err := getADClientAssertion(config)
+				ca, err := getOktaClientAssertion(config)
 				if err != nil {
 					return tpmodels.ProviderConfigForClientType{}, err
 				}
@@ -71,4 +76,36 @@ func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	}
 
 	return NewProvider(input)
+}
+
+func getOktaClientAssertion(config tpmodels.ProviderConfigForClientType) (string, error) {
+	claims := jwt.StandardClaims{
+		ExpiresAt: time.Now().Unix() + 3600,
+		IssuedAt:  time.Now().Unix(),
+		NotBefore: time.Now().Unix(),
+		Audience:  fmt.Sprintf("https://%s.okta.com/oauth2/v1/token", config.AdditionalConfig["oktaDomain"]),
+		Subject:   getActualClientIdFromDevelopmentClientId(config.ClientID),
+		Issuer:    getActualClientIdFromDevelopmentClientId(config.ClientID),
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodRS256, claims)
+	token.Header["alg"] = "RS256"
+
+	privateKey := config.AdditionalConfig["privateKey"].(string)
+
+	block, _ := pem.Decode([]byte(privateKey))
+	// Check if it's a private key
+	if block == nil || block.Type != "PRIVATE KEY" {
+		return "", errors.New("failed to decode PEM block containing private key")
+	}
+	// Get the encoded bytes
+	x509Encoded := block.Bytes
+
+	// Now you need an instance of *ecdsa.PrivateKey
+	parsedKey, err := x509.ParsePKCS8PrivateKey(x509Encoded) // EDIT to x509Encoded from p8bytes
+	if err != nil {
+		return "", err
+	}
+
+	return token.SignedString(parsedKey)
 }
