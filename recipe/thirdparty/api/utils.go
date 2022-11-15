@@ -47,7 +47,7 @@ func createProvider(thirdPartyId string) tpmodels.TypeProvider {
 	case "google-workspaces":
 		return providers.GoogleWorkspaces(tpmodels.ProviderInput{})
 	case "okta":
-		// TODO
+		return providers.Okta(tpmodels.ProviderInput{})
 	case "linkedin":
 		// TODO
 	case "boxyhq":
@@ -96,6 +96,10 @@ var oidcInfoMap = map[string]map[string]interface{}{}
 var oidcInfoMapLock = sync.Mutex{}
 
 func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
+	if issuer[len(issuer)-1] == '/' {
+		issuer = issuer[:len(issuer)-1]
+	}
+
 	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
 		return oidcInfo, nil
 	}

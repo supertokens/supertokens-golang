@@ -101,6 +101,10 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.GoogleWorkspaces(input)
 }
 
+func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Okta(input)
+}
+
 func CustomProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.NewProvider(input)
 }
