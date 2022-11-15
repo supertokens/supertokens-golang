@@ -18,6 +18,7 @@ package providers
 import (
 	"crypto/ecdsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"time"
@@ -80,6 +81,40 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			}
 
 			return config, err
+		}
+
+		oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens
+		provider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			res, err := oExchangeAuthCodeForOAuthTokens(config, redirectURIInfo, userContext)
+			if err != nil {
+				return tpmodels.TypeOAuthTokens{}, err
+			}
+
+			if user, ok := redirectURIInfo.RedirectURIQueryParams["user"].(string); ok {
+				userInfo := map[string]interface{}{}
+				err := json.Unmarshal([]byte(user), &userInfo)
+				if err != nil {
+					res["user"] = user
+				} else {
+					res["user"] = userInfo
+				}
+			}
+
+			return res, nil
+		}
+
+		oGetUserInfo := provider.GetUserInfo
+		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			res, err := oGetUserInfo(config, oAuthTokens, userContext)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+
+			if user, ok := oAuthTokens["user"]; ok {
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = user
+			}
+
+			return res, nil
 		}
 
 		if oOverride != nil {
