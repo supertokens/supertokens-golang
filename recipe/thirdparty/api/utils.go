@@ -49,7 +49,7 @@ func createProvider(thirdPartyId string) tpmodels.TypeProvider {
 	case "okta":
 		return providers.Okta(tpmodels.ProviderInput{})
 	case "linkedin":
-		// TODO
+		return providers.Linkedin(tpmodels.ProviderInput{})
 	case "boxyhq":
 		// TODO
 	}
