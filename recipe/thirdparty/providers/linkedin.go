@@ -22,10 +22,6 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.TokenEndpoint = "https://www.linkedin.com/oauth/v2/accessToken"
 	}
 
-	if input.Config.UserInfoEndpoint == "" {
-		input.Config.UserInfoEndpoint = "https://api.linkedin.com/v2/me"
-	}
-
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
 		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
 	}
@@ -34,17 +30,6 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	}
 	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
 		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
-	}
-
-	if input.Config.AuthorizationEndpointQueryParams == nil {
-		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
-	}
-
-	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
-	}
-	if input.Config.AuthorizationEndpointQueryParams["access_type"] == nil {
-		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
 	}
 
 	oOverride := input.Override
@@ -74,7 +59,7 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				"Authorization": "Bearer " + accessToken,
 			}
 			rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{}
-			userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, nil, headers)
+			userInfoFromAccessToken, err := doGetRequest("https://api.linkedin.com/v2/me", nil, headers)
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
