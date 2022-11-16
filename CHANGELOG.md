@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 - Fixes go fiber to handle handler chaining correctly with verifySession.
+- Added test to check JWT contains updated value when MergeIntoAccessTokenPayload is called.
 
 ## [0.9.7] - 2022-10-20
 - Updated Frontend integration test server for angular tests
