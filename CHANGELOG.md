@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.9.8] - 2022-11-16
 - Fixes go fiber to handle handler chaining correctly with verifySession.
 - Added test to check JWT contains updated value when MergeIntoAccessTokenPayload is called.
+- Adds updating of session claims in email verification token generation API in case the session claims are outdated.
 
 ## [0.9.7] - 2022-10-20
 - Updated Frontend integration test server for angular tests

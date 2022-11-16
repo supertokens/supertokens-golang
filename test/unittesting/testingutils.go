@@ -258,6 +258,8 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	if len(antiCsrf) > 0 {
 		antiCsrfVal = antiCsrf[0]
 	}
+	frontToken := res.Header.Get("front-token")
+
 	return map[string]string{
 		"antiCsrf":                 antiCsrfVal,
 		"sAccessToken":             accessToken,
@@ -273,6 +275,7 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 		"accessTokenExpiry":        accessTokenExpiry,
 		"accessTokenDomain":        accessTokenDomain,
 		"accessTokenHttpOnly":      accessTokenHttpOnly,
+		"frontToken":               frontToken,
 	}
 }
 
