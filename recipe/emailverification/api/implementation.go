@@ -102,10 +102,17 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 
 		if response.EmailAlreadyVerifiedError != nil {
+			if sessionContainer.GetClaimValue(evclaims.EmailVerificationClaim) != true {
+				sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
+			}
 			supertokens.LogDebugMessage(fmt.Sprintf("Email verification email not sent to %s because it is already verified", email.OK.Email))
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
+		}
+
+		if sessionContainer.GetClaimValue(evclaims.EmailVerificationClaim) != false {
+			sessionContainer.FetchAndSetClaimWithContext(evclaims.EmailVerificationClaim, userContext)
 		}
 
 		user := evmodels.User{
