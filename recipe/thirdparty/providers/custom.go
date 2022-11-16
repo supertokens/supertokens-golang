@@ -34,7 +34,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email"
 	}
 	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
-		input.Config.UserInfoMap.FromIdTokenPayload.Email = "email_verified"
+		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
 	}
 
 	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {

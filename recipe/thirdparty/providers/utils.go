@@ -142,12 +142,17 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 }
 
 // User map utils
-func accessField(obj interface{}, key string) interface{} {
+func accessField(obj interface{}, key string) (interface{}, bool) {
 	keyParts := strings.Split(key, ".")
+	var ok bool
 	for _, k := range keyParts {
-		obj = obj.(map[string]interface{})[k]
+		obj, ok = obj.(map[string]interface{})[k]
+
+		if !ok {
+			return nil, false
+		}
 	}
-	return obj
+	return obj, ok
 }
 
 var DevOauthClientIds = [...]string{

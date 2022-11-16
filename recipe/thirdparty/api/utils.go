@@ -96,9 +96,21 @@ var oidcInfoMap = map[string]map[string]interface{}{}
 var oidcInfoMapLock = sync.Mutex{}
 
 func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
-	if issuer[len(issuer)-1] == '/' {
-		issuer = issuer[:len(issuer)-1]
+	normalizedDomain, err := supertokens.NewNormalisedURLDomain(issuer)
+	if err != nil {
+		return nil, err
 	}
+	normalizedPath, err := supertokens.NewNormalisedURLPath(issuer)
+	if err != nil {
+		return nil, err
+	}
+
+	openIdConfigPath, err := supertokens.NewNormalisedURLPath("/.well-known/openid-configuration")
+	if err != nil {
+		return nil, err
+	}
+
+	normalizedPath = normalizedPath.AppendPath(openIdConfigPath)
 
 	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
 		return oidcInfo, nil
@@ -112,7 +124,7 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 		return oidcInfo, nil
 	}
 
-	oidcInfo, err := doGetRequest(issuer+"/.well-known/openid-configuration", nil, nil)
+	oidcInfo, err := doGetRequest(normalizedDomain.GetAsStringDangerous()+normalizedPath.GetAsStringDangerous(), nil, nil)
 	if err != nil {
 		return nil, err
 	}

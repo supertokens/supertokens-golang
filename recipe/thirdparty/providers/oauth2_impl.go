@@ -174,21 +174,35 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 
 func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.ProviderConfigForClientType, rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeUserInfo, error) {
 	result := tpmodels.TypeUserInfo{}
+
 	if config.UserInfoMap.FromIdTokenPayload.UserId != "" {
-		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.UserId))
-	} else if config.UserInfoMap.FromUserInfoAPI.UserId != "" {
-		result.ThirdPartyUserId = fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.UserId))
-	} else {
-		return tpmodels.TypeUserInfo{}, errors.New("userId field is not specified in the UserInfoMap config")
+		if userId, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.UserId); ok {
+			result.ThirdPartyUserId = fmt.Sprint(userId)
+		}
+	}
+
+	if config.UserInfoMap.FromIdTokenPayload.UserId != "" {
+		if userId, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.UserId); ok {
+			result.ThirdPartyUserId = fmt.Sprint(userId)
+		}
+	}
+
+	if result.ThirdPartyUserId == "" {
+		return result, errors.New("third party user id is missing")
 	}
 
 	var email string
+
+	if config.UserInfoMap.FromUserInfoAPI.Email != "" {
+		if emailVal, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.Email); ok {
+			email = fmt.Sprint(emailVal)
+		}
+	}
+
 	if config.UserInfoMap.FromIdTokenPayload.Email != "" {
-		email = fmt.Sprint(accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.Email))
-	} else if config.UserInfoMap.FromUserInfoAPI.Email != "" {
-		email = fmt.Sprint(accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.Email))
-	} else {
-		result.Email = nil
+		if emailVal, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.Email); ok {
+			email = fmt.Sprint(emailVal)
+		}
 	}
 
 	if email != "" {
@@ -197,19 +211,26 @@ func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.Provider
 			IsVerified: false,
 		}
 
-		if config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
-			if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(bool); ok {
-				result.Email.IsVerified = emailVerified
-			} else if emailVerified, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified).(string); ok {
-				result.Email.IsVerified = emailVerified == "true"
-			}
-		} else if config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
-			if emailVerified, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified).(bool); ok {
-				result.Email.IsVerified = emailVerified
-			} else if emailVerified, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified).(string); ok {
-				result.Email.IsVerified = emailVerified == "true"
+		if config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
+			if emailVerifiedVal, ok := accessField(rawUserInfoResponse.FromUserInfoAPI, config.UserInfoMap.FromUserInfoAPI.EmailVerified); ok {
+				if emailVerified, ok := emailVerifiedVal.(bool); ok {
+					result.Email.IsVerified = emailVerified
+				} else if emailVerified, ok := emailVerifiedVal.(string); ok {
+					result.Email.IsVerified = emailVerified == "true"
+				}
 			}
 		}
+
+		if config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
+			if emailVerifiedVal, ok := accessField(rawUserInfoResponse.FromIdTokenPayload, config.UserInfoMap.FromIdTokenPayload.EmailVerified); ok {
+				if emailVerified, ok := emailVerifiedVal.(bool); ok {
+					result.Email.IsVerified = emailVerified
+				} else if emailVerified, ok := emailVerifiedVal.(string); ok {
+					result.Email.IsVerified = emailVerified == "true"
+				}
+			}
+		}
+
 	}
 
 	return result, nil
