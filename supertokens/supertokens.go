@@ -135,7 +135,7 @@ func sendTelemetry() {
 	}
 	exists := response["exists"].(bool)
 
-	url := "https://api.supertokens.io/0/st/telemetry"
+	url := "https://api.supertokens.com/0/st/telemetry"
 
 	data := map[string]interface{}{
 		"appName":       superTokensInstance.AppInfo.AppName,
