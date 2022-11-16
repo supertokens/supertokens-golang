@@ -48,6 +48,17 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) != cdiVersion {
+		return
+	}
 
 	mux := http.NewServeMux()
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
