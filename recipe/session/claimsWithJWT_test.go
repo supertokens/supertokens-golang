@@ -231,7 +231,7 @@ func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
 		assert.NotNil(t, sessionContainer)
 
 		sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{
-			"lol": "haha",
+			"testClaim": "newValue",
 		})
 		jwtPayloadStr := sessionContainer.GetAccessTokenPayload()["jwt"].(string)
 		jwtPayload := jwt.MapClaims{}
@@ -239,7 +239,7 @@ func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
 		_, _, err = (&jwt.Parser{}).ParseUnverified(jwtPayloadStr, jwtPayload)
 		assert.NoError(t, err)
 
-		assert.Equal(t, "haha", jwtPayload["lol"])
+		assert.Equal(t, "newValue", jwtPayload["testClaim"])
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
