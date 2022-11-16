@@ -50,8 +50,8 @@ func createProvider(thirdPartyId string) tpmodels.TypeProvider {
 		return providers.Okta(tpmodels.ProviderInput{})
 	case "linkedin":
 		return providers.Linkedin(tpmodels.ProviderInput{})
-	case "boxyhq":
-		// TODO
+	case "boxy-saml":
+		return providers.BoxySaml(tpmodels.ProviderInput{})
 	}
 
 	return providers.NewProvider(tpmodels.ProviderInput{

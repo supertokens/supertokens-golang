@@ -129,6 +129,10 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Apple(input)
 }
 
+func BoxySaml(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.BoxySaml(input)
+}
+
 func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	return providers.Discord(input)
 }
