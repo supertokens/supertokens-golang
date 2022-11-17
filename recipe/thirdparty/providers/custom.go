@@ -78,9 +78,9 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 		if tenantId == tpmodels.DefaultTenantId {
 			// if tenantId is default, merge the client configs using clientType
+			copy(configToReturn.Clients, input.Config.Clients) // Copy the static configs first
 
 			for _, clientConfigFromCore := range configFromCore.OK.Config.Clients {
-				copy(configToReturn.Clients, input.Config.Clients) // Copy the static configs first
 
 				found := false
 				for i, staticClientConfig := range configToReturn.Clients {
