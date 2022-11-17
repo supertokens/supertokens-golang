@@ -20,7 +20,7 @@ func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	}
 
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "sub"
 	}
 	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
 		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
