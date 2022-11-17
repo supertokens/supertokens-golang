@@ -57,12 +57,27 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			return input.Config, err
 		}
 
-		configToReturn := input.Config
+		// Make a copy of the original config, so that the original object is not modified
+		configToReturn := tpmodels.ProviderConfig{
+			AuthorizationEndpoint:            input.Config.AuthorizationEndpoint,
+			AuthorizationEndpointQueryParams: input.Config.AuthorizationEndpointQueryParams,
+			TokenEndpoint:                    input.Config.TokenEndpoint,
+			TokenEndpointBodyParams:          input.Config.TokenEndpointBodyParams,
+			ForcePKCE:                        input.Config.ForcePKCE,
+			UserInfoEndpoint:                 input.Config.UserInfoEndpoint,
+			UserInfoEndpointQueryParams:      input.Config.UserInfoEndpointQueryParams,
+			UserInfoEndpointHeaders:          input.Config.UserInfoEndpointHeaders,
+			JwksURI:                          input.Config.JwksURI,
+			OIDCDiscoveryEndpoint:            input.Config.OIDCDiscoveryEndpoint,
+			UserInfoMap:                      input.Config.UserInfoMap,
+			ValidateIdTokenPayload:           input.Config.ValidateIdTokenPayload,
+			Name:                             input.Config.Name,
+			TenantId:                         input.Config.TenantId,
+			Clients:                          []tpmodels.ProviderClientConfig{}, // Will be populated by the logic below
+		}
 
 		if tenantId == tpmodels.DefaultTenantId {
-			// if tenantId is default, merge the client configs
-			configToReturn.Clients = []tpmodels.ProviderClientConfig{}
-			copy(configToReturn.Clients, input.Config.Clients) // making a copy so that I don't change the original input.Config.Clients array
+			// if tenantId is default, merge the client configs using clientType
 
 			for _, clientConfigFromCore := range configFromCore.OK.Config.Clients {
 				found := false
@@ -83,7 +98,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			configToReturn.Clients = configFromCore.OK.Config.Clients
 		}
 
-		// Merge the config from Core
+		// Config from the core is a priority, set the values that are not empty/nil on the core side
 		if configFromCore.OK.Config.AuthorizationEndpoint != "" {
 			configToReturn.AuthorizationEndpoint = configFromCore.OK.Config.AuthorizationEndpoint
 		}
@@ -126,7 +141,6 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		if configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
 			configToReturn.UserInfoMap.FromIdTokenPayload.EmailVerified = configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified
 		}
-
 		if configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.UserId != "" {
 			configToReturn.UserInfoMap.FromUserInfoAPI.UserId = configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.UserId
 		}
