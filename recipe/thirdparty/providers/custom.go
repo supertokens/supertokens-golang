@@ -38,96 +38,87 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	}
 
 	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+		// Return the static config as is when tenant id is nil
 		if tenantId == nil {
 			return input.Config, nil
 		}
 
 		input.Config.TenantId = *tenantId
 
-		configs, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, *tenantId, userContext)
+		configFromCore, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, *tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProviderConfig{}, err
 		}
 
-		if configs.UnknownMappingError != nil {
+		if configFromCore.UnknownMappingError != nil {
 			// Return the static config as core doesn't have a mapping
 			return input.Config, err
 		}
 
-		// We use the client configs frpm the db and ignore the static
-		clientConfigsFromDb := make([]tpmodels.ProviderClientConfig, len(configs.OK.Config.Clients))
-		for i, config := range configs.OK.Config.Clients {
-			clientConfigsFromDb[i] = tpmodels.ProviderClientConfig{
-				ClientType:       config.ClientType,
-				ClientID:         config.ClientID,
-				ClientSecret:     config.ClientSecret,
-				Scope:            config.Scope,
-				AdditionalConfig: config.AdditionalConfig,
-			}
+		configToReturn := input.Config
+
+		// We use the client configs from the db and ignore the static
+		configToReturn.Clients = configFromCore.OK.Config.Clients
+
+		// Merge the config from Core
+		if configFromCore.OK.Config.AuthorizationEndpoint != "" {
+			configToReturn.AuthorizationEndpoint = configFromCore.OK.Config.AuthorizationEndpoint
+		}
+		if configFromCore.OK.Config.AuthorizationEndpointQueryParams != nil {
+			configToReturn.AuthorizationEndpointQueryParams = configFromCore.OK.Config.AuthorizationEndpointQueryParams
+		}
+		if configFromCore.OK.Config.TokenEndpoint != "" {
+			configToReturn.TokenEndpoint = configFromCore.OK.Config.TokenEndpoint
+		}
+		if configFromCore.OK.Config.TokenEndpointBodyParams != nil {
+			configToReturn.TokenEndpointBodyParams = configFromCore.OK.Config.TokenEndpointBodyParams
+		}
+		if configFromCore.OK.Config.ForcePKCE != nil {
+			configToReturn.ForcePKCE = configFromCore.OK.Config.ForcePKCE
+		}
+		if configFromCore.OK.Config.UserInfoEndpoint != "" {
+			configToReturn.UserInfoEndpoint = configFromCore.OK.Config.UserInfoEndpoint
+		}
+		if configFromCore.OK.Config.UserInfoEndpointQueryParams != nil {
+			configToReturn.UserInfoEndpointQueryParams = configFromCore.OK.Config.UserInfoEndpointQueryParams
+		}
+		if configFromCore.OK.Config.UserInfoEndpointHeaders != nil {
+			configToReturn.UserInfoEndpointHeaders = configFromCore.OK.Config.UserInfoEndpointHeaders
+		}
+		if configFromCore.OK.Config.JwksURI != "" {
+			configToReturn.JwksURI = configFromCore.OK.Config.JwksURI
+		}
+		if configFromCore.OK.Config.OIDCDiscoveryEndpoint != "" {
+			configToReturn.OIDCDiscoveryEndpoint = configFromCore.OK.Config.OIDCDiscoveryEndpoint
+		}
+		if configFromCore.OK.Config.TenantId != "" {
+			configToReturn.TenantId = configFromCore.OK.Config.TenantId
+		}
+		if configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.UserId != "" {
+			configToReturn.UserInfoMap.FromIdTokenPayload.UserId = configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.UserId
+		}
+		if configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.Email != "" {
+			configToReturn.UserInfoMap.FromIdTokenPayload.Email = configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.Email
+		}
+		if configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
+			configToReturn.UserInfoMap.FromIdTokenPayload.EmailVerified = configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified
 		}
 
-		// Merge the config from DB
-		config := input.Config
-		config.Clients = clientConfigsFromDb
-
-		if configs.OK.Config.AuthorizationEndpoint != "" {
-			config.AuthorizationEndpoint = configs.OK.Config.AuthorizationEndpoint
+		if configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.UserId != "" {
+			configToReturn.UserInfoMap.FromUserInfoAPI.UserId = configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.UserId
 		}
-		if configs.OK.Config.AuthorizationEndpointQueryParams != nil {
-			config.AuthorizationEndpointQueryParams = configs.OK.Config.AuthorizationEndpointQueryParams
+		if configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.Email != "" {
+			configToReturn.UserInfoMap.FromUserInfoAPI.Email = configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.Email
 		}
-		if configs.OK.Config.TokenEndpoint != "" {
-			config.TokenEndpoint = configs.OK.Config.TokenEndpoint
-		}
-		if configs.OK.Config.TokenEndpointBodyParams != nil {
-			config.TokenEndpointBodyParams = configs.OK.Config.TokenEndpointBodyParams
-		}
-		if configs.OK.Config.ForcePKCE != nil {
-			config.ForcePKCE = configs.OK.Config.ForcePKCE
-		}
-		if configs.OK.Config.UserInfoEndpoint != "" {
-			config.UserInfoEndpoint = configs.OK.Config.UserInfoEndpoint
-		}
-		if configs.OK.Config.UserInfoEndpointQueryParams != nil {
-			config.UserInfoEndpointQueryParams = configs.OK.Config.UserInfoEndpointQueryParams
-		}
-		if configs.OK.Config.UserInfoEndpointHeaders != nil {
-			config.UserInfoEndpointHeaders = configs.OK.Config.UserInfoEndpointHeaders
-		}
-		if configs.OK.Config.JwksURI != "" {
-			config.JwksURI = configs.OK.Config.JwksURI
-		}
-		if configs.OK.Config.OIDCDiscoveryEndpoint != "" {
-			config.OIDCDiscoveryEndpoint = configs.OK.Config.OIDCDiscoveryEndpoint
-		}
-		if configs.OK.Config.TenantId != "" {
-			config.TenantId = configs.OK.Config.TenantId
-		}
-		if configs.OK.Config.UserInfoMap.FromIdTokenPayload.UserId != "" {
-			config.UserInfoMap.FromIdTokenPayload.UserId = configs.OK.Config.UserInfoMap.FromIdTokenPayload.UserId
-		}
-		if configs.OK.Config.UserInfoMap.FromIdTokenPayload.Email != "" {
-			config.UserInfoMap.FromIdTokenPayload.Email = configs.OK.Config.UserInfoMap.FromIdTokenPayload.Email
-		}
-		if configs.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
-			config.UserInfoMap.FromIdTokenPayload.EmailVerified = configs.OK.Config.UserInfoMap.FromIdTokenPayload.EmailVerified
+		if configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
+			configToReturn.UserInfoMap.FromUserInfoAPI.EmailVerified = configFromCore.OK.Config.UserInfoMap.FromUserInfoAPI.EmailVerified
 		}
 
-		if configs.OK.Config.UserInfoMap.FromUserInfoAPI.UserId != "" {
-			config.UserInfoMap.FromUserInfoAPI.UserId = configs.OK.Config.UserInfoMap.FromUserInfoAPI.UserId
-		}
-		if configs.OK.Config.UserInfoMap.FromUserInfoAPI.Email != "" {
-			config.UserInfoMap.FromUserInfoAPI.Email = configs.OK.Config.UserInfoMap.FromUserInfoAPI.Email
-		}
-		if configs.OK.Config.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
-			config.UserInfoMap.FromUserInfoAPI.EmailVerified = configs.OK.Config.UserInfoMap.FromUserInfoAPI.EmailVerified
+		if configFromCore.OK.Config.Name != "" {
+			configToReturn.Name = configFromCore.OK.Config.Name
 		}
 
-		if configs.OK.Config.Name != "" {
-			config.Name = configs.OK.Config.Name
-		}
-
-		return config, nil
+		return configToReturn, nil
 	}
 
 	impl.GetConfigForClientType = func(clientType *string, inputConfig tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {

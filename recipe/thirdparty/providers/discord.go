@@ -78,7 +78,7 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				return result, err
 			}
 
-			if config.AdditionalConfig == nil || config.AdditionalConfig["requireEmail"] == false {
+			if config.AdditionalConfig == nil || config.AdditionalConfig["requireEmail"] == nil || config.AdditionalConfig["requireEmail"] == false {
 				if result.Email == nil {
 					thirdPartyUserId := strings.ReplaceAll(result.ThirdPartyUserId, "|", ".tenant-")
 					result.Email = &tpmodels.EmailStruct{
