@@ -109,18 +109,15 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 	}
 
 	// Do API key validation for the remaining APIs
-	if id == usersListGetAPI || id == usersCountAPI {
-		userContext := supertokens.MakeDefaultUserContextFromAPI(req)
-		return apiKeyProtector(r.APIImpl, options, userContext, func() error {
-			if id == usersListGetAPI {
-				return api.UsersGet(r.APIImpl, options)
-			} else if id == usersCountAPI {
-				return api.UsersCountGet(r.APIImpl, options)
-			}
-			return errors.New("should never come here")
-		})
-	}
-	return errors.New("should never come here")
+	userContext := supertokens.MakeDefaultUserContextFromAPI(req)
+	return apiKeyProtector(r.APIImpl, options, userContext, func() (interface{}, error) {
+		if id == usersListGetAPI {
+			return api.UsersGet(r.APIImpl, options)
+		} else if id == usersCountAPI {
+			return api.UsersCountGet(r.APIImpl, options)
+		}
+		return nil, errors.New("should never come here")
+	})
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
