@@ -13,7 +13,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
+func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId string) (tpmodels.TypeProvider, error) {
 
 	for _, provider := range options.Providers {
 		if provider.ID == thirdPartyId {
@@ -21,11 +21,7 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *st
 		}
 	}
 
-	if tenantId == nil {
-		return tpmodels.TypeProvider{}, supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
-	}
-
-	// If tenantId is not nil, we need to create the provider on the fly,
+	// We need to create the provider on the fly,
 	// so that the GetConfig function will make use of the core to fetch the config
 	return createProvider(thirdPartyId), nil
 }

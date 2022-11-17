@@ -32,43 +32,60 @@ import (
 func MakeAPIImplementation() tpmodels.APIInterface {
 
 	providersForTenantGET := func(tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
-		result, err := (*options.RecipeImplementation.ListConfigMappingsForTenant)(tenantId, userContext)
+		providers := []struct {
+			ID   string `json:"id"`
+			Name string `json:"name,omitempty"`
+		}{}
+
+		configsFromCore, err := (*options.RecipeImplementation.ListConfigMappingsForTenant)(tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProvidersForTenantGetResponse{}, err
 		}
 
-		providers := make(
-			[]struct {
+		// for default tenant = merge core and static config
+		// for other tenants = only core config if available else static config
+
+		// Add providers returned from core
+		for _, config := range configsFromCore.OK.Configs {
+			providerResult := struct {
 				ID   string `json:"id"`
 				Name string `json:"name,omitempty"`
-			},
-			len(result.OK.Configs),
-		)
-
-		if len(result.OK.Configs) > 0 {
-			// If tenant exists in the db, return the providers from the db
-
-			for i, config := range result.OK.Configs {
-				providers[i] = struct {
-					ID   string `json:"id"`
-					Name string `json:"name,omitempty"`
-				}{
-					ID:   config.ThirdPartyId,
-					Name: config.Config.Name,
-				}
+			}{
+				ID:   config.ThirdPartyId,
+				Name: config.Config.Name,
 			}
 
-		} else {
-			// else return statically configured providers
-			for _, provider := range options.Providers {
-				providerResult := struct {
-					ID   string `json:"id"`
-					Name string `json:"name,omitempty"`
-				}{
-					ID:   provider.ID,
-					Name: "", // Name is unavailable in the statically configured providers
-				}
+			if tenantId != tpmodels.DefaultTenantId || config.Config.UseForDefaultTenant == nil || *config.Config.UseForDefaultTenant {
 				providers = append(providers, providerResult)
+			}
+		}
+
+		if tenantId == tpmodels.DefaultTenantId || len(configsFromCore.OK.Configs) == 0 {
+			// Merge using the static providers
+			availableProvidersFromCore := map[string]bool{}
+			for _, provider := range providers {
+				availableProvidersFromCore[provider.ID] = true
+			}
+
+			for _, provider := range options.Providers {
+				if availableProvidersFromCore[provider.ID] {
+					continue
+				}
+
+				providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options.RecipeImplementation, userContext)
+				if err != nil {
+					return tpmodels.ProvidersForTenantGetResponse{}, err
+				}
+				if tenantId != tpmodels.DefaultTenantId || providerConfig.UseForDefaultTenant == nil || *providerConfig.UseForDefaultTenant {
+					providerResult := struct {
+						ID   string `json:"id"`
+						Name string `json:"name,omitempty"`
+					}{
+						ID:   provider.ID,
+						Name: providerConfig.Name,
+					}
+					providers = append(providers, providerResult)
+				}
 			}
 		}
 

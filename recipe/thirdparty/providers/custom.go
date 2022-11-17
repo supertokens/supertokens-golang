@@ -37,15 +37,10 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
 	}
 
-	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
-		// Return the static config as is when tenant id is nil
-		if tenantId == nil {
-			return input.Config, nil
-		}
+	impl.GetAllClientTypeConfigForTenant = func(tenantId string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+		input.Config.TenantId = tenantId
 
-		input.Config.TenantId = *tenantId
-
-		configFromCore, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, *tenantId, userContext)
+		configFromCore, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProviderConfig{}, err
 		}
@@ -57,8 +52,29 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 		configToReturn := input.Config
 
-		// We use the client configs from the db and ignore the static
-		configToReturn.Clients = configFromCore.OK.Config.Clients
+		if tenantId == tpmodels.DefaultTenantId {
+			// if tenantId is default, merge the client configs
+			staticClientConfigs := []tpmodels.ProviderClientConfig{}
+			copy(staticClientConfigs, input.Config.Clients)
+
+			for _, clientConfigFromCore := range configFromCore.OK.Config.Clients {
+				found := false
+				for i, staticClientConfig := range staticClientConfigs {
+					if clientConfigFromCore.ClientType == staticClientConfig.ClientType {
+						staticClientConfigs[i] = clientConfigFromCore
+						found = true
+						break
+					}
+				}
+				if !found {
+					staticClientConfigs = append(staticClientConfigs, clientConfigFromCore)
+				}
+			}
+
+		} else {
+			// We use the client configs from the db and ignore the static
+			configToReturn.Clients = configFromCore.OK.Config.Clients
+		}
 
 		// Merge the config from Core
 		if configFromCore.OK.Config.AuthorizationEndpoint != "" {
@@ -116,6 +132,9 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 		if configFromCore.OK.Config.Name != "" {
 			configToReturn.Name = configFromCore.OK.Config.Name
+		}
+		if configFromCore.OK.Config.UseForDefaultTenant != nil {
+			configToReturn.UseForDefaultTenant = configFromCore.OK.Config.UseForDefaultTenant
 		}
 
 		return configToReturn, nil

@@ -29,10 +29,11 @@ func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmo
 	tenantId := queryParams.Get("tenantId")
 
 	if tenantId == "" {
-		return supertokens.BadInputError{Msg: "Please provide the tenantId as a GET param"}
+		tenantId = tpmodels.DefaultTenantId
 	}
 
 	result, err := (*apiImplementation.ProvidersForTenantGET)(tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+
 	if err != nil {
 		return err
 	}

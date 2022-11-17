@@ -129,6 +129,7 @@ type ProviderConfig struct {
 
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
 	TenantId               string
+	UseForDefaultTenant    *bool `json:"useForDefaultTenant,omitempty"`
 }
 
 type ProviderClientConfig struct {
@@ -163,9 +164,11 @@ type ProviderConfigForClientType struct {
 type TypeProvider struct {
 	ID string
 
-	GetAllClientTypeConfigForTenant func(tenantId *string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetAllClientTypeConfigForTenant func(tenantId string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
 	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
 	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
 	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
 	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
+
+const DefaultTenantId string = "default"

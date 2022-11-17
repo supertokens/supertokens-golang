@@ -161,7 +161,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		return tpmodels.TypeUserInfo{}, err
 	}
 
-	if config.TenantId != "" {
+	if config.TenantId != tpmodels.DefaultTenantId {
 		userInfoResult.ThirdPartyUserId += "|" + config.TenantId
 	}
 

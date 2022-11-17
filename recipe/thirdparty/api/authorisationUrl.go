@@ -35,9 +35,9 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		clientType = &clientTypeStr
 	}
 
-	var tenantId *string
-	if tenantIdStr := queryParams.Get("tenantId"); tenantIdStr != "" {
-		tenantId = &tenantIdStr
+	var tenantId string = tpmodels.DefaultTenantId
+	if tenantIdStrFromQueryParams := queryParams.Get("tenantId"); tenantIdStrFromQueryParams != "" {
+		tenantId = tenantIdStrFromQueryParams
 	}
 
 	if len(thirdPartyId) == 0 {
