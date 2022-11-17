@@ -1,135 +1,65 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
- *
- * This software is licensed under the Apache License, Version 2.0 (the
- * "License") as published by the Apache Software Foundation.
- *
- * You may not use this file except in compliance with the License. You may
- * obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package providers
 
 import (
-	"encoding/json"
-	"net/http"
-	"strings"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const googleID = "google"
 
-func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: googleID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://oauth2.googleapis.com/token"
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": config.ClientSecret,
-				"grant_type":    "authorization_code",
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
-			}
-
-			authorisationRedirectURL := "https://accounts.google.com/o/oauth2/v2/auth"
-			scopes := []string{"https://www.googleapis.com/auth/userinfo.email"}
-			if config.Scope != nil {
-				scopes = config.Scope
-			}
-
-			var additionalParams map[string]interface{} = nil
-			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-				additionalParams = config.AuthorisationRedirect.Params
-			}
-
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":                  strings.Join(scopes, " "),
-				"access_type":            "offline",
-				"include_granted_scopes": "true",
-				"response_type":          "code",
-				"client_id":              config.ClientID,
-			}
-			for key, value := range additionalParams {
-				authorizationRedirectParams[key] = value
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					var accessTokenAPIResponse googleGetProfileInfoInput
-					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					accessToken := accessTokenAPIResponse.AccessToken
-					authHeader := "Bearer " + accessToken
-					response, err := getGoogleAuthRequest(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					userInfo := response.(map[string]interface{})
-					ID := userInfo["id"].(string)
-					email := userInfo["email"].(string)
-					if email == "" {
-						return tpmodels.UserInfo{
-							ID: ID,
-						}, nil
-					}
-					isVerified := userInfo["verified_email"].(bool)
-					return tpmodels.UserInfo{
-						ID: ID,
-						Email: &tpmodels.EmailStruct{
-							ID:         email,
-							IsVerified: isVerified,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
+func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	if input.ThirdPartyID == "" {
+		input.ThirdPartyID = googleID
 	}
-}
 
-func getGoogleAuthRequest(authHeader string) (interface{}, error) {
-	url := "https://www.googleapis.com/oauth2/v1/userinfo?alt=json"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	if input.Config.OIDCDiscoveryEndpoint == "" {
+		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/"
 	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
-}
 
-type googleGetProfileInfoInput struct {
-	AccessToken  string `json:"access_token"`
-	ExpiresIn    int    `json:"expires_in"`
-	TokenType    string `json:"token_type"`
-	Scope        string `json:"scope"`
-	RefreshToken string `json:"refresh_token"`
+	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
+	}
+	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams == nil {
+		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
+	}
+	if input.Config.AuthorizationEndpointQueryParams["access_type"] == nil {
+		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := provider.GetConfigForClientType
+		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, input, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClientType{}, err
+			}
+
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"openid", "email"}
+			}
+
+			return config, err
+		}
+
+		if oOverride != nil {
+			provider = oOverride(provider)
+		}
+		return provider
+	}
+
+	return NewProvider(input)
 }

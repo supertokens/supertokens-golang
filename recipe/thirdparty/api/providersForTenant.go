@@ -20,22 +20,31 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
-	if apiImplementation.AppleRedirectHandlerPOST == nil || (*apiImplementation.AppleRedirectHandlerPOST) == nil {
+func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+	if apiImplementation.ProvidersForTenantGET == nil || (*apiImplementation.ProvidersForTenantGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
+	queryParams := options.Req.URL.Query()
+	tenantId := queryParams.Get("tenantId")
 
-	err := options.Req.ParseMultipartForm(0)
+	if tenantId == "" {
+		tenantId = tpmodels.DefaultTenantId
+	}
+
+	result, err := (*apiImplementation.ProvidersForTenantGET)(tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+
 	if err != nil {
 		return err
 	}
-
-	formPostInfoFromProvider := map[string]interface{}{}
-
-	for key, value := range options.Req.PostForm {
-		formPostInfoFromProvider[key] = value[0]
+	if result.OK != nil {
+		respBody := map[string]interface{}{
+			"status":    "OK",
+			"providers": result.OK.Providers,
+		}
+		return supertokens.Send200Response(options.Res, respBody)
+	} else if result.GeneralError != nil {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}
-
-	return (*apiImplementation.AppleRedirectHandlerPOST)(formPostInfoFromProvider, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	return supertokens.ErrorIfNoResponse(options.Res)
 }

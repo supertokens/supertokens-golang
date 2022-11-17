@@ -21,21 +21,16 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type signInUpResponse struct {
-	CreatedNewUser bool
-	User           tpmodels.User
-}
-
 func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+func ManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpmodels.SignInUpResponse{}, err
+		return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
@@ -62,8 +57,40 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.SignInUpResponse, error) {
-	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func CreateOrUpdateTenantIdConfigMappingWithContext(thirdPartyId string, tenantId string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, err
+	}
+	return (*instance.RecipeImpl.CreateOrUpdateTenantIdConfigMapping)(thirdPartyId, tenantId, config, userContext)
+}
+
+func FetchTenantIdConfigMappingWithContext(thirdPartyId string, tenantId string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.FetchTenantIdConfigResponse{}, err
+	}
+	return (*instance.RecipeImpl.FetchTenantIdConfigMapping)(thirdPartyId, tenantId, userContext)
+}
+
+func DeleteTenantIdConfigMappingWithContext(thirdPartyId string, tenantId string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.DeleteTenantIdConfigResponse{}, err
+	}
+	return (*instance.RecipeImpl.DeleteTenantIdConfigMapping)(thirdPartyId, tenantId, userContext)
+}
+
+func ListConfigMappingsForTenantWithContext(tenantId string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.ListTenantConfigMappingsResponse{}, err
+	}
+	return (*instance.RecipeImpl.ListConfigMappingsForTenant)(tenantId, userContext)
+}
+
+func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	return ManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
 
 func GetUserByID(userID string) (*tpmodels.User, error) {
@@ -78,26 +105,62 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
-	return providers.Apple(config)
+func CreateOrUpdateTenantIdConfigMapping(thirdPartyId string, tenantId string, config tpmodels.ProviderConfig) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
+	return CreateOrUpdateTenantIdConfigMappingWithContext(thirdPartyId, tenantId, config, &map[string]interface{}{})
 }
 
-func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-	return providers.Facebook(config)
+func FetchTenantIdConfigMapping(thirdPartyId string, tenantId string) (tpmodels.FetchTenantIdConfigResponse, error) {
+	return FetchTenantIdConfigMappingWithContext(thirdPartyId, tenantId, &map[string]interface{}{})
 }
 
-func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-	return providers.Github(config)
+func DeleteTenantIdConfigMapping(thirdPartyId string, tenantId string) (tpmodels.DeleteTenantIdConfigResponse, error) {
+	return DeleteTenantIdConfigMappingWithContext(thirdPartyId, tenantId, &map[string]interface{}{})
 }
 
-func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-	return providers.Discord(config)
+func ListConfigMappingsForTenant(tenantId string) (tpmodels.ListTenantConfigMappingsResponse, error) {
+	return ListConfigMappingsForTenantWithContext(tenantId, &map[string]interface{}{})
 }
 
-func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
-	return providers.GoogleWorkspaces(config)
+func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.ActiveDirectory(input)
 }
 
-func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-	return providers.Google(config)
+func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Apple(input)
+}
+
+func BoxySaml(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.BoxySaml(input)
+}
+
+func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Discord(input)
+}
+
+func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Facebook(input)
+}
+
+func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Github(input)
+}
+
+func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Google(input)
+}
+
+func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.GoogleWorkspaces(input)
+}
+
+func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Linkedin(input)
+}
+
+func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.Okta(input)
+}
+
+func CustomProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
+	return providers.NewProvider(input)
 }

@@ -16,32 +16,50 @@
 package providers
 
 import (
+	"bytes"
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/base64"
 	"encoding/json"
-	"errors"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"strings"
 	"sync"
 	"time"
 
 	"github.com/MicahParks/keyfunc"
+	"github.com/derekstavis/go-qs"
 )
 
-func doGetRequest(req *http.Request) (interface{}, error) {
+// Network utils
+func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (interface{}, error) {
+	if queryParams != nil {
+		querystring, err := qs.Marshal(queryParams)
+		if err != nil {
+			return nil, err
+		}
+		url = url + "?" + querystring
+	}
+
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode >= 300 {
-		return nil, errors.New(fmt.Sprintf("Provider API returned response with status `%s` and body `%s`", resp.Status, string(body)))
 	}
 
 	var result interface{}
@@ -49,9 +67,53 @@ func doGetRequest(req *http.Request) (interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("GET request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
+	}
 	return result, nil
 }
 
+func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, error) {
+	postBody, err := qs.Marshal(params)
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(postBody)))
+	if err != nil {
+		return nil, err
+	}
+	for key, value := range headers {
+		req.Header.Set(key, value.(string))
+	}
+	req.Header.Set("content-type", "application/x-www-form-urlencoded")
+	req.Header.Set("accept", "application/json") // few providers like github don't send back json response by default
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+
+	if resp.StatusCode >= 300 {
+		return nil, fmt.Errorf("POST request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
+	}
+
+	return result, nil
+}
+
+// JWKS utils
 var jwksKeys = map[string]*keyfunc.JWKS{}
 var jwksKeysLock = sync.Mutex{}
 
@@ -77,4 +139,96 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 	}
 	jwksKeys[url] = jwks
 	return jwks, nil
+}
+
+// User map utils
+func accessField(obj interface{}, key string) (interface{}, bool) {
+	keyParts := strings.Split(key, ".")
+	var ok bool
+	for _, k := range keyParts {
+		obj, ok = obj.(map[string]interface{})[k]
+
+		if !ok {
+			return nil, false
+		}
+	}
+	return obj, ok
+}
+
+var DevOauthClientIds = [...]string{
+	"1060725074195-kmeum4crr01uirfl2op9kd5acmi9jutn.apps.googleusercontent.com", // google
+	"467101b197249757c71f", // github
+}
+
+const (
+	DevOauthAuthorisationUrl = "https://supertokens.io/dev/oauth/redirect-to-provider"
+	DevOauthRedirectUrl      = "https://supertokens.io/dev/oauth/redirect-to-app"
+	DevKeyIdentifier         = "4398792-"
+)
+
+func isUsingDevelopmentClientId(clientId string) bool {
+	if strings.HasPrefix(clientId, DevKeyIdentifier) {
+		return true
+	} else {
+		for _, devClientId := range DevOauthClientIds {
+			if devClientId == clientId {
+				return true
+			}
+		}
+		return false
+	}
+}
+
+func getActualClientIdFromDevelopmentClientId(clientId string) string {
+	if strings.HasPrefix(clientId, DevKeyIdentifier) {
+		return strings.Split(clientId, DevKeyIdentifier)[1]
+	}
+	return clientId
+}
+
+// PKCE related functions
+// Ref: https://github.com/nirasan/go-oauth-pkce-code-verifier/blob/master/verifier.go
+
+func randomBytes(length int) ([]byte, error) {
+	const charset = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+	const csLen = byte(len(charset))
+	output := make([]byte, 0, length)
+	for {
+		buf := make([]byte, length)
+		if _, err := io.ReadFull(rand.Reader, buf); err != nil {
+			return nil, fmt.Errorf("failed to read random bytes: %v", err)
+		}
+		for _, b := range buf {
+			// Avoid bias by using a value range that's a multiple of 62
+			if b < (csLen * 4) {
+				output = append(output, charset[b%csLen])
+
+				if len(output) == length {
+					return output, nil
+				}
+			}
+		}
+	}
+}
+
+func encode(msg []byte) string {
+	encoded := base64.StdEncoding.EncodeToString(msg)
+	encoded = strings.Replace(encoded, "+", "-", -1)
+	encoded = strings.Replace(encoded, "/", "_", -1)
+	encoded = strings.Replace(encoded, "=", "", -1)
+	return encoded
+}
+
+func generateCodeChallengeS256(length int) (codeChallenge string, codeVerifier string, err error) {
+	buf, err := randomBytes(length)
+	if err != nil {
+		return "", "", err
+	}
+
+	codeVerifier = encode(buf)
+	h := sha256.New()
+	h.Write([]byte(codeVerifier))
+	codeChallenge = encode(h.Sum(nil))
+	err = nil
+	return
 }

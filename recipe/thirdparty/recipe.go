@@ -139,6 +139,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		return api.AuthorisationUrlAPI(r.APIImpl, options)
 	} else if id == AppleRedirectHandlerAPI {
 		return api.AppleRedirectHandler(r.APIImpl, options)
+	} else if id == ProvidersForTenantAPI {
+		return api.ProvidersForTenantAPI(r.APIImpl, options)
 	}
 	return errors.New("should never come here")
 }
