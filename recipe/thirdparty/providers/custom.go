@@ -37,6 +37,13 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
 	}
 
+	if input.UseForDefaultTenant == nil {
+		True := true
+		input.UseForDefaultTenant = &True
+	}
+
+	impl.UseForDefaultTenant = *input.UseForDefaultTenant
+
 	impl.GetAllClientTypeConfigForTenant = func(tenantId string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		input.Config.TenantId = tenantId
 
@@ -132,9 +139,6 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 		if configFromCore.OK.Config.Name != "" {
 			configToReturn.Name = configFromCore.OK.Config.Name
-		}
-		if configFromCore.OK.Config.UseForDefaultTenant != nil {
-			configToReturn.UseForDefaultTenant = configFromCore.OK.Config.UseForDefaultTenant
 		}
 
 		return configToReturn, nil

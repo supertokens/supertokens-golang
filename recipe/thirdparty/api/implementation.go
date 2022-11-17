@@ -43,46 +43,57 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 
 		// for default tenant = merge core and static config
-		// for other tenants = only core config if available else static config
+		if tenantId == tpmodels.DefaultTenantId {
+			addedFromCore := map[string]bool{}
 
-		// Add providers returned from core
-		for _, config := range configsFromCore.OK.Configs {
-			providerResult := struct {
-				ID   string `json:"id"`
-				Name string `json:"name,omitempty"`
-			}{
-				ID:   config.ThirdPartyId,
-				Name: config.Config.Name,
-			}
-
-			if tenantId != tpmodels.DefaultTenantId || config.Config.UseForDefaultTenant == nil || *config.Config.UseForDefaultTenant {
+			for _, configFromCore := range configsFromCore.OK.Configs {
+				providerResult := struct {
+					ID   string `json:"id"`
+					Name string `json:"name,omitempty"`
+				}{
+					ID:   configFromCore.ThirdPartyId,
+					Name: configFromCore.Config.Name,
+				}
 				providers = append(providers, providerResult)
-			}
-		}
-
-		if tenantId == tpmodels.DefaultTenantId || len(configsFromCore.OK.Configs) == 0 {
-			// Merge using the static providers
-			availableProvidersFromCore := map[string]bool{}
-			for _, provider := range providers {
-				availableProvidersFromCore[provider.ID] = true
+				addedFromCore[configFromCore.ThirdPartyId] = true
 			}
 
-			for _, provider := range options.Providers {
-				if availableProvidersFromCore[provider.ID] {
-					continue
-				}
-
-				providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options.RecipeImplementation, userContext)
-				if err != nil {
-					return tpmodels.ProvidersForTenantGetResponse{}, err
-				}
-				if tenantId != tpmodels.DefaultTenantId || providerConfig.UseForDefaultTenant == nil || *providerConfig.UseForDefaultTenant {
+			for _, staticProvider := range options.Providers {
+				if staticProvider.UseForDefaultTenant {
 					providerResult := struct {
 						ID   string `json:"id"`
 						Name string `json:"name,omitempty"`
 					}{
-						ID:   provider.ID,
-						Name: providerConfig.Name,
+						ID: staticProvider.ID,
+					}
+
+					if !addedFromCore[staticProvider.ID] {
+						providers = append(providers, providerResult)
+					}
+				}
+			}
+		} else {
+			// for other tenants = only core config if available else static config
+			if len(configsFromCore.OK.Configs) > 0 {
+				// Add from core
+				for _, configFromCore := range configsFromCore.OK.Configs {
+					providerResult := struct {
+						ID   string `json:"id"`
+						Name string `json:"name,omitempty"`
+					}{
+						ID:   configFromCore.ThirdPartyId,
+						Name: configFromCore.Config.Name,
+					}
+					providers = append(providers, providerResult)
+				}
+			} else {
+				// add from static
+				for _, staticProvider := range options.Providers {
+					providerResult := struct {
+						ID   string `json:"id"`
+						Name string `json:"name,omitempty"`
+					}{
+						ID: staticProvider.ID,
 					}
 					providers = append(providers, providerResult)
 				}

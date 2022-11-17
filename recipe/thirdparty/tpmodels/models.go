@@ -104,9 +104,11 @@ type OverrideStruct struct {
 }
 
 type ProviderInput struct {
-	ThirdPartyID string
-	Config       ProviderConfig
-	Override     func(provider *TypeProvider) *TypeProvider
+	ThirdPartyID        string
+	UseForDefaultTenant *bool
+
+	Config   ProviderConfig
+	Override func(provider *TypeProvider) *TypeProvider
 }
 
 type ProviderConfig struct {
@@ -129,7 +131,6 @@ type ProviderConfig struct {
 
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
 	TenantId               string
-	UseForDefaultTenant    *bool `json:"useForDefaultTenant,omitempty"`
 }
 
 type ProviderClientConfig struct {
@@ -162,7 +163,8 @@ type ProviderConfigForClientType struct {
 }
 
 type TypeProvider struct {
-	ID string
+	ID                  string
+	UseForDefaultTenant bool
 
 	GetAllClientTypeConfigForTenant func(tenantId string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
 	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
