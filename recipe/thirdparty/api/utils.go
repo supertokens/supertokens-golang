@@ -17,6 +17,11 @@ func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId str
 
 	for _, provider := range options.Providers {
 		if provider.ID == thirdPartyId {
+
+			if tenantId == tpmodels.DefaultTenantId && !provider.UseForDefaultTenant {
+				return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s is disabled for default tenant", thirdPartyId)
+			}
+
 			return provider, nil
 		}
 	}

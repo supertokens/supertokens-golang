@@ -61,20 +61,20 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 		if tenantId == tpmodels.DefaultTenantId {
 			// if tenantId is default, merge the client configs
-			staticClientConfigs := []tpmodels.ProviderClientConfig{}
-			copy(staticClientConfigs, input.Config.Clients)
+			configToReturn.Clients = []tpmodels.ProviderClientConfig{}
+			copy(configToReturn.Clients, input.Config.Clients) // making a copy so that I don't change the original input.Config.Clients array
 
 			for _, clientConfigFromCore := range configFromCore.OK.Config.Clients {
 				found := false
-				for i, staticClientConfig := range staticClientConfigs {
+				for i, staticClientConfig := range configToReturn.Clients {
 					if clientConfigFromCore.ClientType == staticClientConfig.ClientType {
-						staticClientConfigs[i] = clientConfigFromCore
+						configToReturn.Clients[i] = clientConfigFromCore
 						found = true
 						break
 					}
 				}
 				if !found {
-					staticClientConfigs = append(staticClientConfigs, clientConfigFromCore)
+					configToReturn.Clients = append(configToReturn.Clients, clientConfigFromCore)
 				}
 			}
 
