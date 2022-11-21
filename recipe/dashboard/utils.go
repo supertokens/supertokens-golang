@@ -109,5 +109,10 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 		return &val, nil
 	}
 
+	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), userMetaDataAPI) {
+		val := userMetaDataAPI
+		return &val, nil
+	}
+
 	return nil, nil
 }
