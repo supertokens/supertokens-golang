@@ -45,7 +45,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}
 	}
 
-	if api.IsValidRecipeId(recipeId) {
+	if !api.IsValidRecipeId(recipeId) {
 		return userGetResponse{}, supertokens.BadInputError {
 			Msg: "Invalid recipe id",
 		}
