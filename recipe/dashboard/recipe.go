@@ -120,6 +120,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return userdetails.UserGet(r.APIImpl, options)
 		} else if id == userEmailVerifyAPI {
 			return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+		} else if id == userSessionsAPI {
+			return userdetails.UserSessionsGet(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})

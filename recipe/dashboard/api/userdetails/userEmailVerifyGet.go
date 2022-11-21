@@ -21,17 +21,17 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type apiResponse struct {
+type userEmailVerifyGetResponse struct {
 	Status string `json:"status"`
 	IsVerified bool `json:"isVerified,omitempty"`
 }
 
-func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(apiResponse, error) {
+func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
 	if userId == "" {
-		return apiResponse{}, supertokens.BadInputError {
+		return userEmailVerifyGetResponse{}, supertokens.BadInputError {
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
@@ -39,7 +39,7 @@ func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options 
 	emailverificationInstance := emailverification.GetRecipeInstance()
 
 	if emailverificationInstance == nil {
-		return apiResponse{
+		return userEmailVerifyGetResponse{
 			Status: "FEATURE_NOT_ENABLED_ERROR",
 		}, nil
 	}
@@ -47,10 +47,10 @@ func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options 
 	response, verificationError := emailverification.IsEmailVerified(userId, nil)
 
 	if verificationError != nil {
-		return apiResponse{}, verificationError
+		return userEmailVerifyGetResponse{}, verificationError
 	}
 
-	return apiResponse{
+	return userEmailVerifyGetResponse{
 		Status: "OK",
 		IsVerified: response,
 	}, nil
