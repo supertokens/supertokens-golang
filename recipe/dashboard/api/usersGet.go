@@ -132,12 +132,12 @@ func getUsersTypeFromPaginationResult(usersResponse supertokens.UserPaginationRe
 			Id:         v.User["id"].(string),
 			TimeJoined: v.User["timeJoined"].(float64),
 		}
-		firstName, firstNameOk := v.User["firstName"]
-		if firstNameOk {
+		firstName := v.User["firstName"]
+		if firstName != nil {
 			user.FirstName = firstName.(string)
 		}
-		lastName, lastNameOk := v.User["lastName"]
-		if lastNameOk {
+		lastName := v.User["lastName"]
+		if lastName != nil {
 			user.LastName = lastName.(string)
 		}
 
@@ -150,12 +150,12 @@ func getUsersTypeFromPaginationResult(usersResponse supertokens.UserPaginationRe
 				UserId: v.User["thirdParty"].(map[string]interface{})["userId"].(string),
 			}
 		} else {
-			email, ok := v.User["email"]
-			if ok {
+			email := v.User["email"]
+			if email != nil {
 				user.Email = email.(string)
 			}
-			phoneNumber, ok := v.User["phoneNumber"]
-			if ok {
+			phoneNumber := v.User["phoneNumber"]
+			if phoneNumber != nil {
 				user.PhoneNumber = phoneNumber.(string)
 			}
 		}
