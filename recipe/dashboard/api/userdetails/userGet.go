@@ -1,7 +1,22 @@
+/* Copyright (c) 2022, VRAI Labs and/or its affiliates. All rights reserved.
+*
+* This software is licensed under the Apache License, Version 2.0 (the
+* "License") as published by the Apache Software Foundation.
+*
+* You may not use this file except in compliance with the License. You may
+* obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing, software
+* distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+* WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+* License for the specific language governing permissions and limitations
+* under the License.
+ */
+
 package userdetails
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/dashboard"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -30,13 +45,13 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}
 	}
 
-	if dashboard.IsValidRecipeId(recipeId) {
+	if api.IsValidRecipeId(recipeId) {
 		return userGetResponse{}, supertokens.BadInputError {
 			Msg: "Invalid recipe id",
 		}
 	}
 
-	userForRecipeId, _ := dashboard.GetUserForRecipeId(userId, recipeId)
+	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId)
 
 	if userForRecipeId == (dashboardmodels.UserType{}) {
 		return userGetResponse{
