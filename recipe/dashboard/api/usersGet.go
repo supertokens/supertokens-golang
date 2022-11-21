@@ -27,12 +27,7 @@ type User struct {
 	LastName    string     `json:"lastName,omitempty"`
 	Email       string     `json:"email,omitempty"`
 	PhoneNumber string     `json:"phoneNumber,omitempty"`
-	ThirdParty  ThirdParty `json:"thirdParty,omitempty"`
-}
-
-type ThirdParty struct {
-	Id     string `json:"id"`
-	UserId string `json:"userId"`
+	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
 }
 
 func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (UsersGetResponse, error) {
@@ -150,7 +145,7 @@ func getUsersTypeFromPaginationResult(usersResponse supertokens.UserPaginationRe
 			user.Email = v.User["email"].(string)
 		} else if v.RecipeId == "thirdparty" {
 			user.Email = v.User["email"].(string)
-			user.ThirdParty = ThirdParty{
+			user.ThirdParty = dashboardmodels.ThirdParty{
 				Id:     v.User["thirdParty"].(map[string]interface{})["id"].(string),
 				UserId: v.User["thirdParty"].(map[string]interface{})["userId"].(string),
 			}

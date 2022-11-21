@@ -115,6 +115,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return api.UsersGet(r.APIImpl, options)
 		} else if id == usersCountAPI {
 			return api.UsersCountGet(r.APIImpl, options)
+		} else if id == userAPI {
+			return api.UsersGet(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})
