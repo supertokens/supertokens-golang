@@ -121,7 +121,13 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		} else if id == userEmailVerifyAPI {
 			return userdetails.UserEmailVerifyGet(r.APIImpl, options)
 		} else if id == userSessionsAPI {
-			return userdetails.UserSessionsGet(r.APIImpl, options)
+			if req.Method == http.MethodGet {
+				return userdetails.UserSessionsGet(r.APIImpl, options)
+			}
+
+			if req.Method == http.MethodPost {
+				return userdetails.UserSessionsPost(r.APIImpl, options)
+			}
 		} else if id == userMetaDataAPI {
 			return userdetails.UserMetaDataGet(r.APIImpl, options)
 		} else if id == userEmailVerifyTokenAPI {
