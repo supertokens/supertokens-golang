@@ -74,7 +74,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 
 	metadata, metadataerr := usermetadata.GetUserMetadata(userId)
 
-	if metadataerr == nil {
+	if metadataerr != nil {
 		userForRecipeId.FirstName = metadata["first_name"].(string)
 		userForRecipeId.LastName = metadata["last_name"].(string)
 	}
