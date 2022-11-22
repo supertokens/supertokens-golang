@@ -16,8 +16,6 @@
 package userdetails
 
 import (
-	"fmt"
-
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -25,7 +23,7 @@ import (
 
 type userEmailVerifyGetResponse struct {
 	Status string `json:"status"`
-	IsVerified bool `json:"isVerified,omitempty"`
+	IsVerified *bool `json:"isVerified,omitempty"`
 }
 
 func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyGetResponse, error) {
@@ -52,10 +50,8 @@ func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options 
 		return userEmailVerifyGetResponse{}, verificationError
 	}
 
-	fmt.Println(response);
-
 	return userEmailVerifyGetResponse{
 		Status: "OK",
-		IsVerified: response,
+		IsVerified: &response,
 	}, nil
 }
