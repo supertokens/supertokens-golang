@@ -26,10 +26,11 @@ func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmo
 		return nil
 	}
 	queryParams := options.Req.URL.Query()
-	tenantId := queryParams.Get("tenantId")
+	var tenantId *string = nil
+	tenantIdStr := queryParams.Get("tenantId")
 
-	if tenantId == "" {
-		tenantId = tpmodels.DefaultTenantId
+	if tenantIdStr == "" {
+		tenantId = &tenantIdStr
 	}
 
 	result, err := (*apiImplementation.ProvidersForTenantGET)(tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))

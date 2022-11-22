@@ -21,13 +21,13 @@ type RecipeInterface struct {
 	GetUserByID                *func(userID string, userContext supertokens.UserContext) (*User, error)
 	GetUsersByEmail            *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByThirdPartyInfo    *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	SignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens TypeOAuthTokens, rawUserInfoFromProvider TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
+	SignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens TypeOAuthTokens, rawUserInfoFromProvider TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (SignInUpResponse, error)
 	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyIserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
 
-	CreateOrUpdateTenantIdConfigMapping *func(thirdPartyId string, tenantId string, config ProviderConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantIdConfigResponse, error)
-	FetchTenantIdConfigMapping          *func(thirdPartyId string, tenantId string, userContext supertokens.UserContext) (FetchTenantIdConfigResponse, error)
-	DeleteTenantIdConfigMapping         *func(thirdPartyId string, tenantId string, userContext supertokens.UserContext) (DeleteTenantIdConfigResponse, error)
-	ListConfigMappingsForTenant         *func(tenantId string, userContext supertokens.UserContext) (ListTenantConfigMappingsResponse, error)
+	CreateOrUpdateTenantIdConfigMapping *func(thirdPartyId string, tenantId *string, config ProviderConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantIdConfigResponse, error)
+	FetchTenantIdConfigMapping          *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (FetchTenantIdConfigResponse, error)
+	DeleteTenantIdConfigMapping         *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (DeleteTenantIdConfigResponse, error)
+	ListConfigMappingsForTenant         *func(tenantId *string, userContext supertokens.UserContext) (ListTenantConfigMappingsResponse, error)
 }
 
 type SignInUpResponse struct {

@@ -130,7 +130,7 @@ type ProviderConfig struct {
 	Name string `json:"name"`
 
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
-	TenantId               string
+	TenantId               *string
 }
 
 type ProviderClientConfig struct {
@@ -159,18 +159,18 @@ type ProviderConfigForClientType struct {
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
 	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
-	TenantId                         string
+	TenantId                         *string
 }
 
 type TypeProvider struct {
 	ID                  string
 	UseForDefaultTenant bool
 
-	GetAllClientTypeConfigForTenant func(tenantId string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetAllClientTypeConfigForTenant func(tenantId *string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
 	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
 	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
 	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
 	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
-const DefaultTenantId string = "default"
+const DefaultTenantId string = "public" // TODO set the value based on what's decided for core

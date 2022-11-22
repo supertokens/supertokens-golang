@@ -31,7 +31,7 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	providersForTenantGET := func(tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
+	providersForTenantGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
 		providers := []struct {
 			ID   string `json:"id"`
 			Name string `json:"name,omitempty"`
@@ -43,7 +43,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 
 		// for default tenant = merge core and static config
-		if tenantId == tpmodels.DefaultTenantId {
+		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
 			addedFromCore := map[string]bool{}
 
 			for _, configFromCore := range configsFromCore.OK.Configs {
@@ -148,7 +148,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, oAuthTokens, userInfo.RawUserInfoFromProvider, userContext)
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, oAuthTokens, userInfo.RawUserInfoFromProvider, config.TenantId, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}

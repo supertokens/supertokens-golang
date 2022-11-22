@@ -44,7 +44,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	impl.UseForDefaultTenant = *input.UseForDefaultTenant
 
-	impl.GetAllClientTypeConfigForTenant = func(tenantId string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		input.Config.TenantId = tenantId
 
 		configFromCore, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, tenantId, userContext)
@@ -76,7 +76,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 			Clients:                          []tpmodels.ProviderClientConfig{}, // Will be populated by the logic below
 		}
 
-		if tenantId == tpmodels.DefaultTenantId {
+		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
 			// if tenantId is default, merge the client configs using clientType
 			configToReturn.Clients = append(configToReturn.Clients, input.Config.Clients...) // Copy the static configs first
 
@@ -131,7 +131,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		if configFromCore.OK.Config.OIDCDiscoveryEndpoint != "" {
 			configToReturn.OIDCDiscoveryEndpoint = configFromCore.OK.Config.OIDCDiscoveryEndpoint
 		}
-		if configFromCore.OK.Config.TenantId != "" {
+		if configFromCore.OK.Config.TenantId != nil {
 			configToReturn.TenantId = configFromCore.OK.Config.TenantId
 		}
 		if configFromCore.OK.Config.UserInfoMap.FromIdTokenPayload.UserId != "" {
@@ -166,6 +166,10 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
 			}
 
+			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
+		}
+
+		if len(inputConfig.Clients) == 1 {
 			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
 		}
 

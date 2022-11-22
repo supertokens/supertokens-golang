@@ -104,6 +104,10 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	providersForTenantAPI, err := supertokens.NewNormalisedURLPath(ProvidersForTenantAPI)
+	if err != nil {
+		return nil, err
+	}
 	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: signInUpAPI,
@@ -119,6 +123,11 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: appleRedirectHandlerAPI,
 		ID:                     AppleRedirectHandlerAPI,
 		Disabled:               r.APIImpl.AppleRedirectHandlerPOST == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: providersForTenantAPI,
+		ID:                     ProvidersForTenantAPI,
+		Disabled:               r.APIImpl.ProvidersForTenantGET == nil,
 	}}), nil
 }
 

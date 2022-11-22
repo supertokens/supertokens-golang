@@ -84,8 +84,8 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				},
 			}
 
-			if config.TenantId != "" {
-				userInfoResult.ThirdPartyUserId += "|" + config.TenantId
+			if config.TenantId != nil && *config.TenantId != tpmodels.DefaultTenantId {
+				userInfoResult.ThirdPartyUserId += "|" + *config.TenantId
 			}
 
 			return tpmodels.TypeUserInfo{
