@@ -16,6 +16,7 @@
 package userdetails
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -29,17 +30,24 @@ type userEmailVerifyTokenPost struct {
 	Status string `json:"status"`
 }
 
-func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyTokenPost, error) {
-	req := options.Req
-	userId := req.URL.Query().Get("userId")
+type userEmailverifyTokenPostRequestBody struct {
+	UserId string
+}
 
-	if userId == "" {
-		return userEmailVerifyTokenPost{}, supertokens.BadInputError {
-			Msg: "Missing required parameter 'userId'",
-		}
+func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyTokenPost, error) {
+	body, err := supertokens.ReadFromRequest(options.Req)
+
+	if err != nil {
+		return userEmailVerifyTokenPost{}, err
 	}
 
-	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(userId, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	var readBody userEmailverifyTokenPostRequestBody
+	err = json.Unmarshal(body, &readBody)
+	if err != nil {
+		return userEmailVerifyTokenPost{}, err
+	}
+
+	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(readBody.UserId, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 
 	if emailErr != nil {
 		return userEmailVerifyTokenPost{}, emailErr
@@ -49,7 +57,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
 	}
 
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(userId, &emailresponse.OK.Email)
+	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(readBody.UserId, &emailresponse.OK.Email)
 
 	if tokenError != nil {
 		return userEmailVerifyTokenPost{}, tokenError
@@ -72,7 +80,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 	emailverification.SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
-				ID: userId,
+				ID: readBody.UserId,
 				Email: emailresponse.OK.Email,
 			},
 			EmailVerifyLink: emailVerificationURL,
