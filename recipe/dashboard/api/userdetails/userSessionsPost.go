@@ -17,7 +17,6 @@ package userdetails
 
 import (
 	"encoding/json"
-	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -47,7 +46,7 @@ func UserSessionsPost(apiInterface dashboardmodels.APIInterface, options dashboa
 
 	sessionHandles := readBody.SessionHandles
 
-	if sessionHandles == nil || reflect.ValueOf(sessionHandles).Kind() != reflect.Array {
+	if sessionHandles == nil {
 		return userSessionsPostResponse{}, supertokens.BadInputError{
 			Msg: "Required parameter 'sessionHandles' is missing or has an invalid type",
 		}
