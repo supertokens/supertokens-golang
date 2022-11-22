@@ -17,6 +17,7 @@ package userdetails
 
 import (
 	"encoding/json"
+	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -27,27 +28,32 @@ type userSessionsPostResponse struct {
 	Status string `json:"status"`
 }
 
+type userSessionsPostRequestBody struct {
+	SessionHandles []string
+}
+
 func UserSessionsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userSessionsPostResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
 		return userSessionsPostResponse{}, err
 	}
-	var readBody map[string]interface{}
+
+	var readBody userSessionsPostRequestBody
 	err = json.Unmarshal(body, &readBody)
 	if err != nil {
 		return userSessionsPostResponse{}, err
 	}
 
-	sessionHandles := readBody["sessionHandles"]
+	sessionHandles := readBody.SessionHandles
 
-	if sessionHandles == nil {
+	if sessionHandles == nil || reflect.ValueOf(sessionHandles).Kind() != reflect.Array {
 		return userSessionsPostResponse{}, supertokens.BadInputError{
 			Msg: "Required parameter 'sessionHandles' is missing or has an invalid type",
 		}
 	}
 
-	session.RevokeMultipleSessions(sessionHandles.([] string))
+	session.RevokeMultipleSessions(sessionHandles)
 
 	return userSessionsPostResponse{
 		Status: "OK",
