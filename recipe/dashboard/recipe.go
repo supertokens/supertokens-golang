@@ -138,6 +138,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return userdetails.UserMetaDataGet(r.APIImpl, options)
 		} else if id == userEmailVerifyTokenAPI {
 			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options)
+		} else if id == userPasswordAPI {
+			return userdetails.UserPasswordPut(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})
