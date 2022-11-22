@@ -119,7 +119,13 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		} else if id == userAPI {
 			return userdetails.UserGet(r.APIImpl, options)
 		} else if id == userEmailVerifyAPI {
-			return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+			if (req.Method == http.MethodGet) {
+				return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+			}
+
+			if (req.Method == http.MethodPut) {
+				return userdetails.UserEmailVerifyPut(r.APIImpl, options)
+			}
 		} else if id == userSessionsAPI {
 			if req.Method == http.MethodGet {
 				return userdetails.UserSessionsGet(r.APIImpl, options)
