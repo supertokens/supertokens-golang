@@ -62,6 +62,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 	_, err := usermetadata.GetRecipeInstanceOrThrowError()
 
 	if err != nil {
+		// If metadata is not enabled then the frontend will show this as the name
 		userForRecipeId.FirstName = "FEATURE_NOT_ENABLED"
 		userForRecipeId.LastName = "FEATURE_NOT_ENABLED"
 
@@ -75,9 +76,12 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 	metadata, metadataerr := usermetadata.GetUserMetadata(userId)
 
 	if metadataerr != nil {
-		userForRecipeId.FirstName = metadata["first_name"].(string)
-		userForRecipeId.LastName = metadata["last_name"].(string)
+		return userGetResponse{}, metadataerr
 	}
+
+	// first and last name should be an empty string if they dont exist in metadata
+	userForRecipeId.FirstName = metadata["first_name"].(string)
+	userForRecipeId.LastName = metadata["last_name"].(string)
 
 	return userGetResponse{
 		Status: "OK",
