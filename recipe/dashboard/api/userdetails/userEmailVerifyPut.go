@@ -18,7 +18,6 @@ package userdetails
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -48,7 +47,6 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 	}
 
 	if readBody.Verified {
-		fmt.Println("Trying to verify");
 		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(readBody.UserID, nil)
 
 		if tokenErr != nil {
@@ -71,7 +69,6 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			return userEmailVerifyPutResponse{}, errors.New("Should never come here")
 		}
 	} else {
-		fmt.Println("Trying to unverify");
 		_, unverifyErr := emailverification.UnverifyEmail(readBody.UserID, nil)
 
 		if unverifyErr != nil {
