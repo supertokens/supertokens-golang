@@ -80,8 +80,16 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 	}
 
 	// first and last name should be an empty string if they dont exist in metadata
-	userForRecipeId.FirstName = metadata["first_name"].(string)
-	userForRecipeId.LastName = metadata["last_name"].(string)
+	userForRecipeId.FirstName = ""
+	userForRecipeId.LastName = ""
+
+	if metadata["first_name"] != nil {
+		userForRecipeId.FirstName = metadata["first_name"].(string)
+	}
+
+	if metadata["last_name"] != nil {
+		userForRecipeId.LastName = metadata["last_name"].(string)
+	}
 
 	return userGetResponse{
 		Status: "OK",
