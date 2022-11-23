@@ -386,6 +386,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 	_, recipeId := api.GetUserForRecipeId(readBody.UserId, readBody.RecipeId)
 
 	if readBody.FirstName != "" || readBody.LastName != "" {
+		fmt.Println("First name or last name present")
 		isRecipeInitialised := false
 
 		_, err = usermetadata.GetRecipeInstanceOrThrowError()
@@ -393,6 +394,8 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		if err != nil {
 			isRecipeInitialised = true
 		}
+
+		fmt.Println(isRecipeInitialised)
 
 		if isRecipeInitialised {
 			metadataupdate := make(map[string]interface{})
