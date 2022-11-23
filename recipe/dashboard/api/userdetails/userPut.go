@@ -391,7 +391,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 
 		_, err = usermetadata.GetRecipeInstanceOrThrowError()
 
-		if err != nil {
+		if err == nil {
 			isRecipeInitialised = true
 		}
 
