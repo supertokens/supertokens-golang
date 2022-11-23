@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -115,6 +116,14 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return api.UsersGet(r.APIImpl, options)
 		} else if id == usersCountAPI {
 			return api.UsersCountGet(r.APIImpl, options)
+		} else if id == userAPI {
+			return userdetails.UserGet(r.APIImpl, options)
+		} else if id == userEmailVerifyAPI {
+			return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+		} else if id == userSessionsAPI {
+			return userdetails.UserSessionsGet(r.APIImpl, options)
+		} else if id == userMetaDataAPI {
+			return userdetails.UserMetaDataGet(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})
