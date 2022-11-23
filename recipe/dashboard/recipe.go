@@ -124,6 +124,10 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			if req.Method == http.MethodPut {
 				return userdetails.UserPut(r.APIImpl, options)
 			}
+
+			if req.Method == http.MethodDelete {
+				return userdetails.UserDelete(r.APIImpl, options)
+			}
 		} else if id == userEmailVerifyAPI {
 			if (req.Method == http.MethodGet) {
 				return userdetails.UserEmailVerifyGet(r.APIImpl, options)
