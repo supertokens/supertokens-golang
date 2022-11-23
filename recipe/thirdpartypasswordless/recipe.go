@@ -156,6 +156,10 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
+func GetRecipeInstance() *Recipe {
+	return singletonInstance
+}
+
 // implement RecipeModule
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {

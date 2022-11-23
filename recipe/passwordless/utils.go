@@ -153,19 +153,19 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 		FlowType: inputConfig.FlowType,
 		ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 			Enabled:                        false,
-			ValidateEmailAddress:           defaultValidateEmailAddress,
+			ValidateEmailAddress:           DefaultValidateEmailAddress,
 			CreateAndSendCustomEmail:       inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomEmail,
-			ValidatePhoneNumber:            defaultValidatePhoneNumber,
+			ValidatePhoneNumber:            DefaultValidatePhoneNumber,
 			CreateAndSendCustomTextMessage: inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage,
 		},
 		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 			Enabled:                        false,
-			ValidatePhoneNumber:            defaultValidatePhoneNumber,
+			ValidatePhoneNumber:            DefaultValidatePhoneNumber,
 			CreateAndSendCustomTextMessage: inputConfig.ContactMethodPhone.CreateAndSendCustomTextMessage,
 		},
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled:                  false,
-			ValidateEmailAddress:     defaultValidateEmailAddress,
+			ValidateEmailAddress:     DefaultValidateEmailAddress,
 			CreateAndSendCustomEmail: inputConfig.ContactMethodEmail.CreateAndSendCustomEmail,
 		},
 		GetCustomUserInputCode: inputConfig.GetCustomUserInputCode,
@@ -180,7 +180,7 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 	}
 }
 
-func defaultValidateEmailAddress(value interface{}) *string {
+func DefaultValidateEmailAddress(value interface{}) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg
@@ -193,7 +193,7 @@ func defaultValidateEmailAddress(value interface{}) *string {
 	return nil
 }
 
-func defaultValidatePhoneNumber(value interface{}) *string {
+func DefaultValidatePhoneNumber(value interface{}) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg

@@ -117,7 +117,13 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		} else if id == usersCountAPI {
 			return api.UsersCountGet(r.APIImpl, options)
 		} else if id == userAPI {
-			return userdetails.UserGet(r.APIImpl, options)
+			if req.Method == http.MethodGet {
+				return userdetails.UserGet(r.APIImpl, options)
+			}
+
+			if req.Method == http.MethodPut {
+				return userdetails.UserPut(r.APIImpl, options)
+			}
 		} else if id == userEmailVerifyAPI {
 			if (req.Method == http.MethodGet) {
 				return userdetails.UserEmailVerifyGet(r.APIImpl, options)
