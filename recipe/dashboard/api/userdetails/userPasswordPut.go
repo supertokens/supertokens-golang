@@ -66,6 +66,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	}
 
 	if recipeToUse == "none" {
+		// This means that neither emailpassword or thirdpartyemailpassword is initialised
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 
@@ -94,6 +95,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 
 		if passwordResetToken.UnknownUserIdError != nil {
+			// Techincally it can but its an edge case so we assume that it wont
 			return userPasswordPutResponse{}, errors.New("Should never come here")
 		}
 
@@ -136,6 +138,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	}
 
 	if passwordResetToken.UnknownUserIdError != nil {
+		// Techincally it can but its an edge case so we assume that it wont
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 

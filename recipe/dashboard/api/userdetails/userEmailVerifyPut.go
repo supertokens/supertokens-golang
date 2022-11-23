@@ -65,6 +65,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			return userEmailVerifyPutResponse{}, verifyErr
 		}
 
+		// It should never come here because we generate the token immediately before this step
 		if verifyResponse.EmailVerificationInvalidTokenError != nil {
 			return userEmailVerifyPutResponse{}, errors.New("Should never come here")
 		}

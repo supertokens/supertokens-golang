@@ -45,6 +45,13 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		return userMetadataPutResponse{}, err
 	}
 
+	_, instanceError := usermetadata.GetRecipeInstanceOrThrowError()
+
+	// This is so that the API exists early if the recipe has not been initialised
+	if instanceError != nil {
+		return userMetadataPutResponse{}, instanceError
+	}
+
 	var parsedMetaData map[string]interface{}
 	parseErr := json.Unmarshal([]byte(readBody.Data), &parsedMetaData)
 
@@ -54,6 +61,17 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 	}
 
+	/**
+     * This API is meant to set the user metadata of a user. We delete the existing data
+     * before updating it because we want to make sure that shallow merging does not result
+     * in the data being incorrect
+     *
+     * For example if the old data is {test: "test", test2: "test2"} and the user wants to delete
+     * test2 from the data simply calling updateUserMetadata with {test: "test"} would not remove
+     * test2 because of shallow merging.
+     *
+     * Removing first ensures that the final data is exactly what the user wanted it to be
+     */
 	clearErr := usermetadata.ClearUserMetadata(readBody.UserId)
 
 	if clearErr != nil {

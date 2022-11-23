@@ -366,6 +366,9 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string)(update
 		}, nil
 	}
 
+	/**
+     * If it comes here then the user is a not a passwordless user in which case the UI should not have allowed this
+     */
 	return updatePhoneResponse{}, errors.New("Should never come here")
 }
 
@@ -393,6 +396,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 			isRecipeInitialised = true
 		}
 
+		// If the recipe is not initialised we consider updating the names as a no-op instead of throwing an error
 		if isRecipeInitialised {
 			metadataupdate := make(map[string]interface{})
 
