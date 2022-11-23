@@ -18,6 +18,7 @@ package userdetails
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
@@ -403,6 +404,8 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 			if strings.TrimSpace(readBody.LastName) != "" {
 				metadataupdate["last_name"] = strings.TrimSpace(readBody.LastName)
 			}
+
+			fmt.Println(metadataupdate)
 
 			usermetadata.UpdateUserMetadata(readBody.UserId, metadataupdate)
 		}
