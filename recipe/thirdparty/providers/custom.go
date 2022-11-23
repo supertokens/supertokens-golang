@@ -47,7 +47,7 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		input.Config.TenantId = tenantId
 
-		configFromCore, err := (*recipeImpl.FetchTenantIdConfigMapping)(input.ThirdPartyID, tenantId, userContext)
+		configFromCore, err := (*recipeImpl.FetchThirdPartyConfig)(input.ThirdPartyID, tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProviderConfig{}, err
 		}
@@ -166,10 +166,6 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
 			}
 
-			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
-		}
-
-		if len(inputConfig.Clients) == 1 {
 			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
 		}
 

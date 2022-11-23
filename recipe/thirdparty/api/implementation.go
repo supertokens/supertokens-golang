@@ -31,13 +31,13 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	providersForTenantGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
+	configuredProvidersGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
 		providers := []struct {
 			ID   string `json:"id"`
 			Name string `json:"name,omitempty"`
 		}{}
 
-		configsFromCore, err := (*options.RecipeImplementation.ListConfigMappingsForTenant)(tenantId, userContext)
+		configsFromCore, err := (*options.RecipeImplementation.ListThirdPartyConfigs)(tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProvidersForTenantGetResponse{}, err
 		}
@@ -225,7 +225,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	return tpmodels.APIInterface{
-		ProvidersForTenantGET:    &providersForTenantGET,
+		ConfiguredProvidersGET:   &configuredProvidersGET,
 		AuthorisationUrlGET:      &authorisationUrlGET,
 		SignInUpPOST:             &signInUpPOST,
 		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,

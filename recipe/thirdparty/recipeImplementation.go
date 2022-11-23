@@ -123,24 +123,24 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 	}
 
 	// Multi-tenancy
-	createOrUpdateTenantIdConfigMapping := func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
+	createOrUpdateThirdPartyConfig := func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
 		// TODO impl
 		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, nil
 	}
 
-	fetchTenantIdConfigMapping := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
+	fetchThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
 		// TODO impl
 		return tpmodels.FetchTenantIdConfigResponse{
 			UnknownMappingError: &struct{}{},
 		}, nil
 	}
 
-	deleteTenantIdConfigMapping := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
+	deleteThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
 		// TODO impl
 		return tpmodels.DeleteTenantIdConfigResponse{}, nil
 	}
 
-	listConfigMappingsForTenant := func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
+	listThirdPartyConfigs := func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
 		// TODO impl
 		return tpmodels.ListTenantConfigMappingsResponse{
 			OK: &struct {
@@ -164,9 +164,9 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
 
-		CreateOrUpdateTenantIdConfigMapping: &createOrUpdateTenantIdConfigMapping,
-		FetchTenantIdConfigMapping:          &fetchTenantIdConfigMapping,
-		DeleteTenantIdConfigMapping:         &deleteTenantIdConfigMapping,
-		ListConfigMappingsForTenant:         &listConfigMappingsForTenant,
+		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
+		FetchThirdPartyConfig:          &fetchThirdPartyConfig,
+		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
+		ListThirdPartyConfigs:          &listThirdPartyConfigs,
 	}
 }

@@ -173,4 +173,4 @@ type TypeProvider struct {
 	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
-const DefaultTenantId string = "public" // TODO set the value based on what's decided for core
+const DefaultTenantId string = "defaultTenantId"

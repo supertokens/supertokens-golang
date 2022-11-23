@@ -21,7 +21,7 @@ import (
 )
 
 func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
-	if apiImplementation.ProvidersForTenantGET == nil || (*apiImplementation.ProvidersForTenantGET) == nil {
+	if apiImplementation.ConfiguredProvidersGET == nil || (*apiImplementation.ConfiguredProvidersGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
@@ -29,11 +29,11 @@ func ProvidersForTenantAPI(apiImplementation tpmodels.APIInterface, options tpmo
 	var tenantId *string = nil
 	tenantIdStr := queryParams.Get("tenantId")
 
-	if tenantIdStr == "" {
+	if tenantIdStr != "" {
 		tenantId = &tenantIdStr
 	}
 
-	result, err := (*apiImplementation.ProvidersForTenantGET)(tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.ConfiguredProvidersGET)(tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 
 	if err != nil {
 		return err
