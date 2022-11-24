@@ -104,13 +104,18 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 		return &val, nil
 	}
 
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), userSessionsAPI) {
+	if (method == http.MethodGet || method == http.MethodPost) && strings.HasSuffix(path.GetAsStringDangerous(), userSessionsAPI) {
 		val := userSessionsAPI
 		return &val, nil
 	}
 
 	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), userMetaDataAPI) {
 		val := userMetaDataAPI
+		return &val, nil
+	}
+
+	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), userEmailVerifyTokenAPI) {
+		val := userEmailVerifyTokenAPI
 		return &val, nil
 	}
 
