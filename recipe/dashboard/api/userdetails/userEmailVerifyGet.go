@@ -22,16 +22,16 @@ import (
 )
 
 type userEmailVerifyGetResponse struct {
-	Status string `json:"status"`
-	IsVerified bool `json:"isVerified,omitempty"`
+	Status     string `json:"status"`
+	IsVerified *bool  `json:"isVerified,omitempty"`
 }
 
-func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyGetResponse, error) {
+func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
 	if userId == "" {
-		return userEmailVerifyGetResponse{}, supertokens.BadInputError {
+		return userEmailVerifyGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
@@ -51,7 +51,7 @@ func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options 
 	}
 
 	return userEmailVerifyGetResponse{
-		Status: "OK",
-		IsVerified: response,
+		Status:     "OK",
+		IsVerified: &response,
 	}, nil
 }

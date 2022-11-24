@@ -24,25 +24,25 @@ import (
 )
 
 type SessionType struct {
-	SessionData interface{} `json:"sessionData"`
+	SessionData        interface{} `json:"sessionData"`
 	AccessTokenPayload interface{} `json:"accessTokenPayload"`
-	UserId string `json:"userId"`
-	Expiry uint64 `json:"expiry"`
-	TimeCreated uint64 `json:"timeCreated"`
-	SessionHandle string `json:"sessionHandle"`
+	UserId             string      `json:"userId"`
+	Expiry             uint64      `json:"expiry"`
+	TimeCreated        uint64      `json:"timeCreated"`
+	SessionHandle      string      `json:"sessionHandle"`
 }
 
 type userSessionsGetResponse struct {
-	Status string `json:"status"`
+	Status   string        `json:"status"`
 	Sessions []SessionType `json:"sessions"`
 }
 
-func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userSessionsGetResponse, error) {
+func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userSessionsGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
 	if userId == "" {
-		return userSessionsGetResponse{}, supertokens.BadInputError {
+		return userSessionsGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
@@ -74,12 +74,12 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 
 			if sessionResponse != nil {
 				sessions = append(sessions, SessionType{
-					SessionData: sessionResponse.SessionData,
+					SessionData:        sessionResponse.SessionData,
 					AccessTokenPayload: sessionResponse.AccessTokenPayload,
-					UserId: sessionResponse.UserId,
-					Expiry: sessionResponse.Expiry,
-					TimeCreated: sessionResponse.TimeCreated,
-					SessionHandle: sessionResponse.SessionHandle,
+					UserId:             sessionResponse.UserId,
+					Expiry:             sessionResponse.Expiry,
+					TimeCreated:        sessionResponse.TimeCreated,
+					SessionHandle:      sessionResponse.SessionHandle,
 				})
 			}
 
@@ -94,7 +94,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 	processingGroup.Wait()
 
 	return userSessionsGetResponse{
-		Status: "OK",
+		Status:   "OK",
 		Sessions: sessions,
 	}, nil
 }

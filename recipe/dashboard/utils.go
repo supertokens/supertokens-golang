@@ -94,12 +94,12 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 		return &val, nil
 	}
 
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), userAPI) {
+	if (method == http.MethodGet || method == http.MethodPut || method == http.MethodDelete) && strings.HasSuffix(path.GetAsStringDangerous(), userAPI) {
 		val := userAPI
 		return &val, nil
 	}
 
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), userEmailVerifyAPI) {
+	if (method == http.MethodGet || method == http.MethodPut) && strings.HasSuffix(path.GetAsStringDangerous(), userEmailVerifyAPI) {
 		val := userEmailVerifyAPI
 		return &val, nil
 	}
@@ -109,13 +109,18 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 		return &val, nil
 	}
 
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), userMetaDataAPI) {
+	if (method == http.MethodGet || method == http.MethodPut) && strings.HasSuffix(path.GetAsStringDangerous(), userMetaDataAPI) {
 		val := userMetaDataAPI
 		return &val, nil
 	}
 
 	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), userEmailVerifyTokenAPI) {
 		val := userEmailVerifyTokenAPI
+		return &val, nil
+	}
+
+	if method == http.MethodPut && strings.HasSuffix(path.GetAsStringDangerous(), userPasswordAPI) {
+		val := userPasswordAPI
 		return &val, nil
 	}
 

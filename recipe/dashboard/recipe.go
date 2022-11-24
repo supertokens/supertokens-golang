@@ -117,9 +117,25 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		} else if id == usersCountAPI {
 			return api.UsersCountGet(r.APIImpl, options)
 		} else if id == userAPI {
-			return userdetails.UserGet(r.APIImpl, options)
+			if req.Method == http.MethodGet {
+				return userdetails.UserGet(r.APIImpl, options)
+			}
+
+			if req.Method == http.MethodPut {
+				return userdetails.UserPut(r.APIImpl, options)
+			}
+
+			if req.Method == http.MethodDelete {
+				return userdetails.UserDelete(r.APIImpl, options)
+			}
 		} else if id == userEmailVerifyAPI {
-			return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+			if req.Method == http.MethodGet {
+				return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+			}
+
+			if req.Method == http.MethodPut {
+				return userdetails.UserEmailVerifyPut(r.APIImpl, options)
+			}
 		} else if id == userSessionsAPI {
 			if req.Method == http.MethodGet {
 				return userdetails.UserSessionsGet(r.APIImpl, options)
@@ -129,9 +145,17 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 				return userdetails.UserSessionsPost(r.APIImpl, options)
 			}
 		} else if id == userMetaDataAPI {
-			return userdetails.UserMetaDataGet(r.APIImpl, options)
+			if req.Method == http.MethodGet {
+				return userdetails.UserMetaDataGet(r.APIImpl, options)
+			}
+
+			if req.Method == http.MethodPut {
+				return userdetails.UserMetaDataPut(r.APIImpl, options)
+			}
 		} else if id == userEmailVerifyTokenAPI {
 			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options)
+		} else if id == userPasswordAPI {
+			return userdetails.UserPasswordPut(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})

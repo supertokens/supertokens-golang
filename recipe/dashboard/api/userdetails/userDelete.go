@@ -17,41 +17,30 @@ package userdetails
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
-	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type userMetaDataGetResponse struct {
-	Status string      `json:"status"`
-	Data   interface{} `json:"data,omitempty"`
+type userDeleteResponse struct {
+	Status string `json:"status"`
 }
 
-func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userMetaDataGetResponse, error) {
+func UserDelete(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userDeleteResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
 	if userId == "" {
-		return userMetaDataGetResponse{}, supertokens.BadInputError{
+		return userDeleteResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
 
-	_, instanceError := usermetadata.GetRecipeInstanceOrThrowError()
+	deleteError := supertokens.DeleteUser(userId)
 
-	if instanceError != nil {
-		return userMetaDataGetResponse{
-			Status: "FEATURE_NOT_ENABLED_ERROR",
-		}, nil
+	if deleteError != nil {
+		return userDeleteResponse{}, deleteError
 	}
 
-	metadata, err := usermetadata.GetUserMetadata(userId)
-
-	if err != nil {
-		return userMetaDataGetResponse{}, err
-	}
-
-	return userMetaDataGetResponse{
+	return userDeleteResponse{
 		Status: "OK",
-		Data:   metadata,
 	}, nil
 }
