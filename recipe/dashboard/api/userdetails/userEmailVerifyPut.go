@@ -29,8 +29,8 @@ type userEmailVerifyPutResponse struct {
 }
 
 type userEmailVerifyPutRequestBody struct {
-	UserID string
-	Verified bool
+	UserID string `json:"userId"`
+	Verified bool `json:"verified"`
 }
 
 func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyPutResponse, error) {

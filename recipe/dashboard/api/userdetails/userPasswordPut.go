@@ -32,8 +32,8 @@ type userPasswordPutResponse struct {
 }
 
 type userPasswordPutRequestBody struct {
-	UserId string
-	NewPassword string
+	UserId string `json:"userId"`
+	NewPassword string `json:"newPassword`
 }
 
 func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userPasswordPutResponse, error) {

@@ -28,8 +28,8 @@ type userMetadataPutResponse struct {
 }
 
 type userMetaDataRequestBody struct {
-	UserId string
-	Data string
+	UserId string `json:"userId"`
+	Data string `json:"data"`
 }
 
 func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userMetadataPutResponse, error) {

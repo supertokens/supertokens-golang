@@ -47,12 +47,12 @@ type updatePhoneResponse struct {
 }
 
 type userPutRequestBody struct {
-	UserId string
-	RecipeId string
-	FirstName string
-	LastName string
-	Email string
-	Phone string
+	UserId string `json:"userId"`
+	RecipeId string `json:"recipeId"`
+	FirstName string `json:"firstName"`
+	LastName string `json:"lastName"`
+	Email string `json:"email"`
+	Phone string `json:"phone"`
 }
 
 func updateEmailForRecipeId(recipeId string, userId string, email string)(updateEmailResponse, error) {
