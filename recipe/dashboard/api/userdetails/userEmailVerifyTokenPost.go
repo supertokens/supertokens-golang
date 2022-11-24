@@ -31,7 +31,7 @@ type userEmailVerifyTokenPost struct {
 }
 
 type userEmailverifyTokenPostRequestBody struct {
-	UserId string
+	UserId string `json:"userId"`
 }
 
 func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyTokenPost, error) {

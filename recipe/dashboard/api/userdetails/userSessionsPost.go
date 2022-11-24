@@ -28,7 +28,7 @@ type userSessionsPostResponse struct {
 }
 
 type userSessionsPostRequestBody struct {
-	SessionHandles []string
+	SessionHandles []string `json:"sessionHandles"`
 }
 
 func UserSessionsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userSessionsPostResponse, error) {
