@@ -9,7 +9,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 )
 
-func IsValidRecipeId(recipeId string)(bool) {
+func IsValidRecipeId(recipeId string) bool {
 	return recipeId == "emailpassword" || recipeId == "thirdparty" || recipeId == "passwordless"
 }
 
@@ -25,7 +25,7 @@ recipe so we need to check for both.
 
 If this function returns an empty user struct, it should be treated as if the user does not exist
 */
-func GetUserForRecipeId(userId string, recipeId string)(user dashboardmodels.UserType, recipe string) {
+func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.UserType, recipe string) {
 	var userToReturn dashboardmodels.UserType
 	var recipeToReturn string
 

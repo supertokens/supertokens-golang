@@ -34,7 +34,7 @@ type userEmailverifyTokenPostRequestBody struct {
 	UserId string `json:"userId"`
 }
 
-func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyTokenPost, error) {
+func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyTokenPost, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -80,7 +80,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 	emailverification.SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
-				ID: readBody.UserId,
+				ID:    readBody.UserId,
 				Email: emailresponse.OK.Email,
 			},
 			EmailVerifyLink: emailVerificationURL,

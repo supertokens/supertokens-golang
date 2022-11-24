@@ -28,15 +28,15 @@ import (
 
 type userPasswordPutResponse struct {
 	Status string `json:"status,omitempty"`
-	Error string `json:"error,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 type userPasswordPutRequestBody struct {
-	UserId string `json:"userId"`
+	UserId      string `json:"userId"`
 	NewPassword string `json:"newPassword`
 }
 
-func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userPasswordPutResponse, error) {
+func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userPasswordPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -84,7 +84,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		if validationError != nil {
 			return userPasswordPutResponse{
 				Status: "INVALID_PASSWORD_ERROR",
-				Error: *validationError,
+				Error:  *validationError,
 			}, nil
 		}
 
@@ -127,7 +127,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	if validationError != nil {
 		return userPasswordPutResponse{
 			Status: "INVALID_PASSWORD_ERROR",
-			Error: *validationError,
+			Error:  *validationError,
 		}, nil
 	}
 

@@ -23,30 +23,30 @@ import (
 )
 
 type userGetResponse struct {
-	Status string  `json:"status"`
-	RecipeId string `json:"recipeId,omitempty"`
-	User dashboardmodels.UserType `json:"user,omitempty"`
+	Status   string                   `json:"status"`
+	RecipeId string                   `json:"recipeId,omitempty"`
+	User     dashboardmodels.UserType `json:"user,omitempty"`
 }
 
-func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userGetResponse, error) {
+func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 	recipeId := req.URL.Query().Get("recipeId")
 
 	if userId == "" {
-		return userGetResponse{}, supertokens.BadInputError {
+		return userGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
 
 	if recipeId == "" {
-		return userGetResponse{}, supertokens.BadInputError {
+		return userGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'recipeId'",
 		}
 	}
 
 	if !api.IsValidRecipeId(recipeId) {
-		return userGetResponse{}, supertokens.BadInputError {
+		return userGetResponse{}, supertokens.BadInputError{
 			Msg: "Invalid recipe id",
 		}
 	}
@@ -67,9 +67,9 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		userForRecipeId.LastName = "FEATURE_NOT_ENABLED"
 
 		return userGetResponse{
-			Status: "OK",
+			Status:   "OK",
 			RecipeId: recipeId,
-			User: userForRecipeId,
+			User:     userForRecipeId,
 		}, nil
 	}
 
@@ -92,8 +92,8 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 	}
 
 	return userGetResponse{
-		Status: "OK",
+		Status:   "OK",
 		RecipeId: recipeId,
-		User: userForRecipeId,
+		User:     userForRecipeId,
 	}, nil
 }

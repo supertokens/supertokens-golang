@@ -29,10 +29,10 @@ type userMetadataPutResponse struct {
 
 type userMetaDataRequestBody struct {
 	UserId string `json:"userId"`
-	Data string `json:"data"`
+	Data   string `json:"data"`
 }
 
-func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userMetadataPutResponse, error) {
+func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userMetadataPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -62,16 +62,16 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	}
 
 	/**
-     * This API is meant to set the user metadata of a user. We delete the existing data
-     * before updating it because we want to make sure that shallow merging does not result
-     * in the data being incorrect
-     *
-     * For example if the old data is {test: "test", test2: "test2"} and the user wants to delete
-     * test2 from the data simply calling updateUserMetadata with {test: "test"} would not remove
-     * test2 because of shallow merging.
-     *
-     * Removing first ensures that the final data is exactly what the user wanted it to be
-     */
+	 * This API is meant to set the user metadata of a user. We delete the existing data
+	 * before updating it because we want to make sure that shallow merging does not result
+	 * in the data being incorrect
+	 *
+	 * For example if the old data is {test: "test", test2: "test2"} and the user wants to delete
+	 * test2 from the data simply calling updateUserMetadata with {test: "test"} would not remove
+	 * test2 because of shallow merging.
+	 *
+	 * Removing first ensures that the final data is exactly what the user wanted it to be
+	 */
 	clearErr := usermetadata.ClearUserMetadata(readBody.UserId)
 
 	if clearErr != nil {

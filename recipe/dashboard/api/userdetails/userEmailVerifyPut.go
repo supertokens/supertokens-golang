@@ -29,11 +29,11 @@ type userEmailVerifyPutResponse struct {
 }
 
 type userEmailVerifyPutRequestBody struct {
-	UserID string `json:"userId"`
-	Verified bool `json:"verified"`
+	UserID   string `json:"userId"`
+	Verified bool   `json:"verified"`
 }
 
-func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userEmailVerifyPutResponse, error) {
+func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {

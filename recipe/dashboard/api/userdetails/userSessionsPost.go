@@ -31,7 +31,7 @@ type userSessionsPostRequestBody struct {
 	SessionHandles []string `json:"sessionHandles"`
 }
 
-func UserSessionsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userSessionsPostResponse, error) {
+func UserSessionsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userSessionsPostResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {

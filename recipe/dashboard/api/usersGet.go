@@ -21,12 +21,12 @@ type Users struct {
 }
 
 type User struct {
-	Id          string     `json:"id"`
-	TimeJoined  float64    `json:"timeJoined"`
-	FirstName   string     `json:"firstName,omitempty"`
-	LastName    string     `json:"lastName,omitempty"`
-	Email       string     `json:"email,omitempty"`
-	PhoneNumber string     `json:"phoneNumber,omitempty"`
+	Id          string                     `json:"id"`
+	TimeJoined  float64                    `json:"timeJoined"`
+	FirstName   string                     `json:"firstName,omitempty"`
+	LastName    string                     `json:"lastName,omitempty"`
+	Email       string                     `json:"email,omitempty"`
+	PhoneNumber string                     `json:"phoneNumber,omitempty"`
 	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
 }
 

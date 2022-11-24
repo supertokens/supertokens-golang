@@ -33,29 +33,29 @@ import (
 
 type userPutResponse struct {
 	Status string `json:"status"`
-	Error string `json:"error,omitempty"`
+	Error  string `json:"error,omitempty"`
 }
 
 type updateEmailResponse struct {
 	Status string
-	Error string
+	Error  string
 }
 
 type updatePhoneResponse struct {
 	Status string
-	Error string
+	Error  string
 }
 
 type userPutRequestBody struct {
-	UserId string `json:"userId"`
-	RecipeId string `json:"recipeId"`
+	UserId    string `json:"userId"`
+	RecipeId  string `json:"recipeId"`
 	FirstName string `json:"firstName"`
-	LastName string `json:"lastName"`
-	Email string `json:"email"`
-	Phone string `json:"phone"`
+	LastName  string `json:"lastName"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
 }
 
-func updateEmailForRecipeId(recipeId string, userId string, email string)(updateEmailResponse, error) {
+func updateEmailForRecipeId(recipeId string, userId string, email string) (updateEmailResponse, error) {
 	if recipeId == "emailpassword" {
 		var emailField epmodels.NormalisedFormField
 
@@ -70,7 +70,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string)(update
 		if validationError != nil {
 			return updateEmailResponse{
 				Status: "INVALID_EMAIL_ERROR",
-				Error: *validationError,
+				Error:  *validationError,
 			}, nil
 		}
 
@@ -109,7 +109,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string)(update
 		if validationError != nil {
 			return updateEmailResponse{
 				Status: "INVALID_EMAIL_ERROR",
-				Error: *validationError,
+				Error:  *validationError,
 			}, nil
 		}
 
@@ -166,7 +166,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string)(update
 		if !isValidEmail {
 			return updateEmailResponse{
 				Status: "INVALID_EMAIL_ERROR",
-				Error: validationError,
+				Error:  validationError,
 			}, nil
 		}
 
@@ -223,7 +223,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string)(update
 		if !isValidEmail {
 			return updateEmailResponse{
 				Status: "INVALID_EMAIL_ERROR",
-				Error: validationError,
+				Error:  validationError,
 			}, nil
 		}
 
@@ -251,7 +251,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string)(update
 	return updateEmailResponse{}, errors.New("Should never come here")
 }
 
-func updatePhoneForRecipeId(recipeId string, userId string, phone string)(updatePhoneResponse, error){
+func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updatePhoneResponse, error) {
 	if recipeId == "passwordless" {
 		isValidPhone := true
 		validationError := ""
@@ -284,7 +284,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string)(update
 		if !isValidPhone {
 			return updatePhoneResponse{
 				Status: "INVALID_PHONE_ERROR",
-				Error: validationError,
+				Error:  validationError,
 			}, nil
 		}
 
@@ -341,7 +341,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string)(update
 		if !isValidPhone {
 			return updatePhoneResponse{
 				Status: "INVALID_PHONE_ERROR",
-				Error: validationError,
+				Error:  validationError,
 			}, nil
 		}
 
@@ -367,12 +367,12 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string)(update
 	}
 
 	/**
-     * If it comes here then the user is a not a passwordless user in which case the UI should not have allowed this
-     */
+	 * If it comes here then the user is a not a passwordless user in which case the UI should not have allowed this
+	 */
 	return updatePhoneResponse{}, errors.New("Should never come here")
 }
 
-func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userPutResponse, error) {
+func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -422,7 +422,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		if updateResponse.Status != "OK" {
 			return userPutResponse{
 				Status: updateResponse.Status,
-				Error: updateResponse.Error,
+				Error:  updateResponse.Error,
 			}, nil
 		}
 	}
@@ -437,7 +437,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		if updateResponse.Status != "OK" {
 			return userPutResponse{
 				Status: updateResponse.Status,
-				Error: updateResponse.Error,
+				Error:  updateResponse.Error,
 			}, nil
 		}
 	}

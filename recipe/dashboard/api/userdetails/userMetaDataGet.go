@@ -22,16 +22,16 @@ import (
 )
 
 type userMetaDataGetResponse struct {
-	Status string `json:"status"`
-	Data interface{} `json:"data,omitempty"`
+	Status string      `json:"status"`
+	Data   interface{} `json:"data,omitempty"`
 }
 
-func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userMetaDataGetResponse, error) {
+func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userMetaDataGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
 	if userId == "" {
-		return userMetaDataGetResponse{}, supertokens.BadInputError {
+		return userMetaDataGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
@@ -52,6 +52,6 @@ func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboar
 
 	return userMetaDataGetResponse{
 		Status: "OK",
-		Data: metadata,
+		Data:   metadata,
 	}, nil
 }

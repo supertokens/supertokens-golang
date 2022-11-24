@@ -24,12 +24,12 @@ type userDeleteResponse struct {
 	Status string `json:"status"`
 }
 
-func UserDelete(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions)(userDeleteResponse, error) {
+func UserDelete(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userDeleteResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
 	if userId == "" {
-		return userDeleteResponse{}, supertokens.BadInputError {
+		return userDeleteResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}

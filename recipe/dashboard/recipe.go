@@ -129,11 +129,11 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 				return userdetails.UserDelete(r.APIImpl, options)
 			}
 		} else if id == userEmailVerifyAPI {
-			if (req.Method == http.MethodGet) {
+			if req.Method == http.MethodGet {
 				return userdetails.UserEmailVerifyGet(r.APIImpl, options)
 			}
 
-			if (req.Method == http.MethodPut) {
+			if req.Method == http.MethodPut {
 				return userdetails.UserEmailVerifyPut(r.APIImpl, options)
 			}
 		} else if id == userSessionsAPI {
