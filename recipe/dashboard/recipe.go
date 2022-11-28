@@ -142,7 +142,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			}
 
 			if req.Method == http.MethodPost {
-				return userdetails.UserSessionsPost(r.APIImpl, options)
+				return userdetails.UserSessionsRevoke(r.APIImpl, options)
 			}
 		} else if id == userMetaDataAPI {
 			if req.Method == http.MethodGet {
