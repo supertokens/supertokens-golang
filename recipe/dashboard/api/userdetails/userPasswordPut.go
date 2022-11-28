@@ -32,8 +32,8 @@ type userPasswordPutResponse struct {
 }
 
 type userPasswordPutRequestBody struct {
-	UserId      string `json:"userId"`
-	NewPassword string `json:"newPassword`
+	UserId      *string `json:"userId"`
+	NewPassword *string `json:"newPassword`
 }
 
 func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userPasswordPutResponse, error) {
@@ -47,6 +47,18 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	err = json.Unmarshal(body, &readBody)
 	if err != nil {
 		return userPasswordPutResponse{}, err
+	}
+
+	if readBody.UserId == nil {
+		return userPasswordPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'userId' is missing",
+		}
+	}
+
+	if readBody.NewPassword == nil {
+		return userPasswordPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'newPassword' is missing",
+		}
 	}
 
 	recipeToUse := "none"
@@ -88,7 +100,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			}, nil
 		}
 
-		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(readBody.UserId)
+		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(*readBody.UserId)
 
 		if resetTokenErr != nil {
 			return userPasswordPutResponse{}, resetTokenErr
@@ -99,7 +111,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			return userPasswordPutResponse{}, errors.New("Should never come here")
 		}
 
-		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, readBody.NewPassword)
+		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword)
 
 		if passwordResetErr != nil {
 			return userPasswordPutResponse{}, passwordResetErr
@@ -131,7 +143,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		}, nil
 	}
 
-	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordToken(readBody.UserId)
+	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordToken(*readBody.UserId)
 
 	if resetTokenErr != nil {
 		return userPasswordPutResponse{}, resetTokenErr
@@ -142,7 +154,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 
-	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, readBody.NewPassword)
+	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword)
 
 	if passwordResetErr != nil {
 		return userPasswordPutResponse{}, passwordResetErr

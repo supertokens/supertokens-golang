@@ -28,7 +28,7 @@ type userSessionsPostResponse struct {
 }
 
 type userSessionsPostRequestBody struct {
-	SessionHandles []string `json:"sessionHandles"`
+	SessionHandles *[]string `json:"sessionHandles"`
 }
 
 func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userSessionsPostResponse, error) {
@@ -52,7 +52,7 @@ func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, options dashb
 		}
 	}
 
-	session.RevokeMultipleSessions(sessionHandles)
+	session.RevokeMultipleSessions(*sessionHandles)
 
 	return userSessionsPostResponse{
 		Status: "OK",

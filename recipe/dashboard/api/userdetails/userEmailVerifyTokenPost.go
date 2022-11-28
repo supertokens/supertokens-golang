@@ -31,7 +31,7 @@ type userEmailVerifyTokenPost struct {
 }
 
 type userEmailverifyTokenPostRequestBody struct {
-	UserId string `json:"userId"`
+	UserId *string `json:"userId"`
 }
 
 func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyTokenPost, error) {
@@ -47,7 +47,13 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, err
 	}
 
-	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(readBody.UserId, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	if readBody.UserId == nil {
+		return userEmailVerifyTokenPost{}, supertokens.BadInputError{
+			Msg: "Required parameter 'userId' is missing",
+		}
+	}
+
+	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(*readBody.UserId, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 
 	if emailErr != nil {
 		return userEmailVerifyTokenPost{}, emailErr
@@ -57,7 +63,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
 	}
 
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(readBody.UserId, &emailresponse.OK.Email)
+	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(*readBody.UserId, &emailresponse.OK.Email)
 
 	if tokenError != nil {
 		return userEmailVerifyTokenPost{}, tokenError
@@ -80,7 +86,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 	emailverification.SendEmail(emaildelivery.EmailType{
 		EmailVerification: &emaildelivery.EmailVerificationType{
 			User: emaildelivery.User{
-				ID:    readBody.UserId,
+				ID:    *readBody.UserId,
 				Email: emailresponse.OK.Email,
 			},
 			EmailVerifyLink: emailVerificationURL,

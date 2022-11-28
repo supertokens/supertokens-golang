@@ -47,12 +47,12 @@ type updatePhoneResponse struct {
 }
 
 type userPutRequestBody struct {
-	UserId    string `json:"userId"`
-	RecipeId  string `json:"recipeId"`
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
-	Phone     string `json:"phone"`
+	UserId    *string `json:"userId"`
+	RecipeId  *string `json:"recipeId"`
+	FirstName *string `json:"firstName"`
+	LastName  *string `json:"lastName"`
+	Email     *string `json:"email"`
+	Phone     *string `json:"phone"`
 }
 
 func updateEmailForRecipeId(recipeId string, userId string, email string) (updateEmailResponse, error) {
@@ -385,9 +385,45 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		return userPutResponse{}, err
 	}
 
-	_, recipeId := api.GetUserForRecipeId(readBody.UserId, readBody.RecipeId)
+	if readBody.UserId == nil {
+		return userPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'userid' is missing",
+		}
+	}
 
-	if readBody.FirstName != "" || readBody.LastName != "" {
+	if readBody.RecipeId == nil {
+		return userPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'recipeId' is missing",
+		}
+	}
+
+	if readBody.FirstName == nil {
+		return userPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'firstName' is missing",
+		}
+	}
+
+	if readBody.LastName == nil {
+		return userPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'lastName' is missing",
+		}
+	}
+
+	if readBody.Email == nil {
+		return userPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'email' is missing",
+		}
+	}
+
+	if readBody.Phone == nil {
+		return userPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'phone' is missing",
+		}
+	}
+
+	_, recipeId := api.GetUserForRecipeId(*readBody.UserId, *readBody.RecipeId)
+
+	if *readBody.FirstName != "" || *readBody.LastName != "" {
 		isRecipeInitialised := false
 
 		_, err = usermetadata.GetRecipeInstanceOrThrowError()
@@ -400,20 +436,20 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		if isRecipeInitialised {
 			metadataupdate := make(map[string]interface{})
 
-			if strings.TrimSpace(readBody.FirstName) != "" {
-				metadataupdate["first_name"] = strings.TrimSpace(readBody.FirstName)
+			if strings.TrimSpace(*readBody.FirstName) != "" {
+				metadataupdate["first_name"] = strings.TrimSpace(*readBody.FirstName)
 			}
 
-			if strings.TrimSpace(readBody.LastName) != "" {
-				metadataupdate["last_name"] = strings.TrimSpace(readBody.LastName)
+			if strings.TrimSpace(*readBody.LastName) != "" {
+				metadataupdate["last_name"] = strings.TrimSpace(*readBody.LastName)
 			}
 
-			usermetadata.UpdateUserMetadata(readBody.UserId, metadataupdate)
+			usermetadata.UpdateUserMetadata(*readBody.UserId, metadataupdate)
 		}
 	}
 
-	if strings.TrimSpace(readBody.Email) != "" {
-		updateResponse, updateError := updateEmailForRecipeId(recipeId, readBody.UserId, strings.TrimSpace(readBody.Email))
+	if strings.TrimSpace(*readBody.Email) != "" {
+		updateResponse, updateError := updateEmailForRecipeId(recipeId, *readBody.UserId, strings.TrimSpace(*readBody.Email))
 
 		if updateError != nil {
 			return userPutResponse{}, updateError
@@ -427,8 +463,8 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		}
 	}
 
-	if strings.TrimSpace(readBody.Phone) != "" {
-		updateResponse, updateError := updatePhoneForRecipeId(recipeId, readBody.UserId, readBody.Phone)
+	if strings.TrimSpace(*readBody.Phone) != "" {
+		updateResponse, updateError := updatePhoneForRecipeId(recipeId, *readBody.UserId, *readBody.Phone)
 
 		if updateError != nil {
 			return userPutResponse{}, updateError

@@ -28,8 +28,8 @@ type userMetadataPutResponse struct {
 }
 
 type userMetaDataRequestBody struct {
-	UserId string `json:"userId"`
-	Data   string `json:"data"`
+	UserId *string `json:"userId"`
+	Data   *string `json:"data"`
 }
 
 func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userMetadataPutResponse, error) {
@@ -45,6 +45,18 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		return userMetadataPutResponse{}, err
 	}
 
+	if readBody.UserId == nil {
+		return userMetadataPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'userId' is missing",
+		}
+	}
+
+	if readBody.Data == nil {
+		return userMetadataPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'data' is missing",
+		}
+	}
+
 	_, instanceError := usermetadata.GetRecipeInstanceOrThrowError()
 
 	// This is so that the API exists early if the recipe has not been initialised
@@ -53,7 +65,7 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	}
 
 	var parsedMetaData map[string]interface{}
-	parseErr := json.Unmarshal([]byte(readBody.Data), &parsedMetaData)
+	parseErr := json.Unmarshal([]byte(*readBody.Data), &parsedMetaData)
 
 	if parseErr != nil {
 		return userMetadataPutResponse{}, supertokens.BadInputError{
@@ -72,13 +84,13 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	 *
 	 * Removing first ensures that the final data is exactly what the user wanted it to be
 	 */
-	clearErr := usermetadata.ClearUserMetadata(readBody.UserId)
+	clearErr := usermetadata.ClearUserMetadata(*readBody.UserId)
 
 	if clearErr != nil {
 		return userMetadataPutResponse{}, clearErr
 	}
 
-	_, updateErr := usermetadata.UpdateUserMetadata(readBody.UserId, parsedMetaData)
+	_, updateErr := usermetadata.UpdateUserMetadata(*readBody.UserId, parsedMetaData)
 
 	if updateErr != nil {
 		return userMetadataPutResponse{}, updateErr
