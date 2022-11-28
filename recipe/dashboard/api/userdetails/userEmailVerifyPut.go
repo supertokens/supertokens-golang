@@ -29,8 +29,8 @@ type userEmailVerifyPutResponse struct {
 }
 
 type userEmailVerifyPutRequestBody struct {
-	UserID   string `json:"userId"`
-	Verified bool   `json:"verified"`
+	UserID   *string `json:"userId"`
+	Verified *bool   `json:"verified"`
 }
 
 func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyPutResponse, error) {
@@ -46,8 +46,20 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 		return userEmailVerifyPutResponse{}, err
 	}
 
-	if readBody.Verified {
-		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(readBody.UserID, nil)
+	if readBody.UserID == nil {
+		return userEmailVerifyPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'userId' is missing",
+		}
+	}
+
+	if readBody.Verified == nil {
+		return userEmailVerifyPutResponse{}, supertokens.BadInputError{
+			Msg: "Required parameter 'verified' is missing",
+		}
+	}
+
+	if *readBody.Verified {
+		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(*readBody.UserID, nil)
 
 		if tokenErr != nil {
 			return userEmailVerifyPutResponse{}, tokenErr
@@ -70,7 +82,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			return userEmailVerifyPutResponse{}, errors.New("Should never come here")
 		}
 	} else {
-		_, unverifyErr := emailverification.UnverifyEmail(readBody.UserID, nil)
+		_, unverifyErr := emailverification.UnverifyEmail(*readBody.UserID, nil)
 
 		if unverifyErr != nil {
 			return userEmailVerifyPutResponse{}, unverifyErr
