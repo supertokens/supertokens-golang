@@ -89,6 +89,10 @@ func getRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("initialisation not done. Did you forget to call the init function?")
 }
 
+func GetRecipeInstance() *Recipe {
+	return singletonInstance
+}
+
 func recipeInit(config plessmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {

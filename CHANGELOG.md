@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.9.9] - 2022-11-24
+
+### Added:
+- Adds APIs for user details to the dashboard recipe
+
+### Changed:
+- Updates dashboard version to 0.2
+
 ## [0.9.8] - 2022-11-16
 - Fixes go fiber to handle handler chaining correctly with verifySession.
 - Added test to check JWT contains updated value when MergeIntoAccessTokenPayload is called.

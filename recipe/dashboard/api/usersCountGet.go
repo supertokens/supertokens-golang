@@ -5,13 +5,19 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func UsersCountGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
+type usersCountGetResponse struct {
+	Status string  `json:"status"`
+	Count  float64 `json:"count"`
+}
+
+func UsersCountGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (usersCountGetResponse, error) {
 	count, err := supertokens.GetUserCount(nil)
 	if err != nil {
-		return err
+		return usersCountGetResponse{}, err
 	}
-	return supertokens.Send200Response(options.Res, map[string]interface{}{
-		"status": "OK",
-		"count":  count,
-	})
+
+	return usersCountGetResponse{
+		Status: "OK",
+		Count:  count,
+	}, nil
 }
