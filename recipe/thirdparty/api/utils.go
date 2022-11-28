@@ -13,12 +13,11 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId string) (tpmodels.TypeProvider, error) {
-
+func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
 	for _, provider := range options.Providers {
 		if provider.ID == thirdPartyId {
 
-			if tenantId == tpmodels.DefaultTenantId && !provider.UseForDefaultTenant {
+			if (tenantId == nil || *tenantId == tpmodels.DefaultTenantId) && !provider.UseForDefaultTenant {
 				return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s is disabled for default tenant", thirdPartyId)
 			}
 

@@ -28,7 +28,7 @@ type APIInterface struct {
 	SignInUpPOST        *func(provider TypeProvider, config ProviderConfigForClientType, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
 
 	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
-	ProvidersForTenantGET    *func(tenantId string, options APIOptions, userContext supertokens.UserContext) (ProvidersForTenantGetResponse, error)
+	ConfiguredProvidersGET   *func(tenantId *string, options APIOptions, userContext supertokens.UserContext) (ProvidersForTenantGetResponse, error)
 }
 
 type ProvidersForTenantGetResponse struct {

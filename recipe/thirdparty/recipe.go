@@ -104,6 +104,10 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	configuredProvidersAPI, err := supertokens.NewNormalisedURLPath(ConfiguredProvidersAPI)
+	if err != nil {
+		return nil, err
+	}
 	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: signInUpAPI,
@@ -119,6 +123,11 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: appleRedirectHandlerAPI,
 		ID:                     AppleRedirectHandlerAPI,
 		Disabled:               r.APIImpl.AppleRedirectHandlerPOST == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: configuredProvidersAPI,
+		ID:                     ConfiguredProvidersAPI,
+		Disabled:               r.APIImpl.ConfiguredProvidersGET == nil,
 	}}), nil
 }
 
@@ -139,7 +148,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		return api.AuthorisationUrlAPI(r.APIImpl, options)
 	} else if id == AppleRedirectHandlerAPI {
 		return api.AppleRedirectHandler(r.APIImpl, options)
-	} else if id == ProvidersForTenantAPI {
+	} else if id == ConfiguredProvidersAPI {
 		return api.ProvidersForTenantAPI(r.APIImpl, options)
 	}
 	return errors.New("should never come here")

@@ -51,9 +51,9 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		clientType = &bodyParams.ClientType
 	}
 
-	var tenantId string = tpmodels.DefaultTenantId
+	var tenantId *string = nil
 	if bodyParams.TenantId != "" {
-		tenantId = bodyParams.TenantId
+		tenantId = &bodyParams.TenantId
 	}
 
 	if bodyParams.ThirdPartyId == "" {

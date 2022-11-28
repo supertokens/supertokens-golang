@@ -31,19 +31,19 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	providersForTenantGET := func(tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
+	configuredProvidersGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
 		providers := []struct {
 			ID   string `json:"id"`
 			Name string `json:"name,omitempty"`
 		}{}
 
-		configsFromCore, err := (*options.RecipeImplementation.ListConfigMappingsForTenant)(tenantId, userContext)
+		configsFromCore, err := (*options.RecipeImplementation.ListThirdPartyConfigs)(tenantId, userContext)
 		if err != nil {
 			return tpmodels.ProvidersForTenantGetResponse{}, err
 		}
 
 		// for default tenant = merge core and static config
-		if tenantId == tpmodels.DefaultTenantId {
+		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
 			addedFromCore := map[string]bool{}
 
 			for _, configFromCore := range configsFromCore.OK.Configs {
@@ -148,7 +148,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, oAuthTokens, userInfo.RawUserInfoFromProvider, userContext)
+		response, err := (*options.RecipeImplementation.SignInUp)(provider.ID, userInfo.ThirdPartyUserId, emailInfo.ID, oAuthTokens, userInfo.RawUserInfoFromProvider, config.TenantId, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -225,7 +225,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	return tpmodels.APIInterface{
-		ProvidersForTenantGET:    &providersForTenantGET,
+		ConfiguredProvidersGET:   &configuredProvidersGET,
 		AuthorisationUrlGET:      &authorisationUrlGET,
 		SignInUpPOST:             &signInUpPOST,
 		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
