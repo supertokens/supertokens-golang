@@ -17,15 +17,17 @@ package tplmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type RecipeInterface struct {
-	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByPhoneNumber    *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
-	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	GetUserByID                          *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail                      *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByPhoneNumber                 *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
+	GetUserByThirdPartyInfo              *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserId string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
 
 	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
 
@@ -69,6 +71,15 @@ type ConsumeCodeResponse struct {
 }
 
 type ThirdPartySignInUp struct {
+	OK *struct {
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             map[string]interface{}
+		RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
+	}
+}
+
+type ManuallyCreateOrUpdateUserResponse struct {
 	OK *struct {
 		CreatedNewUser bool
 		User           User
