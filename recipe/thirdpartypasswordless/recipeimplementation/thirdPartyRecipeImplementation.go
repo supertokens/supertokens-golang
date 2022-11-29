@@ -65,8 +65,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		}, nil
 	}
 
-	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserId string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserId, email, userContext)
+	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
 		if err != nil {
 			return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 		}

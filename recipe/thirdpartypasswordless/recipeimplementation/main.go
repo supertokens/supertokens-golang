@@ -66,16 +66,16 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		}, nil
 	}
 
-	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserId string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
+	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogManuallyCreateOrUpdateUser = *thirdPartyImplementation.ManuallyCreateOrUpdateUser
 	}
 
-	thirdPartyManuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserId string, email string, userContext supertokens.UserContext) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	thirdPartyManuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
 		if ogManuallyCreateOrUpdateUser == nil {
 			return tplmodels.ManuallyCreateOrUpdateUserResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserId, email, userContext)
+		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, userContext)
 		if err != nil {
 			return tplmodels.ManuallyCreateOrUpdateUserResponse{}, err
 		}

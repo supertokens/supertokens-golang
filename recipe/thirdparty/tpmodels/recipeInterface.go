@@ -22,7 +22,7 @@ type RecipeInterface struct {
 	GetUsersByEmail            *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByThirdPartyInfo    *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
 	SignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens TypeOAuthTokens, rawUserInfoFromProvider TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (SignInUpResponse, error)
-	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserId string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
+	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
 
 	CreateOrUpdateThirdPartyConfig *func(thirdPartyId string, tenantId *string, config ProviderConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantIdConfigResponse, error)
 	FetchThirdPartyConfig          *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (FetchTenantIdConfigResponse, error)
