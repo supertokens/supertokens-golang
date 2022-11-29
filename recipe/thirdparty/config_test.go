@@ -16,125 +16,125 @@
 
 package thirdparty
 
-import (
-	"testing"
+// import (
+// 	"testing"
 
-	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
-	"github.com/supertokens/supertokens-golang/test/unittesting"
-)
+// 	"github.com/stretchr/testify/assert"
+// 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+// 	"github.com/supertokens/supertokens-golang/supertokens"
+// 	"github.com/supertokens/supertokens-golang/test/unittesting"
+// )
 
-func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&tpmodels.TypeInput{}),
-		},
-	}
+// func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
+// 	configValue := supertokens.TypeInput{
+// 		Supertokens: &supertokens.ConnectionInfo{
+// 			ConnectionURI: "http://localhost:8080",
+// 		},
+// 		AppInfo: supertokens.AppInfo{
+// 			APIDomain:     "api.supertokens.io",
+// 			AppName:       "SuperTokens",
+// 			WebsiteDomain: "supertokens.io",
+// 		},
+// 		RecipeList: []supertokens.Recipe{
+// 			Init(&tpmodels.TypeInput{}),
+// 		},
+// 	}
 
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
+// 	err := supertokens.Init(configValue)
 
-	if err != nil {
-		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
-	} else {
-		t.Fail()
-	}
-}
+// 	if err != nil {
+// 		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
+// 	} else {
+// 		t.Fail()
+// 	}
+// }
 
-func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(
-				&tpmodels.TypeInput{
-					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{},
-					},
-				},
-			),
-		},
-	}
+// func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testing.T) {
+// 	configValue := supertokens.TypeInput{
+// 		Supertokens: &supertokens.ConnectionInfo{
+// 			ConnectionURI: "http://localhost:8080",
+// 		},
+// 		AppInfo: supertokens.AppInfo{
+// 			APIDomain:     "api.supertokens.io",
+// 			AppName:       "SuperTokens",
+// 			WebsiteDomain: "supertokens.io",
+// 		},
+// 		RecipeList: []supertokens.Recipe{
+// 			Init(
+// 				&tpmodels.TypeInput{
+// 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+// 						Providers: []tpmodels.TypeProvider{},
+// 					},
+// 				},
+// 			),
+// 		},
+// 	}
 
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
+// 	err := supertokens.Init(configValue)
 
-	if err != nil {
-		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
-	} else {
-		t.Fail()
-	}
-}
+// 	if err != nil {
+// 		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
+// 	} else {
+// 		t.Fail()
+// 	}
+// }
 
-func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(
-				&tpmodels.TypeInput{
-					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							{
-								ID: "custom",
-								Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-									return tpmodels.TypeProviderGetResponse{
-										AccessTokenAPI: tpmodels.AccessTokenAPI{
-											URL: "test.com/oauth/token",
-										},
-										AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-											URL: "test.com/oauth/auth",
-										},
-										GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-											return tpmodels.UserInfo{
-												ID: "user",
-												Email: &tpmodels.EmailStruct{
-													ID:         "email@test.com",
-													IsVerified: true,
-												},
-											}, nil
-										},
-									}
-								},
-							},
-						},
-					},
-				},
-			),
-		},
-	}
+// func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
+// 	configValue := supertokens.TypeInput{
+// 		Supertokens: &supertokens.ConnectionInfo{
+// 			ConnectionURI: "http://localhost:8080",
+// 		},
+// 		AppInfo: supertokens.AppInfo{
+// 			APIDomain:     "api.supertokens.io",
+// 			AppName:       "SuperTokens",
+// 			WebsiteDomain: "supertokens.io",
+// 		},
+// 		RecipeList: []supertokens.Recipe{
+// 			Init(
+// 				&tpmodels.TypeInput{
+// 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+// 						Providers: []tpmodels.TypeProvider{
+// 							{
+// 								ID: "custom",
+// 								Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
+// 									return tpmodels.TypeProviderGetResponse{
+// 										AccessTokenAPI: tpmodels.AccessTokenAPI{
+// 											URL: "test.com/oauth/token",
+// 										},
+// 										AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+// 											URL: "test.com/oauth/auth",
+// 										},
+// 										GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
+// 											return tpmodels.UserInfo{
+// 												ID: "user",
+// 												Email: &tpmodels.EmailStruct{
+// 													ID:         "email@test.com",
+// 													IsVerified: true,
+// 												},
+// 											}, nil
+// 										},
+// 									}
+// 								},
+// 							},
+// 						},
+// 					},
+// 				},
+// 			),
+// 		},
+// 	}
 
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
+// 	BeforeEach()
+// 	unittesting.StartUpST("localhost", "8080")
+// 	defer AfterEach()
+// 	err := supertokens.Init(configValue)
 
-	if err != nil {
-		t.Error(err.Error())
-	}
-}
+// 	if err != nil {
+// 		t.Error(err.Error())
+// 	}
+// }

@@ -35,7 +35,7 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-//SigninFeature Tests
+// SigninFeature Tests
 func TestDisablingAPIDefaultSigninDoesNotWork(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1171,7 +1171,7 @@ func TestHandlePostSignInFunction(t *testing.T) {
 
 }
 
-//Signout Feature tests
+// Signout Feature tests
 func TestDefaultSignoutRouteRevokesSession(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
@@ -1407,7 +1407,7 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 	assert.Equal(t, "", cookieData2["idRefreshTokenDomain"])
 }
 
-//Signup Feature tests
+// Signup Feature tests
 func TestDisablingAPIDefaultSignUpDoesNotWork(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
