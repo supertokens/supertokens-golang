@@ -110,59 +110,69 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
-		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
+		response, err := ogSignInUpPOST(provider, config, input, options, userContext)
 		if err != nil {
-			return tpepmodels.ThirdPartyOutput{}, err
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{}, err
 		}
 		if response.GeneralError != nil {
-			return tpepmodels.ThirdPartyOutput{
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{
 				GeneralError: response.GeneralError,
 			}, nil
 		} else if response.NoEmailGivenByProviderError != nil {
-			return tpepmodels.ThirdPartyOutput{
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{
 				NoEmailGivenByProviderError: &struct{}{},
 			}, nil
 		} else {
-			return tpepmodels.ThirdPartyOutput{
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{
 				OK: &struct {
-					CreatedNewUser   bool
-					User             tpepmodels.User
-					AuthCodeResponse interface{}
-					Session          sessmodels.SessionContainer
+					CreatedNewUser          bool
+					User                    tpepmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             map[string]interface{}
+					RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 				}{
-					CreatedNewUser:   response.OK.CreatedNewUser,
-					AuthCodeResponse: response.OK.AuthCodeResponse,
+					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tpepmodels.User{
 						ID:         response.OK.User.ID,
 						TimeJoined: response.OK.User.TimeJoined,
 						Email:      response.OK.User.Email,
 						ThirdParty: &response.OK.User.ThirdParty,
 					},
-					Session: response.OK.Session,
+					Session:                 response.OK.Session,
+					OAuthTokens:             response.OK.OAuthTokens,
+					RawUserInfoFromProvider: response.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		}
 	}
 
 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return ogAuthorisationUrlGET(provider, options, userContext)
+	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, config, redirectURIOnProviderDashboard, options, userContext)
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
+	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(formPostInfoFromProvider, options, userContext)
 	}
+
+	ogThirdPartyConfiguredProvidersGET := *thirdPartyImplementation.ConfiguredProvidersGET
+	thirdPartyConfiguredProvidersGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
+		return ogThirdPartyConfiguredProvidersGET(tenantId, options, userContext)
+	}
+
 	result := tpepmodels.APIInterface{
-		AuthorisationUrlGET:            &authorisationUrlGET,
+		AuthorisationUrlGET:              &authorisationUrlGET,
+		ThirdPartySignInUpPOST:           &thirdPartySignInUpPOST,
+		AppleRedirectHandlerPOST:         &appleRedirectHandlerPOST,
+		ThirdPartyConfiguredProvidersGET: &thirdPartyConfiguredProvidersGET,
+
 		EmailPasswordEmailExistsGET:    &emailExistsGET,
 		GeneratePasswordResetTokenPOST: &generatePasswordResetTokenPOST,
 		PasswordResetPOST:              &passwordResetPOST,
-		ThirdPartySignInUpPOST:         &thirdPartySignInUpPOST,
 		EmailPasswordSignInPOST:        &emailPasswordSignInPOST,
 		EmailPasswordSignUpPOST:        &emailPasswordSignUpPOST,
-		AppleRedirectHandlerPOST:       &appleRedirectHandlerPOST,
 	}
 
 	modifiedEP := GetEmailPasswordIterfaceImpl(result)
@@ -176,6 +186,7 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	(*thirdPartyImplementation.AuthorisationUrlGET) = *modifiedTP.AuthorisationUrlGET
 	(*thirdPartyImplementation.SignInUpPOST) = *modifiedTP.SignInUpPOST
 	(*thirdPartyImplementation.AppleRedirectHandlerPOST) = *modifiedTP.AppleRedirectHandlerPOST
+	(*thirdPartyImplementation.ConfiguredProvidersGET) = *modifiedTP.ConfiguredProvidersGET
 
 	return result
 }
