@@ -124,11 +124,32 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		return finalResult, nil
 	}
 
+	createOrUpdateThirdPartyConfig := func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
+		return (*recipeImplementation.CreateOrUpdateThirdPartyConfig)(thirdPartyId, tenantId, config, userContext)
+	}
+
+	fetchThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
+		return (*recipeImplementation.FetchThirdPartyConfig)(thirdPartyId, tenantId, userContext)
+	}
+
+	deleteThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
+		return (*recipeImplementation.DeleteThirdPartyConfig)(thirdPartyId, tenantId, userContext)
+	}
+
+	listThirdPartyConfigs := func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
+		return (*recipeImplementation.ListThirdPartyConfigs)(tenantId, userContext)
+	}
+
 	return tpmodels.RecipeInterface{
 		GetUserByID:                &getUserByID,
 		GetUsersByEmail:            &getUserByEmail,
 		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
+
+		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
+		FetchThirdPartyConfig:          &fetchThirdPartyConfig,
+		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
+		ListThirdPartyConfigs:          &listThirdPartyConfigs,
 	}
 }

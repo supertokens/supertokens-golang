@@ -32,6 +32,11 @@ type RecipeInterface struct {
 	CreateResetPasswordToken             *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
 	ResetPasswordUsingToken              *func(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error)
 	UpdateEmailOrPassword                *func(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error)
+
+	CreateOrUpdateThirdPartyConfig *func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error)
+	FetchThirdPartyConfig          *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error)
+	DeleteThirdPartyConfig         *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error)
+	ListThirdPartyConfigs          *func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error)
 }
 
 type SignInUpResponse struct {

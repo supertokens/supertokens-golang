@@ -29,29 +29,23 @@ type RecipeInterface struct {
 	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
 	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserId string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
 
-	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
-
-	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
-
-	ConsumeCode *func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
-
-	UpdatePasswordlessUser *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error)
-
+	CreateCode                     *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
+	CreateNewCodeForDevice         *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
+	ConsumeCode                    *func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
+	UpdatePasswordlessUser         *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error)
 	DeleteEmailForPasswordlessUser *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
+	DeletePhoneNumberForUser       *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
+	RevokeAllCodes                 *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
+	RevokeCode                     *func(codeID string, userContext supertokens.UserContext) error
+	ListCodesByEmail               *func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
+	ListCodesByPhoneNumber         *func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
+	ListCodesByDeviceID            *func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
+	ListCodesByPreAuthSessionID    *func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
 
-	DeletePhoneNumberForUser *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
-
-	RevokeAllCodes *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
-
-	RevokeCode *func(codeID string, userContext supertokens.UserContext) error
-
-	ListCodesByEmail *func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
-
-	ListCodesByPhoneNumber *func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
-
-	ListCodesByDeviceID *func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
-
-	ListCodesByPreAuthSessionID *func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
+	CreateOrUpdateThirdPartyConfig *func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error)
+	FetchThirdPartyConfig          *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error)
+	DeleteThirdPartyConfig         *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error)
+	ListThirdPartyConfigs          *func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error)
 }
 
 type ConsumeCodeResponse struct {

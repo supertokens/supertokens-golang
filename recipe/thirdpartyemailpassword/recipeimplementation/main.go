@@ -305,6 +305,11 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		(*thirdPartyImplementation.GetUsersByEmail) = *modifiedTp.GetUsersByEmail
 		(*thirdPartyImplementation.SignInUp) = *modifiedTp.SignInUp
 		(*thirdPartyImplementation.ManuallyCreateOrUpdateUser) = *modifiedTp.ManuallyCreateOrUpdateUser
+
+		(*thirdPartyImplementation.CreateOrUpdateThirdPartyConfig) = *modifiedTp.CreateOrUpdateThirdPartyConfig
+		(*thirdPartyImplementation.FetchThirdPartyConfig) = *modifiedTp.FetchThirdPartyConfig
+		(*thirdPartyImplementation.DeleteThirdPartyConfig) = *modifiedTp.DeleteThirdPartyConfig
+		(*thirdPartyImplementation.ListThirdPartyConfigs) = *modifiedTp.ListThirdPartyConfigs
 	}
 
 	return result
