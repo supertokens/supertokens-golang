@@ -57,38 +57,6 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func CreateOrUpdateThirdPartyConfigWithContext(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, err
-	}
-	return (*instance.RecipeImpl.CreateOrUpdateThirdPartyConfig)(thirdPartyId, tenantId, config, userContext)
-}
-
-func FetchThirdPartyConfigWithContext(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return tpmodels.FetchTenantIdConfigResponse{}, err
-	}
-	return (*instance.RecipeImpl.FetchThirdPartyConfig)(thirdPartyId, tenantId, userContext)
-}
-
-func DeleteThirdPartyConfigWithContext(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return tpmodels.DeleteTenantIdConfigResponse{}, err
-	}
-	return (*instance.RecipeImpl.DeleteThirdPartyConfig)(thirdPartyId, tenantId, userContext)
-}
-
-func ListThirdPartyConfigsWithContext(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return tpmodels.ListTenantConfigMappingsResponse{}, err
-	}
-	return (*instance.RecipeImpl.ListThirdPartyConfigs)(tenantId, userContext)
-}
-
 func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	return ManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
 }
@@ -103,22 +71,6 @@ func GetUsersByEmail(email string) ([]tpmodels.User, error) {
 
 func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
-}
-
-func CreateOrUpdateThirdPartyConfig(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
-	return CreateOrUpdateThirdPartyConfigWithContext(thirdPartyId, tenantId, config, &map[string]interface{}{})
-}
-
-func FetchThirdPartyConfig(thirdPartyId string, tenantId *string) (tpmodels.FetchTenantIdConfigResponse, error) {
-	return FetchThirdPartyConfigWithContext(thirdPartyId, tenantId, &map[string]interface{}{})
-}
-
-func DeleteThirdPartyConfig(thirdPartyId string, tenantId *string) (tpmodels.DeleteTenantIdConfigResponse, error) {
-	return DeleteThirdPartyConfigWithContext(thirdPartyId, tenantId, &map[string]interface{}{})
-}
-
-func ListThirdPartyConfigs(tenantId *string) (tpmodels.ListTenantConfigMappingsResponse, error) {
-	return ListThirdPartyConfigsWithContext(tenantId, &map[string]interface{}{})
 }
 
 func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {

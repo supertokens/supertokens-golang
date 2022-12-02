@@ -18,6 +18,8 @@ package providers
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -47,14 +49,22 @@ func NewProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
 		input.Config.TenantId = tenantId
 
-		configFromCore, err := (*recipeImpl.FetchThirdPartyConfig)(input.ThirdPartyID, tenantId, userContext)
-		if err != nil {
-			return tpmodels.ProviderConfig{}, err
+		configFromCore := multitenancymodels.FetchTenantIdConfigResponse{
+			UnknownMappingError: &struct{}{},
+		}
+
+		mtInstance := multitenancy.GetRecipeInstance()
+		if mtInstance != nil {
+			var err error
+			configFromCore, err = (*mtInstance.RecipeImpl.FetchThirdPartyConfig)(tenantId, input.ThirdPartyID, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfig{}, err
+			}
 		}
 
 		if configFromCore.UnknownMappingError != nil {
 			// Return the static config as core doesn't have a mapping
-			return input.Config, err
+			return input.Config, nil
 		}
 
 		// Make a copy of the original config, so that the original object is not modified

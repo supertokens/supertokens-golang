@@ -23,6 +23,8 @@ import (
 	"net/url"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -37,9 +39,27 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			Name string `json:"name,omitempty"`
 		}{}
 
-		configsFromCore, err := (*options.RecipeImplementation.ListThirdPartyConfigs)(tenantId, userContext)
-		if err != nil {
-			return tpmodels.ProvidersForTenantGetResponse{}, err
+		mtInstance := multitenancy.GetRecipeInstance()
+
+		configsFromCore := multitenancymodels.ListTenantConfigMappingsResponse{
+			OK: &struct {
+				Configs []struct {
+					ThirdPartyId string
+					Config       tpmodels.ProviderConfig
+				}
+			}{
+				Configs: []struct {
+					ThirdPartyId string
+					Config       tpmodels.ProviderConfig
+				}{},
+			},
+		}
+		if mtInstance != nil {
+			var err error
+			configsFromCore, err = (*mtInstance.RecipeImpl.ListThirdPartyConfigs)(tenantId, userContext)
+			if err != nil {
+				return tpmodels.ProvidersForTenantGetResponse{}, err
+			}
 		}
 
 		// for default tenant = merge core and static config

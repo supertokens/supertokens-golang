@@ -122,51 +122,11 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		return users, nil
 	}
 
-	// Multi-tenancy
-	createOrUpdateThirdPartyConfig := func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
-		// TODO impl
-		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, nil
-	}
-
-	fetchThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
-		// TODO impl
-		return tpmodels.FetchTenantIdConfigResponse{
-			UnknownMappingError: &struct{}{},
-		}, nil
-	}
-
-	deleteThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
-		// TODO impl
-		return tpmodels.DeleteTenantIdConfigResponse{}, nil
-	}
-
-	listThirdPartyConfigs := func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
-		// TODO impl
-		return tpmodels.ListTenantConfigMappingsResponse{
-			OK: &struct {
-				Configs []struct {
-					ThirdPartyId string
-					Config       tpmodels.ProviderConfig
-				}
-			}{
-				Configs: []struct {
-					ThirdPartyId string
-					Config       tpmodels.ProviderConfig
-				}{},
-			},
-		}, nil
-	}
-
 	return tpmodels.RecipeInterface{
 		GetUserByID:                &getUserByID,
 		GetUsersByEmail:            &getUsersByEmail,
 		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
-
-		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
-		FetchThirdPartyConfig:          &fetchThirdPartyConfig,
-		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
-		ListThirdPartyConfigs:          &listThirdPartyConfigs,
 	}
 }

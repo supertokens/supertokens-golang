@@ -41,11 +41,6 @@ type RecipeInterface struct {
 	ListCodesByPhoneNumber         *func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
 	ListCodesByDeviceID            *func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
 	ListCodesByPreAuthSessionID    *func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
-
-	CreateOrUpdateThirdPartyConfig *func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error)
-	FetchThirdPartyConfig          *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error)
-	DeleteThirdPartyConfig         *func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error)
-	ListThirdPartyConfigs          *func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error)
 }
 
 type ConsumeCodeResponse struct {
