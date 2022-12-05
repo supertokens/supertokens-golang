@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `authorisationUrlGET`, `signInUpPOST` do not accept `clientId`, instead they accept `clientType` to determine the matching config
 - `authorisationUrlGET`, `signInUpPOST` accepts optional `tenantId` to support multi-tenancy
 - Updated `appleRedirectHandlerPOST` to accept all the form fields instead of just the code
+- `appleRedirectHandlerPOST` uses redirect URI encoded in the `state` parameter instead of using the websiteDomain config. Also, it uses HTTP 303 instead of javascript based redirection.
 - Removed `SignInUpWithContext` recipe function and added `ManuallyCreateOrUpdateUserWithContext` instead
 
 ### Migration
