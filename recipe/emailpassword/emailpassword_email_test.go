@@ -48,6 +48,39 @@ func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUser(t *testin
 	assert.NotEmpty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
 }
 
+func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUserWithSendEmailOverride(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	testServer := supertokensInitForTest(t,
+		session.Init(nil),
+		Init(&epmodels.TypeInput{
+			EmailDelivery: &emaildelivery.TypeInput{
+				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+					oSendEmail := *originalImplementation.SendEmail
+					nSendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+						input.PasswordReset.User.Email = "override@example.com"
+						return oSendEmail(input, userContext)
+					}
+
+					*originalImplementation.SendEmail = nSendEmail
+					return originalImplementation
+				},
+			},
+		}),
+	)
+	defer testServer.Close()
+
+	SignUp("test@example.com", "1234abcd")
+	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.True(t, PasswordResetEmailSentForTest)
+	assert.Equal(t, PasswordResetDataForTest.User.Email, "override@example.com")
+	assert.NotEmpty(t, PasswordResetDataForTest.PasswordResetURLWithToken)
+}
+
 func TestDefaultBackwardCompatibilityPasswordResetForNonExistantUser(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.9.10]
+-   Fixes issue where if SendEmail is overridden with a different email, it will reset that email.
+
 ## [0.9.9] - 2022-11-24
 
 ### Added:
