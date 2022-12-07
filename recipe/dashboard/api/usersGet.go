@@ -11,7 +11,7 @@ import (
 
 type UsersGetResponse struct {
 	Status              string  `json:"status"`
-	NextPaginationToken string  `json:"nextPaginationToken,omitempty"`
+	NextPaginationToken *string `json:"nextPaginationToken,omitempty"`
 	Users               []Users `json:"users"`
 }
 
@@ -77,7 +77,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	if err != nil {
 		return UsersGetResponse{
 			Status:              "OK",
-			NextPaginationToken: *usersResponse.NextPaginationToken,
+			NextPaginationToken: usersResponse.NextPaginationToken,
 			Users:               getUsersTypeFromPaginationResult(usersResponse),
 		}, nil
 	}
@@ -120,7 +120,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 
 	return UsersGetResponse{
 		Status:              "OK",
-		NextPaginationToken: *usersResponse.NextPaginationToken,
+		NextPaginationToken: usersResponse.NextPaginationToken,
 		Users:               getUsersTypeFromPaginationResult(usersResponse),
 	}, nil
 }
