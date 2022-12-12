@@ -187,17 +187,17 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning UNAUTHORISED")
 		unauthErr := err.(errors.UnauthorizedError)
-		if unauthErr.ClearCookies == nil || *unauthErr.ClearCookies {
-			supertokens.LogDebugMessage("errorHandler: Clearing cookies because of UNAUTHORISED response")
-			clearSessionFromCookie(r.Config, res)
+		if unauthErr.ClearTokens == nil || *unauthErr.ClearTokens {
+			supertokens.LogDebugMessage("errorHandler: Clearing tokens because of UNAUTHORISED response")
+			clearSessionFromAllTokenTransferMethods(r.Config, req, res)
 		}
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning TRY_REFRESH_TOKEN")
 		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
-		supertokens.LogDebugMessage("errorHandler: clearing cookies because of TOKEN_THEFT_DETECTED response")
-		clearSessionFromCookie(r.Config, res)
+		supertokens.LogDebugMessage("errorHandler: clearing tokens because of TOKEN_THEFT_DETECTED response")
+		clearSessionFromAllTokenTransferMethods(r.Config, req, res)
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	} else if defaultErrors.As(err, &errors.InvalidClaimError{}) {

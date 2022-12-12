@@ -24,6 +24,21 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+type TokenType string
+
+const (
+	AccessToken  TokenType = "access"
+	RefreshToken TokenType = "refresh"
+)
+
+type TokenTransferMethod string
+
+const (
+	Cookie TokenTransferMethod = "cookie"
+	Header TokenTransferMethod = "header"
+	Any    TokenTransferMethod = "any"
+)
+
 type HandshakeInfo struct {
 	rawJwtSigningPublicKeyList     []KeyInfo
 	AntiCsrf                       string
@@ -97,6 +112,7 @@ type TypeInput struct {
 	Override                 *OverrideStruct
 	ErrorHandlers            *ErrorHandlers
 	Jwt                      *JWTInputConfig
+	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) string
 }
 
 type JWTInputConfig struct {
@@ -128,6 +144,7 @@ type TypeNormalisedInput struct {
 	Override                 OverrideStruct
 	ErrorHandlers            NormalisedErrorHandlers
 	Jwt                      JWTNormalisedConfig
+	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) string
 }
 
 type JWTNormalisedConfig struct {

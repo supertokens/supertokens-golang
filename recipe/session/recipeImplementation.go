@@ -69,7 +69,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			supertokens.LogDebugMessage("getSession: UNAUTHORISED because idRefreshToken from cookies is nil")
 
 			clearCookies := false
-			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?", ClearCookies: &clearCookies}
+			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?", ClearTokens: &clearCookies}
 		}
 
 		accessToken := getAccessTokenFromCookie(req)

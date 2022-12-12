@@ -53,7 +53,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if err != nil {
 			return err
 		}
-		clearSessionFromCookie(config, session.res)
+		clearSessionFromAllTokenTransferMethods(config, session.res)
 		return nil
 	}
 

@@ -24,10 +24,13 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/weppos/publicsuffix-go/publicsuffix"
 )
 
 func IsAnIPAddress(ipaddress string) (bool, error) {
@@ -66,6 +69,15 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 		return NormalisedAppinfo{}, err
 	}
 
+	topLevelAPIDomain, err := getTopLevelDomainForSameSiteResolution(apiDomain.GetAsStringDangerous())
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+	topLevelWebsiteDomain, err := getTopLevelDomainForSameSiteResolution(websiteDomain.GetAsStringDangerous())
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+
 	APIBasePathStr := "/auth"
 	if appInfo.APIBasePath != nil {
 		APIBasePathStr = *appInfo.APIBasePath
@@ -85,12 +97,14 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 		return NormalisedAppinfo{}, err
 	}
 	return NormalisedAppinfo{
-		AppName:         appInfo.AppName,
-		APIGatewayPath:  apiGatewayPath,
-		WebsiteDomain:   websiteDomain,
-		APIDomain:       apiDomain,
-		APIBasePath:     apiBasePath,
-		WebsiteBasePath: websiteBasePath,
+		AppName:               appInfo.AppName,
+		APIGatewayPath:        apiGatewayPath,
+		WebsiteDomain:         websiteDomain,
+		APIDomain:             apiDomain,
+		APIBasePath:           apiBasePath,
+		TopLevelAPIDomain:     topLevelAPIDomain,
+		TopLevelWebsiteDomain: topLevelWebsiteDomain,
+		WebsiteBasePath:       websiteBasePath,
 	}, nil
 }
 
@@ -268,4 +282,24 @@ func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
 			"request": r,
 		},
 	}
+}
+
+func getTopLevelDomainForSameSiteResolution(inputUrl string) (string, error) {
+	urlObj, err := url.Parse(inputUrl)
+	if err != nil {
+		return "", err
+	}
+	hostName := urlObj.Hostname()
+	isIpAddress, err := IsAnIPAddress(hostName)
+	if err != nil {
+		return "", err
+	}
+	if strings.HasPrefix(hostName, "localhost") || isIpAddress {
+		return "localhost", nil
+	}
+	parsedDomain, err := publicsuffix.Domain(hostName)
+	if err != nil {
+		return "", err
+	}
+	return parsedDomain, nil
 }

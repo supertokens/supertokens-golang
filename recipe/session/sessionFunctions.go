@@ -214,8 +214,8 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 			clearCookies := false
 			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
 			return sessmodels.CreateOrRefreshAPIResponse{}, errors.UnauthorizedError{
-				Msg:          "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.",
-				ClearCookies: &clearCookies,
+				Msg:         "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.",
+				ClearTokens: &clearCookies,
 			}
 		}
 	}

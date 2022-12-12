@@ -18,6 +18,7 @@ package session
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/textproto"
@@ -29,8 +30,11 @@ import (
 )
 
 const (
-	accessTokenCookieKey  = "sAccessToken"
-	refreshTokenCookieKey = "sRefreshToken"
+	authorizationHeaderKey = "authorization"
+	accessTokenCookieKey   = "sAccessToken"
+	accessTokenHeaderKey   = "st-access-token"
+	refreshTokenCookieKey  = "sRefreshToken"
+	refreshTokenHeaderKey  = "st-refresh-token"
 
 	// there are two of them because one is used by the server to check if the user is logged in and the other is checked by the frontend to see if the user is logged in.
 	idRefreshTokenCookieKey = "sIdRefreshToken"
@@ -43,6 +47,8 @@ const (
 
 	frontendSDKNameHeaderKey    = "supertokens-sdk-name"
 	frontendSDKVersionHeaderKey = "supertokens-sdk-version"
+
+	authModeHeaderKey = "st-auth-mode"
 )
 
 type TokenInfo struct {
@@ -51,52 +57,37 @@ type TokenInfo struct {
 	Up  interface{} `json:"up"`
 }
 
-func clearSessionFromCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter) {
-	setCookie(config, res, accessTokenCookieKey, "", 0, "accessTokenPath")
-	setCookie(config, res, refreshTokenCookieKey, "", 0, "refreshTokenPath")
-	setCookie(config, res, idRefreshTokenCookieKey, "", 0, "accessTokenPath")
-	setHeader(res, idRefreshTokenHeaderKey, "remove", false)
-	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
+func clearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter) error {
+	for _, transferMethod := range availableTokenTransferMethods {
+		token, err := getToken(req, sessmodels.AccessToken, transferMethod)
+		if err != nil {
+			return err
+		}
+
+		if token != nil {
+			clearSession(config, res, transferMethod)
+		}
+	}
+	return nil
 }
 
-func attachAccessTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
-	setCookie(config, res, accessTokenCookieKey, token, expiry, "accessTokenPath")
-}
+func clearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) {
+	tokenTypes := []sessmodels.TokenType{sessmodels.AccessToken, sessmodels.RefreshToken}
+	for _, tokenType := range tokenTypes {
+		setToken(config, res, tokenType, "", 0, transferMethod)
+	}
 
-func attachRefreshTokenToCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, token string, expiry uint64) {
-	setCookie(config, res, refreshTokenCookieKey, token, expiry, "refreshTokenPath")
-}
-
-func getAccessTokenFromCookie(req *http.Request) *string {
-	return getCookieValue(req, accessTokenCookieKey)
-}
-
-func getRefreshTokenFromCookie(req *http.Request) *string {
-	return getCookieValue(req, refreshTokenCookieKey)
+	setHeader(res, frontTokenHeaderKey, "remove", false)
+	setHeader(res, "Access-Control-Expose-Headers", frontTokenHeaderKey, true)
 }
 
 func getAntiCsrfTokenFromHeaders(req *http.Request) *string {
 	return getHeader(req, antiCsrfHeaderKey)
 }
 
-func getRidFromHeader(req *http.Request) *string {
-	return getHeader(req, ridHeaderKey)
-}
-
-func getIDRefreshTokenFromCookie(req *http.Request) *string {
-	return getCookieValue(req, idRefreshTokenCookieKey)
-}
-
 func setAntiCsrfTokenInHeaders(res http.ResponseWriter, antiCsrfToken string) {
 	setHeader(res, antiCsrfHeaderKey, antiCsrfToken, false)
 	setHeader(res, "Access-Control-Expose-Headers", antiCsrfHeaderKey, true)
-}
-
-func setIDRefreshTokenInHeaderAndCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, idRefreshToken string, expiry uint64) {
-	setHeader(res, idRefreshTokenHeaderKey, idRefreshToken+";"+fmt.Sprint(expiry), false)
-	setHeader(res, "Access-Control-Expose-Headers", idRefreshTokenHeaderKey, true)
-
-	setCookie(config, res, idRefreshTokenCookieKey, idRefreshToken, expiry, "accessTokenPath")
 }
 
 func setFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uint64, jwtPayload interface{}) {
@@ -113,8 +104,72 @@ func setFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uin
 
 func getCORSAllowedHeaders() []string {
 	return []string{
-		antiCsrfHeaderKey, ridHeaderKey,
+		antiCsrfHeaderKey, ridHeaderKey, authorizationHeaderKey, authModeHeaderKey,
 	}
+}
+
+func getCookieNameFromTokenType(tokenType sessmodels.TokenType) (string, error) {
+	if tokenType == sessmodels.AccessToken {
+		return accessTokenCookieKey, nil
+	}
+	if tokenType == sessmodels.RefreshToken {
+		return refreshTokenCookieKey, nil
+	}
+	return "", errors.New("Unknown token type, should never happen.")
+}
+
+func getResponseHeaderNameForTokenType(tokenType sessmodels.TokenType) (string, error) {
+	if tokenType == sessmodels.AccessToken {
+		return accessTokenHeaderKey, nil
+	}
+	if tokenType == sessmodels.RefreshToken {
+		return refreshTokenHeaderKey, nil
+	}
+	return "", errors.New("Unknown token type, should never happen.")
+}
+
+func getToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod sessmodels.TokenTransferMethod) (*string, error) {
+	if transferMethod == sessmodels.Cookie {
+		cookieName, err := getCookieNameFromTokenType(tokenType)
+		if err != nil {
+			return nil, err
+		}
+		return getCookieValue(req, cookieName), nil
+	} else if transferMethod == sessmodels.Header {
+		headerValue := getHeader(req, authorizationHeaderKey)
+		if headerValue == nil || strings.HasPrefix(*headerValue, "Bearer ") {
+			return nil, nil
+		}
+
+		token := (*headerValue)[7:]
+		return &token, nil
+	}
+	return nil, errors.New("Should never happen")
+}
+
+func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, tokenType sessmodels.TokenType, value string, expires uint64, transferMethod sessmodels.TokenTransferMethod) error {
+	if transferMethod == sessmodels.Cookie {
+		cookieName, err := getCookieNameFromTokenType(tokenType)
+		if err != nil {
+			return err
+		}
+		pathType := ""
+		if tokenType == sessmodels.AccessToken {
+			pathType = "accessTokenPath"
+		} else if tokenType == sessmodels.RefreshToken {
+			pathType = "refreshTokenPath"
+		}
+		setCookie(config, res, cookieName, value, expires, pathType)
+	} else if transferMethod == sessmodels.Header {
+		headerName, err := getResponseHeaderNameForTokenType(tokenType)
+		if err != nil {
+			return err
+		}
+
+		setHeader(res, headerName, fmt.Sprintf("%s;%d", value, expires), false)
+		setHeader(res, "Access-Control-Expose-Headers", headerName, true)
+	}
+	return nil
 }
 
 func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey bool) {

@@ -27,7 +27,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"golang.org/x/net/publicsuffix"
 )
 
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
@@ -43,15 +42,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.APIDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-	topLevelWebsiteDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.WebsiteDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-
 	apiDomainScheme, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
 	if err != nil {
 		return sessmodels.TypeNormalisedInput{}, err
@@ -62,9 +52,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	cookieSameSite := cookieSameSite_LAX
-	if topLevelAPIDomain != topLevelWebsiteDomain {
-		cookieSameSite = cookieSameSite_NONE
-	}
 	if apiDomainScheme != websiteDomainScheme {
 		cookieSameSite = cookieSameSite_NONE
 	}
@@ -157,23 +144,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	IsAnIPAPIDomain, err := supertokens.IsAnIPAddress(topLevelAPIDomain)
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-	IsAnIPWebsiteDomain, err := supertokens.IsAnIPAddress(topLevelWebsiteDomain)
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-
-	if cookieSameSite == cookieSameSite_NONE &&
-		!cookieSecure && !((topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
-		(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain)) {
-		// We can allow insecure cookie when both website & API domain are localhost or an IP
-		// When either of them is a different domain, API domain needs to have https and a secure cookie to work
-		return sessmodels.TypeNormalisedInput{}, errors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-	}
-
 	refreshAPIPath, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
 	if err != nil {
 		return sessmodels.TypeNormalisedInput{}, err
@@ -191,6 +161,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New(sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY + " is a reserved property name, please use a different key name for the jwt")
 	}
 
+	if config.GetTokenTransferMethod == nil {
+		// TODO default impl
+	}
+
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
@@ -201,6 +175,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
 		Jwt:                      Jwt,
+		GetTokenTransferMethod:   config.GetTokenTransferMethod,
 		Override: sessmodels.OverrideStruct{
 			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 				return originalImplementation
@@ -229,26 +204,6 @@ func normaliseSameSiteOrThrowError(sameSite string) (string, error) {
 		return "", errors.New(`cookie same site must be one of "strict", "lax", or "none"`)
 	}
 	return sameSite, nil
-}
-
-func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
-	urlObj, err := url.Parse(URL)
-	if err != nil {
-		return "", err
-	}
-	hostname := urlObj.Hostname()
-	isAnIP, err := supertokens.IsAnIPAddress(hostname)
-	if err != nil {
-		return "", err
-	}
-	if strings.HasPrefix(hostname, "localhost") || strings.HasPrefix(hostname, "localhost.org") || isAnIP {
-		return "localhost", nil
-	}
-	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
-	if err != nil {
-		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
-	}
-	return parsedURL, nil
 }
 
 func GetURLScheme(URL string) (string, error) {
