@@ -6,6 +6,260 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+- Fixes go fiber to handle handler chaining correctly with verifySession.
+
+### Added
+- Added Multitenancy Recipe & always initialized by default.
+- Added new Social login providers - LinkedIn
+- Added new Multi-tenant SSO providers - Okta, Active Directory, Boxy SAML
+
+### Breaking changes
+- TypeProvider interface is re-written
+- In the thirdparty, thirdpartyemailpassword and thirdpartypasswordless, the providers array accepts `[]ProviderInput` instead of `[]TypeProvider`
+- Updated `authorisationUrlGET` API
+  - Changed: Doesn't accept `clientId` anymore and accepts `clientType` instead to determine the matching config
+  - Added: optional `tenantId` to support multi-tenancy
+  - Added: optional `pkceCodeVerifier` in the response, to support PKCE
+- Updated `signInUpPOST` API
+  - Removed: `clientId`, `redirectURI`, `authCodeResponse` and `code` from the input
+  - Instead,
+    - accepts `clientType` to determine the matching config
+    - One of redirectURIInfo (for code flow) or oAuthTokens (for token flow) is required
+  - Added: optional `tenantId` to support multi-tenancy
+- Updated `appleRedirectHandlerPOST` 
+  - to accept all the form fields instead of just the code
+  - to use redirect URI encoded in the `state` parameter instead of using the websiteDomain config.
+  - to use HTTP 303 instead of javascript based redirection.
+- Exposing `ManuallyCreateOrUpdateUserWithContext` instead of `SignInUpWithContext` recipe function in the thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
+  - `SignInUpWithContext` is used by the SDK only to handle the sign in/up flow. It is not meant to be used by the user.
+  - `ManuallyCreateOrUpdateUserWithContext` recipe function is added to allow the user to manually create or update a user in the core.
+
+### Migration
+
+1. Input for providers for all providers is changed as below:
+
+Before:
+
+```go
+thirdparty.Google(tpmodels.GoogleConfig{
+    ClientID: "...",
+    ClientSecret: "...",
+})
+```
+
+After:
+
+```go
+tpmodels.ProviderInput{
+    ThirdPartyId: "google"
+    Config: tpmodels.ProviderConfig{
+        Clients: []tpmodels.ProviderClientConfig{
+            {
+                ClientID:     "...",
+                ClientSecret: "...",
+            },
+        },
+    },
+}
+```
+
+2. Single instance with multiple clients of each provider instead of multiple instances of them. Also use `clientType` to differentiate them. `clientType` passed from the frontend will be used to determine the right config.
+
+Before:
+
+```go
+[]tpmodels.TypeProvider{
+    thirdparty.Google(tpmodels.GoogleConfig{
+        IsDefault: true,
+        ClientID: "clientid1",
+        ClientSecret: "...",
+    }),
+    thirdparty.Google(tpmodels.GoogleConfig{
+        ClientID: "clientid2",
+        ClientSecret: "...",
+    }),
+}
+```
+
+After:
+
+```go
+[]tpmodels.ProviderInput{
+    {
+        ThirdPartyId: "google",
+        Config: tpmodels.ProviderConfig{
+            Clients: []tpmodels.ProviderClientConfig{
+                {
+                    ClientType: "web",
+                    ClientID:     "clientid1",
+                    ClientSecret: "...",
+                },
+                {
+                    ClientType: "android",
+                    ClientID:     "clientid2",
+                    ClientSecret: "...",
+                },
+            },
+        },
+    },
+}
+```
+
+3. Change in the implementation of the custom providers
+
+* All the configuration is part of the `ProviderInput`
+* To update `AuthorisationRedirect.Params` dynamically, GetAuthorisationRedirectURL must be overridden
+* To provide implementation for `GetProfileInfo`,
+  * either use `UserInfoEndpoint`, `UserInfoEndpointQueryParams` and `UserInfoMap` to fetch the user info from the provider
+  * or, specify custom implementation in an override for `GetUserInfo`
+
+Before:
+
+```go
+tpmodels.TypeProvider{
+    ID: "custom",
+    Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+        return tpmodels.TypeProviderGetResponse{
+            AccessTokenAPI: "...",
+            AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+                URL:    "...",
+                Params: map[string]interface{}{},
+            },
+            GetClientId: func(userContext supertokens.UserContext) string {
+                return "..."
+            },
+            GetRedirectURI: func(userContext supertokens.UserContext) (string, error) {
+                return "...", nil
+            },
+            GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+                return tpmodels.UserInfo{
+                    ID: "...",
+                    Email: &tpmodels.EmailStruct{
+                        ID:         "...",
+                        IsVerified: true,
+                    },
+                }, nil
+            },
+        }
+    },
+}
+```
+
+After:
+
+```go
+tpmodels.ProviderInput{
+    ThirdPartyID: "custom",
+    Config: tpmodels.ProviderConfig{
+        Clients: []tpmodels.ProviderClientConfig{
+            {
+                ClientID:     "...",
+                ClientSecret: "...",
+            },
+        },
+        AuthorizationEndpoint:            "...",
+        AuthorizationEndpointQueryParams: map[string]interface{}{},
+        TokenEndpoint:                    "...",
+        TokenEndpointBodyParams:          map[string]interface{}{},
+        UserInfoEndpoint:                 "...",
+        UserInfoEndpointQueryParams:      map[string]interface{}{},
+        UserInfoMap: tpmodels.TypeUserInfoMap{
+            FromUserInfoAPI: struct {
+                UserId        string "json:\"userId\""
+                Email         string "json:\"email\""
+                EmailVerified string "json:\"emailVerified\""
+            }{
+                UserId:        "id",
+                Email:         "email",
+                EmailVerified: "email_verified",
+            },
+        },
+    },
+}
+```
+
+Also, if the custom provider supports openid, it can automatically discover the endpoints
+
+```go
+tpmodels.ProviderInput{
+    ThirdPartyID: "custom",
+    Config: tpmodels.ProviderConfig{
+        Clients: []tpmodels.ProviderClientConfig{
+            {
+                ClientID:     "...",
+                ClientSecret: "...",
+            },
+        },
+        OIDCDiscoveryEndpoint: "...",
+        UserInfoMap: tpmodels.TypeUserInfoMap{
+            FromUserInfoAPI: struct {
+                UserId        string "json:\"userId\""
+                Email         string "json:\"email\""
+                EmailVerified string "json:\"emailVerified\""
+            }{
+                UserId:        "id",
+                Email:         "email",
+                EmailVerified: "emailVerified",
+            },
+        },
+    },
+}
+```
+
+Note: the SDK will fetch the oauth2 endpints from the providered OIDC discovery endpoint url + '/.well-known/openid-configuration'
+
+4. Any of the functions in the TypeProvider  can be overridden for custom implementation
+
+```go
+tpmodels.ProviderInput{
+    ThirdPartyID: "custom",
+    Config: tpmodels.ProviderConfig{
+        Clients: []tpmodels.ProviderClientConfig{
+            {
+                ClientID:     "...",
+                ClientSecret: "...",
+            },
+        },
+        OIDCDiscoveryEndpoint: "...",
+        UserInfoMap: tpmodels.TypeUserInfoMap{
+            FromUserInfoAPI: struct {
+                UserId        string "json:\"userId\""
+                Email         string "json:\"email\""
+                EmailVerified string "json:\"emailVerified\""
+            }{
+                UserId:        "id",
+                Email:         "email",
+                EmailVerified: "emailVerified",
+            },
+        },
+    },
+    Override: func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+        oGetAuthorisationRedirectURL := provider.GetAuthorisationRedirectURL
+        provider.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+            resp, err := oGetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
+            // your logic here
+            return resp, err
+        }
+
+        oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens
+        provider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, code string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeOAuthResponse, error) {
+            resp, err := oExchangeAuthCodeForOAuthTokens(config, code, redirectURIOnProviderDashboard, userContext)
+            // your logic here
+            return resp, err
+        }
+
+        oGetUserInfo := provider.GetUserInfo
+        provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+            resp, err := oGetUserInfo(config, oAuthTokens, userContext)
+            // your logic here
+            return resp, err
+        }
+
+        return provider
+    },
+}
+```
+
 
 ## [0.9.8] - 2022-11-16
 - Fixes go fiber to handle handler chaining correctly with verifySession.
