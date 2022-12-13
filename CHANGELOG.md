@@ -31,7 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exposing `ManuallyCreateOrUpdateUserWithContext` instead of `SignInUpWithContext` recipe function in the thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
   - `SignInUpWithContext` is used by the SDK only to handle the sign in/up flow. It is not meant to be used by the user.
   - `ManuallyCreateOrUpdateUserWithContext` recipe function is added to allow the user to manually create or update a user in the core.
-  - Recipe changes:
+  - Recipe interface changes:
     - Updated `SignInUp` in the thirdparty recipe and `ThirdPartySignInUp` in the thirdpartyemailpassword & thirdpartypasswordless recipe function accepts these new parameters:
       - `oAuthTokens` - contains all the tokens (access_token, id_token, etc.) as returned by the provider
       - `rawUserInfoFromProvider` - contains all the user profile info as returned by the provider
