@@ -27,76 +27,79 @@ import (
 	"strings"
 )
 
-/*
-{
-	"alg":     "RS256",
-	"typ":     "JWT",
-	"version": "2",
+type ParsedJWTInfo struct {
+	RawTokenString string
+	RawPayload     string
+	Header         string
+	Payload        map[string]interface{}
+	Signature      string
 }
-*/
-const header = "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsInZlcnNpb24iOiIyIn0="
 
-func verifyJWTAndGetPayload(jwt string, jwtSigningPublicKey string) (map[string]interface{}, error) {
-	var splitted = strings.Split(jwt, ".")
-	if len(splitted) != 3 {
-		return nil, errors.New("Invalid JWT")
-	}
-	if header != splitted[0] {
-		return nil, errors.New("JWT header mismatch")
-	}
-	var payload = splitted[1]
+var HEADERS = []string{
+	"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsInZlcnNpb24iOiIxIn0=", // {"alg":"RS256","typ":"JWT","version":"1"}
+	"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsInZlcnNpb24iOiIyIn0=", // {"alg":"RS256","typ":"JWT","version":"2"}
+}
 
+func checkHeader(header string) error {
+	for _, h := range HEADERS {
+		if h == header {
+			return nil
+		}
+	}
+	return errors.New("Invalid JWT header")
+}
+
+func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
+	splittedInput := strings.Split(jwt, ".")
+	if len(splittedInput) != 3 {
+		errors.New("Invalid JWT")
+	}
+
+	err := checkHeader(splittedInput[0])
+	if err != nil {
+		return ParsedJWTInfo{}, err
+	}
+
+	payloadBytes, err := b64.RawStdEncoding.DecodeString(splittedInput[1])
+	if err != nil {
+		return ParsedJWTInfo{}, err
+	}
+	payload := map[string]interface{}{}
+	err = json.Unmarshal(payloadBytes, &payload)
+	if err != nil {
+		return ParsedJWTInfo{}, err
+	}
+
+	return ParsedJWTInfo{
+		RawTokenString: jwt,
+		RawPayload:     splittedInput[1],
+		Header:         splittedInput[0],
+		Payload:        payload,
+		Signature:      splittedInput[2],
+	}, nil
+}
+
+func verifyJWT(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string) error {
 	var publicKey, publicKeyError = getPublicKeyFromStr("-----BEGIN PUBLIC KEY-----\n" + jwtSigningPublicKey + "\n-----END PUBLIC KEY-----")
 	if publicKeyError != nil {
-		return nil, publicKeyError
+		return publicKeyError
 	}
 
 	h := sha256.New()
-	h.Write([]byte(header + "." + payload))
+	h.Write([]byte(jwtInfo.Header + "." + jwtInfo.RawPayload))
 	digest := h.Sum(nil)
 
-	var decodedSignature, decodedSignatureError = b64.StdEncoding.DecodeString(splitted[2])
+	var decodedSignature, decodedSignatureError = b64.StdEncoding.DecodeString(jwtInfo.Signature)
 	if decodedSignatureError != nil {
-		return nil, decodedSignatureError
+		return decodedSignatureError
 	}
 
 	verificationError := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, digest, decodedSignature)
 	if verificationError != nil {
-		return nil, verificationError
+		return verificationError
 	}
 
-	var decodedPayload, base64Error = b64.StdEncoding.DecodeString(payload)
-	if base64Error != nil {
-		return nil, base64Error
-	}
-
-	var result map[string]interface{}
-	jsonError := json.Unmarshal(decodedPayload, &result)
-	if jsonError != nil {
-		return nil, jsonError
-	}
-	return result, nil
-}
-
-func getPayloadWithoutVerifying(jwt string) (map[string]interface{}, error) {
-	var splitted = strings.Split(jwt, ".")
-	if len(splitted) != 3 {
-		return nil, errors.New("Invalid JWT")
-	}
-
-	var payload = splitted[1]
-
-	var decodedPayload, base64Error = b64.StdEncoding.DecodeString(payload)
-	if base64Error != nil {
-		return nil, base64Error
-	}
-
-	var result map[string]interface{}
-	jsonError := json.Unmarshal(decodedPayload, &result)
-	if jsonError != nil {
-		return nil, jsonError
-	}
-	return result, nil
+	return nil
 }
 
 func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {

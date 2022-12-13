@@ -24,7 +24,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, AccessTokenPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if AccessTokenPayload == nil {
 		AccessTokenPayload = map[string]interface{}{}
 	}
@@ -40,7 +40,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, c
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
-	requestBody["enableAntiCsrf"] = recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN
+	requestBody["enableAntiCsrf"] = !disableAntiCsrf && recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN
 	response, err := querier.SendPostRequest("/recipe/session", requestBody)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
@@ -64,7 +64,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, c
 	return resp, nil
 }
 
-func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, accessToken string, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (sessmodels.GetSessionResponse, error) {
+func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (sessmodels.GetSessionResponse, error) {
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return sessmodels.GetSessionResponse{}, err
@@ -74,18 +74,13 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 	foundASigningKeyThatIsOlderThanTheAccessToken := false
 	for _, key := range recipeImplHandshakeInfo.GetJwtSigningPublicKeyList() {
 
-		accessTokenInfo, err = getInfoFromAccessToken(accessToken, key.PublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+		accessTokenInfo, err = getInfoFromAccessToken(parsedAccessToken, key.PublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 		if err != nil {
 			if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 				return sessmodels.GetSessionResponse{}, err
 			}
 
-			payload, errFromPayload := getPayloadWithoutVerifying(accessToken)
-
-			if errFromPayload != nil {
-				// we want to return the original error..
-				return sessmodels.GetSessionResponse{}, err
-			}
+			payload := parsedAccessToken.Payload
 
 			expiryTime := uint64(payload["expiryTime"].(float64))
 			timeCreated := uint64(payload["timeCreated"].(float64))
@@ -142,7 +137,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		}, nil
 	}
 	requestBody := map[string]interface{}{
-		"accessToken":     accessToken,
+		"accessToken":     parsedAccessToken.RawTokenString,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
 		"enableAntiCsrf":  recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
@@ -203,26 +198,26 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	return nil, nil
 }
 
-func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool, tokenTransferMethod sessmodels.TokenTransferMethod) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
 
-	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
+	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER && tokenTransferMethod == sessmodels.Cookie {
 		if !containsCustomHeader {
-			clearCookies := false
+			clearTokens := false
 			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
 			return sessmodels.CreateOrRefreshAPIResponse{}, errors.UnauthorizedError{
 				Msg:         "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.",
-				ClearTokens: &clearCookies,
+				ClearTokens: &clearTokens,
 			}
 		}
 	}
 
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
-		"enableAntiCsrf": recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf": tokenTransferMethod == sessmodels.Cookie && recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken

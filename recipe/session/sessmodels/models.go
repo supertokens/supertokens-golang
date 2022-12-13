@@ -31,6 +31,7 @@ const (
 	RefreshToken TokenType = "refresh"
 )
 
+// When adding a new token transfer method, it's also necessary to update the related constant (availableTokenTransferMethods) in `session/constants.go`
 type TokenTransferMethod string
 
 const (
