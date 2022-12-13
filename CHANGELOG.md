@@ -219,11 +219,7 @@ tpmodels.ProviderInput{
         },
         OIDCDiscoveryEndpoint: "...",
         UserInfoMap: tpmodels.TypeUserInfoMap{
-            FromUserInfoAPI: struct {
-                UserId        string "json:\"userId\""
-                Email         string "json:\"email\""
-                EmailVerified string "json:\"emailVerified\""
-            }{
+            FromUserInfoAPI: tpmodels.TypeUserInfoFields{
                 UserId:        "id",
                 Email:         "email",
                 EmailVerified: "emailVerified",
