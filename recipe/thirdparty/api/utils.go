@@ -32,38 +32,30 @@ func findAndCreateProviderInstance(options tpmodels.APIOptions, thirdPartyId str
 }
 
 func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	var providerInstance *tpmodels.TypeProvider
-
 	switch input.Config.ThirdPartyId {
 	case "active-directory":
-		providerInstance = providers.ActiveDirectory(input)
+		return providers.ActiveDirectory(input)
 	case "apple":
-		providerInstance = providers.Apple(input)
+		return providers.Apple(input)
 	case "discord":
-		providerInstance = providers.Discord(input)
+		return providers.Discord(input)
 	case "facebook":
-		providerInstance = providers.Facebook(input)
+		return providers.Facebook(input)
 	case "github":
-		providerInstance = providers.Github(input)
+		return providers.Github(input)
 	case "google":
-		providerInstance = providers.Google(input)
+		return providers.Google(input)
 	case "google-workspaces":
-		providerInstance = providers.GoogleWorkspaces(input)
+		return providers.GoogleWorkspaces(input)
 	case "okta":
-		providerInstance = providers.Okta(input)
+		return providers.Okta(input)
 	case "linkedin":
-		providerInstance = providers.Linkedin(input)
+		return providers.Linkedin(input)
 	case "boxy-saml":
-		providerInstance = providers.BoxySaml(input)
-	default:
-		providerInstance = providers.NewProvider(input)
+		return providers.BoxySaml(input)
 	}
 
-	if input.Override != nil {
-		providerInstance = input.Override(providerInstance)
-	}
-
-	return providerInstance
+	return providers.NewProvider(input)
 }
 
 func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {
