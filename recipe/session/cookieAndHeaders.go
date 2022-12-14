@@ -207,30 +207,27 @@ func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, n
 
 	httpOnly := true
 
-	if domain != "" {
-		cookie := &http.Cookie{
-			Name:     name,
-			Value:    url.QueryEscape(value),
-			Domain:   domain,
-			Secure:   secure,
-			HttpOnly: httpOnly,
-			Expires:  time.Unix(int64(expires/1000), 0),
-			Path:     path,
-			SameSite: sameSiteField,
-		}
-		setCookieValue(res, cookie)
-	} else {
-		cookie := &http.Cookie{
-			Name:     name,
-			Value:    url.QueryEscape(value),
-			Secure:   secure,
-			HttpOnly: httpOnly,
-			Expires:  time.Unix(int64(expires/1000), 0),
-			Path:     path,
-			SameSite: sameSiteField,
-		}
-		setCookieValue(res, cookie)
+	cookie := &http.Cookie{
+		Name:     name,
+		Value:    url.QueryEscape(value),
+		Domain:   domain,
+		Secure:   secure,
+		HttpOnly: httpOnly,
+		Expires:  time.Unix(int64(expires/1000), 0),
+		Path:     path,
+		SameSite: sameSiteField,
 	}
+	setCookieValue(res, cookie)
+
+}
+
+func getAuthmodeFromHeader(req *http.Request) *sessmodels.TokenTransferMethod {
+	val := getHeader(req, authModeHeaderKey)
+	if val == nil {
+		return nil
+	}
+	valLcase := sessmodels.TokenTransferMethod(strings.ToLower(*val))
+	return &valLcase
 }
 
 func getHeader(request *http.Request, key string) *string {

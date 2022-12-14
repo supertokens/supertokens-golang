@@ -18,7 +18,6 @@ package session
 import (
 	"net/http"
 	"reflect"
-	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
@@ -113,7 +112,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 				// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 				// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
 				// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-				uint64(time.Now().UnixNano()/1000000+3153600000000),
+				getCurrTimeInMS()+3153600000000,
 				session.tokenTransferMethod,
 			)
 		}
