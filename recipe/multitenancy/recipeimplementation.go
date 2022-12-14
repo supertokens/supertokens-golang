@@ -53,9 +53,9 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		return multitenancymodels.DeleteThirdPartyConfigResponse{}, nil
 	}
 
-	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
+	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsResponse, error) {
 		// TODO impl
-		return multitenancymodels.ListTenantConfigMappingsResponse{}, nil
+		return multitenancymodels.ListThirdPartyConfigsResponse{}, nil
 	}
 
 	return multitenancymodels.RecipeInterface{

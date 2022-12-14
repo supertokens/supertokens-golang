@@ -30,7 +30,7 @@ type RecipeInterface struct {
 	// Third party provider management
 	CreateOrUpdateThirdPartyConfig *func(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (CreateOrUpdateThirdPartyConfigResponse, error)
 	DeleteThirdPartyConfig         *func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (DeleteThirdPartyConfigResponse, error)
-	ListThirdPartyConfigs          *func(thirdPartyId string, userContext supertokens.UserContext) (ListTenantConfigMappingsResponse, error)
+	ListThirdPartyConfigs          *func(thirdPartyId string, userContext supertokens.UserContext) (ListThirdPartyConfigsResponse, error)
 }
 
 type TenantConfig struct {
@@ -87,7 +87,7 @@ type DeleteThirdPartyConfigResponse struct {
 	TenantDoesNotExistError *struct{}
 }
 
-type ListTenantConfigMappingsResponse struct {
+type ListThirdPartyConfigsResponse struct {
 	OK *struct {
 		Providers []tpmodels.ProviderConfig
 	}
