@@ -84,8 +84,7 @@ type TypeInputSignInAndUp struct {
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers            []ProviderInput
-	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
+	Providers []ProviderInput
 }
 
 type TypeInput struct {
