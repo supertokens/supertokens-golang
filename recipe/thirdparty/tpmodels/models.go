@@ -80,11 +80,11 @@ type User struct {
 }
 
 type TypeInputSignInAndUp struct {
-	Providers []TypeProvider
+	Providers []ProviderInput
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers            []TypeProvider
+	Providers            []ProviderInput
 	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
 }
 

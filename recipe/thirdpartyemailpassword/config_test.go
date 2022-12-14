@@ -38,7 +38,7 @@ func TestDefaultConfigForThirdPartyEmailPasswordRecipe(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(
 				&tpepmodels.TypeInput{
-					Providers: []tpmodels.TypeProvider{},
+					Providers: []tpmodels.ProviderInput{},
 				},
 			),
 		},
@@ -95,7 +95,7 @@ func TestDefaultConfigForThirdPartyEmailPasswordRecipeWithProvider(t *testing.T)
 		RecipeList: []supertokens.Recipe{
 			Init(
 				&tpepmodels.TypeInput{
-					Providers: []tpmodels.TypeProvider{
+					Providers: []tpmodels.ProviderInput{
 						// TODO fix
 						// customProvider2,
 					},

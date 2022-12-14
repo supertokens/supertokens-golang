@@ -7,9 +7,12 @@ import (
 
 const googleID = "google"
 
-func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = googleID
+func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = googleID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Google"
 	}
 
 	if input.Config.OIDCDiscoveryEndpoint == "" {

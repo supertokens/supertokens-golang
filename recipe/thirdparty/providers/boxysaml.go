@@ -6,9 +6,12 @@ import (
 
 const boxySamlID = "boxy-saml"
 
-func BoxySaml(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = boxySamlID
+func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = boxySamlID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Boxy SAML"
 	}
 
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {

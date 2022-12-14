@@ -34,7 +34,7 @@ type Recipe struct {
 	Config       tpmodels.TypeNormalisedInput
 	RecipeImpl   tpmodels.RecipeInterface
 	APIImpl      tpmodels.APIInterface
-	Providers    []tpmodels.TypeProvider
+	Providers    []tpmodels.ProviderInput
 }
 
 var singletonInstance *Recipe
@@ -104,10 +104,6 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
-	configuredProvidersAPI, err := supertokens.NewNormalisedURLPath(ConfiguredProvidersAPI)
-	if err != nil {
-		return nil, err
-	}
 	return append([]supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: signInUpAPI,
@@ -123,15 +119,15 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: appleRedirectHandlerAPI,
 		ID:                     AppleRedirectHandlerAPI,
 		Disabled:               r.APIImpl.AppleRedirectHandlerPOST == nil,
-	}, {
-		Method:                 http.MethodGet,
-		PathWithoutAPIBasePath: configuredProvidersAPI,
-		ID:                     ConfiguredProvidersAPI,
-		Disabled:               r.APIImpl.ConfiguredProvidersGET == nil,
 	}}), nil
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+
+	// TODO recipe enabled check
+
+	// TODO maybe merge the providers list here
+
 	options := tpmodels.APIOptions{
 		Config:               r.Config,
 		OtherHandler:         theirHandler,
@@ -148,8 +144,6 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		return api.AuthorisationUrlAPI(r.APIImpl, options)
 	} else if id == AppleRedirectHandlerAPI {
 		return api.AppleRedirectHandler(r.APIImpl, options)
-	} else if id == ConfiguredProvidersAPI {
-		return api.ProvidersForTenantAPI(r.APIImpl, options)
 	}
 	return errors.New("should never come here")
 }

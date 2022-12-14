@@ -49,8 +49,8 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					mockThirdPartyProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// mockThirdPartyProvider1,
 				},
 			}),
 		},
@@ -103,9 +103,9 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					mockThirdPartyProvider1,
-					mockThirdPartyProvider2,
+				Providers: []tpmodels.ProviderInput{
+					// mockThirdPartyProvider1,
+					// mockThirdPartyProvider2,
 				},
 			}),
 		},

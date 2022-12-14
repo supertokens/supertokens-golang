@@ -22,9 +22,12 @@ import (
 
 const facebookID = "facebook"
 
-func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = facebookID
+func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = facebookID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Facebook"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {

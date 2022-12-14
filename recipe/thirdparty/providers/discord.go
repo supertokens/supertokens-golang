@@ -25,9 +25,12 @@ import (
 
 const discordID = "discord"
 
-func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = discordID
+func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = discordID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Discord"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {

@@ -51,8 +51,8 @@ func TestGetUsersOldesFirst(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					userTestCustomProvider,
+				Providers: []tpmodels.ProviderInput{
+					// userTestCustomProvider,
 				},
 			}),
 		},
@@ -156,8 +156,8 @@ func TestGetUsersNewestFirst(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					userTestCustomProvider,
+				Providers: []tpmodels.ProviderInput{
+					// userTestCustomProvider,
 				},
 			}),
 		},
@@ -262,8 +262,8 @@ func TestGetUserCount(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					userTestCustomProvider,
+				Providers: []tpmodels.ProviderInput{
+					// userTestCustomProvider,
 				},
 			}),
 		},

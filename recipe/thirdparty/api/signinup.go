@@ -73,7 +73,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "Please provide one of redirectURIInfo or oAuthTokens in the request body"}
 	}
 
-	provider, err := findProvider(options, bodyParams.ThirdPartyId, tenantId)
+	provider, err := findAndCreateProviderInstance(options, bodyParams.ThirdPartyId, tenantId)
 	if err != nil {
 		return err
 	}

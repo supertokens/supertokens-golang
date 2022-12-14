@@ -54,8 +54,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					customProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// customProvider1,
 				},
 			}),
 		},
@@ -124,8 +124,8 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					customProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// customProvider1,
 				},
 			}),
 		},

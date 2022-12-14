@@ -15,9 +15,12 @@ import (
 
 const activeDirectoryID = "active-directory"
 
-func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = activeDirectoryID
+func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = activeDirectoryID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Active Directory"
 	}
 
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {

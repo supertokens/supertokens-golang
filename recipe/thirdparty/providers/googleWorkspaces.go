@@ -7,9 +7,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = "google-workspaces"
+func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = "google-workspaces"
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Google Workspaces"
 	}
 
 	if input.Config.ValidateIdTokenPayload == nil {

@@ -14,9 +14,12 @@ import (
 
 const oktaID = "okta"
 
-func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = oktaID
+func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = oktaID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Okta"
 	}
 
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {

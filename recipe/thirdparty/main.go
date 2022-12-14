@@ -16,7 +16,6 @@
 package thirdparty
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -71,48 +70,4 @@ func GetUsersByEmail(email string) ([]tpmodels.User, error) {
 
 func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
-}
-
-func ActiveDirectory(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.ActiveDirectory(input)
-}
-
-func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Apple(input)
-}
-
-func BoxySaml(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.BoxySaml(input)
-}
-
-func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Discord(input)
-}
-
-func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Facebook(input)
-}
-
-func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Github(input)
-}
-
-func Google(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Google(input)
-}
-
-func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.GoogleWorkspaces(input)
-}
-
-func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Linkedin(input)
-}
-
-func Okta(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.Okta(input)
-}
-
-func CustomProvider(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	return providers.NewProvider(input)
 }

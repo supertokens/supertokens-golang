@@ -9,9 +9,12 @@ import (
 
 const linkedinID = "linkedin"
 
-func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = linkedinID
+func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = linkedinID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "LinkedIn"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {

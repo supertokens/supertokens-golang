@@ -73,6 +73,5 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 		AuthorisationUrlGET:      apiImplmentation.AuthorisationUrlGET,
 		AppleRedirectHandlerPOST: apiImplmentation.AppleRedirectHandlerPOST,
 		SignInUpPOST:             &signInUpPOST,
-		ConfiguredProvidersGET:   apiImplmentation.ThirdPartyConfiguredProvidersGET,
 	}
 }

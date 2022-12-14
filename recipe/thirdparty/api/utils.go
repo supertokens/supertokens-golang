@@ -13,50 +13,57 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func findProvider(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
+func findAndCreateProviderInstance(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
 	for _, provider := range options.Providers {
-		if provider.ID == thirdPartyId {
-
-			if (tenantId == nil || *tenantId == tpmodels.DefaultTenantId) && !provider.UseForDefaultTenant {
+		if provider.Config.ThirdPartyId == thirdPartyId {
+			useForDefault := true
+			if provider.UseForDefaultTenant != nil {
+				useForDefault = *provider.UseForDefaultTenant
+			}
+			if (tenantId == nil || *tenantId == tpmodels.DefaultTenantId) && !useForDefault {
 				return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s is disabled for default tenant", thirdPartyId)
 			}
 
-			return provider, nil
+			providerInstance := createProvider(provider)
+			return *providerInstance, nil
 		}
 	}
-
-	// We need to create the provider on the fly,
-	// so that the GetConfig function will make use of the core to fetch the config
-	return createProvider(thirdPartyId), nil
+	return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s could not be found in the configuration", thirdPartyId)
 }
 
-func createProvider(thirdPartyId string) tpmodels.TypeProvider {
-	switch thirdPartyId {
+func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	var providerInstance *tpmodels.TypeProvider
+
+	switch input.Config.ThirdPartyId {
 	case "active-directory":
-		return providers.ActiveDirectory(tpmodels.ProviderInput{})
+		providerInstance = providers.ActiveDirectory(input)
 	case "apple":
-		return providers.Apple(tpmodels.ProviderInput{})
+		providerInstance = providers.Apple(input)
 	case "discord":
-		return providers.Discord(tpmodels.ProviderInput{})
+		providerInstance = providers.Discord(input)
 	case "facebook":
-		return providers.Facebook(tpmodels.ProviderInput{})
+		providerInstance = providers.Facebook(input)
 	case "github":
-		return providers.Github(tpmodels.ProviderInput{})
+		providerInstance = providers.Github(input)
 	case "google":
-		return providers.Google(tpmodels.ProviderInput{})
+		providerInstance = providers.Google(input)
 	case "google-workspaces":
-		return providers.GoogleWorkspaces(tpmodels.ProviderInput{})
+		providerInstance = providers.GoogleWorkspaces(input)
 	case "okta":
-		return providers.Okta(tpmodels.ProviderInput{})
+		providerInstance = providers.Okta(input)
 	case "linkedin":
-		return providers.Linkedin(tpmodels.ProviderInput{})
+		providerInstance = providers.Linkedin(input)
 	case "boxy-saml":
-		return providers.BoxySaml(tpmodels.ProviderInput{})
+		providerInstance = providers.BoxySaml(input)
+	default:
+		providerInstance = providers.NewProvider(input)
 	}
 
-	return providers.NewProvider(tpmodels.ProviderInput{
-		ThirdPartyID: thirdPartyId,
-	})
+	if input.Override != nil {
+		providerInstance = input.Override(providerInstance)
+	}
+
+	return providerInstance
 }
 
 func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {

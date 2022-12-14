@@ -46,7 +46,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(
 				&tpepmodels.TypeInput{
-					Providers: []tpmodels.TypeProvider{
+					Providers: []tpmodels.ProviderInput{
 						// TODO fix
 						// customProvider1,
 					},
@@ -112,7 +112,7 @@ func TestThirdPartyProviderDoesnotExsit(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(
 				&tpepmodels.TypeInput{
-					Providers: []tpmodels.TypeProvider{
+					Providers: []tpmodels.ProviderInput{
 						// TODO fix
 						// customProvider1,
 					},

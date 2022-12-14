@@ -77,11 +77,6 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 		return ogAppleRedirectHandlerPOST(formPostInfoFromProvider, options, userContext)
 	}
 
-	ogThirdPartyConfiguredProvidersGET := *thirdPartyImplementation.ConfiguredProvidersGET
-	thirdPartyConfiguredProvidersGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
-		return ogThirdPartyConfiguredProvidersGET(tenantId, options, userContext)
-	}
-
 	ogConsumeCodePOST := *passwordlessImplementation.ConsumeCodePOST
 	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
 		resp, err := ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, options, userContext)
@@ -146,10 +141,9 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	}
 
 	result := tplmodels.APIInterface{
-		AuthorisationUrlGET:              &authorisationUrlGET,
-		ThirdPartySignInUpPOST:           &thirdPartySignInUpPOST,
-		AppleRedirectHandlerPOST:         &appleRedirectHandlerPOST,
-		ThirdPartyConfiguredProvidersGET: &thirdPartyConfiguredProvidersGET,
+		AuthorisationUrlGET:      &authorisationUrlGET,
+		ThirdPartySignInUpPOST:   &thirdPartySignInUpPOST,
+		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
 
 		CreateCodePOST:                   &createCodePOST,
 		ResendCodePOST:                   &resendCodePOST,
@@ -169,7 +163,6 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	(*thirdPartyImplementation.AuthorisationUrlGET) = *modifiedTP.AuthorisationUrlGET
 	(*thirdPartyImplementation.SignInUpPOST) = *modifiedTP.SignInUpPOST
 	(*thirdPartyImplementation.AppleRedirectHandlerPOST) = *modifiedTP.AppleRedirectHandlerPOST
-	(*thirdPartyImplementation.ConfiguredProvidersGET) = *modifiedTP.ConfiguredProvidersGET
 
 	return result
 }

@@ -30,9 +30,12 @@ import (
 
 const appleID = "apple"
 
-func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = appleID
+func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = appleID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Apple"
 	}
 
 	if input.Config.OIDCDiscoveryEndpoint == "" {

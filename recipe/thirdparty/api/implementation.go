@@ -23,8 +23,6 @@ import (
 	"net/url"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -32,105 +30,6 @@ import (
 )
 
 func MakeAPIImplementation() tpmodels.APIInterface {
-
-	configuredProvidersGET := func(tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.ProvidersForTenantGetResponse, error) {
-		providers := []struct {
-			ID   string `json:"id"`
-			Name string `json:"name,omitempty"`
-		}{}
-
-		mtInstance := multitenancy.GetRecipeInstance()
-
-		configsFromCore := multitenancymodels.ListTenantConfigMappingsResponse{
-			OK: &struct {
-				Configs []struct {
-					ThirdPartyId string
-					Config       tpmodels.ProviderConfig
-				}
-			}{
-				Configs: []struct {
-					ThirdPartyId string
-					Config       tpmodels.ProviderConfig
-				}{},
-			},
-		}
-		if mtInstance != nil {
-			var err error
-			configsFromCore, err = (*mtInstance.RecipeImpl.ListThirdPartyConfigs)(tenantId, userContext)
-			if err != nil {
-				return tpmodels.ProvidersForTenantGetResponse{}, err
-			}
-		}
-
-		// for default tenant = merge core and static config
-		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
-			addedFromCore := map[string]bool{}
-
-			for _, configFromCore := range configsFromCore.OK.Configs {
-				providerResult := struct {
-					ID   string `json:"id"`
-					Name string `json:"name,omitempty"`
-				}{
-					ID:   configFromCore.ThirdPartyId,
-					Name: configFromCore.Config.Name,
-				}
-				providers = append(providers, providerResult)
-				addedFromCore[configFromCore.ThirdPartyId] = true
-			}
-
-			for _, staticProvider := range options.Providers {
-				if staticProvider.UseForDefaultTenant {
-					providerResult := struct {
-						ID   string `json:"id"`
-						Name string `json:"name,omitempty"`
-					}{
-						ID: staticProvider.ID,
-					}
-
-					if !addedFromCore[staticProvider.ID] {
-						providers = append(providers, providerResult)
-					}
-				}
-			}
-		} else {
-			// for other tenants = only core config if available else static config
-			if len(configsFromCore.OK.Configs) > 0 {
-				// Add from core
-				for _, configFromCore := range configsFromCore.OK.Configs {
-					providerResult := struct {
-						ID   string `json:"id"`
-						Name string `json:"name,omitempty"`
-					}{
-						ID:   configFromCore.ThirdPartyId,
-						Name: configFromCore.Config.Name,
-					}
-					providers = append(providers, providerResult)
-				}
-			} else {
-				// add from static
-				for _, staticProvider := range options.Providers {
-					providerResult := struct {
-						ID   string `json:"id"`
-						Name string `json:"name,omitempty"`
-					}{
-						ID: staticProvider.ID,
-					}
-					providers = append(providers, providerResult)
-				}
-			}
-		}
-
-		return tpmodels.ProvidersForTenantGetResponse{
-			OK: &struct {
-				Providers []struct {
-					ID   string `json:"id"`
-					Name string `json:"name,omitempty"`
-				} `json:"providers"`
-			}{
-				Providers: providers,
-			},
-		}, nil
-	}
 
 	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
 		authRedirect, err := provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
@@ -245,7 +144,6 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	return tpmodels.APIInterface{
-		ConfiguredProvidersGET:   &configuredProvidersGET,
 		AuthorisationUrlGET:      &authorisationUrlGET,
 		SignInUpPOST:             &signInUpPOST,
 		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,

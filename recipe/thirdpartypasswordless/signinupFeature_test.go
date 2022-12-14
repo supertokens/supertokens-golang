@@ -140,8 +140,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider6,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider6,
 				},
 			}),
 		},
@@ -237,8 +237,8 @@ func TestWithThirdPartyPasswordlessMissingCodeAndAuthCodeResponse(t *testing.T) 
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider6,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider6,
 				},
 			}),
 		},
@@ -308,8 +308,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider1,
 				},
 			}),
 		},
@@ -415,8 +415,8 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider5,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider5,
 				},
 			}),
 		},
@@ -525,8 +525,8 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider1,
 				},
 			}),
 		},
@@ -599,8 +599,8 @@ func TestWithThirdPartyPasswordlessEmailNotReturnedInGetProfileInfoFunction(t *t
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider3,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider3,
 				},
 			}),
 		},
@@ -680,8 +680,8 @@ func TestWithThirdPartyPasswordlessErrorThrownFromGetProfileInfoFunction(t *test
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider4,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider4,
 				},
 			}),
 		},
@@ -758,8 +758,8 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider1,
 				},
 			}),
 		},
@@ -857,8 +857,8 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider1,
 				},
 			}),
 		},
@@ -956,8 +956,8 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					signinupCustomProvider1,
+				Providers: []tpmodels.ProviderInput{
+					// signinupCustomProvider1,
 				},
 			}),
 		},

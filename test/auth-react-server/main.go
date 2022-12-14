@@ -269,7 +269,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					},
 				},
 				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-					Providers: []tpmodels.TypeProvider{
+					Providers: []tpmodels.ProviderInput{
 						// TODO fix
 						// thirdparty.Google(tpmodels.GoogleConfig{
 						// 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
@@ -375,7 +375,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: formFields,
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					// TODO fix
 					// thirdparty.Google(tpmodels.GoogleConfig{
 					// 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
@@ -460,7 +460,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
-				Providers:                 []tpmodels.TypeProvider{
+				Providers:                 []tpmodels.ProviderInput{
 					// TODO fix
 					// thirdparty.Google(tpmodels.GoogleConfig{
 					// 	ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),

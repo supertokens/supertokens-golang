@@ -19,5 +19,4 @@ const (
 	AuthorisationAPI        = "/authorisationurl"
 	SignInUpAPI             = "/signinup"
 	AppleRedirectHandlerAPI = "/callback/apple"
-	ConfiguredProvidersAPI  = "/providers"
 )

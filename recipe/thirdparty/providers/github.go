@@ -25,9 +25,12 @@ import (
 
 const githubID = "github"
 
-func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = githubID
+func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = githubID
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Github"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {
