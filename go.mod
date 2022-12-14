@@ -12,7 +12,6 @@ require (
 	github.com/nyaruka/phonenumbers v1.0.73
 	github.com/stretchr/testify v1.7.0
 	github.com/twilio/twilio-go v0.26.0
-	github.com/weppos/publicsuffix-go v0.20.0 // indirect
 	golang.org/x/net v0.0.0-20210614182718-04defd469f4e
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df

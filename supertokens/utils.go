@@ -30,7 +30,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/weppos/publicsuffix-go/publicsuffix"
+	"golang.org/x/net/publicsuffix"
 )
 
 func IsAnIPAddress(ipaddress string) (bool, error) {
@@ -69,11 +69,11 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 		return NormalisedAppinfo{}, err
 	}
 
-	topLevelAPIDomain, err := getTopLevelDomainForSameSiteResolution(apiDomain.GetAsStringDangerous())
+	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(apiDomain.GetAsStringDangerous())
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
-	topLevelWebsiteDomain, err := getTopLevelDomainForSameSiteResolution(websiteDomain.GetAsStringDangerous())
+	topLevelWebsiteDomain, err := GetTopLevelDomainForSameSiteResolution(websiteDomain.GetAsStringDangerous())
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
@@ -284,22 +284,22 @@ func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
 	}
 }
 
-func getTopLevelDomainForSameSiteResolution(inputUrl string) (string, error) {
-	urlObj, err := url.Parse(inputUrl)
+func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
+	urlObj, err := url.Parse(URL)
 	if err != nil {
 		return "", err
 	}
-	hostName := urlObj.Hostname()
-	isIpAddress, err := IsAnIPAddress(hostName)
+	hostname := urlObj.Hostname()
+	isAnIP, err := IsAnIPAddress(hostname)
 	if err != nil {
 		return "", err
 	}
-	if strings.HasPrefix(hostName, "localhost") || isIpAddress {
+	if strings.HasPrefix(hostname, "localhost") || strings.HasPrefix(hostname, "localhost.org") || isAnIP {
 		return "localhost", nil
 	}
-	parsedDomain, err := publicsuffix.Domain(hostName)
+	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
 	if err != nil {
-		return "", err
+		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
 	}
-	return parsedDomain, nil
+	return parsedURL, nil
 }
