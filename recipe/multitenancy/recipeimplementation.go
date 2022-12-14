@@ -22,29 +22,49 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config multitenancymodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) multitenancymodels.RecipeInterface {
-	createOrUpdateThirdPartyConfig := func(tenantId *string, thirdPartyId string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantIdConfigResponse, error) {
+
+	createOrUpdateTenant := func(tenantId *string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
 		// TODO impl
-		return multitenancymodels.CreateOrUpdateTenantIdConfigResponse{}, nil
+		return multitenancymodels.CreateOrUpdateTenantResponse{}, nil
 	}
 
-	fetchThirdPartyConfig := func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.FetchTenantIdConfigResponse, error) {
+	deleteTenant := func(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
 		// TODO impl
-		return multitenancymodels.FetchTenantIdConfigResponse{}, nil
+		return multitenancymodels.DeleteTenantResponse{}, nil
 	}
 
-	deleteThirdPartyConfig := func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantIdConfigResponse, error) {
+	getTenantConfig := func(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
 		// TODO impl
-		return multitenancymodels.DeleteTenantIdConfigResponse{}, nil
+		return multitenancymodels.TenantConfigResponse{}, nil
 	}
 
-	listThirdPartyConfigs := func(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
+	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
+		// TODO impl
+		return multitenancymodels.ListAllTenantsResponse{}, nil
+	}
+
+	createOrUpdateThirdPartyConfig := func(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+		// TODO impl
+		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, nil
+	}
+
+	deleteThirdPartyConfig := func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
+		// TODO impl
+		return multitenancymodels.DeleteThirdPartyConfigResponse{}, nil
+	}
+
+	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
 		// TODO impl
 		return multitenancymodels.ListTenantConfigMappingsResponse{}, nil
 	}
 
 	return multitenancymodels.RecipeInterface{
+		CreateOrUpdateTenant: &createOrUpdateTenant,
+		DeleteTenant:         &deleteTenant,
+		GetTenantConfig:      &getTenantConfig,
+		ListAllTenants:       &listAllTenants,
+
 		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
-		FetchThirdPartyConfig:          &fetchThirdPartyConfig,
 		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
 		ListThirdPartyConfigs:          &listThirdPartyConfigs,
 	}

@@ -15,5 +15,27 @@
 
 package multitenancymodels
 
+import "github.com/supertokens/supertokens-golang/supertokens"
+
 type APIInterface struct {
+	LoginMethodsGET func(tenantId *string, userContext supertokens.UserContext) (LoginMethodsGETResponse, error)
+}
+
+type LoginMethodsGETResponse struct {
+	OK *struct {
+		Emailpassword struct {
+			Enabled bool
+		}
+		Passwordless struct {
+			Enabled bool
+		}
+		ThirdParty struct {
+			Enabled   bool
+			Providers []struct {
+				Id   string
+				Name string
+			}
+		}
+	}
+	GeneralError *supertokens.GeneralErrorResponse
 }

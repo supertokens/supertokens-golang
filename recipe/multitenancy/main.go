@@ -25,50 +25,92 @@ func Init(config *multitenancymodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateOrUpdateThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantIdConfigResponse, error) {
+func CreateOrUpdateTenantWithContext(tenantId *string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return multitenancymodels.CreateOrUpdateTenantIdConfigResponse{}, err
+		return multitenancymodels.CreateOrUpdateTenantResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateOrUpdateThirdPartyConfig)(tenantId, thirdPartyId, config, userContext)
+
+	return (*instance.RecipeImpl.CreateOrUpdateTenant)(tenantId, config, userContext)
 }
 
-func FetchThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.FetchTenantIdConfigResponse, error) {
+func DeleteTenantWithContext(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return multitenancymodels.FetchTenantIdConfigResponse{}, err
+		return multitenancymodels.DeleteTenantResponse{}, err
 	}
-	return (*instance.RecipeImpl.FetchThirdPartyConfig)(tenantId, thirdPartyId, userContext)
+
+	return (*instance.RecipeImpl.DeleteTenant)(tenantId, userContext)
 }
 
-func DeleteThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantIdConfigResponse, error) {
+func GetTenantConfigWithContext(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
-		return multitenancymodels.DeleteTenantIdConfigResponse{}, err
+		return multitenancymodels.TenantConfigResponse{}, err
+	}
+
+	return (*instance.RecipeImpl.GetTenantConfig)(tenantId, userContext)
+}
+
+func ListAllTenantsWithContext(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return multitenancymodels.ListAllTenantsResponse{}, err
+	}
+
+	return (*instance.RecipeImpl.ListAllTenants)(userContext)
+}
+
+// Third party provider management
+func CreateOrUpdateThirdPartyConfigWithContext(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
+	}
+	return (*instance.RecipeImpl.CreateOrUpdateThirdPartyConfig)(config, userContext)
+}
+
+func DeleteThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return multitenancymodels.DeleteThirdPartyConfigResponse{}, err
 	}
 	return (*instance.RecipeImpl.DeleteThirdPartyConfig)(tenantId, thirdPartyId, userContext)
 }
 
-func ListThirdPartyConfigsWithContext(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
+func ListThirdPartyConfigsWithContext(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.ListTenantConfigMappingsResponse{}, err
 	}
-	return (*instance.RecipeImpl.ListThirdPartyConfigs)(tenantId, userContext)
+	return (*instance.RecipeImpl.ListThirdPartyConfigs)(thirdPartyId, userContext)
 }
 
-func CreateOrUpdateThirdPartyConfig(tenantId *string, thirdPartyId string, config tpmodels.ProviderConfig) (multitenancymodels.CreateOrUpdateTenantIdConfigResponse, error) {
-	return CreateOrUpdateThirdPartyConfigWithContext(tenantId, thirdPartyId, config, &map[string]interface{}{})
+func CreateOrUpdateTenant(tenantId *string, config multitenancymodels.TenantConfig) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
+	return CreateOrUpdateTenantWithContext(tenantId, config, &map[string]interface{}{})
 }
 
-func FetchThirdPartyConfig(tenantId *string, thirdPartyId string) (multitenancymodels.FetchTenantIdConfigResponse, error) {
-	return FetchThirdPartyConfigWithContext(tenantId, thirdPartyId, &map[string]interface{}{})
+func DeleteTenant(tenantId string) (multitenancymodels.DeleteTenantResponse, error) {
+	return DeleteTenantWithContext(tenantId, &map[string]interface{}{})
 }
 
-func DeleteThirdPartyConfig(tenantId *string, thirdPartyId string) (multitenancymodels.DeleteTenantIdConfigResponse, error) {
+func GetTenantConfig(tenantId *string) (multitenancymodels.TenantConfigResponse, error) {
+	return GetTenantConfigWithContext(tenantId, &map[string]interface{}{})
+}
+
+func ListAllTenants() (multitenancymodels.ListAllTenantsResponse, error) {
+	return ListAllTenantsWithContext(&map[string]interface{}{})
+}
+
+// Third party provider management
+func CreateOrUpdateThirdPartyConfig(config tpmodels.ProviderConfig) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+	return CreateOrUpdateThirdPartyConfigWithContext(config, &map[string]interface{}{})
+}
+
+func DeleteThirdPartyConfig(tenantId *string, thirdPartyId string) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
 	return DeleteThirdPartyConfigWithContext(tenantId, thirdPartyId, &map[string]interface{}{})
 }
 
-func ListThirdPartyConfigs(tenantId *string) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
-	return ListThirdPartyConfigsWithContext(tenantId, &map[string]interface{}{})
+func ListThirdPartyConfigs(thirdPartyId string) (multitenancymodels.ListTenantConfigMappingsResponse, error) {
+	return ListThirdPartyConfigsWithContext(thirdPartyId, &map[string]interface{}{})
 }

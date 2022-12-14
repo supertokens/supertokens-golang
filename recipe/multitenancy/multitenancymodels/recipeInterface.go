@@ -21,36 +21,74 @@ import (
 )
 
 type RecipeInterface struct {
-	CreateOrUpdateThirdPartyConfig *func(tenantId *string, thirdPartyId string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantIdConfigResponse, error)
-	FetchThirdPartyConfig          *func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (FetchTenantIdConfigResponse, error)
-	DeleteThirdPartyConfig         *func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (DeleteTenantIdConfigResponse, error)
-	ListThirdPartyConfigs          *func(tenantId *string, userContext supertokens.UserContext) (ListTenantConfigMappingsResponse, error)
+	// Tenant management
+	CreateOrUpdateTenant *func(tenantId *string, config TenantConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantResponse, error)
+	DeleteTenant         *func(tenantId string, userContext supertokens.UserContext) (DeleteTenantResponse, error)
+	GetTenantConfig      *func(tenantId *string, userContext supertokens.UserContext) (TenantConfigResponse, error)
+	ListAllTenants       *func(userContext supertokens.UserContext) (ListAllTenantsResponse, error)
+
+	// Third party provider management
+	CreateOrUpdateThirdPartyConfig *func(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (CreateOrUpdateThirdPartyConfigResponse, error)
+	DeleteThirdPartyConfig         *func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (DeleteThirdPartyConfigResponse, error)
+	ListThirdPartyConfigs          *func(thirdPartyId string, userContext supertokens.UserContext) (ListTenantConfigMappingsResponse, error)
 }
 
-type CreateOrUpdateTenantIdConfigResponse struct {
+type TenantConfig struct {
+	EmailpasswordEnabled *bool
+	PasswordlessEnabled  *bool
+	ThirdpartyEnabled    *bool
+}
+
+type CreateOrUpdateTenantResponse struct {
 	OK *struct {
 		CreatedNew bool
 	}
 }
 
-type FetchTenantIdConfigResponse struct {
+type DeleteTenantResponse struct {
 	OK *struct {
-		Config tpmodels.ProviderConfig
+		TenantExisted bool
 	}
-	UnknownMappingError *struct{}
 }
 
-type DeleteTenantIdConfigResponse struct {
+type TenantConfigResponse struct {
 	OK *struct {
-		DidMappingExist bool
+		Emailpassword struct {
+			Enabled bool
+		}
+		Passwordless struct {
+			Enabled bool
+		}
+		ThirdParty struct {
+			Enabled   bool
+			Providers []tpmodels.ProviderConfig
+		}
 	}
+	TenantDoesNotExistError *struct{}
+}
+
+type ListAllTenantsResponse struct {
+	OK *struct {
+		Tenants []string
+	}
+}
+
+type CreateOrUpdateThirdPartyConfigResponse struct {
+	OK *struct {
+		CreatedNew bool
+	}
+	TenantDoesNotExistError *struct{}
+}
+
+type DeleteThirdPartyConfigResponse struct {
+	OK *struct {
+		DidConfigExist bool
+	}
+	TenantDoesNotExistError *struct{}
 }
 
 type ListTenantConfigMappingsResponse struct {
 	OK *struct {
-		Configs []struct {
-			ThirdPartyId string
-			Config       tpmodels.ProviderConfig
-		}
+		Providers []tpmodels.ProviderConfig
 	}
 }

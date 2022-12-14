@@ -104,14 +104,17 @@ type OverrideStruct struct {
 }
 
 type ProviderInput struct {
-	ThirdPartyID        string
-	UseForDefaultTenant *bool
-
 	Config   ProviderConfig
 	Override func(provider *TypeProvider) *TypeProvider
+
+	UseForDefaultTenant *bool
 }
 
 type ProviderConfig struct {
+	TenantId     *string `json:"tenantId,omitempty"`
+	ThirdPartyId string  `json:"thirdPartyId"`
+	Name         string  `json:"name"`
+
 	Clients []ProviderClientConfig `json:"clients"`
 
 	// Fields below are optional for built-in providers
@@ -127,10 +130,7 @@ type ProviderConfig struct {
 	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint,omitempty"`
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
 
-	Name string `json:"name"`
-
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
-	TenantId               *string
 }
 
 type ProviderClientConfig struct {
