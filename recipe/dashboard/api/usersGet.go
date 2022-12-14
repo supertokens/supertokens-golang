@@ -9,18 +9,39 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
+type UsersGetResponse struct {
+	Status              string  `json:"status"`
+	NextPaginationToken *string `json:"nextPaginationToken,omitempty"`
+	Users               []Users `json:"users"`
+}
+
+type Users struct {
+	RecipeId string `json:"recipeId"`
+	User     User   `json:"user"`
+}
+
+type User struct {
+	Id          string                     `json:"id"`
+	TimeJoined  float64                    `json:"timeJoined"`
+	FirstName   string                     `json:"firstName,omitempty"`
+	LastName    string                     `json:"lastName,omitempty"`
+	Email       string                     `json:"email,omitempty"`
+	PhoneNumber string                     `json:"phoneNumber,omitempty"`
+	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
+}
+
+func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (UsersGetResponse, error) {
 	req := options.Req
 	limitStr := req.URL.Query().Get("limit")
 
 	if limitStr == "" {
-		return supertokens.BadInputError{
+		return UsersGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'limit'",
 		}
 	}
 	limit, err := strconv.Atoi(limitStr)
 	if err != nil {
-		return err
+		return UsersGetResponse{}, err
 	}
 
 	timeJoinedOrder := req.URL.Query().Get("timeJoinedOrder")
@@ -29,7 +50,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	}
 
 	if timeJoinedOrder != "ASC" && timeJoinedOrder != "DESC" {
-		return supertokens.BadInputError{
+		return UsersGetResponse{}, supertokens.BadInputError{
 			Msg: "Invalid value recieved for 'timeJoinedOrder'",
 		}
 	}
@@ -49,16 +70,16 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 		usersResponse, err = supertokens.GetUsersNewestFirst(paginationTokenPtr, &limit, nil)
 	}
 	if err != nil {
-		return err
+		return UsersGetResponse{}, err
 	}
 
 	_, err = usermetadata.GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return supertokens.Send200Response(options.Res, map[string]interface{}{
-			"status":              "OK",
-			"users":               usersResponse.Users,
-			"nextPaginationToken": usersResponse.NextPaginationToken,
-		})
+		return UsersGetResponse{
+			Status:              "OK",
+			NextPaginationToken: usersResponse.NextPaginationToken,
+			Users:               getUsersTypeFromPaginationResult(usersResponse),
+		}, nil
 	}
 
 	var processingGroup sync.WaitGroup
@@ -72,7 +93,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 		sem <- 1
 
 		if errInBackground != nil {
-			return errInBackground
+			return UsersGetResponse{}, errInBackground
 		}
 
 		go func(i int, userObj struct {
@@ -92,14 +113,57 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	}
 
 	if errInBackground != nil {
-		return errInBackground
+		return UsersGetResponse{}, errInBackground
 	}
 
 	processingGroup.Wait()
 
-	return supertokens.Send200Response(options.Res, map[string]interface{}{
-		"status":              "OK",
-		"users":               usersResponse.Users,
-		"nextPaginationToken": usersResponse.NextPaginationToken,
-	})
+	return UsersGetResponse{
+		Status:              "OK",
+		NextPaginationToken: usersResponse.NextPaginationToken,
+		Users:               getUsersTypeFromPaginationResult(usersResponse),
+	}, nil
+}
+
+func getUsersTypeFromPaginationResult(usersResponse supertokens.UserPaginationResult) []Users {
+	users := []Users{}
+	for _, v := range usersResponse.Users {
+		user := User{
+			Id:         v.User["id"].(string),
+			TimeJoined: v.User["timeJoined"].(float64),
+		}
+		firstName := v.User["firstName"]
+		if firstName != nil {
+			user.FirstName = firstName.(string)
+		}
+		lastName := v.User["lastName"]
+		if lastName != nil {
+			user.LastName = lastName.(string)
+		}
+
+		if v.RecipeId == "emailpassword" {
+			user.Email = v.User["email"].(string)
+		} else if v.RecipeId == "thirdparty" {
+			user.Email = v.User["email"].(string)
+			user.ThirdParty = dashboardmodels.ThirdParty{
+				Id:     v.User["thirdParty"].(map[string]interface{})["id"].(string),
+				UserId: v.User["thirdParty"].(map[string]interface{})["userId"].(string),
+			}
+		} else {
+			email := v.User["email"]
+			if email != nil {
+				user.Email = email.(string)
+			}
+			phoneNumber := v.User["phoneNumber"]
+			if phoneNumber != nil {
+				user.PhoneNumber = phoneNumber.(string)
+			}
+		}
+
+		users = append(users, Users{
+			RecipeId: v.RecipeId,
+			User:     user,
+		})
+	}
+	return users
 }

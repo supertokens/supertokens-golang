@@ -254,6 +254,20 @@ tpmodels.ProviderInput{
 ```
 
 
+## [0.9.11]
+-   Fixes panic issue with dashboard usersGet API
+
+## [0.9.10]
+-   Fixes issue where if SendEmail is overridden with a different email, it will reset that email.
+
+## [0.9.9] - 2022-11-24
+
+### Added:
+- Adds APIs for user details to the dashboard recipe
+
+### Changed:
+- Updates dashboard version to 0.2
+
 ## [0.9.8] - 2022-11-16
 - Fixes go fiber to handle handler chaining correctly with verifySession.
 - Added test to check JWT contains updated value when MergeIntoAccessTokenPayload is called.

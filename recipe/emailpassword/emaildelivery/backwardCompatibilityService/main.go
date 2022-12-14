@@ -34,6 +34,11 @@ func MakeBackwardCompatibilityService(recipeInterfaceImpl epmodels.RecipeInterfa
 			if user == nil {
 				return errors.New("should never come here")
 			}
+
+			// we add this here cause the user may have overridden the sendEmail function
+			// to change the input email and if we don't do this, the input email
+			// will get reset by the getUserById call above.
+			user.Email = input.PasswordReset.User.Email
 			sendResetPasswordEmail(*user, input.PasswordReset.PasswordResetLink, userContext)
 		} else {
 			return errors.New("should never come here")
