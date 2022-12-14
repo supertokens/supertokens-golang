@@ -29,3 +29,18 @@ type OverrideStruct struct {
 	Functions func(originalImplementation RecipeInterface) RecipeInterface
 	APIs      func(originalImplementation APIInterface) APIInterface
 }
+
+type ThirdParty struct {
+	Id     string `json:"id"`
+	UserId string `json:"userId"`
+}
+
+type UserType struct {
+	Id         string     `json:"id,omitempty"`
+	TimeJoined uint64     `json:"timeJoined,omitempty"`
+	FirstName  string     `json:"firstName,omitempty"`
+	LastName   string     `json:"lastName,omitempty"`
+	Email      string     `json:"email,omitempty"`
+	ThirdParty ThirdParty `json:"thirdParty,omitempty"`
+	Phone      string     `json:"phone,omitempty"`
+}

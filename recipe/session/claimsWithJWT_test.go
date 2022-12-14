@@ -192,3 +192,83 @@ func TestAssertClaimsWithPayloadWithJWTAndCallRightUpdateAccessTokenPayload(t *t
 	assert.Equal(t, "stub", jwtPayload["st-stub"].(map[string]interface{})["v"])
 	assert.Equal(t, "rope", jwtPayload["sub"])
 }
+
+func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				Jwt: &sessmodels.JWTInputConfig{
+					Enable: true,
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.8", cdiVersion) == "2.8" {
+		return
+	}
+
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
+		CreateNewSession(rw, "rope", nil, map[string]interface{}{})
+	})
+
+	mux.HandleFunc("/verifySession", VerifySession(nil, func(rw http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
+		assert.NotNil(t, sessionContainer)
+
+		sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{
+			"testClaim": "newValue",
+		})
+		jwtPayloadStr := sessionContainer.GetAccessTokenPayload()["jwt"].(string)
+		jwtPayload := jwt.MapClaims{}
+
+		_, _, err = (&jwt.Parser{}).ParseUnverified(jwtPayloadStr, jwtPayload)
+		assert.NoError(t, err)
+
+		assert.Equal(t, "newValue", jwtPayload["testClaim"])
+	}))
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
+
+	reqV, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
+	assert.NoError(t, err)
+	reqV.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	reqV.Header.Add("anti-csrf", cookieData["antiCsrf"])
+	resv, err := http.DefaultClient.Do(reqV)
+	assert.NoError(t, err)
+	assert.Equal(t, resv.StatusCode, 200)
+}
