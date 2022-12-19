@@ -164,11 +164,11 @@ type ProviderConfigForClientType struct {
 type TypeProvider struct {
 	ID string
 
-	GetAllClientTypeConfigForTenant func(tenantId *string, userContext supertokens.UserContext) (ProviderConfig, error)
-	GetConfigForClientType          func(clientType *string, providerConfig ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
-	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+	// GetAllClientTypeConfigForTenant func(tenantId *string, userContext supertokens.UserContext) (ProviderConfig, error)
+	GetConfigForClientType         func(clientType *string, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
+	GetAuthorisationRedirectURL    func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
 const DefaultTenantId string = "defaultTenantId"

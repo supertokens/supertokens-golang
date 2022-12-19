@@ -30,7 +30,6 @@ type RecipeInterface struct {
 
 type GetProviderResponse struct {
 	OK *struct {
-		Config            ProviderConfig
 		Provider          TypeProvider
 		ThirdPartyEnabled bool
 	}

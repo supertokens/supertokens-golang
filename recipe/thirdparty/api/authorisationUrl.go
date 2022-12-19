@@ -60,9 +60,8 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	}
 
 	provider := providerResponse.OK.Provider
-	providerConfig := providerResponse.OK.Config
 
-	config, err := provider.GetConfigForClientType(clientType, providerConfig, userContext)
+	config, err := provider.GetConfigForClientType(clientType, userContext)
 	if err != nil {
 		return err
 	}

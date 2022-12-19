@@ -71,19 +71,11 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 			return tpmodels.GetProviderResponse{}, err
 		}
 
-		// TODO maybe this is not required
-		providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, userContext)
-		if err != nil {
-			return tpmodels.GetProviderResponse{}, err
-		}
-
 		return tpmodels.GetProviderResponse{
 			OK: &struct {
-				Config            tpmodels.ProviderConfig
 				Provider          tpmodels.TypeProvider
 				ThirdPartyEnabled bool
 			}{
-				Config:            providerConfig,
 				Provider:          provider,
 				ThirdPartyEnabled: tenantConfig.OK.ThirdParty.Enabled,
 			},
