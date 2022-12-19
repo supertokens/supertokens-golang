@@ -73,16 +73,24 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "Please provide one of redirectURIInfo or oAuthTokens in the request body"}
 	}
 
-	provider, err := findAndCreateProviderInstance(options, bodyParams.ThirdPartyId, tenantId)
+	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, tenantId, userContext)
 	if err != nil {
 		return err
 	}
 
-	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options.RecipeImplementation, userContext)
-	if err != nil {
-		return err
+	if providerResponse.TenantDoesNotExistError != nil {
+		return supertokens.SendNon200ResponseWithMessage(options.Res, "Tenant does not exist", 422)
 	}
+
+	if !providerResponse.OK.ThirdPartyEnabled {
+		return supertokens.SendNon200ResponseWithMessage(options.Res, "ThirdParty recipe not enabled for tenant", 422)
+	}
+
+	provider := providerResponse.OK.Provider
+	providerConfig := providerResponse.OK.Config
+
 	config, err := provider.GetConfigForClientType(clientType, providerConfig, userContext)
 	if err != nil {
 		return err

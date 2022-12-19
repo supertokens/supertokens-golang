@@ -21,6 +21,8 @@ import (
 )
 
 type RecipeInterface struct {
+	GetTenantId *func(tenantIdFromFrontend *string, userContext supertokens.UserContext) (*string, error)
+
 	// Tenant management
 	CreateOrUpdateTenant *func(tenantId *string, config TenantConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantResponse, error)
 	DeleteTenant         *func(tenantId string, userContext supertokens.UserContext) (DeleteTenantResponse, error)

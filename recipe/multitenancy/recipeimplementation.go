@@ -16,49 +16,56 @@
 package multitenancy
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config multitenancymodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) multitenancymodels.RecipeInterface {
+	getTenantId := func(tenantIdFromFrontend *string, userContext supertokens.UserContext) (*string, error) {
+		return tenantIdFromFrontend, nil
+	}
 
 	createOrUpdateTenant := func(tenantId *string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
 		// TODO impl
-		return multitenancymodels.CreateOrUpdateTenantResponse{}, nil
+		return multitenancymodels.CreateOrUpdateTenantResponse{}, errors.New("not implemented")
 	}
 
 	deleteTenant := func(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
 		// TODO impl
-		return multitenancymodels.DeleteTenantResponse{}, nil
+		return multitenancymodels.DeleteTenantResponse{}, errors.New("not implemented")
 	}
 
 	getTenantConfig := func(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
 		// TODO impl
-		return multitenancymodels.TenantConfigResponse{}, nil
+		return multitenancymodels.TenantConfigResponse{}, errors.New("not implemented")
 	}
 
 	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
 		// TODO impl
-		return multitenancymodels.ListAllTenantsResponse{}, nil
+		return multitenancymodels.ListAllTenantsResponse{}, errors.New("not implemented")
 	}
 
 	createOrUpdateThirdPartyConfig := func(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
 		// TODO impl
-		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, nil
+		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, errors.New("not implemented")
 	}
 
 	deleteThirdPartyConfig := func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
 		// TODO impl
-		return multitenancymodels.DeleteThirdPartyConfigResponse{}, nil
+		return multitenancymodels.DeleteThirdPartyConfigResponse{}, errors.New("not implemented")
 	}
 
 	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsResponse, error) {
 		// TODO impl
-		return multitenancymodels.ListThirdPartyConfigsResponse{}, nil
+		return multitenancymodels.ListThirdPartyConfigsResponse{}, errors.New("not implemented")
 	}
 
 	return multitenancymodels.RecipeInterface{
+		GetTenantId: &getTenantId,
+
 		CreateOrUpdateTenant: &createOrUpdateTenant,
 		DeleteTenant:         &deleteTenant,
 		GetTenantConfig:      &getTenantConfig,

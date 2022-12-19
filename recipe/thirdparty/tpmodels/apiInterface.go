@@ -29,16 +29,6 @@ type APIInterface struct {
 	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
 }
 
-type ProvidersForTenantGetResponse struct {
-	OK *struct {
-		Providers []struct {
-			ID   string `json:"id"`
-			Name string `json:"name,omitempty"` // Optional for statically defined providers
-		} `json:"providers"`
-	}
-	GeneralError *supertokens.GeneralErrorResponse
-}
-
 type AuthorisationUrlGETResponse struct {
 	OK           *TypeAuthorisationRedirect
 	GeneralError *supertokens.GeneralErrorResponse

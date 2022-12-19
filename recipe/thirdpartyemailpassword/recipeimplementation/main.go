@@ -26,13 +26,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier) tpepmodels.RecipeInterface {
+func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier, providers []tpmodels.ProviderInput) tpepmodels.RecipeInterface {
 	result := tpepmodels.RecipeInterface{}
 
 	emailPasswordImplementation := emailpassword.MakeRecipeImplementation(emailPasswordQuerier)
 	var thirdPartyImplementation *tpmodels.RecipeInterface
 	if thirdPartyQuerier != nil {
-		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier)
+		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier, providers)
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
 

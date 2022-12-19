@@ -54,7 +54,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
+	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance, config.SignInAndUpFeature.Providers))
 	r.Providers = config.SignInAndUpFeature.Providers
 
 	supertokens.AddPostInitCallback(func() error {
@@ -123,11 +123,6 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
-
-	// TODO recipe enabled check
-
-	// TODO maybe merge the providers list here
-
 	options := tpmodels.APIOptions{
 		Config:               r.Config,
 		OtherHandler:         theirHandler,

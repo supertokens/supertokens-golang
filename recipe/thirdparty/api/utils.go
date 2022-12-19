@@ -8,55 +8,9 @@ import (
 	"sync"
 
 	"github.com/derekstavis/go-qs"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
-
-func findAndCreateProviderInstance(options tpmodels.APIOptions, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
-	for _, provider := range options.Providers {
-		if provider.Config.ThirdPartyId == thirdPartyId {
-			useForDefault := true
-			if provider.UseForDefaultTenant != nil {
-				useForDefault = *provider.UseForDefaultTenant
-			}
-			if (tenantId == nil || *tenantId == tpmodels.DefaultTenantId) && !useForDefault {
-				return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s is disabled for default tenant", thirdPartyId)
-			}
-
-			providerInstance := createProvider(provider)
-			return *providerInstance, nil
-		}
-	}
-	return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s could not be found in the configuration", thirdPartyId)
-}
-
-func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	switch input.Config.ThirdPartyId {
-	case "active-directory":
-		return providers.ActiveDirectory(input)
-	case "apple":
-		return providers.Apple(input)
-	case "discord":
-		return providers.Discord(input)
-	case "facebook":
-		return providers.Facebook(input)
-	case "github":
-		return providers.Github(input)
-	case "google":
-		return providers.Google(input)
-	case "google-workspaces":
-		return providers.GoogleWorkspaces(input)
-	case "okta":
-		return providers.Okta(input)
-	case "linkedin":
-		return providers.Linkedin(input)
-	case "boxy-saml":
-		return providers.BoxySaml(input)
-	}
-
-	return providers.NewProvider(input)
-}
 
 func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {
 	if config.OIDCDiscoveryEndpoint != "" {

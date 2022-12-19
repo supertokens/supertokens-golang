@@ -17,7 +17,9 @@ package thirdparty
 
 import (
 	"encoding/json"
+	"fmt"
 
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -101,4 +103,119 @@ func parseUsers(value interface{}) ([]tpmodels.User, error) {
 		return nil, err
 	}
 	return user, nil
+}
+
+func findAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
+	for _, provider := range providers {
+		if provider.Config.ThirdPartyId == thirdPartyId {
+			useForDefault := true
+			if provider.UseForDefaultTenant != nil {
+				useForDefault = *provider.UseForDefaultTenant
+			}
+			if (tenantId == nil || *tenantId == tpmodels.DefaultTenantId) && !useForDefault {
+				return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s is disabled for default tenant", thirdPartyId)
+			}
+
+			providerInstance := createProvider(provider)
+			return *providerInstance, nil
+		}
+	}
+	return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s could not be found in the configuration", thirdPartyId)
+}
+
+func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	switch input.Config.ThirdPartyId {
+	case "active-directory":
+		return providers.ActiveDirectory(input)
+	case "apple":
+		return providers.Apple(input)
+	case "discord":
+		return providers.Discord(input)
+	case "facebook":
+		return providers.Facebook(input)
+	case "github":
+		return providers.Github(input)
+	case "google":
+		return providers.Google(input)
+	case "google-workspaces":
+		return providers.GoogleWorkspaces(input)
+	case "okta":
+		return providers.Okta(input)
+	case "linkedin":
+		return providers.Linkedin(input)
+	case "boxy-saml":
+		return providers.BoxySaml(input)
+	}
+
+	return providers.NewProvider(input)
+}
+
+func mergeConfig(staticConfig tpmodels.ProviderConfig, coreConfig tpmodels.ProviderConfig) tpmodels.ProviderConfig {
+	result := staticConfig
+
+	if coreConfig.AuthorizationEndpoint != "" {
+		result.AuthorizationEndpoint = coreConfig.AuthorizationEndpoint
+	}
+	if coreConfig.AuthorizationEndpointQueryParams != nil {
+		result.AuthorizationEndpointQueryParams = coreConfig.AuthorizationEndpointQueryParams
+	}
+	if coreConfig.TokenEndpoint != "" {
+		result.TokenEndpoint = coreConfig.TokenEndpoint
+	}
+	if coreConfig.TokenEndpointBodyParams != nil {
+		result.TokenEndpointBodyParams = coreConfig.TokenEndpointBodyParams
+	}
+	if coreConfig.UserInfoEndpoint != "" {
+		result.UserInfoEndpoint = coreConfig.UserInfoEndpoint
+	}
+	if coreConfig.UserInfoEndpointHeaders != nil {
+		result.UserInfoEndpointHeaders = coreConfig.UserInfoEndpointHeaders
+	}
+	if coreConfig.UserInfoEndpointQueryParams != nil {
+		result.UserInfoEndpointQueryParams = coreConfig.UserInfoEndpointQueryParams
+	}
+	if coreConfig.ForcePKCE != nil {
+		result.ForcePKCE = coreConfig.ForcePKCE
+	}
+	if coreConfig.JwksURI != "" {
+		result.JwksURI = coreConfig.JwksURI
+	}
+	if coreConfig.Name != "" {
+		result.Name = coreConfig.Name
+	}
+	if coreConfig.OIDCDiscoveryEndpoint != "" {
+		result.OIDCDiscoveryEndpoint = coreConfig.OIDCDiscoveryEndpoint
+	}
+	if coreConfig.UserInfoMap.FromIdTokenPayload.Email != "" {
+		result.UserInfoMap.FromIdTokenPayload.Email = coreConfig.UserInfoMap.FromIdTokenPayload.Email
+	}
+	if coreConfig.UserInfoMap.FromIdTokenPayload.EmailVerified != "" {
+		result.UserInfoMap.FromIdTokenPayload.EmailVerified = coreConfig.UserInfoMap.FromIdTokenPayload.EmailVerified
+	}
+	if coreConfig.UserInfoMap.FromIdTokenPayload.UserId != "" {
+		result.UserInfoMap.FromIdTokenPayload.UserId = coreConfig.UserInfoMap.FromIdTokenPayload.UserId
+	}
+	if coreConfig.UserInfoMap.FromUserInfoAPI.Email != "" {
+		result.UserInfoMap.FromUserInfoAPI.Email = coreConfig.UserInfoMap.FromUserInfoAPI.Email
+	}
+	if coreConfig.UserInfoMap.FromUserInfoAPI.EmailVerified != "" {
+		result.UserInfoMap.FromUserInfoAPI.EmailVerified = coreConfig.UserInfoMap.FromUserInfoAPI.EmailVerified
+	}
+	if coreConfig.UserInfoMap.FromUserInfoAPI.UserId != "" {
+		result.UserInfoMap.FromUserInfoAPI.UserId = coreConfig.UserInfoMap.FromUserInfoAPI.UserId
+	}
+
+	// Merge the clients
+	mergedClients := append([]tpmodels.ProviderClientConfig{}, staticConfig.Clients...)
+	for _, client := range coreConfig.Clients {
+		for i, staticClient := range mergedClients {
+			if staticClient.ClientType == client.ClientType {
+				mergedClients[i] = client
+				break
+			}
+		}
+	}
+	result.Clients = mergedClients
+
+	return result
 }

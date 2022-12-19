@@ -26,7 +26,7 @@ func Init(config *multitenancymodels.TypeInput) supertokens.Recipe {
 }
 
 func CreateOrUpdateTenantWithContext(tenantId *string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.CreateOrUpdateTenantResponse{}, err
 	}
@@ -35,7 +35,7 @@ func CreateOrUpdateTenantWithContext(tenantId *string, config multitenancymodels
 }
 
 func DeleteTenantWithContext(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.DeleteTenantResponse{}, err
 	}
@@ -44,7 +44,7 @@ func DeleteTenantWithContext(tenantId string, userContext supertokens.UserContex
 }
 
 func GetTenantConfigWithContext(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.TenantConfigResponse{}, err
 	}
@@ -53,7 +53,7 @@ func GetTenantConfigWithContext(tenantId *string, userContext supertokens.UserCo
 }
 
 func ListAllTenantsWithContext(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.ListAllTenantsResponse{}, err
 	}
@@ -63,7 +63,7 @@ func ListAllTenantsWithContext(userContext supertokens.UserContext) (multitenanc
 
 // Third party provider management
 func CreateOrUpdateThirdPartyConfigWithContext(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
 	}
@@ -71,7 +71,7 @@ func CreateOrUpdateThirdPartyConfigWithContext(config tpmodels.ProviderConfig, u
 }
 
 func DeleteThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.DeleteThirdPartyConfigResponse{}, err
 	}
@@ -79,7 +79,7 @@ func DeleteThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, us
 }
 
 func ListThirdPartyConfigsWithContext(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.ListThirdPartyConfigsResponse{}, err
 	}

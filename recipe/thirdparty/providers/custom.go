@@ -37,15 +37,8 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
 	}
 
-	if input.UseForDefaultTenant == nil {
-		True := true
-		input.UseForDefaultTenant = &True
-	}
-
-	impl.UseForDefaultTenant = *input.UseForDefaultTenant
-
-	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, recipeImpl tpmodels.RecipeInterface, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
-		// input.Config.TenantId = tenantId
+	impl.GetAllClientTypeConfigForTenant = func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ProviderConfig, error) {
+		input.Config.TenantId = tenantId
 
 		// configFromCore := multitenancymodels.FetchTenantIdConfigResponse{
 		// 	UnknownMappingError: &struct{}{},

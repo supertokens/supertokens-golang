@@ -51,14 +51,11 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	return *r, nil
 }
 
-func GetRecipeInstance() *Recipe {
-	return singletonInstance
-}
-
-func getRecipeInstanceOrThrowError() (*Recipe, error) {
+func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if singletonInstance != nil {
 		return singletonInstance, nil
 	}
+
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
@@ -72,7 +69,7 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 			singletonInstance = &recipe
 			return &singletonInstance.RecipeModule, nil
 		}
-		return nil, errors.New("User Metadata recipe has already been initialised. Please check your code for bugs.")
+		return nil, errors.New("Multitenancy recipe has already been initialised. Please check your code for bugs.")
 	}
 }
 
@@ -96,4 +93,8 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 
 func ResetForTest() {
 	singletonInstance = nil
+}
+
+func init() {
+	supertokens.MultitenancyRecipe = recipeInit(nil)
 }

@@ -91,8 +91,22 @@ func supertokensInit(config TypeInput) error {
 		return errors.New("please provide at least one recipe to the supertokens.init function call")
 	}
 
+	multitenancyFound := false
+
 	for _, elem := range config.RecipeList {
 		recipeModule, err := elem(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
+		if err != nil {
+			return err
+		}
+		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
+
+		if recipeModule.GetRecipeID() == "multitenancy" {
+			multitenancyFound = true
+		}
+	}
+
+	if !multitenancyFound {
+		recipeModule, err := MultitenancyRecipe(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
 		if err != nil {
 			return err
 		}

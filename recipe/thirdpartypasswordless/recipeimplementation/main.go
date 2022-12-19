@@ -26,13 +26,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier) tplmodels.RecipeInterface {
+func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier, providers []tpmodels.ProviderInput) tplmodels.RecipeInterface {
 	result := tplmodels.RecipeInterface{}
 
 	passwordlessImplementation := passwordless.MakeRecipeImplementation(passwordlessQuerier)
 	var thirdPartyImplementation *tpmodels.RecipeInterface
 	if thirdPartyQuerier != nil {
-		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier)
+		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier, providers)
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
 

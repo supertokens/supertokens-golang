@@ -16,11 +16,80 @@
 package thirdparty
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterface {
+func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.ProviderInput) tpmodels.RecipeInterface {
+
+	getProvider := func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+
+		tenantConfig, err := multitenancy.GetTenantConfigWithContext(tenantId, userContext)
+		if err != nil {
+			return tpmodels.GetProviderResponse{}, err
+		}
+
+		if tenantConfig.TenantDoesNotExistError != nil {
+			return tpmodels.GetProviderResponse{
+				TenantDoesNotExistError: &struct{}{},
+			}, nil
+		}
+
+		mergedProviders := []tpmodels.ProviderInput{}
+
+		if len(tenantConfig.OK.ThirdParty.Providers) == 0 {
+			for _, config := range providers {
+				config.Config.TenantId = tenantId
+
+				if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
+					if config.UseForDefaultTenant != nil && !*config.UseForDefaultTenant {
+						continue
+					}
+				}
+
+				mergedProviders = append(mergedProviders, config)
+			}
+		} else {
+			for _, providerConfigFromCore := range tenantConfig.OK.ThirdParty.Providers {
+				mergedProviderInput := tpmodels.ProviderInput{
+					Config: providerConfigFromCore,
+				}
+
+				for _, providerInputFromStatic := range providers {
+					if providerInputFromStatic.Config.ThirdPartyId == providerConfigFromCore.ThirdPartyId {
+						mergedProviderInput.Config = mergeConfig(providerInputFromStatic.Config, providerConfigFromCore)
+					}
+				}
+
+				mergedProviders = append(mergedProviders, mergedProviderInput)
+			}
+		}
+
+		provider, err := findAndCreateProviderInstance(mergedProviders, thirdPartyID, tenantId)
+		if err != nil {
+			return tpmodels.GetProviderResponse{}, err
+		}
+
+		// TODO maybe this is not required
+		providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, userContext)
+		if err != nil {
+			return tpmodels.GetProviderResponse{}, err
+		}
+
+		return tpmodels.GetProviderResponse{
+			OK: &struct {
+				Config            tpmodels.ProviderConfig
+				Provider          tpmodels.TypeProvider
+				ThirdPartyEnabled bool
+			}{
+				Config:            providerConfig,
+				Provider:          provider,
+				ThirdPartyEnabled: tenantConfig.OK.ThirdParty.Enabled,
+			},
+		}, nil
+	}
+
 	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
@@ -126,6 +195,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		GetUserByID:                &getUserByID,
 		GetUsersByEmail:            &getUsersByEmail,
 		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
+		GetProvider:                &getProvider,
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
 	}
