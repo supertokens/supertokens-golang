@@ -15,27 +15,53 @@
 
 package multitenancymodels
 
-import "github.com/supertokens/supertokens-golang/supertokens"
+import (
+	"net/http"
+
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
 
 type APIInterface struct {
-	LoginMethodsGET func(tenantId *string, userContext supertokens.UserContext) (LoginMethodsGETResponse, error)
+	LoginMethodsGET *func(tenantId *string, options APIOptions, userContext supertokens.UserContext) (LoginMethodsGETResponse, error)
 }
 
 type LoginMethodsGETResponse struct {
-	OK *struct {
-		Emailpassword struct {
-			Enabled bool
-		}
-		Passwordless struct {
-			Enabled bool
-		}
-		ThirdParty struct {
-			Enabled   bool
-			Providers []struct {
-				Id   string
-				Name string
-			}
-		}
-	}
-	GeneralError *supertokens.GeneralErrorResponse
+	OK                      *TypeLoginMethods
+	TenantDoesNotExistError *struct{}
+	GeneralError            *supertokens.GeneralErrorResponse
+}
+
+type TypeLoginMethods struct {
+	Emailpassword TypeEmailpassword `json:"emailpassword"`
+	Passwordless  TypePasswordless  `json:"passwordless"`
+	ThirdParty    TypeThirdParty    `json:"thirdParty"`
+}
+
+type TypeEmailpassword struct {
+	Enabled bool `json:"enabled"`
+}
+
+type TypePasswordless struct {
+	Enabled bool `json:"enabled"`
+}
+
+type TypeThirdParty struct {
+	Enabled   bool                     `json:"enabled"`
+	Providers []TypeThirdPartyProvider `json:"providers"`
+}
+
+type TypeThirdPartyProvider struct {
+	Id   string `json:"id"`
+	Name string `json:"name"`
+}
+
+type APIOptions struct {
+	RecipeImplementation      RecipeInterface
+	Config                    TypeNormalisedInput
+	RecipeID                  string
+	Req                       *http.Request
+	Res                       http.ResponseWriter
+	OtherHandler              http.HandlerFunc
+	StaticThirdPartyProviders []tpmodels.ProviderInput
 }

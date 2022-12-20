@@ -22,6 +22,7 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -62,6 +63,15 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		if evRecipe != nil {
 			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+		return nil
+	})
+
+	supertokens.AddPostInitCallback(func() error {
+		mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+		if err != nil {
+			return err
+		}
+		mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
 		return nil
 	})
 

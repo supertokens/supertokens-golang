@@ -19,36 +19,44 @@ import (
 	"errors"
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/api"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const RECIPE_ID = "multitenancy"
 
 type Recipe struct {
-	RecipeModule supertokens.RecipeModule
-	Config       multitenancymodels.TypeNormalisedInput
-	RecipeImpl   multitenancymodels.RecipeInterface
+	RecipeModule              supertokens.RecipeModule
+	Config                    multitenancymodels.TypeNormalisedInput
+	RecipeImpl                multitenancymodels.RecipeInterface
+	APIImpl                   multitenancymodels.APIInterface
+	staticThirdPartyProviders []tpmodels.ProviderInput
 }
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
-		return Recipe{}, err
+		return nil, err
 	}
 	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
+	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 	r.RecipeModule = recipeModuleInstance
 
-	return *r, nil
+	r.staticThirdPartyProviders = []tpmodels.ProviderInput{}
+
+	return r, nil
 }
 
 func GetRecipeInstanceOrThrowError() (*Recipe, error) {
@@ -66,7 +74,7 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 			if err != nil {
 				return nil, err
 			}
-			singletonInstance = &recipe
+			singletonInstance = recipe
 			return &singletonInstance.RecipeModule, nil
 		}
 		return nil, errors.New("Multitenancy recipe has already been initialised. Please check your code for bugs.")
@@ -76,10 +84,34 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 // implement RecipeModule
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	return []supertokens.APIHandled{}, nil
+	loginMethodsAPI, err := supertokens.NewNormalisedURLPath(LoginMethodsAPI)
+	if err != nil {
+		return nil, err
+	}
+
+	return []supertokens.APIHandled{
+		{
+			Method:                 http.MethodGet,
+			PathWithoutAPIBasePath: loginMethodsAPI,
+			ID:                     LoginMethodsAPI,
+			Disabled:               r.APIImpl.LoginMethodsGET == nil,
+		},
+	}, nil
 }
 
 func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+	options := multitenancymodels.APIOptions{
+		RecipeImplementation:      r.RecipeImpl,
+		Config:                    r.Config,
+		RecipeID:                  RECIPE_ID,
+		Req:                       req,
+		Res:                       res,
+		OtherHandler:              theirHandler,
+		StaticThirdPartyProviders: r.staticThirdPartyProviders,
+	}
+	if id == LoginMethodsAPI {
+		return api.LoginMethodsAPI(r.APIImpl, options)
+	}
 	return errors.New("should never come here")
 }
 
@@ -97,4 +129,8 @@ func ResetForTest() {
 
 func init() {
 	supertokens.MultitenancyRecipe = recipeInit(nil)
+}
+
+func (r *Recipe) SetStaticThirdPartyProviders(providers []tpmodels.ProviderInput) {
+	r.staticThirdPartyProviders = append([]tpmodels.ProviderInput{}, providers...)
 }
