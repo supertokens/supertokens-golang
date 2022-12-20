@@ -18,6 +18,7 @@ package thirdpartyemailpassword
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -33,6 +34,14 @@ func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdP
 		return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
 	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+}
+
+func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.GetProviderResponse{}, err
+	}
+	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
@@ -109,6 +118,10 @@ func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens
 
 func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+}
+
+func ThirdPartyGetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
+	return ThirdPartyGetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tpepmodels.User, error) {

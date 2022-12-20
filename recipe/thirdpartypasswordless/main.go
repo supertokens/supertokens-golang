@@ -19,6 +19,7 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/supertokensService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/twilioService"
@@ -36,6 +37,14 @@ func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdP
 		return tplmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
 	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+}
+
+func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.GetProviderResponse{}, err
+	}
+	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
@@ -382,6 +391,10 @@ func SendSms(input smsdelivery.SmsType) error {
 
 func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+}
+
+func ThirdPartyGetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
+	return ThirdPartyGetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tplmodels.User, error) {
