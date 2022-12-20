@@ -124,11 +124,16 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		return finalResult, nil
 	}
 
+	getProvider := func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+		return (*recipeImplementation.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
+	}
+
 	return tpmodels.RecipeInterface{
 		GetUserByID:                &getUserByID,
 		GetUsersByEmail:            &getUserByEmail,
 		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
+		GetProvider:                &getProvider,
 	}
 }

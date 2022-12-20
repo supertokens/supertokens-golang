@@ -22,12 +22,14 @@ import (
 )
 
 type RecipeInterface struct {
-	GetUserByID                          *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail                      *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByPhoneNumber                 *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
-	GetUserByThirdPartyInfo              *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByPhoneNumber    *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
+	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+
 	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
 	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
+	ThirdPartyGetProvider                *func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
 
 	CreateCode                     *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
 	CreateNewCodeForDevice         *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
