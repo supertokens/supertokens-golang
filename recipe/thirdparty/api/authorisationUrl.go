@@ -16,6 +16,7 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -45,6 +46,16 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	}
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+
+	mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+
+	tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
+	if err != nil {
+		return err
+	}
 
 	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, tenantId, userContext)
 	if err != nil {

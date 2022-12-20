@@ -18,6 +18,7 @@ package api
 import (
 	"encoding/json"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -74,6 +75,16 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 	}
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
+
+	mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+
+	tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
+	if err != nil {
+		return err
+	}
 
 	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, tenantId, userContext)
 	if err != nil {
