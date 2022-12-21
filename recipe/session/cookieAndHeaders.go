@@ -133,7 +133,7 @@ func getToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod 
 		return getCookieValue(req, cookieName), nil
 	} else if transferMethod == sessmodels.Header {
 		headerValue := getHeader(req, authorizationHeaderKey)
-		if headerValue == nil || strings.HasPrefix(*headerValue, "Bearer ") {
+		if headerValue == nil || !strings.HasPrefix(*headerValue, "Bearer ") {
 			return nil, nil
 		}
 
