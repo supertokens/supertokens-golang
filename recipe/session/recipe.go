@@ -76,7 +76,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
+	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
 
 	if verifiedConfig.Jwt.Enable {
 		openIdRecipe, err := openid.MakeRecipe(recipeId, appInfo, &openidmodels.TypeInput{

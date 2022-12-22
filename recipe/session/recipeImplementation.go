@@ -218,30 +218,93 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
+	// TODO from line 434
+
 	refreshSession := func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("refreshSession: Started")
-		inputIdRefreshToken := getIDRefreshTokenFromCookie(req)
-		if inputIdRefreshToken == nil {
-			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because idRefreshToken from cookies is nil")
-			return nil, errors.UnauthorizedError{Msg: "Session does not exist. Are you sending the session tokens in the request as cookies?"}
+
+		refreshTokens := map[sessmodels.TokenTransferMethod]*string{}
+		// We check all token transfer methods for available refresh tokens
+		// We do this so that we can later clear all we are not overwriting
+		for _, tokenTransferMethod := range availableTokenTransferMethods {
+			token, err := getToken(req, sessmodels.RefreshToken, tokenTransferMethod)
+			if err != nil {
+				return nil, err
+			}
+			refreshTokens[tokenTransferMethod] = token
+			if token != nil {
+				supertokens.LogDebugMessage("refreshSession: got refresh token from " + string(tokenTransferMethod))
+			}
 		}
 
-		inputRefreshToken := getRefreshTokenFromCookie(req)
-		if inputRefreshToken == nil {
-			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token from cookies is undefined")
-			return nil, errors.UnauthorizedError{Msg: "Refresh token not found. Are you sending the refresh token in the request as a cookie?"}
+		allowedTokenTransferMethod := config.GetTokenTransferMethod(req, false, userContext)
+		supertokens.LogDebugMessage("refreshSession: getTokenTransferMethod returned " + string(allowedTokenTransferMethod))
+
+		var requestTokenTransferMethod sessmodels.TokenTransferMethod
+		var refreshToken *string
+
+		if (allowedTokenTransferMethod == sessmodels.Any || allowedTokenTransferMethod == sessmodels.Header) && refreshTokens[sessmodels.Header] != nil {
+			supertokens.LogDebugMessage("refreshSession: using header transfer method")
+			requestTokenTransferMethod = sessmodels.Header
+			refreshToken = refreshTokens[sessmodels.Header]
+		} else if (allowedTokenTransferMethod == sessmodels.Any || allowedTokenTransferMethod == sessmodels.Cookie) && refreshTokens[sessmodels.Cookie] != nil {
+			supertokens.LogDebugMessage("refreshSession: using cookie transfer method")
+			requestTokenTransferMethod = sessmodels.Cookie
+			refreshToken = refreshTokens[sessmodels.Cookie]
+		} else {
+			if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
+				supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh token was not found")
+				setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
+			}
+
+			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token in request is undefined")
+			False := false
+			return nil, errors.UnauthorizedError{
+				Msg:         "Refresh token not found. Are you sending the refresh token in the request as a cookie?",
+				ClearTokens: &False,
+			}
 		}
 
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *inputRefreshToken, antiCsrfToken, getRidFromHeader(req) != nil)
+		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
 		if err != nil {
+			// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
+			if !defaultErrors.As(err, &errors.UnauthorizedError{}) {
+				if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
+					supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
+					setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
+				}
+			} else if unauthorisedErr, ok := err.(errors.UnauthorizedError); ok {
+				if unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens {
+					if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
+						supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
+						setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
+					}
+				}
+			}
 			return nil, err
 		}
-		attachCreateOrRefreshSessionResponseToRes(config, res, response)
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, result)
+
+		supertokens.LogDebugMessage("refreshSession: Attaching refreshed session info as " + string(requestTokenTransferMethod))
+
+		// We clear the tokens in all token transfer methods we are not going to overwrite
+		for _, tokenTransferMethod := range availableTokenTransferMethods {
+			if tokenTransferMethod != requestTokenTransferMethod {
+				clearSession(config, res, tokenTransferMethod)
+			}
+		}
+		attachCreateOrRefreshSessionResponseToRes(config, res, response, requestTokenTransferMethod)
+		supertokens.LogDebugMessage("refreshSession: Success!")
+
+		// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
+		if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
+			supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token after successfull refresh")
+			setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
+		}
+
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
-		supertokens.LogDebugMessage("refreshSession: Success!")
 		return sessionContainer, nil
 	}
 
