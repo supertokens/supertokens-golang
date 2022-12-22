@@ -73,11 +73,10 @@ type KeyInfo struct {
 }
 
 type CreateOrRefreshAPIResponse struct {
-	Session        SessionStruct                   `json:"session"`
-	AccessToken    CreateOrRefreshAPIResponseToken `json:"accessToken"`
-	RefreshToken   CreateOrRefreshAPIResponseToken `json:"refreshToken"`
-	IDRefreshToken CreateOrRefreshAPIResponseToken `json:"idRefreshToken"`
-	AntiCsrfToken  *string                         `json:"antiCsrfToken"`
+	Session       SessionStruct                   `json:"session"`
+	AccessToken   CreateOrRefreshAPIResponseToken `json:"accessToken"`
+	RefreshToken  CreateOrRefreshAPIResponseToken `json:"refreshToken"`
+	AntiCsrfToken *string                         `json:"antiCsrfToken"`
 }
 
 type SessionStruct struct {
