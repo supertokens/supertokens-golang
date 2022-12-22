@@ -46,7 +46,9 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string, d
 	// This should be called before this function, but the check is very quick, so we can also do them here
 	err = validateAccessTokenStructure(payload)
 	if err != nil {
-		return nil, err
+		return nil, errors.TryRefreshTokenError{
+			Msg: err.Error(),
+		}
 	}
 
 	// We can assume these as defined, since validateAccessTokenPayload checks this
