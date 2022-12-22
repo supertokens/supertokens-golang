@@ -374,3 +374,11 @@ func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool) 
 		return sessmodels.Any
 	}
 }
+
+func getRidFromHeader(req *http.Request) *string {
+	rid := req.Header.Get("rid")
+	if rid == "" {
+		return nil
+	}
+	return &rid
+}

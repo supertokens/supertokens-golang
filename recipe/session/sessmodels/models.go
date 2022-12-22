@@ -113,7 +113,7 @@ type TypeInput struct {
 	Override                 *OverrideStruct
 	ErrorHandlers            *ErrorHandlers
 	Jwt                      *JWTInputConfig
-	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) string
+	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 }
 
 type JWTInputConfig struct {
@@ -145,7 +145,7 @@ type TypeNormalisedInput struct {
 	Override                 OverrideStruct
 	ErrorHandlers            NormalisedErrorHandlers
 	Jwt                      JWTNormalisedConfig
-	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) string
+	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 }
 
 type JWTNormalisedConfig struct {

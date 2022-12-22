@@ -37,7 +37,9 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string, d
 
 	err := verifyJWT(jwtInfo, jwtSigningPublicKey)
 	if err != nil {
-		return nil, err
+		return nil, errors.TryRefreshTokenError{
+			Msg: err.Error(),
+		}
 	}
 
 	payload := jwtInfo.Payload
