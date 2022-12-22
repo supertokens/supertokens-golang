@@ -218,8 +218,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
-	// TODO from line 434
-
 	refreshSession := func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("refreshSession: Started")
 
