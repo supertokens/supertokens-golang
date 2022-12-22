@@ -105,8 +105,8 @@ func supertokensInit(config TypeInput) error {
 		}
 	}
 
-	if !multitenancyFound {
-		recipeModule, err := MultitenancyRecipe(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
+	if !multitenancyFound && DefaultMultitenancyRecipe != nil {
+		recipeModule, err := DefaultMultitenancyRecipe(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
 		if err != nil {
 			return err
 		}

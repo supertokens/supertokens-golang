@@ -128,7 +128,7 @@ func ResetForTest() {
 }
 
 func init() {
-	supertokens.MultitenancyRecipe = recipeInit(nil)
+	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
 }
 
 func (r *Recipe) SetStaticThirdPartyProviders(providers []tpmodels.ProviderInput) {
