@@ -27,7 +27,7 @@ func Init(config *epmodels.TypeInput) supertokens.Recipe {
 }
 
 func SignUpWithContext(email string, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignUpResponse{}, err
 	}
@@ -35,7 +35,7 @@ func SignUpWithContext(email string, password string, userContext supertokens.Us
 }
 
 func SignInWithContext(email string, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignInResponse{}, err
 	}
@@ -43,7 +43,7 @@ func SignInWithContext(email string, password string, userContext supertokens.Us
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*epmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +51,7 @@ func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) 
 }
 
 func GetUserByEmailWithContext(email string, userContext supertokens.UserContext) (*epmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func GetUserByEmailWithContext(email string, userContext supertokens.UserContext
 }
 
 func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
@@ -67,7 +67,7 @@ func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.
 }
 
 func ResetPasswordUsingTokenWithContext(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, nil
 	}
@@ -75,7 +75,7 @@ func ResetPasswordUsingTokenWithContext(token string, newPassword string, userCo
 }
 
 func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, nil
 	}
@@ -83,7 +83,7 @@ func UpdateEmailOrPasswordWithContext(userId string, email *string, password *st
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}

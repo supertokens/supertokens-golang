@@ -124,13 +124,13 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 
 func IsRecipeInitialised(recipeId string) bool {
 	if recipeId == emailpassword.RECIPE_ID {
-		instance := emailpassword.GetRecipeInstance()
+		_, err := emailpassword.GetRecipeInstanceOrThrowError()
 
-		return instance != nil
+		return err == nil
 	} else if recipeId == passwordless.RECIPE_ID {
-		instance := passwordless.GetRecipeInstance()
+		_, err := passwordless.GetRecipeInstanceOrThrowError()
 
-		return instance != nil
+		return err == nil
 	} else if recipeId == thirdparty.RECIPE_ID {
 		_, err := thirdparty.GetRecipeInstanceOrThrowError()
 
