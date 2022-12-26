@@ -81,7 +81,7 @@ func TestForThirdPartyPasswordlessTheMinimumConfigForThirdPartyProviderGoogle(t 
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -159,7 +159,7 @@ func TestWithThirdPartyPasswordlessPassingAdditionalParamsCheckTheyArePresentInA
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -229,7 +229,7 @@ func TestForThirdpartyPasswordlessPassingScopesInConfigForThirdpartyProviderGoog
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -296,7 +296,7 @@ func TestForThirdPartyPasswordlessMinimumConfigForThirdPartyProviderFacebook(t *
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -369,7 +369,7 @@ func TestWithThirdPartyPasswordlessPassingScopesInConfigForThirdPartyProviderFac
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -434,7 +434,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyProviderGithub(t *t
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -510,7 +510,7 @@ func TestWithThirdPartyPasswordlessParamCheckTheyArePresentInAuthorizationURLFor
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -579,7 +579,7 @@ func TestWithThirdPartyPasswordlessPassingScopesInConfigForThirdPartyProviderGit
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -648,7 +648,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyProviderApple(t *te
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -732,7 +732,7 @@ func TestWithThirdPartyPasswordlessPassingAdditionalParamsCheckTheyArePresentInA
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
@@ -808,7 +808,7 @@ func TestWithThirdPartyProviderPasswordlessPassingScopesInConfigForThirdPartyPro
 		return
 	}
 
-	thirdpartypasswordlessrecipeinstance, err := getRecipeInstanceOrThrowError()
+	thirdpartypasswordlessrecipeinstance, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 
 	providerInfo := thirdpartypasswordlessrecipeinstance.Config.Providers[0]
