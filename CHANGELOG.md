@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 -   Adds optional `Username` to `SMTPSettings`, which can be used for SMTP login if username is different from `From.Email`.
 
-## [0.9.11] - 2022-12-26
+## [0.9.12] - 2022-12-26
 -   Fixes `newPassword` validation in Dashboard API
 
 ## [0.9.11]
