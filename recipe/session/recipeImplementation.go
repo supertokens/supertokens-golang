@@ -47,8 +47,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		outputTokenTransferMethod := config.GetTokenTransferMethod(req, true, userContext)
-		if outputTokenTransferMethod == sessmodels.Any {
-			outputTokenTransferMethod = sessmodels.Header
+		if outputTokenTransferMethod == sessmodels.AnyTransferMethod {
+			outputTokenTransferMethod = sessmodels.HeaderTransferMethod
 		}
 
 		supertokens.LogDebugMessage(fmt.Sprintf("createNewSession: using transfer method %s", outputTokenTransferMethod))
@@ -62,7 +62,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return nil, err
 		}
 
-		if outputTokenTransferMethod == sessmodels.Cookie &&
+		if outputTokenTransferMethod == sessmodels.CookieTransferMethod &&
 			config.CookieSameSite == "none" &&
 			!config.CookieSecure &&
 			!((appInfo.TopLevelAPIDomain == "localhost" || isTopLevelAPIDomainIPAddress) &&
@@ -72,7 +72,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return nil, defaultErrors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
 		}
 
-		disableAntiCSRF := outputTokenTransferMethod == sessmodels.Header
+		disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
 		sessionResponse, err := createNewSessionHelper(
 			recipeImplHandshakeInfo, config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionData,
 		)
@@ -140,14 +140,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		var requestTokenTransferMethod sessmodels.TokenTransferMethod
 		var accessToken *ParsedJWTInfo
 
-		if (allowedTokenTransferMethod == sessmodels.Any || allowedTokenTransferMethod == sessmodels.Header) && (accessTokens[sessmodels.Header] != nil) {
+		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.HeaderTransferMethod) && (accessTokens[sessmodels.HeaderTransferMethod] != nil) {
 			supertokens.LogDebugMessage("getSession: using header transfer method")
-			requestTokenTransferMethod = sessmodels.Header
-			accessToken = accessTokens[sessmodels.Header]
-		} else if (allowedTokenTransferMethod == sessmodels.Any || allowedTokenTransferMethod == sessmodels.Cookie) && (accessTokens[sessmodels.Cookie] != nil) {
+			requestTokenTransferMethod = sessmodels.HeaderTransferMethod
+			accessToken = accessTokens[sessmodels.HeaderTransferMethod]
+		} else if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && (accessTokens[sessmodels.CookieTransferMethod] != nil) {
 			supertokens.LogDebugMessage("getSession: using cookie transfer method")
-			requestTokenTransferMethod = sessmodels.Cookie
-			accessToken = accessTokens[sessmodels.Cookie]
+			requestTokenTransferMethod = sessmodels.CookieTransferMethod
+			accessToken = accessTokens[sessmodels.CookieTransferMethod]
 		} else {
 			if sessionOptional {
 				supertokens.LogDebugMessage("getSession: returning undefined because accessToken is undefined and sessionRequired is false")
@@ -176,7 +176,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			doAntiCsrfCheck = &doAntiCsrfCheckBool
 		}
 
-		if requestTokenTransferMethod == sessmodels.Header {
+		if requestTokenTransferMethod == sessmodels.HeaderTransferMethod {
 			False := false
 			doAntiCsrfCheck = &False
 		}
@@ -241,14 +241,14 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		var requestTokenTransferMethod sessmodels.TokenTransferMethod
 		var refreshToken *string
 
-		if (allowedTokenTransferMethod == sessmodels.Any || allowedTokenTransferMethod == sessmodels.Header) && refreshTokens[sessmodels.Header] != nil {
+		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.HeaderTransferMethod) && refreshTokens[sessmodels.HeaderTransferMethod] != nil {
 			supertokens.LogDebugMessage("refreshSession: using header transfer method")
-			requestTokenTransferMethod = sessmodels.Header
-			refreshToken = refreshTokens[sessmodels.Header]
-		} else if (allowedTokenTransferMethod == sessmodels.Any || allowedTokenTransferMethod == sessmodels.Cookie) && refreshTokens[sessmodels.Cookie] != nil {
+			requestTokenTransferMethod = sessmodels.HeaderTransferMethod
+			refreshToken = refreshTokens[sessmodels.HeaderTransferMethod]
+		} else if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && refreshTokens[sessmodels.CookieTransferMethod] != nil {
 			supertokens.LogDebugMessage("refreshSession: using cookie transfer method")
-			requestTokenTransferMethod = sessmodels.Cookie
-			refreshToken = refreshTokens[sessmodels.Cookie]
+			requestTokenTransferMethod = sessmodels.CookieTransferMethod
+			refreshToken = refreshTokens[sessmodels.CookieTransferMethod]
 		} else {
 			if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
 				supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh token was not found")
@@ -266,18 +266,15 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
 		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
 		if err != nil {
+			legacyIdRefreshToken := getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME)
+			unauthorisedErr := errors.UnauthorizedError{}
+			isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
+
 			// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
-			if !defaultErrors.As(err, &errors.UnauthorizedError{}) {
-				if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
+			if legacyIdRefreshToken != nil {
+				if (!isUnauthorisedErr) || (unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
 					supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
 					setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
-				}
-			} else if unauthorisedErr, ok := err.(errors.UnauthorizedError); ok {
-				if unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens {
-					if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
-						supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
-						setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
-					}
 				}
 			}
 			return nil, err

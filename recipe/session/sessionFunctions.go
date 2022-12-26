@@ -204,7 +204,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
 
-	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER && tokenTransferMethod == sessmodels.Cookie {
+	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER && tokenTransferMethod == sessmodels.CookieTransferMethod {
 		if !containsCustomHeader {
 			clearTokens := false
 			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
@@ -217,7 +217,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
-		"enableAntiCsrf": tokenTransferMethod == sessmodels.Cookie && recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf": tokenTransferMethod == sessmodels.CookieTransferMethod && recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken

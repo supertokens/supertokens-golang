@@ -35,9 +35,9 @@ const (
 type TokenTransferMethod string
 
 const (
-	Cookie TokenTransferMethod = "cookie"
-	Header TokenTransferMethod = "header"
-	Any    TokenTransferMethod = "any"
+	CookieTransferMethod TokenTransferMethod = "cookie"
+	HeaderTransferMethod TokenTransferMethod = "header"
+	AnyTransferMethod    TokenTransferMethod = "any"
 )
 
 type HandshakeInfo struct {

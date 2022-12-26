@@ -58,8 +58,8 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string, d
 	parentRefreshTokenHash1 := sanitizeStringInput(payload["parentRefreshTokenHash1"])
 	userData := payload["userData"].(map[string]interface{})
 	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
-	expiryTime := sanitizeNumberInput(payload["expiryTime"])
-	timeCreated := sanitizeNumberInput(payload["timeCreated"])
+	expiryTime := sanitizeNumberInputAsUint64(payload["expiryTime"])
+	timeCreated := sanitizeNumberInputAsUint64(payload["timeCreated"])
 
 	if antiCsrfToken == nil && doAntiCsrfCheck {
 		return nil, defaultErrors.New("Access token does not contain the anti-csrf token.")
@@ -121,7 +121,7 @@ func sanitizeStringInput(field interface{}) *string {
 	return nil
 }
 
-func sanitizeNumberInput(field interface{}) *uint64 {
+func sanitizeNumberInputAsUint64(field interface{}) *uint64 {
 	if field != nil {
 		num, ok := field.(float64)
 		if ok {

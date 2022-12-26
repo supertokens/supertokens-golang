@@ -30,4 +30,4 @@ const (
 	cookieSameSite_STRICT = "strict"
 )
 
-var availableTokenTransferMethods = []sessmodels.TokenTransferMethod{sessmodels.Cookie, sessmodels.Header}
+var availableTokenTransferMethods = []sessmodels.TokenTransferMethod{sessmodels.CookieTransferMethod, sessmodels.HeaderTransferMethod}

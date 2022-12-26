@@ -162,7 +162,25 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.GetTokenTransferMethod == nil {
-		// TODO default impl
+		config.GetTokenTransferMethod = func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+			if !forCreateNewSession {
+				return sessmodels.AnyTransferMethod
+			}
+
+			authModeFromHeader := getAuthmodeFromHeader(req)
+			if authModeFromHeader == nil {
+				return sessmodels.AnyTransferMethod
+			}
+
+			switch *authModeFromHeader {
+			case sessmodels.HeaderTransferMethod:
+				return sessmodels.HeaderTransferMethod
+			case sessmodels.CookieTransferMethod:
+				return sessmodels.CookieTransferMethod
+			default:
+				return sessmodels.AnyTransferMethod
+			}
+		}
 	}
 
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
@@ -357,21 +375,21 @@ func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool) 
 	// We allow fallback (checking headers then cookies) by default when validating
 
 	if !forCreateNewSession {
-		return sessmodels.Any
+		return sessmodels.AnyTransferMethod
 	}
 
 	// In create new session we respect the frontend preference by default
 	authMode := getAuthmodeFromHeader(req)
 	if authMode == nil {
-		return sessmodels.Any
+		return sessmodels.AnyTransferMethod
 	}
 	switch *authMode {
-	case sessmodels.Cookie:
-		return sessmodels.Cookie
-	case sessmodels.Header:
-		return sessmodels.Header
+	case sessmodels.CookieTransferMethod:
+		return sessmodels.CookieTransferMethod
+	case sessmodels.HeaderTransferMethod:
+		return sessmodels.HeaderTransferMethod
 	default:
-		return sessmodels.Any
+		return sessmodels.AnyTransferMethod
 	}
 }
 

@@ -19,7 +19,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -125,26 +124,26 @@ func getResponseHeaderNameForTokenType(tokenType sessmodels.TokenType) (string, 
 }
 
 func getToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod sessmodels.TokenTransferMethod) (*string, error) {
-	if transferMethod == sessmodels.Cookie {
+	if transferMethod == sessmodels.CookieTransferMethod {
 		cookieName, err := getCookieNameFromTokenType(tokenType)
 		if err != nil {
 			return nil, err
 		}
 		return getCookieValue(req, cookieName), nil
-	} else if transferMethod == sessmodels.Header {
+	} else if transferMethod == sessmodels.HeaderTransferMethod {
 		headerValue := getHeader(req, authorizationHeaderKey)
 		if headerValue == nil || !strings.HasPrefix(*headerValue, "Bearer ") {
 			return nil, nil
 		}
 
-		token := (*headerValue)[7:]
+		token := strings.TrimSpace(strings.ReplaceAll(*headerValue, "Bearer ", ""))
 		return &token, nil
 	}
 	return nil, errors.New("Should never happen")
 }
 
 func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, tokenType sessmodels.TokenType, value string, expires uint64, transferMethod sessmodels.TokenTransferMethod) error {
-	if transferMethod == sessmodels.Cookie {
+	if transferMethod == sessmodels.CookieTransferMethod {
 		cookieName, err := getCookieNameFromTokenType(tokenType)
 		if err != nil {
 			return err
@@ -156,13 +155,13 @@ func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, to
 			pathType = "refreshTokenPath"
 		}
 		setCookie(config, res, cookieName, value, expires, pathType)
-	} else if transferMethod == sessmodels.Header {
+	} else if transferMethod == sessmodels.HeaderTransferMethod {
 		headerName, err := getResponseHeaderNameForTokenType(tokenType)
 		if err != nil {
 			return err
 		}
 
-		setHeader(res, headerName, fmt.Sprintf("%s;%d", value, expires), false)
+		setHeader(res, headerName, value, false)
 		setHeader(res, "Access-Control-Expose-Headers", headerName, true)
 	}
 	return nil
