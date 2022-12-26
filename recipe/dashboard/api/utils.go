@@ -64,8 +64,10 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			userToReturn.FirstName = ""
 			userToReturn.LastName = ""
 			userToReturn.Email = response.Email
-			userToReturn.ThirdParty.Id = response.ThirdParty.ID
-			userToReturn.ThirdParty.UserId = response.ThirdParty.UserID
+			userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
+				Id: response.ThirdParty.ID,
+				UserId: response.ThirdParty.UserID,
+			}
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
@@ -77,8 +79,10 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 				userToReturn.FirstName = ""
 				userToReturn.LastName = ""
 				userToReturn.Email = tpepResponse.Email
-				userToReturn.ThirdParty.Id = tpepResponse.ThirdParty.ID
-				userToReturn.ThirdParty.UserId = tpepResponse.ThirdParty.UserID
+				userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
+					Id: tpepResponse.ThirdParty.ID,
+					UserId: tpepResponse.ThirdParty.UserID,
+				}
 			}
 		}
 	} else if recipeId == passwordless.RECIPE_ID {
@@ -133,9 +137,9 @@ func IsRecipeInitialised(recipeId string) bool {
 		}
 
 		if !isRecipeInitialised {
-			_, tpepErr := thirdpartyemailpassword.GetRecipeInstanceOrThrowError()
+			_, err := thirdpartyemailpassword.GetRecipeInstanceOrThrowError()
 
-			if tpepErr == nil {
+			if err == nil {
 				isRecipeInitialised = true
 			}
 		}
@@ -147,9 +151,9 @@ func IsRecipeInitialised(recipeId string) bool {
 		}
 
 		if !isRecipeInitialised {
-			_, tppErr := thirdpartypasswordless.GetRecipeInstanceOrThrowError()
+			_, err := thirdpartypasswordless.GetRecipeInstanceOrThrowError()
 
-			if tppErr == nil {
+			if err == nil {
 				isRecipeInitialised = true
 			}
 		}
@@ -161,17 +165,17 @@ func IsRecipeInitialised(recipeId string) bool {
 		}
 
 		if !isRecipeInitialised {
-			_, tpepErr := thirdpartyemailpassword.GetRecipeInstanceOrThrowError()
+			_, err := thirdpartyemailpassword.GetRecipeInstanceOrThrowError()
 
-			if tpepErr == nil {
+			if err == nil {
 				isRecipeInitialised = true
 			}
 		}
 
 		if !isRecipeInitialised {
-			_, tpepErr := thirdpartypasswordless.GetRecipeInstanceOrThrowError()
+			_, err := thirdpartypasswordless.GetRecipeInstanceOrThrowError()
 
-			if tpepErr == nil {
+			if err == nil {
 				isRecipeInitialised = true
 			}
 		}

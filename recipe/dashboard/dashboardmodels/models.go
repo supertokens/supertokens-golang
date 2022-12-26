@@ -31,8 +31,8 @@ type OverrideStruct struct {
 }
 
 type ThirdParty struct {
-	Id     string `json:"id,omitempty"`
-	UserId string `json:"userId,omitempty"`
+	Id     string `json:"id"`
+	UserId string `json:"userId"`
 }
 
 type UserType struct {
@@ -41,6 +41,6 @@ type UserType struct {
 	FirstName  string     `json:"firstName,omitempty"`
 	LastName   string     `json:"lastName,omitempty"`
 	Email      string     `json:"email,omitempty"`
-	ThirdParty ThirdParty `json:"thirdParty,omitempty"`
+	ThirdParty *ThirdParty `json:"thirdParty,omitempty"`
 	Phone      string     `json:"phoneNumber,omitempty"`
 }
