@@ -121,3 +121,21 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 
 	return userToReturn, recipeToReturn
 }
+
+func IsRecipeInitialised(recipeId string) bool {
+	if recipeId == emailpassword.RECIPE_ID {
+		instance := emailpassword.GetRecipeInstance()
+
+		return instance != nil
+	} else if recipeId == passwordless.RECIPE_ID {
+		instance := passwordless.GetRecipeInstance()
+
+		return instance != nil
+	} else if recipeId == thirdparty.RECIPE_ID {
+		_, err := thirdparty.GetRecipeInstanceOrThrowError()
+
+		return err == nil
+	}
+
+	return false
+}

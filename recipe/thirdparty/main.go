@@ -31,7 +31,7 @@ func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 }
 
 func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.SignInUpResponse{}, err
 	}
@@ -39,7 +39,7 @@ func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email str
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -47,7 +47,7 @@ func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) 
 }
 
 func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return []tpmodels.User{}, err
 	}
@@ -55,7 +55,7 @@ func GetUsersByEmailWithContext(email string, userContext supertokens.UserContex
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
