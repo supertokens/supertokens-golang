@@ -82,7 +82,7 @@ func recipeInit(config *tpmodels.TypeInput) supertokens.Recipe {
 	}
 }
 
-func getRecipeInstanceOrThrowError() (*Recipe, error) {
+func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	if singletonInstance != nil {
 		return singletonInstance, nil
 	}

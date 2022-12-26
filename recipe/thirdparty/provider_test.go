@@ -60,7 +60,7 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -130,7 +130,7 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -199,7 +199,7 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -263,7 +263,7 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -327,7 +327,7 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -380,7 +380,7 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -446,7 +446,7 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -503,7 +503,7 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := getRecipeInstanceOrThrowError()
+	singletonInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
