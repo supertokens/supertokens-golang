@@ -24,6 +24,7 @@ type SMTPSettings struct {
 	Host     string
 	From     SMTPFrom
 	Port     int
+	Username *string
 	Password string
 	Secure   bool
 }
