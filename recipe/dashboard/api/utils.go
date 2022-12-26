@@ -167,6 +167,14 @@ func IsRecipeInitialised(recipeId string) bool {
 				isRecipeInitialised = true
 			}
 		}
+
+		if !isRecipeInitialised {
+			_, tpepErr := thirdpartypasswordless.GetRecipeInstanceOrThrowError()
+
+			if tpepErr == nil {
+				isRecipeInitialised = true
+			}
+		}
 	}
 
 	return isRecipeInitialised
