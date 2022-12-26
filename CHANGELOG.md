@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-## [0.9.11] - 2022-12-26
+## [0.9.12] - 2022-12-26
 -   Fixes `newPassword` validation in Dashboard API
 
 ## [0.9.11]
