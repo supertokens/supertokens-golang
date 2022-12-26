@@ -52,7 +52,12 @@ func SendSMTPEmail(settings SMTPSettings, content EmailContent) error {
 		m.SetBody("text/plain", content.Body)
 	}
 
-	d := gomail.NewDialer(settings.Host, settings.Port, settings.From.Email, settings.Password)
+	username := settings.From.Email
+	if settings.Username != nil {
+		username = *settings.Username
+	}
+
+	d := gomail.NewDialer(settings.Host, settings.Port, username, settings.Password)
 
 	if settings.Secure {
 		d.TLSConfig = &tls.Config{InsecureSkipVerify: true, ServerName: settings.Host}
