@@ -60,7 +60,7 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 		return ParsedJWTInfo{}, err
 	}
 
-	payloadBytes, err := b64.RawStdEncoding.DecodeString(splittedInput[1])
+	payloadBytes, err := b64.StdEncoding.DecodeString(splittedInput[1])
 	if err != nil {
 		return ParsedJWTInfo{}, err
 	}

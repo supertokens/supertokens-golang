@@ -161,6 +161,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New(sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY + " is a reserved property name, please use a different key name for the jwt")
 	}
 
+	if config == nil {
+		config = &sessmodels.TypeInput{}
+	}
+
 	if config.GetTokenTransferMethod == nil {
 		config.GetTokenTransferMethod = func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 			if !forCreateNewSession {
