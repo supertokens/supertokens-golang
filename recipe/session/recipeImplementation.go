@@ -266,13 +266,13 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
 		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
 		if err != nil {
-			legacyIdRefreshToken := getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME)
 			unauthorisedErr := errors.UnauthorizedError{}
 			isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
+			isTokenTheftDetectedErr := defaultErrors.As(err, &errors.TokenTheftDetectedError{})
 
 			// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
-			if legacyIdRefreshToken != nil {
-				if (!isUnauthorisedErr) || (unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
+			if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
+				if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
 					supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
 					setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
 				}
