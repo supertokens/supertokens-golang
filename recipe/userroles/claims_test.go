@@ -1,6 +1,7 @@
 package userroles
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -41,7 +42,9 @@ func TestShouldAddClaimsToSessionWithoutConfig(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
@@ -88,7 +91,9 @@ func TestShouldNotAddClaimsToSessionIfDisabledInConfig(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
@@ -135,7 +140,9 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
@@ -184,7 +191,9 @@ func TestShouldValidateRoles(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -241,7 +250,9 @@ func TestShouldValidateRolesAfterRefetching(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -296,7 +307,9 @@ func TestShouldValidatePermissions(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -354,7 +367,9 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{

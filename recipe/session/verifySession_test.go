@@ -815,7 +815,7 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 			return
 		}
 
-		CreateNewSession(w, "testing-userId", body, map[string]interface{}{})
+		CreateNewSession(r, w, "testing-userId", body, map[string]interface{}{})
 		resp := map[string]interface{}{
 			"message": true,
 		}
