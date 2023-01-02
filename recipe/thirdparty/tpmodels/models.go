@@ -105,8 +105,6 @@ type OverrideStruct struct {
 type ProviderInput struct {
 	Config   ProviderConfig
 	Override func(provider *TypeProvider) *TypeProvider
-
-	UseForDefaultTenant *bool
 }
 
 type ProviderConfig struct {
@@ -121,7 +119,6 @@ type ProviderConfig struct {
 	AuthorizationEndpointQueryParams map[string]interface{} `json:"authorizationEndpointQueryParams,omitempty"`
 	TokenEndpoint                    string                 `json:"tokenEndpoint,omitempty"`
 	TokenEndpointBodyParams          map[string]interface{} `json:"tokenEndpointBodyParams,omitempty"`
-	ForcePKCE                        *bool                  `json:"forcePKCE,omitempty"`
 	UserInfoEndpoint                 string                 `json:"userInfoEndpoint,omitempty"`
 	UserInfoEndpointQueryParams      map[string]interface{} `json:"userInfoEndpointQueryParams,omitempty"`
 	UserInfoEndpointHeaders          map[string]interface{} `json:"userInfoEndpointHeaders,omitempty"`
@@ -137,6 +134,7 @@ type ProviderClientConfig struct {
 	ClientID         string                 `json:"clientId"`
 	ClientSecret     string                 `json:"clientSecret"`
 	Scope            []string               `json:"scope"`
+	ForcePKCE        *bool                  `json:"forcePKCE,omitempty"`
 	AdditionalConfig map[string]interface{} `json:"additionalConfig"`
 }
 

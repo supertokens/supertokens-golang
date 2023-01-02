@@ -2,7 +2,6 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -19,11 +18,6 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 			staticProviders := []multitenancymodels.TypeThirdPartyProvider{}
 
 			for _, provider := range options.StaticThirdPartyProviders {
-				if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
-					if provider.UseForDefaultTenant != nil && !*provider.UseForDefaultTenant {
-						continue
-					}
-				}
 				staticProviders = append(staticProviders, multitenancymodels.TypeThirdPartyProvider{
 					Id:   provider.Config.ThirdPartyId,
 					Name: provider.Config.Name,

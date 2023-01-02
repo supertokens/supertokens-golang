@@ -42,12 +42,6 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 			for _, config := range providers {
 				config.Config.TenantId = tenantId
 
-				if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
-					if config.UseForDefaultTenant != nil && !*config.UseForDefaultTenant {
-						continue
-					}
-				}
-
 				mergedProviders = append(mergedProviders, config)
 			}
 		} else {
@@ -110,7 +104,10 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 		}, nil
 	}
 
-	manuallyCreateOrUpdateUser := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	manuallyCreateOrUpdateUser := func(thirdPartyID, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+		if tenantId != nil && *tenantId != tpmodels.DefaultTenantId {
+			thirdPartyUserID += "|" + *tenantId
+		}
 		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
@@ -151,7 +148,10 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 		return nil, nil
 	}
 
-	getUserByThirdPartyInfo := func(thirdPartyID, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+	getUserByThirdPartyInfo := func(thirdPartyID, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+		if tenantId != nil && *tenantId != tpmodels.DefaultTenantId {
+			thirdPartyUserID += "|" + *tenantId
+		}
 		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,

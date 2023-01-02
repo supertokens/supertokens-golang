@@ -28,12 +28,12 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
+func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, tenantId, userContext)
 }
 
 func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
@@ -44,12 +44,12 @@ func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, use
 	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
 }
 
-func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, tenantId, userContext)
 }
 
 func EmailPasswordSignUpWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
@@ -116,16 +116,16 @@ func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens
 	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
 }
 
-func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
-	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, tenantId, &map[string]interface{}{})
 }
 
 func ThirdPartyGetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
 	return ThirdPartyGetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
 }
 
-func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tpepmodels.User, error) {
-	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
+func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, tenantId *string) (*tpepmodels.User, error) {
+	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, tenantId, &map[string]interface{}{})
 }
 
 func EmailPasswordSignUp(email, password string) (tpepmodels.SignUpResponse, error) {

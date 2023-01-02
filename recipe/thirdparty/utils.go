@@ -106,14 +106,6 @@ func parseUsers(value interface{}) ([]tpmodels.User, error) {
 func findAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
 	for _, provider := range providers {
 		if provider.Config.ThirdPartyId == thirdPartyId {
-			useForDefault := true
-			if provider.UseForDefaultTenant != nil {
-				useForDefault = *provider.UseForDefaultTenant
-			}
-			if (tenantId == nil || *tenantId == tpmodels.DefaultTenantId) && !useForDefault {
-				return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s is disabled for default tenant", thirdPartyId)
-			}
-
 			providerInstance := createProvider(provider)
 			return *providerInstance, nil
 		}
@@ -171,9 +163,6 @@ func mergeConfig(staticConfig tpmodels.ProviderConfig, coreConfig tpmodels.Provi
 	}
 	if coreConfig.UserInfoEndpointQueryParams != nil {
 		result.UserInfoEndpointQueryParams = coreConfig.UserInfoEndpointQueryParams
-	}
-	if coreConfig.ForcePKCE != nil {
-		result.ForcePKCE = coreConfig.ForcePKCE
 	}
 	if coreConfig.JwksURI != "" {
 		result.JwksURI = coreConfig.JwksURI

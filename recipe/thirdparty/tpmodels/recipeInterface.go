@@ -20,12 +20,12 @@ import "github.com/supertokens/supertokens-golang/supertokens"
 type RecipeInterface struct {
 	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
 	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*User, error)
 
 	GetProvider *func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (GetProviderResponse, error)
 
 	SignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens TypeOAuthTokens, rawUserInfoFromProvider TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (SignInUpResponse, error)
-	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
+	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
 }
 
 type GetProviderResponse struct {
