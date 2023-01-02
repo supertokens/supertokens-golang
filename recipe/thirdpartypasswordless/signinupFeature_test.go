@@ -39,82 +39,81 @@ import (
 )
 
 func TestThirdPartyPasswordlessThatIfYouDisableTheSignInUpAPIItDoesNotWork(t *testing.T) {
-	// TODO fix
-	// configValue := supertokens.TypeInput{
-	// 	Supertokens: &supertokens.ConnectionInfo{
-	// 		ConnectionURI: "http://localhost:8080",
-	// 	},
-	// 	AppInfo: supertokens.AppInfo{
-	// 		APIDomain:     "api.supertokens.io",
-	// 		AppName:       "SuperTokens",
-	// 		WebsiteDomain: "supertokens.io",
-	// 	},
-	// 	RecipeList: []supertokens.Recipe{
-	// 		session.Init(nil),
-	// 		Init(tplmodels.TypeInput{
-	// 			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-	// 			ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-	// 				Enabled: true,
-	// 				CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-	// 					return nil
-	// 				},
-	// 			},
-	// 			Override: &tplmodels.OverrideStruct{
-	// 				APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
-	// 					*originalImplementation.ThirdPartySignInUpPOST = nil
-	// 					return originalImplementation
-	// 				},
-	// 			},
-	// 			Providers: []tpmodels.TypeProvider{
-	// 				thirdparty.Google(tpmodels.GoogleConfig{
-	// 					ClientID:     "test",
-	// 					ClientSecret: "test-secret",
-	// 				}),
-	// 			},
-	// 		}),
-	// 	},
-	// }
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(tplmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+				Override: &tplmodels.OverrideStruct{
+					APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
+						*originalImplementation.ThirdPartySignInUpPOST = nil
+						return originalImplementation
+					},
+				},
+				Providers: []tpmodels.TypeProvider{
+					thirdparty.Google(tpmodels.GoogleConfig{
+						ClientID:     "test",
+						ClientSecret: "test-secret",
+					}),
+				},
+			}),
+		},
+	}
 
-	// BeforeEach()
-	// unittesting.StartUpST("localhost", "8080")
-	// defer AfterEach()
-	// err := supertokens.Init(configValue)
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-	// q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-	// apiV, err := q.GetQuerierAPIVersion()
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-	// if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-	// 	return
-	// }
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
 
-	// mux := http.NewServeMux()
-	// testServer := httptest.NewServer(supertokens.Middleware(mux))
-	// defer testServer.Close()
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
-	// signinupPostData := map[string]string{
-	// 	"thirdPartyId": "google",
-	// 	"code":         "abcdefghj",
-	// 	"redirectURI":  "http://127.0.0.1/callback",
-	// }
+	signinupPostData := map[string]string{
+		"thirdPartyId": "google",
+		"code":         "abcdefghj",
+		"redirectURI":  "http://127.0.0.1/callback",
+	}
 
-	// postBody, err := json.Marshal(signinupPostData)
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
+	postBody, err := json.Marshal(signinupPostData)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-	// resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-	// assert.Equal(t, http.StatusNotFound, resp.StatusCode)
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
 
 func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(t *testing.T) {
@@ -140,8 +139,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider6,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider6,
 				},
 			}),
 		},
@@ -237,8 +236,8 @@ func TestWithThirdPartyPasswordlessMissingCodeAndAuthCodeResponse(t *testing.T) 
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider6,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider6,
 				},
 			}),
 		},
@@ -308,8 +307,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider1,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider1,
 				},
 			}),
 		},
@@ -415,8 +414,8 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider5,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider5,
 				},
 			}),
 		},
@@ -525,8 +524,8 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider1,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider1,
 				},
 			}),
 		},
@@ -599,8 +598,8 @@ func TestWithThirdPartyPasswordlessEmailNotReturnedInGetProfileInfoFunction(t *t
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider3,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider3,
 				},
 			}),
 		},
@@ -680,8 +679,8 @@ func TestWithThirdPartyPasswordlessErrorThrownFromGetProfileInfoFunction(t *test
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider4,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider4,
 				},
 			}),
 		},
@@ -758,8 +757,8 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider1,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider1,
 				},
 			}),
 		},
@@ -857,8 +856,8 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider1,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider1,
 				},
 			}),
 		},
@@ -956,8 +955,8 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// signinupCustomProvider1,
+				Providers: []tpmodels.TypeProvider{
+					signinupCustomProvider1,
 				},
 			}),
 		},
@@ -1007,7 +1006,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	gock.New(testServer.URL).EnableNetworking().Persist()
 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-	userBegoreSignup, err := GetUserByThirdPartyInfo("custom", "user", nil)
+	userBegoreSignup, err := GetUserByThirdPartyInfo("custom", "user")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1035,7 +1034,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 
 	user := result["user"].(map[string]interface{})
-	userInfoAfterSignup, err := GetUserByThirdPartyInfo("custom", "user", nil)
+	userInfoAfterSignup, err := GetUserByThirdPartyInfo("custom", "user")
 	if err != nil {
 		t.Error(err.Error())
 	}

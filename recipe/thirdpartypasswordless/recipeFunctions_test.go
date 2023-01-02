@@ -26,83 +26,83 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTheCorrectEmailVerificationStatus(t *testing.T) {
-	// TODO fix
-	// configValue := supertokens.TypeInput{
-	// 	Supertokens: &supertokens.ConnectionInfo{
-	// 		ConnectionURI: "http://localhost:8080",
-	// 	},
-	// 	AppInfo: supertokens.AppInfo{
-	// 		APIDomain:     "api.supertokens.io",
-	// 		AppName:       "SuperTokens",
-	// 		WebsiteDomain: "supertokens.io",
-	// 	},
-	// 	RecipeList: []supertokens.Recipe{
-	// 		emailverification.Init(evmodels.TypeInput{
-	// 			Mode: evmodels.ModeOptional,
-	// 		}),
-	// 		session.Init(nil),
-	// 		Init(tplmodels.TypeInput{
-	// 			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-	// 			ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-	// 				Enabled: true,
-	// 				CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-	// 					return nil
-	// 				},
-	// 				CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-	// 					return nil
-	// 				},
-	// 			},
-	// 			Providers: []tpmodels.TypeProvider{
-	// 				customProvider1,
-	// 			},
-	// 		}),
-	// 	},
-	// }
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
+			session.Init(nil),
+			Init(tplmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+					Enabled: true,
+					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
+						return nil
+					},
+				},
+				Providers: []tpmodels.TypeProvider{
+					customProvider1,
+				},
+			}),
+		},
+	}
 
-	// BeforeEach()
-	// unittesting.StartUpST("localhost", "8080")
-	// defer AfterEach()
-	// err := supertokens.Init(configValue)
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-	// q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
-	// apiV, err := q.GetQuerierAPIVersion()
-	// if err != nil {
-	// 	t.Error(err.Error())
-	// }
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-	// if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-	// 	return
-	// }
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
 
-	// resp, err := ThirdPartySignInUp("custom", "verifiedUser", "test@example.com")
-	// assert.NoError(t, err)
+	resp, err := ThirdPartySignInUp("custom", "verifiedUser", "test@example.com")
+	assert.NoError(t, err)
 
-	// emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
-	// assert.NoError(t, err)
+	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
+	assert.NoError(t, err)
 
-	// emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token)
+	emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token)
 
-	// isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, nil)
-	// assert.NoError(t, err)
-	// assert.True(t, isVerfied)
+	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, nil)
+	assert.NoError(t, err)
+	assert.True(t, isVerfied)
 
-	// resp1, err := ThirdPartySignInUp("custom2", "NotVerifiedUser", "test@example.com")
-	// assert.NoError(t, err)
+	resp1, err := ThirdPartySignInUp("custom2", "NotVerifiedUser", "test@example.com")
+	assert.NoError(t, err)
 
-	// isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)
-	// assert.NoError(t, err)
-	// assert.False(t, isVerfied1)
+	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)
+	assert.NoError(t, err)
+	assert.False(t, isVerfied1)
 }
 
 func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturnsTrueForPhoneAndFalseForEmail(t *testing.T) {

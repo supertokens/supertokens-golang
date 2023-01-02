@@ -434,8 +434,8 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
-		Providers: []tpmodels.ProviderInput{
-			// customProviderForEmailVerification,
+		Providers: []tpmodels.TypeProvider{
+			customProviderForEmailVerification,
 		},
 	}
 	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(tplConfig))
@@ -692,9 +692,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 			Enabled: true,
 		},
 
-		Providers: []tpmodels.ProviderInput{
-			// customProviderForEmailVerification
-		},
+		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
 	}
 	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
 		Mode: evmodels.ModeOptional,
@@ -919,9 +917,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
-		Providers: []tpmodels.ProviderInput{
-			// customProviderForEmailVerification
-		},
+		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
 	}
 	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
 		Mode: evmodels.ModeOptional,

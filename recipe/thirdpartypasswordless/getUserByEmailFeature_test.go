@@ -49,8 +49,8 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// mockThirdPartyProvider1,
+				Providers: []tpmodels.TypeProvider{
+					mockThirdPartyProvider1,
 				},
 			}),
 		},
@@ -103,9 +103,9 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.ProviderInput{
-					// mockThirdPartyProvider1,
-					// mockThirdPartyProvider2,
+				Providers: []tpmodels.TypeProvider{
+					mockThirdPartyProvider1,
+					mockThirdPartyProvider2,
 				},
 			}),
 		},
@@ -131,20 +131,19 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	// TODO fix
-	// ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
-	// ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
 
-	// users, err := GetUsersByEmail("john.doe@example.com")
-	// assert.NoError(t, err)
-	// assert.Equal(t, 2, len(users))
+	users, err := GetUsersByEmail("john.doe@example.com")
+	assert.NoError(t, err)
+	assert.Equal(t, 2, len(users))
 
-	// for _, u := range users {
-	// 	assert.Equal(t, "john.doe@example.com", *u.Email)
-	// 	assert.Equal(t, "thirdPartyJohnDoe", u.ThirdParty.UserID)
-	// 	assert.NotNil(t, u.ID)
-	// 	assert.NotNil(t, u.TimeJoined)
-	// 	assert.NotNil(t, u.ThirdParty.ID)
-	// 	assert.Nil(t, u.PhoneNumber)
-	// }
+	for _, u := range users {
+		assert.Equal(t, "john.doe@example.com", *u.Email)
+		assert.Equal(t, "thirdPartyJohnDoe", u.ThirdParty.UserID)
+		assert.NotNil(t, u.ID)
+		assert.NotNil(t, u.TimeJoined)
+		assert.NotNil(t, u.ThirdParty.ID)
+		assert.Nil(t, u.PhoneNumber)
+	}
 }

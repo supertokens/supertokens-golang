@@ -25,6 +25,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -56,63 +57,61 @@ type PostDataForCustomProvider struct {
 	RedirectUri      string            `json:"redirectURI"`
 }
 
-// TODO fix this
-// var customProvider1 = tpmodels.TypeProvider{
-// 	ID: "custom",
-// 	Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 		return tpmodels.TypeProviderGetResponse{
-// 			AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 				URL: "https://test.com/oauth/token",
-// 			},
-// 			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 				URL: "https://test.com/oauth/auth",
-// 				Params: map[string]interface{}{
-// 					"scope":     "test",
-// 					"client_id": "supertokens",
-// 				},
-// 			},
-// 			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 				return tpmodels.UserInfo{
-// 					ID: "user",
-// 					Email: &tpmodels.EmailStruct{
-// 						ID:         "email@test.com",
-// 						IsVerified: true,
-// 					},
-// 				}, nil
-// 			},
-// 			GetClientId: func(userContext supertokens.UserContext) string {
-// 				return "supertokens"
-// 			},
-// 		}
-// 	},
-// }
+var customProvider1 = tpmodels.TypeProvider{
+	ID: "custom",
+	Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+		return tpmodels.TypeProviderGetResponse{
+			AccessTokenAPI: tpmodels.AccessTokenAPI{
+				URL: "https://test.com/oauth/token",
+			},
+			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+				URL: "https://test.com/oauth/auth",
+				Params: map[string]interface{}{
+					"scope":     "test",
+					"client_id": "supertokens",
+				},
+			},
+			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+				return tpmodels.UserInfo{
+					ID: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "email@test.com",
+						IsVerified: true,
+					},
+				}, nil
+			},
+			GetClientId: func(userContext supertokens.UserContext) string {
+				return "supertokens"
+			},
+		}
+	},
+}
 
-// TODO fix this
-// var customProvider2 = tpmodels.TypeProvider{
-// 	ID: "custom",
-// 	Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-// 		return tpmodels.TypeProviderGetResponse{
-// 			AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 				URL: "https://test.com/oauth/token",
-// 			},
-// 			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 				URL: "https://test.com/oauth/auth",
-// 			},
-// 			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-// 				return tpmodels.UserInfo{
-// 					ID: "user",
-// 					Email: &tpmodels.EmailStruct{
-// 						ID:         "email@test.com",
-// 						IsVerified: true,
-// 					},
-// 				}, nil
-// 			},
-// 			GetClientId: func(userContext supertokens.UserContext) string {
-// 				return "supertokens"
-// 			},
-// 		}
-// 	},
-// }
+var customProvider2 = tpmodels.TypeProvider{
+	ID: "custom",
+	Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+		return tpmodels.TypeProviderGetResponse{
+			AccessTokenAPI: tpmodels.AccessTokenAPI{
+				URL: "https://test.com/oauth/token",
+			},
+			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+				URL: "https://test.com/oauth/auth",
+			},
+			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+				return tpmodels.UserInfo{
+					ID: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "email@test.com",
+						IsVerified: true,
+					},
+				}, nil
+			},
+			GetClientId: func(userContext supertokens.UserContext) string {
+				return "supertokens"
+			},
+		}
+	},
+}
 
 func supertokensInitForTest(t *testing.T, recipes ...supertokens.Recipe) *httptest.Server {
 	config := supertokens.TypeInput{
@@ -135,32 +134,31 @@ func supertokensInitForTest(t *testing.T, recipes ...supertokens.Recipe) *httpte
 	return testServer
 }
 
-// TODO fix this
-// var customProviderForEmailVerification = tpmodels.TypeProvider{
-// 	ID: "custom",
-// 	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-// 		return tpmodels.TypeProviderGetResponse{
-// 			AccessTokenAPI: tpmodels.AccessTokenAPI{
-// 				URL: "https://test.com/oauth/token",
-// 			},
-// 			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-// 				URL: "https://test.com/oauth/auth",
-// 			},
-// 			GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-// 				if authCodeResponse.(map[string]interface{})["access_token"] == nil {
-// 					return tpmodels.UserInfo{}, nil
-// 				}
-// 				return tpmodels.UserInfo{
-// 					ID: "user",
-// 					Email: &tpmodels.EmailStruct{
-// 						ID:         "test@example.com",
-// 						IsVerified: false,
-// 					},
-// 				}, nil
-// 			},
-// 			GetClientId: func(userContext *map[string]interface{}) string {
-// 				return "supertokens"
-// 			},
-// 		}
-// 	},
-// }
+var customProviderForEmailVerification = tpmodels.TypeProvider{
+	ID: "custom",
+	Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
+		return tpmodels.TypeProviderGetResponse{
+			AccessTokenAPI: tpmodels.AccessTokenAPI{
+				URL: "https://test.com/oauth/token",
+			},
+			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+				URL: "https://test.com/oauth/auth",
+			},
+			GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
+				if authCodeResponse.(map[string]interface{})["access_token"] == nil {
+					return tpmodels.UserInfo{}, nil
+				}
+				return tpmodels.UserInfo{
+					ID: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "test@example.com",
+						IsVerified: false,
+					},
+				}, nil
+			},
+			GetClientId: func(userContext *map[string]interface{}) string {
+				return "supertokens"
+			},
+		}
+	},
+}

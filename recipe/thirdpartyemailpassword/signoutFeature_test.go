@@ -15,164 +15,181 @@
 
 package thirdpartyemailpassword
 
-// TODO fix this test
-// func TestDefaultRouteShouldRevokeSession(t *testing.T) {
-// 	customAntiCsrfVal := "VIA_TOKEN"
-// 	configValue := supertokens.TypeInput{
-// 		Supertokens: &supertokens.ConnectionInfo{
-// 			ConnectionURI: "http://localhost:8080",
-// 		},
-// 		AppInfo: supertokens.AppInfo{
-// 			APIDomain:     "api.supertokens.io",
-// 			AppName:       "SuperTokens",
-// 			WebsiteDomain: "supertokens.io",
-// 		},
-// 		RecipeList: []supertokens.Recipe{
-// 			Init(&tpepmodels.TypeInput{
-// 				Providers: []tpmodels.TypeProvider{
-// 					customProvider2,
-// 				},
-// 			}),
-// 			session.Init(&sessmodels.TypeInput{
-// 				AntiCsrf: &customAntiCsrfVal,
-// 			}),
-// 		},
-// 	}
-// 	BeforeEach()
-// 	unittesting.StartUpST("localhost", "8080")
-// 	defer AfterEach()
-// 	err := supertokens.Init(configValue)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	mux := http.NewServeMux()
-// 	testServer := httptest.NewServer(supertokens.Middleware(mux))
-// 	defer testServer.Close()
+import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-// 	defer gock.OffAll()
-// 	gock.New("https://test.com/").
-// 		Post("oauth/token").
-// 		Reply(200).
-// 		JSON(map[string]string{})
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
+	"gopkg.in/h2non/gock.v1"
+)
 
-// 	postData := map[string]string{
-// 		"thirdPartyId": "custom",
-// 		"code":         "abcdefghj",
-// 		"redirectURI":  "http://127.0.0.1/callback",
-// 	}
+func TestDefaultRouteShouldRevokeSession(t *testing.T) {
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&tpepmodels.TypeInput{
+				Providers: []tpmodels.TypeProvider{
+					customProvider2,
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
 
-// 	postBody, err := json.Marshal(postData)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+	defer gock.OffAll()
+	gock.New("https://test.com/").
+		Post("oauth/token").
+		Reply(200).
+		JSON(map[string]string{})
 
-// 	gock.New(testServer.URL).EnableNetworking().Persist()
-// 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	postData := map[string]string{
+		"thirdPartyId": "custom",
+		"code":         "abcdefghj",
+		"redirectURI":  "http://127.0.0.1/callback",
+	}
 
-// 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	cookieData := unittesting.ExtractInfoFromResponse(resp)
-// 	assert.Equal(t, http.StatusOK, resp.StatusCode)
-// 	dataInBytes, err := io.ReadAll(resp.Body)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	resp.Body.Close()
+	postBody, err := json.Marshal(postData)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	var result map[string]interface{}
+	gock.New(testServer.URL).EnableNetworking().Persist()
+	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-// 	err = json.Unmarshal(dataInBytes, &result)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cookieData := unittesting.ExtractInfoFromResponse(resp)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
 
-// 	assert.Equal(t, "OK", result["status"])
-// 	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	var result map[string]interface{}
 
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	cookieData1 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(resp1)
-// 	assert.Equal(t, http.StatusOK, resp1.StatusCode)
-// 	dataInBytes1, err := io.ReadAll(resp1.Body)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	resp1.Body.Close()
+	err = json.Unmarshal(dataInBytes, &result)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	var result1 map[string]interface{}
+	assert.Equal(t, "OK", result["status"])
+	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
 
-// 	err = json.Unmarshal(dataInBytes1, &result1)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cookieData1 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(resp1)
+	assert.Equal(t, http.StatusOK, resp1.StatusCode)
+	dataInBytes1, err := io.ReadAll(resp1.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp1.Body.Close()
 
-// 	assert.Equal(t, "OK", result1["status"])
-// 	assert.Equal(t, "", cookieData1["sAccessToken"])
-// 	assert.Equal(t, "", cookieData1["sRefreshToken"])
-// 	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
+	var result1 map[string]interface{}
 
-// 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
-// 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
-// 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
+	err = json.Unmarshal(dataInBytes1, &result1)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	assert.Equal(t, "", cookieData1["accessTokenDomain"])
-// 	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
-// 	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
+	assert.Equal(t, "OK", result1["status"])
+	assert.Equal(t, "", cookieData1["sAccessToken"])
+	assert.Equal(t, "", cookieData1["sRefreshToken"])
+	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
 
-// 	resp2, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	cookieData2 := unittesting.ExtractInfoFromResponse(resp2)
-// 	assert.Equal(t, http.StatusOK, resp2.StatusCode)
-// 	dataInBytes2, err := io.ReadAll(resp2.Body)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	resp2.Body.Close()
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
 
-// 	var result2 map[string]interface{}
+	assert.Equal(t, "", cookieData1["accessTokenDomain"])
+	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
+	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
 
-// 	err = json.Unmarshal(dataInBytes2, &result2)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+	resp2, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cookieData2 := unittesting.ExtractInfoFromResponse(resp2)
+	assert.Equal(t, http.StatusOK, resp2.StatusCode)
+	dataInBytes2, err := io.ReadAll(resp2.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp2.Body.Close()
 
-// 	assert.Equal(t, "OK", result2["status"])
+	var result2 map[string]interface{}
 
-// 	resp3, err := unittesting.SignoutRequest(testServer.URL, cookieData2["sAccessToken"], cookieData2["sIdRefreshToken"], cookieData2["antiCsrf"])
+	err = json.Unmarshal(dataInBytes2, &result2)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(resp3)
-// 	assert.Equal(t, http.StatusOK, resp3.StatusCode)
-// 	dataInBytes3, err := io.ReadAll(resp3.Body)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
-// 	resp3.Body.Close()
+	assert.Equal(t, "OK", result2["status"])
 
-// 	var result3 map[string]interface{}
+	resp3, err := unittesting.SignoutRequest(testServer.URL, cookieData2["sAccessToken"], cookieData2["sIdRefreshToken"], cookieData2["antiCsrf"])
 
-// 	err = json.Unmarshal(dataInBytes3, &result3)
-// 	if err != nil {
-// 		t.Error(err.Error())
-// 	}
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(resp3)
+	assert.Equal(t, http.StatusOK, resp3.StatusCode)
+	dataInBytes3, err := io.ReadAll(resp3.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp3.Body.Close()
 
-// 	assert.Equal(t, "OK", result3["status"])
-// 	assert.Equal(t, "", cookieData3["sAccessToken"])
-// 	assert.Equal(t, "", cookieData3["sRefreshToken"])
-// 	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
+	var result3 map[string]interface{}
 
-// 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
-// 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
-// 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
+	err = json.Unmarshal(dataInBytes3, &result3)
+	if err != nil {
+		t.Error(err.Error())
+	}
 
-// 	assert.Equal(t, "", cookieData3["accessTokenDomain"])
-// 	assert.Equal(t, "", cookieData3["refreshTokenDomain"])
-// 	assert.Equal(t, "", cookieData3["idRefreshTokenDomain"])
-// }
+	assert.Equal(t, "OK", result3["status"])
+	assert.Equal(t, "", cookieData3["sAccessToken"])
+	assert.Equal(t, "", cookieData3["sRefreshToken"])
+	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
+
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
+	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
+
+	assert.Equal(t, "", cookieData3["accessTokenDomain"])
+	assert.Equal(t, "", cookieData3["refreshTokenDomain"])
+	assert.Equal(t, "", cookieData3["idRefreshTokenDomain"])
+}

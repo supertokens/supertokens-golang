@@ -4,34 +4,38 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func initForUserIdMappingTest(t *testing.T) {
-	// TODO fix
-	// config := supertokens.TypeInput{
-	// 	Supertokens: &supertokens.ConnectionInfo{
-	// 		ConnectionURI: "http://localhost:8080",
-	// 	},
-	// 	AppInfo: supertokens.AppInfo{
-	// 		APIDomain:     "api.supertokens.io",
-	// 		AppName:       "SuperTokens",
-	// 		WebsiteDomain: "supertokens.io",
-	// 	},
-	// 	RecipeList: []supertokens.Recipe{Init(tplmodels.TypeInput{
-	// 		ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-	// 			Enabled: true,
-	// 		},
-	// 		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-	// 		Providers: []tpmodels.TypeProvider{
-	// 			thirdparty.Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
-	// 		},
-	// 	})},
-	// }
 
-	// err := supertokens.Init(config)
-	// assert.NoError(t, err)
+	config := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{Init(tplmodels.TypeInput{
+			ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+				Enabled: true,
+			},
+			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+			Providers: []tpmodels.TypeProvider{
+				thirdparty.Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
+			},
+		})},
+	}
+
+	err := supertokens.Init(config)
+	assert.NoError(t, err)
 }
 
 func TestCreateUserIdMappingUsingEmail(t *testing.T) {
@@ -41,43 +45,42 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 
 	initForUserIdMappingTest(t)
 
-	// TODO fix
-	// querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	// assert.NoError(t, err)
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	assert.NoError(t, err)
 
-	// cdiVersion, err := querier.GetQuerierAPIVersion()
-	// assert.NoError(t, err)
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	assert.NoError(t, err)
 
-	// if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
-	// 	return
-	// }
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
+		return
+	}
 
-	// signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
-	// assert.NoError(t, err)
+	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
+	assert.NoError(t, err)
 
-	// externalUserId := "externalId"
-	// externalUserIdInfo := "externalIdInfo"
-	// createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
-	// assert.NoError(t, err)
-	// assert.NotNil(t, createResp.OK)
+	externalUserId := "externalId"
+	externalUserIdInfo := "externalIdInfo"
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, createResp.OK)
 
-	// { // Using supertokens ID
-	// 	userResp, err := GetUserByID(signUpResponse.OK.User.ID)
-	// 	assert.NoError(t, err)
-	// 	assert.Equal(t, externalUserId, userResp.ID)
-	// }
+	{ // Using supertokens ID
+		userResp, err := GetUserByID(signUpResponse.OK.User.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, externalUserId, userResp.ID)
+	}
 
-	// { // Using external ID
-	// 	userResp, err := GetUserByID(externalUserId)
-	// 	assert.NoError(t, err)
-	// 	assert.Equal(t, externalUserId, userResp.ID)
-	// }
+	{ // Using external ID
+		userResp, err := GetUserByID(externalUserId)
+		assert.NoError(t, err)
+		assert.Equal(t, externalUserId, userResp.ID)
+	}
 
-	// { // Using thirdparty info
-	// 	userResp, err := GetUserByThirdPartyInfo("google", "googleID")
-	// 	assert.NoError(t, err)
-	// 	assert.Equal(t, externalUserId, userResp.ID)
-	// }
+	{ // Using thirdparty info
+		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		assert.NoError(t, err)
+		assert.Equal(t, externalUserId, userResp.ID)
+	}
 }
 
 func TestPlessCreateUserIdMappingUsingEmail(t *testing.T) {
