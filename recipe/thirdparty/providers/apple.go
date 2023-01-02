@@ -90,6 +90,8 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				} else {
 					res["user"] = userInfo
 				}
+			} else if userInfo, ok := redirectURIInfo.RedirectURIQueryParams["user"].(map[string]interface{}); ok {
+				res["user"] = userInfo
 			}
 
 			return res, nil
