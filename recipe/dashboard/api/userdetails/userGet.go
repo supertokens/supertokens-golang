@@ -51,6 +51,12 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}
 	}
 
+	if !api.IsRecipeInitialised(recipeId) {
+		return userGetResponse{
+			Status: "RECIPE_NOT_INITIALISED",
+		}, nil
+	}
+
 	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId)
 
 	if userForRecipeId == (dashboardmodels.UserType{}) {

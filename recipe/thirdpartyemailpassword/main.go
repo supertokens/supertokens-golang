@@ -29,7 +29,7 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 }
 
 func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
@@ -37,7 +37,7 @@ func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdP
 }
 
 func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.GetProviderResponse{}, err
 	}
@@ -45,7 +45,7 @@ func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, use
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -53,7 +53,7 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID st
 }
 
 func EmailPasswordSignUpWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignUpResponse{}, err
 	}
@@ -61,7 +61,7 @@ func EmailPasswordSignUpWithContext(email, password string, userContext supertok
 }
 
 func EmailPasswordSignInWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInResponse{}, err
 	}
@@ -69,7 +69,7 @@ func EmailPasswordSignInWithContext(email, password string, userContext supertok
 }
 
 func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) 
 }
 
 func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +85,7 @@ func GetUsersByEmailWithContext(email string, userContext supertokens.UserContex
 }
 
 func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
@@ -93,7 +93,7 @@ func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.
 }
 
 func ResetPasswordUsingTokenWithContext(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, err
 	}
@@ -101,7 +101,7 @@ func ResetPasswordUsingTokenWithContext(token, newPassword string, userContext s
 }
 
 func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
 	}
@@ -109,7 +109,7 @@ func UpdateEmailOrPasswordWithContext(userId string, email *string, password *st
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}

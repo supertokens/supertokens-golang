@@ -254,6 +254,18 @@ tpmodels.ProviderInput{
 ```
 
 
+## [0.9.14] - 2022-12-26
+
+-   Fixes an issue in the dashboard recipe when fetching user details for passwordless users that don't have an email associated with their accounts
+-   Updates dashboard version
+-   Updates user GET API for dashboard recipe
+
+## [0.9.13] - 2022-12-26
+-   Adds optional `Username` to `SMTPSettings`, which can be used for SMTP login if username is different from `From.Email`.
+
+## [0.9.12] - 2022-12-26
+-   Fixes `newPassword` validation in Dashboard API
+
 ## [0.9.11]
 -   Fixes panic issue with dashboard usersGet API
 

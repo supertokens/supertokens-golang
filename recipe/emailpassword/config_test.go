@@ -46,7 +46,7 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -106,7 +106,7 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -157,7 +157,7 @@ func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -189,7 +189,7 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletonEmailPasswordInstance, err := getRecipeInstanceOrThrowError()
+	singletonEmailPasswordInstance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}

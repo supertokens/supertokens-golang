@@ -41,6 +41,6 @@ type UserType struct {
 	FirstName  string     `json:"firstName,omitempty"`
 	LastName   string     `json:"lastName,omitempty"`
 	Email      string     `json:"email,omitempty"`
-	ThirdParty ThirdParty `json:"thirdParty,omitempty"`
-	Phone      string     `json:"phone,omitempty"`
+	ThirdParty *ThirdParty `json:"thirdParty,omitempty"`
+	Phone      string     `json:"phoneNumber,omitempty"`
 }
