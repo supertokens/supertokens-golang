@@ -72,6 +72,8 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 		thirdPartyIdSet[provider.Config.ThirdPartyId] = true
 	}
 
+	// TODO normalize provider names
+
 	return tpmodels.TypeNormalisedInputSignInAndUp{
 		Providers: providers,
 	}, nil
