@@ -26,7 +26,7 @@ func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 }
 
 func ManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
@@ -34,7 +34,7 @@ func ManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID
 }
 
 func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) 
 }
 
 func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return []tpmodels.User{}, err
 	}
@@ -50,7 +50,7 @@ func GetUsersByEmailWithContext(email string, userContext supertokens.UserContex
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-	instance, err := getRecipeInstanceOrThrowError()
+	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}

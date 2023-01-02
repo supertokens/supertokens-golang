@@ -79,7 +79,7 @@ func TestMinimumConfigForThirdPartyPasswordlessWithEmailOrPhoneContactMethod(t *
 		return
 	}
 
-	thirdPartyPasswordlessRecipe, err := getRecipeInstanceOrThrowError()
+	thirdPartyPasswordlessRecipe, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 	assert.Equal(t, "USER_INPUT_CODE_AND_MAGIC_LINK", thirdPartyPasswordlessRecipe.Config.FlowType)
 }
@@ -355,7 +355,7 @@ func TestWithThirdPartyPasswordLessMinimumConfigWithEmailContactMethod(t *testin
 		return
 	}
 
-	thirdPartyPasswordlessRecipe, err := getRecipeInstanceOrThrowError()
+	thirdPartyPasswordlessRecipe, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 	assert.Equal(t, "USER_INPUT_CODE_AND_MAGIC_LINK", thirdPartyPasswordlessRecipe.Config.FlowType)
 }

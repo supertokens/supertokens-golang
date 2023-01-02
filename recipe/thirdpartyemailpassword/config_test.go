@@ -53,7 +53,7 @@ func TestDefaultConfigForThirdPartyEmailPasswordRecipe(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	thirdpartyemailpassword, err := getRecipeInstanceOrThrowError()
+	thirdpartyemailpassword, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -112,7 +112,7 @@ func TestDefaultConfigForThirdPartyEmailPasswordRecipeWithProvider(t *testing.T)
 		t.Error(err.Error())
 	}
 
-	thirdpartyemailpassword, err := getRecipeInstanceOrThrowError()
+	thirdpartyemailpassword, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
