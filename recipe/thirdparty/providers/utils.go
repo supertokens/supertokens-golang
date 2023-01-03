@@ -31,10 +31,13 @@ import (
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 // Network utils
 func doGetRequest(url string, queryParams map[string]interface{}, headers map[string]string) (interface{}, error) {
+	supertokens.LogDebugMessage(fmt.Sprintf("GET request to %s, with query params %v and headers %v", url, queryParams, headers))
+
 	if queryParams != nil {
 		querystring, err := qs.Marshal(queryParams)
 		if err != nil {
@@ -62,6 +65,8 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 		return nil, err
 	}
 
+	supertokens.LogDebugMessage(fmt.Sprintf("Received response with status %d and body %s", resp.StatusCode, string(body)))
+
 	var result interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
@@ -74,6 +79,8 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 }
 
 func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, error) {
+	supertokens.LogDebugMessage(fmt.Sprintf("POST request to %s, with form fields %v and headers %v", url, params, headers))
+
 	postBody, err := qs.Marshal(params)
 	if err != nil {
 		return nil, err
@@ -99,6 +106,8 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	if err != nil {
 		return nil, err
 	}
+
+	supertokens.LogDebugMessage(fmt.Sprintf("Received response with status %d and body %s", resp.StatusCode, string(body)))
 
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
