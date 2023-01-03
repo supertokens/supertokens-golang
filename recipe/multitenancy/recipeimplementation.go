@@ -40,6 +40,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 
 	getTenantConfig := func(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
 		// TODO impl
+		// TODO may throw mterrors.TenantDoesNotExistError
 		return multitenancymodels.TenantConfigResponse{}, errors.New("not implemented")
 	}
 
@@ -50,11 +51,13 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 
 	createOrUpdateThirdPartyConfig := func(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
 		// TODO impl
+		// TODO may throw mterrors.TenantDoesNotExistError
 		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, errors.New("not implemented")
 	}
 
 	deleteThirdPartyConfig := func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
 		// TODO impl
+		// TODO may throw mterrors.TenantDoesNotExistError
 		return multitenancymodels.DeleteThirdPartyConfigResponse{}, errors.New("not implemented")
 	}
 
