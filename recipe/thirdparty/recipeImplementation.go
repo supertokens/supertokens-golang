@@ -47,6 +47,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 				for _, providerInputFromStatic := range providers {
 					if providerInputFromStatic.Config.ThirdPartyId == providerConfigFromCore.ThirdPartyId {
 						mergedProviderInput.Config = mergeConfig(providerInputFromStatic.Config, providerConfigFromCore)
+						mergedProviderInput.Override = providerInputFromStatic.Override
+						break
 					}
 				}
 
