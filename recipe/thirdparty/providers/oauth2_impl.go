@@ -161,7 +161,6 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		return tpmodels.TypeUserInfo{}, err
 	}
 
-	// FIXME - what if the user overrides GetUserInfo and forgets to append tenant id to the thirdPartyUserId
 	if config.TenantId != nil && *config.TenantId != tpmodels.DefaultTenantId {
 		userInfoResult.ThirdPartyUserId += "|" + *config.TenantId
 	}
