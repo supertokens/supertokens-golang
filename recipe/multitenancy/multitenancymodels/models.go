@@ -15,12 +15,26 @@
 
 package multitenancymodels
 
+import "net/http"
+
 type TypeInput struct {
-	Override *OverrideStruct
+	ErrorHandlers *ErrorHandlers
+	Override      *OverrideStruct
+}
+
+type ErrorHandlers struct {
+	OnTenantDoesNotExistError      *func(err error, req *http.Request, res http.ResponseWriter) error
+	OnRecipeDisabledForTenantError *func(err error, req *http.Request, res http.ResponseWriter) error
 }
 
 type TypeNormalisedInput struct {
-	Override OverrideStruct
+	ErrorHandlers NormalisedErrorHandlers
+	Override      OverrideStruct
+}
+
+type NormalisedErrorHandlers struct {
+	OnTenantDoesNotExistError      func(err error, req *http.Request, res http.ResponseWriter) error
+	OnRecipeDisabledForTenantError func(err error, req *http.Request, res http.ResponseWriter) error
 }
 
 type OverrideStruct struct {

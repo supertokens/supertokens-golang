@@ -20,12 +20,13 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/api"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const RECIPE_ID = "multitenancy"
+const RECIPE_ID = supertokens.MULTITENANCY_RECIPE_ID
 
 type Recipe struct {
 	RecipeModule              supertokens.RecipeModule
@@ -120,6 +121,11 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	if errors.As(err, &mterrors.TenantDoesNotExistError{}) {
+		return true, r.Config.ErrorHandlers.OnTenantDoesNotExistError(err, req, res)
+	} else if errors.As(err, &mterrors.RecipeDisabledForTenantError{}) {
+		return true, r.Config.ErrorHandlers.OnRecipeDisabledForTenantError(err, req, res)
+	}
 	return false, nil
 }
 
@@ -127,10 +133,17 @@ func ResetForTest() {
 	singletonInstance = nil
 }
 
+// This function is called when the multitenancy package is imported. This is set so that
+// the supertokens Init can create an instance of the multitenancy recipe automatically
+// if the user has not explicitly created one.
 func init() {
 	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
 }
 
 func (r *Recipe) SetStaticThirdPartyProviders(providers []tpmodels.ProviderInput) {
+	// the `staticThirdPartyProviders` is always overwritten with the provider list from
+	// the last thirdparty recipe that was initialised. In case of multitenancy, the
+	// core is expected to contain the tenant configs for that tenant, so, it wouldn't
+	// be too much of a problem about which static list we use from here.
 	r.staticThirdPartyProviders = append([]tpmodels.ProviderInput{}, providers...)
 }

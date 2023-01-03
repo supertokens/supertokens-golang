@@ -86,10 +86,10 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				userInfo := map[string]interface{}{}
 				err := json.Unmarshal([]byte(user), &userInfo)
 				if err != nil {
-					res["user"] = user
-				} else {
-					res["user"] = userInfo
+					return nil, err
 				}
+				res["user"] = userInfo
+
 			} else if userInfo, ok := redirectURIInfo.RedirectURIQueryParams["user"].(map[string]interface{}); ok {
 				res["user"] = userInfo
 			}
@@ -104,8 +104,15 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return tpmodels.TypeUserInfo{}, err
 			}
 
-			if user, ok := oAuthTokens["user"]; ok {
-				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = user
+			if user, ok := oAuthTokens["user"].(string); ok {
+				userInfo := map[string]interface{}{}
+				err := json.Unmarshal([]byte(user), &userInfo)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = userInfo
+			} else if userInfo, ok := oAuthTokens["user"].(map[string]interface{}); ok {
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = userInfo
 			}
 
 			return res, nil

@@ -1,6 +1,8 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -8,6 +10,12 @@ import (
 func MakeAPIImplementation() multitenancymodels.APIInterface {
 
 	loginMethodsAPI := func(tenantId *string, options multitenancymodels.APIOptions, userContext supertokens.UserContext) (multitenancymodels.LoginMethodsGETResponse, error) {
+
+		tenantId, err := (*options.RecipeImplementation.GetTenantId)(tenantId, userContext)
+		if err != nil {
+			return multitenancymodels.LoginMethodsGETResponse{}, err
+		}
+
 		tenantConfigResponse, err := (*options.RecipeImplementation.GetTenantConfig)(tenantId, userContext)
 		if err != nil {
 			return multitenancymodels.LoginMethodsGETResponse{}, err
@@ -35,6 +43,12 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 
 			var finalProviderList []multitenancymodels.TypeThirdPartyProvider
 
+			/*
+				With respect to https://supertokens.com/docs/contribute/decisions/multitenancy/0002,
+				we are not merging the providers from core on top of static providers, because,
+				we are just interested in the `Name` in the context of this API and core is expected
+				to have the value for it.
+			*/
 			if len(providersFromCore) > 0 {
 				finalProviderList = providersFromCore
 			} else {
@@ -56,13 +70,9 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 				},
 			}
 			return result, nil
-		} else if tenantConfigResponse.TenantDoesNotExistError != nil {
-			return multitenancymodels.LoginMethodsGETResponse{
-				TenantDoesNotExistError: &struct{}{},
-			}, nil
 		}
 
-		return multitenancymodels.LoginMethodsGETResponse{}, nil
+		return multitenancymodels.LoginMethodsGETResponse{}, errors.New("should never come here")
 	}
 
 	return multitenancymodels.APIInterface{

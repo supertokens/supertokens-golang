@@ -27,9 +27,8 @@ type APIInterface struct {
 }
 
 type LoginMethodsGETResponse struct {
-	OK                      *TypeLoginMethods
-	TenantDoesNotExistError *struct{}
-	GeneralError            *supertokens.GeneralErrorResponse
+	OK           *TypeLoginMethods
+	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type TypeLoginMethods struct {

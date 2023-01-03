@@ -17,6 +17,7 @@ package api
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -62,12 +63,14 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return err
 	}
 
-	if providerResponse.TenantDoesNotExistError != nil {
-		return supertokens.SendNon200ResponseWithMessage(options.Res, "Tenant does not exist", 422)
-	}
-
 	if !providerResponse.OK.ThirdPartyEnabled {
-		return supertokens.SendNon200ResponseWithMessage(options.Res, "ThirdParty recipe not enabled for tenant", 422)
+		msg := "Thirdparty recipe is disabled for the "
+		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
+			msg += "default tenant"
+		} else {
+			msg += "tenant: " + *tenantId
+		}
+		return mterrors.RecipeDisabledForTenantError{Msg: msg}
 	}
 
 	provider := providerResponse.OK.Provider

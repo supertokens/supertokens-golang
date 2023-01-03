@@ -78,12 +78,12 @@ func DeleteThirdPartyConfigWithContext(tenantId *string, thirdPartyId string, us
 	return (*instance.RecipeImpl.DeleteThirdPartyConfig)(tenantId, thirdPartyId, userContext)
 }
 
-func ListThirdPartyConfigsWithContext(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsResponse, error) {
+func ListThirdPartyConfigsWithContext(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return multitenancymodels.ListThirdPartyConfigsResponse{}, err
+		return multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse{}, err
 	}
-	return (*instance.RecipeImpl.ListThirdPartyConfigs)(thirdPartyId, userContext)
+	return (*instance.RecipeImpl.ListThirdPartyConfigsForThirdPartyId)(thirdPartyId, userContext)
 }
 
 func CreateOrUpdateTenant(tenantId *string, config multitenancymodels.TenantConfig) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
@@ -111,6 +111,6 @@ func DeleteThirdPartyConfig(tenantId *string, thirdPartyId string) (multitenancy
 	return DeleteThirdPartyConfigWithContext(tenantId, thirdPartyId, &map[string]interface{}{})
 }
 
-func ListThirdPartyConfigs(thirdPartyId string) (multitenancymodels.ListThirdPartyConfigsResponse, error) {
+func ListThirdPartyConfigs(thirdPartyId string) (multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse, error) {
 	return ListThirdPartyConfigsWithContext(thirdPartyId, &map[string]interface{}{})
 }

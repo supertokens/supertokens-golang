@@ -32,8 +32,6 @@ func LoginMethodsAPI(apiImplementation multitenancymodels.APIInterface, options 
 
 	if result.OK != nil {
 		return supertokens.Send200Response(options.Res, result.OK)
-	} else if result.TenantDoesNotExistError != nil {
-		return supertokens.SendNon200ResponseWithMessage(options.Res, "Tenant does not exist", 422)
 	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}

@@ -28,3 +28,5 @@ var (
 )
 
 const DashboardVersion = "0.3"
+
+const MULTITENANCY_RECIPE_ID string = "multitenancy"

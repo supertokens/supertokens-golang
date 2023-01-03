@@ -14,7 +14,7 @@ func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.ThirdPartyId = boxySamlID
 	}
 	if input.Config.Name == "" {
-		input.Config.Name = "Boxy SAML"
+		input.Config.Name = "SAML"
 	}
 
 	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {

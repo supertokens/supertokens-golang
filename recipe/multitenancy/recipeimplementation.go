@@ -58,9 +58,9 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		return multitenancymodels.DeleteThirdPartyConfigResponse{}, errors.New("not implemented")
 	}
 
-	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsResponse, error) {
+	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse, error) {
 		// TODO impl
-		return multitenancymodels.ListThirdPartyConfigsResponse{}, errors.New("not implemented")
+		return multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse{}, errors.New("not implemented")
 	}
 
 	return multitenancymodels.RecipeInterface{
@@ -71,8 +71,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		GetTenantConfig:      &getTenantConfig,
 		ListAllTenants:       &listAllTenants,
 
-		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
-		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
-		ListThirdPartyConfigs:          &listThirdPartyConfigs,
+		CreateOrUpdateThirdPartyConfig:       &createOrUpdateThirdPartyConfig,
+		DeleteThirdPartyConfig:               &deleteThirdPartyConfig,
+		ListThirdPartyConfigsForThirdPartyId: &listThirdPartyConfigs,
 	}
 }

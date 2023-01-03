@@ -158,7 +158,11 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	return false, nil
+	mtRecipe, rErr := multitenancy.GetRecipeInstanceOrThrowError()
+	if rErr != nil {
+		return false, rErr
+	}
+	return mtRecipe.RecipeModule.HandleError(err, req, res)
 }
 
 func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
