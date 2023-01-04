@@ -112,6 +112,9 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{
@@ -183,11 +186,8 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
 }
@@ -206,6 +206,9 @@ func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{
@@ -263,6 +266,9 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{
@@ -341,11 +347,8 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
 }
@@ -367,6 +370,9 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{
@@ -451,11 +457,8 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
 }
@@ -471,7 +474,11 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
@@ -542,7 +549,11 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
@@ -657,6 +668,9 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{
@@ -739,6 +753,9 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{
@@ -838,6 +855,9 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(
 				&tpmodels.TypeInput{

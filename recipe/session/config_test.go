@@ -1121,7 +1121,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
@@ -1182,7 +1182,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/hello/session/refresh", nil)
 	assert.NoError(t, err)
 
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
@@ -1241,7 +1241,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/hello/session/refresh", nil)
 	assert.NoError(t, err)
 
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 

@@ -226,7 +226,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/id", nil)
-	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res1, err := http.DefaultClient.Do(req1)
@@ -246,7 +246,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	res1.Body.Close()
 
 	req2, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/handleV0", nil)
-	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
@@ -264,7 +264,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	res2.Body.Close()
 
 	req3, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/handleOptional", nil)
-	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res3, err := http.DefaultClient.Do(req3)
 	assert.NoError(t, err)
@@ -318,7 +318,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	res5.Body.Close()
 
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
-	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
@@ -327,7 +327,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	assert.Equal(t, 200, res6.StatusCode)
 
 	req7, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
-	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	req7.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	assert.NoError(t, err)
 	res7, err := http.DefaultClient.Do(req7)
@@ -335,7 +335,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	assert.Equal(t, 200, res7.StatusCode)
 
 	req8, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
-	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req8.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res8, err := http.DefaultClient.Do(req8)
@@ -353,7 +353,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	assert.Equal(t, "Token theft detected", result8["message"])
 
 	req9, err := http.NewRequest(http.MethodGet, testServer.URL+"/logout", nil)
-	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	assert.NoError(t, err)
 	req9.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	res9, err := http.DefaultClient.Do(req9)
@@ -362,10 +362,8 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
-	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
 	assert.Equal(t, "", cookieData3["sRefreshToken"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
 	dataInBytes9, err := ioutil.ReadAll(res9.Body)
 	if err != nil {
@@ -522,7 +520,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/id", nil)
-	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res1, err := http.DefaultClient.Do(req1)
@@ -542,7 +540,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	res1.Body.Close()
 
 	req2, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/handleV0", nil)
-	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
@@ -560,7 +558,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	res2.Body.Close()
 
 	req3, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/handleOptional", nil)
-	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res3, err := http.DefaultClient.Do(req3)
 	assert.NoError(t, err)
@@ -614,7 +612,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	res5.Body.Close()
 
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
-	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
@@ -623,7 +621,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, 200, res6.StatusCode)
 
 	req7, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
-	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	req7.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	assert.NoError(t, err)
 	res7, err := http.DefaultClient.Do(req7)
@@ -631,7 +629,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, 200, res7.StatusCode)
 
 	req8, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
-	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req8.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res8, err := http.DefaultClient.Do(req8)
@@ -649,7 +647,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, "Token theft detected", result8["message"])
 
 	req9, err := http.NewRequest(http.MethodGet, testServer.URL+"/logout", nil)
-	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	assert.NoError(t, err)
 	req9.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	res9, err := http.DefaultClient.Do(req9)
@@ -658,10 +656,8 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
-	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
 	assert.Equal(t, "", cookieData3["sRefreshToken"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
 	dataInBytes9, err := ioutil.ReadAll(res9.Body)
 	if err != nil {
@@ -833,7 +829,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/id", nil)
-	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res1, err := http.DefaultClient.Do(req1)
@@ -853,7 +849,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	res1.Body.Close()
 
 	req2, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/handleV0", nil)
-	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
@@ -871,7 +867,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	res2.Body.Close()
 
 	req3, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/handleOptional", nil)
-	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res3, err := http.DefaultClient.Do(req3)
 	assert.NoError(t, err)
@@ -925,7 +921,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	res5.Body.Close()
 
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/custom/session/refresh", nil)
-	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
@@ -934,7 +930,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	assert.Equal(t, 200, res6.StatusCode)
 
 	req7, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/verifySession", nil)
-	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	req7.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	assert.NoError(t, err)
 	res7, err := http.DefaultClient.Do(req7)
@@ -942,7 +938,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	assert.Equal(t, 200, res7.StatusCode)
 
 	req8, err := http.NewRequest(http.MethodPost, testServer.URL+"/custom/session/refresh", nil)
-	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req8.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res8, err := http.DefaultClient.Do(req8)
@@ -960,7 +956,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	assert.Equal(t, "Token theft detected", result8["message"])
 
 	req9, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/logout", nil)
-	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	assert.NoError(t, err)
 	req9.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	res9, err := http.DefaultClient.Do(req9)
@@ -969,10 +965,8 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
-	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
 	assert.Equal(t, "", cookieData3["sRefreshToken"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
 	dataInBytes9, err := ioutil.ReadAll(res9.Body)
 	if err != nil {
@@ -1131,7 +1125,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	cookieData := unittesting.ExtractInfoFromResponse(res)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/id", nil)
-	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res1, err := http.DefaultClient.Do(req1)
@@ -1151,7 +1145,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	res1.Body.Close()
 
 	req2, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/handleV0", nil)
-	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
@@ -1169,7 +1163,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	res2.Body.Close()
 
 	req3, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/handleOptional", nil)
-	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req3.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	assert.NoError(t, err)
 	res3, err := http.DefaultClient.Do(req3)
 	assert.NoError(t, err)
@@ -1223,7 +1217,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	res5.Body.Close()
 
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/custom/session/refresh", nil)
-	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res6, err := http.DefaultClient.Do(req6)
@@ -1232,7 +1226,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, 200, res6.StatusCode)
 
 	req7, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/verifySession", nil)
-	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req7.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	req7.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	assert.NoError(t, err)
 	res7, err := http.DefaultClient.Do(req7)
@@ -1240,7 +1234,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, 200, res7.StatusCode)
 
 	req8, err := http.NewRequest(http.MethodPost, testServer.URL+"/custom/session/refresh", nil)
-	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req8.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req8.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	assert.NoError(t, err)
 	res8, err := http.DefaultClient.Do(req8)
@@ -1258,7 +1252,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, "Token theft detected", result8["message"])
 
 	req9, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/logout", nil)
-	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	req9.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	assert.NoError(t, err)
 	req9.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	res9, err := http.DefaultClient.Do(req9)
@@ -1267,10 +1261,8 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	cookieData3 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res9)
 	assert.Equal(t, "", cookieData3["antiCsrf"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
-	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
 	assert.Equal(t, "", cookieData3["sRefreshToken"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
 	dataInBytes9, err := ioutil.ReadAll(res9.Body)
 	if err != nil {

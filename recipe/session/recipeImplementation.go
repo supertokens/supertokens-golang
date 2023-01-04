@@ -108,7 +108,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			}
 		}
 
-		sessionOptional := options == nil || options.SessionRequired == nil || !*options.SessionRequired
+		sessionOptional := options != nil && options.SessionRequired != nil && !*options.SessionRequired
 		supertokens.LogDebugMessage(fmt.Sprintf("getSession: optional validation %v", sessionOptional))
 
 		accessTokens := map[sessmodels.TokenTransferMethod]*ParsedJWTInfo{}

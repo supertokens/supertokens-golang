@@ -266,7 +266,7 @@ func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
 
 	reqV, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
 	assert.NoError(t, err)
-	reqV.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	reqV.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	reqV.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	resv, err := http.DefaultClient.Do(reqV)
 	assert.NoError(t, err)

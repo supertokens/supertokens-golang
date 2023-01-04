@@ -37,6 +37,9 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &antiCsrfConf,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -88,7 +91,6 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 		testServer.URL,
 		userId,
 		infoFromResponse["sAccessToken"],
-		infoFromResponse["sIdRefreshToken"],
 		antiCsrf,
 	)
 	assert.NoError(t, err)
@@ -110,7 +112,6 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 		testServer.URL,
 		userId,
 		infoFromResponse["sAccessToken"],
-		infoFromResponse["sIdRefreshToken"],
 		antiCsrf,
 	)
 	assert.NoError(t, err)
@@ -125,7 +126,6 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 		testServer.URL,
 		userId,
 		infoFromResponse["sAccessToken"],
-		infoFromResponse["sIdRefreshToken"],
 		antiCsrf,
 	)
 	assert.NoError(t, err)
@@ -144,7 +144,6 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 		testServer.URL,
 		userId,
 		infoFromResponse["sAccessToken"],
-		infoFromResponse["sIdRefreshToken"],
 		antiCsrf,
 	)
 	assert.NoError(t, err)
