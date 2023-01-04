@@ -60,7 +60,7 @@ func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.TokenEndpointBodyParams["client_assertion"] = ca
 			}
 
-			return config, err
+			return discoverOIDCEndpoints(config)
 		}
 
 		if oOverride != nil {

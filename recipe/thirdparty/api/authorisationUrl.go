@@ -79,10 +79,6 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	if err != nil {
 		return err
 	}
-	config, err = discoverOIDCEndpoints(config)
-	if err != nil {
-		return err
-	}
 
 	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, config, redirectURIOnProviderDashboard, options, userContext)
 	if err != nil {

@@ -11,11 +11,6 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 
 	loginMethodsAPI := func(tenantId *string, options multitenancymodels.APIOptions, userContext supertokens.UserContext) (multitenancymodels.LoginMethodsGETResponse, error) {
 
-		tenantId, err := (*options.RecipeImplementation.GetTenantId)(tenantId, userContext)
-		if err != nil {
-			return multitenancymodels.LoginMethodsGETResponse{}, err
-		}
-
 		tenantConfigResponse, err := (*options.RecipeImplementation.GetTenantConfig)(tenantId, userContext)
 		if err != nil {
 			return multitenancymodels.LoginMethodsGETResponse{}, err

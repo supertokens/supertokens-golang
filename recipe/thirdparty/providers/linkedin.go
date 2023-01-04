@@ -39,7 +39,7 @@ func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.Scope = []string{"r_emailaddress", "r_liteprofile"}
 			}
 
-			return config, err
+			return discoverOIDCEndpoints(config)
 		}
 
 		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {

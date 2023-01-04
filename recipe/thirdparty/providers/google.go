@@ -55,7 +55,7 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.Scope = []string{"openid", "email"}
 			}
 
-			return config, err
+			return discoverOIDCEndpoints(config)
 		}
 
 		if oOverride != nil {

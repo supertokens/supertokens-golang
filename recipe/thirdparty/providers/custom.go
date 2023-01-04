@@ -45,13 +45,14 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
 			}
 
-			return getProviderConfigForClient(inputConfig, inputConfig.Clients[0]), nil
+			config := getProviderConfigForClient(inputConfig, inputConfig.Clients[0])
+			return discoverOIDCEndpoints(config)
 		}
 
 		for _, client := range inputConfig.Clients {
 			if client.ClientType == *clientType {
 				config := getProviderConfigForClient(input.Config, client)
-				return config, nil
+				return discoverOIDCEndpoints(config)
 			}
 		}
 

@@ -108,10 +108,6 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 	if err != nil {
 		return err
 	}
-	config, err = discoverOIDCEndpoints(config)
-	if err != nil {
-		return err
-	}
 
 	result, err := (*apiImplementation.SignInUpPOST)(provider, config, input, options, userContext)
 

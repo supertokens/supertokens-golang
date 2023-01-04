@@ -26,7 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const RECIPE_ID = supertokens.MULTITENANCY_RECIPE_ID
+const RECIPE_ID = supertokens."multitenancy"
 
 type Recipe struct {
 	RecipeModule              supertokens.RecipeModule

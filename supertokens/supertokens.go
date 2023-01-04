@@ -100,7 +100,7 @@ func supertokensInit(config TypeInput) error {
 		}
 		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
 
-		if recipeModule.GetRecipeID() == MULTITENANCY_RECIPE_ID {
+		if recipeModule.GetRecipeID() == "multitenancy" {
 			multitenancyFound = true
 		}
 	}
