@@ -23,12 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const discordID = "discord"
-
-func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = discordID
-	}
+func ValidateAndNormaliseDiscord(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "Discord"
 	}
@@ -57,6 +52,12 @@ func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "verified"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

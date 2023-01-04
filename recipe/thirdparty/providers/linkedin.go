@@ -7,12 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const linkedinID = "linkedin"
-
-func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = linkedinID
-	}
+func ValidateAndNormaliseLinkedin(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "LinkedIn"
 	}
@@ -25,6 +20,12 @@ func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.TokenEndpoint = "https://www.linkedin.com/oauth/v2/accessToken"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

@@ -74,9 +74,45 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 
 	// TODO normalize provider names
 
+	normalisedProviders := []tpmodels.ProviderInput{}
+	for _, provider := range providers {
+		provider, err := validateAndNormaliseProviderInput(provider)
+		if err != nil {
+			return tpmodels.TypeNormalisedInputSignInAndUp{}, err
+		}
+		normalisedProviders = append(normalisedProviders, provider)
+	}
+
 	return tpmodels.TypeNormalisedInputSignInAndUp{
-		Providers: providers,
+		Providers: normalisedProviders,
 	}, nil
+}
+
+func validateAndNormaliseProviderInput(providerInput tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+	switch providerInput.Config.ThirdPartyId {
+	case "active-directory":
+		return providers.ValidateAndNormaliseActiveDirectory(providerInput)
+	case "apple":
+		return providers.ValidateAndNormaliseApple(providerInput)
+	case "discord":
+		return providers.ValidateAndNormaliseDiscord(providerInput)
+	case "facebook":
+		return providers.ValidateAndNormaliseFacebook(providerInput)
+	case "github":
+		return providers.ValidateAndNormaliseGithub(providerInput)
+	case "google":
+		return providers.ValidateAndNormaliseGoogle(providerInput)
+	case "google-workspaces":
+		return providers.ValidateAndNormaliseGoogleWorkspaces(providerInput)
+	case "okta":
+		return providers.ValidateAndNormaliseOkta(providerInput)
+	case "linkedin":
+		return providers.ValidateAndNormaliseLinkedin(providerInput)
+	case "boxy-saml":
+		return providers.ValidateAndNormaliseBoxySaml(providerInput)
+	}
+
+	return providers.ValidateAndNormaliseNewProvider(providerInput)
 }
 
 func parseUser(value interface{}) (*tpmodels.User, error) {

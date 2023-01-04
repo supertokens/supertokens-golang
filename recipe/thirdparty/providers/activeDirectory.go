@@ -13,12 +13,7 @@ import (
 	"golang.org/x/crypto/pkcs12"
 )
 
-const activeDirectoryID = "active-directory"
-
-func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = activeDirectoryID
-	}
+func ValidateAndNormaliseActiveDirectory(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "Active Directory"
 	}
@@ -30,6 +25,12 @@ func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

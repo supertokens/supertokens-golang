@@ -7,12 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const boxySamlID = "boxy-saml"
-
-func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = boxySamlID
-	}
+func ValidateAndNormaliseBoxySaml(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "SAML"
 	}
@@ -24,6 +19,12 @@ func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

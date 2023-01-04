@@ -23,12 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const githubID = "github"
-
-func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = githubID
-	}
+func ValidateAndNormaliseGithub(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "Github"
 	}
@@ -41,6 +36,12 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.TokenEndpoint = "https://github.com/login/oauth/access_token"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

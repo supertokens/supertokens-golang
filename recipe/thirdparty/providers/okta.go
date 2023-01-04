@@ -12,12 +12,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const oktaID = "okta"
-
-func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = oktaID
-	}
+func ValidateAndNormaliseOkta(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "Okta"
 	}
@@ -32,6 +27,12 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

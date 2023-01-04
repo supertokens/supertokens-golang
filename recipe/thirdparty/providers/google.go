@@ -5,12 +5,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const googleID = "google"
-
-func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = googleID
-	}
+func ValidateAndNormaliseGoogle(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "Google"
 	}
@@ -41,6 +36,12 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

@@ -22,11 +22,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	impl := &tpmodels.TypeProvider{
-		ID: input.Config.ThirdPartyId,
-	}
-
+func ValidateAndNormaliseNewProvider(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
 	}
@@ -35,6 +31,16 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	}
 	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
+	}
+
+	// TODO add validation
+
+	return input, nil
+}
+
+func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	impl := &tpmodels.TypeProvider{
+		ID: input.Config.ThirdPartyId,
 	}
 
 	impl.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {

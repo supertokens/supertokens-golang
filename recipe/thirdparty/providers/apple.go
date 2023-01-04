@@ -28,12 +28,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const appleID = "apple"
-
-func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	if input.Config.ThirdPartyId == "" {
-		input.Config.ThirdPartyId = appleID
-	}
+func ValidateAndNormaliseApple(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.Name == "" {
 		input.Config.Name = "Apple"
 	}
@@ -50,6 +45,12 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.AuthorizationEndpointQueryParams["response_mode"] = "form_post"
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {

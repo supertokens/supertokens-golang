@@ -7,7 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+func ValidateAndNormaliseGoogleWorkspaces(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
 	if input.Config.ThirdPartyId == "" {
 		input.Config.ThirdPartyId = "google-workspaces"
 	}
@@ -24,6 +24,12 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 	}
 
+	// TODO add validation
+
+	return ValidateAndNormaliseNewProvider(input)
+}
+
+func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
 	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
