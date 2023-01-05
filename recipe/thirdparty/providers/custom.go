@@ -16,8 +16,6 @@
 package providers
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -43,7 +41,7 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 		if clientType == nil {
 			if len(inputConfig.Clients) != 1 {
-				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide exactly one client config or pass clientType or tenantId")
+				return tpmodels.ProviderConfigForClientType{}, tperrors.ClientTypeNotFoundError{Msg: "please provide exactly one client config or pass clientType or tenantId"}
 			}
 
 			config := getProviderConfigForClient(inputConfig, inputConfig.Clients[0])
