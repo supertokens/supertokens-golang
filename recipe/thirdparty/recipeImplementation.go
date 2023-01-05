@@ -31,32 +31,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 			return tpmodels.GetProviderResponse{}, err
 		}
 
-		mergedProviders := []tpmodels.ProviderInput{}
-
-		if len(tenantConfig.OK.ThirdParty.Providers) == 0 {
-			for _, config := range providers {
-				config.Config.TenantId = tenantId
-
-				mergedProviders = append(mergedProviders, config)
-			}
-		} else {
-			for _, providerConfigFromCore := range tenantConfig.OK.ThirdParty.Providers {
-				mergedProviderInput := tpmodels.ProviderInput{
-					Config: providerConfigFromCore,
-				}
-
-				for _, providerInputFromStatic := range providers {
-					if providerInputFromStatic.Config.ThirdPartyId == providerConfigFromCore.ThirdPartyId {
-						mergedProviderInput.Config = mergeConfig(providerInputFromStatic.Config, providerConfigFromCore)
-						mergedProviderInput.Override = providerInputFromStatic.Override
-						break
-					}
-				}
-
-				mergedProviders = append(mergedProviders, mergedProviderInput)
-			}
-		}
-
+		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantId, tenantConfig.OK.ThirdParty.Providers, providers)
 		provider, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, thirdPartyID, tenantId, clientType, userContext)
 		if err != nil {
 			return tpmodels.GetProviderResponse{}, err

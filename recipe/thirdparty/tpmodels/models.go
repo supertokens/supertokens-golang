@@ -139,6 +139,8 @@ type ProviderClientConfig struct {
 }
 
 type ProviderConfigForClientType struct {
+	Name string
+
 	ClientID         string
 	ClientSecret     string
 	Scope            []string

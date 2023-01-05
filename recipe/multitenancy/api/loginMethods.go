@@ -18,6 +18,11 @@ func LoginMethodsAPI(apiImplementation multitenancymodels.APIInterface, options 
 		tenantId = &tenantIdStrFromQueryParams
 	}
 
+	var clientType *string = nil
+	if clientTypeStrFromQueryParams := queryParams.Get("clientType"); clientTypeStrFromQueryParams != "" {
+		clientType = &clientTypeStrFromQueryParams
+	}
+
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	tenantId, err := (*options.RecipeImplementation.GetTenantId)(tenantId, userContext)
@@ -25,7 +30,7 @@ func LoginMethodsAPI(apiImplementation multitenancymodels.APIInterface, options 
 		return err
 	}
 
-	result, err := (*apiImplementation.LoginMethodsGET)(tenantId, options, userContext)
+	result, err := (*apiImplementation.LoginMethodsGET)(tenantId, clientType, options, userContext)
 	if err != nil {
 		return err
 	}
