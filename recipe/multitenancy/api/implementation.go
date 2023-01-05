@@ -1,8 +1,11 @@
 package api
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	tpproviders "github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -25,7 +28,10 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 		for _, providerInput := range mergedProviders {
 			providerInstance, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, providerInput.Config.ThirdPartyId, tenantId, clientType, userContext)
 			if err != nil {
-				continue // Skip as the clientType is missing for the particular provider
+				if errors.As(err, &tperrors.ClientTypeNotFoundError{}) {
+					continue // Skip as the clientType is missing for the particular provider
+				}
+				return multitenancymodels.LoginMethodsGETResponse{}, err
 			}
 			finalProviderList = append(finalProviderList, multitenancymodels.TypeThirdPartyProvider{
 				Id:   providerInstance.ID,

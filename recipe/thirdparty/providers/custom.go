@@ -18,6 +18,7 @@ package providers
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -56,7 +57,7 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 		}
 
-		return tpmodels.ProviderConfigForClientType{}, errors.New("Could not find client config for clientType: " + *clientType)
+		return tpmodels.ProviderConfigForClientType{}, tperrors.ClientTypeNotFoundError{Msg: "Could not find client config for clientType: " + *clientType}
 	}
 
 	impl.GetAuthorisationRedirectURL = func(redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
