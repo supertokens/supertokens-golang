@@ -56,7 +56,7 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.Scope = []string{"read:user", "user:email"}
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {

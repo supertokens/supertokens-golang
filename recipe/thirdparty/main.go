@@ -16,6 +16,7 @@
 package thirdparty
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -82,4 +83,8 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 
 func GetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
 	return GetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
+}
+
+func DiscoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {
+	return api.DiscoverOIDCEndpoints(config)
 }

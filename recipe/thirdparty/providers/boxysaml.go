@@ -52,7 +52,7 @@ func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.UserInfoEndpoint = boxyURL + "/api/oauth/userinfo"
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		if oOverride != nil {

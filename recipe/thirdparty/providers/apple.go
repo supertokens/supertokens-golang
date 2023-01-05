@@ -73,7 +73,7 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.ClientSecret = clientSecret
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens

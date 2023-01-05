@@ -46,7 +46,7 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.AuthorizationEndpointQueryParams["hd"] = config.AdditionalConfig["hd"]
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		if oOverride != nil {

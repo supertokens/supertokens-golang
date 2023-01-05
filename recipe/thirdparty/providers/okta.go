@@ -63,7 +63,7 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.TokenEndpointBodyParams["client_assertion"] = ca
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		if oOverride != nil {

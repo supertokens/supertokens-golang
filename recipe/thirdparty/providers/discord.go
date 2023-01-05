@@ -72,7 +72,7 @@ func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.Scope = []string{"identify", "email"}
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		oGetUserInfo := provider.GetUserInfo

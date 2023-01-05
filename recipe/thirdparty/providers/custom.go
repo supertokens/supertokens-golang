@@ -52,13 +52,13 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			config := getProviderConfigForClient(inputConfig, inputConfig.Clients[0])
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		for _, client := range inputConfig.Clients {
 			if client.ClientType == *clientType {
 				config := getProviderConfigForClient(input.Config, client)
-				return discoverOIDCEndpoints(config)
+				return config, nil
 			}
 		}
 

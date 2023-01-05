@@ -69,7 +69,7 @@ func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.Scope = []string{"email"}
 			}
 
-			return discoverOIDCEndpoints(config)
+			return config, nil
 		}
 
 		oGetUserInfo := provider.GetUserInfo
