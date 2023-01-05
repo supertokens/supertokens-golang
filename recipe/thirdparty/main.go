@@ -16,7 +16,6 @@
 package thirdparty
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -57,12 +56,12 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func GetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+func GetProviderWithContext(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.GetProviderResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, tenantId, userContext)
+	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, tenantId, clientType, userContext)
 }
 
 func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
@@ -81,10 +80,6 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-func GetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
-	return GetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
-}
-
-func DiscoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {
-	return api.DiscoverOIDCEndpoints(config)
+func GetProvider(thirdPartyID string, tenantId *string, clientType *string) (tpmodels.GetProviderResponse, error) {
+	return GetProviderWithContext(thirdPartyID, tenantId, clientType, &map[string]interface{}{})
 }

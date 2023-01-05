@@ -7,7 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseBoxySaml(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "SAML"
 	}
@@ -19,17 +19,11 @@ func ValidateAndNormaliseBoxySaml(input tpmodels.ProviderInput) (tpmodels.Provid
 		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
 	}
 
-	// TODO add validation
-
-	return ValidateAndNormaliseNewProvider(input)
-}
-
-func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
@@ -56,9 +50,9 @@ func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

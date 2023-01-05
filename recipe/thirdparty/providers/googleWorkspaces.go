@@ -7,7 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseGoogleWorkspaces(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.ThirdPartyId == "" {
 		input.Config.ThirdPartyId = "google-workspaces"
 	}
@@ -24,17 +24,11 @@ func ValidateAndNormaliseGoogleWorkspaces(input tpmodels.ProviderInput) (tpmodel
 		}
 	}
 
-	// TODO add validation
-
-	return ValidateAndNormaliseNewProvider(input)
-}
-
-func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
@@ -50,9 +44,9 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return Google(input)

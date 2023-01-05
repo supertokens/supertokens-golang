@@ -28,7 +28,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseApple(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "Apple"
 	}
@@ -45,17 +45,11 @@ func ValidateAndNormaliseApple(input tpmodels.ProviderInput) (tpmodels.ProviderI
 		input.Config.AuthorizationEndpointQueryParams["response_mode"] = "form_post"
 	}
 
-	// TODO add validation
-
-	return ValidateAndNormaliseNewProvider(input)
-}
-
-func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
@@ -76,9 +70,9 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
-		oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens
-		provider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			res, err := oExchangeAuthCodeForOAuthTokens(config, redirectURIInfo, userContext)
+		oExchangeAuthCodeForOAuthTokens := originalImplementation.ExchangeAuthCodeForOAuthTokens
+		originalImplementation.ExchangeAuthCodeForOAuthTokens = func(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			res, err := oExchangeAuthCodeForOAuthTokens(redirectURIInfo, userContext)
 			if err != nil {
 				return tpmodels.TypeOAuthTokens{}, err
 			}
@@ -98,9 +92,9 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return res, nil
 		}
 
-		oGetUserInfo := provider.GetUserInfo
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			res, err := oGetUserInfo(config, oAuthTokens, userContext)
+		oGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			res, err := oGetUserInfo(oAuthTokens, userContext)
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
@@ -120,9 +114,9 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

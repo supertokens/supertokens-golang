@@ -12,7 +12,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseOkta(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "Okta"
 	}
@@ -27,17 +27,11 @@ func ValidateAndNormaliseOkta(input tpmodels.ProviderInput) (tpmodels.ProviderIn
 		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
 	}
 
-	// TODO add validation
-
-	return ValidateAndNormaliseNewProvider(input)
-}
-
-func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
@@ -67,9 +61,9 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

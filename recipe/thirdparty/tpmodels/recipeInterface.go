@@ -22,7 +22,7 @@ type RecipeInterface struct {
 	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
 	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
 
-	GetProvider *func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (GetProviderResponse, error)
+	GetProvider *func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (GetProviderResponse, error)
 
 	SignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens TypeOAuthTokens, rawUserInfoFromProvider TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
 	ManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
@@ -30,7 +30,7 @@ type RecipeInterface struct {
 
 type GetProviderResponse struct {
 	OK *struct {
-		Provider          TypeProvider
+		Provider          *TypeProvider
 		ThirdPartyEnabled bool
 	}
 }

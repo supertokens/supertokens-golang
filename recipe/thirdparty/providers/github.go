@@ -23,7 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseGithub(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "Github"
 	}
@@ -36,17 +36,11 @@ func ValidateAndNormaliseGithub(input tpmodels.ProviderInput) (tpmodels.Provider
 		input.Config.TokenEndpoint = "https://github.com/login/oauth/access_token"
 	}
 
-	// TODO add validation
-
-	return ValidateAndNormaliseNewProvider(input)
-}
-
-func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
 			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
@@ -59,7 +53,7 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 			headers := map[string]string{
 				"Authorization": fmt.Sprintf("Bearer %s", oAuthTokens["access_token"]),
 				"Accept":        "application/vnd.github.v3+json",
@@ -90,9 +84,9 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

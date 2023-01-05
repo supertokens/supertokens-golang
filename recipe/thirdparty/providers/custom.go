@@ -22,7 +22,11 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateAndNormaliseNewProvider(input tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
+func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	impl := &tpmodels.TypeProvider{
+		ID: input.Config.ThirdPartyId,
+	}
+
 	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
 	}
@@ -31,16 +35,6 @@ func ValidateAndNormaliseNewProvider(input tpmodels.ProviderInput) (tpmodels.Pro
 	}
 	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
-	}
-
-	// TODO add validation
-
-	return input, nil
-}
-
-func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	impl := &tpmodels.TypeProvider{
-		ID: input.Config.ThirdPartyId,
 	}
 
 	impl.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
@@ -65,16 +59,16 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		return tpmodels.ProviderConfigForClientType{}, errors.New("Could not find client config for clientType: " + *clientType)
 	}
 
-	impl.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-		return oauth2_GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
+	impl.GetAuthorisationRedirectURL = func(redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+		return oauth2_GetAuthorisationRedirectURL(impl.Config, redirectURIOnProviderDashboard, userContext)
 	}
 
-	impl.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-		return oauth2_ExchangeAuthCodeForOAuthTokens(config, redirectURIInfo, userContext)
+	impl.ExchangeAuthCodeForOAuthTokens = func(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+		return oauth2_ExchangeAuthCodeForOAuthTokens(impl.Config, redirectURIInfo, userContext)
 	}
 
-	impl.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-		return oauth2_GetUserInfo(config, oAuthTokens, userContext)
+	impl.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		return oauth2_GetUserInfo(impl.Config, oAuthTokens, userContext)
 	}
 
 	if input.Override != nil {

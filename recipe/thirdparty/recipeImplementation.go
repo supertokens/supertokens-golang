@@ -17,13 +17,14 @@ package thirdparty
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	tpproviders "github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.ProviderInput) tpmodels.RecipeInterface {
 
-	getProvider := func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	getProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
 
 		tenantConfig, err := multitenancy.GetTenantConfigWithContext(tenantId, userContext)
 		if err != nil {
@@ -56,14 +57,14 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 			}
 		}
 
-		provider, err := findAndCreateProviderInstance(mergedProviders, thirdPartyID, tenantId)
+		provider, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, thirdPartyID, tenantId, clientType, userContext)
 		if err != nil {
 			return tpmodels.GetProviderResponse{}, err
 		}
 
 		return tpmodels.GetProviderResponse{
 			OK: &struct {
-				Provider          tpmodels.TypeProvider
+				Provider          *tpmodels.TypeProvider
 				ThirdPartyEnabled bool
 			}{
 				Provider:          provider,

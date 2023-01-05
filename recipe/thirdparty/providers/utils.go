@@ -31,6 +31,7 @@ import (
 
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -240,4 +241,78 @@ func generateCodeChallengeS256(length int) (codeChallenge string, codeVerifier s
 	codeChallenge = encode(h.Sum(nil))
 	err = nil
 	return
+}
+
+// OIDC utils
+
+func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodels.ProviderConfigForClientType, error) {
+	if config.OIDCDiscoveryEndpoint != "" {
+		oidcInfo, err := getOIDCDiscoveryInfo(config.OIDCDiscoveryEndpoint)
+		if err != nil {
+			return tpmodels.ProviderConfigForClientType{}, err
+		}
+
+		if authURL, ok := oidcInfo["authorization_endpoint"].(string); ok {
+			if config.AuthorizationEndpoint == "" {
+				config.AuthorizationEndpoint = authURL
+			}
+		}
+
+		if tokenURL, ok := oidcInfo["token_endpoint"].(string); ok {
+			if config.TokenEndpoint == "" {
+				config.TokenEndpoint = tokenURL
+			}
+		}
+
+		if userInfoURL, ok := oidcInfo["userinfo_endpoint"].(string); ok {
+			if config.UserInfoEndpoint == "" {
+				config.UserInfoEndpoint = userInfoURL
+			}
+		}
+
+		if jwksUri, ok := oidcInfo["jwks_uri"].(string); ok {
+			config.JwksURI = jwksUri
+		}
+	}
+	return config, nil
+}
+
+var oidcInfoMap = map[string]map[string]interface{}{}
+var oidcInfoMapLock = sync.Mutex{}
+
+func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
+	normalizedDomain, err := supertokens.NewNormalisedURLDomain(issuer)
+	if err != nil {
+		return nil, err
+	}
+	normalizedPath, err := supertokens.NewNormalisedURLPath(issuer)
+	if err != nil {
+		return nil, err
+	}
+
+	openIdConfigPath, err := supertokens.NewNormalisedURLPath("/.well-known/openid-configuration")
+	if err != nil {
+		return nil, err
+	}
+
+	normalizedPath = normalizedPath.AppendPath(openIdConfigPath)
+
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
+	oidcInfoMapLock.Lock()
+	defer oidcInfoMapLock.Unlock()
+
+	// Check again to see if it was added while we were waiting for the lock
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
+	oidcInfo, err := doGetRequest(normalizedDomain.GetAsStringDangerous()+normalizedPath.GetAsStringDangerous(), nil, nil)
+	if err != nil {
+		return nil, err
+	}
+	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
+	return oidcInfoMap[issuer], nil
 }

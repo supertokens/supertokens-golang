@@ -17,9 +17,7 @@ package thirdparty
 
 import (
 	"encoding/json"
-	"fmt"
 
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -72,47 +70,9 @@ func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp)
 		thirdPartyIdSet[provider.Config.ThirdPartyId] = true
 	}
 
-	// TODO normalize provider names
-
-	normalisedProviders := []tpmodels.ProviderInput{}
-	for _, provider := range providers {
-		provider, err := validateAndNormaliseProviderInput(provider)
-		if err != nil {
-			return tpmodels.TypeNormalisedInputSignInAndUp{}, err
-		}
-		normalisedProviders = append(normalisedProviders, provider)
-	}
-
 	return tpmodels.TypeNormalisedInputSignInAndUp{
-		Providers: normalisedProviders,
+		Providers: providers,
 	}, nil
-}
-
-func validateAndNormaliseProviderInput(providerInput tpmodels.ProviderInput) (tpmodels.ProviderInput, error) {
-	switch providerInput.Config.ThirdPartyId {
-	case "active-directory":
-		return providers.ValidateAndNormaliseActiveDirectory(providerInput)
-	case "apple":
-		return providers.ValidateAndNormaliseApple(providerInput)
-	case "discord":
-		return providers.ValidateAndNormaliseDiscord(providerInput)
-	case "facebook":
-		return providers.ValidateAndNormaliseFacebook(providerInput)
-	case "github":
-		return providers.ValidateAndNormaliseGithub(providerInput)
-	case "google":
-		return providers.ValidateAndNormaliseGoogle(providerInput)
-	case "google-workspaces":
-		return providers.ValidateAndNormaliseGoogleWorkspaces(providerInput)
-	case "okta":
-		return providers.ValidateAndNormaliseOkta(providerInput)
-	case "linkedin":
-		return providers.ValidateAndNormaliseLinkedin(providerInput)
-	case "boxy-saml":
-		return providers.ValidateAndNormaliseBoxySaml(providerInput)
-	}
-
-	return providers.ValidateAndNormaliseNewProvider(providerInput)
 }
 
 func parseUser(value interface{}) (*tpmodels.User, error) {
@@ -139,43 +99,6 @@ func parseUsers(value interface{}) ([]tpmodels.User, error) {
 		return nil, err
 	}
 	return user, nil
-}
-
-func findAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPartyId string, tenantId *string) (tpmodels.TypeProvider, error) {
-	for _, provider := range providers {
-		if provider.Config.ThirdPartyId == thirdPartyId {
-			providerInstance := createProvider(provider)
-			return *providerInstance, nil
-		}
-	}
-	return tpmodels.TypeProvider{}, fmt.Errorf("the provider %s could not be found in the configuration", thirdPartyId)
-}
-
-func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	switch input.Config.ThirdPartyId {
-	case "active-directory":
-		return providers.ActiveDirectory(input)
-	case "apple":
-		return providers.Apple(input)
-	case "discord":
-		return providers.Discord(input)
-	case "facebook":
-		return providers.Facebook(input)
-	case "github":
-		return providers.Github(input)
-	case "google":
-		return providers.Google(input)
-	case "google-workspaces":
-		return providers.GoogleWorkspaces(input)
-	case "okta":
-		return providers.Okta(input)
-	case "linkedin":
-		return providers.Linkedin(input)
-	case "boxy-saml":
-		return providers.BoxySaml(input)
-	}
-
-	return providers.NewProvider(input)
 }
 
 func mergeConfig(staticConfig tpmodels.ProviderConfig, coreConfig tpmodels.ProviderConfig) tpmodels.ProviderConfig {

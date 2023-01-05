@@ -58,7 +58,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return err
 	}
 
-	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, tenantId, userContext)
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, tenantId, clientType, userContext)
 	if err != nil {
 		return err
 	}
@@ -75,17 +75,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 
 	provider := providerResponse.OK.Provider
 
-	config, err := provider.GetConfigForClientType(clientType, userContext)
-	if err != nil {
-		return err
-	}
-
-	config, err = DiscoverOIDCEndpoints(config)
-	if err != nil {
-		return err
-	}
-
-	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, config, redirectURIOnProviderDashboard, options, userContext)
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, redirectURIOnProviderDashboard, options, userContext)
 	if err != nil {
 		return err
 	}

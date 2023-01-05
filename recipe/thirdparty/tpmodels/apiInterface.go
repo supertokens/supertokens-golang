@@ -24,8 +24,8 @@ import (
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET      *func(provider TypeProvider, config ProviderConfigForClientType, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST             *func(provider TypeProvider, config ProviderConfigForClientType, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+	AuthorisationUrlGET      *func(provider *TypeProvider, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider *TypeProvider, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
 	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
 }
 

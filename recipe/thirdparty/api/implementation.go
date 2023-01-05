@@ -31,8 +31,8 @@ import (
 
 func MakeAPIImplementation() tpmodels.APIInterface {
 
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		authRedirect, err := provider.GetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
+	authorisationUrlGET := func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		authRedirect, err := provider.GetAuthorisationRedirectURL(redirectURIOnProviderDashboard, userContext)
 		if err != nil {
 			return tpmodels.AuthorisationUrlGETResponse{}, err
 		}
@@ -42,12 +42,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}, nil
 	}
 
-	signInUpPOST := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+	signInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 		var oAuthTokens map[string]interface{} = nil
 		var err error
 
 		if input.RedirectURIInfo != nil {
-			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(config, *input.RedirectURIInfo, userContext)
+			oAuthTokens, err = provider.ExchangeAuthCodeForOAuthTokens(*input.RedirectURIInfo, userContext)
 			if err != nil {
 				return tpmodels.SignInUpPOSTResponse{}, err
 			}
@@ -55,7 +55,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			oAuthTokens = *input.OAuthTokens
 		}
 
-		userInfo, err := provider.GetUserInfo(config, oAuthTokens, userContext)
+		userInfo, err := provider.GetUserInfo(oAuthTokens, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
