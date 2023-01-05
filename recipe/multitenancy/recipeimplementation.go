@@ -49,7 +49,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		return multitenancymodels.ListAllTenantsResponse{}, errors.New("not implemented")
 	}
 
-	createOrUpdateThirdPartyConfig := func(config tpmodels.ProviderConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+	createOrUpdateThirdPartyConfig := func(config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
 		// TODO impl
 		// TODO may throw mterrors.TenantDoesNotExistError
 		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, errors.New("not implemented")
