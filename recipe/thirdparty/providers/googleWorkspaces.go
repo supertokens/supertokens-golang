@@ -7,15 +7,18 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = "google-workspaces"
+func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.ThirdPartyId == "" {
+		input.Config.ThirdPartyId = "google-workspaces"
+	}
+	if input.Config.Name == "" {
+		input.Config.Name = "Google Workspaces"
 	}
 
 	if input.Config.ValidateIdTokenPayload == nil {
 		input.Config.ValidateIdTokenPayload = func(idTokenPayload map[string]interface{}, clientConfig tpmodels.ProviderConfigForClientType) error {
 			if clientConfig.AdditionalConfig != nil && clientConfig.AdditionalConfig["hd"] != nil && clientConfig.AdditionalConfig["hd"] != "*" && idTokenPayload["hd"] != clientConfig.AdditionalConfig["hd"] {
-				return errors.New("invalid id token payload")
+				return errors.New("the value for hd claim in the id token does not match the value provided in the config")
 			}
 			return nil
 		}
@@ -23,10 +26,10 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
-			config, err := oGetConfig(clientType, input, userContext)
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
@@ -37,13 +40,13 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.AuthorizationEndpointQueryParams["hd"] = config.AdditionalConfig["hd"]
 			}
 
-			return config, err
+			return config, nil
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return Google(input)

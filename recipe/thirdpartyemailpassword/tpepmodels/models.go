@@ -38,7 +38,7 @@ type TypeContext struct {
 
 type TypeInput struct {
 	SignUpFeature                  *epmodels.TypeInputSignUp
-	Providers                      []tpmodels.TypeProvider
+	Providers                      []tpmodels.ProviderInput
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	Override                       *OverrideStruct
 	EmailDelivery                  *emaildelivery.TypeInput
@@ -46,7 +46,7 @@ type TypeInput struct {
 
 type TypeNormalisedInput struct {
 	SignUpFeature                  *epmodels.TypeInputSignUp
-	Providers                      []tpmodels.TypeProvider
+	Providers                      []tpmodels.ProviderInput
 	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
 	Override                       OverrideStruct
 	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService

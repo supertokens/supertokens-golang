@@ -59,17 +59,15 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) tpmodels.TypeNormalisedInpu
 
 func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp) (tpmodels.TypeNormalisedInputSignInAndUp, error) {
 	providers := config.Providers
-	if len(providers) == 0 {
-		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config"}
-	}
+	// With the feature of dynamic providers from core, we need not check if the provider array is empty
 
 	thirdPartyIdSet := map[string]bool{}
 
 	for _, provider := range providers {
-		if thirdPartyIdSet[provider.ID] {
+		if thirdPartyIdSet[provider.Config.ThirdPartyId] {
 			return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "The providers array has multiple entries for the same third party provider."}
 		}
-		thirdPartyIdSet[provider.ID] = true
+		thirdPartyIdSet[provider.Config.ThirdPartyId] = true
 	}
 
 	return tpmodels.TypeNormalisedInputSignInAndUp{

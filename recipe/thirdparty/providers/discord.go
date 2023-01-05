@@ -23,11 +23,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const discordID = "discord"
-
-func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = discordID
+func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Discord"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {
@@ -56,10 +54,10 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
-			config, err := oGetConfig(clientType, input, userContext)
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
@@ -68,17 +66,17 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.Scope = []string{"identify", "email"}
 			}
 
-			return config, err
+			return config, nil
 		}
 
-		oGetUserInfo := provider.GetUserInfo
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			result, err := oGetUserInfo(config, oAuthTokens, userContext)
+		oGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			result, err := oGetUserInfo(oAuthTokens, userContext)
 			if err != nil {
 				return result, err
 			}
 
-			if config.AdditionalConfig == nil || config.AdditionalConfig["requireEmail"] == nil || config.AdditionalConfig["requireEmail"] == false {
+			if originalImplementation.Config.AdditionalConfig == nil || originalImplementation.Config.AdditionalConfig["requireEmail"] == nil || originalImplementation.Config.AdditionalConfig["requireEmail"] == false {
 				if result.Email == nil {
 					thirdPartyUserId := strings.ReplaceAll(result.ThirdPartyUserId, "|", ".tenant-")
 					result.Email = &tpmodels.EmailStruct{
@@ -92,9 +90,9 @@ func Discord(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

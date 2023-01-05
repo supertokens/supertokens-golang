@@ -26,13 +26,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier) tpepmodels.RecipeInterface {
+func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier, providers []tpmodels.ProviderInput) tpepmodels.RecipeInterface {
 	result := tpepmodels.RecipeInterface{}
 
 	emailPasswordImplementation := emailpassword.MakeRecipeImplementation(emailPasswordQuerier)
 	var thirdPartyImplementation *tpmodels.RecipeInterface
 	if thirdPartyQuerier != nil {
-		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier)
+		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier, providers)
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
 
@@ -84,20 +84,53 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
-	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogSignInUp = *thirdPartyImplementation.SignInUp
 	}
-	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 		if ogSignInUp == nil {
 			return tpepmodels.SignInUpResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, userContext)
+		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
 		if err != nil {
 			return tpepmodels.SignInUpResponse{}, err
 		}
 
 		return tpepmodels.SignInUpResponse{
+			OK: &struct {
+				CreatedNewUser          bool
+				User                    tpepmodels.User
+				OAuthTokens             map[string]interface{}
+				RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
+			}{
+				CreatedNewUser: result.OK.CreatedNewUser,
+				User: tpepmodels.User{
+					ID:         result.OK.User.ID,
+					TimeJoined: result.OK.User.TimeJoined,
+					Email:      result.OK.User.Email,
+					ThirdParty: &result.OK.User.ThirdParty,
+				},
+				OAuthTokens:             result.OK.OAuthTokens,
+				RawUserInfoFromProvider: result.OK.RawUserInfoFromProvider,
+			},
+		}, nil
+	}
+
+	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
+	if thirdPartyImplementation != nil {
+		ogManuallyCreateOrUpdateUser = *thirdPartyImplementation.ManuallyCreateOrUpdateUser
+	}
+	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
+		if ogManuallyCreateOrUpdateUser == nil {
+			return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, errors.New("no thirdparty provider configured")
+		}
+		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, userContext)
+		if err != nil {
+			return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
+		}
+
+		return tpepmodels.ManuallyCreateOrUpdateUserResponse{
 			OK: &struct {
 				CreatedNewUser bool
 				User           tpepmodels.User
@@ -249,6 +282,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	result.GetUsersByEmail = &getUsersByEmail
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
 	result.ThirdPartySignInUp = &signInUp
+	result.ThirdPartyManuallyCreateOrUpdateUser = &manuallyCreateOrUpdateUser
 	result.EmailPasswordSignUp = &signUp
 	result.EmailPasswordSignIn = &signIn
 	result.CreateResetPasswordToken = &createResetPasswordToken
@@ -270,6 +304,8 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		(*thirdPartyImplementation.GetUserByThirdPartyInfo) = *modifiedTp.GetUserByThirdPartyInfo
 		(*thirdPartyImplementation.GetUsersByEmail) = *modifiedTp.GetUsersByEmail
 		(*thirdPartyImplementation.SignInUp) = *modifiedTp.SignInUp
+		(*thirdPartyImplementation.ManuallyCreateOrUpdateUser) = *modifiedTp.ManuallyCreateOrUpdateUser
+		(*thirdPartyImplementation.GetProvider) = *modifiedTp.GetProvider
 	}
 
 	return result

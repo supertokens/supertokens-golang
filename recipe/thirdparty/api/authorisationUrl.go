@@ -16,6 +16,8 @@
 package api
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -44,26 +46,36 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
 
-	provider, err := findProvider(options, thirdPartyId, tenantId)
-	if err != nil {
-		return err
-	}
-
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-	providerConfig, err := provider.GetAllClientTypeConfigForTenant(tenantId, options.RecipeImplementation, userContext)
-	if err != nil {
-		return err
-	}
-	config, err := provider.GetConfigForClientType(clientType, providerConfig, userContext)
-	if err != nil {
-		return err
-	}
-	config, err = discoverOIDCEndpoints(config)
+
+	mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, config, redirectURIOnProviderDashboard, options, userContext)
+	tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
+	if err != nil {
+		return err
+	}
+
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, tenantId, clientType, userContext)
+	if err != nil {
+		return err
+	}
+
+	if !providerResponse.OK.ThirdPartyEnabled {
+		msg := "Thirdparty recipe is disabled for the "
+		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
+			msg += "default tenant"
+		} else {
+			msg += "tenant: " + *tenantId
+		}
+		return mterrors.RecipeDisabledForTenantError{Msg: msg}
+	}
+
+	provider := providerResponse.OK.Provider
+
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, redirectURIOnProviderDashboard, options, userContext)
 	if err != nil {
 		return err
 	}

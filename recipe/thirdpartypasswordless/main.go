@@ -19,6 +19,7 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/supertokensService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/smsdelivery/twilioService"
@@ -30,20 +31,28 @@ func Init(config tplmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return tplmodels.ThirdPartySignInUp{}, err
+		return tplmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, tenantId, userContext)
 }
 
-func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.GetProviderResponse{}, err
+	}
+	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
+}
+
+func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tplmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, tenantId, userContext)
 }
 
 func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
@@ -380,12 +389,16 @@ func SendSms(input smsdelivery.SmsType) error {
 	return SendSmsWithContext(input, &map[string]interface{}{})
 }
 
-func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tplmodels.ThirdPartySignInUp, error) {
-	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, tenantId, &map[string]interface{}{})
 }
 
-func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tplmodels.User, error) {
-	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
+func ThirdPartyGetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
+	return ThirdPartyGetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
+}
+
+func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, tenantId *string) (*tplmodels.User, error) {
+	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserById(userID string) (*tplmodels.User, error) {

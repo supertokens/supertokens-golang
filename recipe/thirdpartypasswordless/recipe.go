@@ -65,7 +65,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config t
 			return Recipe{}, err
 		}
 
-		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*passwordlessquerierInstance, thirdpartyquerierInstance))
+		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*passwordlessquerierInstance, thirdpartyquerierInstance, verifiedConfig.Providers))
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 

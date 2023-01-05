@@ -64,7 +64,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 			return Recipe{}, err
 		}
 
-		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance))
+		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance, verifiedConfig.Providers))
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 

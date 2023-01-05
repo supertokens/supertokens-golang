@@ -13,10 +13,28 @@
  * under the License.
  */
 
-package thirdparty
+package multitenancy
 
-const (
-	AuthorisationAPI        = "/authorisationurl"
-	SignInUpAPI             = "/signinup"
-	AppleRedirectHandlerAPI = "/callback/apple"
+import (
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
+
+func resetAll() {
+	supertokens.ResetForTest()
+	ResetForTest()
+	session.ResetForTest()
+}
+
+func BeforeEach() {
+	unittesting.KillAllST()
+	resetAll()
+	unittesting.SetUpST()
+}
+
+func AfterEach() {
+	unittesting.KillAllST()
+	resetAll()
+	unittesting.CleanST()
+}

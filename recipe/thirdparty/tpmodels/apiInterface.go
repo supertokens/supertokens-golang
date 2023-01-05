@@ -24,21 +24,9 @@ import (
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET *func(provider TypeProvider, config ProviderConfigForClientType, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST        *func(provider TypeProvider, config ProviderConfigForClientType, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
-
+	AuthorisationUrlGET      *func(provider *TypeProvider, redirectURIOnProviderDashboard string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider *TypeProvider, input TypeSignInUpInput, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
 	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
-	ConfiguredProvidersGET   *func(tenantId *string, options APIOptions, userContext supertokens.UserContext) (ProvidersForTenantGetResponse, error)
-}
-
-type ProvidersForTenantGetResponse struct {
-	OK *struct {
-		Providers []struct {
-			ID   string `json:"id"`
-			Name string `json:"name,omitempty"` // Optional for statically defined providers
-		} `json:"providers"`
-	}
-	GeneralError *supertokens.GeneralErrorResponse
 }
 
 type AuthorisationUrlGETResponse struct {
@@ -68,7 +56,7 @@ type APIOptions struct {
 	RecipeImplementation RecipeInterface
 	Config               TypeNormalisedInput
 	RecipeID             string
-	Providers            []TypeProvider
+	Providers            []ProviderInput
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc

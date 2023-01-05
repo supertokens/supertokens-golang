@@ -17,14 +17,19 @@ package tpepmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type RecipeInterface struct {
-	GetUserByID              *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail          *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByThirdPartyInfo  *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp       *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (SignInUpResponse, error)
+	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
+
+	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
+	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
+	ThirdPartyGetProvider                *func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
+
 	EmailPasswordSignUp      *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
 	EmailPasswordSignIn      *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
 	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error)
@@ -33,6 +38,15 @@ type RecipeInterface struct {
 }
 
 type SignInUpResponse struct {
+	OK *struct {
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             map[string]interface{}
+		RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
+	}
+}
+
+type ManuallyCreateOrUpdateUserResponse struct {
 	OK *struct {
 		CreatedNewUser bool
 		User           User

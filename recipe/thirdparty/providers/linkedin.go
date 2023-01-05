@@ -7,11 +7,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const linkedinID = "linkedin"
-
-func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = linkedinID
+func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "LinkedIn"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {
@@ -24,10 +22,10 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
-			config, err := oGetConfig(clientType, input, userContext)
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
@@ -36,10 +34,10 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.Scope = []string{"r_emailaddress", "r_liteprofile"}
 			}
 
-			return config, err
+			return config, nil
 		}
 
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 			accessToken, accessTokenOk := oAuthTokens["access_token"].(string)
 			if !accessTokenOk {
 				return tpmodels.TypeUserInfo{}, errors.New("access token not found")
@@ -84,8 +82,8 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				},
 			}
 
-			if config.TenantId != nil && *config.TenantId != tpmodels.DefaultTenantId {
-				userInfoResult.ThirdPartyUserId += "|" + *config.TenantId
+			if originalImplementation.Config.TenantId != nil && *originalImplementation.Config.TenantId != tpmodels.DefaultTenantId {
+				userInfoResult.ThirdPartyUserId += "|" + *originalImplementation.Config.TenantId
 			}
 
 			return tpmodels.TypeUserInfo{
@@ -96,9 +94,9 @@ func Linkedin(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

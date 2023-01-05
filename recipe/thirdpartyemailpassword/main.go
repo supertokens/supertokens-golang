@@ -18,6 +18,7 @@ package thirdpartyemailpassword
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -27,12 +28,20 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartySignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpepmodels.SignInUpResponse{}, err
+		return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+}
+
+func ThirdPartyGetProviderWithContext(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return tpmodels.GetProviderResponse{}, err
+	}
+	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
 }
 
 func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
@@ -107,8 +116,12 @@ func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens
 	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
 }
 
-func ThirdPartySignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tpepmodels.SignInUpResponse, error) {
-	return ThirdPartySignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
+}
+
+func ThirdPartyGetProvider(thirdPartyID string, tenantId *string) (tpmodels.GetProviderResponse, error) {
+	return ThirdPartyGetProviderWithContext(thirdPartyID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tpepmodels.User, error) {

@@ -20,11 +20,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const facebookID = "facebook"
-
-func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = facebookID
+func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Facebook"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {
@@ -53,10 +51,10 @@ func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
-			config, err := oGetConfig(clientType, input, userContext)
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
@@ -65,32 +63,32 @@ func Facebook(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.Scope = []string{"email"}
 			}
 
-			return config, err
+			return config, nil
 		}
 
-		oGetUserInfo := provider.GetUserInfo
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			if config.UserInfoEndpointQueryParams == nil {
-				config.UserInfoEndpointQueryParams = map[string]interface{}{}
+		oGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			if originalImplementation.Config.UserInfoEndpointQueryParams == nil {
+				originalImplementation.Config.UserInfoEndpointQueryParams = map[string]interface{}{}
 			}
 
-			config.UserInfoEndpointQueryParams["access_token"] = oAuthTokens["access_token"]
-			config.UserInfoEndpointQueryParams["fields"] = "id,email"
-			config.UserInfoEndpointQueryParams["format"] = "json"
+			originalImplementation.Config.UserInfoEndpointQueryParams["access_token"] = oAuthTokens["access_token"]
+			originalImplementation.Config.UserInfoEndpointQueryParams["fields"] = "id,email"
+			originalImplementation.Config.UserInfoEndpointQueryParams["format"] = "json"
 
-			if config.UserInfoEndpointHeaders == nil {
-				config.UserInfoEndpointHeaders = map[string]interface{}{}
+			if originalImplementation.Config.UserInfoEndpointHeaders == nil {
+				originalImplementation.Config.UserInfoEndpointHeaders = map[string]interface{}{}
 			}
 
-			config.UserInfoEndpointHeaders["Authorization"] = nil
+			originalImplementation.Config.UserInfoEndpointHeaders["Authorization"] = nil
 
-			return oGetUserInfo(config, oAuthTokens, userContext)
+			return oGetUserInfo(oAuthTokens, userContext)
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

@@ -16,12 +16,39 @@
 package thirdparty
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	tpproviders "github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterface {
-	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.ProviderInput) tpmodels.RecipeInterface {
+
+	getProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+
+		tenantConfig, err := multitenancy.GetTenantConfigWithContext(tenantId, userContext)
+		if err != nil {
+			return tpmodels.GetProviderResponse{}, err
+		}
+
+		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantId, tenantConfig.OK.ThirdParty.Providers, providers)
+		provider, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, thirdPartyID, tenantId, clientType, userContext)
+		if err != nil {
+			return tpmodels.GetProviderResponse{}, err
+		}
+
+		return tpmodels.GetProviderResponse{
+			OK: &struct {
+				Provider          *tpmodels.TypeProvider
+				ThirdPartyEnabled bool
+			}{
+				Provider:          provider,
+				ThirdPartyEnabled: tenantConfig.OK.ThirdParty.Enabled,
+			},
+		}, nil
+	}
+
+	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
@@ -122,51 +149,12 @@ func MakeRecipeImplementation(querier supertokens.Querier) tpmodels.RecipeInterf
 		return users, nil
 	}
 
-	// Multi-tenancy
-	createOrUpdateThirdPartyConfig := func(thirdPartyId string, tenantId *string, config tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.CreateOrUpdateTenantIdConfigResponse, error) {
-		// TODO impl
-		return tpmodels.CreateOrUpdateTenantIdConfigResponse{}, nil
-	}
-
-	fetchThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.FetchTenantIdConfigResponse, error) {
-		// TODO impl
-		return tpmodels.FetchTenantIdConfigResponse{
-			UnknownMappingError: &struct{}{},
-		}, nil
-	}
-
-	deleteThirdPartyConfig := func(thirdPartyId string, tenantId *string, userContext supertokens.UserContext) (tpmodels.DeleteTenantIdConfigResponse, error) {
-		// TODO impl
-		return tpmodels.DeleteTenantIdConfigResponse{}, nil
-	}
-
-	listThirdPartyConfigs := func(tenantId *string, userContext supertokens.UserContext) (tpmodels.ListTenantConfigMappingsResponse, error) {
-		// TODO impl
-		return tpmodels.ListTenantConfigMappingsResponse{
-			OK: &struct {
-				Configs []struct {
-					ThirdPartyId string
-					Config       tpmodels.ProviderConfig
-				}
-			}{
-				Configs: []struct {
-					ThirdPartyId string
-					Config       tpmodels.ProviderConfig
-				}{},
-			},
-		}, nil
-	}
-
 	return tpmodels.RecipeInterface{
 		GetUserByID:                &getUserByID,
 		GetUsersByEmail:            &getUsersByEmail,
 		GetUserByThirdPartyInfo:    &getUserByThirdPartyInfo,
+		GetProvider:                &getProvider,
 		SignInUp:                   &signInUp,
 		ManuallyCreateOrUpdateUser: &manuallyCreateOrUpdateUser,
-
-		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
-		FetchThirdPartyConfig:          &fetchThirdPartyConfig,
-		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
-		ListThirdPartyConfigs:          &listThirdPartyConfigs,
 	}
 }

@@ -80,12 +80,11 @@ type User struct {
 }
 
 type TypeInputSignInAndUp struct {
-	Providers []TypeProvider
+	Providers []ProviderInput
 }
 
 type TypeNormalisedInputSignInAndUp struct {
-	Providers            []TypeProvider
-	GetUserPoolForTenant func(tenantId string, userContext supertokens.UserContext) (string, error)
+	Providers []ProviderInput
 }
 
 type TypeInput struct {
@@ -104,14 +103,15 @@ type OverrideStruct struct {
 }
 
 type ProviderInput struct {
-	ThirdPartyID        string
-	UseForDefaultTenant *bool
-
 	Config   ProviderConfig
-	Override func(provider *TypeProvider) *TypeProvider
+	Override func(originalImplementation *TypeProvider) *TypeProvider
 }
 
 type ProviderConfig struct {
+	TenantId     *string `json:"tenantId,omitempty"`
+	ThirdPartyId string  `json:"thirdPartyId"`
+	Name         string  `json:"name"`
+
 	Clients []ProviderClientConfig `json:"clients"`
 
 	// Fields below are optional for built-in providers
@@ -119,7 +119,6 @@ type ProviderConfig struct {
 	AuthorizationEndpointQueryParams map[string]interface{} `json:"authorizationEndpointQueryParams,omitempty"`
 	TokenEndpoint                    string                 `json:"tokenEndpoint,omitempty"`
 	TokenEndpointBodyParams          map[string]interface{} `json:"tokenEndpointBodyParams,omitempty"`
-	ForcePKCE                        *bool                  `json:"forcePKCE,omitempty"`
 	UserInfoEndpoint                 string                 `json:"userInfoEndpoint,omitempty"`
 	UserInfoEndpointQueryParams      map[string]interface{} `json:"userInfoEndpointQueryParams,omitempty"`
 	UserInfoEndpointHeaders          map[string]interface{} `json:"userInfoEndpointHeaders,omitempty"`
@@ -127,10 +126,7 @@ type ProviderConfig struct {
 	OIDCDiscoveryEndpoint            string                 `json:"oidcDiscoveryEndpoint,omitempty"`
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
 
-	Name string `json:"name"`
-
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
-	TenantId               *string
 }
 
 type ProviderClientConfig struct {
@@ -138,10 +134,13 @@ type ProviderClientConfig struct {
 	ClientID         string                 `json:"clientId"`
 	ClientSecret     string                 `json:"clientSecret"`
 	Scope            []string               `json:"scope"`
+	ForcePKCE        *bool                  `json:"forcePKCE,omitempty"`
 	AdditionalConfig map[string]interface{} `json:"additionalConfig"`
 }
 
 type ProviderConfigForClientType struct {
+	Name string
+
 	ClientID         string
 	ClientSecret     string
 	Scope            []string
@@ -163,14 +162,13 @@ type ProviderConfigForClientType struct {
 }
 
 type TypeProvider struct {
-	ID                  string
-	UseForDefaultTenant bool
+	ID     string
+	Config ProviderConfigForClientType
 
-	GetAllClientTypeConfigForTenant func(tenantId *string, recipeImpl RecipeInterface, userContext supertokens.UserContext) (ProviderConfig, error)
-	GetConfigForClientType          func(clientType *string, input ProviderConfig, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
-	GetAuthorisationRedirectURL     func(config ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
-	ExchangeAuthCodeForOAuthTokens  func(config ProviderConfigForClientType, redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
-	GetUserInfo                     func(config ProviderConfigForClientType, oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
+	GetConfigForClientType         func(clientType *string, userContext supertokens.UserContext) (ProviderConfigForClientType, error)
+	GetAuthorisationRedirectURL    func(redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (TypeAuthorisationRedirect, error)
+	ExchangeAuthCodeForOAuthTokens func(redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
+	GetUserInfo                    func(oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
 
 const DefaultTenantId string = "defaultTenantId"

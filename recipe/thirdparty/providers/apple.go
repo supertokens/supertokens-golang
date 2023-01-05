@@ -28,11 +28,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const appleID = "apple"
-
-func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = appleID
+func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Apple"
 	}
 
 	if input.Config.OIDCDiscoveryEndpoint == "" {
@@ -49,10 +47,10 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
-			config, err := oGetConfig(clientType, input, userContext)
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
@@ -69,12 +67,12 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.ClientSecret = clientSecret
 			}
 
-			return config, err
+			return config, nil
 		}
 
-		oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens
-		provider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			res, err := oExchangeAuthCodeForOAuthTokens(config, redirectURIInfo, userContext)
+		oExchangeAuthCodeForOAuthTokens := originalImplementation.ExchangeAuthCodeForOAuthTokens
+		originalImplementation.ExchangeAuthCodeForOAuthTokens = func(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			res, err := oExchangeAuthCodeForOAuthTokens(redirectURIInfo, userContext)
 			if err != nil {
 				return tpmodels.TypeOAuthTokens{}, err
 			}
@@ -83,33 +81,42 @@ func Apple(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				userInfo := map[string]interface{}{}
 				err := json.Unmarshal([]byte(user), &userInfo)
 				if err != nil {
-					res["user"] = user
-				} else {
-					res["user"] = userInfo
+					return nil, err
 				}
+				res["user"] = userInfo
+
+			} else if userInfo, ok := redirectURIInfo.RedirectURIQueryParams["user"].(map[string]interface{}); ok {
+				res["user"] = userInfo
 			}
 
 			return res, nil
 		}
 
-		oGetUserInfo := provider.GetUserInfo
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			res, err := oGetUserInfo(config, oAuthTokens, userContext)
+		oGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			res, err := oGetUserInfo(oAuthTokens, userContext)
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
 
-			if user, ok := oAuthTokens["user"]; ok {
-				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = user
+			if user, ok := oAuthTokens["user"].(string); ok {
+				userInfo := map[string]interface{}{}
+				err := json.Unmarshal([]byte(user), &userInfo)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = userInfo
+			} else if userInfo, ok := oAuthTokens["user"].(map[string]interface{}); ok {
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = userInfo
 			}
 
 			return res, nil
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)

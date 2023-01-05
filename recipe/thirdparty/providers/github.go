@@ -23,11 +23,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const githubID = "github"
-
-func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
-	if input.ThirdPartyID == "" {
-		input.ThirdPartyID = githubID
+func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Github"
 	}
 
 	if input.Config.AuthorizationEndpoint == "" {
@@ -40,10 +38,10 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 
 	oOverride := input.Override
 
-	input.Override = func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-		oGetConfig := provider.GetConfigForClientType
-		provider.GetConfigForClientType = func(clientType *string, input tpmodels.ProviderConfig, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
-			config, err := oGetConfig(clientType, input, userContext)
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
 			if err != nil {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
@@ -52,10 +50,10 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 				config.Scope = []string{"read:user", "user:email"}
 			}
 
-			return config, err
+			return config, nil
 		}
 
-		provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 			headers := map[string]string{
 				"Authorization": fmt.Sprintf("Bearer %s", oAuthTokens["access_token"]),
 				"Accept":        "application/vnd.github.v3+json",
@@ -86,9 +84,9 @@ func Github(input tpmodels.ProviderInput) tpmodels.TypeProvider {
 		}
 
 		if oOverride != nil {
-			provider = oOverride(provider)
+			originalImplementation = oOverride(originalImplementation)
 		}
-		return provider
+		return originalImplementation
 	}
 
 	return NewProvider(input)
