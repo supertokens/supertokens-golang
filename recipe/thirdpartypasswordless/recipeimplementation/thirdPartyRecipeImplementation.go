@@ -124,8 +124,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 		return finalResult, nil
 	}
 
-	getProvider := func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
-		return (*recipeImplementation.ThirdPartyGetProvider)(thirdPartyID, tenantId, userContext)
+	getProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+		return (*recipeImplementation.ThirdPartyGetProvider)(thirdPartyID, tenantId, clientType, userContext)
 	}
 
 	return tpmodels.RecipeInterface{

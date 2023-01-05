@@ -30,8 +30,8 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
-		response, err := ogSignInUpPOST(provider, config, input, options, userContext)
+	thirdPartySignInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
+		response, err := ogSignInUpPOST(provider, input, options, userContext)
 		if err != nil {
 			return tplmodels.ThirdPartySignInUpPOSTResponse{}, err
 		}
@@ -68,8 +68,8 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	}
 
 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return ogAuthorisationUrlGET(provider, config, redirectURIOnProviderDashboard, options, userContext)
+	authorisationUrlGET := func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, options, userContext)
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST

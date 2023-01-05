@@ -28,7 +28,7 @@ type RecipeInterface struct {
 
 	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (SignInUpResponse, error)
 	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
-	ThirdPartyGetProvider                *func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
+	ThirdPartyGetProvider                *func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
 
 	EmailPasswordSignUp      *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
 	EmailPasswordSignIn      *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)

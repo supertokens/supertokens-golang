@@ -29,7 +29,7 @@ type RecipeInterface struct {
 
 	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
 	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
-	ThirdPartyGetProvider                *func(thirdPartyID string, tenantId *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
+	ThirdPartyGetProvider                *func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
 
 	CreateCode                     *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
 	CreateNewCodeForDevice         *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
