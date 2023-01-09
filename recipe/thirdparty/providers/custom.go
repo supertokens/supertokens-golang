@@ -16,6 +16,9 @@
 package providers
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -34,6 +37,13 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	}
 	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
+	}
+
+	if input.Config.GenerateFakeEmail == nil {
+		input.Config.GenerateFakeEmail = func(thirdPartyUserId string, userContext supertokens.UserContext) string {
+			thirdPartyUserId = strings.ReplaceAll(thirdPartyUserId, "|", ".")
+			return fmt.Sprintf("%s@%s.fakeemail.com", thirdPartyUserId, input.Config.ThirdPartyId)
+		}
 	}
 
 	impl.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
