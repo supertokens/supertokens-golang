@@ -60,6 +60,13 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
 
+		if userInfo.Email == nil && provider.Config.RequireEmail != nil && !*provider.Config.RequireEmail {
+			userInfo.Email = &tpmodels.EmailStruct{
+				ID:         provider.Config.GenerateFakeEmail(userInfo.ThirdPartyUserId, userContext),
+				IsVerified: true,
+			}
+		}
+
 		emailInfo := userInfo.Email
 		if emailInfo == nil {
 			return tpmodels.SignInUpPOSTResponse{

@@ -28,6 +28,8 @@ func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpm
 		OIDCDiscoveryEndpoint:            config.OIDCDiscoveryEndpoint,
 		UserInfoMap:                      config.UserInfoMap,
 		ValidateIdTokenPayload:           config.ValidateIdTokenPayload,
+		RequireEmail:                     config.RequireEmail,
+		GenerateFakeEmail:                config.GenerateFakeEmail,
 		TenantId:                         config.TenantId,
 	}
 }

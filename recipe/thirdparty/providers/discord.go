@@ -16,9 +16,6 @@
 package providers
 
 import (
-	"fmt"
-	"strings"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -67,26 +64,6 @@ func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			return config, nil
-		}
-
-		oGetUserInfo := originalImplementation.GetUserInfo
-		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			result, err := oGetUserInfo(oAuthTokens, userContext)
-			if err != nil {
-				return result, err
-			}
-
-			if originalImplementation.Config.AdditionalConfig == nil || originalImplementation.Config.AdditionalConfig["requireEmail"] == nil || originalImplementation.Config.AdditionalConfig["requireEmail"] == false {
-				if result.Email == nil {
-					thirdPartyUserId := strings.ReplaceAll(result.ThirdPartyUserId, "|", ".tenant-")
-					result.Email = &tpmodels.EmailStruct{
-						ID:         fmt.Sprintf("%s@fakediscorduser.com", thirdPartyUserId),
-						IsVerified: true,
-					}
-				}
-			}
-
-			return result, nil
 		}
 
 		if oOverride != nil {
