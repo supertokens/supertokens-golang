@@ -41,7 +41,7 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 	if input.Config.GenerateFakeEmail == nil {
 		input.Config.GenerateFakeEmail = func(thirdPartyUserId string, userContext supertokens.UserContext) string {
-			thirdPartyUserId = strings.ReplaceAll(thirdPartyUserId, "|", ".tenant-")
+			thirdPartyUserId = strings.ReplaceAll(thirdPartyUserId, "|", ".")
 			return fmt.Sprintf("%s@%s.fakeemail.com", thirdPartyUserId, input.Config.ThirdPartyId)
 		}
 	}
