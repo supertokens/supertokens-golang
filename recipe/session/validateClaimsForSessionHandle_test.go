@@ -23,6 +23,9 @@ func TestValidateShouldReturnRightValidationErrors(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
@@ -91,7 +94,11 @@ func TestValidateShouldWorkForNonExistantHandle(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()

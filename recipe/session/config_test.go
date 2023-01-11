@@ -682,11 +682,9 @@ func TestSuperTokensInitWithDifferentWebAndApiDomainWithDefaultCookieSecure(t *t
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
-	if err != nil {
-		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-	} else {
-		t.Fail()
-	}
+	// The following error is not expected to happen on supertokens init anymore
+	// Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.
+	assert.NoError(t, err)
 }
 func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFalse(t *testing.T) {
 	apiBasePath0 := "test/"
@@ -713,11 +711,9 @@ func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFa
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
-	if err != nil {
-		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-	} else {
-		t.Fail()
-	}
+	// The following error is not expected to happen on supertokens init anymore
+	// Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.
+	assert.NoError(t, err)
 }
 
 func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {

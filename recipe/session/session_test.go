@@ -42,6 +42,9 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -68,7 +71,7 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	cookieData := unittesting.ExtractInfoFromResponse(res)
-	assert.Equal(t, []string{"front-token, id-refresh-token, anti-csrf"}, res.Header["Access-Control-Expose-Headers"])
+	assert.Equal(t, []string{"front-token, anti-csrf"}, res.Header["Access-Control-Expose-Headers"])
 	assert.Equal(t, "", cookieData["refreshTokenDomain"])
 	assert.Equal(t, "", cookieData["accessTokenDomain"])
 	assert.NotNil(t, cookieData["sAccessToken"])
@@ -92,6 +95,9 @@ func TestTokenTheftDetection(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -180,6 +186,9 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -267,6 +276,9 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -327,6 +339,9 @@ func TestRevokingOfSessions(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -411,6 +426,9 @@ func TestManipulatingSessionData(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -489,6 +507,9 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -564,6 +585,9 @@ func TestManipulatingJWTpayload(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -659,6 +683,9 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:     &customAntiCsrfVal,
 				CookieSecure: &True,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -751,6 +778,9 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -780,6 +810,9 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -807,6 +840,9 @@ func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -832,6 +868,9 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -897,6 +936,9 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -969,6 +1011,9 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1022,6 +1067,9 @@ func TestSessionContainerOverride(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oGetSessionInformation := *originalImplementation.GetSessionInformation

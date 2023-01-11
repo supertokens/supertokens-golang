@@ -23,7 +23,11 @@ func TestEmptyClaimsArray(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -68,7 +72,11 @@ func TestAssertClaimsWithPayload(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()

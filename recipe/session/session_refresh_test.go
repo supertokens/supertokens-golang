@@ -26,6 +26,9 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -107,6 +110,9 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -191,6 +197,9 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -270,6 +279,9 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST

@@ -43,6 +43,9 @@ func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						*originalImplementation.RefreshPOST = nil
@@ -85,6 +88,9 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -298,25 +304,6 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	assert.Equal(t, false, result4["message"])
 	res4.Body.Close()
 
-	req5, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/handleV0", nil)
-	req5.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
-	assert.NoError(t, err)
-	req5.Header.Add("anti-csrf", cookieData["antiCsrf"])
-	res5, err := http.DefaultClient.Do(req5)
-	assert.NoError(t, err)
-	assert.Equal(t, 401, res5.StatusCode)
-	dataInBytes5, err := ioutil.ReadAll(res5.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	var result5 map[string]string
-	err = json.Unmarshal(dataInBytes5, &result5)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.Equal(t, "unauthorised", result5["message"])
-	res5.Body.Close()
-
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
@@ -391,6 +378,9 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -592,25 +582,6 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	assert.Equal(t, false, result4["message"])
 	res4.Body.Close()
 
-	req5, err := http.NewRequest(http.MethodGet, testServer.URL+"/user/handleV0", nil)
-	req5.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
-	assert.NoError(t, err)
-	req5.Header.Add("anti-csrf", cookieData["antiCsrf"])
-	res5, err := http.DefaultClient.Do(req5)
-	assert.NoError(t, err)
-	assert.Equal(t, 401, res5.StatusCode)
-	dataInBytes5, err := ioutil.ReadAll(res5.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	var result5 map[string]string
-	err = json.Unmarshal(dataInBytes5, &result5)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.Equal(t, "unauthorised", result5["message"])
-	res5.Body.Close()
-
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
@@ -687,6 +658,9 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -901,25 +875,6 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	assert.Equal(t, false, result4["message"])
 	res4.Body.Close()
 
-	req5, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/handleV0", nil)
-	req5.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
-	assert.NoError(t, err)
-	req5.Header.Add("anti-csrf", cookieData["antiCsrf"])
-	res5, err := http.DefaultClient.Do(req5)
-	assert.NoError(t, err)
-	assert.Equal(t, 401, res5.StatusCode)
-	dataInBytes5, err := ioutil.ReadAll(res5.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	var result5 map[string]string
-	err = json.Unmarshal(dataInBytes5, &result5)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.Equal(t, "unauthorised", result5["message"])
-	res5.Body.Close()
-
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/custom/session/refresh", nil)
 	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req6.Header.Add("anti-csrf", cookieData["antiCsrf"])
@@ -996,6 +951,9 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				ErrorHandlers: &sessmodels.ErrorHandlers{
 					OnTokenTheftDetected: func(sessionHandle, userID string, req *http.Request, res http.ResponseWriter) error {
 						res.WriteHeader(403)
@@ -1196,25 +1154,6 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	}
 	assert.Equal(t, false, result4["message"])
 	res4.Body.Close()
-
-	req5, err := http.NewRequest(http.MethodGet, testServer.URL+"/custom/user/handleV0", nil)
-	req5.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
-	assert.NoError(t, err)
-	req5.Header.Add("anti-csrf", cookieData["antiCsrf"])
-	res5, err := http.DefaultClient.Do(req5)
-	assert.NoError(t, err)
-	assert.Equal(t, 401, res5.StatusCode)
-	dataInBytes5, err := ioutil.ReadAll(res5.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	var result5 map[string]string
-	err = json.Unmarshal(dataInBytes5, &result5)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.Equal(t, "unauthorised", result5["message"])
-	res5.Body.Close()
 
 	req6, err := http.NewRequest(http.MethodPost, testServer.URL+"/custom/session/refresh", nil)
 	req6.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])

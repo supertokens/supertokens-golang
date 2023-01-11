@@ -25,6 +25,10 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+
 				Jwt: &sessmodels.JWTInputConfig{
 					Enable: true,
 				},
@@ -112,6 +116,10 @@ func TestAssertClaimsWithPayloadWithJWTAndCallRightUpdateAccessTokenPayload(t *t
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+
 				Jwt: &sessmodels.JWTInputConfig{Enable: true},
 			}),
 		},
@@ -205,6 +213,10 @@ func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+
 				Jwt: &sessmodels.JWTInputConfig{
 					Enable: true,
 				},

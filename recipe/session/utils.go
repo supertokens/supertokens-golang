@@ -52,7 +52,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	cookieSameSite := cookieSameSite_LAX
-	if apiDomainScheme != websiteDomainScheme {
+	if apiDomainScheme != websiteDomainScheme || appInfo.TopLevelAPIDomain != appInfo.TopLevelWebsiteDomain {
 		cookieSameSite = cookieSameSite_NONE
 	}
 
