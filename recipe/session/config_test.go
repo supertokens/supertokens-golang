@@ -1088,6 +1088,9 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1149,6 +1152,9 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1208,6 +1214,9 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1279,11 +1288,17 @@ func TestInvalidSameSiteNoneConfig(t *testing.T) {
 			RecipeList: []supertokens.Recipe{
 				Init(&sessmodels.TypeInput{
 					CookieSameSite: &None,
+					GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+						return sessmodels.CookieTransferMethod
+					},
 				}),
 			},
 		}
+
+		// The following error is not expected to come from supertokens.Init any more
+		// Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.
 		err := supertokens.Init(configValue)
-		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+		assert.NoError(t, err)
 		AfterEach()
 	}
 }
