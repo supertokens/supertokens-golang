@@ -2,6 +2,7 @@ package providers
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -51,26 +52,25 @@ func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPart
 }
 
 func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
-	switch input.Config.ThirdPartyId {
-	case "active-directory":
+	if strings.HasPrefix(input.Config.ThirdPartyId, "active-directory") {
 		return ActiveDirectory(input)
-	case "apple":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "apple") {
 		return Apple(input)
-	case "discord":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "discord") {
 		return Discord(input)
-	case "facebook":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "facebook") {
 		return Facebook(input)
-	case "github":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "github") {
 		return Github(input)
-	case "google":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google") {
 		return Google(input)
-	case "google-workspaces":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google-workspaces") {
 		return GoogleWorkspaces(input)
-	case "okta":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "okta") {
 		return Okta(input)
-	case "linkedin":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "linkedin") {
 		return Linkedin(input)
-	case "boxy-saml":
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "boxy-saml") {
 		return BoxySaml(input)
 	}
 
