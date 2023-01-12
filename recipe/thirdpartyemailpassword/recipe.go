@@ -134,7 +134,6 @@ func recipeInit(config *tpepmodels.TypeInput) supertokens.Recipe {
 			if err != nil {
 				return nil, err
 			}
-
 			singletonInstance = &recipe
 			return &singletonInstance.RecipeModule, nil
 		}
