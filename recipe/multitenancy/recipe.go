@@ -39,7 +39,7 @@ type Recipe struct {
 	GetTenantIdForUserID        multitenancymodels.TypeGetTenantIdForUserID
 	AddGetTenantIdForUserIdFunc func(function multitenancymodels.TypeGetTenantIdForUserID)
 
-	GetDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 }
 
 var singletonInstance *Recipe

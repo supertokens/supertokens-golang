@@ -25,14 +25,14 @@ type TypeGetTenantIdForUserID func(userID string, userContext supertokens.UserCo
 
 type TenantIdResult struct {
 	OK *struct {
-		TenantId *string
+		TenantId string
 	}
 	UnknownUserIDError *struct{}
 }
 
 type TypeInput struct {
 	GetTenantIdForUserID  TypeGetTenantIdForUserID
-	GetDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 	ErrorHandlers         *ErrorHandlers
 	Override              *OverrideStruct
 }
@@ -44,7 +44,7 @@ type ErrorHandlers struct {
 
 type TypeNormalisedInput struct {
 	GetTenantIdForUserID  TypeGetTenantIdForUserID
-	GetDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 
 	ErrorHandlers NormalisedErrorHandlers
 	Override      OverrideStruct

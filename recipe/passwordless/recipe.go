@@ -24,8 +24,11 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/api"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -76,6 +79,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 		if emailVerificationRecipe != nil {
 			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+
+		mtRecipe := multitenancy.GetRecipeInstance()
+		if mtRecipe != nil {
+			mtRecipe.AddGetTenantIdForUserIdFunc(r.getTenantIdForUserId)
+		}
+
 		return nil
 	})
 
@@ -290,6 +299,25 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 	return evmodels.TypeEmailInfo{
 		OK: &struct{ Email string }{
 			Email: *userInfo.Email,
+		},
+	}, nil
+}
+
+func (r *Recipe) getTenantIdForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
+	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
+	if err != nil {
+		return multitenancymodels.TenantIdResult{}, err
+	}
+
+	if userInfo == nil {
+		return multitenancymodels.TenantIdResult{
+			UnknownUserIDError: &struct{}{},
+		}, nil
+	}
+
+	return multitenancymodels.TenantIdResult{
+		OK: &struct{ TenantId string }{
+			TenantId: tpmodels.DefaultTenantId, // Returning default tenant id here because multitenancy is not supported for this recipe yet
 		},
 	}, nil
 }

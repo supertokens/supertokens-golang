@@ -58,7 +58,7 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, config *mult
 	}
 
 	if config.GetDomainsForTenantId == nil {
-		config.GetDomainsForTenantId = func(tenantId *string, userContext supertokens.UserContext) ([]string, error) {
+		config.GetDomainsForTenantId = func(tenantId string, userContext supertokens.UserContext) ([]string, error) {
 			return []string{}, nil
 		}
 	}
