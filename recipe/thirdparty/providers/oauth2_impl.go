@@ -125,7 +125,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		}
 		rawUserInfoFromProvider.FromIdTokenPayload = map[string]interface{}(claims)
 		if config.ValidateIdTokenPayload != nil {
-			err := config.ValidateIdTokenPayload(rawUserInfoFromProvider.FromIdTokenPayload, config)
+			err := config.ValidateIdTokenPayload(rawUserInfoFromProvider.FromIdTokenPayload, config, userContext)
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
@@ -222,7 +222,7 @@ func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.Provider
 				if emailVerified, ok := emailVerifiedVal.(bool); ok {
 					result.Email.IsVerified = emailVerified
 				} else if emailVerified, ok := emailVerifiedVal.(string); ok {
-					result.Email.IsVerified = emailVerified == "true"
+					result.Email.IsVerified = strings.ToLower(emailVerified) == "true"
 				}
 			}
 		}

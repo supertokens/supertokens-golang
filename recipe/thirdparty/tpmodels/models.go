@@ -128,7 +128,7 @@ type ProviderConfig struct {
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
 	RequireEmail                     *bool                  `json:"requireEmail,omitempty"`
 
-	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
+	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
 	GenerateFakeEmail      func(thirdPartyUserId string, userContext supertokens.UserContext) string
 }
 
@@ -160,7 +160,7 @@ type ProviderConfigForClientType struct {
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
 
 	RequireEmail      *bool
 	GenerateFakeEmail func(thirdPartyUserId string, userContext supertokens.UserContext) string
