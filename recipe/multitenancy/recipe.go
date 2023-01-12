@@ -23,6 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -77,7 +78,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 			if err != nil {
 				return tenantIdRes, err
 			}
-			if tenantIdRes.UnknownUserIDError == nil {
+			if tenantIdRes.OK != nil {
 				return tenantIdRes, nil
 			}
 		}
@@ -112,6 +113,20 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 			if err != nil {
 				return nil, err
 			}
+
+			supertokens.AddPostInitCallback(func() error {
+				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
+
+				if err != nil {
+					return nil // skip adding claims if session recipe is not initialised
+				}
+
+				sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyTenantIdClaim)
+				sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyDomainsClaim)
+
+				return nil
+			})
+
 			singletonInstance = recipe
 			return &singletonInstance.RecipeModule, nil
 		}
@@ -184,5 +199,6 @@ func (r *Recipe) SetStaticThirdPartyProviders(providers []tpmodels.ProviderInput
 func init() {
 	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
 
+	// Create multitenancy claims when the module is imported
 	multitenancyclaims.MultitenancyTenantIdClaim, multitenancyclaims.MultitenancyDomainsClaim, multitenancyclaims.MultitenancyValidators = NewMultitenancyClaims()
 }

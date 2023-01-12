@@ -54,7 +54,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 
 	queryParamsObj := urlObj.Query()
 	for k, v := range queryParams {
-		queryParamsObj.Add(k, fmt.Sprint(v))
+		queryParamsObj.Set(k, fmt.Sprint(v))
 	}
 	urlObj.RawQuery = queryParamsObj.Encode()
 

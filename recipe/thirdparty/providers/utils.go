@@ -50,7 +50,7 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 		queryParamsObj := urlObj.Query()
 
 		for key, value := range queryParams {
-			queryParamsObj.Add(key, fmt.Sprint(value))
+			queryParamsObj.Set(key, fmt.Sprint(value))
 		}
 
 		urlObj.RawQuery = queryParamsObj.Encode()

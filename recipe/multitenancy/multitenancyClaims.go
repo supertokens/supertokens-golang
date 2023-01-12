@@ -43,8 +43,7 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 			}
 			return domains, nil
 		} else {
-			// This may be Unknown user id error or the user may belong to a non thirdparty recipe, in which case, the domains can be assumed to be an empty array
-			return []interface{}{}, nil
+			return nil, errors.New("UNKNOWN_USER_ID")
 		}
 	}
 
@@ -67,11 +66,7 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 
 	validators := multitenancyclaims.TypeMultitenancyClaimValidators{
 		PrimitiveArrayClaimValidators: arrayClaimValidators,
-		CheckAccessToDomain: func(allowedDomain string, refetchTimeOnFalseInSeconds *int64, maxAgeInSeconds *int64) claims.SessionClaimValidator {
-			if refetchTimeOnFalseInSeconds == nil {
-				var defaultTimeout int64 = 10
-				refetchTimeOnFalseInSeconds = &defaultTimeout
-			}
+		CheckAccessToDomain: func(allowedDomain string, maxAgeInSeconds *int64) claims.SessionClaimValidator {
 			if maxAgeInSeconds == nil {
 				var defaultTimeout int64 = 300
 				maxAgeInSeconds = &defaultTimeout
@@ -80,7 +75,7 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 			claimValidator := arrayClaimValidators.Includes(allowedDomain, maxAgeInSeconds, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 				value := mtDomainClaim.GetValueFromPayload(payload, userContext)
-				return value == nil || (*getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000) || (*getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*refetchTimeOnFalseInSeconds*1000)
+				return value == nil || (*getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000)
 			}
 			return claimValidator
 		},

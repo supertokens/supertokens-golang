@@ -6,7 +6,7 @@ import (
 
 type TypeMultitenancyClaimValidators struct {
 	claims.PrimitiveArrayClaimValidators
-	CheckAccessToDomain func(allowedDomain string, refetchTimeOnFalseInSeconds *int64, maxAgeInSeconds *int64) claims.SessionClaimValidator
+	CheckAccessToDomain func(allowedDomain string, maxAgeInSeconds *int64) claims.SessionClaimValidator
 }
 
 var MultitenancyTenantIdClaim *claims.TypeSessionClaim

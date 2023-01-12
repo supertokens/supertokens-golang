@@ -23,8 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/api"
@@ -136,19 +134,6 @@ func recipeInit(config *tpepmodels.TypeInput) supertokens.Recipe {
 			if err != nil {
 				return nil, err
 			}
-
-			supertokens.AddPostInitCallback(func() error {
-				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
-
-				if err != nil {
-					return nil // skip adding claims if session recipe is not initialised
-				}
-
-				sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyTenantIdClaim)
-				sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyDomainsClaim)
-
-				return nil
-			})
 
 			singletonInstance = &recipe
 			return &singletonInstance.RecipeModule, nil
