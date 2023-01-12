@@ -11,6 +11,27 @@ import (
 
 // key string, fetchValue claims.FetchValueFunc
 func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim, multitenancyclaims.TypeMultitenancyClaimValidators) {
+	fetchTenantId := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		instance, err := GetRecipeInstanceOrThrowError()
+		if err != nil {
+			return nil, err
+		}
+		tenantIdRes, err := instance.GetTenantIdForUserID(userId, userContext)
+		if err != nil {
+			return false, err
+		}
+		if tenantIdRes.OK != nil {
+			if tenantIdRes.OK.TenantId == nil {
+				return nil, nil
+			} else {
+				return *tenantIdRes.OK.TenantId, nil
+			}
+		} else {
+			// This may be Unknown user id error or the user may belong to a non thirdparty recipe, in which case, the domains can be assumed to be nil
+			return nil, errors.New("UNKNOWN_USER_ID")
+		}
+	}
+
 	fetchDomains := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := GetRecipeInstanceOrThrowError()
 		if err != nil {
@@ -28,23 +49,8 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 			}
 			return domains, nil
 		} else {
-			return false, errors.New("UNKNOWN_USER_ID")
-		}
-	}
-
-	fetchTenantId := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
-		instance, err := GetRecipeInstanceOrThrowError()
-		if err != nil {
-			return nil, err
-		}
-		tenantIdRes, err := instance.GetTenantIdForUserID(userId, userContext)
-		if err != nil {
-			return false, err
-		}
-		if tenantIdRes.OK != nil {
-			return tenantIdRes.OK.TenantId, nil
-		} else {
-			return false, errors.New("UNKNOWN_USER_ID")
+			// This may be Unknown user id error or the user may belong to a non thirdparty recipe, in which case, the domains can be assumed to be an empty array
+			return []interface{}{}, errors.New("UNKNOWN_USER_ID")
 		}
 	}
 
@@ -67,7 +73,7 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 
 	validators := multitenancyclaims.TypeMultitenancyClaimValidators{
 		PrimitiveArrayClaimValidators: arrayClaimValidators,
-		HasAccessToCurrentDomain: func(allowedDomain string, refetchTimeOnFalseInSeconds *int64, maxAgeInSeconds *int64) claims.SessionClaimValidator {
+		CheckAccessToDomain: func(allowedDomain string, refetchTimeOnFalseInSeconds *int64, maxAgeInSeconds *int64) claims.SessionClaimValidator {
 			if refetchTimeOnFalseInSeconds == nil {
 				var defaultTimeout int64 = 10
 				refetchTimeOnFalseInSeconds = &defaultTimeout

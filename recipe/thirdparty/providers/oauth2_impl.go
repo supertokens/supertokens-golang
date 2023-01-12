@@ -20,7 +20,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 	}
 	var pkceCodeVerifier *string
 	if config.ClientSecret == "" || (config.ForcePKCE != nil && *config.ForcePKCE) {
-		challenge, verifier, err := generateCodeChallengeS256(64)
+		challenge, verifier, err := generateCodeChallengeS256(64) // According to https://www.rfc-editor.org/rfc/rfc7636, length must be between 43 and 128
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
