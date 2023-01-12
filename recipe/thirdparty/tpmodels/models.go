@@ -70,9 +70,10 @@ type TypeUserInfoMap struct {
 }
 
 type User struct {
-	ID         string `json:"id"`
-	TimeJoined uint64 `json:"timeJoined"`
-	Email      string `json:"email"`
+	ID         string  `json:"id"`
+	TimeJoined uint64  `json:"timeJoined"`
+	Email      string  `json:"email"`
+	TenantId   *string `json:"tenantId,omitempty"`
 	ThirdParty struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`

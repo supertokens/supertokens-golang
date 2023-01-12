@@ -129,6 +129,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 				Email:       &userinfo.Email,
 				PhoneNumber: nil,
 				TimeJoined:  userinfo.TimeJoined,
+				TenantId:    userinfo.TenantId,
 				ThirdParty:  &userinfo.ThirdParty,
 			}, nil
 		}
@@ -198,6 +199,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 				Email:       &userinfo.Email,
 				PhoneNumber: nil,
 				TimeJoined:  userinfo.TimeJoined,
+				TenantId:    userinfo.TenantId,
 				ThirdParty:  &userinfo.ThirdParty,
 			}, nil
 		}

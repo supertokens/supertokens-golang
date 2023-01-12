@@ -3,9 +3,9 @@ package providers
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
-	"github.com/derekstavis/go-qs"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -20,7 +20,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 	}
 	var pkceCodeVerifier *string
 	if config.ClientSecret == "" || (config.ForcePKCE != nil && *config.ForcePKCE) {
-		challenge, verifier, err := generateCodeChallengeS256(32)
+		challenge, verifier, err := generateCodeChallengeS256(64)
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
@@ -37,23 +37,29 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 		}
 	}
 
-	url := config.AuthorizationEndpoint
+	authUrl := config.AuthorizationEndpoint
 
 	/* Transformation needed for dev keys BEGIN */
 	if isUsingDevelopmentClientId(config.ClientID) {
 		queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
-		queryParams["actual_redirect_uri"] = url
-		url = DevOauthAuthorisationUrl
+		queryParams["actual_redirect_uri"] = authUrl
+		authUrl = DevOauthAuthorisationUrl
 	}
 	/* Transformation needed for dev keys END */
 
-	queryParamsStr, err := qs.Marshal(queryParams)
+	urlObj, err := url.Parse(authUrl)
 	if err != nil {
 		return tpmodels.TypeAuthorisationRedirect{}, err
 	}
 
+	queryParamsObj := urlObj.Query()
+	for k, v := range queryParams {
+		queryParamsObj.Add(k, fmt.Sprint(v))
+	}
+	urlObj.RawQuery = queryParamsObj.Encode()
+
 	return tpmodels.TypeAuthorisationRedirect{
-		URLWithQueryParams: url + "?" + queryParamsStr,
+		URLWithQueryParams: urlObj.String(),
 		PKCECodeVerifier:   pkceCodeVerifier,
 	}, nil
 }

@@ -94,7 +94,7 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeUserInfo, error) {
 	if rawUserInfoResponse.FromUserInfoAPI == nil {
-		return tpmodels.TypeUserInfo{}, errors.New("rawUserInfoResponse.FromAccessToken is not available")
+		return tpmodels.TypeUserInfo{}, errors.New("rawUserInfoResponse.FromUserInfoAPI is not available")
 	}
 
 	result := tpmodels.TypeUserInfo{
