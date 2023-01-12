@@ -1,7 +1,6 @@
 package multitenancy
 
 import (
-	"errors"
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
@@ -27,8 +26,8 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 				return *tenantIdRes.OK.TenantId, nil
 			}
 		} else {
-			// This may be Unknown user id error or the user may belong to a non thirdparty recipe, in which case, the domains can be assumed to be nil
-			return nil, errors.New("UNKNOWN_USER_ID")
+			// This may be Unknown user id error or the user may belong to a non thirdparty recipe, in which case, the tenantId can be assumed to be nil
+			return nil, nil
 		}
 	}
 
@@ -50,7 +49,7 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, *claims.TypeSessionClaim
 			return domains, nil
 		} else {
 			// This may be Unknown user id error or the user may belong to a non thirdparty recipe, in which case, the domains can be assumed to be an empty array
-			return []interface{}{}, errors.New("UNKNOWN_USER_ID")
+			return []interface{}{}, nil
 		}
 	}
 
