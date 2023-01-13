@@ -3,6 +3,7 @@ package providers
 import (
 	"errors"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -82,7 +83,7 @@ func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				},
 			}
 
-			if originalImplementation.Config.TenantId != nil && *originalImplementation.Config.TenantId != tpmodels.DefaultTenantId {
+			if originalImplementation.Config.TenantId != nil && *originalImplementation.Config.TenantId != multitenancymodels.DefaultTenantId {
 				userInfoResult.ThirdPartyUserId += "|" + *originalImplementation.Config.TenantId
 			}
 

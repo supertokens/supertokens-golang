@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -167,7 +168,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		return tpmodels.TypeUserInfo{}, err
 	}
 
-	if config.TenantId != nil && *config.TenantId != tpmodels.DefaultTenantId {
+	if config.TenantId != nil && *config.TenantId != multitenancymodels.DefaultTenantId {
 		userInfoResult.ThirdPartyUserId += "|" + *config.TenantId
 	}
 

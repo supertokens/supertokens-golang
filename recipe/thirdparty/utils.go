@@ -98,18 +98,20 @@ func parseUsers(value interface{}) ([]tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	var user []tpmodels.User
-	err = json.Unmarshal(respJSON, &user)
+	var users []interface{}
+	err = json.Unmarshal(respJSON, &users)
 
-	for i, userObj := range user {
-		if strings.Contains(userObj.ThirdParty.UserID, "|") {
-			tenantId := strings.Split(userObj.ThirdParty.UserID, "|")[1]
-			user[i].TenantId = &tenantId
+	usersResult := make([]tpmodels.User, len(users))
+	for i, user := range users {
+		userObj, err := parseUser(user)
+		if err != nil {
+			return nil, err
 		}
+		usersResult[i] = *userObj
 	}
 
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return usersResult, nil
 }

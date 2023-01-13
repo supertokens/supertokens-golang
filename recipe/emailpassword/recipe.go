@@ -28,7 +28,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -227,8 +226,8 @@ func (r *Recipe) getTenantIdForUserId(userID string, userContext supertokens.Use
 	}
 
 	return multitenancymodels.TenantIdResult{
-		OK: &struct{ TenantId string }{
-			TenantId: tpmodels.DefaultTenantId, // Returning default tenant id here because multitenancy is not supported for this recipe yet
+		OK: &struct{ TenantId *string }{
+			TenantId: nil, // Returning nil here because multitenancy is not supported for this recipe yet
 		},
 	}, nil
 }

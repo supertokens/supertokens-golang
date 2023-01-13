@@ -20,6 +20,7 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -94,7 +95,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 
 	if !providerResponse.OK.ThirdPartyEnabled {
 		msg := "Thirdparty recipe is disabled for the "
-		if tenantId == nil || *tenantId == tpmodels.DefaultTenantId {
+		if tenantId == nil || *tenantId == multitenancymodels.DefaultTenantId {
 			msg += "default tenant"
 		} else {
 			msg += "tenant: " + *tenantId

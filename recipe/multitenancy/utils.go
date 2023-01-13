@@ -57,15 +57,9 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, config *mult
 		config.ErrorHandlers.OnRecipeDisabledForTenantError = &onRecipeDisabledForTenantError
 	}
 
-	if config.GetDomainsForTenantId == nil {
-		config.GetDomainsForTenantId = func(tenantId string, userContext supertokens.UserContext) ([]string, error) {
-			return []string{}, nil
-		}
-	}
-
 	return multitenancymodels.TypeNormalisedInput{
-		GetTenantIdForUserID:  config.GetTenantIdForUserID,
-		GetDomainsForTenantId: config.GetDomainsForTenantId,
+		GetTenantIdForUserID:         config.GetTenantIdForUserID,
+		GetAllowedDomainsForTenantId: config.GetAllowedDomainsForTenantId,
 		ErrorHandlers: multitenancymodels.NormalisedErrorHandlers{
 			OnTenantDoesNotExistError:      *config.ErrorHandlers.OnTenantDoesNotExistError,
 			OnRecipeDisabledForTenantError: *config.ErrorHandlers.OnRecipeDisabledForTenantError,

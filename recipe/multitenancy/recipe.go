@@ -40,7 +40,7 @@ type Recipe struct {
 	GetTenantIdForUserID        multitenancymodels.TypeGetTenantIdForUserID
 	AddGetTenantIdForUserIdFunc func(function multitenancymodels.TypeGetTenantIdForUserID)
 
-	GetDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
+	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
 }
 
 var singletonInstance *Recipe
@@ -91,6 +91,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		getTenantIdForUserIdFuncsFromOtherRecipes = append(getTenantIdForUserIdFuncsFromOtherRecipes, function)
 	}
 
+	r.GetAllowedDomainsForTenantId = verifiedConfig.GetAllowedDomainsForTenantId
+
 	return r, nil
 }
 
@@ -114,18 +116,19 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 				return nil, err
 			}
 
-			supertokens.AddPostInitCallback(func() error {
-				sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
+			if recipe.GetAllowedDomainsForTenantId != nil {
+				supertokens.AddPostInitCallback(func() error {
+					sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
 
-				if err != nil {
-					return nil // skip adding claims if session recipe is not initialised
-				}
+					if err != nil {
+						return nil // skip adding claims if session recipe is not initialised
+					}
 
-				sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyTenantIdClaim)
-				sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyDomainsClaim)
+					sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.MultitenancyDomainsClaim)
 
-				return nil
-			})
+					return nil
+				})
+			}
 
 			singletonInstance = recipe
 			return &singletonInstance.RecipeModule, nil
@@ -200,5 +203,5 @@ func init() {
 	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
 
 	// Create multitenancy claims when the module is imported
-	multitenancyclaims.MultitenancyTenantIdClaim, multitenancyclaims.MultitenancyDomainsClaim, multitenancyclaims.MultitenancyValidators = NewMultitenancyClaims()
+	multitenancyclaims.MultitenancyDomainsClaim, multitenancyclaims.MultitenancyValidators = NewMultitenancyClaims()
 }

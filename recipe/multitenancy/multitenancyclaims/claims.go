@@ -9,6 +9,5 @@ type TypeMultitenancyClaimValidators struct {
 	CheckAccessToDomain func(allowedDomain string, maxAgeInSeconds *int64) claims.SessionClaimValidator
 }
 
-var MultitenancyTenantIdClaim *claims.TypeSessionClaim
 var MultitenancyDomainsClaim *claims.TypeSessionClaim
 var MultitenancyValidators TypeMultitenancyClaimValidators

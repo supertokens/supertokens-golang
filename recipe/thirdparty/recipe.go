@@ -196,14 +196,9 @@ func (r *Recipe) getTenantIdForUserId(userID string, userContext supertokens.Use
 		}, nil
 	}
 
-	tenantId := tpmodels.DefaultTenantId
-	if userInfo.TenantId != nil {
-		tenantId = *userInfo.TenantId
-	}
-
 	return multitenancymodels.TenantIdResult{
-		OK: &struct{ TenantId string }{
-			TenantId: tenantId,
+		OK: &struct{ TenantId *string }{
+			TenantId: userInfo.TenantId,
 		},
 	}, nil
 }
