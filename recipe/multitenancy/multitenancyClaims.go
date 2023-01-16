@@ -55,8 +55,8 @@ func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, multitenancyclaims.Type
 			claimValidator := arrayClaimValidators.Includes(allowedDomain, maxAgeInSeconds, nil)
 			oShouldRefetch := claimValidator.ShouldRefetch
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-				claimVal, ok := allowedDomainsClaim.GetValueFromPayload(payload, userContext).([]interface{})
-				if !ok || claimVal == nil {
+				claimVal := allowedDomainsClaim.GetValueFromPayload(payload, userContext)
+				if claimVal == nil {
 					return false
 				}
 				return oShouldRefetch(payload, userContext)
