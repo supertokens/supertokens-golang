@@ -373,6 +373,17 @@ func getUsers(timeJoinedOrder string, paginationToken *string, limit *int, inclu
 		return UserPaginationResult{}, err
 	}
 
+	// If thirdparty user, then add tenantId based on thirdParty userId
+	for _, user := range result.Users {
+		if thirdPartyInfo, ok := user.User["thirdParty"].(map[string]interface{}); ok {
+			user.User["tenantId"] = nil
+			userId := thirdPartyInfo["userId"].(string)
+			if strings.Contains(userId, "|") {
+				user.User["tenantId"] = strings.Split(userId, "|")[1]
+			}
+		}
+	}
+
 	return result, nil
 }
 
