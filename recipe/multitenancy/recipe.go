@@ -124,7 +124,7 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 						return nil // skip adding claims if session recipe is not initialised
 					}
 
-					sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.AllowDomainsClaim)
+					sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.AllowedDomainsClaim)
 
 					return nil
 				})
@@ -203,5 +203,5 @@ func init() {
 	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
 
 	// Create multitenancy claims when the module is imported
-	multitenancyclaims.AllowDomainsClaim, multitenancyclaims.AllowDomainsClaimValidators = NewMultitenancyClaims()
+	multitenancyclaims.AllowedDomainsClaim, multitenancyclaims.AllowedDomainsClaimValidators = NewAllowedDomainsClaim()
 }

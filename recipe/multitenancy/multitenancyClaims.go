@@ -8,7 +8,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func NewMultitenancyClaims() (*claims.TypeSessionClaim, multitenancyclaims.TypeMultitenancyClaimValidators) {
+func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, multitenancyclaims.TypeAllowedDomainsClaimValidators) {
 	fetchDomains := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := GetRecipeInstanceOrThrowError()
 		if err != nil {
@@ -42,9 +42,9 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, multitenancyclaims.TypeM
 	}
 
 	var defaultMaxAge int64 = 3600
-	allowDomainsClaim, arrayClaimValidators := claims.PrimitiveArrayClaim("st-allow-domains", fetchDomains, &defaultMaxAge)
+	allowedDomainsClaim, arrayClaimValidators := claims.PrimitiveArrayClaim("st-tenant-domains", fetchDomains, &defaultMaxAge)
 
-	allowDomainsClaimValidators := multitenancyclaims.TypeMultitenancyClaimValidators{
+	allowedDomainsClaimValidators := multitenancyclaims.TypeAllowedDomainsClaimValidators{
 		PrimitiveArrayClaimValidators: arrayClaimValidators,
 		CheckAccessToDomain: func(allowedDomain string, maxAgeInSeconds *int64) claims.SessionClaimValidator {
 			if maxAgeInSeconds == nil {
@@ -53,8 +53,16 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, multitenancyclaims.TypeM
 			}
 
 			claimValidator := arrayClaimValidators.Includes(allowedDomain, maxAgeInSeconds, nil)
+			oShouldRefetch := claimValidator.ShouldRefetch
+			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
+				claimVal, ok := allowedDomainsClaim.GetValueFromPayload(payload, userContext).([]interface{})
+				if !ok || claimVal == nil {
+					return false
+				}
+				return oShouldRefetch(payload, userContext)
+			}
 			return claimValidator
 		},
 	}
-	return allowDomainsClaim, allowDomainsClaimValidators
+	return allowedDomainsClaim, allowedDomainsClaimValidators
 }
