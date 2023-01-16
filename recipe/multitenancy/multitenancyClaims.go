@@ -42,9 +42,9 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, multitenancyclaims.TypeM
 	}
 
 	var defaultMaxAge int64 = 3600
-	mtDomainClaim, arrayClaimValidators := claims.PrimitiveArrayClaim("st-tenant-domains", fetchDomains, &defaultMaxAge)
+	allowDomainsClaim, arrayClaimValidators := claims.PrimitiveArrayClaim("st-allow-domains", fetchDomains, &defaultMaxAge)
 
-	validators := multitenancyclaims.TypeMultitenancyClaimValidators{
+	allowDomainsClaimValidators := multitenancyclaims.TypeMultitenancyClaimValidators{
 		PrimitiveArrayClaimValidators: arrayClaimValidators,
 		CheckAccessToDomain: func(allowedDomain string, maxAgeInSeconds *int64) claims.SessionClaimValidator {
 			if maxAgeInSeconds == nil {
@@ -56,5 +56,5 @@ func NewMultitenancyClaims() (*claims.TypeSessionClaim, multitenancyclaims.TypeM
 			return claimValidator
 		},
 	}
-	return mtDomainClaim, validators
+	return allowDomainsClaim, allowDomainsClaimValidators
 }
