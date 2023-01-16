@@ -32,12 +32,12 @@ type LoginMethodsGETResponse struct {
 }
 
 type TypeLoginMethods struct {
-	Emailpassword TypeEmailpassword `json:"emailpassword"`
+	EmailPassword TypeEmailPassword `json:"emailPassword"`
 	Passwordless  TypePasswordless  `json:"passwordless"`
 	ThirdParty    TypeThirdParty    `json:"thirdParty"`
 }
 
-type TypeEmailpassword struct {
+type TypeEmailPassword struct {
 	Enabled bool `json:"enabled"`
 }
 
