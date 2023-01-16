@@ -2,13 +2,13 @@ package multitenancy
 
 import (
 	"errors"
+	"math"
 
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, multitenancyclaims.TypeAllowedDomainsClaimValidators) {
+func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimValidators) {
 	fetchDomains := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := GetRecipeInstanceOrThrowError()
 		if err != nil {
@@ -42,27 +42,29 @@ func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, multitenancyclaims.Type
 	}
 
 	var defaultMaxAge int64 = 3600
-	allowedDomainsClaim, arrayClaimValidators := claims.PrimitiveArrayClaim("st-tenant-domains", fetchDomains, &defaultMaxAge)
+	allowedDomainsClaim, allowedDomainsClaimValidators := claims.PrimitiveArrayClaim("st-tenant-domains", fetchDomains, &defaultMaxAge)
 
-	allowedDomainsClaimValidators := multitenancyclaims.TypeAllowedDomainsClaimValidators{
-		PrimitiveArrayClaimValidators: arrayClaimValidators,
-		CheckAccessToDomain: func(allowedDomain string, maxAgeInSeconds *int64) claims.SessionClaimValidator {
-			if maxAgeInSeconds == nil {
-				var defaultTimeout int64 = 3600
-				maxAgeInSeconds = &defaultTimeout
-			}
+	oGetValueFromPayload := allowedDomainsClaim.GetValueFromPayload
+	allowedDomainsClaim.GetValueFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {
+		value := oGetValueFromPayload(payload, userContext)
 
-			claimValidator := arrayClaimValidators.Includes(allowedDomain, maxAgeInSeconds, nil)
-			oShouldRefetch := claimValidator.ShouldRefetch
-			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
-				claimVal := allowedDomainsClaim.GetValueFromPayload(payload, userContext)
-				if claimVal == nil {
-					return false
-				}
-				return oShouldRefetch(payload, userContext)
-			}
-			return claimValidator
-		},
+		if value == nil {
+			return []interface{}{}
+		}
+
+		return value
 	}
+
+	oGetLastRefetchTime := allowedDomainsClaim.GetLastRefetchTime
+	allowedDomainsClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
+		value := oGetLastRefetchTime(payload, userContext)
+		if value == nil {
+			val := int64(math.MaxInt64)
+			return &val
+		}
+
+		return value
+	}
+
 	return allowedDomainsClaim, allowedDomainsClaimValidators
 }

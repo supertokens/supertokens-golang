@@ -40,6 +40,7 @@ type TypeSessionClaim struct {
 	RemoveFromPayloadByMerge_internal func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	RemoveFromPayload                 func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	GetValueFromPayload               func(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
+	GetLastRefetchTime                func(payload map[string]interface{}, userContext supertokens.UserContext) *int64
 	Build                             func(userId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error)
 }
 
