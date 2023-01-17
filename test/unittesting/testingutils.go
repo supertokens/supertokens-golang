@@ -193,6 +193,8 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	var accessTokenExpiry string
 	var accessTokenDomain string
 	var accessTokenHttpOnly = "false"
+
+	// Cookie stuff
 	for _, cookie := range cookies {
 		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
 			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
@@ -237,6 +239,10 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	}
 	frontToken := res.Header.Get("front-token")
 
+	// Header stuff
+	var refreshTokenFromHeader string = res.Header.Get("st-refresh-token")
+	var accessTokenFromHeader string = res.Header.Get("st-access-token")
+
 	return map[string]string{
 		"antiCsrf":             antiCsrfVal,
 		"sAccessToken":         accessToken,
@@ -248,6 +254,9 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 		"accessTokenDomain":    accessTokenDomain,
 		"accessTokenHttpOnly":  accessTokenHttpOnly,
 		"frontToken":           frontToken,
+
+		"refreshTokenFromHeader": refreshTokenFromHeader,
+		"accessTokenFromHeader":  accessTokenFromHeader,
 	}
 }
 
