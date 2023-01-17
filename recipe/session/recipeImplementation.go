@@ -284,7 +284,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		// We clear the tokens in all token transfer methods we are not going to overwrite
 		for _, tokenTransferMethod := range availableTokenTransferMethods {
-			if tokenTransferMethod != requestTokenTransferMethod {
+			if tokenTransferMethod != requestTokenTransferMethod && refreshTokens[tokenTransferMethod] != nil {
 				clearSession(config, res, tokenTransferMethod)
 			}
 		}

@@ -260,6 +260,85 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	}
 }
 
+func ExtractInfoFromResponseForAuthModeTests(res *http.Response) map[string]string {
+	antiCsrf := res.Header["Anti-Csrf"]
+	cookies := res.Header["Set-Cookie"]
+	var refreshToken string = "-not-present-"
+	var refreshTokenExpiry string = "-not-present-"
+	var refreshTokenDomain string = "-not-present-"
+	var refreshTokenHttpOnly = "false"
+	var accessToken string = "-not-present-"
+	var accessTokenExpiry string = "-not-present-"
+	var accessTokenDomain string = "-not-present-"
+	var accessTokenHttpOnly = "false"
+
+	// Cookie stuff
+	for _, cookie := range cookies {
+		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
+			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					refreshTokenHttpOnly = "true"
+					break
+				}
+			}
+		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sAccessToken" {
+			accessToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					accessTokenHttpOnly = "true"
+					break
+				}
+			}
+		}
+	}
+	antiCsrfVal := "-not-present-"
+	if len(antiCsrf) > 0 {
+		antiCsrfVal = antiCsrf[0]
+	}
+	frontToken := res.Header.Get("front-token")
+
+	// Header stuff
+	var refreshTokenFromHeader string = "-not-present-"
+	if len(res.Header.Values("st-refresh-token")) > 0 {
+		refreshTokenFromHeader = res.Header.Get("st-refresh-token")
+	}
+	var accessTokenFromHeader string = "-not-present-"
+	if len(res.Header.Values("st-access-token")) > 0 {
+		accessTokenFromHeader = res.Header.Get("st-access-token")
+	}
+
+	return map[string]string{
+		"antiCsrf":             antiCsrfVal,
+		"sAccessToken":         accessToken,
+		"sRefreshToken":        refreshToken,
+		"refreshTokenExpiry":   refreshTokenExpiry,
+		"refreshTokenDomain":   refreshTokenDomain,
+		"refreshTokenHttpOnly": refreshTokenHttpOnly,
+		"accessTokenExpiry":    accessTokenExpiry,
+		"accessTokenDomain":    accessTokenDomain,
+		"accessTokenHttpOnly":  accessTokenHttpOnly,
+		"frontToken":           frontToken,
+
+		"refreshTokenFromHeader": refreshTokenFromHeader,
+		"accessTokenFromHeader":  accessTokenFromHeader,
+	}
+}
+
 func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]string {
 	cookies := res.Header["Set-Cookie"]
 	var refreshToken string
@@ -280,8 +359,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 			} else {
 				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
 					refreshTokenHttpOnly = "true"
@@ -296,8 +373,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
 			} else {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
-			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {

@@ -51,11 +51,13 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionShouldDefaultToHeaderB
 
 	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
 
-	assert.Empty(t, resp["sAccessToken"])
-	assert.Empty(t, resp["sRefreshToken"])
-	assert.Empty(t, resp["antiCsrf"])
+	assert.Equal(t, resp["sAccessToken"], "-not-present-")
+	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+	assert.Equal(t, resp["antiCsrf"], "-not-present-")
 	assert.NotEmpty(t, resp["accessTokenFromHeader"])
+	assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
 	assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithBadAuthModeHeaderShouldDefaultToHeaderBasedSession(t *testing.T) {
@@ -92,11 +94,13 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithBadAuthModeHeaderS
 	authMode := "badauthmode"
 	resp := createNewSession(t, mux, testServer.URL, &authMode, nil, nil, nil)
 
-	assert.Empty(t, resp["sAccessToken"])
-	assert.Empty(t, resp["sRefreshToken"])
-	assert.Empty(t, resp["antiCsrf"])
+	assert.Equal(t, resp["sAccessToken"], "-not-present-")
+	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+	assert.Equal(t, resp["antiCsrf"], "-not-present-")
 	assert.NotEmpty(t, resp["accessTokenFromHeader"])
+	assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
 	assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedAsHeader(t *testing.T) {
@@ -133,11 +137,13 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 	authMode := string(sessmodels.HeaderTransferMethod)
 	resp := createNewSession(t, mux, testServer.URL, &authMode, nil, nil, nil)
 
-	assert.Empty(t, resp["sAccessToken"])
-	assert.Empty(t, resp["sRefreshToken"])
-	assert.Empty(t, resp["antiCsrf"])
+	assert.Equal(t, resp["sAccessToken"], "-not-present-")
+	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+	assert.Equal(t, resp["antiCsrf"], "-not-present-")
 	assert.NotEmpty(t, resp["accessTokenFromHeader"])
+	assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
 	assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedAsCookie(t *testing.T) {
@@ -175,10 +181,13 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 	resp := createNewSession(t, mux, testServer.URL, &authMode, nil, nil, nil)
 
 	assert.NotEmpty(t, resp["sAccessToken"])
+	assert.NotEqual(t, resp["sAccessToken"], "-not-present-")
 	assert.NotEmpty(t, resp["sRefreshToken"])
+	assert.NotEqual(t, resp["sRefreshToken"], "-not-present-")
 	assert.NotEmpty(t, resp["antiCsrf"])
-	assert.Empty(t, resp["accessTokenFromHeader"])
-	assert.Empty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["antiCsrf"], "-not-present-")
+	assert.Equal(t, resp["accessTokenFromHeader"], "-not-present-")
+	assert.Equal(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIfMethodReturnsAny(t *testing.T) {
@@ -217,11 +226,13 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 
 	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
 
-	assert.Empty(t, resp["sAccessToken"])
-	assert.Empty(t, resp["sRefreshToken"])
-	assert.Empty(t, resp["antiCsrf"])
+	assert.Equal(t, resp["sAccessToken"], "-not-present-")
+	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+	assert.Equal(t, resp["antiCsrf"], "-not-present-")
 	assert.NotEmpty(t, resp["accessTokenFromHeader"])
+	assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
 	assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIfMethodReturnsHeader(t *testing.T) {
@@ -260,11 +271,13 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 
 	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
 
-	assert.Empty(t, resp["sAccessToken"])
-	assert.Empty(t, resp["sRefreshToken"])
-	assert.Empty(t, resp["antiCsrf"])
+	assert.Equal(t, resp["sAccessToken"], "-not-present-")
+	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+	assert.Equal(t, resp["antiCsrf"], "-not-present-")
 	assert.NotEmpty(t, resp["accessTokenFromHeader"])
+	assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
 	assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearCookiesIfMethodReturnsHeader(t *testing.T) {
@@ -314,7 +327,7 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearCookie
 	assert.Equal(t, resp["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Empty(t, resp["sRefreshToken"])
 	assert.Equal(t, resp["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-	assert.Empty(t, resp["antiCsrf"])
+	assert.Equal(t, resp["antiCsrf"], "-not-present-")
 }
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseCookieIfMethodReturnsCookie(t *testing.T) {
@@ -354,13 +367,16 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseCookieIf
 	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
 
 	assert.NotEmpty(t, resp["sAccessToken"])
+	assert.NotEqual(t, resp["sAccessToken"], "-not-present-")
 	assert.NotEmpty(t, resp["sRefreshToken"])
+	assert.NotEqual(t, resp["sRefreshToken"], "-not-present-")
 	assert.NotEmpty(t, resp["antiCsrf"])
-	assert.Empty(t, resp["accessTokenFromHeader"])
-	assert.Empty(t, resp["refreshTokenFromHeader"])
+	assert.NotEqual(t, resp["antiCsrf"], "-not-present-")
+	assert.Equal(t, resp["accessTokenFromHeader"], "-not-present-")
+	assert.Equal(t, resp["refreshTokenFromHeader"], "-not-present-")
 }
 
-func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearHeaderIfMethodReturnsHeader(t *testing.T) {
+func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearHeaderIfMethodReturnsCookie(t *testing.T) {
 	viaToken := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -986,6 +1002,301 @@ func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfCookiesAreNotPres
 	assert.Equal(t, result, map[string]interface{}{"message": "unauthorised"})
 }
 
+func TestMergeIntoAccessTokenPayloadShouldUpdateCookiesIfSessionWasCookieBased(t *testing.T) {
+	viaToken := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &viaToken,
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+	setupRoutesForTest(t, mux)
+
+	header := "header"
+	createInfo := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+	updateInfo := testGetUrl(t, mux, testServer.URL, createInfo, "/update-payload", 200, "cookie", nil)
+
+	// Didn't update
+	assert.Equal(t, updateInfo["sRefreshToken"], "-not-present-")
+	assert.Equal(t, updateInfo["antiCsrf"], "-not-present-")
+	assert.Equal(t, updateInfo["accessTokenFromHeader"], "-not-present-")
+	assert.Equal(t, updateInfo["refreshTokenFromHeader"], "-not-present-")
+
+	// Updated access token
+	assert.NotEmpty(t, updateInfo["sAccessToken"])
+	assert.NotEqual(t, updateInfo["sAccessToken"], "-not-present-")
+	assert.NotEqual(t, updateInfo["sAccessToken"], createInfo["accessTokenFromHeader"])
+
+	// Update front token
+	assert.NotEmpty(t, updateInfo["frontToken"])
+	assert.NotEqual(t, updateInfo["frontToken"], "-not-present-")
+	assert.NotEqual(t, updateInfo["frontToken"], createInfo["frontToken"])
+}
+
+func TestMergeIntoAccessTokenPayloadShouldAllowHeadersIfSessionWasHeaderBased(t *testing.T) {
+	viaToken := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &viaToken,
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+	setupRoutesForTest(t, mux)
+
+	cookie := "cookie"
+	createInfo := createNewSession(t, mux, testServer.URL, &cookie, nil, nil, nil)
+
+	updateInfo := testGetUrl(t, mux, testServer.URL, createInfo, "/update-payload", 200, "header", nil)
+
+	// Didn't update
+	assert.Equal(t, updateInfo["sAccessToken"], "-not-present-")
+	assert.Empty(t, updateInfo["sRefresthToken"])
+	assert.Equal(t, updateInfo["antiCsrf"], "-not-present-")
+	assert.Equal(t, updateInfo["refreshTokenFromHeader"], "-not-present-")
+
+	// Updated access token
+	assert.NotEmpty(t, updateInfo["accessTokenFromHeader"])
+	assert.NotEqual(t, url.QueryEscape(updateInfo["accessTokenFromHeader"].(string)), createInfo["sAccessToken"])
+
+	// Update front token
+	assert.NotEmpty(t, updateInfo["frontToken"])
+	assert.NotEqual(t, updateInfo["frontToken"], "-not-present-")
+	assert.NotEqual(t, updateInfo["frontToken"], createInfo["frontToken"])
+}
+
+func TestRefreshTokenBehaviour(t *testing.T) {
+	viaToken := "VIA_TOKEN"
+
+	behaviourTable := []struct {
+		getTokenTransferMethodRes string
+		authHeader                bool
+		authCookie                bool
+		output                    string
+		setTokens                 string
+		clearedTokens             string
+	}{
+		{getTokenTransferMethodRes: "any", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "cookie", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "any", authHeader: false, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: true, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "cookie", authHeader: false, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "any", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "cookie", authHeader: true, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "any", authHeader: true, authCookie: true, output: "validateheader", setTokens: "headers", clearedTokens: "cookies"},
+		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: true, output: "validateheader", setTokens: "headers", clearedTokens: "cookies"},
+		{getTokenTransferMethodRes: "cookie", authHeader: true, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "headers"},
+	}
+
+	for _, behaviour := range behaviourTable {
+		t.Run(fmt.Sprintf("behaviour %v with valid token", behaviour), func(t *testing.T) {
+			configValue := supertokens.TypeInput{
+				Supertokens: &supertokens.ConnectionInfo{
+					ConnectionURI: "http://localhost:8080",
+				},
+				AppInfo: supertokens.AppInfo{
+					APIDomain:     "api.supertokens.io",
+					AppName:       "SuperTokens",
+					WebsiteDomain: "supertokens.io",
+				},
+				RecipeList: []supertokens.Recipe{
+					Init(nil),
+					session.Init(&sessmodels.TypeInput{
+						AntiCsrf: &viaToken,
+						GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+							return sessmodels.TokenTransferMethod(behaviour.getTokenTransferMethodRes)
+						},
+					}),
+				},
+			}
+
+			BeforeEach()
+			unittesting.StartUpST("localhost", "8080")
+			defer AfterEach()
+
+			err := supertokens.Init(configValue)
+			if err != nil {
+				assert.NoError(t, err)
+			}
+
+			mux := http.NewServeMux()
+			testServer := httptest.NewServer(supertokens.Middleware(mux))
+			defer testServer.Close()
+			setupRoutesForTest(t, mux)
+
+			header := "header" // Which we create doesn't really matter, since the token is the same
+			createInfo := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+
+			authMode := ""
+			if behaviour.authCookie && behaviour.authHeader {
+				authMode = "both"
+			} else if behaviour.authCookie {
+				authMode = "cookie"
+			} else if behaviour.authHeader {
+				authMode = "header"
+			} else {
+				authMode = "none"
+			}
+
+			expectedStatus := 200
+			if behaviour.output == "unauthorised" {
+				expectedStatus = 401
+			}
+
+			refreshRes := refreshSession(t, mux, testServer.URL, &behaviour.getTokenTransferMethodRes, authMode, createInfo, expectedStatus)
+
+			if behaviour.clearedTokens == "headers" {
+				assert.Empty(t, refreshRes["accessTokenFromHeader"])
+				assert.Empty(t, refreshRes["refreshTokenFromHeader"])
+			} else if behaviour.clearedTokens == "cookies" {
+				assert.Empty(t, refreshRes["sAccessToken"])
+				assert.Equal(t, refreshRes["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+				assert.Empty(t, refreshRes["sRefreshToken"])
+				assert.Equal(t, refreshRes["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+			}
+
+			switch behaviour.setTokens {
+			case "headers":
+				assert.NotEmpty(t, refreshRes["accessTokenFromHeader"])
+				assert.NotEqual(t, refreshRes["accessTokenFromHeader"], "-not-present-")
+				assert.NotEmpty(t, refreshRes["refreshTokenFromHeader"])
+				assert.NotEqual(t, refreshRes["refreshTokenFromHeader"], "-not-present-")
+
+			case "cookies":
+				assert.NotEmpty(t, refreshRes["sAccessToken"])
+				assert.NotEqual(t, refreshRes["sAccessToken"], "-not-present-")
+				assert.NotEqual(t, refreshRes["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+				assert.NotEmpty(t, refreshRes["sRefreshToken"])
+				assert.NotEqual(t, refreshRes["sRefreshToken"], "-not-present-")
+				assert.NotEqual(t, refreshRes["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+
+			case "none":
+				if behaviour.clearedTokens == "none" {
+					assert.Empty(t, refreshRes["frontToken"])
+				}
+			}
+
+			if behaviour.setTokens != "cookies" && behaviour.clearedTokens != "cookies" {
+				assert.Equal(t, refreshRes["sAccessToken"], "-not-present-")
+				assert.Equal(t, refreshRes["accessTokenExpiry"], "-not-present-")
+				assert.Equal(t, refreshRes["sRefreshToken"], "-not-present-")
+				assert.Equal(t, refreshRes["refreshTokenExpiry"], "-not-present-")
+			}
+			if behaviour.setTokens != "headers" && behaviour.clearedTokens != "headers" {
+				assert.Equal(t, refreshRes["accessTokenFromHeader"], "-not-present-")
+				assert.Equal(t, refreshRes["refreshTokenFromHeader"], "-not-present-")
+			}
+
+		})
+
+		t.Run(fmt.Sprintf("behaviour %v with invalid token", behaviour), func(t *testing.T) {
+			configValue := supertokens.TypeInput{
+				Supertokens: &supertokens.ConnectionInfo{
+					ConnectionURI: "http://localhost:8080",
+				},
+				AppInfo: supertokens.AppInfo{
+					APIDomain:     "api.supertokens.io",
+					AppName:       "SuperTokens",
+					WebsiteDomain: "supertokens.io",
+				},
+				RecipeList: []supertokens.Recipe{
+					Init(nil),
+					session.Init(&sessmodels.TypeInput{
+						AntiCsrf: &viaToken,
+						GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+							return sessmodels.TokenTransferMethod(behaviour.getTokenTransferMethodRes)
+						},
+					}),
+				},
+			}
+
+			BeforeEach()
+			unittesting.StartUpST("localhost", "8080")
+			defer AfterEach()
+
+			err := supertokens.Init(configValue)
+			if err != nil {
+				assert.NoError(t, err)
+			}
+
+			mux := http.NewServeMux()
+			testServer := httptest.NewServer(supertokens.Middleware(mux))
+			defer testServer.Close()
+			setupRoutesForTest(t, mux)
+
+			createInfo := map[string]string{
+				"sRefreshToken": "invalid",
+			}
+
+			authMode := ""
+			if behaviour.authCookie && behaviour.authHeader {
+				authMode = "both"
+			} else if behaviour.authCookie {
+				authMode = "cookie"
+			} else if behaviour.authHeader {
+				authMode = "header"
+			} else {
+				authMode = "none"
+			}
+
+			refreshRes := refreshSession(t, mux, testServer.URL, &behaviour.getTokenTransferMethodRes, authMode, createInfo, 401)
+
+			if behaviour.output == "validateheader" {
+				assert.Empty(t, refreshRes["accessTokenFromHeader"])
+				assert.Empty(t, refreshRes["refreshTokenFromHeader"])
+			} else if behaviour.output == "validatecookie" {
+				assert.Empty(t, refreshRes["sAccessToken"])
+				assert.Equal(t, refreshRes["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+				assert.Empty(t, refreshRes["sRefreshToken"])
+				assert.Equal(t, refreshRes["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+			}
+		})
+	}
+}
+
 func createNewSession(t *testing.T, mux *http.ServeMux, baseURL string, authModeHeader *string, body map[string]interface{}, cookies []http.Cookie, headers map[string]string) map[string]string {
 	req, err := http.NewRequest(http.MethodPost, baseURL+"/create", nil)
 	assert.NoError(t, err)
@@ -1005,7 +1316,7 @@ func createNewSession(t *testing.T, mux *http.ServeMux, baseURL string, authMode
 	createResp, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 
-	result := unittesting.ExtractInfoFromResponse(createResp)
+	result := unittesting.ExtractInfoFromResponseForAuthModeTests(createResp)
 
 	bodyMap := map[string]interface{}{}
 	err = json.NewDecoder(createResp.Body).Decode(&bodyMap)
@@ -1018,13 +1329,63 @@ func createNewSession(t *testing.T, mux *http.ServeMux, baseURL string, authMode
 	return result
 }
 
+func refreshSession(t *testing.T, mux *http.ServeMux, baseURL string, authModeHeader *string, authMode string, info map[string]string, expectedStatus int) map[string]string {
+	req, err := http.NewRequest(http.MethodPost, baseURL+"/auth/session/refresh", nil)
+	assert.NoError(t, err)
+
+	if authModeHeader != nil {
+		req.Header.Add("st-auth-mode", *authModeHeader)
+	}
+
+	accessToken := ""
+	if info["sAccessToken"] != "" && info["sAccessToken"] != "-not-present-" {
+		accessToken = info["sAccessToken"]
+	}
+	if info["accessTokenFromHeader"] != "" && info["accessTokenFromHeader"] != "-not-present-" {
+		accessToken = url.QueryEscape(info["accessTokenFromHeader"])
+	}
+
+	refreshToken := ""
+	if info["sRefreshToken"] != "" && info["sRefreshToken"] != "-not-present-" {
+		refreshToken = info["sRefreshToken"]
+	}
+	if info["refreshTokenFromHeader"] != "" && info["refreshTokenFromHeader"] != "-not-present-" {
+		refreshToken = url.QueryEscape(info["refreshTokenFromHeader"])
+	}
+
+	if authMode == "cookie" || authMode == "both" {
+		req.AddCookie(&http.Cookie{Name: "sAccessToken", Value: accessToken})
+		req.AddCookie(&http.Cookie{Name: "sRefreshToken", Value: refreshToken})
+	}
+	if authMode == "header" || authMode == "both" {
+		refToken, err := url.QueryUnescape(refreshToken)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+refToken)
+	}
+	if info["antiCsrf"] != "" {
+		req.Header.Set("anti-csrf", info["antiCsrf"])
+	}
+
+	refreshResp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, expectedStatus, refreshResp.StatusCode)
+
+	result := unittesting.ExtractInfoFromResponseForAuthModeTests(refreshResp)
+
+	return result
+}
+
 func testGet(t *testing.T, mux *http.ServeMux, baseURL string, info map[string]string, sessionRequired bool, expectedStatus int, authMode string) map[string]interface{} {
 	endpoint := "/verify-optional"
 	if sessionRequired {
 		endpoint = "/verify"
 	}
-	accessToken := info["sAccessToken"]
-	if info["accessTokenFromHeader"] != "" {
+	accessToken := ""
+	if info["sAccessToken"] != "" && info["sAccessToken"] != "-not-present-" {
+		accessToken = info["sAccessToken"]
+	}
+	if info["accessTokenFromHeader"] != "" && info["accessTokenFromHeader"] != "-not-present-" {
 		accessToken = url.QueryEscape(info["accessTokenFromHeader"])
 	}
 
@@ -1057,6 +1418,49 @@ func testGet(t *testing.T, mux *http.ServeMux, baseURL string, info map[string]s
 	return result
 }
 
+func testGetUrl(t *testing.T, mux *http.ServeMux, baseURL string, info map[string]string, endpoint string, expectedStatus int, authMode string, authModeHeader interface{}) map[string]interface{} {
+	accessToken := ""
+	if info["sAccessToken"] != "" && info["sAccessToken"] != "-not-present-" {
+		accessToken = info["sAccessToken"]
+	}
+	if info["accessTokenFromHeader"] != "" && info["accessTokenFromHeader"] != "-not-present-" {
+		accessToken = url.QueryEscape(info["accessTokenFromHeader"])
+	}
+
+	req, err := http.NewRequest(http.MethodGet, baseURL+endpoint, nil)
+	assert.NoError(t, err)
+
+	if authMode == "cookie" || authMode == "both" {
+		req.Header.Add("Cookie", "sAccessToken="+accessToken)
+	}
+	if authMode == "header" || authMode == "both" {
+		accToken, err := url.QueryUnescape(accessToken)
+		assert.NoError(t, err)
+		req.Header.Set("Authorization", "Bearer "+accToken)
+	}
+
+	if info["antiCsrf"] != "" {
+		req.Header.Set("anti-csrf", info["antiCsrf"])
+	}
+
+	resp, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+
+	assert.Equal(t, resp.StatusCode, expectedStatus)
+
+	result := map[string]interface{}{}
+
+	err = json.NewDecoder(resp.Body).Decode(&result)
+	assert.NoError(t, err)
+
+	tokenInfo := unittesting.ExtractInfoFromResponseForAuthModeTests(resp)
+	for k, v := range tokenInfo {
+		result[k] = v
+	}
+
+	return result
+}
+
 func setupRoutesForTest(t *testing.T, mux *http.ServeMux) {
 	mux.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
 
@@ -1072,8 +1476,14 @@ func setupRoutesForTest(t *testing.T, mux *http.ServeMux) {
 	})
 
 	mux.HandleFunc("/update-payload", verifySession(true, func(w http.ResponseWriter, r *http.Request) {
-		session := session.GetSessionFromRequestContext(r.Context())
-		session.MergeIntoAccessTokenPayload(map[string]interface{}{"newValue": "test"})
+		sessionContainer := session.GetSessionFromRequestContext(r.Context())
+		sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{"newValue": "test"})
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"message": true,
+		})
+
 	}))
 
 	mux.HandleFunc("/verify", verifySession(true, func(w http.ResponseWriter, r *http.Request) {
