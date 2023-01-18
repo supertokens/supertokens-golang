@@ -35,6 +35,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 			ID:         user.ID,
 			Email:      user.Email,
 			TimeJoined: user.TimeJoined,
+			TenantId:   user.TenantId,
 			ThirdParty: *user.ThirdParty,
 		}, nil
 	}
@@ -57,6 +58,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 					ID:         result.OK.User.ID,
 					Email:      result.OK.User.Email,
 					TimeJoined: result.OK.User.TimeJoined,
+					TenantId:   result.OK.User.TenantId,
 					ThirdParty: *result.OK.User.ThirdParty,
 				},
 				OAuthTokens:             result.OK.OAuthTokens,
@@ -80,6 +82,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 					ID:         result.OK.User.ID,
 					Email:      result.OK.User.Email,
 					TimeJoined: result.OK.User.TimeJoined,
+					TenantId:   result.OK.User.TenantId,
 					ThirdParty: struct {
 						ID     string "json:\"id\""
 						UserID string "json:\"userId\""
@@ -104,6 +107,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 			ID:         user.ID,
 			Email:      user.Email,
 			TimeJoined: user.TimeJoined,
+			TenantId:   user.TenantId,
 			ThirdParty: *user.ThirdParty,
 		}, nil
 	}
@@ -122,6 +126,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 					ID:         tpepUser.ID,
 					TimeJoined: tpepUser.TimeJoined,
 					Email:      tpepUser.Email,
+					TenantId:   tpepUser.TenantId,
 					ThirdParty: *tpepUser.ThirdParty,
 				})
 			}

@@ -70,9 +70,10 @@ type TypeUserInfoMap struct {
 }
 
 type User struct {
-	ID         string `json:"id"`
-	TimeJoined uint64 `json:"timeJoined"`
-	Email      string `json:"email"`
+	ID         string  `json:"id"`
+	TimeJoined uint64  `json:"timeJoined"`
+	Email      string  `json:"email"`
+	TenantId   *string `json:"-"`
 	ThirdParty struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`
@@ -127,7 +128,7 @@ type ProviderConfig struct {
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
 	RequireEmail                     *bool                  `json:"requireEmail,omitempty"`
 
-	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
+	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
 	GenerateFakeEmail      func(thirdPartyUserId string, userContext supertokens.UserContext) string
 }
 
@@ -159,7 +160,7 @@ type ProviderConfigForClientType struct {
 	JwksURI                          string
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
-	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType) error
+	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
 
 	RequireEmail      *bool
 	GenerateFakeEmail func(thirdPartyUserId string, userContext supertokens.UserContext) string
@@ -175,5 +176,3 @@ type TypeProvider struct {
 	ExchangeAuthCodeForOAuthTokens func(redirectURIInfo TypeRedirectURIInfo, userContext supertokens.UserContext) (TypeOAuthTokens, error) // For apple, add userInfo from callbackInfo to oAuthTOkens
 	GetUserInfo                    func(oAuthTokens TypeOAuthTokens, userContext supertokens.UserContext) (TypeUserInfo, error)
 }
-
-const DefaultTenantId string = "defaultTenantId"

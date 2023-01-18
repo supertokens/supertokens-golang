@@ -41,7 +41,7 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 
 		result := multitenancymodels.LoginMethodsGETResponse{
 			OK: &multitenancymodels.TypeLoginMethods{
-				Emailpassword: multitenancymodels.TypeEmailpassword{
+				EmailPassword: multitenancymodels.TypeEmailPassword{
 					Enabled: tenantConfigResponse.OK.Emailpassword.Enabled,
 				},
 				Passwordless: multitenancymodels.TypePasswordless{

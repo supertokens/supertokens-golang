@@ -29,6 +29,8 @@ import (
 	"sync"
 	"time"
 
+	urllib "net/url"
+
 	"github.com/MicahParks/keyfunc"
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -40,11 +42,20 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 	supertokens.LogDebugMessage(fmt.Sprintf("GET request to %s, with query params %v and headers %v", url, queryParams, headers))
 
 	if queryParams != nil {
-		querystring, err := qs.Marshal(queryParams)
+		urlObj, err := urllib.Parse(url)
 		if err != nil {
 			return nil, err
 		}
-		url = url + "?" + querystring
+
+		queryParamsObj := urlObj.Query()
+
+		for key, value := range queryParams {
+			queryParamsObj.Set(key, fmt.Sprint(value))
+		}
+
+		urlObj.RawQuery = queryParamsObj.Encode()
+
+		url = urlObj.String()
 	}
 
 	req, err := http.NewRequest("GET", url, nil)

@@ -3,10 +3,11 @@ package providers
 import (
 	"errors"
 	"fmt"
+	"net/url"
 	"strings"
 
-	"github.com/derekstavis/go-qs"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -20,7 +21,7 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 	}
 	var pkceCodeVerifier *string
 	if config.ClientSecret == "" || (config.ForcePKCE != nil && *config.ForcePKCE) {
-		challenge, verifier, err := generateCodeChallengeS256(32)
+		challenge, verifier, err := generateCodeChallengeS256(64) // According to https://www.rfc-editor.org/rfc/rfc7636, length must be between 43 and 128
 		if err != nil {
 			return tpmodels.TypeAuthorisationRedirect{}, err
 		}
@@ -37,23 +38,29 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 		}
 	}
 
-	url := config.AuthorizationEndpoint
+	authUrl := config.AuthorizationEndpoint
 
 	/* Transformation needed for dev keys BEGIN */
 	if isUsingDevelopmentClientId(config.ClientID) {
 		queryParams["client_id"] = getActualClientIdFromDevelopmentClientId(config.ClientID)
-		queryParams["actual_redirect_uri"] = url
-		url = DevOauthAuthorisationUrl
+		queryParams["actual_redirect_uri"] = authUrl
+		authUrl = DevOauthAuthorisationUrl
 	}
 	/* Transformation needed for dev keys END */
 
-	queryParamsStr, err := qs.Marshal(queryParams)
+	urlObj, err := url.Parse(authUrl)
 	if err != nil {
 		return tpmodels.TypeAuthorisationRedirect{}, err
 	}
 
+	queryParamsObj := urlObj.Query()
+	for k, v := range queryParams {
+		queryParamsObj.Set(k, fmt.Sprint(v))
+	}
+	urlObj.RawQuery = queryParamsObj.Encode()
+
 	return tpmodels.TypeAuthorisationRedirect{
-		URLWithQueryParams: url + "?" + queryParamsStr,
+		URLWithQueryParams: urlObj.String(),
 		PKCECodeVerifier:   pkceCodeVerifier,
 	}, nil
 }
@@ -119,7 +126,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		}
 		rawUserInfoFromProvider.FromIdTokenPayload = map[string]interface{}(claims)
 		if config.ValidateIdTokenPayload != nil {
-			err := config.ValidateIdTokenPayload(rawUserInfoFromProvider.FromIdTokenPayload, config)
+			err := config.ValidateIdTokenPayload(rawUserInfoFromProvider.FromIdTokenPayload, config, userContext)
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
@@ -161,7 +168,7 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		return tpmodels.TypeUserInfo{}, err
 	}
 
-	if config.TenantId != nil && *config.TenantId != tpmodels.DefaultTenantId {
+	if config.TenantId != nil && *config.TenantId != multitenancymodels.DefaultTenantId {
 		userInfoResult.ThirdPartyUserId += "|" + *config.TenantId
 	}
 
@@ -216,7 +223,7 @@ func oauth2_getSupertokensUserInfoResultFromRawUserInfo(config tpmodels.Provider
 				if emailVerified, ok := emailVerifiedVal.(bool); ok {
 					result.Email.IsVerified = emailVerified
 				} else if emailVerified, ok := emailVerifiedVal.(string); ok {
-					result.Email.IsVerified = emailVerified == "true"
+					result.Email.IsVerified = strings.ToLower(emailVerified) == "true"
 				}
 			}
 		}

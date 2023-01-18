@@ -15,11 +15,28 @@
 
 package multitenancymodels
 
-import "net/http"
+import (
+	"net/http"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
+)
+
+const DefaultTenantId string = "defaultTenantId"
+
+type TypeGetTenantIdForUserID func(userID string, userContext supertokens.UserContext) (TenantIdResult, error)
+
+type TenantIdResult struct {
+	OK *struct {
+		TenantId *string
+	}
+	UnknownUserIDError *struct{}
+}
 
 type TypeInput struct {
-	ErrorHandlers *ErrorHandlers
-	Override      *OverrideStruct
+	GetTenantIdForUserID         TypeGetTenantIdForUserID
+	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	ErrorHandlers                *ErrorHandlers
+	Override                     *OverrideStruct
 }
 
 type ErrorHandlers struct {
@@ -28,6 +45,9 @@ type ErrorHandlers struct {
 }
 
 type TypeNormalisedInput struct {
+	GetTenantIdForUserID         TypeGetTenantIdForUserID
+	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+
 	ErrorHandlers NormalisedErrorHandlers
 	Override      OverrideStruct
 }

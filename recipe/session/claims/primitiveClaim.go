@@ -35,7 +35,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 		return nil
 	}
 
-	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
+	sessionClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[sessionClaim.Key].(map[string]interface{}); ok {
 			switch t := value["t"].(type) {
 			case int64:
@@ -65,7 +65,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 					if val == nil {
 						return true
 					}
-					return maxAgeInSeconds != nil && *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000
+					return maxAgeInSeconds != nil && *sessionClaim.GetLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000
 				},
 				Validate: func(payload map[string]interface{}, userContext supertokens.UserContext) ClaimValidationResult {
 					claimVal := sessionClaim.GetValueFromPayload(payload, userContext)
@@ -80,7 +80,7 @@ func PrimitiveClaim(key string, fetchValue FetchValueFunc, defaultMaxAgeInSecond
 							},
 						}
 					}
-					ageInSeconds := (time.Now().UnixNano()/1000000 - *getLastRefetchTime(payload, userContext)) / 1000
+					ageInSeconds := (time.Now().UnixNano()/1000000 - *sessionClaim.GetLastRefetchTime(payload, userContext)) / 1000
 					if maxAgeInSeconds != nil && ageInSeconds > *maxAgeInSeconds {
 						return ClaimValidationResult{
 							IsValid: false,

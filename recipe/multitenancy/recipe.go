@@ -21,7 +21,9 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/api"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -34,11 +36,18 @@ type Recipe struct {
 	RecipeImpl                multitenancymodels.RecipeInterface
 	APIImpl                   multitenancymodels.APIInterface
 	staticThirdPartyProviders []tpmodels.ProviderInput
+
+	GetTenantIdForUserID        multitenancymodels.TypeGetTenantIdForUserID
+	AddGetTenantIdForUserIdFunc func(function multitenancymodels.TypeGetTenantIdForUserID)
+
+	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
 }
 
 var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*Recipe, error) {
+	getTenantIdForUserIdFuncsFromOtherRecipes := []multitenancymodels.TypeGetTenantIdForUserID{}
+
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -57,6 +66,33 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	r.staticThirdPartyProviders = []tpmodels.ProviderInput{}
 
+	r.GetTenantIdForUserID = func(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
+		if r.Config.GetTenantIdForUserID != nil {
+			return r.Config.GetTenantIdForUserID(userID, userContext)
+		}
+
+		var err error
+		var tenantIdRes multitenancymodels.TenantIdResult
+		for _, getTenantIdForUserIdFunc := range getTenantIdForUserIdFuncsFromOtherRecipes {
+			tenantIdRes, err = getTenantIdForUserIdFunc(userID, userContext)
+			if err != nil {
+				return tenantIdRes, err
+			}
+			if tenantIdRes.OK != nil {
+				return tenantIdRes, nil
+			}
+		}
+		return multitenancymodels.TenantIdResult{
+			UnknownUserIDError: &struct{}{},
+		}, nil
+	}
+
+	r.AddGetTenantIdForUserIdFunc = func(function multitenancymodels.TypeGetTenantIdForUserID) {
+		getTenantIdForUserIdFuncsFromOtherRecipes = append(getTenantIdForUserIdFuncsFromOtherRecipes, function)
+	}
+
+	r.GetAllowedDomainsForTenantId = verifiedConfig.GetAllowedDomainsForTenantId
+
 	return r, nil
 }
 
@@ -68,6 +104,10 @@ func GetRecipeInstanceOrThrowError() (*Recipe, error) {
 	return nil, errors.New("Initialisation not done. Did you forget to call the init function?")
 }
 
+func GetRecipeInstance() *Recipe {
+	return singletonInstance
+}
+
 func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
@@ -75,6 +115,21 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 			if err != nil {
 				return nil, err
 			}
+
+			if recipe.GetAllowedDomainsForTenantId != nil {
+				supertokens.AddPostInitCallback(func() error {
+					sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
+
+					if err != nil {
+						return nil // skip adding claims if session recipe is not initialised
+					}
+
+					sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.AllowedDomainsClaim)
+
+					return nil
+				})
+			}
+
 			singletonInstance = recipe
 			return &singletonInstance.RecipeModule, nil
 		}
@@ -133,17 +188,20 @@ func ResetForTest() {
 	singletonInstance = nil
 }
 
-// This function is called when the multitenancy package is imported. This is set so that
-// the supertokens Init can create an instance of the multitenancy recipe automatically
-// if the user has not explicitly created one.
-func init() {
-	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
-}
-
 func (r *Recipe) SetStaticThirdPartyProviders(providers []tpmodels.ProviderInput) {
 	// the `staticThirdPartyProviders` is always overwritten with the provider list from
 	// the last thirdparty recipe that was initialised. In case of multitenancy, the
 	// core is expected to contain the tenant configs for that tenant, so, it wouldn't
 	// be too much of a problem about which static list we use from here.
 	r.staticThirdPartyProviders = append([]tpmodels.ProviderInput{}, providers...)
+}
+
+// This function is called when the multitenancy package is imported. This is set so that
+// the supertokens Init can create an instance of the multitenancy recipe automatically
+// if the user has not explicitly created one.
+func init() {
+	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
+
+	// Create multitenancy claims when the module is imported
+	multitenancyclaims.AllowedDomainsClaim, multitenancyclaims.AllowedDomainsClaimValidators = NewAllowedDomainsClaim()
 }

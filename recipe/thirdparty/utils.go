@@ -17,6 +17,7 @@ package thirdparty
 
 import (
 	"encoding/json"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -85,6 +86,10 @@ func parseUser(value interface{}) (*tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
+	if strings.Contains(user.ThirdParty.UserID, "|") {
+		tenantId := strings.Split(user.ThirdParty.UserID, "|")[1]
+		user.TenantId = &tenantId
+	}
 	return &user, nil
 }
 
@@ -93,10 +98,20 @@ func parseUsers(value interface{}) ([]tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	var user []tpmodels.User
-	err = json.Unmarshal(respJSON, &user)
+	var users []interface{}
+	err = json.Unmarshal(respJSON, &users)
+
+	usersResult := make([]tpmodels.User, len(users))
+	for i, user := range users {
+		userObj, err := parseUser(user)
+		if err != nil {
+			return nil, err
+		}
+		usersResult[i] = *userObj
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return usersResult, nil
 }

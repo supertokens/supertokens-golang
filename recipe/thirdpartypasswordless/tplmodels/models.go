@@ -28,6 +28,7 @@ type User struct {
 	TimeJoined  uint64  `json:"timeJoined"`
 	Email       *string `json:"email"`
 	PhoneNumber *string `json:"phoneNumber"`
+	TenantId    *string `json:"-"`
 	ThirdParty  *struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`
