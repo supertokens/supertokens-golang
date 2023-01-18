@@ -2,7 +2,7 @@ package multitenancy
 
 import (
 	"errors"
-	"math"
+	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -59,7 +59,7 @@ func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayCl
 	allowedDomainsClaim.GetLastRefetchTime = func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		value := oGetLastRefetchTime(payload, userContext)
 		if value == nil {
-			val := int64(math.MaxInt64)
+			val := int64(time.Now().UnixNano() / 1000000)
 			return &val
 		}
 
