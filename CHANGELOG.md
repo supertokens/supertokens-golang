@@ -6,7 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
-
 ### Added
 -   Adds support for header based auth
 -   Optional `GetTokenTransferMethod` config is Session recipe input, which determines the token transfer method.
@@ -17,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Breaking changes
 -   `CreateNewSessionWithContext` and `CreateNewSession` in the session recipe accepts new parameter `req` of type `*http.Request`
 
+## [0.9.11]
+-   Fixes panic issue with dashboard usersGet API
 
 ## [0.9.10]
 -   Fixes issue where if SendEmail is overridden with a different email, it will reset that email.
