@@ -36,9 +36,9 @@ type RecipeInterface struct {
 }
 
 type TenantConfig struct {
-	EmailpasswordEnabled *bool
+	EmailPasswordEnabled *bool
 	PasswordlessEnabled  *bool
-	ThirdpartyEnabled    *bool
+	ThirdPartyEnabled    *bool
 }
 
 type CreateOrUpdateTenantResponse struct {
@@ -55,7 +55,7 @@ type DeleteTenantResponse struct {
 
 type TenantConfigResponse struct {
 	OK *struct {
-		Emailpassword struct {
+		EmailPassword struct {
 			Enabled bool
 		}
 		Passwordless struct {
