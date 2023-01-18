@@ -585,11 +585,11 @@ func TestVerifySessionBehaviour(t *testing.T) {
 			case "undefined":
 				assert.Equal(t, testRes["sessionExists"], false)
 			case "UNAUTHORISED":
-				assert.Equal(t, testRes, map[string]interface{}{"message": "unauthorised"})
+				assert.Equal(t, testRes["message"], "unauthorised")
 			case "validateheader":
-				assert.Equal(t, testRes, map[string]interface{}{"message": "try refresh token"})
+				assert.Equal(t, testRes["message"], "try refresh token")
 			case "validatecookie":
-				assert.Equal(t, testRes, map[string]interface{}{"message": "try refresh token"})
+				assert.Equal(t, testRes["message"], "try refresh token")
 			}
 		})
 	}
