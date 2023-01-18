@@ -108,7 +108,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			}
 		}
 
-		sessionOptional := options == nil || options.SessionRequired == nil || !*options.SessionRequired
+		sessionOptional := options != nil && options.SessionRequired != nil && !*options.SessionRequired
 		supertokens.LogDebugMessage(fmt.Sprintf("getSession: optional validation %v", sessionOptional))
 
 		accessTokens := map[sessmodels.TokenTransferMethod]*ParsedJWTInfo{}
@@ -284,7 +284,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		// We clear the tokens in all token transfer methods we are not going to overwrite
 		for _, tokenTransferMethod := range availableTokenTransferMethods {
-			if tokenTransferMethod != requestTokenTransferMethod {
+			if tokenTransferMethod != requestTokenTransferMethod && refreshTokens[tokenTransferMethod] != nil {
 				clearSession(config, res, tokenTransferMethod)
 			}
 		}

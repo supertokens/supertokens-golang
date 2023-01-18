@@ -42,6 +42,9 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -56,7 +59,7 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -68,17 +71,14 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	res, err := http.DefaultClient.Do(req)
 	assert.NoError(t, err)
 	cookieData := unittesting.ExtractInfoFromResponse(res)
-	assert.Equal(t, []string{"front-token, id-refresh-token, anti-csrf"}, res.Header["Access-Control-Expose-Headers"])
+	assert.Equal(t, []string{"front-token, anti-csrf"}, res.Header["Access-Control-Expose-Headers"])
 	assert.Equal(t, "", cookieData["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData["idRefreshTokenDomain"])
 	assert.Equal(t, "", cookieData["accessTokenDomain"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
 }
 
 func TestTokenTheftDetection(t *testing.T) {
@@ -95,6 +95,9 @@ func TestTokenTheftDetection(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -109,7 +112,7 @@ func TestTokenTheftDetection(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	customValForAntiCsrfCheck := true
@@ -137,7 +140,7 @@ func TestTokenTheftDetection(t *testing.T) {
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res2, err := http.DefaultClient.Do(req2)
 	cookieData2 := unittesting.ExtractInfoFromResponse(res2)
@@ -145,7 +148,7 @@ func TestTokenTheftDetection(t *testing.T) {
 
 	reqV, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
 	assert.NoError(t, err)
-	reqV.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	reqV.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	reqV.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	resv, err := http.DefaultClient.Do(reqV)
 	assert.NoError(t, err)
@@ -153,7 +156,7 @@ func TestTokenTheftDetection(t *testing.T) {
 
 	req3, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req3.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req3.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req3.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res3, err := http.DefaultClient.Do(req3)
 	assert.NoError(t, err)
@@ -183,6 +186,9 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -198,7 +204,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "userId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "userId", map[string]interface{}{}, map[string]interface{}{})
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
@@ -225,7 +231,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res2, err := http.DefaultClient.Do(req2)
 	cookieData2 := unittesting.ExtractInfoFromResponse(res2)
@@ -233,7 +239,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 
 	reqV, err := http.NewRequest(http.MethodGet, testServer.URL+"/verifySession", nil)
 	assert.NoError(t, err)
-	reqV.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"]+";"+"sIdRefreshToken="+cookieData2["sIdRefreshToken"])
+	reqV.Header.Add("Cookie", "sAccessToken="+cookieData2["sAccessToken"])
 	reqV.Header.Add("anti-csrf", cookieData2["antiCsrf"])
 	resv, err := http.DefaultClient.Do(reqV)
 	assert.NoError(t, err)
@@ -241,7 +247,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 
 	req3, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req3.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req3.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req3.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res3, err := http.DefaultClient.Do(req3)
 	assert.NoError(t, err)
@@ -270,6 +276,9 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -283,7 +292,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "someId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "someId", map[string]interface{}{}, map[string]interface{}{})
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
@@ -310,7 +319,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
 	assert.NoError(t, err)
-	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	res1, err := http.DefaultClient.Do(req1)
 	assert.NoError(t, err)
 	assert.Equal(t, 401, res1.StatusCode)
@@ -330,6 +339,9 @@ func TestRevokingOfSessions(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -343,7 +355,7 @@ func TestRevokingOfSessions(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "someUniqueID", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "someUniqueID", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -414,6 +426,9 @@ func TestManipulatingSessionData(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -427,7 +442,7 @@ func TestManipulatingSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "rp", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "rp", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -492,6 +507,9 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -516,7 +534,7 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, nil)
+		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -567,6 +585,9 @@ func TestManipulatingJWTpayload(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -591,7 +612,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -662,6 +683,9 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:     &customAntiCsrfVal,
 				CookieSecure: &True,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -675,7 +699,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "supertokens", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "supertokens", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	customValForAntiCsrfCheck := false
@@ -725,14 +749,14 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSessionWithAntiCsrfFalse", nil)
 	assert.NoError(t, err)
-	req1.Header.Add("Cookie", "sAccessToken="+cookieDataWithoutAntiCsrf["sAccessToken"]+";"+"sIdRefreshToken="+cookieDataWithoutAntiCsrf["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sAccessToken="+cookieDataWithoutAntiCsrf["sAccessToken"])
 	res1, err := http.DefaultClient.Do(req1)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res1.StatusCode)
 
 	req2, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSessionWithAntiCsrfTrue", nil)
 	assert.NoError(t, err)
-	req2.Header.Add("Cookie", "sAccessToken="+cookieDataWithoutAntiCsrf["sAccessToken"]+";"+"sIdRefreshToken="+cookieDataWithoutAntiCsrf["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sAccessToken="+cookieDataWithoutAntiCsrf["sAccessToken"])
 	res2, err := http.DefaultClient.Do(req2)
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res2.StatusCode)
@@ -754,6 +778,9 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -783,6 +810,9 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -810,6 +840,9 @@ func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				AntiCsrf:       &customAntiCsrfVal,
 				CookieSameSite: &customCookieSameSiteVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -835,6 +868,9 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -859,7 +895,7 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -900,6 +936,9 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -924,7 +963,7 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -972,6 +1011,9 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -986,7 +1028,7 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		sess, _ := CreateNewSession(rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		sess, _ := CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
 		sessionHandle = sess.GetHandle()
 	})
 
@@ -1002,16 +1044,13 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 
 	RevokeSession(sessionHandle)
 
-	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["antiCsrf"])
 	cookieData = unittesting.ExtractInfoFromResponse(resp1)
 
 	assert.Equal(t, cookieData["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-	assert.Equal(t, cookieData["idRefreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData["accessToken"], "")
 	assert.Equal(t, cookieData["refreshToken"], "")
-	assert.Equal(t, cookieData["idRefreshTokenFromCookie"], "")
-	assert.Equal(t, cookieData["idRefreshTokenFromHeader"], "remove")
 }
 
 func TestSessionContainerOverride(t *testing.T) {
@@ -1028,6 +1067,9 @@ func TestSessionContainerOverride(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oGetSessionInformation := *originalImplementation.GetSessionInformation
@@ -1056,7 +1098,9 @@ func TestSessionContainerOverride(t *testing.T) {
 		t.Error(err.Error())
 	}
 	res := MockResponseWriter{}
-	session, err := CreateNewSession(res, "testId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	session, err := CreateNewSession(req, res, "testId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	data, err := session.GetSessionData()

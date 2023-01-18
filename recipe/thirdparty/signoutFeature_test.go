@@ -46,7 +46,11 @@ func TestThatCallingTheAPIwithoutASessionShouldReturnOk(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
@@ -110,6 +114,9 @@ func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 			session.Init(
 				&sessmodels.TypeInput{
 					AntiCsrf: &customAntiCsrfVal,
+					GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+						return sessmodels.CookieTransferMethod
+					},
 				},
 			),
 			Init(
@@ -185,7 +192,7 @@ func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
 	res, err := http.DefaultClient.Do(req)
@@ -199,15 +206,12 @@ func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 
 	assert.Equal(t, "", cookieData1["sAccessToken"])
 	assert.Equal(t, "", cookieData1["sRefreshToken"])
-	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData1["accessTokenDomain"])
 	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
 }
 
 func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldReturnOk(t *testing.T) {
@@ -225,6 +229,9 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 			session.Init(
 				&sessmodels.TypeInput{
 					AntiCsrf: &customAntiCsrfVal,
+					GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+						return sessmodels.CookieTransferMethod
+					},
 				},
 			),
 			Init(
@@ -303,7 +310,7 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 		t.Error(err.Error())
 	}
 
-	req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
 	res, err := http.DefaultClient.Do(req)
@@ -331,7 +338,7 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 		t.Error(err.Error())
 	}
 
-	req1.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
 	res1, err := http.DefaultClient.Do(req1)
@@ -348,7 +355,7 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 		t.Error(err.Error())
 	}
 
-	req2.Header.Add("Cookie", "sAccessToken="+cookieData1["sAccessToken"]+";"+"sIdRefreshToken="+cookieData1["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sAccessToken="+cookieData1["sAccessToken"])
 	req2.Header.Add("anti-csrf", cookieData1["antiCsrf"])
 
 	res2, err := http.DefaultClient.Do(req2)
@@ -362,13 +369,10 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 
 	assert.Equal(t, "", cookieData2["sAccessToken"])
 	assert.Equal(t, "", cookieData2["sRefreshToken"])
-	assert.Equal(t, "", cookieData2["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData2["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData2["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData2["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData2["accessTokenDomain"])
 	assert.Equal(t, "", cookieData2["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData2["idRefreshTokenDomain"])
 }

@@ -52,7 +52,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	cookieSameSite := cookieSameSite_LAX
-	if apiDomainScheme != websiteDomainScheme {
+	if apiDomainScheme != websiteDomainScheme || appInfo.TopLevelAPIDomain != appInfo.TopLevelWebsiteDomain {
 		cookieSameSite = cookieSameSite_NONE
 	}
 
@@ -159,6 +159,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 	if sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY == Jwt.PropertyNameInAccessTokenPayload {
 		return sessmodels.TypeNormalisedInput{}, errors.New(sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY + " is a reserved property name, please use a different key name for the jwt")
+	}
+
+	if config == nil {
+		config = &sessmodels.TypeInput{}
 	}
 
 	if config.GetTokenTransferMethod == nil {

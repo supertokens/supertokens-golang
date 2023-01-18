@@ -53,27 +53,37 @@ type TokenInfo struct {
 }
 
 func clearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter) error {
+	// We are clearing the session in all transfermethods to be sure to override cookies in case they have been already added to the response.
+	// This is done to handle the following use-case:
+	// If the app overrides signInPOST to check the ban status of the user after the original implementation and throwing an UNAUTHORISED error
+	// In this case: the SDK has attached cookies to the response, but none was sent with the request
+	// We can't know which to clear since we can't reliably query or remove the set-cookie header added to the response (causes issues in some frameworks, i.e.: hapi)
+	// The safe solution in this case is to overwrite all the response cookies/headers with an empty value, which is what we are doing here
 	for _, transferMethod := range availableTokenTransferMethods {
-		token, err := getToken(req, sessmodels.AccessToken, transferMethod)
+		err := clearSession(config, res, transferMethod)
 		if err != nil {
 			return err
-		}
-
-		if token != nil {
-			clearSession(config, res, transferMethod)
 		}
 	}
 	return nil
 }
 
-func clearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) {
+func clearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) error {
+	// If we can tell it's a cookie based session we are not clearing using headers
+	// If we can be specific about which transferMethod we want to clear, there is no reason to clear the other ones
 	tokenTypes := []sessmodels.TokenType{sessmodels.AccessToken, sessmodels.RefreshToken}
 	for _, tokenType := range tokenTypes {
-		setToken(config, res, tokenType, "", 0, transferMethod)
+		err := setToken(config, res, tokenType, "", 0, transferMethod)
+		if err != nil {
+			return err
+		}
 	}
 
+	res.Header().Del(antiCsrfHeaderKey)
+	// This can be added multiple times in some cases, but that should be OK
 	setHeader(res, frontTokenHeaderKey, "remove", false)
 	setHeader(res, "Access-Control-Expose-Headers", frontTokenHeaderKey, true)
+	return nil
 }
 
 func getAntiCsrfTokenFromHeaders(req *http.Request) *string {
