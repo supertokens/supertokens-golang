@@ -49,7 +49,7 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionShouldDefaultToHeaderB
 	defer testServer.Close()
 	setupRoutesForTest(t, mux)
 
-	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, nil, nil, nil, nil)
 
 	assert.Equal(t, resp["sAccessToken"], "-not-present-")
 	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
@@ -92,7 +92,7 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithBadAuthModeHeaderS
 	setupRoutesForTest(t, mux)
 
 	authMode := "badauthmode"
-	resp := createNewSession(t, mux, testServer.URL, &authMode, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, &authMode, nil, nil, nil)
 
 	assert.Equal(t, resp["sAccessToken"], "-not-present-")
 	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
@@ -135,7 +135,7 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 	setupRoutesForTest(t, mux)
 
 	authMode := string(sessmodels.HeaderTransferMethod)
-	resp := createNewSession(t, mux, testServer.URL, &authMode, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, &authMode, nil, nil, nil)
 
 	assert.Equal(t, resp["sAccessToken"], "-not-present-")
 	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
@@ -178,7 +178,7 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 	setupRoutesForTest(t, mux)
 
 	authMode := string(sessmodels.CookieTransferMethod)
-	resp := createNewSession(t, mux, testServer.URL, &authMode, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, &authMode, nil, nil, nil)
 
 	assert.NotEmpty(t, resp["sAccessToken"])
 	assert.NotEqual(t, resp["sAccessToken"], "-not-present-")
@@ -224,7 +224,7 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 	defer testServer.Close()
 	setupRoutesForTest(t, mux)
 
-	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, nil, nil, nil, nil)
 
 	assert.Equal(t, resp["sAccessToken"], "-not-present-")
 	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
@@ -269,7 +269,7 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 	defer testServer.Close()
 	setupRoutesForTest(t, mux)
 
-	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, nil, nil, nil, nil)
 
 	assert.Equal(t, resp["sAccessToken"], "-not-present-")
 	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
@@ -321,7 +321,7 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearCookie
 		},
 	}
 
-	resp := createNewSession(t, mux, testServer.URL, nil, nil, cookies, nil)
+	resp := createNewSession(t, testServer.URL, nil, nil, cookies, nil)
 
 	assert.Empty(t, resp["sAccessToken"])
 	assert.Equal(t, resp["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
@@ -364,7 +364,7 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseCookieIf
 	defer testServer.Close()
 	setupRoutesForTest(t, mux)
 
-	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, nil)
+	resp := createNewSession(t, testServer.URL, nil, nil, nil, nil)
 
 	assert.NotEmpty(t, resp["sAccessToken"])
 	assert.NotEqual(t, resp["sAccessToken"], "-not-present-")
@@ -414,7 +414,7 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearHeader
 		"Authorization": "Bearer " + exampleJWTForTest,
 	}
 
-	resp := createNewSession(t, mux, testServer.URL, nil, nil, nil, headers)
+	resp := createNewSession(t, testServer.URL, nil, nil, nil, headers)
 
 	assert.Empty(t, resp["accessTokenFromHeader"])
 	assert.Empty(t, resp["refreshTokenFromHeader"])
@@ -493,7 +493,7 @@ func TestVerifySessionBehaviour(t *testing.T) {
 			setupRoutesForTest(t, mux)
 
 			cookie := "cookie"
-			createInfo := createNewSession(t, mux, testServer.URL, &cookie, nil, nil, nil)
+			createInfo := createNewSession(t, testServer.URL, &cookie, nil, nil, nil)
 			fmt.Println(createInfo)
 
 			authMode := ""
@@ -512,7 +512,7 @@ func TestVerifySessionBehaviour(t *testing.T) {
 				expectedStatus = 401
 			}
 
-			testRes := testGet(t, mux, testServer.URL, createInfo, behaviour.sessionRequired, expectedStatus, authMode)
+			testRes := testGetVerify(t, testServer.URL, createInfo, behaviour.sessionRequired, expectedStatus, authMode)
 			switch behaviour.output {
 			case "undefined":
 				assert.Equal(t, testRes["sessionExists"], false)
@@ -562,7 +562,7 @@ func TestVerifySessionBehaviour(t *testing.T) {
 			setupRoutesForTest(t, mux)
 
 			cookie := "cookie"
-			createInfo := createNewSession(t, mux, testServer.URL, &cookie, nil, nil, nil)
+			createInfo := createNewSession(t, testServer.URL, &cookie, nil, nil, nil)
 			time.Sleep(3 * time.Second)
 
 			authMode := ""
@@ -580,7 +580,7 @@ func TestVerifySessionBehaviour(t *testing.T) {
 			if behaviour.output == "undefined" {
 				expectedStatus = 200
 			}
-			testRes := testGet(t, mux, testServer.URL, createInfo, behaviour.sessionRequired, expectedStatus, authMode)
+			testRes := testGetVerify(t, testServer.URL, createInfo, behaviour.sessionRequired, expectedStatus, authMode)
 			switch behaviour.output {
 			case "undefined":
 				assert.Equal(t, testRes["sessionExists"], false)
@@ -630,8 +630,8 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsAny(
 	setupRoutesForTest(t, mux)
 
 	header := "header"
-	createInfoCookie := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
-	createInfoHeader := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+	createInfoCookie := createNewSession(t, testServer.URL, &header, nil, nil, nil)
+	createInfoHeader := createNewSession(t, testServer.URL, &header, nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/verify", nil)
 	assert.NoError(t, err)
@@ -687,8 +687,8 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsHead
 	setupRoutesForTest(t, mux)
 
 	header := "header"
-	createInfoCookie := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
-	createInfoHeader := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+	createInfoCookie := createNewSession(t, testServer.URL, &header, nil, nil, nil)
+	createInfoHeader := createNewSession(t, testServer.URL, &header, nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/verify", nil)
 	assert.NoError(t, err)
@@ -747,8 +747,8 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseCookieIfMethodReturnsCooki
 	setupRoutesForTest(t, mux)
 
 	header := "header"
-	createInfoCookie := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
-	createInfoHeader := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+	createInfoCookie := createNewSession(t, testServer.URL, &header, nil, nil, nil)
+	createInfoHeader := createNewSession(t, testServer.URL, &header, nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/verify", nil)
 	assert.NoError(t, err)
@@ -801,7 +801,7 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldRejectRequestWithsIdRefreshTo
 	setupRoutesForTest(t, mux)
 
 	cookie := "cookie"
-	createInfo := createNewSession(t, mux, testServer.URL, &cookie, nil, nil, nil)
+	createInfo := createNewSession(t, testServer.URL, &cookie, nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/verify", nil)
 	assert.NoError(t, err)
@@ -864,7 +864,7 @@ func TestWithNonSTAuthorizeHeaderShouldUseCookiesIfPresentAndMethodReturnsAny(t 
 	setupRoutesForTest(t, mux)
 
 	header := "header"
-	createInfo := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+	createInfo := createNewSession(t, testServer.URL, &header, nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/verify", nil)
 	assert.NoError(t, err)
@@ -927,7 +927,7 @@ func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfMethodReturnsHead
 	setupRoutesForTest(t, mux)
 
 	header := "header"
-	createInfo := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+	createInfo := createNewSession(t, testServer.URL, &header, nil, nil, nil)
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/verify", nil)
 	assert.NoError(t, err)
@@ -1034,8 +1034,8 @@ func TestMergeIntoAccessTokenPayloadShouldUpdateCookiesIfSessionWasCookieBased(t
 	setupRoutesForTest(t, mux)
 
 	header := "header"
-	createInfo := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
-	updateInfo := testGetUrl(t, mux, testServer.URL, createInfo, "/update-payload", 200, "cookie", nil)
+	createInfo := createNewSession(t, testServer.URL, &header, nil, nil, nil)
+	updateInfo := testGetUrl(t, testServer.URL, createInfo, "/update-payload", 200, "cookie", nil)
 
 	// Didn't update
 	assert.Equal(t, updateInfo["sRefreshToken"], "-not-present-")
@@ -1086,9 +1086,9 @@ func TestMergeIntoAccessTokenPayloadShouldAllowHeadersIfSessionWasHeaderBased(t 
 	setupRoutesForTest(t, mux)
 
 	cookie := "cookie"
-	createInfo := createNewSession(t, mux, testServer.URL, &cookie, nil, nil, nil)
+	createInfo := createNewSession(t, testServer.URL, &cookie, nil, nil, nil)
 
-	updateInfo := testGetUrl(t, mux, testServer.URL, createInfo, "/update-payload", 200, "header", nil)
+	updateInfo := testGetUrl(t, testServer.URL, createInfo, "/update-payload", 200, "header", nil)
 
 	// Didn't update
 	assert.Equal(t, updateInfo["sAccessToken"], "-not-present-")
@@ -1168,7 +1168,7 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 			setupRoutesForTest(t, mux)
 
 			header := "header" // Which we create doesn't really matter, since the token is the same
-			createInfo := createNewSession(t, mux, testServer.URL, &header, nil, nil, nil)
+			createInfo := createNewSession(t, testServer.URL, &header, nil, nil, nil)
 
 			authMode := ""
 			if behaviour.authCookie && behaviour.authHeader {
@@ -1186,7 +1186,7 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 				expectedStatus = 401
 			}
 
-			refreshRes := refreshSession(t, mux, testServer.URL, &behaviour.getTokenTransferMethodRes, authMode, createInfo, expectedStatus)
+			refreshRes := refreshSession(t, testServer.URL, &behaviour.getTokenTransferMethodRes, authMode, createInfo, expectedStatus)
 
 			if behaviour.clearedTokens == "headers" {
 				assert.Empty(t, refreshRes["accessTokenFromHeader"])
@@ -1282,7 +1282,7 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 				authMode = "none"
 			}
 
-			refreshRes := refreshSession(t, mux, testServer.URL, &behaviour.getTokenTransferMethodRes, authMode, createInfo, 401)
+			refreshRes := refreshSession(t, testServer.URL, &behaviour.getTokenTransferMethodRes, authMode, createInfo, 401)
 
 			if behaviour.output == "validateheader" {
 				assert.Empty(t, refreshRes["accessTokenFromHeader"])
@@ -1297,7 +1297,7 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 	}
 }
 
-func createNewSession(t *testing.T, mux *http.ServeMux, baseURL string, authModeHeader *string, body map[string]interface{}, cookies []http.Cookie, headers map[string]string) map[string]string {
+func createNewSession(t *testing.T, baseURL string, authModeHeader *string, body map[string]interface{}, cookies []http.Cookie, headers map[string]string) map[string]string {
 	req, err := http.NewRequest(http.MethodPost, baseURL+"/create", nil)
 	assert.NoError(t, err)
 
@@ -1329,7 +1329,7 @@ func createNewSession(t *testing.T, mux *http.ServeMux, baseURL string, authMode
 	return result
 }
 
-func refreshSession(t *testing.T, mux *http.ServeMux, baseURL string, authModeHeader *string, authMode string, info map[string]string, expectedStatus int) map[string]string {
+func refreshSession(t *testing.T, baseURL string, authModeHeader *string, authMode string, info map[string]string, expectedStatus int) map[string]string {
 	req, err := http.NewRequest(http.MethodPost, baseURL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 
@@ -1376,49 +1376,16 @@ func refreshSession(t *testing.T, mux *http.ServeMux, baseURL string, authModeHe
 	return result
 }
 
-func testGet(t *testing.T, mux *http.ServeMux, baseURL string, info map[string]string, sessionRequired bool, expectedStatus int, authMode string) map[string]interface{} {
+func testGetVerify(t *testing.T, baseURL string, info map[string]string, sessionRequired bool, expectedStatus int, authMode string) map[string]interface{} {
 	endpoint := "/verify-optional"
 	if sessionRequired {
 		endpoint = "/verify"
 	}
-	accessToken := ""
-	if info["sAccessToken"] != "" && info["sAccessToken"] != "-not-present-" {
-		accessToken = info["sAccessToken"]
-	}
-	if info["accessTokenFromHeader"] != "" && info["accessTokenFromHeader"] != "-not-present-" {
-		accessToken = url.QueryEscape(info["accessTokenFromHeader"])
-	}
 
-	req, err := http.NewRequest(http.MethodGet, baseURL+endpoint, nil)
-	assert.NoError(t, err)
-
-	if authMode == "cookie" || authMode == "both" {
-		req.Header.Add("Cookie", "sAccessToken="+accessToken)
-	}
-	if authMode == "header" || authMode == "both" {
-		accToken, err := url.QueryUnescape(accessToken)
-		assert.NoError(t, err)
-		req.Header.Set("Authorization", "Bearer "+accToken)
-	}
-
-	if info["antiCsrf"] != "" {
-		req.Header.Set("anti-csrf", info["antiCsrf"])
-	}
-
-	resp, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-
-	assert.Equal(t, resp.StatusCode, expectedStatus)
-
-	result := map[string]interface{}{}
-
-	err = json.NewDecoder(resp.Body).Decode(&result)
-	assert.NoError(t, err)
-
-	return result
+	return testGetUrl(t, baseURL, info, endpoint, expectedStatus, authMode, nil)
 }
 
-func testGetUrl(t *testing.T, mux *http.ServeMux, baseURL string, info map[string]string, endpoint string, expectedStatus int, authMode string, authModeHeader interface{}) map[string]interface{} {
+func testGetUrl(t *testing.T, baseURL string, info map[string]string, endpoint string, expectedStatus int, authMode string, authModeHeader interface{}) map[string]interface{} {
 	accessToken := ""
 	if info["sAccessToken"] != "" && info["sAccessToken"] != "-not-present-" {
 		accessToken = info["sAccessToken"]
