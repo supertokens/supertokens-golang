@@ -527,7 +527,7 @@ func ReturnCustomProviderWithAuthRedirectParams() tpmodels.ProviderInput {
 
 				if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 					if req, ok := _default["request"].(*http.Request); ok {
-						originalImplementation.Config.AuthorizationEndpointQueryParams["dynamic"] = req.URL.Query().Get("dynamic")
+						config.AuthorizationEndpointQueryParams["dynamic"] = req.URL.Query().Get("dynamic")
 					}
 				}
 
