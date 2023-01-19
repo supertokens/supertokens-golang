@@ -69,7 +69,6 @@ func clearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInp
 }
 
 func clearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) error {
-	// If we can tell it's a cookie based session we are not clearing using headers
 	// If we can be specific about which transferMethod we want to clear, there is no reason to clear the other ones
 	tokenTypes := []sessmodels.TokenType{sessmodels.AccessToken, sessmodels.RefreshToken}
 	for _, tokenType := range tokenTypes {
