@@ -69,14 +69,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		if mtRecipe != nil {
 			mtRecipe.AddGetTenantIdForUserIdFunc(r.getTenantIdForUserId)
 		}
-		return nil
-	})
 
-	supertokens.AddPostInitCallback(func() error {
-		mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
-		if err != nil {
-			return err
-		}
 		mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
 		return nil
 	})
