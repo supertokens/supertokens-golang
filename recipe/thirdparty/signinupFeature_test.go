@@ -49,11 +49,18 @@ func TestWithDisabledAPIDefaultSigninupAPIdoesnNotWork(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(tpmodels.GoogleConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-							}),
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
 						},
 					},
 					Override: &tpmodels.OverrideStruct{
@@ -116,7 +123,7 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider6,
 						},
 					},
@@ -140,10 +147,9 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -210,7 +216,7 @@ func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider6,
 						},
 					},
@@ -234,7 +240,6 @@ func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		RedirectUri:  "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -267,7 +272,7 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
@@ -295,10 +300,14 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{"access_token": "abcdefghj"})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -371,7 +380,7 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider5,
 						},
 					},
@@ -399,10 +408,14 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{"access_token": "abcdefghj"})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -475,7 +488,7 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
@@ -497,10 +510,14 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "google",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -528,7 +545,7 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", response["message"])
+	assert.Equal(t, "the provider google could not be found in the configuration", response["message"])
 }
 
 func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
@@ -546,7 +563,7 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
@@ -614,7 +631,7 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Please provide one of code or authCodeResponse in the request body", response1["message"])
+	assert.Equal(t, "Please provide one of redirectURIInfo or oAuthTokens in the request body", response1["message"])
 
 	//request where the post data without redirect-uri
 	postData2 := map[string]interface{}{
@@ -640,7 +657,7 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Please provide the redirectURI in request body", response2["message"])
+	assert.Equal(t, "Please provide one of redirectURIInfo or oAuthTokens in the request body", response2["message"])
 }
 
 func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
@@ -661,7 +678,7 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider3,
 						},
 					},
@@ -689,10 +706,14 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -743,7 +764,7 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
@@ -771,10 +792,14 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://localhost.org",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://localhost.org",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -842,7 +867,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
@@ -870,10 +895,14 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://localhost.org",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://localhost.org",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)

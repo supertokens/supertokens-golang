@@ -48,7 +48,10 @@ func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPart
 			return providerInstance, nil
 		}
 	}
-	return nil, fmt.Errorf("the provider %s could not be found in the configuration", thirdPartyId)
+
+	return nil, supertokens.BadInputError{
+		Msg: fmt.Sprintf("the provider %s could not be found in the configuration", thirdPartyId),
+	}
 }
 
 func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {

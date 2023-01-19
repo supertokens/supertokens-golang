@@ -51,10 +51,11 @@ func AfterEach() {
 
 type PostDataForCustomProvider struct {
 	ThirdPartyId    string `json:"thirdPartyId"`
-	RedirectURIInfo struct {
+	RedirectURIInfo *struct {
 		RedirectURIOnProviderDashboard string                 `json:"redirectURIOnProviderDashboard"`
 		RedirectURIQueryParams         map[string]interface{} `json:"redirectURIQueryParams"`
-	} `json:"redirectURIInfo"`
+	} `json:"redirectURIInfo,omitempty"`
+	OAuthTokens map[string]interface{} `json:"oAuthTokens,omitempty"`
 }
 
 func supertokensInitForTest(t *testing.T, recipes ...supertokens.Recipe) *httptest.Server {
@@ -126,7 +127,7 @@ var customProvider6 = tpmodels.ProviderInput{
 			return tpmodels.TypeUserInfo{
 				ThirdPartyUserId: "user",
 				Email: &tpmodels.EmailStruct{
-					ID:         "test@example.com",
+					ID:         "email@test.com",
 					IsVerified: true,
 				},
 			}, nil
@@ -153,7 +154,7 @@ var customProvider1 = tpmodels.ProviderInput{
 			return tpmodels.TypeUserInfo{
 				ThirdPartyUserId: "user",
 				Email: &tpmodels.EmailStruct{
-					ID:         "test@example.com",
+					ID:         "email@test.com",
 					IsVerified: true,
 				},
 			}, nil
