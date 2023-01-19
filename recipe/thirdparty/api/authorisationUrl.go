@@ -82,8 +82,8 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	}
 	if result.OK != nil {
 		respBody := map[string]interface{}{
-			"status": "OK",
-			"url":    result.OK.URLWithQueryParams,
+			"status":             "OK",
+			"urlWithQueryParams": result.OK.URLWithQueryParams,
 		}
 		if result.OK.PKCECodeVerifier != nil {
 			respBody["pkceCodeVerifier"] = *result.OK.PKCECodeVerifier
