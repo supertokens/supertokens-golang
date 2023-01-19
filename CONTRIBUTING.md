@@ -39,7 +39,7 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
 
 1. Navigate to the `supertokens-root` repository
 2. Start the testing environment  
-   `./startTestingEnv --wait`
+   `./startTestEnv --wait`
 3. Navigate to the `supertokens-golang` repository  
    `cd ../supertokens-golang/`
 4. Run all tests, [count=1 ensures tests are not cached]

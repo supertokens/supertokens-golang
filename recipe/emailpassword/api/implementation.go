@@ -125,14 +125,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 		var email string
+		var password string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
 				email = formField.Value
-			}
-		}
-		var password string
-		for _, formField := range formFields {
-			if formField.ID == "password" {
+			} else if formField.ID == "password" {
 				password = formField.Value
 			}
 		}
@@ -166,14 +163,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 	signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 		var email string
+		var password string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
 				email = formField.Value
-			}
-		}
-		var password string
-		for _, formField := range formFields {
-			if formField.ID == "password" {
+			} else if formField.ID == "password" {
 				password = formField.Value
 			}
 		}

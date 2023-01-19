@@ -82,7 +82,7 @@ func TestMinimumConfigWithEmailOrPhoneContactMethod(t *testing.T) {
 		return
 	}
 
-	passwordlessRecipe, err := getRecipeInstanceOrThrowError()
+	passwordlessRecipe, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 	assert.Equal(t, "USER_INPUT_CODE_AND_MAGIC_LINK", passwordlessRecipe.Config.FlowType)
 }
@@ -436,7 +436,7 @@ func TestMinimumConfigWithPhoneContactMethod(t *testing.T) {
 		return
 	}
 
-	passwordlessRecipe, err := getRecipeInstanceOrThrowError()
+	passwordlessRecipe, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 	assert.Equal(t, "USER_INPUT_CODE_AND_MAGIC_LINK", passwordlessRecipe.Config.FlowType)
 	assert.True(t, passwordlessRecipe.Config.ContactMethodPhone.Enabled)
@@ -991,7 +991,7 @@ func TestMinimumConfigWithEmailContactMethod(t *testing.T) {
 		return
 	}
 
-	passwordlessRecipe, err := getRecipeInstanceOrThrowError()
+	passwordlessRecipe, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 	assert.Equal(t, "USER_INPUT_CODE_AND_MAGIC_LINK", passwordlessRecipe.Config.FlowType)
 	assert.True(t, passwordlessRecipe.Config.ContactMethodEmail.Enabled)
