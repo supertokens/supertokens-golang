@@ -6,51 +6,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
-### Added
--   Added support for authorizing requests using the `Authorization` header instead of cookies
--   Optional `GetTokenTransferMethod` config is Session recipe input, which determines the token transfer method.
--   Check out https://supertokens.com/docs/thirdpartyemailpassword/common-customizations/sessions/token-transfer-method for more information
-
-### Removed
--   ID Refresh token is removed from the SDK
-
-### Breaking changes
--   The frontend SDK should be updated to a version supporting the header-based sessions!
-    -   supertokens-auth-react: >= 0.30.0
-    -   supertokens-web-js: >= 0.3.0
-    -   supertokens-website: >= 13.0.0
-    -   supertokens-react-native: >= 4.0.0
-    -   !!!TODO: re-check before release and add mobile SDKs
--   `CreateNewSession` now requires passing the request as well as the response.
-    -   This only requires a change if you manually created sessions (e.g.: during testing)
-    -   Check the migration example below
--   `CreateNewSessionWithContext` and `CreateNewSession` in the session recipe accepts new parameter `req` of type `*http.Request`
-
-### Migration
-
-Before:
-
-```go
-func httpHandler(w http.ResponseWriter, r *http.Request,) {
-    sessionContainer, err := session.CreateNewSession(w, "userId", map[string]interface{}{}, map[string]interface{}{})
-    if err != nil {
-        // handle error
-    }
-    // ...
-}
-```
-
-After:
-
-```go
-func httpHandler(w http.ResponseWriter, r *http.Request,) {
-    sessionContainer, err := session.CreateNewSession(r, w, "userId", map[string]interface{}{}, map[string]interface{}{})
-    if err != nil {
-        // handle error
-    }
-    // ...
-}
-```
 
 ## [0.10.0]
 ### Added
