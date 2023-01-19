@@ -39,6 +39,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 }
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput) multitenancymodels.TypeNormalisedInput {
+	if config == nil {
+		config = &multitenancymodels.TypeInput{}
+	}
+
 	if config.ErrorHandlers == nil {
 		config.ErrorHandlers = &multitenancymodels.ErrorHandlers{}
 	}

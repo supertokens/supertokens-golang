@@ -25,6 +25,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -157,6 +158,10 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	if errors.As(err, &tperrors.ClientTypeNotFoundError{}) {
+		supertokens.SendNon200ResponseWithMessage(res, err.Error(), 400)
+		return true, nil
+	}
 	return false, nil
 }
 
