@@ -24,6 +24,22 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+type TokenType string
+
+const (
+	AccessToken  TokenType = "access"
+	RefreshToken TokenType = "refresh"
+)
+
+// When adding a new token transfer method, it's also necessary to update the related constant (availableTokenTransferMethods) in `session/constants.go`
+type TokenTransferMethod string
+
+const (
+	CookieTransferMethod TokenTransferMethod = "cookie"
+	HeaderTransferMethod TokenTransferMethod = "header"
+	AnyTransferMethod    TokenTransferMethod = "any"
+)
+
 type HandshakeInfo struct {
 	rawJwtSigningPublicKeyList     []KeyInfo
 	AntiCsrf                       string
@@ -57,11 +73,10 @@ type KeyInfo struct {
 }
 
 type CreateOrRefreshAPIResponse struct {
-	Session        SessionStruct                   `json:"session"`
-	AccessToken    CreateOrRefreshAPIResponseToken `json:"accessToken"`
-	RefreshToken   CreateOrRefreshAPIResponseToken `json:"refreshToken"`
-	IDRefreshToken CreateOrRefreshAPIResponseToken `json:"idRefreshToken"`
-	AntiCsrfToken  *string                         `json:"antiCsrfToken"`
+	Session       SessionStruct                   `json:"session"`
+	AccessToken   CreateOrRefreshAPIResponseToken `json:"accessToken"`
+	RefreshToken  CreateOrRefreshAPIResponseToken `json:"refreshToken"`
+	AntiCsrfToken *string                         `json:"antiCsrfToken"`
 }
 
 type SessionStruct struct {
@@ -97,6 +112,7 @@ type TypeInput struct {
 	Override                 *OverrideStruct
 	ErrorHandlers            *ErrorHandlers
 	Jwt                      *JWTInputConfig
+	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 }
 
 type JWTInputConfig struct {
@@ -128,6 +144,7 @@ type TypeNormalisedInput struct {
 	Override                 OverrideStruct
 	ErrorHandlers            NormalisedErrorHandlers
 	Jwt                      JWTNormalisedConfig
+	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 }
 
 type JWTNormalisedConfig struct {

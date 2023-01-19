@@ -111,7 +111,11 @@ func TestThatIfDisableAPIDefaultSignupAPIDoesNotWork(t *testing.T) {
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -158,6 +162,9 @@ func TestMinimumConfigForOneProvider(t *testing.T) {
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -232,7 +239,11 @@ func TestSignUpAPIWorksWhenInputIsFine(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 

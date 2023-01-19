@@ -682,11 +682,9 @@ func TestSuperTokensInitWithDifferentWebAndApiDomainWithDefaultCookieSecure(t *t
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
-	if err != nil {
-		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-	} else {
-		t.Fail()
-	}
+	// The following error is not expected to happen on supertokens init anymore
+	// Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.
+	assert.NoError(t, err)
 }
 func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFalse(t *testing.T) {
 	apiBasePath0 := "test/"
@@ -713,11 +711,9 @@ func TestSuperTokensInitWithDifferentWebAndApiDomainWithCookieSecureValueSetToFa
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
-	if err != nil {
-		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-	} else {
-		t.Fail()
-	}
+	// The following error is not expected to happen on supertokens init anymore
+	// Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.
+	assert.NoError(t, err)
 }
 
 func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
@@ -1092,6 +1088,9 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1106,7 +1105,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -1121,7 +1120,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
 
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
@@ -1153,6 +1152,9 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1167,7 +1169,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -1182,7 +1184,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/hello/session/refresh", nil)
 	assert.NoError(t, err)
 
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
@@ -1212,6 +1214,9 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1226,7 +1231,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -1241,7 +1246,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	req2, err := http.NewRequest(http.MethodPost, testServer.URL+"/hello/session/refresh", nil)
 	assert.NoError(t, err)
 
-	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req2.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 
 	req2.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
@@ -1283,11 +1288,17 @@ func TestInvalidSameSiteNoneConfig(t *testing.T) {
 			RecipeList: []supertokens.Recipe{
 				Init(&sessmodels.TypeInput{
 					CookieSameSite: &None,
+					GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+						return sessmodels.CookieTransferMethod
+					},
 				}),
 			},
 		}
+
+		// The following error is not expected to come from supertokens.Init any more
+		// Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.
 		err := supertokens.Init(configValue)
-		assert.Equal(t, err.Error(), "Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
+		assert.NoError(t, err)
 		AfterEach()
 	}
 }

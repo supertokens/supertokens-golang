@@ -1,10 +1,12 @@
 package session
 
 import (
+	"net/http"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -20,7 +22,11 @@ func TestShouldNotChangeIfFetchValueReturnsNil(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -32,7 +38,9 @@ func TestShouldNotChangeIfFetchValueReturnsNil(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	nilClaim, _ := NilClaim()
@@ -53,7 +61,11 @@ func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -65,7 +77,9 @@ func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
@@ -89,7 +103,11 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -101,7 +119,9 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()

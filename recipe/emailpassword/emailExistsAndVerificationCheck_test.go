@@ -97,7 +97,11 @@ func TestGoodInputsEmailExists(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -178,7 +182,11 @@ func TestGoodInputsEmailDoesNotExists(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -225,7 +233,11 @@ func TestEmailExistsWithSyntacticallyInvalidEmail(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -306,7 +318,11 @@ func TestEmailExistsWithUnNormalizedEmail(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -387,7 +403,11 @@ func TestEmailDoesExistsWithBadInput(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -462,7 +482,7 @@ func TestEmailDoesExistsWithBadInput(t *testing.T) {
 // 	}
 // 	VerifyEmailUsingToken(verifyToken.OK.Token)
 
-// 	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+// 	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 // 	if err != nil {
 // 		t.Error(err.Error())
@@ -497,6 +517,9 @@ func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -551,6 +574,9 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -594,7 +620,7 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 
 	time.Sleep(5 * time.Second)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -615,7 +641,7 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 
 	assert.Equal(t, "try refresh token", response1["message"])
 
-	res, err := unittesting.SessionRefresh(testServer.URL, cookieData["sRefreshToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	res, err := unittesting.SessionRefresh(testServer.URL, cookieData["sRefreshToken"], cookieData["antiCsrf"])
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -624,7 +650,7 @@ func TestGenerateTokenAPIWithExpiredAccessToken(t *testing.T) {
 
 	cookieData2 := unittesting.ExtractInfoFromResponse(res)
 
-	res1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData2["sAccessToken"], cookieData2["sIdRefreshToken"], cookieData2["antiCsrf"])
+	res1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData2["sAccessToken"], cookieData2["antiCsrf"])
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -672,6 +698,9 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -702,7 +731,7 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -743,6 +772,9 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -773,7 +805,7 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -823,6 +855,9 @@ func TestTheEmailVerifyApiWithInvalidTokenAndCheckError(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -875,6 +910,9 @@ func TestEmailVerifyAPIWithTokenOfNotTypeString(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -946,6 +984,9 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -976,7 +1017,7 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1035,6 +1076,9 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1065,7 +1109,7 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1097,7 +1141,7 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 	assert.Equal(t, "OK", response2["status"])
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/user/email/verify", nil)
-	req1.Header.Set("Cookie", "sAccessToken="+cookieData["sAccessToken"]+"; sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req1.Header.Set("Cookie", "sAccessToken="+cookieData["sAccessToken"])
 	req1.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	if err != nil {
 		t.Error(err.Error())
@@ -1135,6 +1179,9 @@ func TestVerifySessionWithNoSessionUsingTheGetMethod(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1206,6 +1253,9 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1236,7 +1286,7 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1309,6 +1359,9 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1339,7 +1392,7 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1412,6 +1465,9 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1442,7 +1498,7 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1514,6 +1570,9 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 			Init(&epmodels.TypeInput{}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1544,7 +1603,7 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1596,6 +1655,9 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1665,7 +1727,11 @@ func TestEmailVerifyWithDeletedUser(t *testing.T) {
 				Mode: evmodels.ModeOptional,
 			}),
 			Init(&epmodels.TypeInput{}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1708,7 +1774,7 @@ func TestEmailVerifyWithDeletedUser(t *testing.T) {
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
 	supertokens.DeleteUser(userId.(string))
 
-	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1718,13 +1784,10 @@ func TestEmailVerifyWithDeletedUser(t *testing.T) {
 	assert.Equal(t, 401, resp1.StatusCode)
 	assert.Equal(t, "", cookieData1["sAccessToken"])
 	assert.Equal(t, "", cookieData1["sRefreshToken"])
-	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData1["accessTokenDomain"])
 	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
 }
