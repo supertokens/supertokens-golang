@@ -43,7 +43,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider2,
 						},
 					},
@@ -134,7 +134,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider2,
 						},
 					},
@@ -226,7 +226,7 @@ func TestGetUserCount(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider2,
 						},
 					},

@@ -585,10 +585,14 @@ func SigninupCustomRequest(testServerUrl string, email string, id string) (*http
 			"email": email,
 			"id":    id,
 		})
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://localhost.org",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://localhost.org",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
