@@ -25,7 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   `CreateNewSession` now requires passing the request as well as the response.
     -   This only requires a change if you manually created sessions (e.g.: during testing)
     -   Check the migration example below
--   `CreateNewSessionWithContext` and `CreateNewSession` in the session recipe accepts new parameter `req` of type `*http.Request`
+-   `CreateNewSessionWithContext` and `CreateNewSession` in the session recipe accepts new 
+-   Only supporting FDI 1.16
+parameter `req` of type `*http.Request`
 
 ### Migration
 
