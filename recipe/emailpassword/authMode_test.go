@@ -1046,7 +1046,7 @@ func TestMergeIntoAccessTokenPayloadShouldUpdateCookiesIfSessionWasCookieBased(t
 	// Updated access token
 	assert.NotEmpty(t, updateInfo["sAccessToken"])
 	assert.NotEqual(t, updateInfo["sAccessToken"], "-not-present-")
-	assert.NotEqual(t, updateInfo["sAccessToken"], createInfo["accessTokenFromHeader"])
+	assert.NotEqual(t, updateInfo["sAccessToken"], url.QueryEscape(createInfo["accessTokenFromHeader"]))
 
 	// Update front token
 	assert.NotEmpty(t, updateInfo["frontToken"])
