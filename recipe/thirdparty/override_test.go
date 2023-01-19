@@ -49,7 +49,7 @@ func TestOverrideFunctions(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
@@ -57,8 +57,8 @@ func TestOverrideFunctions(t *testing.T) {
 						Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
 							originalSignInUp := *originalImplementation.SignInUp
 							originalGetUserById := *originalImplementation.GetUserByID
-							*originalImplementation.SignInUp = func(thirdPartyID, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-								resp, err := originalSignInUp(thirdPartyID, thirdPartyUserID, email, userContext)
+							*originalImplementation.SignInUp = func(thirdPartyID, thirdPartyUserID, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+								resp, err := originalSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
 								if err != nil {
 									return tpmodels.SignInUpResponse{}, err
 								}
@@ -119,10 +119,14 @@ func TestOverrideFunctions(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	formFields := map[string]string{
+	formFields := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  testServer.URL + "/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": testServer.URL + "/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(formFields)
@@ -196,15 +200,15 @@ func TestOverrideAPIs(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							customProvider1,
 						},
 					},
 					Override: &tpmodels.OverrideStruct{
 						APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
 							originalSigniupPost := *originalImplementation.SignInUpPOST
-							*originalImplementation.SignInUpPOST = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext *map[string]interface{}) (tpmodels.SignInUpPOSTResponse, error) {
-								res, err := originalSigniupPost(provider, code, authCodeResponse, redirectURI, options, userContext)
+							*originalImplementation.SignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+								res, err := originalSigniupPost(provider, input, options, userContext)
 								if err != nil {
 									t.Error(err.Error())
 								}
@@ -257,10 +261,14 @@ func TestOverrideAPIs(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	formFields := map[string]string{
+	formFields := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  testServer.URL + "/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": testServer.URL + "/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(formFields)
