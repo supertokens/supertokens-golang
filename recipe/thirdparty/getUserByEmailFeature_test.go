@@ -39,9 +39,11 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							{
-								ID: "mock",
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "mock",
+								},
 							},
 						},
 					},
@@ -94,12 +96,16 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							{
-								ID: "mock",
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "mock",
+								},
 							},
 							{
-								ID: "mock2",
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "mock2",
+								},
 							},
 						},
 					},
@@ -129,9 +135,9 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	SignInUp("mock", "thirdPartyJohnDoe", "john.doe@example.com")
+	ManuallyCreateOrUpdateUser("mock", "thirdPartyJohnDoe", "john.doe@example.com")
 
-	SignInUp("mock2", "thirdPartyDaveDoe", "john.doe@example.com")
+	ManuallyCreateOrUpdateUser("mock2", "thirdPartyDaveDoe", "john.doe@example.com")
 
 	users, err := GetUsersByEmail("john.doe@example.com")
 
