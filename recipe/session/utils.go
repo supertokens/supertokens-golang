@@ -166,25 +166,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config.GetTokenTransferMethod == nil {
-		config.GetTokenTransferMethod = func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-			if !forCreateNewSession {
-				return sessmodels.AnyTransferMethod
-			}
-
-			authModeFromHeader := getAuthmodeFromHeader(req)
-			if authModeFromHeader == nil {
-				return sessmodels.AnyTransferMethod
-			}
-
-			switch *authModeFromHeader {
-			case sessmodels.HeaderTransferMethod:
-				return sessmodels.HeaderTransferMethod
-			case sessmodels.CookieTransferMethod:
-				return sessmodels.CookieTransferMethod
-			default:
-				return sessmodels.AnyTransferMethod
-			}
-		}
+		config.GetTokenTransferMethod = defaultGetTokenTransferMethod
 	}
 
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
@@ -375,7 +357,7 @@ func getRequiredClaimValidators(
 	return globalClaimValidators, nil
 }
 
-func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool) sessmodels.TokenTransferMethod {
+func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 	// We allow fallback (checking headers then cookies) by default when validating
 
 	if !forCreateNewSession {

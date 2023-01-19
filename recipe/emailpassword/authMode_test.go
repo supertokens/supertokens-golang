@@ -1356,14 +1356,15 @@ func refreshSession(t *testing.T, baseURL string, authModeHeader *string, authMo
 	if authMode == "cookie" || authMode == "both" {
 		req.AddCookie(&http.Cookie{Name: "sAccessToken", Value: accessToken})
 		req.AddCookie(&http.Cookie{Name: "sRefreshToken", Value: refreshToken})
+
+		if info["antiCsrf"] != "" {
+			req.Header.Set("anti-csrf", info["antiCsrf"])
+		}
 	}
 	if authMode == "header" || authMode == "both" {
 		refToken, err := url.QueryUnescape(refreshToken)
 		assert.NoError(t, err)
 		req.Header.Set("Authorization", "Bearer "+refToken)
-	}
-	if info["antiCsrf"] != "" {
-		req.Header.Set("anti-csrf", info["antiCsrf"])
 	}
 
 	refreshResp, err := http.DefaultClient.Do(req)
