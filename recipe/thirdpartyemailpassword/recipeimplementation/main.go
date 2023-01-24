@@ -244,7 +244,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				ID:         userinfo.ID,
 				Email:      userinfo.Email,
 				TimeJoined: userinfo.TimeJoined,
-				TenantId:   userinfo.TenantId,
+				TenantIds:  userinfo.TenantIds,
 				ThirdParty: &userinfo.ThirdParty,
 			}, nil
 		}

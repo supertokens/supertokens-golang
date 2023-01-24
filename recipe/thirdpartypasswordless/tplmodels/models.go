@@ -24,11 +24,11 @@ import (
 )
 
 type User struct {
-	ID          string  `json:"id"`
-	TimeJoined  uint64  `json:"timeJoined"`
-	Email       *string `json:"email"`
-	PhoneNumber *string `json:"phoneNumber"`
-	TenantId    *string `json:"-"`
+	ID          string   `json:"id"`
+	TimeJoined  uint64   `json:"timeJoined"`
+	Email       *string  `json:"email"`
+	PhoneNumber *string  `json:"phoneNumber"`
+	TenantIds   []string `json:"-"`
 	ThirdParty  *struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`
