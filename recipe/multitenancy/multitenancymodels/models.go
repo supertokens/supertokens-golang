@@ -23,7 +23,7 @@ import (
 
 const DefaultTenantId string = "defaultTenantId"
 
-type TypeGetTenantIdsForUserID func(userID string, userContext supertokens.UserContext) (TenantIdsResult, error)
+type TypeGetTenantIdsForUserId func(userID string, userContext supertokens.UserContext) (TenantIdsResult, error)
 
 type TenantIdsResult struct {
 	OK *struct {
@@ -33,7 +33,7 @@ type TenantIdsResult struct {
 }
 
 type TypeInput struct {
-	GetTenantIdsForUserId        TypeGetTenantIdsForUserID
+	GetTenantIdsForUserId        TypeGetTenantIdsForUserId
 	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 	ErrorHandlers                *ErrorHandlers
 	Override                     *OverrideStruct
@@ -45,7 +45,7 @@ type ErrorHandlers struct {
 }
 
 type TypeNormalisedInput struct {
-	GetTenantIdsForUserId        TypeGetTenantIdsForUserID
+	GetTenantIdsForUserId        TypeGetTenantIdsForUserId
 	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 
 	ErrorHandlers NormalisedErrorHandlers
