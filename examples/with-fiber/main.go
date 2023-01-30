@@ -119,19 +119,23 @@ func main() {
 
 // wrapper of the original implementation of verify session to match the required function signature
 func verifySession(options *sessmodels.VerifySessionOptions) fiber.Handler {
-	shouldCallNext := false
 	return func(c *fiber.Ctx) error {
+		var errFromNextHandler error
 		err := adaptor.HTTPHandlerFunc(session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 			c.SetUserContext(r.Context())
-			shouldCallNext = true
+			errFromNextHandler = c.Next()
+
+			if errFromNextHandler != nil {
+				// just in case a supertokens error was returned, we call the supertokens error handler
+				// also, if supertokens error was handled, we don't want to return it, hence updating errFromNextHandler
+				errFromNextHandler = supertokens.ErrorHandler(errFromNextHandler, r, rw)
+			}
 		}))(c)
+
 		if err != nil {
 			return err
 		}
-		if shouldCallNext {
-			return c.Next()
-		}
-		return nil
+		return errFromNextHandler
 	}
 }
 
