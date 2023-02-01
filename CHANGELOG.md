@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 
 ## [0.10.0]
+
+### Fixes
+-   Fixes issue with go-fiber example, where updating accessTokenPayload from user defined endpoint doesn't reflect in the response cookies.
+
 ### Added
 -   Added support for authorizing requests using the `Authorization` header instead of cookies
 -   Optional `GetTokenTransferMethod` config is Session recipe input, which determines the token transfer method.
