@@ -49,7 +49,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	getTenantIdsForUserIdFuncsFromOtherRecipes := []multitenancymodels.TypeGetTenantIdsForUserId{}
 
 	r := &Recipe{}
-	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
+	verifiedConfig := validateAndNormaliseUserInput(config)
 	r.Config = verifiedConfig
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)

@@ -22,9 +22,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput) multitenancymodels.TypeNormalisedInput {
+func validateAndNormaliseUserInput(config *multitenancymodels.TypeInput) multitenancymodels.TypeNormalisedInput {
 
-	typeNormalisedInput := makeTypeNormalisedInput(appInfo, config)
+	typeNormalisedInput := makeTypeNormalisedInput(config)
 
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
@@ -38,7 +38,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	return typeNormalisedInput
 }
 
-func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput) multitenancymodels.TypeNormalisedInput {
+func makeTypeNormalisedInput(config *multitenancymodels.TypeInput) multitenancymodels.TypeNormalisedInput {
 	if config.ErrorHandlers == nil {
 		config.ErrorHandlers = &multitenancymodels.ErrorHandlers{}
 	}
