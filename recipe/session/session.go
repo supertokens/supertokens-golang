@@ -32,9 +32,11 @@ type SessionContainerInput struct {
 	res                   http.ResponseWriter
 	accessToken           string
 	recipeImpl            sessmodels.RecipeInterface
+	req                   *http.Request
+	tokenTransferMethod   sessmodels.TokenTransferMethod
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
+func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
 	return SessionContainerInput{
 		sessionHandle:         sessionHandle,
 		userID:                userID,
@@ -42,6 +44,8 @@ func makeSessionContainerInput(accessToken string, sessionHandle string, userID 
 		res:                   res,
 		accessToken:           accessToken,
 		recipeImpl:            recipeImpl,
+		req:                   req,
+		tokenTransferMethod:   tokenTransferMethod,
 	}
 }
 
@@ -53,7 +57,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if err != nil {
 			return err
 		}
-		clearSessionFromCookie(config, session.res)
+		clearSession(config, session.res, session.tokenTransferMethod)
 		return nil
 	}
 
@@ -99,7 +103,18 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
 			session.accessToken = resp.AccessToken.Token
 			setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-			attachAccessTokenToCookie(config, session.res, resp.AccessToken.Token, resp.AccessToken.Expiry)
+			setToken(
+				config,
+				session.res,
+				sessmodels.AccessToken,
+				resp.AccessToken.Token,
+				// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
+				// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
+				// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
+				// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
+				getCurrTimeInMS()+3153600000000,
+				session.tokenTransferMethod,
+			)
 		}
 		return nil
 	}

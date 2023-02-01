@@ -45,6 +45,9 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &antiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -115,6 +118,9 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &antiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",

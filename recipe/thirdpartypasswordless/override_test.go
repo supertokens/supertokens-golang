@@ -26,6 +26,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -46,7 +47,11 @@ func TestOverridingFunctions(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -218,7 +223,11 @@ func TestOverridingAPIs(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{

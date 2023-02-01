@@ -17,11 +17,13 @@
 package passwordless
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -48,7 +50,12 @@ func TestDeletePhoneNumber(t *testing.T) {
 						return nil
 					},
 				},
-			}), session.Init(nil),
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -112,7 +119,12 @@ func TestDeleteEmail(t *testing.T) {
 						return nil
 					},
 				},
-			}), session.Init(nil),
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -176,7 +188,12 @@ func TestDeleteEmailAndPhoneShouldThrowError(t *testing.T) {
 						return nil
 					},
 				},
-			}), session.Init(nil),
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()

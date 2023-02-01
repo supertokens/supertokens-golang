@@ -17,6 +17,7 @@
 package thirdpartypasswordless
 
 import (
+	"net/http"
 	"net/url"
 	"testing"
 	"time"
@@ -26,6 +27,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -46,7 +48,11 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
@@ -121,7 +127,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
@@ -193,7 +203,11 @@ func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
@@ -293,7 +307,11 @@ func TestWithThirdPartyPasswordlessCreateCodeTest(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -361,7 +379,11 @@ func TestThirdPartyPasswordlessCreateNewCodeFromDevice(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -456,7 +478,11 @@ func TestThirdPartyPasswordlessConsumeCoed(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -532,7 +558,11 @@ func TestThirdPartyPasswordlessConsumeCodeTestWithExpiredUserInputCodeError(t *t
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -590,7 +620,11 @@ func TestThirdPartyPasswordlessUpdateUserContactMethodEmailTest(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -660,7 +694,11 @@ func TestThirdPartyPasswordlessUpdateUserContactPhone(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
@@ -731,7 +769,11 @@ func TestThirdPartyPasswordlessRevokeAllCodesTest(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -795,7 +837,11 @@ func TestThirdPartyPasswordlessRevokeCode(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -859,7 +905,11 @@ func TestThirdPartyPasswordlessListCodesByEmail(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -922,7 +972,11 @@ func TestListCodesByPhoneNumber(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
@@ -985,7 +1039,11 @@ func TestThirdPartyPasswordlessListCodesByDeviceIdAndListCodesByPreAuthSessionId
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
@@ -1043,7 +1101,11 @@ func TestCreateMagicLinkTest(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
@@ -1099,7 +1161,11 @@ func TestThirdPartyPasswordlessSignInUp(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
