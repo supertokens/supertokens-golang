@@ -61,7 +61,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForThirdpartyUser(t *testing.T
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -144,7 +144,7 @@ func TestBackwardCompatibilityResetPasswordForThirdpartyUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -266,7 +266,7 @@ func TestCustomOverrideResetPasswordForThirdpartyUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -432,7 +432,7 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -538,7 +538,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 	defer AfterEach()
 
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -547,10 +547,9 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -673,7 +672,7 @@ func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -723,7 +722,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -747,10 +746,9 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -878,7 +876,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		},
 	})
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		Providers: []tpmodels.ProviderInput{customProviderForEmailVerification},
 	}
 	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
 		Mode: evmodels.ModeOptional,
@@ -890,10 +888,9 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)

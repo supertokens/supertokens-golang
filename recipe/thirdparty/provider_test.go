@@ -17,12 +17,16 @@
 package thirdparty
 
 import (
+	"io/ioutil"
+	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
+	"gopkg.in/h2non/gock.v1"
 )
 
 func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
@@ -39,11 +43,18 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(tpmodels.GoogleConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-							}),
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -60,33 +71,67 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("google", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "google", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfo.Config.AuthorizationEndpoint)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfo.Config.TokenEndpoint)
+	assert.Equal(t, "https://openidconnect.googleapis.com/v1/userinfo", providerInfo.Config.UserInfoEndpoint)
 
-	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]string{
-		"client_id":     "test",
-		"client_secret": "test-secret",
-		"grant_type":    "authorization_code",
-	}, providerInfoGetResult.AccessTokenAPI.Params)
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id":              "test",
-		"access_type":            "offline",
-		"include_granted_scopes": "true",
-		"response_type":          "code",
-		"scope":                  "https://www.googleapis.com/auth/userinfo.email",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":              {"test"},
+		"access_type":            {"offline"},
+		"include_granted_scopes": {"true"},
+		"response_type":          {"code"},
+		"redirect_uri":           {"redirect"},
+		"scope":                  {"openid email"},
+	}, authParams)
+
+	tokenParams := url.Values{}
+
+	defer gock.OffAll()
+	gock.New("https://oauth2.googleapis.com").
+		Post("/token").
+		Persist().
+		Map(func(r *http.Request) *http.Request {
+			data, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			tokenParams, err = url.ParseQuery(string(data))
+			assert.NoError(t, err)
+			return r
+		}).
+		Reply(200).
+		JSON(map[string]string{
+			"access_token": "abcd",
+		})
+
+	_, err = providerInfo.ExchangeAuthCodeForOAuthTokens(tpmodels.TypeRedirectURIInfo{
+		RedirectURIOnProviderDashboard: "redirect",
+		RedirectURIQueryParams: map[string]interface{}{
+			"code": "abcd",
+		},
+	}, &map[string]interface{}{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"client_secret": {"test-secret"},
+		"grant_type":    {"authorization_code"},
+		"code":          {"abcd"},
+		"redirect_uri":  {"redirect"},
+	}, tokenParams)
 }
 
 func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing.T) {
@@ -103,17 +148,22 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(tpmodels.GoogleConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-								AuthorisationRedirect: &struct{ Params map[string]interface{} }{
-									Params: map[string]interface{}{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+										},
+									},
+									AuthorizationEndpointQueryParams: map[string]interface{}{
 										"key1": "value1",
 										"key2": "value2",
 									},
 								},
-							}),
+							},
 						},
 					},
 				},
@@ -130,35 +180,34 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("google", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
-
+	providerInfo := providerRes.OK.Provider
 	assert.Equal(t, "google", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfo.Config.TokenEndpoint)
+	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfo.Config.AuthorizationEndpoint)
+	assert.Equal(t, "https://openidconnect.googleapis.com/v1/userinfo", providerInfo.Config.UserInfoEndpoint)
 
-	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]string{
-		"client_id":     "test",
-		"client_secret": "test-secret",
-		"grant_type":    "authorization_code",
-	}, providerInfoGetResult.AccessTokenAPI.Params)
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id":              "test",
-		"access_type":            "offline",
-		"include_granted_scopes": "true",
-		"response_type":          "code",
-		"scope":                  "https://www.googleapis.com/auth/userinfo.email",
-		"key1":                   "value1",
-		"key2":                   "value2",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":              {"test"},
+		"access_type":            {"offline"},
+		"include_granted_scopes": {"true"},
+		"response_type":          {"code"},
+		"redirect_uri":           {"redirect"},
+		"scope":                  {"openid email"},
+		"key1":                   {"value1"},
+		"key2":                   {"value2"},
+	}, authParams)
 }
 
 func TestPassingScopesInConfigForGoogle(t *testing.T) {
@@ -175,14 +224,19 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(tpmodels.GoogleConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-								Scope: []string{
-									"test-scope-1", "test-scope-2",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+											Scope:        []string{"test-scope-1", "test-scope-2"},
+										},
+									},
 								},
-							}),
+							},
 						},
 					},
 				},
@@ -199,33 +253,33 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("google", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "google", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfo.Config.AuthorizationEndpoint)
+	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfo.Config.TokenEndpoint)
+	assert.Equal(t, "https://openidconnect.googleapis.com/v1/userinfo", providerInfo.Config.UserInfoEndpoint)
 
-	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfoGetResult.AccessTokenAPI.URL)
-	assert.Equal(t, "https://accounts.google.com/o/oauth2/v2/auth", providerInfoGetResult.AuthorisationRedirect.URL)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]string{
-		"client_id":     "test",
-		"client_secret": "test-secret",
-		"grant_type":    "authorization_code",
-	}, providerInfoGetResult.AccessTokenAPI.Params)
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id":              "test",
-		"access_type":            "offline",
-		"include_granted_scopes": "true",
-		"response_type":          "code",
-		"scope":                  "test-scope-1 test-scope-2",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":              {"test"},
+		"access_type":            {"offline"},
+		"include_granted_scopes": {"true"},
+		"response_type":          {"code"},
+		"redirect_uri":           {"redirect"},
+		"scope":                  {"test-scope-1 test-scope-2"},
+	}, authParams)
 }
 
 func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
@@ -242,11 +296,18 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Facebook(tpmodels.FacebookConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-							}),
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "facebook",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -263,30 +324,64 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("facebook", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://graph.facebook.com/v12.0/oauth/access_token", providerInfo.Config.TokenEndpoint)
+	assert.Equal(t, "https://www.facebook.com/v12.0/dialog/oauth", providerInfo.Config.AuthorizationEndpoint)
 
-	assert.Equal(t, "https://graph.facebook.com/v9.0/oauth/access_token", providerInfoGetResult.AccessTokenAPI.URL)
-	assert.Equal(t, "https://www.facebook.com/v9.0/dialog/oauth", providerInfoGetResult.AuthorisationRedirect.URL)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]string{
-		"client_id":     "test",
-		"client_secret": "test-secret",
-	}, providerInfoGetResult.AccessTokenAPI.Params)
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id":     "test",
-		"response_type": "code",
-		"scope":         "email",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"response_type": {"code"},
+		"redirect_uri":  {"redirect"},
+		"scope":         {"email"},
+	}, authParams)
+
+	tokenParams := url.Values{}
+
+	defer gock.OffAll()
+	gock.New("https://graph.facebook.com").
+		Post("/v12.0/oauth/access_token").
+		Persist().
+		Map(func(r *http.Request) *http.Request {
+			data, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			tokenParams, err = url.ParseQuery(string(data))
+			assert.NoError(t, err)
+			return r
+		}).
+		Reply(200).
+		JSON(map[string]string{
+			"access_token": "abcd",
+		})
+
+	_, err = providerInfo.ExchangeAuthCodeForOAuthTokens(tpmodels.TypeRedirectURIInfo{
+		RedirectURIOnProviderDashboard: "redirect",
+		RedirectURIQueryParams: map[string]interface{}{
+			"code": "abcd",
+		},
+	}, &map[string]interface{}{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"client_secret": {"test-secret"},
+		"grant_type":    {"authorization_code"},
+		"code":          {"abcd"},
+		"redirect_uri":  {"redirect"},
+	}, tokenParams)
 }
 
 func TestPassingScopesInConfigForFacebook(t *testing.T) {
@@ -303,14 +398,19 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Facebook(tpmodels.FacebookConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-								Scope: []string{
-									"test-scope-1", "test-scope-2",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "facebook",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+											Scope:        []string{"test-scope-1", "test-scope-2"},
+										},
+									},
 								},
-							}),
+							},
 						},
 					},
 				},
@@ -327,22 +427,30 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("facebook", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://graph.facebook.com/v12.0/oauth/access_token", providerInfo.Config.TokenEndpoint)
+	assert.Equal(t, "https://www.facebook.com/v12.0/dialog/oauth", providerInfo.Config.AuthorizationEndpoint)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id":     "test",
-		"response_type": "code",
-		"scope":         "test-scope-1 test-scope-2",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
+
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
+
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"response_type": {"code"},
+		"redirect_uri":  {"redirect"},
+		"scope":         {"test-scope-1 test-scope-2"},
+	}, authParams)
 }
 
 func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
@@ -359,11 +467,18 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Github(tpmodels.GithubConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-							}),
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "github",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -380,29 +495,64 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("github", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "github", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://github.com/login/oauth/authorize", providerInfo.Config.AuthorizationEndpoint)
+	assert.Equal(t, "https://github.com/login/oauth/access_token", providerInfo.Config.TokenEndpoint)
 
-	assert.Equal(t, "https://github.com/login/oauth/access_token", providerInfoGetResult.AccessTokenAPI.URL)
-	assert.Equal(t, "https://github.com/login/oauth/authorize", providerInfoGetResult.AuthorisationRedirect.URL)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]string{
-		"client_id":     "test",
-		"client_secret": "test-secret",
-	}, providerInfoGetResult.AccessTokenAPI.Params)
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id": "test",
-		"scope":     "read:user user:email",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"response_type": {"code"},
+		"redirect_uri":  {"redirect"},
+		"scope":         {"read:user user:email"},
+	}, authParams)
+
+	tokenParams := url.Values{}
+
+	defer gock.OffAll()
+	gock.New("https://github.com").
+		Post("/login/oauth/access_token").
+		Persist().
+		Map(func(r *http.Request) *http.Request {
+			data, err := ioutil.ReadAll(r.Body)
+			assert.NoError(t, err)
+			tokenParams, err = url.ParseQuery(string(data))
+			assert.NoError(t, err)
+			return r
+		}).
+		Reply(200).
+		JSON(map[string]string{
+			"access_token": "abcd",
+		})
+
+	_, err = providerInfo.ExchangeAuthCodeForOAuthTokens(tpmodels.TypeRedirectURIInfo{
+		RedirectURIOnProviderDashboard: "redirect",
+		RedirectURIQueryParams: map[string]interface{}{
+			"code": "abcd",
+		},
+	}, &map[string]interface{}{})
+	assert.NoError(t, err)
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"client_secret": {"test-secret"},
+		"grant_type":    {"authorization_code"},
+		"code":          {"abcd"},
+		"redirect_uri":  {"redirect"},
+	}, tokenParams)
 }
 
 func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing.T) {
@@ -419,17 +569,22 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Github(tpmodels.GithubConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-								AuthorisationRedirect: &struct{ Params map[string]interface{} }{
-									Params: map[string]interface{}{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "github",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+										},
+									},
+									AuthorizationEndpointQueryParams: map[string]interface{}{
 										"key1": "value1",
 										"key2": "value2",
 									},
 								},
-							}),
+							},
 						},
 					},
 				},
@@ -446,23 +601,32 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("github", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "github", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://github.com/login/oauth/authorize", providerInfo.Config.AuthorizationEndpoint)
+	assert.Equal(t, "https://github.com/login/oauth/access_token", providerInfo.Config.TokenEndpoint)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id": "test",
-		"scope":     "read:user user:email",
-		"key1":      "value1",
-		"key2":      "value2",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
+
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
+
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"response_type": {"code"},
+		"redirect_uri":  {"redirect"},
+		"scope":         {"read:user user:email"},
+		"key1":          {"value1"},
+		"key2":          {"value2"},
+	}, authParams)
 }
 
 func TestPassingScopesInConfigForGithub(t *testing.T) {
@@ -479,14 +643,19 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Github(tpmodels.GithubConfig{
-								ClientID:     "test",
-								ClientSecret: "test-secret",
-								Scope: []string{
-									"test-scope-1", "test-scope-2",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "github",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+											Scope:        []string{"test-scope-1", "test-scope-2"},
+										},
+									},
 								},
-							}),
+							},
 						},
 					},
 				},
@@ -503,19 +672,28 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	singletonInstance, err := GetRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
+	providerRes, err := GetProvider("github", nil, nil)
+	assert.NoError(t, err)
 
-	providerInfo := singletonInstance.Providers[0]
+	providerInfo := providerRes.OK.Provider
 
 	assert.Equal(t, "github", providerInfo.ID)
 
-	providerInfoGetResult := providerInfo.Get(nil, nil, nil)
+	assert.Equal(t, "https://github.com/login/oauth/authorize", providerInfo.Config.AuthorizationEndpoint)
+	assert.Equal(t, "https://github.com/login/oauth/access_token", providerInfo.Config.TokenEndpoint)
 
-	assert.Equal(t, map[string]interface{}{
-		"client_id": "test",
-		"scope":     "test-scope-1 test-scope-2",
-	}, providerInfoGetResult.AuthorisationRedirect.Params)
+	authUrlRes, err := providerInfo.GetAuthorisationRedirectURL("redirect", &map[string]interface{}{})
+	assert.NoError(t, err)
+
+	urlObj, err := url.Parse(authUrlRes.URLWithQueryParams)
+	assert.NoError(t, err)
+
+	authParams := urlObj.Query()
+
+	assert.Equal(t, url.Values{
+		"client_id":     {"test"},
+		"response_type": {"code"},
+		"redirect_uri":  {"redirect"},
+		"scope":         {"test-scope-1 test-scope-2"},
+	}, authParams)
 }

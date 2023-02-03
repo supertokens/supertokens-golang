@@ -99,29 +99,27 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.emailPasswordRecipe = emailPasswordInstance
 	}
 
-	if len(verifiedConfig.Providers) > 0 {
-		if thirdPartyInstance == nil {
-			thirdPartyConfig := &tpmodels.TypeInput{
-				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-					Providers: verifiedConfig.Providers,
+	if thirdPartyInstance == nil {
+		thirdPartyConfig := &tpmodels.TypeInput{
+			SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+				Providers: verifiedConfig.Providers,
+			},
+			Override: &tpmodels.OverrideStruct{
+				Functions: func(_ tpmodels.RecipeInterface) tpmodels.RecipeInterface {
+					return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
 				},
-				Override: &tpmodels.OverrideStruct{
-					Functions: func(_ tpmodels.RecipeInterface) tpmodels.RecipeInterface {
-						return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
-					},
-					APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
-						return api.GetThirdPartyIterfaceImpl(r.APIImpl)
-					},
+				APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
+					return api.GetThirdPartyIterfaceImpl(r.APIImpl)
 				},
-			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailDelivery, onSuperTokensAPIError)
-			if err != nil {
-				return Recipe{}, err
-			}
-			r.thirdPartyRecipe = &thirdPartyRecipeinstance
-		} else {
-			r.thirdPartyRecipe = thirdPartyInstance
+			},
 		}
+		thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailDelivery, onSuperTokensAPIError)
+		if err != nil {
+			return Recipe{}, err
+		}
+		r.thirdPartyRecipe = &thirdPartyRecipeinstance
+	} else {
+		r.thirdPartyRecipe = thirdPartyInstance
 	}
 
 	return *r, nil
