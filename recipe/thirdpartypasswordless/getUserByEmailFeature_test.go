@@ -49,7 +49,7 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					mockThirdPartyProvider1,
 				},
 			}),
@@ -103,7 +103,7 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					mockThirdPartyProvider1,
 					mockThirdPartyProvider2,
 				},
@@ -131,8 +131,8 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
-	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
 
 	users, err := GetUsersByEmail("john.doe@example.com")
 	assert.NoError(t, err)

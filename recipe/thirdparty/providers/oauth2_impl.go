@@ -66,6 +66,10 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 }
 
 func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+	if redirectURIInfo.RedirectURIQueryParams == nil || redirectURIInfo.RedirectURIQueryParams["code"] == nil {
+		return nil, supertokens.BadInputError{Msg: "code not found in redirect URI query params"}
+	}
+
 	tokenAPIURL := config.TokenEndpoint
 	accessTokenAPIParams := map[string]interface{}{
 		"client_id":    config.ClientID,

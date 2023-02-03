@@ -434,7 +434,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -443,10 +443,9 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -692,7 +691,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 			Enabled: true,
 		},
 
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		Providers: []tpmodels.ProviderInput{customProviderForEmailVerification},
 	}
 	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
 		Mode: evmodels.ModeOptional,
@@ -716,10 +715,9 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -917,7 +915,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
 		},
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		Providers: []tpmodels.ProviderInput{customProviderForEmailVerification},
 	}
 	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
 		Mode: evmodels.ModeOptional,
@@ -929,10 +927,9 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)

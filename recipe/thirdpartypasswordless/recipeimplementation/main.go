@@ -95,6 +95,18 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		}, nil
 	}
 
+	var ogGetProvider func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) = nil
+	if thirdPartyImplementation != nil {
+		ogGetProvider = *thirdPartyImplementation.GetProvider
+	}
+
+	thirdPartyGetProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+		if ogGetProvider == nil {
+			return tpmodels.GetProviderResponse{}, errors.New("no thirdparty provider configured")
+		}
+		return ogGetProvider(thirdPartyID, tenantId, clientType, userContext)
+	}
+
 	ogPlessGetUserByID := *passwordlessImplementation.GetUserByID
 	var ogTPGetUserById func(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
 	if thirdPartyImplementation != nil {
@@ -360,6 +372,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	result.GetUserByThirdPartyInfo = &getUserByThirdPartyInfo
 	result.ThirdPartySignInUp = &thirPartySignInUp
 	result.ThirdPartyManuallyCreateOrUpdateUser = &thirdPartyManuallyCreateOrUpdateUser
+	result.ThirdPartyGetProvider = &thirdPartyGetProvider
 	result.ConsumeCode = &consumeCode
 	result.CreateCode = &createCode
 	result.CreateNewCodeForDevice = &createNewCodeForDevice
@@ -396,6 +409,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		(*thirdPartyImplementation.GetUserByID) = *modifiedTp.GetUserByID
 		(*thirdPartyImplementation.GetUserByThirdPartyInfo) = *modifiedTp.GetUserByThirdPartyInfo
 		(*thirdPartyImplementation.GetUsersByEmail) = *modifiedTp.GetUsersByEmail
+		(*thirdPartyImplementation.GetProvider) = *modifiedTp.GetProvider
 		(*thirdPartyImplementation.SignInUp) = *modifiedTp.SignInUp
 		(*thirdPartyImplementation.ManuallyCreateOrUpdateUser) = *modifiedTp.ManuallyCreateOrUpdateUser
 		(*thirdPartyImplementation.GetProvider) = *modifiedTp.GetProvider
