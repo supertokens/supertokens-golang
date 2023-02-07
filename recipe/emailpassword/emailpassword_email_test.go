@@ -27,6 +27,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -36,7 +37,15 @@ func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUser(t *testin
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(nil),
+	)
 	defer testServer.Close()
 
 	SignUp("test@example.com", "1234abcd")
@@ -54,7 +63,11 @@ func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUserWithSendEm
 	defer AfterEach()
 
 	testServer := supertokensInitForTest(t,
-		session.Init(nil),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
 		Init(&epmodels.TypeInput{
 			EmailDelivery: &emaildelivery.TypeInput{
 				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
@@ -86,7 +99,15 @@ func TestDefaultBackwardCompatibilityPasswordResetForNonExistantUser(t *testing.
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(nil),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
@@ -115,7 +136,15 @@ func TestBackwardCompatibilityResetPasswordForEmailPasswordUser(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	SignUp("test@example.com", "1234abcd")
@@ -152,7 +181,15 @@ func TestBackwardCompatibilityResetPasswordForNonExistantUser(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
@@ -194,7 +231,15 @@ func TestCustomOverrideResetPasswordForEmailPasswordUser(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	SignUp("test@example.com", "1234abcd")
@@ -237,7 +282,15 @@ func TestCustomOverrideResetPasswordForNonExistantUser(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
@@ -298,7 +351,15 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 			Service: smtpService,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	SignUp("test@example.com", "1234abcd")
@@ -360,7 +421,15 @@ func TestSMTPOverridePasswordResetForNonExistantUser(t *testing.T) {
 			Service: smtpService,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tpepConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tpepConfig),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
@@ -384,7 +453,16 @@ func TestDefaultBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(nil), emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(nil),
+		emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}),
+	)
 	defer testServer.Close()
 
 	resp, err := unittesting.SignupRequest("test@example.com", "1234abcd", testServer.URL)
@@ -412,7 +490,11 @@ func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
 	tpepConfig := &epmodels.TypeInput{}
 	testServer := supertokensInitForTest(
 		t,
-		session.Init(nil),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
 			CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
@@ -454,7 +536,11 @@ func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	testServer := supertokensInitForTest(t,
-		session.Init(nil),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
 		Init(nil),
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
@@ -532,7 +618,11 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 		},
 	})
 	testServer := supertokensInitForTest(t,
-		session.Init(nil),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
 		Init(nil),
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,

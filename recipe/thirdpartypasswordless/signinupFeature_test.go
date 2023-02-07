@@ -49,7 +49,11 @@ func TestThirdPartyPasswordlessThatIfYouDisableTheSignInUpAPIItDoesNotWork(t *te
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -130,6 +134,9 @@ func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -204,11 +211,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
 }
@@ -227,6 +231,9 @@ func TestWithThirdPartyPasswordlessMissingCodeAndAuthCodeResponse(t *testing.T) 
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -298,6 +305,9 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -379,11 +389,8 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
 }
@@ -405,6 +412,9 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -492,11 +502,8 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 	assert.NotNil(t, cookieData["antiCsrf"])
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenHttpOnly"])
 }
@@ -515,6 +522,9 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 		RecipeList: []supertokens.Recipe{
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfValue,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
@@ -589,7 +599,11 @@ func TestWithThirdPartyPasswordlessEmailNotReturnedInGetProfileInfoFunction(t *t
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -670,7 +684,11 @@ func TestWithThirdPartyPasswordlessErrorThrownFromGetProfileInfoFunction(t *test
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -748,7 +766,11 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -847,7 +869,11 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
@@ -946,7 +972,11 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{

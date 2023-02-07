@@ -7,11 +7,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
--   Fixes issue with go-fiber example, where updating accessTokenPayload from user defined endpoint doesn't reflect in the response cookies.
-
-## [0.9.15] - 2023-02-06
+## [0.10.1] - 2023-02-06
 
 -   Email template updates
+
+## [0.10.0] - 2023-02-02
+
+### Fixes
+-   Fixes issue with go-fiber example, where updating accessTokenPayload from user defined endpoint doesn't reflect in the response cookies.
+
+### Added
+-   Added support for authorizing requests using the `Authorization` header instead of cookies
+-   Optional `GetTokenTransferMethod` config is Session recipe input, which determines the token transfer method.
+-   Check out https://supertokens.com/docs/thirdpartyemailpassword/common-customizations/sessions/token-transfer-method for more information
+
+### Removed
+-   ID Refresh token is removed from the SDK
+
+### Breaking changes
+-   The frontend SDK should be updated to a version supporting the header-based sessions!
+    -   supertokens-auth-react: >= 0.31.0
+    -   supertokens-web-js: >= 0.5.0
+    -   supertokens-website: >= 16.0.0
+    -   supertokens-react-native: >= 4.0.0
+    -   supertokens-ios >= 0.2.0
+    -   supertokens-android >= 0.3.0
+    -   supertokens-flutter >= 0.1.0
+-   `CreateNewSession` now requires passing the request as well as the response.
+    -   This only requires a change if you manually created sessions (e.g.: during testing)
+    -   Check the migration example below
+-   `CreateNewSessionWithContext` and `CreateNewSession` in the session recipe accepts new 
+-   Only supporting FDI 1.16
+parameter `req` of type `*http.Request`
+
+### Migration
+
+Before:
+
+```go
+func httpHandler(w http.ResponseWriter, r *http.Request,) {
+    sessionContainer, err := session.CreateNewSession(w, "userId", map[string]interface{}{}, map[string]interface{}{})
+    if err != nil {
+        // handle error
+    }
+    // ...
+}
+```
+
+After:
+
+```go
+func httpHandler(w http.ResponseWriter, r *http.Request,) {
+    sessionContainer, err := session.CreateNewSession(r, w, "userId", map[string]interface{}{}, map[string]interface{}{})
+    if err != nil {
+        // handle error
+    }
+    // ...
+}
+```
 
 ## [0.9.14] - 2022-12-26
 

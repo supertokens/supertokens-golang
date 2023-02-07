@@ -15,6 +15,8 @@
 
 package session
 
+import "github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+
 const (
 	refreshAPIPath = "/session/refresh"
 	signoutAPIPath = "/signout"
@@ -27,3 +29,5 @@ const (
 	cookieSameSite_LAX    = "lax"
 	cookieSameSite_STRICT = "strict"
 )
+
+var availableTokenTransferMethods = []sessmodels.TokenTransferMethod{sessmodels.CookieTransferMethod, sessmodels.HeaderTransferMethod}

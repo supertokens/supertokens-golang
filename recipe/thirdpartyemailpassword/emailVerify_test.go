@@ -49,6 +49,9 @@ func TestTheGenerateTokenAPIwithValidInputEmailNotVerified(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -77,7 +80,7 @@ func TestTheGenerateTokenAPIwithValidInputEmailNotVerified(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 	user := result["user"].(map[string]interface{})
 
-	rep1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user["id"].(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	rep1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user["id"].(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -103,6 +106,9 @@ func TestGenerateTokenAPIwithValidInputEmailVerifiedAndTestError(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -137,7 +143,7 @@ func TestGenerateTokenAPIwithValidInputEmailVerifiedAndTestError(t *testing.T) {
 	}
 	emailverification.VerifyEmailUsingToken(verifyToken.OK.Token)
 
-	rep1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user["id"].(string), cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	rep1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user["id"].(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -163,6 +169,9 @@ func TestGenerateTokenAPIWithValidInputNoSessionAndCheckOutput(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -205,6 +214,9 @@ func TestEmailVerifyAPIwithInvalidTokenCheckError(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customCSRFval,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}

@@ -189,15 +189,12 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	var refreshTokenExpiry string
 	var refreshTokenDomain string
 	var refreshTokenHttpOnly = "false"
-	var idRefreshTokenFromCookie string
-	var idRefreshTokenFromHeader string
-	var idRefreshTokenExpiry string
-	var idRefreshTokenDomain string
-	var idRefreshTokenHttpOnly = "false"
 	var accessToken string
 	var accessTokenExpiry string
 	var accessTokenDomain string
 	var accessTokenHttpOnly = "false"
+
+	// Cookie stuff
 	for _, cookie := range cookies {
 		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
 			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
@@ -214,23 +211,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
 					refreshTokenHttpOnly = "true"
-					break
-				}
-			}
-		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sIdRefreshToken" {
-			idRefreshTokenFromCookie = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
-			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
-				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
-			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
-				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
-			} else {
-				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
-			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-			}
-			for _, property := range strings.Split(cookie, ";") {
-				if strings.Index(property, "HttpOnly") == 1 {
-					idRefreshTokenHttpOnly = "true"
 					break
 				}
 			}
@@ -253,29 +233,109 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 			}
 		}
 	}
-	idRefreshTokenFromHeader = res.Header.Get("id-refresh-token")
 	antiCsrfVal := ""
 	if len(antiCsrf) > 0 {
 		antiCsrfVal = antiCsrf[0]
 	}
 	frontToken := res.Header.Get("front-token")
 
+	// Header stuff
+	var refreshTokenFromHeader string = res.Header.Get("st-refresh-token")
+	var accessTokenFromHeader string = res.Header.Get("st-access-token")
+
 	return map[string]string{
-		"antiCsrf":                 antiCsrfVal,
-		"sAccessToken":             accessToken,
-		"sRefreshToken":            refreshToken,
-		"sIdRefreshToken":          idRefreshTokenFromCookie,
-		"refreshTokenExpiry":       refreshTokenExpiry,
-		"refreshTokenDomain":       refreshTokenDomain,
-		"refreshTokenHttpOnly":     refreshTokenHttpOnly,
-		"idRefreshTokenExpiry":     idRefreshTokenExpiry,
-		"idRefreshTokenFromHeader": idRefreshTokenFromHeader,
-		"idRefreshTokenDomain":     idRefreshTokenDomain,
-		"idRefreshTokenHttpOnly":   idRefreshTokenHttpOnly,
-		"accessTokenExpiry":        accessTokenExpiry,
-		"accessTokenDomain":        accessTokenDomain,
-		"accessTokenHttpOnly":      accessTokenHttpOnly,
-		"frontToken":               frontToken,
+		"antiCsrf":             antiCsrfVal,
+		"sAccessToken":         accessToken,
+		"sRefreshToken":        refreshToken,
+		"refreshTokenExpiry":   refreshTokenExpiry,
+		"refreshTokenDomain":   refreshTokenDomain,
+		"refreshTokenHttpOnly": refreshTokenHttpOnly,
+		"accessTokenExpiry":    accessTokenExpiry,
+		"accessTokenDomain":    accessTokenDomain,
+		"accessTokenHttpOnly":  accessTokenHttpOnly,
+		"frontToken":           frontToken,
+
+		"refreshTokenFromHeader": refreshTokenFromHeader,
+		"accessTokenFromHeader":  accessTokenFromHeader,
+	}
+}
+
+func ExtractInfoFromResponseForAuthModeTests(res *http.Response) map[string]string {
+	antiCsrf := res.Header["Anti-Csrf"]
+	cookies := res.Header["Set-Cookie"]
+	var refreshToken string = "-not-present-"
+	var refreshTokenExpiry string = "-not-present-"
+	var refreshTokenDomain string = "-not-present-"
+	var refreshTokenHttpOnly = "false"
+	var accessToken string = "-not-present-"
+	var accessTokenExpiry string = "-not-present-"
+	var accessTokenDomain string = "-not-present-"
+	var accessTokenHttpOnly = "false"
+
+	// Cookie stuff
+	for _, cookie := range cookies {
+		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
+			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					refreshTokenHttpOnly = "true"
+					break
+				}
+			}
+		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sAccessToken" {
+			accessToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
+			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
+			} else {
+				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
+			}
+			for _, property := range strings.Split(cookie, ";") {
+				if strings.Index(property, "HttpOnly") == 1 {
+					accessTokenHttpOnly = "true"
+					break
+				}
+			}
+		}
+	}
+	antiCsrfVal := "-not-present-"
+	if len(antiCsrf) > 0 {
+		antiCsrfVal = antiCsrf[0]
+	}
+	frontToken := res.Header.Get("front-token")
+
+	// Header stuff
+	var refreshTokenFromHeader string = "-not-present-"
+	if len(res.Header.Values("st-refresh-token")) > 0 {
+		refreshTokenFromHeader = res.Header.Get("st-refresh-token")
+	}
+	var accessTokenFromHeader string = "-not-present-"
+	if len(res.Header.Values("st-access-token")) > 0 {
+		accessTokenFromHeader = res.Header.Get("st-access-token")
+	}
+
+	return map[string]string{
+		"antiCsrf":             antiCsrfVal,
+		"sAccessToken":         accessToken,
+		"sRefreshToken":        refreshToken,
+		"refreshTokenExpiry":   refreshTokenExpiry,
+		"refreshTokenDomain":   refreshTokenDomain,
+		"refreshTokenHttpOnly": refreshTokenHttpOnly,
+		"accessTokenExpiry":    accessTokenExpiry,
+		"accessTokenDomain":    accessTokenDomain,
+		"accessTokenHttpOnly":  accessTokenHttpOnly,
+		"frontToken":           frontToken,
+
+		"refreshTokenFromHeader": refreshTokenFromHeader,
+		"accessTokenFromHeader":  accessTokenFromHeader,
 	}
 }
 
@@ -285,10 +345,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 	var refreshTokenExpiry string
 	var refreshTokenDomain string
 	var refreshTokenHttpOnly = "false"
-	var idRefreshTokenFromCookie string
-	var idRefreshTokenExpiry string
-	var idRefreshTokenDomain string
-	var idRefreshTokenHttpOnly = "false"
 	var accessToken string
 	var accessTokenExpiry string
 	var accessTokenDomain string
@@ -303,28 +359,9 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 			} else {
 				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
 					refreshTokenHttpOnly = "true"
-					break
-				}
-			}
-		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sIdRefreshToken" {
-			idRefreshTokenFromCookie = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
-			if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " Expires" {
-				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
-			} else if strings.Split(strings.Split(cookie, ";")[2], "=")[0] == " expires" {
-				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
-			} else {
-				idRefreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
-			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-			}
-			for _, property := range strings.Split(cookie, ";") {
-				if strings.Index(property, "HttpOnly") == 1 {
-					idRefreshTokenHttpOnly = "true"
 					break
 				}
 			}
@@ -337,8 +374,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 			} else {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.Index(property, "HttpOnly") == 1 {
 					accessTokenHttpOnly = "true"
@@ -348,18 +383,14 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 		}
 	}
 	return map[string]string{
-		"sAccessToken":           accessToken,
-		"sRefreshToken":          refreshToken,
-		"sIdRefreshToken":        idRefreshTokenFromCookie,
-		"refreshTokenExpiry":     refreshTokenExpiry,
-		"refreshTokenDomain":     refreshTokenDomain,
-		"refreshTokenHttpOnly":   refreshTokenHttpOnly,
-		"idRefreshTokenExpiry":   idRefreshTokenExpiry,
-		"idRefreshTokenDomain":   idRefreshTokenDomain,
-		"idRefreshTokenHttpOnly": idRefreshTokenHttpOnly,
-		"accessTokenExpiry":      accessTokenExpiry,
-		"accessTokenDomain":      accessTokenDomain,
-		"accessTokenHttpOnly":    accessTokenHttpOnly,
+		"sAccessToken":         accessToken,
+		"sRefreshToken":        refreshToken,
+		"refreshTokenExpiry":   refreshTokenExpiry,
+		"refreshTokenDomain":   refreshTokenDomain,
+		"refreshTokenHttpOnly": refreshTokenHttpOnly,
+		"accessTokenExpiry":    accessTokenExpiry,
+		"accessTokenDomain":    accessTokenDomain,
+		"accessTokenHttpOnly":  accessTokenHttpOnly,
 	}
 }
 
@@ -448,14 +479,14 @@ func SignInRequest(email string, password string, testUrl string) (*http.Respons
 	return resp, nil
 }
 
-func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, idRefreshTokenFromCookie string, antiCsrf string) (*http.Response, error) {
+func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/user/email/verify/token", bytes.NewBuffer([]byte(userId)))
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Cookie", "sAccessToken="+accessToken+";"+"sIdRefreshToken="+idRefreshTokenFromCookie)
+	req.Header.Add("Cookie", "sAccessToken="+accessToken)
 	req.Header.Add("anti-csrf", antiCsrf)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -465,14 +496,14 @@ func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, 
 	return resp, nil
 }
 
-func SignoutRequest(testUrl string, accessToken string, idRefreshTokenFromCookie string, antiCsrf string) (*http.Response, error) {
+func SignoutRequest(testUrl string, accessToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/signout", nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Cookie", "sAccessToken="+accessToken+";"+"sIdRefreshToken="+idRefreshTokenFromCookie)
+	req.Header.Add("Cookie", "sAccessToken="+accessToken)
 	req.Header.Add("anti-csrf", antiCsrf)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
@@ -482,14 +513,14 @@ func SignoutRequest(testUrl string, accessToken string, idRefreshTokenFromCookie
 	return resp, nil
 }
 
-func SessionRefresh(testUrl string, refreshToken string, idRefreshToken string, antiCsrf string) (*http.Response, error) {
+func SessionRefresh(testUrl string, refreshToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/session/refresh", nil)
 	if err != nil {
 		fmt.Println(err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Add("Cookie", "sRefreshToken="+refreshToken+";"+"sIdRefreshToken="+idRefreshToken)
+	req.Header.Add("Cookie", "sRefreshToken="+refreshToken)
 	req.Header.Add("anti-csrf", antiCsrf)
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
