@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-## [0.10.0]
+## [0.10.1] - 2023-02-06
+
+-   Email template updates
+
+## [0.10.0] - 2023-02-02
 
 ### Fixes
 -   Fixes issue with go-fiber example, where updating accessTokenPayload from user defined endpoint doesn't reflect in the response cookies.

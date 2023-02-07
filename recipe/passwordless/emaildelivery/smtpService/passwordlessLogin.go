@@ -507,13 +507,6 @@ const magicLinkAndOtpLoginTemplate = `<!doctype html>
 			text-decoration: underline;
 		}
 
-		@media only screen and (min-width:768px) {
-			.templateContainer {
-				width: 600px !important;
-			}
-
-		}
-
 		@media only screen and (max-width: 480px) {
 
 			body,
@@ -1494,13 +1487,6 @@ const magicLinkLoginTemplate = `<!doctype html>
 			text-decoration: underline;
 		}
 
-		@media only screen and (min-width:768px) {
-			.templateContainer {
-				width: 600px !important;
-			}
-
-		}
-
 		@media only screen and (max-width: 480px) {
 
 			body,
@@ -2418,13 +2404,6 @@ const otpLoginTemplate = `<!doctype html>
 			font-weight: normal;
 			/*@editable*/
 			text-decoration: underline;
-		}
-
-		@media only screen and (min-width:768px) {
-			.templateContainer {
-				width: 600px !important;
-			}
-
 		}
 
 		@media only screen and (max-width: 480px) {
