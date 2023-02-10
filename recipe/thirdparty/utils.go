@@ -19,7 +19,6 @@ import (
 	"encoding/json"
 	"strings"
 
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -87,11 +86,10 @@ func parseUser(value interface{}) (*tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	tenantId := multitenancymodels.DefaultTenantId
 	if strings.Contains(user.ThirdParty.UserID, "|") {
-		tenantId = strings.Split(user.ThirdParty.UserID, "|")[1]
+		tenantId := strings.Split(user.ThirdParty.UserID, "|")[1]
+		user.TenantId = &tenantId
 	}
-	user.TenantIds = []string{tenantId}
 	return &user, nil
 }
 

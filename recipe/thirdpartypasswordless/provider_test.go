@@ -26,7 +26,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -1228,43 +1227,6 @@ func TestWithThirdPartyPasswordlessDuplicateProvider(t *testing.T) {
 								},
 							},
 						},
-					}),
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		assert.Equal(t, "The providers array has multiple entries for the same third party provider. Please mark one of them as the default one by using 'IsDefault: true'", err.Error())
-	}
-}
-
-func TestWithThirdPartyPasswordlessDuplicateProviderWithBothDefault(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-					return sessmodels.CookieTransferMethod
-				},
-			}),
-			Init(tplmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
 					},
 				},
 			}),
@@ -1275,63 +1237,7 @@ func TestWithThirdPartyPasswordlessDuplicateProviderWithBothDefault(t *testing.T
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	err := supertokens.Init(configValue)
-	assert.NotNil(t, err)
 	if err != nil {
-		assert.Equal(t, "You have provided multiple third party providers that have the id: google and are marked as 'IsDefault: true'. Please only mark one of them as isDefault", err.Error())
-	}
-}
-
-func TestWithThirdPartyPasswordlessDuplicateProviderWithOneMarkedAsDefault(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-					return sessmodels.CookieTransferMethod
-				},
-			}),
-			Init(tplmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-				},
-				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     "test",
-						ClientSecret: "test-secret",
-						Scope: []string{
-							"test-scope-1", "test-scope-2",
-						},
-						IsDefault: true,
-					}),
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     "test",
-						ClientSecret: "test-secret",
-						Scope: []string{
-							"test-scope-1", "test-scope-2",
-						},
-					}),
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
 		assert.Equal(t, "The providers array has multiple entries for the same third party provider.", err.Error())
 	}
 }

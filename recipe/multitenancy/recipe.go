@@ -37,16 +37,16 @@ type Recipe struct {
 	APIImpl                   multitenancymodels.APIInterface
 	staticThirdPartyProviders []tpmodels.ProviderInput
 
-	GetTenantIdsForUserId        multitenancymodels.TypeGetTenantIdsForUserId
-	AddGetTenantIdsForUserIdFunc func(function multitenancymodels.TypeGetTenantIdsForUserId)
+	GetTenantIdForUserId        multitenancymodels.TypeGetTenantIdForUserId
+	AddGetTenantIdForUserIdFunc func(function multitenancymodels.TypeGetTenantIdForUserId)
 
-	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
+	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
 }
 
 var singletonInstance *Recipe
 
 func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *multitenancymodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*Recipe, error) {
-	getTenantIdsForUserIdFuncsFromOtherRecipes := []multitenancymodels.TypeGetTenantIdsForUserId{}
+	getTenantIdsForUserIdFuncsFromOtherRecipes := []multitenancymodels.TypeGetTenantIdForUserId{}
 
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(config)
@@ -66,13 +66,13 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	r.staticThirdPartyProviders = []tpmodels.ProviderInput{}
 
-	r.GetTenantIdsForUserId = func(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdsResult, error) {
-		if r.Config.GetTenantIdsForUserId != nil {
-			return r.Config.GetTenantIdsForUserId(userID, userContext)
+	r.GetTenantIdForUserId = func(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
+		if r.Config.GetTenantIdForUserId != nil {
+			return r.Config.GetTenantIdForUserId(userID, userContext)
 		}
 
 		var err error
-		var tenantIdRes multitenancymodels.TenantIdsResult
+		var tenantIdRes multitenancymodels.TenantIdResult
 		for _, getTenantIdsForUserIdFunc := range getTenantIdsForUserIdFuncsFromOtherRecipes {
 			tenantIdRes, err = getTenantIdsForUserIdFunc(userID, userContext)
 			if err != nil {
@@ -82,12 +82,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 				return tenantIdRes, nil
 			}
 		}
-		return multitenancymodels.TenantIdsResult{
+		return multitenancymodels.TenantIdResult{
 			UnknownUserIDError: &struct{}{},
 		}, nil
 	}
 
-	r.AddGetTenantIdsForUserIdFunc = func(function multitenancymodels.TypeGetTenantIdsForUserId) {
+	r.AddGetTenantIdForUserIdFunc = func(function multitenancymodels.TypeGetTenantIdForUserId) {
 		getTenantIdsForUserIdFuncsFromOtherRecipes = append(getTenantIdsForUserIdFuncsFromOtherRecipes, function)
 	}
 

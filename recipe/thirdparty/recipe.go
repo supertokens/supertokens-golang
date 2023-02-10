@@ -68,7 +68,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 		mtRecipe := multitenancy.GetRecipeInstance()
 		if mtRecipe != nil {
-			mtRecipe.AddGetTenantIdsForUserIdFunc(r.getTenantIdsForUserId)
+			mtRecipe.AddGetTenantIdForUserIdFunc(r.getTenantIdsForUserId)
 		}
 
 		mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
@@ -182,21 +182,21 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 	}, nil
 }
 
-func (r *Recipe) getTenantIdsForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdsResult, error) {
+func (r *Recipe) getTenantIdsForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
 	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
 	if err != nil {
-		return multitenancymodels.TenantIdsResult{}, err
+		return multitenancymodels.TenantIdResult{}, err
 	}
 
 	if userInfo == nil {
-		return multitenancymodels.TenantIdsResult{
+		return multitenancymodels.TenantIdResult{
 			UnknownUserIDError: &struct{}{},
 		}, nil
 	}
 
-	return multitenancymodels.TenantIdsResult{
-		OK: &struct{ TenantIds []string }{
-			TenantIds: userInfo.TenantIds,
+	return multitenancymodels.TenantIdResult{
+		OK: &struct{ TenantId *string }{
+			TenantId: userInfo.TenantId,
 		},
 	}, nil
 }

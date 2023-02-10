@@ -41,7 +41,30 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	getTenantConfig := func(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
 		// TODO impl
 		// TODO may throw mterrors.TenantDoesNotExistError
-		return multitenancymodels.TenantConfigResponse{}, errors.New("not implemented")
+		return multitenancymodels.TenantConfigResponse{
+			OK: &struct {
+				EmailPassword struct{ Enabled bool }
+				Passwordless  struct{ Enabled bool }
+				ThirdParty    struct {
+					Enabled   bool
+					Providers []tpmodels.ProviderConfig
+				}
+			}{
+				EmailPassword: struct{ Enabled bool }{
+					Enabled: true,
+				},
+				Passwordless: struct{ Enabled bool }{
+					Enabled: true,
+				},
+				ThirdParty: struct {
+					Enabled   bool
+					Providers []tpmodels.ProviderConfig
+				}{
+					Enabled:   true,
+					Providers: []tpmodels.ProviderConfig{},
+				},
+			},
+		}, nil
 	}
 
 	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
