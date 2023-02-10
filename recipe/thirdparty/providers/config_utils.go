@@ -48,7 +48,10 @@ func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPart
 			return providerInstance, nil
 		}
 	}
-	return nil, fmt.Errorf("the provider %s could not be found in the configuration", thirdPartyId)
+
+	return nil, supertokens.BadInputError{
+		Msg: fmt.Sprintf("the provider %s could not be found in the configuration", thirdPartyId),
+	}
 }
 
 func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
@@ -62,10 +65,10 @@ func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		return Facebook(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "github") {
 		return Github(input)
-	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google") {
-		return Google(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google-workspaces") {
 		return GoogleWorkspaces(input)
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google") {
+		return Google(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "okta") {
 		return Okta(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "linkedin") {

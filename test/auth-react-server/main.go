@@ -244,24 +244,24 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
 						ogSignInUpPOST := *originalImplementation.SignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+						(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
 							if gr != nil {
 								return tpmodels.AuthorisationUrlGETResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogAuthorisationUrlGET(provider, options, userContext)
+							return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, options, userContext)
 						}
 
-						(*originalImplementation.SignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+						(*originalImplementation.SignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
 							if gr != nil {
 								return tpmodels.SignInUpPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+							return ogSignInUpPOST(provider, input, options, userContext)
 						}
 						return originalImplementation
 					},
@@ -295,24 +295,24 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
 						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+						(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
 							if gr != nil {
 								return tpmodels.AuthorisationUrlGETResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogAuthorisationUrlGET(provider, options, userContext)
+							return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, options, userContext)
 						}
 
-						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
+						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
 							if gr != nil {
-								return tpepmodels.ThirdPartyOutput{
+								return tpepmodels.ThirdPartySignInUpPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+							return ogSignInUpPOST(provider, input, options, userContext)
 						}
 
 						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
@@ -477,24 +477,24 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
 						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+						(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
 							if gr != nil {
 								return tpmodels.AuthorisationUrlGETResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogAuthorisationUrlGET(provider, options, userContext)
+							return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, options, userContext)
 						}
 
-						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
+						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
 							if gr != nil {
-								return tplmodels.ThirdPartySignInUpOutput{
+								return tplmodels.ThirdPartySignInUpPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+							return ogSignInUpPOST(provider, input, options, userContext)
 						}
 
 						(*originalImplementation.ConsumeCodePOST) = func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
@@ -709,9 +709,61 @@ func returnGeneralErrorIfNeeded(req http.Request, message string, useQueryParams
 	return nil
 }
 
-func customAuth0Provider() tpmodels.TypeProvider {
+func customAuth0Provider() tpmodels.ProviderInput {
 
-	var response tpmodels.TypeProvider
+	var response tpmodels.ProviderInput
+
+	response.Config.ThirdPartyId = "auth0"
+	response.Config.Clients = []tpmodels.ProviderClientConfig{
+		{
+			ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
+			ClientSecret: os.Getenv("AUTH0_CLIENT_SECRET"),
+		},
+	}
+	response.Config.AuthorizationEndpoint = "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize"
+	response.Config.TokenEndpoint = "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token"
+
+	response.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+
+			authCodeResponseJson, err := json.Marshal(oAuthTokens)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+
+			var accessTokenAPIResponse auth0GetProfileInfoInput
+			err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
+
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+
+			accessToken := accessTokenAPIResponse.AccessToken
+			authHeader := "Bearer " + accessToken
+
+			// TODO maybe userInfoEndpoint is enough. Verify while testing
+			response, err := getAuth0AuthRequest(authHeader)
+
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+
+			userInfo := response.(map[string]interface{})
+
+			ID := userInfo["sub"].(string)
+			email := userInfo["name"].(string)
+
+			return tpmodels.TypeUserInfo{
+				ThirdPartyUserId: ID,
+				Email: &tpmodels.EmailStruct{
+					ID:         email,
+					IsVerified: true, // true if email is verified already
+				},
+			}, nil
+		}
+
+		return originalImplementation
+	}
 
 	response.ID = "auth0"
 	response.Get = func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {

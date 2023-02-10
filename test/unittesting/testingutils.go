@@ -32,6 +32,7 @@ import (
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"gopkg.in/h2non/gock.v1"
 )
 
@@ -530,65 +531,78 @@ func SessionRefresh(testUrl string, refreshToken string, antiCsrf string) (*http
 	return resp, nil
 }
 
-func ReturnCustomProviderWithAuthRedirectParams() tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL: "https://test.com/oauth/token",
+func ReturnCustomProviderWithAuthRedirectParams() tpmodels.ProviderInput {
+	return tpmodels.ProviderInput{
+		Config: tpmodels.ProviderConfig{
+			ThirdPartyId:          "custom",
+			AuthorizationEndpoint: "https://test.com/oauth/auth",
+			AuthorizationEndpointQueryParams: map[string]interface{}{
+				"scope":     "test",
+				"client_id": "supertokens",
+			},
+			TokenEndpoint: "https://test.com/oauth/token",
+			Clients: []tpmodels.ProviderClientConfig{
+				{
+					ClientID: "supertokens",
+					Scope:    []string{"test"},
 				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL: "https://test.com/oauth/auth",
-					Params: map[string]interface{}{
-						"scope":     "test",
-						"client_id": "supertokens",
-						"dynamic": func(req *http.Request) string {
-							return req.URL.Query().Get("dynamic")
-						},
-					},
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-					return tpmodels.UserInfo{
-						ID: "user",
-						Email: &tpmodels.EmailStruct{
-							ID:         "email@test.com",
-							IsVerified: true,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext *map[string]interface{}) string {
-					return "supertokens"
-				},
+			},
+		},
+		Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+			oGetConfig := originalImplementation.GetConfigForClientType
+			originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+				config, err := oGetConfig(clientType, userContext)
+				if err != nil {
+					return config, err
+				}
+
+				if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
+					if req, ok := _default["request"].(*http.Request); ok {
+						config.AuthorizationEndpointQueryParams["dynamic"] = req.URL.Query().Get("dynamic")
+					}
+				}
+
+				return config, nil
 			}
+
+			originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+				return tpmodels.TypeUserInfo{
+					ThirdPartyUserId: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "email@test.com",
+						IsVerified: true,
+					},
+				}, nil
+			}
+			return originalImplementation
 		},
 	}
 }
 
-func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: "custom",
-		Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL: "https://test.com/oauth/token",
+func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.ProviderInput {
+	return tpmodels.ProviderInput{
+		Config: tpmodels.ProviderConfig{
+			ThirdPartyId:          "custom",
+			AuthorizationEndpoint: "https://test.com/oauth/auth",
+			TokenEndpoint:         "https://test.com/oauth/token",
+			Clients: []tpmodels.ProviderClientConfig{
+				{
+					ClientID: "supertokens",
+					Scope:    []string{"test"},
 				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL: "https://test.com/oauth/auth",
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-					return tpmodels.UserInfo{
-						ID: "user",
-						Email: &tpmodels.EmailStruct{
-							ID:         "email@test.com",
-							IsVerified: true,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext *map[string]interface{}) string {
-					return "supertokens"
-				},
+			},
+		},
+		Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+			originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+				return tpmodels.TypeUserInfo{
+					ThirdPartyUserId: "user",
+					Email: &tpmodels.EmailStruct{
+						ID:         "email@test.com",
+						IsVerified: true,
+					},
+				}, nil
 			}
+			return originalImplementation
 		},
 	}
 }
@@ -602,10 +616,14 @@ func SigninupCustomRequest(testServerUrl string, email string, id string) (*http
 			"email": email,
 			"id":    id,
 		})
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://localhost.org",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://localhost.org",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)

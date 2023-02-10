@@ -46,7 +46,7 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&tpepmodels.TypeInput{
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					customProvider2,
 				},
 			}),
@@ -75,10 +75,14 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)

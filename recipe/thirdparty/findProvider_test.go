@@ -30,7 +30,7 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestSingleConfigWithoutClientIDSpecified(t *testing.T) {
+func TestSingleConfigWithoutClientTypeSpecified(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -44,13 +44,18 @@ func TestSingleConfigWithoutClientIDSpecified(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
+							},
 						},
 					},
 				},
@@ -87,14 +92,14 @@ func TestSingleConfigWithoutClientIDSpecified(t *testing.T) {
 	err = json.Unmarshal(dataInBytes, &data)
 	assert.NoError(t, err)
 
-	authUrl := data["url"].(string)
+	authUrl := data["urlWithQueryParams"].(string)
 	parsedURL, err := url.Parse(authUrl)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "client-id-1", parsedURL.Query().Get("client_id"))
 }
 
-func TestSingleConfigWithDefaultWithoutClientIDSpecified(t *testing.T) {
+func TestSingleConfigWithoutClientTypeSpecifiedOnlyInConfig(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -108,14 +113,19 @@ func TestSingleConfigWithDefaultWithoutClientIDSpecified(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
-									IsDefault:    true,
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
+							},
 						},
 					},
 				},
@@ -152,14 +162,14 @@ func TestSingleConfigWithDefaultWithoutClientIDSpecified(t *testing.T) {
 	err = json.Unmarshal(dataInBytes, &data)
 	assert.NoError(t, err)
 
-	authUrl := data["url"].(string)
+	authUrl := data["urlWithQueryParams"].(string)
 	parsedURL, err := url.Parse(authUrl)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "client-id-1", parsedURL.Query().Get("client_id"))
 }
 
-func TestMultipleProviderSingleConfigWithoutClientIDSpecified(t *testing.T) {
+func TestSingleConfigWithClientTypeSpecified(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -173,19 +183,19 @@ func TestMultipleProviderSingleConfigWithoutClientIDSpecified(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Facebook(
-								tpmodels.FacebookConfig{
-									ClientID:     "client-id-2",
-									ClientSecret: "test-secret",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
-								},
-							),
+							},
 						},
 					},
 				},
@@ -206,7 +216,7 @@ func TestMultipleProviderSingleConfigWithoutClientIDSpecified(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google")
+	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google&clientType=web")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -222,14 +232,14 @@ func TestMultipleProviderSingleConfigWithoutClientIDSpecified(t *testing.T) {
 	err = json.Unmarshal(dataInBytes, &data)
 	assert.NoError(t, err)
 
-	authUrl := data["url"].(string)
+	authUrl := data["urlWithQueryParams"].(string)
 	parsedURL, err := url.Parse(authUrl)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "client-id-1", parsedURL.Query().Get("client_id"))
 }
 
-func TestMultipleConfigWithoutClientIDSpecified1(t *testing.T) {
+func TestSingleConfigWithDifferentClientTypeSpecified(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -243,26 +253,95 @@ func TestMultipleConfigWithoutClientIDSpecified1(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
-									IsDefault:    true,
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-2",
-									ClientSecret: "test-secret",
+							},
+						},
+					},
+				},
+			),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google&clientType=ios")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, 400, resp.StatusCode)
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	assert.NoError(t, err)
+
+	assert.Equal(t, data["message"], "Could not find client config for clientType: ios")
+}
+
+func TestMultipleProviderSingleConfigWithoutClientTypeSpecified(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
+				&tpmodels.TypeInput{
+					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-3",
-									ClientSecret: "test-secret",
+							},
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "facebook",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "client-id-2",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
+							},
 						},
 					},
 				},
@@ -299,14 +378,14 @@ func TestMultipleConfigWithoutClientIDSpecified1(t *testing.T) {
 	err = json.Unmarshal(dataInBytes, &data)
 	assert.NoError(t, err)
 
-	authUrl := data["url"].(string)
+	authUrl := data["urlWithQueryParams"].(string)
 	parsedURL, err := url.Parse(authUrl)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "client-id-1", parsedURL.Query().Get("client_id"))
 }
 
-func TestMultipleConfigWithoutClientIDSpecified2(t *testing.T) {
+func TestMultipleConfigWithoutClientTypeSpecified(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -320,26 +399,29 @@ func TestMultipleConfigWithoutClientIDSpecified2(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "ios",
+											ClientID:     "client-id-2",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "android",
+											ClientID:     "client-id-3",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-2",
-									ClientSecret: "test-secret",
-								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-3",
-									ClientSecret: "test-secret",
-									IsDefault:    true,
-								},
-							),
+							},
 						},
 					},
 				},
@@ -364,7 +446,7 @@ func TestMultipleConfigWithoutClientIDSpecified2(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, 400, resp.StatusCode)
 
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -376,14 +458,10 @@ func TestMultipleConfigWithoutClientIDSpecified2(t *testing.T) {
 	err = json.Unmarshal(dataInBytes, &data)
 	assert.NoError(t, err)
 
-	authUrl := data["url"].(string)
-	parsedURL, err := url.Parse(authUrl)
-	assert.NoError(t, err)
-
-	assert.Equal(t, "client-id-3", parsedURL.Query().Get("client_id"))
+	assert.Equal(t, data["message"], "please provide exactly one client config or pass clientType or tenantId")
 }
 
-func TestMultipleProviderMultipleConfigWithoutClientIDSpecified(t *testing.T) {
+func TestMultipleConfigWithClientTypeSpecified(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -397,45 +475,132 @@ func TestMultipleProviderMultipleConfigWithoutClientIDSpecified(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Facebook(
-								tpmodels.FacebookConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
-									IsDefault:    true,
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "ios",
+											ClientID:     "client-id-2",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "android",
+											ClientID:     "client-id-3",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Facebook(
-								tpmodels.FacebookConfig{
-									ClientID:     "client-id-2",
-									ClientSecret: "test-secret",
+							},
+						},
+					},
+				},
+			),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=google&clientType=ios")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	// TODO this will result in an error
+	assert.Equal(t, 200, resp.StatusCode)
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	assert.NoError(t, err)
+
+	authUrl := data["urlWithQueryParams"].(string)
+	parsedURL, err := url.Parse(authUrl)
+	assert.NoError(t, err)
+
+	assert.Equal(t, "client-id-2", parsedURL.Query().Get("client_id"))
+}
+
+func TestMultipleProviderMultipleConfigWithoutClientTypeSpecified(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
+				&tpmodels.TypeInput{
+					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "ios",
+											ClientID:     "client-id-2",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "android",
+											ClientID:     "client-id-3",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Facebook(
-								tpmodels.FacebookConfig{
-									ClientID:     "client-id-3",
-									ClientSecret: "test-secret",
+							},
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "facebook",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "ios",
+											ClientID:     "client-id-2",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "android",
+											ClientID:     "client-id-3",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-1",
-									ClientSecret: "test-secret",
-								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-2",
-									ClientSecret: "test-secret",
-								},
-							),
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "client-id-3",
-									ClientSecret: "test-secret",
-									IsDefault:    true,
-								},
-							),
+							},
 						},
 					},
 				},
@@ -460,6 +625,104 @@ func TestMultipleProviderMultipleConfigWithoutClientIDSpecified(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	assert.Equal(t, 400, resp.StatusCode)
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	assert.NoError(t, err)
+
+	assert.Equal(t, data["message"], "please provide exactly one client config or pass clientType or tenantId")
+}
+
+func TestMultipleProviderMultipleConfigWithClientTypeSpecified(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
+				&tpmodels.TypeInput{
+					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-1",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "ios",
+											ClientID:     "client-id-2",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "android",
+											ClientID:     "client-id-3",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "facebook",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientType:   "web",
+											ClientID:     "client-id-4",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "ios",
+											ClientID:     "client-id-5",
+											ClientSecret: "test-secret",
+										},
+										{
+											ClientType:   "android",
+											ClientID:     "client-id-6",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	resp, err := http.Get(testServer.URL + "/auth/authorisationurl?thirdPartyId=facebook&clientType=android")
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, 200, resp.StatusCode)
 
 	dataInBytes, err := io.ReadAll(resp.Body)
@@ -472,9 +735,9 @@ func TestMultipleProviderMultipleConfigWithoutClientIDSpecified(t *testing.T) {
 	err = json.Unmarshal(dataInBytes, &data)
 	assert.NoError(t, err)
 
-	authUrl := data["url"].(string)
+	authUrl := data["urlWithQueryParams"].(string)
 	parsedURL, err := url.Parse(authUrl)
 	assert.NoError(t, err)
 
-	assert.Equal(t, "client-id-3", parsedURL.Query().Get("client_id"))
+	assert.Equal(t, "client-id-6", parsedURL.Query().Get("client_id"))
 }

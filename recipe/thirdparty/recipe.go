@@ -25,6 +25,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -67,7 +68,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 		mtRecipe := multitenancy.GetRecipeInstance()
 		if mtRecipe != nil {
-			mtRecipe.AddGetTenantIdForUserIdFunc(r.getTenantIdForUserId)
+			mtRecipe.AddGetTenantIdsForUserIdFunc(r.getTenantIdsForUserId)
 		}
 
 		mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
@@ -157,6 +158,10 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	if errors.As(err, &tperrors.ClientTypeNotFoundError{}) {
+		supertokens.SendNon200ResponseWithMessage(res, err.Error(), 400)
+		return true, nil
+	}
 	return false, nil
 }
 
@@ -177,21 +182,21 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 	}, nil
 }
 
-func (r *Recipe) getTenantIdForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
+func (r *Recipe) getTenantIdsForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdsResult, error) {
 	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
 	if err != nil {
-		return multitenancymodels.TenantIdResult{}, err
+		return multitenancymodels.TenantIdsResult{}, err
 	}
 
 	if userInfo == nil {
-		return multitenancymodels.TenantIdResult{
+		return multitenancymodels.TenantIdsResult{
 			UnknownUserIDError: &struct{}{},
 		}, nil
 	}
 
-	return multitenancymodels.TenantIdResult{
-		OK: &struct{ TenantId *string }{
-			TenantId: userInfo.TenantId,
+	return multitenancymodels.TenantIdsResult{
+		OK: &struct{ TenantIds []string }{
+			TenantIds: userInfo.TenantIds,
 		},
 	}, nil
 }

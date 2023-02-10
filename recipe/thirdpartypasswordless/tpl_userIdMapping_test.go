@@ -5,7 +5,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -28,8 +27,18 @@ func initForUserIdMappingTest(t *testing.T) {
 				Enabled: true,
 			},
 			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-			Providers: []tpmodels.TypeProvider{
-				thirdparty.Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
+			Providers: []tpmodels.ProviderInput{
+				{
+					Config: tpmodels.ProviderConfig{
+						ThirdPartyId: "google",
+						Clients: []tpmodels.ProviderClientConfig{
+							{
+								ClientID:     "clientID",
+								ClientSecret: "clientSecret",
+							},
+						},
+					},
+				},
 			},
 		})},
 	}
@@ -55,7 +64,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
+	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"

@@ -71,7 +71,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 		mtRecipe := multitenancy.GetRecipeInstance()
 		if mtRecipe != nil {
-			mtRecipe.AddGetTenantIdForUserIdFunc(r.getTenantIdForUserId)
+			mtRecipe.AddGetTenantIdsForUserIdFunc(r.getTenantIdsForUserId)
 		}
 
 		return nil
@@ -213,21 +213,21 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 	}, nil
 }
 
-func (r *Recipe) getTenantIdForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
+func (r *Recipe) getTenantIdsForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdsResult, error) {
 	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
 	if err != nil {
-		return multitenancymodels.TenantIdResult{}, err
+		return multitenancymodels.TenantIdsResult{}, err
 	}
 
 	if userInfo == nil {
-		return multitenancymodels.TenantIdResult{
+		return multitenancymodels.TenantIdsResult{
 			UnknownUserIDError: &struct{}{},
 		}, nil
 	}
 
-	return multitenancymodels.TenantIdResult{
-		OK: &struct{ TenantId *string }{
-			TenantId: nil, // Returning nil here because multitenancy is not supported for this recipe yet
+	return multitenancymodels.TenantIdsResult{
+		OK: &struct{ TenantIds []string }{
+			TenantIds: []string{multitenancymodels.DefaultTenantId}, // Returning defaultTenantId here because multitenancy is not supported for this recipe yet
 		},
 	}, nil
 }

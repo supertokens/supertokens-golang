@@ -57,7 +57,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					customProvider1,
 				},
 			}),
@@ -94,7 +94,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
 	assert.Equal(t, "OK", result["status"])
 
-	fetchedUrl := result["url"].(string)
+	fetchedUrl := result["urlWithQueryParams"].(string)
 	fetchedParsedUrl, err := url.Parse(fetchedUrl)
 
 	assert.NoError(t, err)
@@ -130,7 +130,7 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					customProvider1,
 				},
 			}),
@@ -165,5 +165,5 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
 	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
-	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", result["message"])
+	assert.Equal(t, "the provider google could not be found in the configuration", result["message"])
 }

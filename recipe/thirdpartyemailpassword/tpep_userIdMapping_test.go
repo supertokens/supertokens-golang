@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -23,8 +22,18 @@ func initForUserIdMappingTest(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{Init(&tpepmodels.TypeInput{
-			Providers: []tpmodels.TypeProvider{
-				thirdparty.Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
+			Providers: []tpmodels.ProviderInput{
+				{
+					Config: tpmodels.ProviderConfig{
+						ThirdPartyId: "google",
+						Clients: []tpmodels.ProviderClientConfig{
+							{
+								ClientID:     "test",
+								ClientSecret: "test-secret",
+							},
+						},
+					},
+				},
 			},
 		})},
 	}
@@ -50,7 +59,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
+	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"

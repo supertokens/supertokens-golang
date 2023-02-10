@@ -68,11 +68,18 @@ func TestThirdPartyPasswordlessThatIfYouDisableTheSignInUpAPIItDoesNotWork(t *te
 						return originalImplementation
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     "test",
-						ClientSecret: "test-secret",
-					}),
+				Providers: []tpmodels.ProviderInput{
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "google",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     "test",
+									ClientSecret: "test-secret",
+								},
+							},
+						},
+					},
 				},
 			}),
 		},
@@ -102,10 +109,14 @@ func TestThirdPartyPasswordlessThatIfYouDisableTheSignInUpAPIItDoesNotWork(t *te
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	signinupPostData := map[string]string{
+	signinupPostData := map[string]interface{}{
 		"thirdPartyId": "google",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -146,7 +157,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider6,
 				},
 			}),
@@ -179,10 +190,9 @@ func TestWithThirdPartyPasswordlessMinimumConfigWithoutCodeForThirdPartyModyule(
 
 	signinupPostData := thirdparty.PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -243,7 +253,7 @@ func TestWithThirdPartyPasswordlessMissingCodeAndAuthCodeResponse(t *testing.T) 
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider6,
 				},
 			}),
@@ -276,7 +286,12 @@ func TestWithThirdPartyPasswordlessMissingCodeAndAuthCodeResponse(t *testing.T) 
 
 	signinupPostData := thirdparty.PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		RedirectUri:  "http://127.0.0.1/callback",
+		RedirectURIInfo: &struct {
+			RedirectURIOnProviderDashboard string                 "json:\"redirectURIOnProviderDashboard\""
+			RedirectURIQueryParams         map[string]interface{} "json:\"redirectURIQueryParams\""
+		}{
+			RedirectURIOnProviderDashboard: "http://127.0.0.1/callback",
+		},
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -317,7 +332,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -354,10 +369,14 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 		Reply(200).
 		JSON(map[string]string{"access_token": "abcdefghj"})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -424,7 +443,7 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider5,
 				},
 			}),
@@ -461,10 +480,14 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 		Reply(200).
 		JSON(map[string]string{"access_token": "abcdefghj"})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -534,7 +557,7 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -565,10 +588,14 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "google",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -585,7 +612,7 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 
 	response := *unittesting.HttpResponseToConsumableInformation(resp.Body)
 
-	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", response["message"])
+	assert.Equal(t, "the provider google could not be found in the configuration", response["message"])
 }
 
 func TestWithThirdPartyPasswordlessEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
@@ -612,7 +639,7 @@ func TestWithThirdPartyPasswordlessEmailNotReturnedInGetProfileInfoFunction(t *t
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider3,
 				},
 			}),
@@ -649,10 +676,14 @@ func TestWithThirdPartyPasswordlessEmailNotReturnedInGetProfileInfoFunction(t *t
 		Reply(200).
 		JSON(map[string]string{"access_token": "abcdefghj"})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -697,7 +728,7 @@ func TestWithThirdPartyPasswordlessErrorThrownFromGetProfileInfoFunction(t *test
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider4,
 				},
 			}),
@@ -734,10 +765,14 @@ func TestWithThirdPartyPasswordlessErrorThrownFromGetProfileInfoFunction(t *test
 		Reply(200).
 		JSON(map[string]string{"access_token": "abcdefghj"})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -779,7 +814,7 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -838,7 +873,7 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 	}
 	assert.Equal(t, http.StatusBadRequest, resp1.StatusCode)
 	response1 := *unittesting.HttpResponseToConsumableInformation(resp1.Body)
-	assert.Equal(t, "Please provide one of code or authCodeResponse in the request body", response1["message"])
+	assert.Equal(t, "Please provide one of redirectURIInfo or oAuthTokens in the request body", response1["message"])
 
 	//request where the post data without redirect-uri
 	postData2 := map[string]interface{}{
@@ -855,7 +890,7 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 	}
 	assert.Equal(t, http.StatusBadRequest, resp2.StatusCode)
 	response2 := *unittesting.HttpResponseToConsumableInformation(resp2.Body)
-	assert.Equal(t, "Please provide the redirectURI in request body", response2["message"])
+	assert.Equal(t, "Please provide one of redirectURIInfo or oAuthTokens in the request body", response2["message"])
 }
 
 func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T) {
@@ -882,7 +917,7 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -919,10 +954,14 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://localhost.org",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://localhost.org",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -985,7 +1024,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 						return nil
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -1022,10 +1061,14 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://localhost.org",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://localhost.org",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
