@@ -267,19 +267,40 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					},
 				},
 				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-					Providers: []tpmodels.TypeProvider{
-						thirdparty.Google(tpmodels.GoogleConfig{
-							ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-							ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-						}),
-						thirdparty.Github(tpmodels.GithubConfig{
-							ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-							ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-						}),
-						thirdparty.Facebook(tpmodels.FacebookConfig{
-							ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-							ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-						}),
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+										ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+									},
+								},
+							},
+						},
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "github",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+										ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+									},
+								},
+							},
+						},
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "facebook",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+										ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+									},
+								},
+							},
+						},
 						customAuth0Provider(),
 					},
 				},
@@ -370,19 +391,40 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: formFields,
 				},
-				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-					}),
-					thirdparty.Github(tpmodels.GithubConfig{
-						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-					}),
-					thirdparty.Facebook(tpmodels.FacebookConfig{
-						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-					}),
+				Providers: []tpmodels.ProviderInput{
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "google",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+									ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+								},
+							},
+						},
+					},
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "github",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+									ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+								},
+							},
+						},
+					},
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "facebook",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+									ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+								},
+							},
+						},
+					},
 					customAuth0Provider(),
 				},
 			}),
@@ -454,19 +496,40 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
-				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-					}),
-					thirdparty.Github(tpmodels.GithubConfig{
-						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-					}),
-					thirdparty.Facebook(tpmodels.FacebookConfig{
-						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-					}),
+				Providers: []tpmodels.ProviderInput{
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "google",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+									ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+								},
+							},
+						},
+					},
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "github",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+									ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+								},
+							},
+						},
+					},
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "facebook",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+									ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+								},
+							},
+						},
+					},
 					customAuth0Provider(),
 				},
 				Override: &tplmodels.OverrideStruct{
@@ -711,19 +774,19 @@ func returnGeneralErrorIfNeeded(req http.Request, message string, useQueryParams
 
 func customAuth0Provider() tpmodels.ProviderInput {
 
-	var response tpmodels.ProviderInput
+	var providerInput tpmodels.ProviderInput
 
-	response.Config.ThirdPartyId = "auth0"
-	response.Config.Clients = []tpmodels.ProviderClientConfig{
+	providerInput.Config.ThirdPartyId = "auth0"
+	providerInput.Config.Clients = []tpmodels.ProviderClientConfig{
 		{
 			ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
 			ClientSecret: os.Getenv("AUTH0_CLIENT_SECRET"),
 		},
 	}
-	response.Config.AuthorizationEndpoint = "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize"
-	response.Config.TokenEndpoint = "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token"
+	providerInput.Config.AuthorizationEndpoint = "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize"
+	providerInput.Config.TokenEndpoint = "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token"
 
-	response.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+	providerInput.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 
 			authCodeResponseJson, err := json.Marshal(oAuthTokens)
@@ -764,82 +827,7 @@ func customAuth0Provider() tpmodels.ProviderInput {
 
 		return originalImplementation
 	}
-
-	response.ID = "auth0"
-	response.Get = func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-		if redirectURI == nil {
-			temp := ""
-			redirectURI = &temp
-		}
-
-		if authCodeFromRequest == nil {
-			temp := ""
-			authCodeFromRequest = &temp
-		}
-
-		return tpmodels.TypeProviderGetResponse{
-
-			AccessTokenAPI: tpmodels.AccessTokenAPI{
-				URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/oauth/token",
-				Params: map[string]string{
-					"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
-					"client_secret": os.Getenv("AUTH0_CLIENT_SECRET"),
-					"grant_type":    "authorization_code",
-					"redirect_uri":  *redirectURI,
-					"code":          *authCodeFromRequest,
-				},
-			},
-			AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-				URL: "https://" + os.Getenv("AUTH0_DOMAIN") + "/authorize",
-				Params: map[string]interface{}{
-					"client_id":     os.Getenv("AUTH0_CLIENT_ID"),
-					"scope":         "openid profile",
-					"response_type": "code",
-				},
-			},
-			GetClientId: func(userContext supertokens.UserContext) string {
-				return os.Getenv("AUTH0_CLIENT_ID")
-			},
-			GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-
-				authCodeResponseJson, err := json.Marshal(authCodeResponse)
-				if err != nil {
-					return tpmodels.UserInfo{}, err
-				}
-
-				var accessTokenAPIResponse auth0GetProfileInfoInput
-				err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-
-				if err != nil {
-					return tpmodels.UserInfo{}, err
-				}
-
-				accessToken := accessTokenAPIResponse.AccessToken
-				authHeader := "Bearer " + accessToken
-
-				response, err := getAuth0AuthRequest(authHeader)
-
-				if err != nil {
-					return tpmodels.UserInfo{}, err
-				}
-
-				userInfo := response.(map[string]interface{})
-
-				ID := userInfo["sub"].(string)
-				email := userInfo["name"].(string)
-
-				return tpmodels.UserInfo{
-					ID: ID,
-					Email: &tpmodels.EmailStruct{
-						ID:         email,
-						IsVerified: true, // true if email is verified already
-					},
-				}, nil
-			},
-		}
-	}
-	return response
-
+	return providerInput
 }
 
 func getAuth0AuthRequest(authHeader string) (interface{}, error) {
