@@ -33,7 +33,6 @@ type TenantIdResult struct {
 }
 
 type TypeInput struct {
-	GetTenantIdForUserId         TypeGetTenantIdForUserId
 	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
 	ErrorHandlers                *ErrorHandlers
 	Override                     *OverrideStruct
@@ -45,7 +44,6 @@ type ErrorHandlers struct {
 }
 
 type TypeNormalisedInput struct {
-	GetTenantIdForUserId         TypeGetTenantIdForUserId
 	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
 
 	ErrorHandlers NormalisedErrorHandlers

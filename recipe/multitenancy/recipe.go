@@ -67,10 +67,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.staticThirdPartyProviders = []tpmodels.ProviderInput{}
 
 	r.GetTenantIdForUserId = func(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
-		if r.Config.GetTenantIdForUserId != nil {
-			return r.Config.GetTenantIdForUserId(userID, userContext)
-		}
-
 		var err error
 		var tenantIdRes multitenancymodels.TenantIdResult
 		for _, getTenantIdsForUserIdFunc := range getTenantIdsForUserIdFuncsFromOtherRecipes {
@@ -90,8 +86,6 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.AddGetTenantIdForUserIdFunc = func(function multitenancymodels.TypeGetTenantIdForUserId) {
 		getTenantIdsForUserIdFuncsFromOtherRecipes = append(getTenantIdsForUserIdFuncsFromOtherRecipes, function)
 	}
-
-	r.GetAllowedDomainsForTenantId = verifiedConfig.GetAllowedDomainsForTenantId
 
 	return r, nil
 }

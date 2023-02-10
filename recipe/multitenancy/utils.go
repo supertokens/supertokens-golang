@@ -62,7 +62,6 @@ func makeTypeNormalisedInput(config *multitenancymodels.TypeInput) multitenancym
 	}
 
 	return multitenancymodels.TypeNormalisedInput{
-		GetTenantIdForUserId:         config.GetTenantIdForUserId,
 		GetAllowedDomainsForTenantId: config.GetAllowedDomainsForTenantId,
 		ErrorHandlers: multitenancymodels.NormalisedErrorHandlers{
 			OnTenantDoesNotExistError:      *config.ErrorHandlers.OnTenantDoesNotExistError,
