@@ -26,6 +26,9 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -59,7 +62,7 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -75,12 +78,11 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 
 	assert.NotEmpty(t, cookieData["sAccessToken"])
 	assert.NotEmpty(t, cookieData["antiCsrf"])
-	assert.NotEmpty(t, cookieData["idRefreshTokenFromHeader"])
 	assert.NotEmpty(t, cookieData["sRefreshToken"])
 
 	req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res, err = http.DefaultClient.Do(req)
 	cookieData2 := unittesting.ExtractInfoFromResponse(res)
@@ -89,11 +91,8 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 	assert.Equal(t, res.StatusCode, 200)
 	assert.Equal(t, cookieData2["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData2["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-	assert.Equal(t, cookieData2["idRefreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData2["accessToken"], "")
 	assert.Equal(t, cookieData2["refreshToken"], "")
-	assert.Equal(t, cookieData2["idRefreshTokenFromCookie"], "")
-	assert.Equal(t, cookieData2["idRefreshTokenFromHeader"], "remove")
 	assert.Greater(t, len(cookieData2["frontToken"]), 1)
 }
 
@@ -111,6 +110,9 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -147,7 +149,7 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -163,12 +165,11 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 
 	assert.NotEmpty(t, cookieData["sAccessToken"])
 	assert.NotEmpty(t, cookieData["antiCsrf"])
-	assert.NotEmpty(t, cookieData["idRefreshTokenFromHeader"])
 	assert.NotEmpty(t, cookieData["sRefreshToken"])
 
 	req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res, err = http.DefaultClient.Do(req)
 	cookieData2 := unittesting.ExtractInfoFromResponse(res)
@@ -177,11 +178,8 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 	assert.Equal(t, res.StatusCode, 401)
 	assert.Equal(t, cookieData2["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData2["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-	assert.Equal(t, cookieData2["idRefreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData2["accessToken"], "")
 	assert.Equal(t, cookieData2["refreshToken"], "")
-	assert.Equal(t, cookieData2["idRefreshTokenFromCookie"], "")
-	assert.Equal(t, cookieData2["idRefreshTokenFromHeader"], "remove")
 	assert.Greater(t, len(cookieData2["frontToken"]), 1)
 }
 
@@ -199,6 +197,9 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -230,7 +231,7 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -246,12 +247,11 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 
 	assert.NotEmpty(t, cookieData["sAccessToken"])
 	assert.NotEmpty(t, cookieData["antiCsrf"])
-	assert.NotEmpty(t, cookieData["idRefreshTokenFromHeader"])
 	assert.NotEmpty(t, cookieData["sRefreshToken"])
 
 	req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res, err = http.DefaultClient.Do(req)
 	cookieData2 := unittesting.ExtractInfoFromResponse(res)
@@ -260,11 +260,8 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 	assert.Equal(t, res.StatusCode, 401)
 	assert.Equal(t, cookieData2["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData2["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-	assert.Equal(t, cookieData2["idRefreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	assert.Equal(t, cookieData2["accessToken"], "")
 	assert.Equal(t, cookieData2["refreshToken"], "")
-	assert.Equal(t, cookieData2["idRefreshTokenFromCookie"], "")
-	assert.Equal(t, cookieData2["idRefreshTokenFromHeader"], "remove")
 	assert.Greater(t, len(cookieData2["frontToken"]), 1)
 }
 
@@ -282,6 +279,9 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
@@ -314,7 +314,7 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -330,12 +330,11 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 
 	assert.NotEmpty(t, cookieData["sAccessToken"])
 	assert.NotEmpty(t, cookieData["antiCsrf"])
-	assert.NotEmpty(t, cookieData["idRefreshTokenFromHeader"])
 	assert.NotEmpty(t, cookieData["sRefreshToken"])
 
 	req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 	assert.NoError(t, err)
-	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"]+";"+"sIdRefreshToken="+cookieData["sIdRefreshToken"])
+	req.Header.Add("Cookie", "sRefreshToken="+cookieData["sRefreshToken"])
 	req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 	res, err = http.DefaultClient.Do(req)
 	cookieData2 := unittesting.ExtractInfoFromResponse(res)
@@ -344,6 +343,5 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 	assert.Equal(t, res.StatusCode, 401)
 	assert.NotEmpty(t, cookieData2["sAccessToken"])
 	assert.NotEmpty(t, cookieData2["antiCsrf"])
-	assert.NotEmpty(t, cookieData2["idRefreshTokenFromHeader"])
 	assert.NotEmpty(t, cookieData2["sRefreshToken"])
 }

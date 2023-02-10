@@ -125,14 +125,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 		var email string
+		var password string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
 				email = formField.Value
-			}
-		}
-		var password string
-		for _, formField := range formFields {
-			if formField.ID == "password" {
+			} else if formField.ID == "password" {
 				password = formField.Value
 			}
 		}
@@ -148,7 +145,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}
 
 		user := response.OK.User
-		session, err := session.CreateNewSessionWithContext(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
 			return epmodels.SignInPOSTResponse{}, err
 		}
@@ -166,14 +163,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 	signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 		var email string
+		var password string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
 				email = formField.Value
-			}
-		}
-		var password string
-		for _, formField := range formFields {
-			if formField.ID == "password" {
+			} else if formField.ID == "password" {
 				password = formField.Value
 			}
 		}
@@ -190,7 +184,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		user := response.OK.User
 
-		session, err := session.CreateNewSessionWithContext(options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
 			return epmodels.SignUpPOSTResponse{}, err
 		}

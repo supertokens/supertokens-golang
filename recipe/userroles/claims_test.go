@@ -1,12 +1,14 @@
 package userroles
 
 import (
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	sessErrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesclaims"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -24,7 +26,11 @@ func TestShouldAddClaimsToSessionWithoutConfig(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(nil),
 		},
 	}
@@ -41,7 +47,9 @@ func TestShouldAddClaimsToSessionWithoutConfig(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
@@ -68,7 +76,11 @@ func TestShouldNotAddClaimsToSessionIfDisabledInConfig(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(&userrolesmodels.TypeInput{
 				SkipAddingRolesToAccessToken:       true,
 				SkipAddingPermissionsToAccessToken: true,
@@ -88,7 +100,9 @@ func TestShouldNotAddClaimsToSessionIfDisabledInConfig(t *testing.T) {
 	}
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
@@ -115,7 +129,11 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(nil),
 		},
 	}
@@ -135,7 +153,9 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
@@ -164,7 +184,11 @@ func TestShouldValidateRoles(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(nil),
 		},
 	}
@@ -184,7 +208,9 @@ func TestShouldValidateRoles(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -219,7 +245,11 @@ func TestShouldValidateRolesAfterRefetching(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(&userrolesmodels.TypeInput{
 				SkipAddingRolesToAccessToken: true,
 			}),
@@ -241,7 +271,9 @@ func TestShouldValidateRolesAfterRefetching(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -276,7 +308,11 @@ func TestShouldValidatePermissions(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(nil),
 		},
 	}
@@ -296,7 +332,9 @@ func TestShouldValidatePermissions(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -332,7 +370,11 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 			Init(&userrolesmodels.TypeInput{
 				SkipAddingPermissionsToAccessToken: true,
 			}),
@@ -354,7 +396,9 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 	AddRoleToUser("userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
-	sessionContainer, err := session.CreateNewSession(res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	req, err := http.NewRequest(http.MethodGet, "", nil)
+	assert.NoError(t, err)
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{

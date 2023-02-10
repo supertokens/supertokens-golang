@@ -31,6 +31,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -48,7 +49,15 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 			Enabled: true,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -115,7 +124,15 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -203,7 +220,15 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -310,7 +335,15 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 			Service: smtpService,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -380,7 +413,16 @@ func TestDefaultBackwardCompatibilityEmailVerifyForPasswordlessUser(t *testing.T
 			Enabled: true,
 		},
 	}
-	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -438,7 +480,16 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 			customProviderForEmailVerification,
 		},
 	}
-	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}), session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -610,24 +661,33 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 			Enabled: true,
 		},
 	}
-	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
-		Mode: evmodels.ModeOptional,
-		EmailDelivery: &emaildelivery.TypeInput{
-			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
-				sendEmail := *originalImplementation.SendEmail
-				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-					if input.EmailVerification != nil {
-						customCalled = true
-						email = input.EmailVerification.User.Email
-						emailVerifyLink = input.EmailVerification.EmailVerifyLink
-						return nil
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+					sendEmail := *originalImplementation.SendEmail
+					*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+						if input.EmailVerification != nil {
+							customCalled = true
+							email = input.EmailVerification.User.Email
+							emailVerifyLink = input.EmailVerification.EmailVerifyLink
+							return nil
+						}
+						return sendEmail(input, userContext)
 					}
-					return sendEmail(input, userContext)
-				}
-				return originalImplementation
+					return originalImplementation
+				},
 			},
-		},
-	}), session.Init(nil), Init(tplConfig))
+		}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -694,24 +754,33 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
 	}
-	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
-		Mode: evmodels.ModeOptional,
-		EmailDelivery: &emaildelivery.TypeInput{
-			Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
-				sendEmail := *originalImplementation.SendEmail
-				*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-					if input.EmailVerification != nil {
-						customCalled = true
-						email = input.EmailVerification.User.Email
-						emailVerifyLink = input.EmailVerification.EmailVerifyLink
-						return nil
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+					sendEmail := *originalImplementation.SendEmail
+					*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+						if input.EmailVerification != nil {
+							customCalled = true
+							email = input.EmailVerification.User.Email
+							emailVerifyLink = input.EmailVerification.EmailVerifyLink
+							return nil
+						}
+						return sendEmail(input, userContext)
 					}
-					return sendEmail(input, userContext)
-				}
-				return originalImplementation
+					return originalImplementation
+				},
 			},
-		},
-	}), session.Init(nil), Init(tplConfig))
+		}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{
@@ -816,12 +885,21 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 			Service: tplSmtpService,
 		},
 	}
-	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
-		Mode: evmodels.ModeOptional,
-		EmailDelivery: &emaildelivery.TypeInput{
-			Service: evSmtpService,
-		},
-	}), session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Service: evSmtpService,
+			},
+		}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -919,12 +997,21 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		},
 		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
 	}
-	testServer := supertokensInitForTest(t, emailverification.Init(evmodels.TypeInput{
-		Mode: evmodels.ModeOptional,
-		EmailDelivery: &emaildelivery.TypeInput{
-			Service: smtpService,
-		},
-	}), session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Service: smtpService,
+			},
+		}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	signinupPostData := PostDataForCustomProvider{

@@ -70,7 +70,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalCreateNewSession := *originalImplementation.CreateNewSession
 
-		(*originalImplementation.CreateNewSession) = func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 			if accessTokenPayload == nil {
 				accessTokenPayload = map[string]interface{}{}
 			}
@@ -86,7 +86,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 				return nil, err
 			}
 
-			sessionContainer, err := originalCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
+			sessionContainer, err := originalCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
 
 			if err != nil {
 				return sessionContainer, err
