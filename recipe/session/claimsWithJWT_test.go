@@ -35,16 +35,16 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							if accessTokenPayload == nil {
 								accessTokenPayload = map[string]interface{}{}
 							}
 							claim, _ := TrueClaim()
-							accessTokenPayload, err := claim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := claim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -78,7 +78,7 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 		assert.NoError(t, err)
 	})
 
@@ -92,7 +92,7 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
+	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle(), sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	jwtPayloadStr := sessInfo.AccessTokenPayload["jwt"].(string)
 	jwtPayload := jwt.MapClaims{}
@@ -151,7 +151,7 @@ func TestAssertClaimsWithPayloadWithJWTAndCallRightUpdateAccessTokenPayload(t *t
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{}, nil)
 		assert.NoError(t, err)
 	})
 
@@ -189,7 +189,7 @@ func TestAssertClaimsWithPayloadWithJWTAndCallRightUpdateAccessTokenPayload(t *t
 	assert.Equal(t, "stub", validationPayload["st-stub"].(map[string]interface{})["v"])
 
 	// Check if claim was updated in jwt
-	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
+	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle(), sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	jwtPayloadStr := sessInfo.AccessTokenPayload["jwt"].(string)
 	jwtPayload := jwt.MapClaims{}
@@ -246,7 +246,7 @@ func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "rope", nil, map[string]interface{}{})
+		CreateNewSession(r, rw, "rope", nil, map[string]interface{}{}, nil)
 	})
 
 	mux.HandleFunc("/verifySession", VerifySession(nil, func(rw http.ResponseWriter, r *http.Request) {

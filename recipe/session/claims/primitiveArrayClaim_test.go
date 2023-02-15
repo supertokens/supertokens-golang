@@ -10,7 +10,7 @@ import (
 func TestPrimitiveArrayClaimValidators(t *testing.T) {
 	primArrayClaim, validators := PrimitiveArrayClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId *string, userContext supertokens.UserContext) (interface{}, error) {
 			return map[string]interface{}{}, nil
 		},
 		nil,

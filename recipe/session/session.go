@@ -28,6 +28,7 @@ import (
 type SessionContainerInput struct {
 	sessionHandle         string
 	userID                string
+	tenantId              *string
 	userDataInAccessToken map[string]interface{}
 	res                   http.ResponseWriter
 	accessToken           string
@@ -36,10 +37,11 @@ type SessionContainerInput struct {
 	tokenTransferMethod   sessmodels.TokenTransferMethod
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
+func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, tenantId *string, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
 	return SessionContainerInput{
 		sessionHandle:         sessionHandle,
 		userID:                userID,
+		tenantId:              tenantId,
 		userDataInAccessToken: userDataInAccessToken,
 		res:                   res,
 		accessToken:           accessToken,
@@ -53,7 +55,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 	sessionContainer := &sessmodels.TypeSessionContainer{}
 	sessionContainer.RevokeSessionWithContext = func(userContext supertokens.UserContext) error {
-		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
+		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, session.tenantId, userContext)
 		if err != nil {
 			return err
 		}
@@ -62,7 +64,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.GetSessionDataWithContext = func(userContext supertokens.UserContext) (map[string]interface{}, error) {
-		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
+		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, session.tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -73,7 +75,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.UpdateSessionDataWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
-		updated, err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, userContext)
+		updated, err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, session.tenantId, userContext)
 		if err != nil {
 			return err
 		}
@@ -88,7 +90,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			newAccessTokenPayload = map[string]interface{}{}
 		}
 
-		resp, err := (*session.recipeImpl.RegenerateAccessToken)(session.accessToken, &newAccessTokenPayload, userContext)
+		resp, err := (*session.recipeImpl.RegenerateAccessToken)(session.accessToken, &newAccessTokenPayload, session.tenantId, userContext)
 
 		if err != nil {
 			return err
@@ -120,7 +122,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.GetTimeCreatedWithContext = func(userContext supertokens.UserContext) (uint64, error) {
-		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
+		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, session.tenantId, userContext)
 		if err != nil {
 			return 0, err
 		}
@@ -131,7 +133,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.GetExpiryWithContext = func(userContext supertokens.UserContext) (uint64, error) {
-		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
+		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, session.tenantId, userContext)
 		if err != nil {
 			return 0, err
 		}
@@ -168,7 +170,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.AssertClaimsWithContext = func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error {
-		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, sessionContainer.GetAccessTokenPayloadWithContext(userContext), claimValidators, userContext)
+		validateClaimResponse, err := (*session.recipeImpl.ValidateClaims)(session.userID, sessionContainer.GetAccessTokenPayloadWithContext(userContext), claimValidators, session.tenantId, userContext)
 		if err != nil {
 			return err
 		}
@@ -191,7 +193,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.FetchAndSetClaimWithContext = func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), nil, userContext)
+		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), nil, session.tenantId, userContext)
 		if err != nil {
 			return err
 		}
@@ -226,6 +228,9 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 	sessionContainer.GetUserID = func() string {
 		return sessionContainer.GetUserIDWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetTenantId = func() *string {
+		return session.tenantId
 	}
 	sessionContainer.GetAccessTokenPayload = func() map[string]interface{} {
 		return sessionContainer.GetAccessTokenPayloadWithContext(&map[string]interface{}{})

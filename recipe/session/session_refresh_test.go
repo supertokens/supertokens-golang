@@ -32,8 +32,8 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(options, userContext)
+						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -62,7 +62,7 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -116,8 +116,8 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(options, userContext)
+						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -149,7 +149,7 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -203,8 +203,8 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(options, userContext)
+						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -231,7 +231,7 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -285,8 +285,8 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(options, userContext)
+						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -314,7 +314,7 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))

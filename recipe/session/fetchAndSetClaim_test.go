@@ -40,7 +40,7 @@ func TestShouldNotChangeIfFetchValueReturnsNil(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	nilClaim, _ := NilClaim()
@@ -79,7 +79,7 @@ func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
@@ -121,15 +121,15 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
-	ok, err := FetchAndSetClaim(sessionContainer.GetHandle(), trueClaim)
+	ok, err := FetchAndSetClaim(sessionContainer.GetHandle(), trueClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	assert.True(t, ok)
 
-	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
+	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle(), sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	accessTokenPayload := sessInfo.AccessTokenPayload
 

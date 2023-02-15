@@ -8,7 +8,7 @@ import (
 func TrueClaim() (*claims.TypeSessionClaim, claims.BooleanClaimValidators) {
 	claim, validators := claims.BooleanClaim(
 		"st-true",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId *string, userContext supertokens.UserContext) (interface{}, error) {
 			return true, nil
 		},
 		nil,
@@ -19,7 +19,7 @@ func TrueClaim() (*claims.TypeSessionClaim, claims.BooleanClaimValidators) {
 func NilClaim() (*claims.TypeSessionClaim, claims.PrimitiveClaimValidators) {
 	claim, validators := claims.PrimitiveClaim(
 		"st-nil",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId *string, userContext supertokens.UserContext) (interface{}, error) {
 			return nil, nil
 		},
 		nil,
@@ -30,7 +30,7 @@ func NilClaim() (*claims.TypeSessionClaim, claims.PrimitiveClaimValidators) {
 func StubClaim(validate func(payload map[string]interface{}, userContext supertokens.UserContext) claims.ClaimValidationResult) (*claims.TypeSessionClaim, StubValidator) {
 	claim, validators := claims.PrimitiveClaim(
 		"st-stub",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId *string, userContext supertokens.UserContext) (interface{}, error) {
 			return "stub", nil
 		},
 		nil,
@@ -53,7 +53,7 @@ func StubClaim(validate func(payload map[string]interface{}, userContext superto
 func StubClaimWithRefetch(validate func(payload map[string]interface{}, userContext supertokens.UserContext) claims.ClaimValidationResult) (*claims.TypeSessionClaim, StubValidator) {
 	claim, validators := claims.PrimitiveClaim(
 		"st-stub",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId *string, userContext supertokens.UserContext) (interface{}, error) {
 			return "stub", nil
 		},
 		nil,

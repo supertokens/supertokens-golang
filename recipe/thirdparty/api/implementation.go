@@ -95,7 +95,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, response.OK.User.ID, nil, nil, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, response.OK.User.ID, nil, nil, nil, userContext) // TODO pass tenant id
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}

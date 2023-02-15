@@ -303,3 +303,10 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	}
 	return parsedURL, nil
 }
+
+func GetPathPrefixForTenantId(tenantId *string) string {
+	if tenantId == nil {
+		return ""
+	}
+	return "/" + *tenantId
+}

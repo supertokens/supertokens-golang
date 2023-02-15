@@ -18,14 +18,15 @@ package api
 import (
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() sessmodels.APIInterface {
-	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
+	refreshPOST := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, tenantId, userContext)
 	}
 
 	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
@@ -38,13 +39,29 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 		if err != nil {
 			return nil, err
 		}
+		var tenantId *string = nil
+		if verifySessionOptions != nil && verifySessionOptions.GetTenantId != nil {
+			tenantId, err = verifySessionOptions.GetTenantId(options.Req)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+		if err != nil {
+			return nil, err
+		}
+		tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
+		if err != nil {
+			return nil, err
+		}
 
 		refreshTokenPath := options.Config.RefreshTokenPath
 		if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
-			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
+			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, tenantId, userContext)
 			return session, err
 		} else {
-			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, nil, userContext)
 			if err != nil {
 				return nil, err
 			}
@@ -58,7 +75,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
 			}
 			claimValidators := options.ClaimValidatorsAddedByOtherRecipes
-			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidators, userContext)
+			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidators, nil, userContext) // TODO pass tenant ID
 			if err != nil {
 				return nil, err
 			}

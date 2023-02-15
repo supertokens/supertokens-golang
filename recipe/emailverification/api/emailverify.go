@@ -47,6 +47,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 					return validators, nil
 				},
 			},
+			nil, // TODO pass tenant ID
 			userContext)
 		if err != nil {
 			return err
@@ -105,6 +106,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 					return validators, nil
 				},
 			},
+			nil, // TODO pass tenant ID
 			userContext,
 		)
 		if err != nil {

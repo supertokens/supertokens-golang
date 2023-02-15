@@ -18,6 +18,7 @@ package session
 import (
 	"net/http"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -25,6 +26,7 @@ import (
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
+	multitenancy.ResetForTest()
 }
 
 func BeforeEach() {

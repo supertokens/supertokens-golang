@@ -29,13 +29,13 @@ func TestValidateShouldReturnRightValidationErrors(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -55,7 +55,7 @@ func TestValidateShouldReturnRightValidationErrors(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	_, nilValidator := NilClaim()
@@ -71,6 +71,7 @@ func TestValidateShouldReturnRightValidationErrors(t *testing.T) {
 				failingValidator,
 			}
 		},
+		sessionContainer.GetTenantId(),
 	)
 	assert.NoError(t, err)
 	assert.NotNil(t, validationRes.OK)
@@ -109,7 +110,7 @@ func TestValidateShouldWorkForNonExistantHandle(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	validationRes, err := ValidateClaimsForSessionHandle("nonExistantHandle", nil)
+	validationRes, err := ValidateClaimsForSessionHandle("nonExistantHandle", nil, nil)
 	assert.NoError(t, err)
 	assert.Nil(t, validationRes.OK)
 	assert.NotNil(t, validationRes.SessionDoesNotExistError)

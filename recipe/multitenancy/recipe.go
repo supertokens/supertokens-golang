@@ -23,7 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -110,19 +109,20 @@ func recipeInit(config *multitenancymodels.TypeInput) supertokens.Recipe {
 				return nil, err
 			}
 
-			if recipe.GetAllowedDomainsForTenantId != nil {
-				supertokens.AddPostInitCallback(func() error {
-					sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
+			// TODO causes cyclic import
+			// if recipe.GetAllowedDomainsForTenantId != nil {
+			// 	supertokens.AddPostInitCallback(func() error {
+			// 		sessionRecipe, err := session.GetRecipeInstanceOrThrowError()
 
-					if err != nil {
-						return nil // skip adding claims if session recipe is not initialised
-					}
+			// 		if err != nil {
+			// 			return nil // skip adding claims if session recipe is not initialised
+			// 		}
 
-					sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.AllowedDomainsClaim)
+			// 		sessionRecipe.AddClaimFromOtherRecipe(multitenancyclaims.AllowedDomainsClaim)
 
-					return nil
-				})
-			}
+			// 		return nil
+			// 	})
+			// }
 
 			singletonInstance = recipe
 			return &singletonInstance.RecipeModule, nil

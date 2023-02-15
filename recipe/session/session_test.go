@@ -59,7 +59,7 @@ func TestOutputHeadersAndSetCookieForCreateSessionIsFine(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -112,7 +112,7 @@ func TestTokenTheftDetection(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	customValForAntiCsrfCheck := true
@@ -124,7 +124,7 @@ func TestTokenTheftDetection(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -204,7 +204,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "userId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
@@ -215,7 +215,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -292,7 +292,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "someId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "someId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 	customValForAntiCsrfCheck := true
 	customSessionRequiredValue := true
@@ -303,7 +303,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -355,7 +355,7 @@ func TestRevokingOfSessions(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "someUniqueID", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "someUniqueID", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -369,12 +369,12 @@ func TestRevokingOfSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	_, err = RevokeAllSessionsForUser("someUniqueID")
+	_, err = RevokeAllSessionsForUser("someUniqueID", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionHandlesAfterRevoke, err := GetAllSessionHandlesForUser("someUniqueID")
+	sessionHandlesAfterRevoke, err := GetAllSessionHandlesForUser("someUniqueID", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -392,20 +392,20 @@ func TestRevokingOfSessions(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res2.StatusCode)
 
-	sessionHandlesBeforeRevoke1, err := GetAllSessionHandlesForUser("someUniqueID")
+	sessionHandlesBeforeRevoke1, err := GetAllSessionHandlesForUser("someUniqueID", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 2, len(sessionHandlesBeforeRevoke1))
 
-	revokedSessions, err := RevokeAllSessionsForUser("someUniqueID")
+	revokedSessions, err := RevokeAllSessionsForUser("someUniqueID", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	assert.Equal(t, 2, len(revokedSessions))
 
-	sessionHandlesAfterRevoke1, err := GetAllSessionHandlesForUser("someUniqueID")
+	sessionHandlesAfterRevoke1, err := GetAllSessionHandlesForUser("someUniqueID", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -442,7 +442,7 @@ func TestManipulatingSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "rp", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "rp", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -457,7 +457,7 @@ func TestManipulatingSessionData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := GetAllSessionHandlesForUser("rp")
+	sessionHandles, err := GetAllSessionHandlesForUser("rp", nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -465,9 +465,9 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "John",
-	})
+	}, nil)
 
-	sessionInfo, err := GetSessionInformation(sessionHandles[0])
+	sessionInfo, err := GetSessionInformation(sessionHandles[0], nil)
 
 	assert.NoError(t, err)
 
@@ -475,9 +475,9 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "Joel",
-	})
+	}, nil)
 
-	sessionInfo, err = GetSessionInformation(sessionHandles[0])
+	sessionInfo, err = GetSessionInformation(sessionHandles[0], nil)
 
 	assert.NoError(t, err)
 
@@ -487,7 +487,7 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	sessionUpdated, err := UpdateSessionData("random", map[string]interface{}{
 		"name": "Ronit",
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 	assert.False(t, sessionUpdated)
@@ -534,7 +534,7 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, nil)
+		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, nil, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -549,13 +549,13 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := GetAllSessionHandlesForUser("uniqueId")
+	sessionHandles, err := GetAllSessionHandlesForUser("uniqueId", nil)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionInfo, err := GetSessionInformation(sessionHandles[0])
+	sessionInfo, err := GetSessionInformation(sessionHandles[0], nil)
 
 	assert.NoError(t, err)
 
@@ -563,8 +563,8 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 
 	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "John",
-	})
-	sessionInfo, err = GetSessionInformation(sessionHandles[0])
+	}, nil)
+	sessionInfo, err = GetSessionInformation(sessionHandles[0], nil)
 
 	assert.NoError(t, err)
 
@@ -612,7 +612,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -627,7 +627,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandles, err := GetAllSessionHandlesForUser("uniqueId")
+	sessionHandles, err := GetAllSessionHandlesForUser("uniqueId", nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -635,12 +635,12 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	tokenUpdated, err := UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value",
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 	assert.True(t, tokenUpdated)
 
-	sessionInfo, err := GetSessionInformation(sessionHandles[0])
+	sessionInfo, err := GetSessionInformation(sessionHandles[0], nil)
 
 	assert.NoError(t, err)
 
@@ -648,12 +648,12 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	tokenUpdated, err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value2",
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 	assert.True(t, tokenUpdated)
 
-	sessionInfo1, err := GetSessionInformation(sessionHandles[0])
+	sessionInfo1, err := GetSessionInformation(sessionHandles[0], nil)
 
 	assert.NoError(t, err)
 
@@ -661,7 +661,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	tokenUpdated, err = UpdateAccessTokenPayload("random", map[string]interface{}{
 		"key": "value3",
-	})
+	}, nil)
 
 	assert.NoError(t, err)
 	assert.False(t, tokenUpdated)
@@ -699,7 +699,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "supertokens", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "supertokens", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	customValForAntiCsrfCheck := false
@@ -711,7 +711,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -727,7 +727,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue1,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck1,
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -895,7 +895,7 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -910,13 +910,13 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandlers, err := GetAllSessionHandlesForUser("ronit")
+	sessionHandlers, err := GetAllSessionHandlesForUser("ronit", nil)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionInfo, err := GetSessionInformation(sessionHandlers[0])
+	sessionInfo, err := GetSessionInformation(sessionHandlers[0], nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, "ronit", sessionInfo.UserId)
@@ -963,7 +963,7 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{}, nil)
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -978,20 +978,20 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	sessionHandlers, err := GetAllSessionHandlesForUser("ronit")
+	sessionHandlers, err := GetAllSessionHandlesForUser("ronit", nil)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	sessionInfo, err := GetSessionInformation(sessionHandlers[0])
+	sessionInfo, err := GetSessionInformation(sessionHandlers[0], nil)
 	assert.NoError(t, err)
 	assert.Equal(t, "ronit", sessionInfo.UserId)
-	_, err = RevokeMultipleSessions(sessionHandlers)
+	_, err = RevokeMultipleSessions(sessionHandlers, nil)
 	assert.NoError(t, err)
-	_, err = RevokeAllSessionsForUser("ronit")
+	_, err = RevokeAllSessionsForUser("ronit", nil)
 	assert.NoError(t, err)
-	sessionInformation, err := GetSessionInformation(sessionHandlers[0])
+	sessionInformation, err := GetSessionInformation(sessionHandlers[0], nil)
 	assert.Nil(t, sessionInformation)
 	assert.NoError(t, err)
 }
@@ -1028,7 +1028,7 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		sess, _ := CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		sess, _ := CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 		sessionHandle = sess.GetHandle()
 	})
 
@@ -1042,7 +1042,7 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 	assert.NoError(t, err)
 	cookieData := unittesting.ExtractInfoFromResponse(res)
 
-	RevokeSession(sessionHandle)
+	RevokeSession(sessionHandle, nil)
 
 	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["antiCsrf"])
 	cookieData = unittesting.ExtractInfoFromResponse(resp1)
@@ -1073,8 +1073,8 @@ func TestSessionContainerOverride(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oGetSessionInformation := *originalImplementation.GetSessionInformation
-						nGetSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
-							info, err := oGetSessionInformation(sessionHandle, userContext)
+						nGetSessionInformation := func(sessionHandle string, tenantId *string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
+							info, err := oGetSessionInformation(sessionHandle, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
@@ -1100,7 +1100,7 @@ func TestSessionContainerOverride(t *testing.T) {
 	res := MockResponseWriter{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	session, err := CreateNewSession(req, res, "testId", map[string]interface{}{}, map[string]interface{}{})
+	session, err := CreateNewSession(req, res, "testId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	data, err := session.GetSessionData()

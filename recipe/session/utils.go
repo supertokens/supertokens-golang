@@ -294,7 +294,7 @@ func sendInvalidClaimResponse(recipeInstance Recipe, claimValidationErrors []cla
 }
 
 func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string, _ string, _ *http.Request, response http.ResponseWriter) error {
-	_, err := (*recipeInstance.RecipeImpl.RevokeSession)(sessionHandle, &map[string]interface{}{})
+	_, err := (*recipeInstance.RecipeImpl.RevokeSession)(sessionHandle, nil, &map[string]interface{}{}) // TODO pass tenant id
 	if err != nil {
 		return err
 	}
@@ -344,7 +344,7 @@ func getRequiredClaimValidators(
 		return nil, err
 	}
 	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
-	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
+	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, sessionContainer.GetTenantId(), userContext)
 	if err != nil {
 		return nil, err
 	}

@@ -39,7 +39,7 @@ func TestShouldSetClaimValueMergeTheRightValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
@@ -68,13 +68,13 @@ func TestShouldSetClaimValueOverwriteClaimValue(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -94,7 +94,7 @@ func TestShouldSetClaimValueOverwriteClaimValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
 	assert.Equal(t, 1, len(accessTokenPayload))
@@ -126,13 +126,13 @@ func TestShouldSetClaimValueOverwriteClaimValueUsingHandle(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -152,18 +152,18 @@ func TestShouldSetClaimValueOverwriteClaimValueUsingHandle(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
 	assert.Equal(t, 1, len(accessTokenPayload))
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 
 	trueClaim, _ := TrueClaim()
-	ok, err := SetClaimValue(sessionContainer.GetHandle(), trueClaim, false)
+	ok, err := SetClaimValue(sessionContainer.GetHandle(), trueClaim, false, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	assert.True(t, ok)
 
-	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
+	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle(), sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	accessTokenPayload = sessInfo.AccessTokenPayload
 	assert.Equal(t, 1, len(accessTokenPayload))
@@ -197,7 +197,7 @@ func TestShoulSetClaimValueWorkForNonExistantHandle(t *testing.T) {
 	}
 
 	trueClaim, _ := TrueClaim()
-	ok, err := SetClaimValue("invalidHandle", trueClaim, false)
+	ok, err := SetClaimValue("invalidHandle", trueClaim, false, nil)
 	assert.NoError(t, err)
 	assert.False(t, ok)
 }

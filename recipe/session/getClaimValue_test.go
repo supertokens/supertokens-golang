@@ -28,13 +28,13 @@ func TestGetClaimValueReturnsRightValue(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -54,7 +54,7 @@ func TestGetClaimValueReturnsRightValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
@@ -79,13 +79,13 @@ func TestGetClaimValueFromHandleReturnsRightValue(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -105,11 +105,11 @@ func TestGetClaimValueFromHandleReturnsRightValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
-	getRes, err := GetClaimValue(sessionContainer.GetHandle(), trueClaim)
+	getRes, err := GetClaimValue(sessionContainer.GetHandle(), trueClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 	assert.NotNil(t, getRes.OK)
 	assert.True(t, getRes.OK.Value.(bool))
@@ -133,13 +133,13 @@ func TestGetClaimValueForNonExistantSessionhandle(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, tenantId, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -157,7 +157,7 @@ func TestGetClaimValueForNonExistantSessionhandle(t *testing.T) {
 	}
 
 	trueClaim, _ := TrueClaim()
-	getRes, err := GetClaimValue("invalidSessionHandle", trueClaim)
+	getRes, err := GetClaimValue("invalidSessionHandle", trueClaim, nil)
 	assert.NoError(t, err)
 	assert.Nil(t, getRes.OK)
 	assert.NotNil(t, getRes.SessionDoesNotExistError)

@@ -82,6 +82,7 @@ type CreateOrRefreshAPIResponse struct {
 type SessionStruct struct {
 	Handle                string                 `json:"handle"`
 	UserID                string                 `json:"userId"`
+	TenantId              *string                `json:"tenantId,omitempty"`
 	UserDataInAccessToken map[string]interface{} `json:"userDataInJWT"`
 }
 
@@ -156,6 +157,7 @@ type JWTNormalisedConfig struct {
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
+	GetTenantId                   func(req *http.Request) (*string, error)
 	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 }
 
@@ -182,6 +184,7 @@ type TypeSessionContainer struct {
 	GetSessionData           func() (map[string]interface{}, error)
 	UpdateSessionData        func(newSessionData map[string]interface{}) error
 	GetUserID                func() string
+	GetTenantId              func() *string
 	GetAccessTokenPayload    func() map[string]interface{}
 	GetHandle                func() string
 	GetAccessToken           func() string
@@ -222,6 +225,7 @@ type SessionContainer = *TypeSessionContainer
 type SessionInformation struct {
 	SessionHandle      string
 	UserId             string
+	TenantId           *string
 	SessionData        map[string]interface{}
 	Expiry             uint64
 	AccessTokenPayload map[string]interface{}

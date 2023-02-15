@@ -16,6 +16,10 @@
 package api
 
 import (
+	"encoding/json"
+	"io/ioutil"
+
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -29,13 +33,42 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
+	var tenantId *string = nil
+
+	{
+		// Fetch tenant id
+		bodyBytes, err := ioutil.ReadAll(options.Req.Body)
+		if err != nil {
+			return err
+		}
+		if len(bodyBytes) > 0 {
+			bodyObj := map[string]interface{}{}
+			err = json.Unmarshal(bodyBytes, &bodyObj)
+			if err != nil {
+				return err
+			}
+			if tenantIdVal, ok := bodyObj["tenantId"].(string); ok {
+				tenantId = &tenantIdVal
+			}
+		}
+	}
+
+	mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+	tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
+	if err != nil {
+		return err
+	}
+
 	False := false
 	sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, &sessmodels.VerifySessionOptions{
 		SessionRequired: &False,
 		OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 			return []claims.SessionClaimValidator{}, nil
 		},
-	}, userContext)
+	}, tenantId, userContext)
 
 	if err != nil {
 		return err

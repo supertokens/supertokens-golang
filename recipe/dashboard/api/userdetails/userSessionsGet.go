@@ -47,7 +47,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 	}
 
-	response, err := session.GetAllSessionHandlesForUser(userId)
+	response, err := session.GetAllSessionHandlesForUser(userId, nil) // TODO pass tenant ID
 
 	if err != nil {
 		return userSessionsGetResponse{}, err
@@ -65,7 +65,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 
 		go func(i int, handle string) {
-			sessionResponse, sessionError := session.GetSessionInformation(handle)
+			sessionResponse, sessionError := session.GetSessionInformation(handle, nil) // TODO pass tenant ID
 
 			if sessionError != nil {
 				errInBackground = sessionError

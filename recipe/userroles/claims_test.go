@@ -49,16 +49,16 @@ func TestShouldAddClaimsToSessionWithoutConfig(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
-	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
+	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, userroleClaimValue.OK)
 	assert.Equal(t, []interface{}{}, userroleClaimValue.OK.Value)
 
-	permissionClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.PermissionClaim)
+	permissionClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.PermissionClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, permissionClaimValue.OK)
@@ -102,16 +102,16 @@ func TestShouldNotAddClaimsToSessionIfDisabledInConfig(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
-	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
+	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, userroleClaimValue.OK)
 	assert.Equal(t, nil, userroleClaimValue.OK.Value)
 
-	permissionClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.PermissionClaim)
+	permissionClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.PermissionClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, permissionClaimValue.OK)
@@ -155,16 +155,16 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
-	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim)
+	userroleClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.UserRoleClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, userroleClaimValue.OK)
 	assert.Equal(t, []interface{}{"test"}, userroleClaimValue.OK.Value)
 
-	permissionClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.PermissionClaim)
+	permissionClaimValue, err := session.GetClaimValue(sessionContainer.GetHandle(), userrolesclaims.PermissionClaim, sessionContainer.GetTenantId())
 	assert.NoError(t, err)
 
 	assert.NotNil(t, permissionClaimValue.OK)
@@ -210,7 +210,7 @@ func TestShouldValidateRoles(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -273,7 +273,7 @@ func TestShouldValidateRolesAfterRefetching(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -334,7 +334,7 @@ func TestShouldValidatePermissions(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{
@@ -398,7 +398,7 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := session.CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	err = sessionContainer.AssertClaims([]claims.SessionClaimValidator{

@@ -119,7 +119,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{}, nil)
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -155,7 +155,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	customAntiCsrfCheck := true
@@ -409,7 +409,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{}, nil)
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -445,7 +445,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	customAntiCsrfCheck := true
@@ -689,7 +689,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{}, nil)
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -725,7 +725,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	customAntiCsrfCheck := true
@@ -982,7 +982,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{}, nil)
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -1018,7 +1018,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		})
+		}, nil)
 	}))
 
 	customAntiCsrfCheck := true

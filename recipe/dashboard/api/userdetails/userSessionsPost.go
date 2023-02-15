@@ -52,7 +52,7 @@ func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, options dashb
 		}
 	}
 
-	session.RevokeMultipleSessions(*sessionHandles)
+	session.RevokeMultipleSessions(*sessionHandles, nil) // TODO pass tenant ID
 
 	return userSessionsPostResponse{
 		Status: "OK",

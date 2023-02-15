@@ -1432,7 +1432,7 @@ func testGetUrl(t *testing.T, baseURL string, info map[string]string, endpoint s
 func setupRoutesForTest(t *testing.T, mux *http.ServeMux) {
 	mux.HandleFunc("/create", func(w http.ResponseWriter, r *http.Request) {
 
-		sessionContainer, err := session.CreateNewSession(r, w, "testuser", nil, nil)
+		sessionContainer, err := session.CreateNewSession(r, w, "testuser", nil, nil, nil)
 		assert.NoError(t, err)
 
 		w.Header().Set("Content-Type", "application/json")

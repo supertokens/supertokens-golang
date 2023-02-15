@@ -70,7 +70,7 @@ func TestShouldAllowClaimValidAfterRefetching(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, trueValidators := TrueClaim()
@@ -121,7 +121,7 @@ func TestShouldRejectClaimRequiredButNotAdded(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, nilValidators := NilClaim()
@@ -191,7 +191,7 @@ func TestShouldAllowCustomValidatorReturningTrue(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							result = append(result, customValidator)
@@ -248,7 +248,7 @@ func TestShouldRejectCustomValidatorReturningFalse(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							result = append(result, customValidator)
@@ -312,7 +312,7 @@ func TestShouldRejectCustomValidatorReturningFalseWithReason(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							result = append(result, customValidator)
@@ -376,13 +376,13 @@ func TestShouldRejectIfAssertClaimsReturnsError(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							result = append(result, customValidator)
 							return result, nil
 						}
-						*originalImplementation.ValidateClaims = func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
+						*originalImplementation.ValidateClaims = func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
 							return sessmodels.ValidateClaimsResult{
 								InvalidClaims: []claims.ClaimValidationError{
 									{
@@ -450,13 +450,13 @@ func TestShouldAllowIfAssertClaimsReturnsNoError(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							result = append(result, customValidator)
 							return result, nil
 						}
-						*originalImplementation.ValidateClaims = func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
+						*originalImplementation.ValidateClaims = func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) (sessmodels.ValidateClaimsResult, error) {
 							return sessmodels.ValidateClaimsResult{
 								InvalidClaims: []claims.ClaimValidationError{},
 							}, nil
@@ -506,7 +506,7 @@ func TestShouldAllowWithEmptyListAsOverride(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, nilValidators := NilClaim()
@@ -566,7 +566,7 @@ func TestShouldAllowClaimValidAfterRefetchingWithOverride(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, trueValidators := TrueClaim()
@@ -627,7 +627,7 @@ func TestShouldRejectClaimInvalidAfterRefetchingWithOverride(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, trueValidators := TrueClaim()
@@ -707,7 +707,7 @@ func TestShouldRejectCustomValidatorReturningFalseWithOverride(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, validator := TrueClaim()
@@ -780,7 +780,7 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
-						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+						*originalImplementation.GetGlobalClaimValidators = func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 							result := []claims.SessionClaimValidator{}
 							result = append(result, claimValidatorsAddedByOtherRecipes...)
 							_, validator := TrueClaim()
@@ -855,7 +855,7 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 			return
 		}
 
-		CreateNewSession(r, w, "testing-userId", body, map[string]interface{}{})
+		CreateNewSession(r, w, "testing-userId", body, map[string]interface{}{}, nil)
 		resp := map[string]interface{}{
 			"message": true,
 		}
@@ -885,12 +885,12 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 	}))
 
 	mux.HandleFunc("/logout", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
-		sessionContainer, err := GetSession(r, w, nil)
+		sessionContainer, err := GetSession(r, w, nil, nil)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
-		RevokeSession(sessionContainer.GetHandle())
+		RevokeSession(sessionContainer.GetHandle(), sessionContainer.GetTenantId())
 		resp := map[string]interface{}{
 			"message": true,
 		}
