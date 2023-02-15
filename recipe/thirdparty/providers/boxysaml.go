@@ -31,7 +31,7 @@ func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 			boxyURL, ok := config.AdditionalConfig["boxyURL"].(string)
 			if !ok {
-				return tpmodels.ProviderConfigForClientType{}, errors.New("boxyURL is missing or an invalid value in the additionalConfig")
+				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide the boxyURL in the AdditionalConfig")
 			}
 
 			if config.AuthorizationEndpoint == "" {
