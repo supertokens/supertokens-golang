@@ -158,8 +158,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return nil, nil
 	}
 
-	getUserByID := func(userID string, userContext supertokens.UserContext) (*plessmodels.User, error) {
-		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+	getUserByID := func(userID string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user", map[string]string{
 			"userId": userID,
 		})
 		if err != nil {

@@ -26,7 +26,7 @@ type RecipeInterface struct {
 
 	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
 
-	GetUserByID *func(userID string, userContext supertokens.UserContext) (*User, error)
+	GetUserByID *func(userID string, tenantId *string, userContext supertokens.UserContext) (*User, error)
 
 	GetUserByEmail *func(email string, userContext supertokens.UserContext) (*User, error)
 

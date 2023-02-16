@@ -87,7 +87,7 @@ func ConsumeCodeWithLinkCodeWithContext(linkCode string, preAuthSessionID string
 	return (*instance.RecipeImpl.ConsumeCode)(nil, &linkCode, preAuthSessionID, userContext)
 }
 
-func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+func GetUserByIDWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -95,7 +95,7 @@ func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) 
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	return (*instance.RecipeImpl.GetUserByID)(userID, tenantId, userContext)
 }
 
 func GetUserByEmailWithContext(email string, userContext supertokens.UserContext) (*plessmodels.User, error) {
@@ -326,8 +326,8 @@ func ConsumeCodeWithLinkCode(linkCode string, preAuthSessionID string) (plessmod
 	return ConsumeCodeWithLinkCodeWithContext(linkCode, preAuthSessionID, &map[string]interface{}{})
 }
 
-func GetUserByID(userID string) (*plessmodels.User, error) {
-	return GetUserByIDWithContext(userID, &map[string]interface{}{})
+func GetUserByID(userID string, tenantId *string) (*plessmodels.User, error) {
+	return GetUserByIDWithContext(userID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserByEmail(email string) (*plessmodels.User, error) {

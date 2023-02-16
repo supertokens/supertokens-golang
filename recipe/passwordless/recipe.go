@@ -273,8 +273,8 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 	}
 }
 
-func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
+func (r *Recipe) getEmailForUserId(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, tenantId, userContext)
 	if err != nil {
 		return evmodels.TypeEmailInfo{}, err
 	}

@@ -90,7 +90,7 @@ func TestDeletePhoneNumber(t *testing.T) {
 		}
 		assert.NotNil(t, deleteResponse.OK)
 
-		userInfo, err := GetUserByID(res.User.ID)
+		userInfo, err := GetUserByID(res.User.ID, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -159,7 +159,7 @@ func TestDeleteEmail(t *testing.T) {
 		}
 		assert.NotNil(t, deleteResponse.OK)
 
-		userInfo, err := GetUserByID(res.User.ID)
+		userInfo, err := GetUserByID(res.User.ID, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -228,7 +228,7 @@ func TestDeleteEmailAndPhoneShouldThrowError(t *testing.T) {
 		}
 		assert.NotNil(t, deleteResponse.OK)
 
-		userInfo, err := GetUserByID(res.User.ID)
+		userInfo, err := GetUserByID(res.User.ID, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}

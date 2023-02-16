@@ -29,7 +29,7 @@ import (
 
 func MakeAPIImplementation() evmodels.APIInterface {
 	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
+		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, sessionContainer.GetTenantId(), userContext)
 		if err != nil {
 			return evmodels.VerifyEmailPOSTResponse{}, err
 		}
@@ -83,7 +83,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		}
 
 		userID := sessionContainer.GetUserIDWithContext(userContext)
-		email, err := options.GetEmailForUserID(userID, userContext)
+		email, err := options.GetEmailForUserID(userID, sessionContainer.GetTenantId(), userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
@@ -96,7 +96,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, sessionContainer.GetTenantId(), userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}

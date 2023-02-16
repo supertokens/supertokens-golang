@@ -163,8 +163,8 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
+func (r *Recipe) getEmailForUserId(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext) // TODO pass tenantId
 	if err != nil {
 		return evmodels.TypeEmailInfo{}, err
 	}

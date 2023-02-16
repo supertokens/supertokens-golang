@@ -71,8 +71,8 @@ func TestOverridingFunctions(t *testing.T) {
 							return resp, err
 						}
 						originalGetUserById := *originalImplementation.GetUserByID
-						*originalImplementation.GetUserByID = func(userID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
-							resp, err := originalGetUserById(userID, userContext)
+						*originalImplementation.GetUserByID = func(userID string, tenantId *string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+							resp, err := originalGetUserById(userID, tenantId, userContext)
 							userRef = resp
 							return resp, err
 						}
@@ -107,7 +107,7 @@ func TestOverridingFunctions(t *testing.T) {
 
 	mux.HandleFunc("/user", func(rw http.ResponseWriter, r *http.Request) {
 		userId := r.URL.Query().Get("userId")
-		fetchedUser, err := GetUserByID(userId)
+		fetchedUser, err := GetUserByID(userId, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -285,7 +285,7 @@ func TestOverridingAPIs(t *testing.T) {
 
 	mux.HandleFunc("/user", func(rw http.ResponseWriter, r *http.Request) {
 		userId := r.URL.Query().Get("userId")
-		fetchedUser, err := GetUserByID(userId)
+		fetchedUser, err := GetUserByID(userId, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}

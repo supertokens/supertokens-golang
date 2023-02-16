@@ -512,7 +512,7 @@ func TestWithThirdPartyPasswordlessWithMinimumConfigForThirdPartyModuleEmailUnve
 
 	user := result["user"].(map[string]interface{})
 
-	isVerified, err := emailverification.IsEmailVerified(user["id"].(string), nil)
+	isVerified, err := emailverification.IsEmailVerified(user["id"].(string), nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -972,7 +972,7 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 	gock.New(testServer.URL).EnableNetworking().Persist()
 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-	userDataBeforeSignup, err := GetUserByID("randomId")
+	userDataBeforeSignup, err := GetUserByID("randomId", nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -991,7 +991,7 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 	assert.Equal(t, "OK", result["status"])
 
 	user := result["user"].(map[string]interface{})
-	userInfoAfterSignup, err := GetUserByID(user["id"].(string))
+	userInfoAfterSignup, err := GetUserByID(user["id"].(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

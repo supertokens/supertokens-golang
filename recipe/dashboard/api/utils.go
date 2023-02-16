@@ -65,7 +65,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			userToReturn.LastName = ""
 			userToReturn.Email = response.Email
 			userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
-				Id: response.ThirdParty.ID,
+				Id:     response.ThirdParty.ID,
 				UserId: response.ThirdParty.UserID,
 			}
 		}
@@ -80,13 +80,13 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 				userToReturn.LastName = ""
 				userToReturn.Email = tpepResponse.Email
 				userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
-					Id: tpepResponse.ThirdParty.ID,
+					Id:     tpepResponse.ThirdParty.ID,
 					UserId: tpepResponse.ThirdParty.UserID,
 				}
 			}
 		}
 	} else if recipeId == passwordless.RECIPE_ID {
-		response, error := passwordless.GetUserByID(userId)
+		response, error := passwordless.GetUserByID(userId, nil) // TODO tenantId
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -104,7 +104,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId)
+			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId, nil) // TODO tenantId
 
 			if tppError == nil {
 				userToReturn.Id = tppResponse.ID

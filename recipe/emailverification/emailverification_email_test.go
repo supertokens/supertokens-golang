@@ -41,7 +41,7 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+				GetEmailForUserID: func(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 					return evmodels.TypeEmailInfo{
 						OK: &struct{ Email string }{
 							Email: "someEmail",
@@ -93,7 +93,7 @@ func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					funcCalled = true
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+				GetEmailForUserID: func(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
@@ -152,7 +152,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
 					funcCalled = true
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+				GetEmailForUserID: func(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
@@ -227,7 +227,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 				EmailDelivery: &emaildelivery.TypeInput{
 					Service: smtpService,
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+				GetEmailForUserID: func(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),
@@ -302,7 +302,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 				EmailDelivery: &emaildelivery.TypeInput{
 					Service: smtpService,
 				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+				GetEmailForUserID: func(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 					return evmodels.TypeEmailInfo{}, nil
 				},
 			}),

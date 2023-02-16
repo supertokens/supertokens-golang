@@ -89,7 +89,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 	}
 
 	getUserByID := func(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-		user, err := (*recipeImplementation.GetUserByID)(userID, userContext)
+		user, err := (*recipeImplementation.GetUserByID)(userID, nil, userContext) // TODO pass tenantId
 		if err != nil {
 			return nil, err
 		}

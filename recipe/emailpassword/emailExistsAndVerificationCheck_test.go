@@ -1344,8 +1344,8 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 				Override: &evmodels.OverrideStruct{
 					Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 						originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-						*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-							res, err := originalVerifyUsingToken(token, userContext)
+						*originalImplementation.VerifyEmailUsingToken = func(token string, tenantId *string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+							res, err := originalVerifyUsingToken(token, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1554,8 +1554,8 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 				Override: &evmodels.OverrideStruct{
 					Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 						originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-						*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-							res, err := originalVerifyUsingToken(token, userContext)
+						*originalImplementation.VerifyEmailUsingToken = func(token string, tenantId *string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+							res, err := originalVerifyUsingToken(token, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1698,15 +1698,15 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 
 	userId := response["user"].(map[string]interface{})["id"]
 
-	res, err := emailverification.CreateEmailVerificationToken(userId.(string), nil)
+	res, err := emailverification.CreateEmailVerificationToken(userId.(string), nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	verifyToken := res.OK.Token
 
-	emailverification.RevokeEmailVerificationTokens(userId.(string), nil)
+	emailverification.RevokeEmailVerificationTokens(userId.(string), nil, nil)
 
-	res1, err := emailverification.VerifyEmailUsingToken(verifyToken)
+	res1, err := emailverification.VerifyEmailUsingToken(verifyToken, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, res1.EmailVerificationInvalidTokenError)
 	assert.Nil(t, res1.OK)

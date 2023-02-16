@@ -112,8 +112,8 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	if thirdPartyImplementation != nil {
 		ogTPGetUserById = *thirdPartyImplementation.GetUserByID
 	}
-	getUserByID := func(userID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
-		user, err := ogPlessGetUserByID(userID, userContext)
+	getUserByID := func(userID string, tenantId *string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+		user, err := ogPlessGetUserByID(userID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -318,7 +318,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 
 	ogUpdateUser := *passwordlessImplementation.UpdateUser
 	updatePasswordlessUser := func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error) {
-		user, err := (*result.GetUserByID)(userID, userContext)
+		user, err := (*result.GetUserByID)(userID, nil, userContext) // TODO pass tenantId
 		if err != nil {
 			return plessmodels.UpdateUserResponse{}, err
 		}
@@ -335,7 +335,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 
 	ogDeleteEmailForUser := *passwordlessImplementation.DeleteEmailForUser
 	deleteEmailForPasswordlessUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
-		user, err := (*result.GetUserByID)(userID, userContext)
+		user, err := (*result.GetUserByID)(userID, nil, userContext) // TODO pass tenantId
 		if err != nil {
 			return plessmodels.DeleteUserResponse{}, err
 		}
@@ -352,7 +352,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 
 	ogDeletePhoneNumberForUser := *passwordlessImplementation.DeletePhoneNumberForUser
 	deletePhoneNumberForPasswordlessUser := func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
-		user, err := (*result.GetUserByID)(userID, userContext)
+		user, err := (*result.GetUserByID)(userID, nil, userContext) // TODO pass tenantId
 		if err != nil {
 			return plessmodels.DeleteUserResponse{}, err
 		}

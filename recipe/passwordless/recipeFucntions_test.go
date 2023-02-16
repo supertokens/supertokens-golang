@@ -79,7 +79,7 @@ func TestGetUser(t *testing.T) {
 		return
 	}
 
-	user, err := GetUserByID("random")
+	user, err := GetUserByID("random", nil)
 	assert.NoError(t, err)
 	assert.Nil(t, user)
 
@@ -88,14 +88,14 @@ func TestGetUser(t *testing.T) {
 
 	user = &result.User
 
-	userData, err := GetUserByID(user.ID)
+	userData, err := GetUserByID(user.ID, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, user.ID, userData.ID)
 	assert.Equal(t, user.Email, userData.Email)
 	assert.Nil(t, userData.PhoneNumber)
 
-	user1, err := GetUserByID("random")
+	user1, err := GetUserByID("random", nil)
 	assert.NoError(t, err)
 	assert.Nil(t, user1)
 
@@ -111,7 +111,7 @@ func TestGetUser(t *testing.T) {
 	assert.Equal(t, user1.Email, userData1.Email)
 	assert.Nil(t, userData1.PhoneNumber)
 
-	user2, err := GetUserByID("random")
+	user2, err := GetUserByID("random", nil)
 	assert.NoError(t, err)
 	assert.Nil(t, user2)
 
@@ -493,7 +493,7 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 
 	assert.NotNil(t, updatedResp.OK)
 
-	updatedUser, err := GetUserByID(resp.User.ID)
+	updatedUser, err := GetUserByID(resp.User.ID, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, *updatedUser.Email, email)
@@ -574,7 +574,7 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 
 	assert.NotNil(t, res1.OK)
 
-	result, err := GetUserByID(userInfo.User.ID)
+	result, err := GetUserByID(userInfo.User.ID, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, phoneNumber_2, *result.PhoneNumber)

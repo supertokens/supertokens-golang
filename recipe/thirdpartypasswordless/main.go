@@ -55,12 +55,12 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID st
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+func GetUserByIdWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (*tplmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	return (*instance.RecipeImpl.GetUserByID)(userID, tenantId, userContext)
 }
 
 func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tplmodels.User, error) {
@@ -129,7 +129,7 @@ func ConsumeCodeWithLinkCodeWithContext(linkCode string, preAuthSessionID string
 	return (*instance.RecipeImpl.ConsumeCode)(nil, &linkCode, preAuthSessionID, userContext)
 }
 
-func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+func GetUserByIDWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (*tplmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -137,7 +137,7 @@ func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) 
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	return (*instance.RecipeImpl.GetUserByID)(userID, tenantId, userContext)
 }
 
 func GetUserByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (*tplmodels.User, error) {
@@ -401,8 +401,8 @@ func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tpl
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-func GetUserById(userID string) (*tplmodels.User, error) {
-	return GetUserByIDWithContext(userID, &map[string]interface{}{})
+func GetUserById(userID string, tenantId *string) (*tplmodels.User, error) {
+	return GetUserByIDWithContext(userID, tenantId, &map[string]interface{}{})
 }
 
 func GetUsersByEmail(email string) ([]tplmodels.User, error) {
@@ -429,8 +429,8 @@ func ConsumeCodeWithLinkCode(linkCode string, preAuthSessionID string) (tplmodel
 	return ConsumeCodeWithLinkCodeWithContext(linkCode, preAuthSessionID, &map[string]interface{}{})
 }
 
-func GetUserByID(userID string) (*tplmodels.User, error) {
-	return GetUserByIDWithContext(userID, &map[string]interface{}{})
+func GetUserByID(userID string, tenantId *string) (*tplmodels.User, error) {
+	return GetUserByIDWithContext(userID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserByPhoneNumber(phoneNumber string) (*tplmodels.User, error) {

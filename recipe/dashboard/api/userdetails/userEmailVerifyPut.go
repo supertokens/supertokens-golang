@@ -59,7 +59,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 	}
 
 	if *readBody.Verified {
-		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(*readBody.UserID, nil)
+		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(*readBody.UserID, nil, nil) // TODO tenantId
 
 		if tokenErr != nil {
 			return userEmailVerifyPutResponse{}, tokenErr
@@ -71,7 +71,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			}, nil
 		}
 
-		verifyResponse, verifyErr := emailverification.VerifyEmailUsingToken(tokenResponse.OK.Token)
+		verifyResponse, verifyErr := emailverification.VerifyEmailUsingToken(tokenResponse.OK.Token, nil) // TODO tenantId
 
 		if verifyErr != nil {
 			return userEmailVerifyPutResponse{}, verifyErr
@@ -82,7 +82,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			return userEmailVerifyPutResponse{}, errors.New("Should never come here")
 		}
 	} else {
-		_, unverifyErr := emailverification.UnverifyEmail(*readBody.UserID, nil)
+		_, unverifyErr := emailverification.UnverifyEmail(*readBody.UserID, nil, nil) // TODO tenantId
 
 		if unverifyErr != nil {
 			return userEmailVerifyPutResponse{}, unverifyErr

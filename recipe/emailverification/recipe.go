@@ -69,9 +69,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		r.EmailDelivery = emaildelivery.MakeIngredient(verifiedConfig.GetEmailDeliveryConfig())
 	}
 
-	r.GetEmailForUserID = func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
+	r.GetEmailForUserID = func(userID string, tenantId *string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 		if r.Config.GetEmailForUserID != nil {
-			emailRes, err := r.Config.GetEmailForUserID(userID, userContext)
+			emailRes, err := r.Config.GetEmailForUserID(userID, tenantId, userContext)
 			if err != nil {
 				return evmodels.TypeEmailInfo{}, err
 			}
@@ -83,7 +83,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		var err error
 		var emailRes evmodels.TypeEmailInfo
 		for _, getEmailForUserIdFunc := range getEmailForUserIdFuncsFromOtherRecipes {
-			emailRes, err = getEmailForUserIdFunc(userID, userContext)
+			emailRes, err = getEmailForUserIdFunc(userID, tenantId, userContext)
 			if err != nil {
 				return emailRes, err
 			}

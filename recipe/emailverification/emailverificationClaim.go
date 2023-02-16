@@ -16,12 +16,12 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 		if err != nil {
 			return nil, err
 		}
-		emailInfo, err := instance.GetEmailForUserID(userId, userContext)
+		emailInfo, err := instance.GetEmailForUserID(userId, tenantId, userContext)
 		if err != nil {
 			return false, err
 		}
 		if emailInfo.OK != nil {
-			verified, err := (*instance.RecipeImpl.IsEmailVerified)(userId, emailInfo.OK.Email, userContext) // TODO pass tenant ID
+			verified, err := (*instance.RecipeImpl.IsEmailVerified)(userId, emailInfo.OK.Email, tenantId, userContext)
 			if err != nil {
 				return false, nil
 			}

@@ -87,8 +87,8 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		return nil, nil
 	}
 
-	getUserByID := func(userID string, userContext supertokens.UserContext) (*plessmodels.User, error) {
-		resp, err := (*recipeImplementation.GetUserByID)(userID, userContext)
+	getUserByID := func(userID string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		resp, err := (*recipeImplementation.GetUserByID)(userID, tenantId, userContext)
 
 		if err != nil {
 			return nil, err

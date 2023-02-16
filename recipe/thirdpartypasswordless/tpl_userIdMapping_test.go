@@ -74,13 +74,13 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserByID(signUpResponse.OK.User.ID)
+		userResp, err := GetUserByID(signUpResponse.OK.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserByID(externalUserId)
+		userResp, err := GetUserByID(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -119,13 +119,13 @@ func TestPlessCreateUserIdMappingUsingEmail(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserByID(signUpResponse.User.ID)
+		userResp, err := GetUserByID(signUpResponse.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserByID(externalUserId)
+		userResp, err := GetUserByID(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -180,13 +180,13 @@ func TestPlessCreateUserIdMappingUsingPhone(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserByID(signUpResponse.User.ID)
+		userResp, err := GetUserByID(signUpResponse.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserByID(externalUserId)
+		userResp, err := GetUserByID(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}

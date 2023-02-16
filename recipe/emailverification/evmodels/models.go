@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type TypeGetEmailForUserID func(userID string, userContext supertokens.UserContext) (TypeEmailInfo, error)
+type TypeGetEmailForUserID func(userID string, tenantId *string, userContext supertokens.UserContext) (TypeEmailInfo, error)
 
 type TypeMode string
 

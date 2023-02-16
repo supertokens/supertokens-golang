@@ -53,7 +53,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		}
 	}
 
-	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(*readBody.UserId, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(*readBody.UserId, nil, supertokens.MakeDefaultUserContextFromAPI(options.Req)) // TODO tenantId
 
 	if emailErr != nil {
 		return userEmailVerifyTokenPost{}, emailErr
@@ -63,7 +63,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
 	}
 
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(*readBody.UserId, &emailresponse.OK.Email)
+	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(*readBody.UserId, &emailresponse.OK.Email, nil) // TODO tenantId
 
 	if tokenError != nil {
 		return userEmailVerifyTokenPost{}, tokenError

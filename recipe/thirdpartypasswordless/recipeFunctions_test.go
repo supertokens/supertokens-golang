@@ -94,19 +94,19 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	resp, err := ThirdPartyManuallyCreateOrUpdateUser("custom", "verifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
-	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
+	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil, nil)
 	assert.NoError(t, err)
 
-	emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token)
+	emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token, nil)
 
-	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, nil)
+	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, nil, nil)
 	assert.NoError(t, err)
 	assert.True(t, isVerfied)
 
 	resp1, err := ThirdPartyManuallyCreateOrUpdateUser("custom2", "NotVerifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
-	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)
+	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil, nil)
 	assert.NoError(t, err)
 	assert.False(t, isVerfied1)
 }
@@ -170,11 +170,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	response, err := PasswordlessSignInUpByEmail("test@example.com")
 	assert.NoError(t, err)
 
-	isVerified, err := emailverification.IsEmailVerified(response.User.ID, nil)
+	isVerified, err := emailverification.IsEmailVerified(response.User.ID, nil, nil)
 	assert.NoError(t, err)
 	assert.False(t, isVerified) // this is a change in behavior
 
-	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, nil)
+	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, nil, nil)
 	assert.NoError(t, err)
 	assert.Nil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.NotNil(t, emailVerificationResp.OK)
@@ -182,11 +182,11 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	response, err = PasswordlessSignInUpByPhoneNumber("+123456789012")
 	assert.NoError(t, err)
 
-	isVerified, err = emailverification.IsEmailVerified(response.User.ID, nil)
+	isVerified, err = emailverification.IsEmailVerified(response.User.ID, nil, nil)
 	assert.NoError(t, err)
 	assert.True(t, isVerified)
 
-	emailVerificationResp, err = emailverification.CreateEmailVerificationToken(response.User.ID, nil)
+	emailVerificationResp, err = emailverification.CreateEmailVerificationToken(response.User.ID, nil, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.Nil(t, emailVerificationResp.OK)
@@ -243,7 +243,7 @@ func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
 		return
 	}
 
-	user, err := GetUserByID("random")
+	user, err := GetUserByID("random", nil)
 	assert.NoError(t, err)
 	assert.Nil(t, user)
 
@@ -251,7 +251,7 @@ func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
 	assert.NoError(t, err)
 	userId := resp.User.ID
 
-	user, err = GetUserByID(userId)
+	user, err = GetUserByID(userId, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
 
@@ -665,7 +665,7 @@ func TestThirdPartyPasswordlessUpdateUserContactMethodEmailTest(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.OK)
 
-	user, err := GetUserByID(userInfo.User.ID)
+	user, err := GetUserByID(userInfo.User.ID, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, updatedEmail, *user.Email)
 
@@ -743,7 +743,7 @@ func TestThirdPartyPasswordlessUpdateUserContactPhone(t *testing.T) {
 
 	assert.NotNil(t, res1.OK)
 
-	result, err := GetUserByID(userInfo.User.ID)
+	result, err := GetUserByID(userInfo.User.ID, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, phoneNumber_2, *result.PhoneNumber)

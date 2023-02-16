@@ -632,7 +632,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 		} else if r.URL.Path == "/unverifyEmail" && r.Method == "GET" {
 			session.VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
 				sessionContainer := session.GetSessionFromRequestContext(r.Context())
-				emailverification.UnverifyEmail(sessionContainer.GetUserID(), nil)
+				emailverification.UnverifyEmail(sessionContainer.GetUserID(), nil, nil)
 				sessionContainer.FetchAndSetClaim(evclaims.EmailVerificationClaim)
 				rw.Header().Add("content-type", "application/json")
 				rw.WriteHeader(200)
@@ -657,11 +657,11 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				for i, p := range permissions {
 					permissionsStr[i] = p.(string)
 				}
-				_, err = userroles.CreateNewRoleOrAddPermissions(role, permissionsStr, &map[string]interface{}{})
+				_, err = userroles.CreateNewRoleOrAddPermissions(role, permissionsStr, nil, &map[string]interface{}{})
 				if err != nil {
 					return
 				}
-				_, err = userroles.AddRoleToUser(sessionContainer.GetUserID(), role, &map[string]interface{}{})
+				_, err = userroles.AddRoleToUser(sessionContainer.GetUserID(), role, nil, &map[string]interface{}{})
 				if err != nil {
 					return
 				}

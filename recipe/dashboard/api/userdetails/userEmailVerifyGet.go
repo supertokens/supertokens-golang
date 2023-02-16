@@ -44,7 +44,7 @@ func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options 
 		}, nil
 	}
 
-	response, verificationError := emailverification.IsEmailVerified(userId, nil)
+	response, verificationError := emailverification.IsEmailVerified(userId, nil, nil) // TODO tenantId
 
 	if verificationError != nil {
 		return userEmailVerifyGetResponse{}, verificationError

@@ -82,9 +82,9 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	infoFromResponse := unittesting.ExtractInfoFromResponse(resp)
 	antiCsrf := infoFromResponse["antiCsrf"]
 
-	token, err := emailverification.CreateEmailVerificationToken(userId, nil)
+	token, err := emailverification.CreateEmailVerificationToken(userId, nil, nil)
 	assert.NoError(t, err)
-	_, err = emailverification.VerifyEmailUsingToken(token.OK.Token)
+	_, err = emailverification.VerifyEmailUsingToken(token.OK.Token, nil)
 	assert.NoError(t, err)
 
 	resp, err = unittesting.EmailVerifyTokenRequest(
@@ -121,7 +121,7 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	assert.Empty(t, infoFromResponse2["frontToken"])
 
 	// now we mark the email as unverified and try again
-	emailverification.UnverifyEmail(userId, nil)
+	emailverification.UnverifyEmail(userId, nil, nil)
 	resp, err = unittesting.EmailVerifyTokenRequest(
 		testServer.URL,
 		userId,
