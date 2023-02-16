@@ -55,7 +55,7 @@ func TestClearMetadata(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
-		err := ClearUserMetadata("userId")
+		err := ClearUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -94,17 +94,17 @@ func TestShouldClearStoredField(t *testing.T) {
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
 		_, err := UpdateUserMetadata("userId", map[string]interface{}{
 			"role": "admin",
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
 
-		err = ClearUserMetadata("userId")
+		err = ClearUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
 
-		metadata, err := GetUserMetadata("userId")
+		metadata, err := GetUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -112,7 +112,7 @@ func TestShouldClearStoredField(t *testing.T) {
 
 		updatedContent, err := UpdateUserMetadata("userId", map[string]interface{}{
 			"role": "admin2",
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -153,7 +153,7 @@ func TestGetUserMetadata(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
-		metadata, err := GetUserMetadata("userId")
+		metadata, err := GetUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -193,7 +193,7 @@ func TestGetUserMetadataIfCreated(t *testing.T) {
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
 		updatedContent, err := UpdateUserMetadata("userId", map[string]interface{}{
 			"role": "admin",
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -201,7 +201,7 @@ func TestGetUserMetadataIfCreated(t *testing.T) {
 			"role": "admin",
 		})
 
-		metadata, err := GetUserMetadata("userId")
+		metadata, err := GetUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -228,9 +228,9 @@ func TestOverride(t *testing.T) {
 					Functions: func(originalImplementation usermetadatamodels.RecipeInterface) usermetadatamodels.RecipeInterface {
 						originalUpdateMetadata := *originalImplementation.UpdateUserMetadata
 
-						(*originalImplementation.UpdateUserMetadata) = func(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
+						(*originalImplementation.UpdateUserMetadata) = func(userID string, metadataUpdate map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error) {
 							calledOverride = true
-							return originalUpdateMetadata(userID, metadataUpdate, userContext)
+							return originalUpdateMetadata(userID, metadataUpdate, tenantId, userContext)
 						}
 
 						return originalImplementation
@@ -257,12 +257,12 @@ func TestOverride(t *testing.T) {
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
 		_, err := UpdateUserMetadata("userId", map[string]interface{}{
 			"role": "admin",
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
 
-		metadata, err := GetUserMetadata("userId")
+		metadata, err := GetUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -334,20 +334,20 @@ func TestShouldUpdateShallowMerge(t *testing.T) {
 			"unchanged":   float64(123),
 		}
 
-		updatedContent, err := UpdateUserMetadata("userId", testMetadata)
+		updatedContent, err := UpdateUserMetadata("userId", testMetadata, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
 		assert.Equal(t, updatedContent, testMetadata)
 
-		updatedContent, err = UpdateUserMetadata("userId", testMetadataUpdate)
+		updatedContent, err = UpdateUserMetadata("userId", testMetadataUpdate, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
 
 		assert.Equal(t, updatedContent, expectedResult)
 
-		finalResult, err := GetUserMetadata("userId")
+		finalResult, err := GetUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -389,7 +389,7 @@ func TestGetUserMetadataWithUTF8Encoding(t *testing.T) {
 	if unittesting.MaxVersion("2.13", cdiVersion) == cdiVersion {
 		updatedContent, err := UpdateUserMetadata("userId", map[string]interface{}{
 			"role": "\uFDFD   Æää",
-		})
+		}, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -397,7 +397,7 @@ func TestGetUserMetadataWithUTF8Encoding(t *testing.T) {
 			"role": "\uFDFD   Æää",
 		})
 
-		metadata, err := GetUserMetadata("userId")
+		metadata, err := GetUserMetadata("userId", nil)
 		if err != nil {
 			t.Error(err.Error())
 		}

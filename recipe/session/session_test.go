@@ -124,7 +124,7 @@ func TestTokenTheftDetection(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -215,7 +215,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -303,7 +303,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -711,7 +711,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -727,7 +727,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue1,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck1,
-		}, nil)
+		})
 		if err != nil {
 			t.Error(err.Error())
 		}

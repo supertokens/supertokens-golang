@@ -18,7 +18,7 @@ func NewUserRoleClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimVal
 		if err != nil {
 			return nil, err
 		}
-		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, userContext)
+		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -42,14 +42,14 @@ func NewPermissionClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimV
 		if err != nil {
 			return nil, err
 		}
-		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, userContext)
+		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
 
 		permissionSet := map[string]bool{}
 		for _, role := range roles.OK.Roles {
-			permissions, err := (*recipe.RecipeImpl.GetPermissionsForRole)(role, userContext)
+			permissions, err := (*recipe.RecipeImpl.GetPermissionsForRole)(role, tenantId, userContext)
 			if err != nil {
 				return nil, err
 			}

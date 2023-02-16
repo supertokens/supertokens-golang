@@ -24,50 +24,50 @@ func Init(config *usermetadatamodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func GetUserMetadata(userID string) (map[string]interface{}, error) {
+func GetUserMetadata(userID string, tenantId *string) (map[string]interface{}, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	return (*instance.RecipeImpl.GetUserMetadata)(userID, &map[string]interface{}{})
+	return (*instance.RecipeImpl.GetUserMetadata)(userID, tenantId, &map[string]interface{}{})
 }
 
-func GetUserMetadataWithContext(userID string, userContext supertokens.UserContext) (map[string]interface{}, error) {
+func GetUserMetadataWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	return (*instance.RecipeImpl.GetUserMetadata)(userID, userContext)
+	return (*instance.RecipeImpl.GetUserMetadata)(userID, tenantId, userContext)
 }
 
-func UpdateUserMetadata(userID string, metadataUpdate map[string]interface{}) (map[string]interface{}, error) {
+func UpdateUserMetadata(userID string, metadataUpdate map[string]interface{}, tenantId *string) (map[string]interface{}, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	return (*instance.RecipeImpl.UpdateUserMetadata)(userID, metadataUpdate, &map[string]interface{}{})
+	return (*instance.RecipeImpl.UpdateUserMetadata)(userID, metadataUpdate, tenantId, &map[string]interface{}{})
 }
 
-func UpdateUserMetadataWithContext(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
+func UpdateUserMetadataWithContext(userID string, metadataUpdate map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
-	return (*instance.RecipeImpl.UpdateUserMetadata)(userID, metadataUpdate, userContext)
+	return (*instance.RecipeImpl.UpdateUserMetadata)(userID, metadataUpdate, tenantId, userContext)
 }
 
-func ClearUserMetadata(userID string) error {
+func ClearUserMetadata(userID string, tenantId *string) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return (*instance.RecipeImpl.ClearUserMetadata)(userID, &map[string]interface{}{})
+	return (*instance.RecipeImpl.ClearUserMetadata)(userID, tenantId, &map[string]interface{}{})
 }
 
-func ClearUserMetadataWithContext(userID string, userContext supertokens.UserContext) error {
+func ClearUserMetadataWithContext(userID string, tenantId *string, userContext supertokens.UserContext) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return (*instance.RecipeImpl.ClearUserMetadata)(userID, userContext)
+	return (*instance.RecipeImpl.ClearUserMetadata)(userID, tenantId, userContext)
 }

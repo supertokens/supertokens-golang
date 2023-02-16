@@ -49,18 +49,18 @@ func TestCreateAssignAndDeleteRole(t *testing.T) {
 	roles := []string{"role1", "role2", "role3"}
 
 	for _, role := range roles {
-		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, &map[string]interface{}{})
+		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
 
-		addResult, err := AddRoleToUser("userId", role, &map[string]interface{}{})
+		addResult, err := AddRoleToUser("userId", role, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, addResult.OK)
 		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 	}
 
-	listResult, err := GetAllRoles(&map[string]interface{}{})
+	listResult, err := GetAllRoles(nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Contains(t, listResult.OK.Roles, "role1")
@@ -69,19 +69,19 @@ func TestCreateAssignAndDeleteRole(t *testing.T) {
 	assert.Equal(t, 3, len(listResult.OK.Roles))
 
 	// Delete a role
-	deleteResult, err := DeleteRole("role2", &map[string]interface{}{})
+	deleteResult, err := DeleteRole("role2", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, deleteResult.OK)
 	assert.True(t, deleteResult.OK.DidRoleExist)
 
-	listResult, err = GetAllRoles(&map[string]interface{}{})
+	listResult, err = GetAllRoles(nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Contains(t, listResult.OK.Roles, "role1")
 	assert.Contains(t, listResult.OK.Roles, "role3")
 	assert.Equal(t, 2, len(listResult.OK.Roles))
 
-	userRolesResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	userRolesResult, err := GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, userRolesResult.OK)
 	assert.Contains(t, userRolesResult.OK.Roles, "role1")
@@ -114,7 +114,7 @@ func TestDeleteUnknownRole(t *testing.T) {
 	}
 
 	// Delete a role
-	deleteResult, err := DeleteRole("role1", &map[string]interface{}{})
+	deleteResult, err := DeleteRole("role1", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, deleteResult.OK)
 	assert.False(t, deleteResult.OK.DidRoleExist)

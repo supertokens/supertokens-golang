@@ -444,7 +444,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 				metadataupdate["last_name"] = strings.TrimSpace(*readBody.LastName)
 			}
 
-			usermetadata.UpdateUserMetadata(*readBody.UserId, metadataupdate)
+			usermetadata.UpdateUserMetadata(*readBody.UserId, metadataupdate, nil) // TODO tenantId
 		}
 	}
 

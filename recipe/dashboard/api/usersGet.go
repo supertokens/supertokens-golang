@@ -101,7 +101,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 			User     map[string]interface{} `json:"user"`
 		}) {
 			defer processingGroup.Done()
-			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string))
+			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string), nil) // TODO tenantId
 			<-sem
 			if err != nil {
 				errInBackground = err

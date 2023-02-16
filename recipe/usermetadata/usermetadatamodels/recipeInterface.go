@@ -18,7 +18,7 @@ package usermetadatamodels
 import "github.com/supertokens/supertokens-golang/supertokens"
 
 type RecipeInterface struct {
-	GetUserMetadata    *func(userID string, userContext supertokens.UserContext) (map[string]interface{}, error)
-	UpdateUserMetadata *func(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error)
-	ClearUserMetadata  *func(userID string, userContext supertokens.UserContext) error
+	GetUserMetadata    *func(userID string, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error)
+	UpdateUserMetadata *func(userID string, metadataUpdate map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error)
+	ClearUserMetadata  *func(userID string, tenantId *string, userContext supertokens.UserContext) error
 }

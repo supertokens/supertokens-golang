@@ -24,8 +24,8 @@ import (
 
 type RecipeInterface struct {
 	CreateNewSession            *func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (SessionContainer, error)
-	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, tenantId *string, userContext supertokens.UserContext) (SessionContainer, error)
-	RefreshSession              *func(req *http.Request, res http.ResponseWriter, tenantId *string, userContext supertokens.UserContext) (SessionContainer, error)
+	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)
+	RefreshSession              *func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSessionInformation       *func(sessionHandle string, tenantId *string, userContext supertokens.UserContext) (*SessionInformation, error)
 	RevokeAllSessionsForUser    *func(userID string, tenantId *string, userContext supertokens.UserContext) ([]string, error)
 	GetAllSessionHandlesForUser *func(userID string, tenantId *string, userContext supertokens.UserContext) ([]string, error)
@@ -34,8 +34,8 @@ type RecipeInterface struct {
 	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (bool, error)
 	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (bool, error)
 	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (bool, error)
-	GetAccessTokenLifeTimeMS    *func(tenantId *string, userContext supertokens.UserContext) (uint64, error)
-	GetRefreshTokenLifeTimeMS   *func(tenantId *string, userContext supertokens.UserContext) (uint64, error)
+	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)
+	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
 	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (*RegenerateAccessTokenResponse, error)
 
 	GetGlobalClaimValidators   *func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId *string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)

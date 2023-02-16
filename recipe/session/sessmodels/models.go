@@ -157,7 +157,6 @@ type JWTNormalisedConfig struct {
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
-	GetTenantId                   func(req *http.Request) (*string, error)
 	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 }
 

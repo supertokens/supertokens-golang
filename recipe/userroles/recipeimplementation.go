@@ -22,8 +22,8 @@ import (
 
 func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) userrolesmodels.RecipeInterface {
 
-	addRoleToUser := func(userID string, role string, userContext supertokens.UserContext) (userrolesmodels.AddRoleToUserResponse, error) {
-		response, err := querier.SendPutRequest("/recipe/user/role", map[string]interface{}{
+	addRoleToUser := func(userID string, role string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.AddRoleToUserResponse, error) {
+		response, err := querier.SendPutRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/role", map[string]interface{}{
 			"userId": userID,
 			"role":   role,
 		})
@@ -44,8 +44,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	removeUserRole := func(userID string, role string, userContext supertokens.UserContext) (userrolesmodels.RemoveUserRoleResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/user/role/remove", map[string]interface{}{
+	removeUserRole := func(userID string, role string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.RemoveUserRoleResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/role/remove", map[string]interface{}{
 			"userId": userID,
 			"role":   role,
 		})
@@ -66,8 +66,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	getRolesForUser := func(userID string, userContext supertokens.UserContext) (userrolesmodels.GetRolesForUserResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/user/roles", map[string]string{
+	getRolesForUser := func(userID string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.GetRolesForUserResponse, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/roles", map[string]string{
 			"userId": userID,
 		})
 		if err != nil {
@@ -82,8 +82,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 
 	}
 
-	getUsersThatHaveRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/role/users", map[string]string{
+	getUsersThatHaveRole := func(role string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/role/users", map[string]string{
 			"role": role,
 		})
 		if err != nil {
@@ -103,8 +103,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	createNewRoleOrAddPermissions := func(role string, permissions []string, userContext supertokens.UserContext) (userrolesmodels.CreateNewRoleOrAddPermissionsResponse, error) {
-		response, err := querier.SendPutRequest("/recipe/role", map[string]interface{}{
+	createNewRoleOrAddPermissions := func(role string, permissions []string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.CreateNewRoleOrAddPermissionsResponse, error) {
+		response, err := querier.SendPutRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/role", map[string]interface{}{
 			"role":        role,
 			"permissions": permissions,
 		})
@@ -119,8 +119,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	getPermissionsForRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.GetPermissionsForRoleResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/role/permissions", map[string]string{
+	getPermissionsForRole := func(role string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.GetPermissionsForRoleResponse, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/role/permissions", map[string]string{
 			"role": role,
 		})
 		if err != nil {
@@ -140,8 +140,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	removePermissionsFromRole := func(role string, permissions []string, userContext supertokens.UserContext) (userrolesmodels.RemovePermissionsFromRoleResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/role/permissions/remove", map[string]interface{}{
+	removePermissionsFromRole := func(role string, permissions []string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.RemovePermissionsFromRoleResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/role/permissions/remove", map[string]interface{}{
 			"role":        role,
 			"permissions": permissions,
 		})
@@ -160,8 +160,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	getRolesThatHavePermission := func(permission string, userContext supertokens.UserContext) (userrolesmodels.GetRolesThatHavePermissionResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/permission/roles", map[string]string{
+	getRolesThatHavePermission := func(permission string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.GetRolesThatHavePermissionResponse, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/permission/roles", map[string]string{
 			"permission": permission,
 		})
 		if err != nil {
@@ -175,8 +175,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	deleteRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.DeleteRoleResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/role/remove", map[string]interface{}{
+	deleteRole := func(role string, tenantId *string, userContext supertokens.UserContext) (userrolesmodels.DeleteRoleResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/role/remove", map[string]interface{}{
 			"role": role,
 		})
 		if err != nil {
@@ -190,8 +190,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		}, nil
 	}
 
-	getAllRoles := func(userContext supertokens.UserContext) (userrolesmodels.GetAllRolesResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/roles", map[string]string{})
+	getAllRoles := func(tenantId *string, userContext supertokens.UserContext) (userrolesmodels.GetAllRolesResponse, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/roles", map[string]string{})
 		if err != nil {
 			return userrolesmodels.GetAllRolesResponse{}, err
 		}

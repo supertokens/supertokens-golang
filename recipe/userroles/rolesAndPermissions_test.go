@@ -46,7 +46,7 @@ func TestCreateRole(t *testing.T) {
 		return
 	}
 
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
@@ -75,12 +75,12 @@ func TestCreateRoleTwice(t *testing.T) {
 		return
 	}
 
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	createResult, err = CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err = CreateNewRoleOrAddPermissions("role", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.False(t, createResult.OK.CreatedNewRole)
@@ -109,12 +109,12 @@ func TestCreateRoleWithPermissions(t *testing.T) {
 		return
 	}
 
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1"}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, permissionResult.OK)
 	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
@@ -143,17 +143,17 @@ func TestAddPermissionToRole(t *testing.T) {
 		return
 	}
 
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1"}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	createResult, err = CreateNewRoleOrAddPermissions("role", []string{"permission2", "permission3"}, &map[string]interface{}{})
+	createResult, err = CreateNewRoleOrAddPermissions("role", []string{"permission2", "permission3"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.False(t, createResult.OK.CreatedNewRole)
 
-	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, permissionResult.OK)
 	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
@@ -184,17 +184,17 @@ func TestDuplicatePermission(t *testing.T) {
 		return
 	}
 
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2"}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	createResult, err = CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2"}, &map[string]interface{}{})
+	createResult, err = CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.False(t, createResult.OK.CreatedNewRole)
 
-	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, permissionResult.OK)
 	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
@@ -225,7 +225,7 @@ func TestPermissionsOfUnknownRole(t *testing.T) {
 		return
 	}
 
-	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.Nil(t, permissionResult.OK)
 	assert.NotNil(t, permissionResult.UnknownRoleError)
@@ -257,13 +257,13 @@ func TestGetRolesThatHavePermission(t *testing.T) {
 	roles := []string{"role1", "role2", "role3"}
 
 	for _, role := range roles {
-		createResult, err := CreateNewRoleOrAddPermissions(role, []string{"permission"}, &map[string]interface{}{})
+		createResult, err := CreateNewRoleOrAddPermissions(role, []string{"permission"}, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
 	}
 
-	listResult, err := GetRolesThatHavePermission("permission", &map[string]interface{}{})
+	listResult, err := GetRolesThatHavePermission("permission", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Contains(t, listResult.OK.Roles, "role1")
@@ -298,13 +298,13 @@ func TestGetRolesThatHaveUnknownPermission(t *testing.T) {
 	roles := []string{"role1", "role2", "role3"}
 
 	for _, role := range roles {
-		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, &map[string]interface{}{})
+		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
 	}
 
-	listResult, err := GetRolesThatHavePermission("permission", &map[string]interface{}{})
+	listResult, err := GetRolesThatHavePermission("permission", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Equal(t, 0, len(listResult.OK.Roles))
@@ -333,23 +333,23 @@ func TestDeletePermissionFromRole(t *testing.T) {
 		return
 	}
 
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2", "permission3"}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{"permission1", "permission2", "permission3"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	permissionResult, err := GetPermissionsForRole("role", &map[string]interface{}{})
+	permissionResult, err := GetPermissionsForRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, permissionResult.OK)
 	assert.Contains(t, permissionResult.OK.Permissions, "permission1")
 	assert.Contains(t, permissionResult.OK.Permissions, "permission2")
 	assert.Contains(t, permissionResult.OK.Permissions, "permission3")
 
-	removeResult, err := RemovePermissionsFromRole("role", []string{"permission1", "permission3"}, &map[string]interface{}{})
+	removeResult, err := RemovePermissionsFromRole("role", []string{"permission1", "permission3"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, removeResult.OK)
 
-	permissionResult, err = GetPermissionsForRole("role", &map[string]interface{}{})
+	permissionResult, err = GetPermissionsForRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, permissionResult.OK)
 	assert.NotContains(t, permissionResult.OK.Permissions, "permission1")
@@ -381,7 +381,7 @@ func TestDeletePermissionFromUnknownRole(t *testing.T) {
 		return
 	}
 
-	removeResult, err := RemovePermissionsFromRole("role", []string{"permission1", "permission2"}, &map[string]interface{}{})
+	removeResult, err := RemovePermissionsFromRole("role", []string{"permission1", "permission2"}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.Nil(t, removeResult.OK)
 	assert.NotNil(t, removeResult.UnknownRoleError)

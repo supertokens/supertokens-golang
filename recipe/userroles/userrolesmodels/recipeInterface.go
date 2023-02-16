@@ -84,14 +84,14 @@ type GetAllRolesResponse struct {
 }
 
 type RecipeInterface struct {
-	AddRoleToUser                 *func(userID string, role string, userContext supertokens.UserContext) (AddRoleToUserResponse, error)
-	RemoveUserRole                *func(userID string, role string, userContext supertokens.UserContext) (RemoveUserRoleResponse, error)
-	GetRolesForUser               *func(userID string, userContext supertokens.UserContext) (GetRolesForUserResponse, error)
-	GetUsersThatHaveRole          *func(role string, userContext supertokens.UserContext) (GetUsersThatHaveRoleResponse, error)
-	CreateNewRoleOrAddPermissions *func(role string, permissions []string, userContext supertokens.UserContext) (CreateNewRoleOrAddPermissionsResponse, error)
-	GetPermissionsForRole         *func(role string, userContext supertokens.UserContext) (GetPermissionsForRoleResponse, error)
-	RemovePermissionsFromRole     *func(role string, permissions []string, userContext supertokens.UserContext) (RemovePermissionsFromRoleResponse, error)
-	GetRolesThatHavePermission    *func(permission string, userContext supertokens.UserContext) (GetRolesThatHavePermissionResponse, error)
-	DeleteRole                    *func(role string, userContext supertokens.UserContext) (DeleteRoleResponse, error)
-	GetAllRoles                   *func(userContext supertokens.UserContext) (GetAllRolesResponse, error)
+	AddRoleToUser                 *func(userID string, role string, tenantId *string, userContext supertokens.UserContext) (AddRoleToUserResponse, error)
+	RemoveUserRole                *func(userID string, role string, tenantId *string, userContext supertokens.UserContext) (RemoveUserRoleResponse, error)
+	GetRolesForUser               *func(userID string, tenantId *string, userContext supertokens.UserContext) (GetRolesForUserResponse, error)
+	GetUsersThatHaveRole          *func(role string, tenantId *string, userContext supertokens.UserContext) (GetUsersThatHaveRoleResponse, error)
+	CreateNewRoleOrAddPermissions *func(role string, permissions []string, tenantId *string, userContext supertokens.UserContext) (CreateNewRoleOrAddPermissionsResponse, error)
+	GetPermissionsForRole         *func(role string, tenantId *string, userContext supertokens.UserContext) (GetPermissionsForRoleResponse, error)
+	RemovePermissionsFromRole     *func(role string, permissions []string, tenantId *string, userContext supertokens.UserContext) (RemovePermissionsFromRoleResponse, error)
+	GetRolesThatHavePermission    *func(permission string, tenantId *string, userContext supertokens.UserContext) (GetRolesThatHavePermissionResponse, error)
+	DeleteRole                    *func(role string, tenantId *string, userContext supertokens.UserContext) (DeleteRoleResponse, error)
+	GetAllRoles                   *func(tenantId *string, userContext supertokens.UserContext) (GetAllRolesResponse, error)
 }

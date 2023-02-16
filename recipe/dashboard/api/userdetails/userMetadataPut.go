@@ -84,13 +84,13 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	 *
 	 * Removing first ensures that the final data is exactly what the user wanted it to be
 	 */
-	clearErr := usermetadata.ClearUserMetadata(*readBody.UserId)
+	clearErr := usermetadata.ClearUserMetadata(*readBody.UserId, nil) // TODO tenantId
 
 	if clearErr != nil {
 		return userMetadataPutResponse{}, clearErr
 	}
 
-	_, updateErr := usermetadata.UpdateUserMetadata(*readBody.UserId, parsedMetaData)
+	_, updateErr := usermetadata.UpdateUserMetadata(*readBody.UserId, parsedMetaData, nil) // TODO tenantId
 
 	if updateErr != nil {
 		return userMetadataPutResponse{}, updateErr

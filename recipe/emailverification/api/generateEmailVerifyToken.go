@@ -40,7 +40,6 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 				return validators, nil
 			},
 		},
-		nil, // TODO pass tenant ID
 		userContext,
 	)
 	if err != nil {

@@ -21,8 +21,8 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config usermetadatamodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) usermetadatamodels.RecipeInterface {
-	getUserMetadata := func(userID string, userContext supertokens.UserContext) (map[string]interface{}, error) {
-		response, err := querier.SendGetRequest("/recipe/user/metadata", map[string]string{
+	getUserMetadata := func(userID string, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/metadata", map[string]string{
 			"userId": userID,
 		})
 		if err != nil {
@@ -32,8 +32,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config usermetadatamo
 		return response["metadata"].(map[string]interface{}), nil
 	}
 
-	updateUserMetadata := func(userID string, metadataUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
-		response, err := querier.SendPutRequest("/recipe/user/metadata", map[string]interface{}{
+	updateUserMetadata := func(userID string, metadataUpdate map[string]interface{}, tenantId *string, userContext supertokens.UserContext) (map[string]interface{}, error) {
+		response, err := querier.SendPutRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/metadata", map[string]interface{}{
 			"userId":         userID,
 			"metadataUpdate": metadataUpdate,
 		})
@@ -44,8 +44,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config usermetadatamo
 		return response["metadata"].(map[string]interface{}), nil
 	}
 
-	clearUserMetadata := func(userID string, userContext supertokens.UserContext) error {
-		_, err := querier.SendPostRequest("/recipe/user/metadata/remove", map[string]interface{}{
+	clearUserMetadata := func(userID string, tenantId *string, userContext supertokens.UserContext) error {
+		_, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/metadata/remove", map[string]interface{}{
 			"userId": userID,
 		})
 		return err

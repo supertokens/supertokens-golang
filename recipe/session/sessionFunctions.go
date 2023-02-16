@@ -64,7 +64,7 @@ func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, c
 	return resp, nil
 }
 
-func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool, tenantId *string) (sessmodels.GetSessionResponse, error) {
+func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (sessmodels.GetSessionResponse, error) {
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return sessmodels.GetSessionResponse{}, err
@@ -145,7 +145,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		requestBody["antiCsrfToken"] = *antiCsrfToken
 	}
 
-	response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/session/verify", requestBody)
+	response, err := querier.SendPostRequest("/recipe/session/verify", requestBody)
 	if err != nil {
 		return sessmodels.GetSessionResponse{}, err
 	}
@@ -198,7 +198,7 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	return nil, nil
 }
 
-func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool, tokenTransferMethod sessmodels.TokenTransferMethod, tenantId *string) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool, tokenTransferMethod sessmodels.TokenTransferMethod) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
@@ -222,7 +222,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken
 	}
-	response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/session/refresh", requestBody)
+	response, err := querier.SendPostRequest("/recipe/session/refresh", requestBody)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}

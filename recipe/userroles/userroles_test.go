@@ -47,19 +47,19 @@ func TestAddNewRoleToUser(t *testing.T) {
 	}
 
 	// Create a new role
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
 	// Add role to the user
-	addResult, err := AddRoleToUser("userId", "role", &map[string]interface{}{})
+	addResult, err := AddRoleToUser("userId", "role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, addResult.OK)
 	assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 
 	// Check user has new role
-	listResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	listResult, err := GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Contains(t, listResult.OK.Roles, "role")
@@ -89,25 +89,25 @@ func TestAddDuplicateRoleToUser(t *testing.T) {
 	}
 
 	// Create a new role
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
 	// Add role to the user
-	addResult, err := AddRoleToUser("userId", "role", &map[string]interface{}{})
+	addResult, err := AddRoleToUser("userId", "role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, addResult.OK)
 	assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 
 	// Add role to the user
-	addResult, err = AddRoleToUser("userId", "role", &map[string]interface{}{})
+	addResult, err = AddRoleToUser("userId", "role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, addResult.OK)
 	assert.True(t, addResult.OK.DidUserAlreadyHaveRole)
 
 	// Check user has new role
-	listResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	listResult, err := GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Contains(t, listResult.OK.Roles, "role")
@@ -137,13 +137,13 @@ func TestAddUnknownRoleToUser(t *testing.T) {
 	}
 
 	// Add role to the user
-	addResult, err := AddRoleToUser("userId", "role", &map[string]interface{}{})
+	addResult, err := AddRoleToUser("userId", "role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.Nil(t, addResult.OK)
 	assert.NotNil(t, addResult.UnknownRoleError)
 
 	// Check user has new role
-	listResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	listResult, err := GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.NotContains(t, listResult.OK.Roles, "role")
@@ -173,7 +173,7 @@ func TestGetUsersThatHaveARole(t *testing.T) {
 	}
 
 	// Create a new role
-	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
@@ -181,14 +181,14 @@ func TestGetUsersThatHaveARole(t *testing.T) {
 	// Add role to the users
 	users := []string{"user1", "user2", "user3"}
 	for _, user := range users {
-		addResult, err := AddRoleToUser(user, "role", &map[string]interface{}{})
+		addResult, err := AddRoleToUser(user, "role", nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, addResult.OK)
 		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 	}
 
 	// Check user has new role
-	listResult, err := GetUsersThatHaveRole("role", &map[string]interface{}{})
+	listResult, err := GetUsersThatHaveRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, listResult.OK)
 	assert.Contains(t, listResult.OK.Users, "user1")
@@ -221,7 +221,7 @@ func TestGetUsersThatHaveUnknownRole(t *testing.T) {
 	}
 
 	// Check user has new role
-	listResult, err := GetUsersThatHaveRole("role", &map[string]interface{}{})
+	listResult, err := GetUsersThatHaveRole("role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.Nil(t, listResult.OK)
 	assert.NotNil(t, listResult.UnknownRoleError)
@@ -253,18 +253,18 @@ func TestRemoveUserRole(t *testing.T) {
 	// Create a new roles and assign them to the users
 	roles := []string{"role1", "role2", "role3"}
 	for _, role := range roles {
-		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, &map[string]interface{}{})
+		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
 
-		addResult, err := AddRoleToUser("userId", role, &map[string]interface{}{})
+		addResult, err := AddRoleToUser("userId", role, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, addResult.OK)
 		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 	}
 
-	rolesResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	rolesResult, err := GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, rolesResult.OK)
 	assert.Contains(t, rolesResult.OK.Roles, "role1")
@@ -273,12 +273,12 @@ func TestRemoveUserRole(t *testing.T) {
 	assert.Equal(t, 3, len(rolesResult.OK.Roles))
 
 	// Remove role from the user
-	removeResult, err := RemoveUserRole("userId", "role2", &map[string]interface{}{})
+	removeResult, err := RemoveUserRole("userId", "role2", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, removeResult.OK)
 	assert.True(t, removeResult.OK.DidUserHaveRole)
 
-	rolesResult, err = GetRolesForUser("userId", &map[string]interface{}{})
+	rolesResult, err = GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, rolesResult.OK)
 	assert.Contains(t, rolesResult.OK.Roles, "role1")
@@ -312,22 +312,22 @@ func TestRemoveUnassignedUserRole(t *testing.T) {
 	// Create a new roles and assign them to the users
 	roles := []string{"role1", "role2", "role3"}
 	for _, role := range roles {
-		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, &map[string]interface{}{})
+		createResult, err := CreateNewRoleOrAddPermissions(role, []string{}, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
 
-		addResult, err := AddRoleToUser("userId", role, &map[string]interface{}{})
+		addResult, err := AddRoleToUser("userId", role, nil, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, addResult.OK)
 		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
 	}
-	createResult, err := CreateNewRoleOrAddPermissions("role4", []string{}, &map[string]interface{}{})
+	createResult, err := CreateNewRoleOrAddPermissions("role4", []string{}, nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, createResult.OK)
 	assert.True(t, createResult.OK.CreatedNewRole)
 
-	rolesResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	rolesResult, err := GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, rolesResult.OK)
 	assert.Contains(t, rolesResult.OK.Roles, "role1")
@@ -336,12 +336,12 @@ func TestRemoveUnassignedUserRole(t *testing.T) {
 	assert.Equal(t, 3, len(rolesResult.OK.Roles))
 
 	// Remove role from the user
-	removeResult, err := RemoveUserRole("userId", "role4", &map[string]interface{}{})
+	removeResult, err := RemoveUserRole("userId", "role4", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, removeResult.OK)
 	assert.False(t, removeResult.OK.DidUserHaveRole)
 
-	rolesResult, err = GetRolesForUser("userId", &map[string]interface{}{})
+	rolesResult, err = GetRolesForUser("userId", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, rolesResult.OK)
 	assert.Contains(t, rolesResult.OK.Roles, "role1")
@@ -374,7 +374,7 @@ func TestRemoveUnknownUserRole(t *testing.T) {
 	}
 
 	// Remove role from the user
-	removeResult, err := RemoveUserRole("userId", "role", &map[string]interface{}{})
+	removeResult, err := RemoveUserRole("userId", "role", nil, &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.Nil(t, removeResult.OK)
 	assert.NotNil(t, removeResult.UnknownRoleError)

@@ -183,7 +183,7 @@ func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	userMetadata := map[string]interface{}{
 		"role": "admin",
 	}
-	metadataResp, err := usermetadata.UpdateUserMetadata(signUpResponse.OK.User.ID, userMetadata)
+	metadataResp, err := usermetadata.UpdateUserMetadata(signUpResponse.OK.User.ID, userMetadata, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, metadataResp)
 

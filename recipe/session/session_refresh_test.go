@@ -32,8 +32,8 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
+						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -116,8 +116,8 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
+						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -203,8 +203,8 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
+						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}
@@ -285,8 +285,8 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {
 						oRefreshPOST := *originalImplementation.RefreshPOST
-						refreshPost := func(tenantId *string, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-							sessionContainer, err := oRefreshPOST(tenantId, options, userContext)
+						refreshPost := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							sessionContainer, err := oRefreshPOST(options, userContext)
 							if err != nil {
 								return sessionContainer, err
 							}

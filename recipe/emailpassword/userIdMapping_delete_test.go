@@ -209,7 +209,7 @@ func TestDeleteUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	userMetadata := map[string]interface{}{
 		"role": "admin",
 	}
-	metadataResp, err := usermetadata.UpdateUserMetadata(externalUserId, userMetadata)
+	metadataResp, err := usermetadata.UpdateUserMetadata(externalUserId, userMetadata, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, metadataResp)
 	{ // with force nil

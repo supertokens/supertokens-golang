@@ -53,12 +53,12 @@ func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, use
 	return (*instance.RecipeImpl.CreateNewSession)(req, res, userID, finalAccessTokenPayload, sessionData, tenantId, userContext)
 }
 
-func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	sessionContainer, err := (*instance.RecipeImpl.GetSession)(req, res, options, tenantId, userContext)
+	sessionContainer, err := (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
 	if err != nil {
 		return nil, err
 	}
@@ -88,12 +88,12 @@ func GetSessionInformationWithContext(sessionHandle string, tenantId *string, us
 	return (*instance.RecipeImpl.GetSessionInformation)(sessionHandle, tenantId, userContext)
 }
 
-func RefreshSessionWithContext(req *http.Request, res http.ResponseWriter, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func RefreshSessionWithContext(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.RefreshSession)(req, res, tenantId, userContext)
+	return (*instance.RecipeImpl.RefreshSession)(req, res, userContext)
 }
 
 func RevokeAllSessionsForUserWithContext(userID string, tenantId *string, userContext supertokens.UserContext) ([]string, error) {
@@ -339,16 +339,16 @@ func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string,
 	return CreateNewSessionWithContext(req, res, userID, accessTokenPayload, sessionData, tenantId, &map[string]interface{}{})
 }
 
-func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, tenantId *string) (sessmodels.SessionContainer, error) {
-	return GetSessionWithContext(req, res, options, tenantId, &map[string]interface{}{})
+func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
+	return GetSessionWithContext(req, res, options, &map[string]interface{}{})
 }
 
 func GetSessionInformation(sessionHandle string, tenantId *string) (*sessmodels.SessionInformation, error) {
 	return GetSessionInformationWithContext(sessionHandle, tenantId, &map[string]interface{}{})
 }
 
-func RefreshSession(req *http.Request, res http.ResponseWriter, tenantId *string) (sessmodels.SessionContainer, error) {
-	return RefreshSessionWithContext(req, res, tenantId, &map[string]interface{}{})
+func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
+	return RefreshSessionWithContext(req, res, &map[string]interface{}{})
 }
 
 func RevokeAllSessionsForUser(userID string, tenantId *string) ([]string, error) {

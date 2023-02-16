@@ -100,7 +100,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	// In all cases if sIdRefreshToken token exists (so it's a legacy session) we return TRY_REFRESH_TOKEN. The refresh endpoint will clear this cookie and try to upgrade the session.
 	// Check https://supertokens.com/docs/contribute/decisions/session/0007 for further details and a table of expected behaviours
-	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		idRefreshToken := getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME)
 		if idRefreshToken != nil {
 			return nil, errors.TryRefreshTokenError{
@@ -183,7 +183,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: " + strconv.FormatBool(*doAntiCsrfCheck))
 
-		response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil, tenantId)
+		response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 		if err != nil {
 			return nil, err
 		}
@@ -218,7 +218,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return getSessionInformationHelper(querier, sessionHandle, tenantId)
 	}
 
-	refreshSession := func(req *http.Request, res http.ResponseWriter, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	refreshSession := func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("refreshSession: Started")
 
 		refreshTokens := map[sessmodels.TokenTransferMethod]*string{}
@@ -264,7 +264,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod, tenantId)
+		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
 		if err != nil {
 			unauthorisedErr := errors.UnauthorizedError{}
 			isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
@@ -327,7 +327,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload, tenantId)
 	}
 
-	getAccessTokenLifeTimeMS := func(tenantId *string, userContext supertokens.UserContext) (uint64, error) {
+	getAccessTokenLifeTimeMS := func(userContext supertokens.UserContext) (uint64, error) {
 		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 		if err != nil {
 			return 0, err
@@ -335,7 +335,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return recipeImplHandshakeInfo.AccessTokenValidity, nil
 	}
 
-	getRefreshTokenLifeTimeMS := func(tenantId *string, userContext supertokens.UserContext) (uint64, error) {
+	getRefreshTokenLifeTimeMS := func(userContext supertokens.UserContext) (uint64, error) {
 		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 		if err != nil {
 			return 0, err

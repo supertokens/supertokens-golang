@@ -79,7 +79,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}, nil
 	}
 
-	metadata, metadataerr := usermetadata.GetUserMetadata(userId)
+	metadata, metadataerr := usermetadata.GetUserMetadata(userId, nil) // TODO tenantId
 
 	if metadataerr != nil {
 		return userGetResponse{}, metadataerr

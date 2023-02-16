@@ -68,7 +68,7 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 			return []claims.SessionClaimValidator{}, nil
 		},
-	}, tenantId, userContext)
+	}, userContext)
 
 	if err != nil {
 		return err

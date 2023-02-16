@@ -149,8 +149,8 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 		return
 	}
 
-	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, nil, &map[string]interface{}{})
+	AddRoleToUser("userId", "test", nil, &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -204,8 +204,8 @@ func TestShouldValidateRoles(t *testing.T) {
 		return
 	}
 
-	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, nil, &map[string]interface{}{})
+	AddRoleToUser("userId", "test", nil, &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -267,8 +267,8 @@ func TestShouldValidateRolesAfterRefetching(t *testing.T) {
 		return
 	}
 
-	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, nil, &map[string]interface{}{})
+	AddRoleToUser("userId", "test", nil, &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -328,8 +328,8 @@ func TestShouldValidatePermissions(t *testing.T) {
 		return
 	}
 
-	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, nil, &map[string]interface{}{})
+	AddRoleToUser("userId", "test", nil, &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -392,8 +392,8 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 		return
 	}
 
-	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, nil, &map[string]interface{}{})
+	AddRoleToUser("userId", "test", nil, &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)

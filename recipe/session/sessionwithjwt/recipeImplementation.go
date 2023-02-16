@@ -74,7 +74,7 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 			if accessTokenPayload == nil {
 				accessTokenPayload = map[string]interface{}{}
 			}
-			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)(tenantId, userContext)
+			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)(userContext)
 			if err != nil {
 				return nil, err
 			}
@@ -99,8 +99,8 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalGetSession := *originalImplementation.GetSession
 
-		(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-			sessionContainer, err := originalGetSession(req, res, options, tenantId, userContext)
+		(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+			sessionContainer, err := originalGetSession(req, res, options, userContext)
 
 			if err != nil {
 				return nil, err
@@ -119,15 +119,15 @@ func MakeRecipeImplementation(originalImplementation sessmodels.RecipeInterface,
 	{
 		originalRefreshSession := *originalImplementation.RefreshSession
 
-		(*originalImplementation.RefreshSession) = func(req *http.Request, res http.ResponseWriter, tenantId *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)(tenantId, userContext)
+		(*originalImplementation.RefreshSession) = func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+			accessTokenValidityInSeconds, err := (*originalImplementation.GetAccessTokenLifeTimeMS)(userContext)
 			if err != nil {
 				return nil, err
 			}
 			accessTokenValidityInSeconds = uint64(math.Ceil(float64(accessTokenValidityInSeconds) / 1000))
 
 			// Refresh session first because this will create a new access token
-			newSession, err := originalRefreshSession(req, res, tenantId, userContext)
+			newSession, err := originalRefreshSession(req, res, userContext)
 			if err != nil {
 				return nil, err
 			}

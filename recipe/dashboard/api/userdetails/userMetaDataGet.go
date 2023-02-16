@@ -44,7 +44,7 @@ func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}, nil
 	}
 
-	metadata, err := usermetadata.GetUserMetadata(userId)
+	metadata, err := usermetadata.GetUserMetadata(userId, nil) // TODO tenantId
 
 	if err != nil {
 		return userMetaDataGetResponse{}, err

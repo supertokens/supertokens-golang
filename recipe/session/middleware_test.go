@@ -155,7 +155,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	customAntiCsrfCheck := true
@@ -445,7 +445,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	customAntiCsrfCheck := true
@@ -725,7 +725,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	customAntiCsrfCheck := true
@@ -1018,7 +1018,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
-		}, nil)
+		})
 	}))
 
 	customAntiCsrfCheck := true
