@@ -41,7 +41,7 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams["response_mode"] == nil {
+	if _, ok := input.Config.AuthorizationEndpointQueryParams["response_mode"]; !ok {
 		input.Config.AuthorizationEndpointQueryParams["response_mode"] = "form_post"
 	}
 
@@ -60,6 +60,11 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			if config.ClientSecret == "" {
+
+				if config.AdditionalConfig == nil || config.AdditionalConfig["teamId"] == nil || config.AdditionalConfig["keyId"] == nil || config.AdditionalConfig["privateKey"] == nil {
+					return tpmodels.ProviderConfigForClientType{}, errors.New("please ensure that keyId, teamId and privateKey are provided in the AdditionalConfig")
+				}
+
 				clientSecret, err := getClientSecret(config.ClientID, config.AdditionalConfig)
 				if err != nil {
 					return tpmodels.ProviderConfigForClientType{}, err

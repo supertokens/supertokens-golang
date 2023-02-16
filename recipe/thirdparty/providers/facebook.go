@@ -72,9 +72,15 @@ func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				originalImplementation.Config.UserInfoEndpointQueryParams = map[string]interface{}{}
 			}
 
-			originalImplementation.Config.UserInfoEndpointQueryParams["access_token"] = oAuthTokens["access_token"]
-			originalImplementation.Config.UserInfoEndpointQueryParams["fields"] = "id,email"
-			originalImplementation.Config.UserInfoEndpointQueryParams["format"] = "json"
+			if _, ok := originalImplementation.Config.UserInfoEndpointQueryParams["access_token"]; !ok {
+				originalImplementation.Config.UserInfoEndpointQueryParams["access_token"] = oAuthTokens["access_token"]
+			}
+			if _, ok := originalImplementation.Config.UserInfoEndpointQueryParams["fields"]; !ok {
+				originalImplementation.Config.UserInfoEndpointQueryParams["fields"] = "id,email"
+			}
+			if _, ok := originalImplementation.Config.UserInfoEndpointQueryParams["format"]; !ok {
+				originalImplementation.Config.UserInfoEndpointQueryParams["format"] = "json"
+			}
 
 			if originalImplementation.Config.UserInfoEndpointHeaders == nil {
 				originalImplementation.Config.UserInfoEndpointHeaders = map[string]interface{}{}

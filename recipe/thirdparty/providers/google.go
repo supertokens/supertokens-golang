@@ -29,10 +29,10 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] == nil {
+	if _, ok := input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"]; !ok {
 		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
 	}
-	if input.Config.AuthorizationEndpointQueryParams["access_type"] == nil {
+	if _, ok := input.Config.AuthorizationEndpointQueryParams["access_type"]; !ok {
 		input.Config.AuthorizationEndpointQueryParams["access_type"] = "offline"
 	}
 

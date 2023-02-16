@@ -23,7 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -68,10 +67,9 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 		mtRecipe := multitenancy.GetRecipeInstance()
 		if mtRecipe != nil {
-			mtRecipe.AddGetTenantIdForUserIdFunc(r.getTenantIdsForUserId)
+			mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
 		}
 
-		mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
 		return nil
 	})
 
@@ -178,25 +176,6 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 	return evmodels.TypeEmailInfo{
 		OK: &struct{ Email string }{
 			Email: userInfo.Email,
-		},
-	}, nil
-}
-
-func (r *Recipe) getTenantIdsForUserId(userID string, userContext supertokens.UserContext) (multitenancymodels.TenantIdResult, error) {
-	userInfo, err := (*r.RecipeImpl.GetUserByID)(userID, userContext)
-	if err != nil {
-		return multitenancymodels.TenantIdResult{}, err
-	}
-
-	if userInfo == nil {
-		return multitenancymodels.TenantIdResult{
-			UnknownUserIDError: &struct{}{},
-		}, nil
-	}
-
-	return multitenancymodels.TenantIdResult{
-		OK: &struct{ TenantId *string }{
-			TenantId: userInfo.TenantId,
 		},
 	}, nil
 }

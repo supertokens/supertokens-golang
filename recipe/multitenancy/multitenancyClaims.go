@@ -14,6 +14,10 @@ func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayCl
 			return nil, err
 		}
 
+		if instance.GetAllowedDomainsForTenantId == nil {
+			return []interface{}{}, nil // User did not provide a function to get allowed domains, but is using a validator. So we don't allow any domains by default
+		}
+
 		domains, err := instance.GetAllowedDomainsForTenantId(tenantId, userContext)
 		if err != nil {
 			return nil, err

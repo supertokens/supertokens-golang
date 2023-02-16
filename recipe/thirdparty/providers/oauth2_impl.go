@@ -37,6 +37,10 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 		}
 	}
 
+	if config.AuthorizationEndpoint == "" {
+		return tpmodels.TypeAuthorisationRedirect{}, errors.New("ThirdParty provider's authorizationEndpoint is not configured.")
+	}
+
 	authUrl := config.AuthorizationEndpoint
 
 	/* Transformation needed for dev keys BEGIN */
@@ -67,6 +71,10 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
 	if redirectURIInfo.RedirectURIQueryParams == nil || redirectURIInfo.RedirectURIQueryParams["code"] == nil {
 		return nil, supertokens.BadInputError{Msg: "code not found in redirect URI query params"}
+	}
+
+	if config.TokenEndpoint == "" {
+		return nil, errors.New("ThirdParty provider's tokenEndpoint is not configured.")
 	}
 
 	tokenAPIURL := config.TokenEndpoint

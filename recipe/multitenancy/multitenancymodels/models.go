@@ -23,15 +23,6 @@ import (
 
 const DefaultTenantId string = "defaultTenantId"
 
-type TypeGetTenantIdForUserId func(userID string, userContext supertokens.UserContext) (TenantIdResult, error)
-
-type TenantIdResult struct {
-	OK *struct {
-		TenantId *string
-	}
-	UnknownUserIDError *struct{}
-}
-
 type TypeInput struct {
 	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
 	ErrorHandlers                *ErrorHandlers
