@@ -82,7 +82,6 @@ type CreateOrRefreshAPIResponse struct {
 type SessionStruct struct {
 	Handle                string                 `json:"handle"`
 	UserID                string                 `json:"userId"`
-	TenantId              *string                `json:"tenantId,omitempty"`
 	UserDataInAccessToken map[string]interface{} `json:"userDataInJWT"`
 }
 

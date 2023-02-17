@@ -94,7 +94,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		attachCreateOrRefreshSessionResponseToRes(config, res, sessionResponse, outputTokenTransferMethod)
 
-		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, sessionResponse.Session.Handle, sessionResponse.Session.UserID, sessionResponse.Session.UserDataInAccessToken, res, req, outputTokenTransferMethod, sessionResponse.Session.TenantId, result)
+		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, sessionResponse.Session.Handle, sessionResponse.Session.UserID, sessionResponse.Session.UserDataInAccessToken, res, req, outputTokenTransferMethod, result)
 		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
@@ -208,7 +208,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		supertokens.LogDebugMessage("getSession: Success!")
-		sessionContainerInput := makeSessionContainerInput(accessTokenStr, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, response.Session.TenantId, result)
+		sessionContainerInput := makeSessionContainerInput(accessTokenStr, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
@@ -297,7 +297,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
 		}
 
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, response.Session.TenantId, result)
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil

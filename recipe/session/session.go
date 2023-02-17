@@ -37,7 +37,13 @@ type SessionContainerInput struct {
 	tokenTransferMethod   sessmodels.TokenTransferMethod
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, tenantId *string, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
+func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
+	var tenantId *string = nil
+
+	if tenantIdVal, ok := userDataInAccessToken["tenantId"].(string); ok {
+		tenantId = &tenantIdVal
+	}
+
 	return SessionContainerInput{
 		sessionHandle:         sessionHandle,
 		userID:                userID,
