@@ -18,13 +18,13 @@ package epmodels
 import "github.com/supertokens/supertokens-golang/supertokens"
 
 type RecipeInterface struct {
-	SignUp                   *func(email string, password string, userContext supertokens.UserContext) (SignUpResponse, error)
-	SignIn                   *func(email string, password string, userContext supertokens.UserContext) (SignInResponse, error)
-	GetUserByID              *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUserByEmail           *func(email string, userContext supertokens.UserContext) (*User, error)
-	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (CreateResetPasswordTokenResponse, error)
-	ResetPasswordUsingToken  *func(token string, newPassword string, userContext supertokens.UserContext) (ResetPasswordUsingTokenResponse, error)
-	UpdateEmailOrPassword    *func(userId string, email *string, password *string, userContext supertokens.UserContext) (UpdateEmailOrPasswordResponse, error)
+	SignUp                   *func(email string, password string, tenantId *string, userContext supertokens.UserContext) (SignUpResponse, error)
+	SignIn                   *func(email string, password string, tenantId *string, userContext supertokens.UserContext) (SignInResponse, error)
+	GetUserByID              *func(userID string, tenantId *string, userContext supertokens.UserContext) (*User, error)
+	GetUserByEmail           *func(email string, tenantId *string, userContext supertokens.UserContext) (*User, error)
+	CreateResetPasswordToken *func(userID string, tenantId *string, userContext supertokens.UserContext) (CreateResetPasswordTokenResponse, error)
+	ResetPasswordUsingToken  *func(token string, newPassword string, tenantId *string, userContext supertokens.UserContext) (ResetPasswordUsingTokenResponse, error)
+	UpdateEmailOrPassword    *func(userId string, email *string, password *string, tenantId *string, userContext supertokens.UserContext) (UpdateEmailOrPasswordResponse, error)
 }
 
 type SignUpResponse struct {

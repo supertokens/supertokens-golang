@@ -1050,7 +1050,7 @@ func TestGetUserByEmail(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	user, err := GetUserByEmail("random@gmail.com")
+	user, err := GetUserByEmail("random@gmail.com", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1072,7 +1072,7 @@ func TestGetUserByEmail(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	user1, err := GetUserByEmail("random@gmail.com")
+	user1, err := GetUserByEmail("random@gmail.com", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1117,7 +1117,7 @@ func TestGetUserById(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	user, err := GetUserByID("randomId")
+	user, err := GetUserByID("randomId", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1139,7 +1139,7 @@ func TestGetUserById(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	user1, err := GetUserByID(data["user"].(map[string]interface{})["id"].(string))
+	user1, err := GetUserByID(data["user"].(map[string]interface{})["id"].(string), nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1169,8 +1169,8 @@ func TestHandlePostSignInFunction(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignInPost := *originalImplementation.SignInPOST
-						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
-							res, _ := originalSignInPost(formFields, options, userContext)
+						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+							res, _ := originalSignInPost(formFields, tenantId, options, userContext)
 							customUser = res.OK.User
 							return res, nil
 						}
@@ -2014,8 +2014,8 @@ func TestThatCustomFieldsAreSentUsingHandlePostSignup(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignUpPost := *originalImplementation.SignUpPOST
-						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
-							res, _ := originalSignUpPost(formFields, options, userContext)
+						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+							res, _ := originalSignUpPost(formFields, tenantId, options, userContext)
 							customFormFields = formFields
 							return res, nil
 						}

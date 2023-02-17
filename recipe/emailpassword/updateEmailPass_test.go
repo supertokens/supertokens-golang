@@ -100,7 +100,7 @@ func TestUpdateEmailPass(t *testing.T) {
 	email := "test2@gmail.com"
 	password := "testPass"
 
-	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password)
+	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil)
 
 	res1, err := unittesting.SignInRequest("testrandom@gmail.com", "validpass123", testServer.URL)
 
@@ -157,7 +157,7 @@ func TestAPICustomResponse(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						oSignUpPost := originalImplementation.SignUpPOST
-						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+						nSignUpPost := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							options.Res.Header().Set("Content-Type", "application/json; charset=utf-8")
 							options.Res.WriteHeader(201)
 							responseJson := map[string]interface{}{
@@ -165,7 +165,7 @@ func TestAPICustomResponse(t *testing.T) {
 							}
 							bytes, _ := json.Marshal(responseJson)
 							options.Res.Write(bytes)
-							return (*oSignUpPost)(formFields, options, userContext)
+							return (*oSignUpPost)(formFields, tenantId, options, userContext)
 						}
 						originalImplementation.SignUpPOST = &nSignUpPost
 						return originalImplementation
@@ -228,7 +228,7 @@ func TestAPICustomResponseGeneralError(t *testing.T) {
 			Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
-						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+						nSignUpPost := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							options.Res.Header().Set("Content-Type", "application/json; charset=utf-8")
 							options.Res.WriteHeader(201)
 							responseJson := map[string]interface{}{
@@ -300,7 +300,7 @@ func TestAPICustomResponseMalformedResult(t *testing.T) {
 			Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
-						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+						nSignUpPost := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							options.Res.Header().Set("Content-Type", "application/json; charset=utf-8")
 							options.Res.WriteHeader(201)
 							responseJson := map[string]interface{}{
@@ -372,7 +372,7 @@ func TestAPICustomResponseMalformedResultWithoutCustomResponse(t *testing.T) {
 			Init(&epmodels.TypeInput{
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
-						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+						nSignUpPost := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							return epmodels.SignUpPOSTResponse{}, nil
 						}
 						originalImplementation.SignUpPOST = &nSignUpPost
@@ -436,7 +436,7 @@ func TestAPIRequestBodyInAPIOverride(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						oSignUpPost := *originalImplementation.SignUpPOST
-						nSignUpPost := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+						nSignUpPost := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							body := options.Req.Body
 							bodyBytes, err := ioutil.ReadAll(body)
 							assert.Nil(t, err)
@@ -454,7 +454,7 @@ func TestAPIRequestBodyInAPIOverride(t *testing.T) {
 								}
 							}
 
-							return oSignUpPost(formFields, options, userContext)
+							return oSignUpPost(formFields, tenantId, options, userContext)
 						}
 						originalImplementation.SignUpPOST = &nSignUpPost
 						return originalImplementation

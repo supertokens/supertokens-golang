@@ -45,6 +45,11 @@ func ConsumeCode(apiImplementation plessmodels.APIInterface, options plessmodels
 	deviceID, okDeviceID := readBody["deviceId"]
 	userInputCode, okUserInputCode := readBody["userInputCode"]
 
+	var tenantId *string
+	if tenantIdVal, ok := readBody["tenantId"].(string); ok {
+		tenantId = &tenantIdVal
+	}
+
 	if !okPreAuthSessionID || reflect.ValueOf(preAuthSessionID).Kind() != reflect.String {
 		return supertokens.BadInputError{Msg: "Please provide preAuthSessionId"}
 	}
@@ -89,7 +94,7 @@ func ConsumeCode(apiImplementation plessmodels.APIInterface, options plessmodels
 		linkCodePointer = &t
 	}
 
-	response, err := (*apiImplementation.ConsumeCodePOST)(userInput, linkCodePointer, preAuthSessionID.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.ConsumeCodePOST)(userInput, linkCodePointer, preAuthSessionID.(string), tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

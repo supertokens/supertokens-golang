@@ -37,8 +37,8 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	}
 
 	ogSignUp := *emailPasswordImplementation.SignUp
-	signUp := func(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
-		response, err := ogSignUp(email, password, userContext)
+	signUp := func(email, password string, tenantId *string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
+		response, err := ogSignUp(email, password, tenantId, userContext)
 		if err != nil {
 			return tpepmodels.SignUpResponse{}, err
 		}
@@ -62,8 +62,8 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	}
 
 	ogSignIn := *emailPasswordImplementation.SignIn
-	signIn := func(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
-		response, err := ogSignIn(email, password, userContext)
+	signIn := func(email, password string, tenantId *string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
+		response, err := ogSignIn(email, password, tenantId, userContext)
 		if err != nil {
 			return tpepmodels.SignInResponse{}, err
 		}
@@ -84,15 +84,15 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
-	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogSignInUp = *thirdPartyImplementation.SignInUp
 	}
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (tpepmodels.SignInUpResponse, error) {
 		if ogSignInUp == nil {
 			return tpepmodels.SignInUpResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
+		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
 		if err != nil {
 			return tpepmodels.SignInUpResponse{}, err
 		}
@@ -117,15 +117,15 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
-	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
+	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogManuallyCreateOrUpdateUser = *thirdPartyImplementation.ManuallyCreateOrUpdateUser
 	}
-	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
 		if ogManuallyCreateOrUpdateUser == nil {
 			return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, userContext)
+		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, tenantId, userContext)
 		if err != nil {
 			return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
 		}
@@ -160,12 +160,12 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	}
 
 	ogEPGetUserByID := *emailPasswordImplementation.GetUserByID
-	var ogTPGetUserById func(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
+	var ogTPGetUserById func(userID string, tenantId *string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
 	if thirdPartyImplementation != nil {
 		ogTPGetUserById = *thirdPartyImplementation.GetUserByID
 	}
-	getUserByID := func(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
-		user, err := ogEPGetUserByID(userID, userContext)
+	getUserByID := func(userID string, tenantId *string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+		user, err := ogEPGetUserByID(userID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 			return nil, nil
 		}
 
-		userinfo, err := ogTPGetUserById(userID, userContext)
+		userinfo, err := ogTPGetUserById(userID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -198,19 +198,19 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	}
 
 	ogEPGetUserByEmail := *emailPasswordImplementation.GetUserByEmail
-	var ogTPGetUsersByEmail func(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) = nil
+	var ogTPGetUsersByEmail func(email string, tenantId *string, userContext supertokens.UserContext) ([]tpmodels.User, error) = nil
 	if thirdPartyImplementation != nil {
 		ogTPGetUsersByEmail = *thirdPartyImplementation.GetUsersByEmail
 	}
-	getUsersByEmail := func(email string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
-		fromEP, err := ogEPGetUserByEmail(email, userContext)
+	getUsersByEmail := func(email string, tenantId *string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
+		fromEP, err := ogEPGetUserByEmail(email, tenantId, userContext)
 		if err != nil {
 			return []tpepmodels.User{}, err
 		}
 
 		fromTP := []tpmodels.User{}
 		if ogTPGetUsersByEmail != nil {
-			fromTP, err = ogTPGetUsersByEmail(email, userContext)
+			fromTP, err = ogTPGetUsersByEmail(email, tenantId, userContext)
 			if err != nil {
 				return []tpepmodels.User{}, err
 			}
@@ -238,16 +238,16 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		return finalResult, nil
 	}
 
-	var ogGetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
+	var ogGetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
 	if thirdPartyImplementation != nil {
 		ogGetUserByThirdPartyInfo = *thirdPartyImplementation.GetUserByThirdPartyInfo
 	}
-	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
 		if ogGetUserByThirdPartyInfo == nil {
 			return nil, nil
 		}
 
-		userinfo, err := ogGetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID, userContext)
+		userinfo, err := ogGetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -265,18 +265,18 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	}
 
 	ogCreateResetPasswordToken := *emailPasswordImplementation.CreateResetPasswordToken
-	createResetPasswordToken := func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
-		return ogCreateResetPasswordToken(userID, userContext)
+	createResetPasswordToken := func(userID string, tenantId *string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+		return ogCreateResetPasswordToken(userID, tenantId, userContext)
 	}
 
 	ogResetPasswordUsingToken := *emailPasswordImplementation.ResetPasswordUsingToken
-	resetPasswordUsingToken := func(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
-		return ogResetPasswordUsingToken(token, newPassword, userContext)
+	resetPasswordUsingToken := func(token, newPassword string, tenantId *string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+		return ogResetPasswordUsingToken(token, newPassword, tenantId, userContext)
 	}
 
 	ogUpdateEmailOrPassword := *emailPasswordImplementation.UpdateEmailOrPassword
-	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
-		user, err := (*result.GetUserByID)(userId, userContext)
+	updateEmailOrPassword := func(userId string, email, password *string, tenantId *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+		user, err := (*result.GetUserByID)(userId, tenantId, userContext)
 		if err != nil {
 			return epmodels.UpdateEmailOrPasswordResponse{}, err
 		}
@@ -289,7 +289,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 			return epmodels.UpdateEmailOrPasswordResponse{}, errors.New("cannot update email or password of a user who signed up using third party login")
 		}
 
-		return ogUpdateEmailOrPassword(userId, email, password, userContext)
+		return ogUpdateEmailOrPassword(userId, email, password, tenantId, userContext)
 	}
 
 	result.GetUserByID = &getUserByID

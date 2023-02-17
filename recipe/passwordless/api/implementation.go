@@ -29,8 +29,8 @@ import (
 
 func MakeAPIImplementation() plessmodels.APIInterface {
 
-	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
-		response, err := (*options.RecipeImplementation.ConsumeCode)(userInput, linkCode, preAuthSessionID, userContext)
+	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
+		response, err := (*options.RecipeImplementation.ConsumeCode)(userInput, linkCode, preAuthSessionID, tenantId, userContext)
 		if err != nil {
 			return plessmodels.ConsumeCodePOSTResponse{}, err
 		}
@@ -48,12 +48,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		if user.Email != nil {
 			evInstance := emailverification.GetRecipeInstance()
 			if evInstance != nil {
-				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, nil, userContext) // TODO pass tenantId
+				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, tenantId, userContext)
 				if err != nil {
 					return plessmodels.ConsumeCodePOSTResponse{}, err
 				}
 				if tokenResponse.OK != nil {
-					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, nil, userContext) // TODO pass tenantId
+					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, tenantId, userContext)
 					if err != nil {
 						return plessmodels.ConsumeCodePOSTResponse{}, err
 					}
@@ -61,7 +61,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			}
 		}
 
-		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, nil, userContext) // TODO pass tenant ID
+		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, tenantId, userContext)
 		if err != nil {
 			return plessmodels.ConsumeCodePOSTResponse{}, err
 		}
@@ -79,7 +79,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}, nil
 	}
 
-	createCodePOST := func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+	createCodePOST := func(email *string, phoneNumber *string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
 		var userInputCodeInput *string
 		if options.Config.GetCustomUserInputCode != nil {
 			c, err := options.Config.GetCustomUserInputCode(userContext)
@@ -89,7 +89,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			userInputCodeInput = &c
 		}
 
-		response, err := (*options.RecipeImplementation.CreateCode)(email, phoneNumber, userInputCodeInput, userContext)
+		response, err := (*options.RecipeImplementation.CreateCode)(email, phoneNumber, userInputCodeInput, tenantId, userContext)
 		if err != nil {
 			return plessmodels.CreateCodePOSTResponse{}, err
 		}
@@ -201,8 +201,8 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}, nil
 	}
 
-	emailExistsGET := func(email string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
-		response, err := (*options.RecipeImplementation.GetUserByEmail)(email, userContext)
+	emailExistsGET := func(email string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
+		response, err := (*options.RecipeImplementation.GetUserByEmail)(email, tenantId, userContext)
 		if err != nil {
 			return plessmodels.EmailExistsGETResponse{}, err
 		}
@@ -214,8 +214,8 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}, nil
 	}
 
-	phoneNumberExistsGET := func(phoneNumber string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error) {
-		response, err := (*options.RecipeImplementation.GetUserByPhoneNumber)(phoneNumber, userContext)
+	phoneNumberExistsGET := func(phoneNumber string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error) {
+		response, err := (*options.RecipeImplementation.GetUserByPhoneNumber)(phoneNumber, tenantId, userContext)
 		if err != nil {
 			return plessmodels.PhoneNumberExistsGETResponse{}, err
 		}
@@ -227,8 +227,8 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		}, nil
 	}
 
-	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
-		deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(deviceID, userContext)
+	resendCodePOST := func(deviceID string, preAuthSessionID string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+		deviceInfo, err := (*options.RecipeImplementation.ListCodesByDeviceID)(deviceID, tenantId, userContext)
 		if err != nil {
 			return plessmodels.ResendCodePOSTResponse{}, err
 		}
@@ -254,7 +254,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 				}
 				userInputCodeInput = &c
 			}
-			response, err := (*options.RecipeImplementation.CreateNewCodeForDevice)(deviceID, userInputCodeInput, userContext)
+			response, err := (*options.RecipeImplementation.CreateNewCodeForDevice)(deviceID, userInputCodeInput, tenantId, userContext)
 			if err != nil {
 				return plessmodels.ResendCodePOSTResponse{}, err
 			}

@@ -25,7 +25,7 @@ func TestGetUserIdMapping(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -133,7 +133,7 @@ func TestGetUserIdMappingWithNoExternalUserIdInfo(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)

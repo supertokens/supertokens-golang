@@ -28,8 +28,8 @@ import (
 )
 
 func MakeAPIImplementation() evmodels.APIInterface {
-	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, sessionContainer.GetTenantId(), userContext)
+	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, tenantId *string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, tenantId, userContext)
 		if err != nil {
 			return evmodels.VerifyEmailPOSTResponse{}, err
 		}

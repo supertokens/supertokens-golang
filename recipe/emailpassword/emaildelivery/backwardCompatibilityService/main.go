@@ -27,7 +27,7 @@ import (
 func MakeBackwardCompatibilityService(recipeInterfaceImpl epmodels.RecipeInterface, appInfo supertokens.NormalisedAppinfo, sendResetPasswordEmail func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext)) emaildelivery.EmailDeliveryInterface {
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 		if input.PasswordReset != nil {
-			user, err := (*recipeInterfaceImpl.GetUserByID)(input.PasswordReset.User.ID, userContext)
+			user, err := (*recipeInterfaceImpl.GetUserByID)(input.PasswordReset.User.ID, input.PasswordReset.User.TenantId, userContext)
 			if err != nil {
 				return err
 			}

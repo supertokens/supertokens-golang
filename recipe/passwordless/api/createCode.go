@@ -44,6 +44,11 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 	email, okEmail := readBody["email"]
 	phoneNumber, okPhoneNumber := readBody["phoneNumber"]
 
+	var tenantId *string
+	if tenantIdVal, ok := readBody["tenantId"].(string); ok {
+		tenantId = &tenantIdVal
+	}
+
 	if (!okEmail && !okPhoneNumber) || (okEmail && okPhoneNumber) {
 		return supertokens.BadInputError{Msg: "Please provide exactly one of email or phoneNumber"}
 	}
@@ -114,7 +119,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		phoneNumberStrPointer = &t
 	}
 
-	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

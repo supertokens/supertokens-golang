@@ -20,35 +20,35 @@ import (
 )
 
 type RecipeInterface struct {
-	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (CreateCodeResponse, error)
+	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, tenantId *string, userContext supertokens.UserContext) (CreateCodeResponse, error)
 
-	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (ResendCodeResponse, error)
+	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, tenantId *string, userContext supertokens.UserContext) (ResendCodeResponse, error)
 
-	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
+	ConsumeCode *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId *string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
 
 	GetUserByID *func(userID string, tenantId *string, userContext supertokens.UserContext) (*User, error)
 
-	GetUserByEmail *func(email string, userContext supertokens.UserContext) (*User, error)
+	GetUserByEmail *func(email string, tenantId *string, userContext supertokens.UserContext) (*User, error)
 
-	GetUserByPhoneNumber *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
+	GetUserByPhoneNumber *func(phoneNumber string, tenantId *string, userContext supertokens.UserContext) (*User, error)
 
-	UpdateUser *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (UpdateUserResponse, error)
+	UpdateUser *func(userID string, email *string, phoneNumber *string, tenantId *string, userContext supertokens.UserContext) (UpdateUserResponse, error)
 
-	DeleteEmailForUser *func(userID string, userContext supertokens.UserContext) (DeleteUserResponse, error)
+	DeleteEmailForUser *func(userID string, tenantId *string, userContext supertokens.UserContext) (DeleteUserResponse, error)
 
-	DeletePhoneNumberForUser *func(userID string, userContext supertokens.UserContext) (DeleteUserResponse, error)
+	DeletePhoneNumberForUser *func(userID string, tenantId *string, userContext supertokens.UserContext) (DeleteUserResponse, error)
 
-	RevokeAllCodes *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
+	RevokeAllCodes *func(email *string, phoneNumber *string, tenantId *string, userContext supertokens.UserContext) error
 
-	RevokeCode *func(codeID string, userContext supertokens.UserContext) error
+	RevokeCode *func(codeID string, tenantId *string, userContext supertokens.UserContext) error
 
-	ListCodesByEmail *func(email string, userContext supertokens.UserContext) ([]DeviceType, error)
+	ListCodesByEmail *func(email string, tenantId *string, userContext supertokens.UserContext) ([]DeviceType, error)
 
-	ListCodesByPhoneNumber *func(phoneNumber string, userContext supertokens.UserContext) ([]DeviceType, error)
+	ListCodesByPhoneNumber *func(phoneNumber string, tenantId *string, userContext supertokens.UserContext) ([]DeviceType, error)
 
-	ListCodesByDeviceID *func(deviceID string, userContext supertokens.UserContext) (*DeviceType, error)
+	ListCodesByDeviceID *func(deviceID string, tenantId *string, userContext supertokens.UserContext) (*DeviceType, error)
 
-	ListCodesByPreAuthSessionID *func(preAuthSessionID string, userContext supertokens.UserContext) (*DeviceType, error)
+	ListCodesByPreAuthSessionID *func(preAuthSessionID string, tenantId *string, userContext supertokens.UserContext) (*DeviceType, error)
 }
 
 type DeviceType struct {

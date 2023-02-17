@@ -29,7 +29,11 @@ func DoesPhoneNumberExist(apiImplementation plessmodels.APIInterface, options pl
 	if phoneNumber == "" {
 		return supertokens.BadInputError{Msg: "Please provide the phoneNumber as a GET param"}
 	}
-	result, err := (*apiImplementation.PhoneNumberExistsGET)(phoneNumber, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	var tenantId *string
+	if tenantIdVal := options.Req.URL.Query().Get("tenantId"); tenantIdVal != "" {
+		tenantId = &tenantIdVal
+	}
+	result, err := (*apiImplementation.PhoneNumberExistsGET)(phoneNumber, tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

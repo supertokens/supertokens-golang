@@ -57,6 +57,7 @@ type PasswordlessLoginType struct {
 }
 
 type User struct {
-	ID    string
-	Email string
+	ID       string
+	TenantId *string
+	Email    string
 }

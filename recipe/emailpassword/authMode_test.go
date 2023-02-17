@@ -494,7 +494,6 @@ func TestVerifySessionBehaviour(t *testing.T) {
 
 			cookie := "cookie"
 			createInfo := createNewSession(t, testServer.URL, &cookie, nil, nil, nil)
-			fmt.Println(createInfo)
 
 			authMode := ""
 			if behaviour.authCookie && behaviour.authHeader {

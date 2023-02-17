@@ -105,7 +105,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 
 	provider := providerResponse.OK.Provider
 
-	result, err := (*apiImplementation.SignInUpPOST)(provider, input, options, userContext)
+	result, err := (*apiImplementation.SignInUpPOST)(provider, input, tenantId, options, userContext)
 
 	if err != nil {
 		return err

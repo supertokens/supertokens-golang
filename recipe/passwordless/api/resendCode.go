@@ -42,6 +42,11 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 	preAuthSessionID, okPreAuthSessionID := readBody["preAuthSessionId"]
 	deviceID, okDeviceID := readBody["deviceId"]
 
+	var tenantId *string
+	if tenantIdVal, ok := readBody["tenantId"].(string); ok {
+		tenantId = &tenantIdVal
+	}
+
 	if !okPreAuthSessionID {
 		return supertokens.BadInputError{Msg: "Please provide preAuthSessionId"}
 	}
@@ -58,7 +63,7 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		return supertokens.BadInputError{Msg: "Please make sure that deviceId is a string"}
 	}
 
-	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

@@ -193,7 +193,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId *string, userContext supertokens.UserContext) (string, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		return "", err
@@ -207,7 +207,7 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext
 		userInputCodeInput = &c
 	}
 
-	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, userContext)
+	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, tenantId, userContext)
 	if err != nil {
 		return "", err
 	}
@@ -223,12 +223,12 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext
 	return link, nil
 }
 
-func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supertokens.UserContext) (struct {
+func (r *Recipe) SignInUp(email *string, phoneNumber *string, tenantId *string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
 }, error) {
-	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, userContext)
+	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, tenantId, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string
@@ -247,7 +247,7 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 			DeviceID: codeInfo.OK.DeviceID,
 		}
 	}
-	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, userContext)
+	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, tenantId, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string

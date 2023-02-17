@@ -23,8 +23,8 @@ import (
 
 func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeInterface) tpmodels.RecipeInterface {
 
-	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-		user, err := (*recipeImplementation.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
+	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, tenantId *string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -40,8 +40,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
+	signInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId *string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartySignInUp)(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
 		if err != nil {
 			return tpmodels.SignInUpResponse{}, err
 		}
@@ -67,8 +67,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
-		result, err := (*recipeImplementation.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	manuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, tenantId *string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+		result, err := (*recipeImplementation.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, tenantId, userContext)
 		if err != nil {
 			return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 		}
@@ -95,8 +95,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	getUserByID := func(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
-		user, err := (*recipeImplementation.GetUserByID)(userID, userContext)
+	getUserByID := func(userID string, tenantId *string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+		user, err := (*recipeImplementation.GetUserByID)(userID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -112,8 +112,8 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tpepmodels.RecipeIn
 		}, nil
 	}
 
-	getUserByEmail := func(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
-		users, err := (*recipeImplementation.GetUsersByEmail)(email, userContext)
+	getUserByEmail := func(email string, tenantId *string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
+		users, err := (*recipeImplementation.GetUsersByEmail)(email, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}

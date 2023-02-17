@@ -29,7 +29,12 @@ func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOp
 	if email == "" {
 		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
 	}
-	result, err := (*apiImplementation.EmailExistsGET)(email, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	var tenantId *string
+	tenantIdVal := options.Req.URL.Query().Get("tenantId")
+	if tenantIdVal != "" {
+		tenantId = &tenantIdVal
+	}
+	result, err := (*apiImplementation.EmailExistsGET)(email, tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

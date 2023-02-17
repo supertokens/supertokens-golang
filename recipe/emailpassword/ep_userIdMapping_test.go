@@ -25,7 +25,7 @@ func TestCreateUserIdMappingGetUserById(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -37,13 +37,13 @@ func TestCreateUserIdMappingGetUserById(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserByID(signUpResponse.OK.User.ID)
+		userResp, err := GetUserByID(signUpResponse.OK.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserByID(externalUserId)
+		userResp, err := GetUserByID(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -66,7 +66,7 @@ func TestCreateUserIdMappingGetUserByEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -77,7 +77,7 @@ func TestCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	userResp, err := GetUserByEmail("test@example.com")
+	userResp, err := GetUserByEmail("test@example.com", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, externalUserId, userResp.ID)
 }
@@ -99,7 +99,7 @@ func TestCreateUserIdMappingSignIn(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -110,7 +110,7 @@ func TestCreateUserIdMappingSignIn(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	signInResp, err := SignIn("test@example.com", "testpass123")
+	signInResp, err := SignIn("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, signInResp.OK)
 	assert.Equal(t, externalUserId, signInResp.OK.User.ID)
@@ -133,7 +133,7 @@ func TestCreateUserIdMappingPasswordReset(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -144,15 +144,15 @@ func TestCreateUserIdMappingPasswordReset(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	prTokenResp, err := CreateResetPasswordToken(externalUserId)
+	prTokenResp, err := CreateResetPasswordToken(externalUserId, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, prTokenResp.OK)
 
-	prResp, err := ResetPasswordUsingToken(prTokenResp.OK.Token, "newpass123")
+	prResp, err := ResetPasswordUsingToken(prTokenResp.OK.Token, "newpass123", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, prResp.OK)
 
-	signInResp, err := SignIn("test@example.com", "newpass123")
+	signInResp, err := SignIn("test@example.com", "newpass123", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, signInResp.OK)
 	assert.Equal(t, externalUserId, signInResp.OK.User.ID)
@@ -175,7 +175,7 @@ func TestCreateUserIdMappingUpdateEmailPassword(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -188,11 +188,11 @@ func TestCreateUserIdMappingUpdateEmailPassword(t *testing.T) {
 
 	newEmail := "email@example.com"
 	newPass := "newpass123"
-	updateResp, err := UpdateEmailOrPassword(externalUserId, &newEmail, &newPass)
+	updateResp, err := UpdateEmailOrPassword(externalUserId, &newEmail, &newPass, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, updateResp.OK)
 
-	signInResp, err := SignIn(newEmail, newPass)
+	signInResp, err := SignIn(newEmail, newPass, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, signInResp.OK)
 	assert.Equal(t, externalUserId, signInResp.OK.User.ID)

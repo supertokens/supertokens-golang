@@ -30,24 +30,24 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
 	ogEmailExistsGET := *emailPasswordImplementation.EmailExistsGET
-	emailExistsGET := func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
-		return ogEmailExistsGET(email, options, userContext)
+	emailExistsGET := func(email string, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+		return ogEmailExistsGET(email, tenantId, options, userContext)
 
 	}
 
 	ogGeneratePasswordResetTokenPOST := *emailPasswordImplementation.GeneratePasswordResetTokenPOST
-	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-		return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
+	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+		return ogGeneratePasswordResetTokenPOST(formFields, tenantId, options, userContext)
 	}
 
 	ogPasswordResetPOST := *emailPasswordImplementation.PasswordResetPOST
-	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
-		return ogPasswordResetPOST(formFields, token, options, userContext)
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+		return ogPasswordResetPOST(formFields, token, tenantId, options, userContext)
 	}
 
 	ogSignInPOST := *emailPasswordImplementation.SignInPOST
-	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
-		response, err := ogSignInPOST(formFields, options, userContext)
+	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
+		response, err := ogSignInPOST(formFields, tenantId, options, userContext)
 		if err != nil {
 			return tpepmodels.SignInPOSTResponse{}, err
 		}
@@ -78,8 +78,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignUpPOST := *emailPasswordImplementation.SignUpPOST
-	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
-		response, err := ogSignUpPOST(formFields, options, userContext)
+	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
+		response, err := ogSignUpPOST(formFields, tenantId, options, userContext)
 		if err != nil {
 			return tpepmodels.SignUpPOSTResponse{}, err
 		}
@@ -110,8 +110,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
-		response, err := ogSignInUpPOST(provider, input, options, userContext)
+	thirdPartySignInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId *string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
+		response, err := ogSignInUpPOST(provider, input, tenantId, options, userContext)
 		if err != nil {
 			return tpepmodels.ThirdPartySignInUpPOSTResponse{}, err
 		}

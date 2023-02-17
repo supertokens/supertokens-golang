@@ -30,7 +30,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 	var recipeToReturn string
 
 	if recipeId == emailpassword.RECIPE_ID {
-		response, error := emailpassword.GetUserByID(userId)
+		response, error := emailpassword.GetUserByID(userId, nil) // TODO tenantId
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -43,7 +43,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId)
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, nil) // TODO tenantId
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -56,7 +56,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			}
 		}
 	} else if recipeId == thirdparty.RECIPE_ID {
-		response, error := thirdparty.GetUserByID(userId)
+		response, error := thirdparty.GetUserByID(userId, nil) // TODO tenantId
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -71,7 +71,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId)
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, nil) // TODO tenantId
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID

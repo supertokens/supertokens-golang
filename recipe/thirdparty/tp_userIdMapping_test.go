@@ -60,7 +60,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
+	signUpResponse, err := ManuallyCreateOrUpdateUser("google", "googleID", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -70,19 +70,19 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserByID(signUpResponse.OK.User.ID)
+		userResp, err := GetUserByID(signUpResponse.OK.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserByID(externalUserId)
+		userResp, err := GetUserByID(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		userResp, err := GetUserByThirdPartyInfo("google", "googleID", nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}

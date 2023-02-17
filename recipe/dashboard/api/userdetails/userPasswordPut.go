@@ -100,7 +100,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			}, nil
 		}
 
-		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(*readBody.UserId)
+		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(*readBody.UserId, nil) // TODO tenantId
 
 		if resetTokenErr != nil {
 			return userPasswordPutResponse{}, resetTokenErr
@@ -111,7 +111,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			return userPasswordPutResponse{}, errors.New("Should never come here")
 		}
 
-		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword)
+		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword, nil) // TODO tenantId
 
 		if passwordResetErr != nil {
 			return userPasswordPutResponse{}, passwordResetErr
@@ -143,7 +143,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		}, nil
 	}
 
-	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordToken(*readBody.UserId)
+	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordToken(*readBody.UserId, nil) // TODO tenantId
 
 	if resetTokenErr != nil {
 		return userPasswordPutResponse{}, resetTokenErr
@@ -154,7 +154,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 
-	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword)
+	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword, nil) // TODO tenantId
 
 	if passwordResetErr != nil {
 		return userPasswordPutResponse{}, passwordResetErr

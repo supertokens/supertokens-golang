@@ -827,7 +827,7 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 	gock.New(testServer.URL).EnableNetworking().Persist()
 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-	userDataBeforeSignup, err := GetUserByID("as")
+	userDataBeforeSignup, err := GetUserByID("as", nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -857,7 +857,7 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 
 	user := result["user"].(map[string]interface{})
-	userInfoAfterSignup, err := GetUserByID(user["id"].(string))
+	userInfoAfterSignup, err := GetUserByID(user["id"].(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -933,7 +933,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	gock.New(testServer.URL).EnableNetworking().Persist()
 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-	userBegoreSignup, err := GetUserByThirdPartyInfo("custom", "user")
+	userBegoreSignup, err := GetUserByThirdPartyInfo("custom", "user", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -961,7 +961,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 
 	user := result["user"].(map[string]interface{})
-	userInfoAfterSignup, err := GetUserByThirdPartyInfo("custom", "user")
+	userInfoAfterSignup, err := GetUserByThirdPartyInfo("custom", "user", nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

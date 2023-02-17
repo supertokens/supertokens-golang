@@ -29,7 +29,7 @@ func Init(config plessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateCodeWithEmailWithContext(email string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+func CreateCodeWithEmailWithContext(email string, userInputCode *string, tenantId *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.CreateCodeResponse{}, err
@@ -37,10 +37,10 @@ func CreateCodeWithEmailWithContext(email string, userInputCode *string, userCon
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.CreateCode)(&email, nil, userInputCode, userContext)
+	return (*instance.RecipeImpl.CreateCode)(&email, nil, userInputCode, tenantId, userContext)
 }
 
-func CreateCodeWithPhoneNumberWithContext(phoneNumber string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+func CreateCodeWithPhoneNumberWithContext(phoneNumber string, userInputCode *string, tenantId *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.CreateCodeResponse{}, err
@@ -48,10 +48,10 @@ func CreateCodeWithPhoneNumberWithContext(phoneNumber string, userInputCode *str
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.CreateCode)(nil, &phoneNumber, userInputCode, userContext)
+	return (*instance.RecipeImpl.CreateCode)(nil, &phoneNumber, userInputCode, tenantId, userContext)
 }
 
-func CreateNewCodeForDeviceWithContext(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+func CreateNewCodeForDeviceWithContext(deviceID string, userInputCode *string, tenantId *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.ResendCodeResponse{}, err
@@ -59,10 +59,10 @@ func CreateNewCodeForDeviceWithContext(deviceID string, userInputCode *string, u
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.CreateNewCodeForDevice)(deviceID, userInputCode, userContext)
+	return (*instance.RecipeImpl.CreateNewCodeForDevice)(deviceID, userInputCode, tenantId, userContext)
 }
 
-func ConsumeCodeWithUserInputCodeWithContext(deviceID string, userInputCode string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+func ConsumeCodeWithUserInputCodeWithContext(deviceID string, userInputCode string, preAuthSessionID string, tenantId *string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.ConsumeCodeResponse{}, err
@@ -73,10 +73,10 @@ func ConsumeCodeWithUserInputCodeWithContext(deviceID string, userInputCode stri
 	return (*instance.RecipeImpl.ConsumeCode)(&plessmodels.UserInputCodeWithDeviceID{
 		Code:     userInputCode,
 		DeviceID: deviceID,
-	}, nil, preAuthSessionID, userContext)
+	}, nil, preAuthSessionID, tenantId, userContext)
 }
 
-func ConsumeCodeWithLinkCodeWithContext(linkCode string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+func ConsumeCodeWithLinkCodeWithContext(linkCode string, preAuthSessionID string, tenantId *string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.ConsumeCodeResponse{}, err
@@ -84,7 +84,7 @@ func ConsumeCodeWithLinkCodeWithContext(linkCode string, preAuthSessionID string
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.ConsumeCode)(nil, &linkCode, preAuthSessionID, userContext)
+	return (*instance.RecipeImpl.ConsumeCode)(nil, &linkCode, preAuthSessionID, tenantId, userContext)
 }
 
 func GetUserByIDWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.User, error) {
@@ -98,7 +98,7 @@ func GetUserByIDWithContext(userID string, tenantId *string, userContext superto
 	return (*instance.RecipeImpl.GetUserByID)(userID, tenantId, userContext)
 }
 
-func GetUserByEmailWithContext(email string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+func GetUserByEmailWithContext(email string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -106,10 +106,10 @@ func GetUserByEmailWithContext(email string, userContext supertokens.UserContext
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.GetUserByEmail)(email, userContext)
+	return (*instance.RecipeImpl.GetUserByEmail)(email, tenantId, userContext)
 }
 
-func GetUserByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+func GetUserByPhoneNumberWithContext(phoneNumber string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -117,10 +117,10 @@ func GetUserByPhoneNumberWithContext(phoneNumber string, userContext supertokens
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.GetUserByPhoneNumber)(phoneNumber, userContext)
+	return (*instance.RecipeImpl.GetUserByPhoneNumber)(phoneNumber, tenantId, userContext)
 }
 
-func UpdateUserWithContext(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error) {
+func UpdateUserWithContext(userID string, email *string, phoneNumber *string, tenantId *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.UpdateUserResponse{}, err
@@ -128,10 +128,10 @@ func UpdateUserWithContext(userID string, email *string, phoneNumber *string, us
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.UpdateUser)(userID, email, phoneNumber, userContext)
+	return (*instance.RecipeImpl.UpdateUser)(userID, email, phoneNumber, tenantId, userContext)
 }
 
-func RevokeAllCodesByEmailWithContext(email string, userContext supertokens.UserContext) error {
+func RevokeAllCodesByEmailWithContext(email string, tenantId *string, userContext supertokens.UserContext) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
@@ -139,10 +139,10 @@ func RevokeAllCodesByEmailWithContext(email string, userContext supertokens.User
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.RevokeAllCodes)(&email, nil, userContext)
+	return (*instance.RecipeImpl.RevokeAllCodes)(&email, nil, tenantId, userContext)
 }
 
-func RevokeAllCodesByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) error {
+func RevokeAllCodesByPhoneNumberWithContext(phoneNumber string, tenantId *string, userContext supertokens.UserContext) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
@@ -150,10 +150,10 @@ func RevokeAllCodesByPhoneNumberWithContext(phoneNumber string, userContext supe
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.RevokeAllCodes)(nil, &phoneNumber, userContext)
+	return (*instance.RecipeImpl.RevokeAllCodes)(nil, &phoneNumber, tenantId, userContext)
 }
 
-func RevokeCodeWithContext(codeID string, userContext supertokens.UserContext) error {
+func RevokeCodeWithContext(codeID string, tenantId *string, userContext supertokens.UserContext) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
@@ -161,10 +161,10 @@ func RevokeCodeWithContext(codeID string, userContext supertokens.UserContext) e
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.RevokeCode)(codeID, userContext)
+	return (*instance.RecipeImpl.RevokeCode)(codeID, tenantId, userContext)
 }
 
-func ListCodesByEmailWithContext(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+func ListCodesByEmailWithContext(email string, tenantId *string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return []plessmodels.DeviceType{}, err
@@ -172,10 +172,10 @@ func ListCodesByEmailWithContext(email string, userContext supertokens.UserConte
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.ListCodesByEmail)(email, userContext)
+	return (*instance.RecipeImpl.ListCodesByEmail)(email, tenantId, userContext)
 }
 
-func ListCodesByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+func ListCodesByPhoneNumberWithContext(phoneNumber string, tenantId *string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return []plessmodels.DeviceType{}, err
@@ -183,10 +183,10 @@ func ListCodesByPhoneNumberWithContext(phoneNumber string, userContext supertoke
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.ListCodesByPhoneNumber)(phoneNumber, userContext)
+	return (*instance.RecipeImpl.ListCodesByPhoneNumber)(phoneNumber, tenantId, userContext)
 }
 
-func ListCodesByDeviceIDWithContext(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+func ListCodesByDeviceIDWithContext(deviceID string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -194,10 +194,10 @@ func ListCodesByDeviceIDWithContext(deviceID string, userContext supertokens.Use
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.ListCodesByDeviceID)(deviceID, userContext)
+	return (*instance.RecipeImpl.ListCodesByDeviceID)(deviceID, tenantId, userContext)
 }
 
-func ListCodesByPreAuthSessionIDWithContext(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+func ListCodesByPreAuthSessionIDWithContext(preAuthSessionID string, tenantId *string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -205,10 +205,10 @@ func ListCodesByPreAuthSessionIDWithContext(preAuthSessionID string, userContext
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.ListCodesByPreAuthSessionID)(preAuthSessionID, userContext)
+	return (*instance.RecipeImpl.ListCodesByPreAuthSessionID)(preAuthSessionID, tenantId, userContext)
 }
 
-func CreateMagicLinkByEmailWithContext(email string, userContext supertokens.UserContext) (string, error) {
+func CreateMagicLinkByEmailWithContext(email string, tenantId *string, userContext supertokens.UserContext) (string, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return "", err
@@ -216,10 +216,10 @@ func CreateMagicLinkByEmailWithContext(email string, userContext supertokens.Use
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.CreateMagicLink(&email, nil, userContext)
+	return instance.CreateMagicLink(&email, nil, tenantId, userContext)
 }
 
-func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (string, error) {
+func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, tenantId *string, userContext supertokens.UserContext) (string, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return "", err
@@ -227,10 +227,10 @@ func CreateMagicLinkByPhoneNumberWithContext(phoneNumber string, userContext sup
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.CreateMagicLink(nil, &phoneNumber, userContext)
+	return instance.CreateMagicLink(nil, &phoneNumber, tenantId, userContext)
 }
 
-func SignInUpByEmailWithContext(email string, userContext supertokens.UserContext) (struct {
+func SignInUpByEmailWithContext(email string, tenantId *string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
@@ -246,10 +246,10 @@ func SignInUpByEmailWithContext(email string, userContext supertokens.UserContex
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.SignInUp(&email, nil, userContext)
+	return instance.SignInUp(&email, nil, tenantId, userContext)
 }
 
-func SignInUpByPhoneNumberWithContext(phoneNumber string, userContext supertokens.UserContext) (struct {
+func SignInUpByPhoneNumberWithContext(phoneNumber string, tenantId *string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
@@ -265,10 +265,10 @@ func SignInUpByPhoneNumberWithContext(phoneNumber string, userContext supertoken
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return instance.SignInUp(nil, &phoneNumber, userContext)
+	return instance.SignInUp(nil, &phoneNumber, tenantId, userContext)
 }
 
-func DeleteEmailForUserWithContext(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+func DeleteEmailForUserWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.DeleteUserResponse{}, err
@@ -276,10 +276,10 @@ func DeleteEmailForUserWithContext(userID string, userContext supertokens.UserCo
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.DeleteEmailForUser)(userID, userContext)
+	return (*instance.RecipeImpl.DeleteEmailForUser)(userID, tenantId, userContext)
 }
 
-func DeletePhoneNumberForUserWithContext(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
+func DeletePhoneNumberForUserWithContext(userID string, tenantId *string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return plessmodels.DeleteUserResponse{}, err
@@ -287,7 +287,7 @@ func DeletePhoneNumberForUserWithContext(userID string, userContext supertokens.
 	if userContext == nil {
 		userContext = &map[string]interface{}{}
 	}
-	return (*instance.RecipeImpl.DeletePhoneNumberForUser)(userID, userContext)
+	return (*instance.RecipeImpl.DeletePhoneNumberForUser)(userID, tenantId, userContext)
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
@@ -306,100 +306,100 @@ func SendSmsWithContext(input smsdelivery.SmsType, userContext supertokens.UserC
 	return (*instance.SmsDelivery.IngredientInterfaceImpl.SendSms)(input, userContext)
 }
 
-func CreateCodeWithEmail(email string, userInputCode *string) (plessmodels.CreateCodeResponse, error) {
-	return CreateCodeWithEmailWithContext(email, userInputCode, &map[string]interface{}{})
+func CreateCodeWithEmail(email string, userInputCode *string, tenantId *string) (plessmodels.CreateCodeResponse, error) {
+	return CreateCodeWithEmailWithContext(email, userInputCode, tenantId, &map[string]interface{}{})
 }
 
-func CreateCodeWithPhoneNumber(phoneNumber string, userInputCode *string) (plessmodels.CreateCodeResponse, error) {
-	return CreateCodeWithPhoneNumberWithContext(phoneNumber, userInputCode, &map[string]interface{}{})
+func CreateCodeWithPhoneNumber(phoneNumber string, userInputCode *string, tenantId *string) (plessmodels.CreateCodeResponse, error) {
+	return CreateCodeWithPhoneNumberWithContext(phoneNumber, userInputCode, tenantId, &map[string]interface{}{})
 }
 
-func CreateNewCodeForDevice(deviceID string, userInputCode *string) (plessmodels.ResendCodeResponse, error) {
-	return CreateNewCodeForDeviceWithContext(deviceID, userInputCode, &map[string]interface{}{})
+func CreateNewCodeForDevice(deviceID string, userInputCode *string, tenantId *string) (plessmodels.ResendCodeResponse, error) {
+	return CreateNewCodeForDeviceWithContext(deviceID, userInputCode, tenantId, &map[string]interface{}{})
 }
 
-func ConsumeCodeWithUserInputCode(deviceID string, userInputCode string, preAuthSessionID string) (plessmodels.ConsumeCodeResponse, error) {
-	return ConsumeCodeWithUserInputCodeWithContext(deviceID, userInputCode, preAuthSessionID, &map[string]interface{}{})
+func ConsumeCodeWithUserInputCode(deviceID string, userInputCode string, preAuthSessionID string, tenantId *string) (plessmodels.ConsumeCodeResponse, error) {
+	return ConsumeCodeWithUserInputCodeWithContext(deviceID, userInputCode, preAuthSessionID, tenantId, &map[string]interface{}{})
 }
 
-func ConsumeCodeWithLinkCode(linkCode string, preAuthSessionID string) (plessmodels.ConsumeCodeResponse, error) {
-	return ConsumeCodeWithLinkCodeWithContext(linkCode, preAuthSessionID, &map[string]interface{}{})
+func ConsumeCodeWithLinkCode(linkCode string, preAuthSessionID string, tenantId *string) (plessmodels.ConsumeCodeResponse, error) {
+	return ConsumeCodeWithLinkCodeWithContext(linkCode, preAuthSessionID, tenantId, &map[string]interface{}{})
 }
 
 func GetUserByID(userID string, tenantId *string) (*plessmodels.User, error) {
 	return GetUserByIDWithContext(userID, tenantId, &map[string]interface{}{})
 }
 
-func GetUserByEmail(email string) (*plessmodels.User, error) {
-	return GetUserByEmailWithContext(email, &map[string]interface{}{})
+func GetUserByEmail(email string, tenantId *string) (*plessmodels.User, error) {
+	return GetUserByEmailWithContext(email, tenantId, &map[string]interface{}{})
 }
 
-func GetUserByPhoneNumber(phoneNumber string) (*plessmodels.User, error) {
-	return GetUserByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+func GetUserByPhoneNumber(phoneNumber string, tenantId *string) (*plessmodels.User, error) {
+	return GetUserByPhoneNumberWithContext(phoneNumber, tenantId, &map[string]interface{}{})
 }
 
-func UpdateUser(userID string, email *string, phoneNumber *string) (plessmodels.UpdateUserResponse, error) {
-	return UpdateUserWithContext(userID, email, phoneNumber, &map[string]interface{}{})
+func UpdateUser(userID string, email *string, phoneNumber *string, tenantId *string) (plessmodels.UpdateUserResponse, error) {
+	return UpdateUserWithContext(userID, email, phoneNumber, tenantId, &map[string]interface{}{})
 }
 
-func RevokeAllCodesByEmail(email string) error {
-	return RevokeAllCodesByEmailWithContext(email, &map[string]interface{}{})
+func RevokeAllCodesByEmail(email string, tenantId *string) error {
+	return RevokeAllCodesByEmailWithContext(email, tenantId, &map[string]interface{}{})
 }
 
-func RevokeAllCodesByPhoneNumber(phoneNumber string) error {
-	return RevokeAllCodesByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+func RevokeAllCodesByPhoneNumber(phoneNumber string, tenantId *string) error {
+	return RevokeAllCodesByPhoneNumberWithContext(phoneNumber, tenantId, &map[string]interface{}{})
 }
 
-func RevokeCode(codeID string) error {
-	return RevokeCodeWithContext(codeID, &map[string]interface{}{})
+func RevokeCode(codeID string, tenantId *string) error {
+	return RevokeCodeWithContext(codeID, tenantId, &map[string]interface{}{})
 }
 
-func ListCodesByEmail(email string) ([]plessmodels.DeviceType, error) {
-	return ListCodesByEmailWithContext(email, &map[string]interface{}{})
+func ListCodesByEmail(email string, tenantId *string) ([]plessmodels.DeviceType, error) {
+	return ListCodesByEmailWithContext(email, tenantId, &map[string]interface{}{})
 }
 
-func ListCodesByPhoneNumber(phoneNumber string) ([]plessmodels.DeviceType, error) {
-	return ListCodesByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+func ListCodesByPhoneNumber(phoneNumber string, tenantId *string) ([]plessmodels.DeviceType, error) {
+	return ListCodesByPhoneNumberWithContext(phoneNumber, tenantId, &map[string]interface{}{})
 }
 
-func ListCodesByDeviceID(deviceID string) (*plessmodels.DeviceType, error) {
-	return ListCodesByDeviceIDWithContext(deviceID, &map[string]interface{}{})
+func ListCodesByDeviceID(deviceID string, tenantId *string) (*plessmodels.DeviceType, error) {
+	return ListCodesByDeviceIDWithContext(deviceID, tenantId, &map[string]interface{}{})
 }
 
-func ListCodesByPreAuthSessionID(preAuthSessionID string) (*plessmodels.DeviceType, error) {
-	return ListCodesByPreAuthSessionIDWithContext(preAuthSessionID, &map[string]interface{}{})
+func ListCodesByPreAuthSessionID(preAuthSessionID string, tenantId *string) (*plessmodels.DeviceType, error) {
+	return ListCodesByPreAuthSessionIDWithContext(preAuthSessionID, tenantId, &map[string]interface{}{})
 }
 
-func CreateMagicLinkByEmail(email string) (string, error) {
-	return CreateMagicLinkByEmailWithContext(email, &map[string]interface{}{})
+func CreateMagicLinkByEmail(email string, tenantId *string) (string, error) {
+	return CreateMagicLinkByEmailWithContext(email, tenantId, &map[string]interface{}{})
 }
 
-func CreateMagicLinkByPhoneNumber(phoneNumber string) (string, error) {
-	return CreateMagicLinkByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+func CreateMagicLinkByPhoneNumber(phoneNumber string, tenantId *string) (string, error) {
+	return CreateMagicLinkByPhoneNumberWithContext(phoneNumber, tenantId, &map[string]interface{}{})
 }
 
-func DeleteEmailForUser(userID string) (plessmodels.DeleteUserResponse, error) {
-	return DeleteEmailForUserWithContext(userID, &map[string]interface{}{})
+func DeleteEmailForUser(userID string, tenantId *string) (plessmodels.DeleteUserResponse, error) {
+	return DeleteEmailForUserWithContext(userID, tenantId, &map[string]interface{}{})
 }
 
-func DeletePhoneNumberForUser(userID string) (plessmodels.DeleteUserResponse, error) {
-	return DeletePhoneNumberForUserWithContext(userID, &map[string]interface{}{})
+func DeletePhoneNumberForUser(userID string, tenantId *string) (plessmodels.DeleteUserResponse, error) {
+	return DeletePhoneNumberForUserWithContext(userID, tenantId, &map[string]interface{}{})
 }
 
-func SignInUpByEmail(email string) (struct {
+func SignInUpByEmail(email string, tenantId *string) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
 }, error) {
-	return SignInUpByEmailWithContext(email, &map[string]interface{}{})
+	return SignInUpByEmailWithContext(email, tenantId, &map[string]interface{}{})
 }
 
-func SignInUpByPhoneNumber(phoneNumber string) (struct {
+func SignInUpByPhoneNumber(phoneNumber string, tenantId *string) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
 }, error) {
-	return SignInUpByPhoneNumberWithContext(phoneNumber, &map[string]interface{}{})
+	return SignInUpByPhoneNumberWithContext(phoneNumber, tenantId, &map[string]interface{}{})
 }
 
 func SendEmail(input emaildelivery.EmailType) error {

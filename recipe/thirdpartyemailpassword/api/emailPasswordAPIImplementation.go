@@ -33,8 +33,8 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 	}
 
 	if apiImplmentation.EmailPasswordSignInPOST != nil && (*apiImplmentation.EmailPasswordSignInPOST) != nil {
-		signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
-			result, err := (*apiImplmentation.EmailPasswordSignInPOST)(formFields, options, userContext)
+		signInPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+			result, err := (*apiImplmentation.EmailPasswordSignInPOST)(formFields, tenantId, options, userContext)
 			if err != nil {
 				return epmodels.SignInPOSTResponse{}, err
 			}
@@ -67,8 +67,8 @@ func GetEmailPasswordIterfaceImpl(apiImplmentation tpepmodels.APIInterface) epmo
 	}
 
 	if apiImplmentation.EmailPasswordSignUpPOST != nil && (*apiImplmentation.EmailPasswordSignUpPOST) != nil {
-		signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
-			result, err := (*apiImplmentation.EmailPasswordSignUpPOST)(formFields, options, userContext)
+		signUpPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+			result, err := (*apiImplmentation.EmailPasswordSignUpPOST)(formFields, tenantId, options, userContext)
 			if err != nil {
 				return epmodels.SignUpPOSTResponse{}, err
 			}

@@ -36,7 +36,7 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	VerifyEmailPOST              *func(token string, sessionContainer sessmodels.SessionContainer, options APIOptions, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
+	VerifyEmailPOST              *func(token string, sessionContainer sessmodels.SessionContainer, tenantId *string, options APIOptions, userContext supertokens.UserContext) (VerifyEmailPOSTResponse, error)
 	IsEmailVerifiedGET           *func(sessionContainer sessmodels.SessionContainer, options APIOptions, userContext supertokens.UserContext) (IsEmailVerifiedGETResponse, error)
 	GenerateEmailVerifyTokenPOST *func(sessionContainer sessmodels.SessionContainer, options APIOptions, userContext supertokens.UserContext) (GenerateEmailVerifyTokenPOSTResponse, error)
 }

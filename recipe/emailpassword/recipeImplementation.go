@@ -21,8 +21,8 @@ import (
 )
 
 func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterface {
-	signUp := func(email, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/signup", map[string]interface{}{
+	signUp := func(email, password string, tenantId *string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/signup", map[string]interface{}{
 			"email":    email,
 			"password": password,
 		})
@@ -44,8 +44,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}, nil
 	}
 
-	signIn := func(email, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/signin", map[string]interface{}{
+	signIn := func(email, password string, tenantId *string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/signin", map[string]interface{}{
 			"email":    email,
 			"password": password,
 		})
@@ -67,8 +67,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}, nil
 	}
 
-	getUserByID := func(userID string, userContext supertokens.UserContext) (*epmodels.User, error) {
-		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+	getUserByID := func(userID string, tenantId *string, userContext supertokens.UserContext) (*epmodels.User, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user", map[string]string{
 			"userId": userID,
 		})
 		if err != nil {
@@ -85,8 +85,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		return nil, nil
 	}
 
-	getUserByEmail := func(email string, userContext supertokens.UserContext) (*epmodels.User, error) {
-		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+	getUserByEmail := func(email string, tenantId *string, userContext supertokens.UserContext) (*epmodels.User, error) {
+		response, err := querier.SendGetRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user", map[string]string{
 			"email": email,
 		})
 		if err != nil {
@@ -103,8 +103,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		return nil, nil
 	}
 
-	createResetPasswordToken := func(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/user/password/reset/token", map[string]interface{}{
+	createResetPasswordToken := func(userID string, tenantId *string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/password/reset/token", map[string]interface{}{
 			"userId": userID,
 		})
 		if err != nil {
@@ -121,8 +121,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}, nil
 	}
 
-	resetPasswordUsingToken := func(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
-		response, err := querier.SendPostRequest("/recipe/user/password/reset", map[string]interface{}{
+	resetPasswordUsingToken := func(token, newPassword string, tenantId *string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+		response, err := querier.SendPostRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user/password/reset", map[string]interface{}{
 			"method":      "token",
 			"token":       token,
 			"newPassword": newPassword,
@@ -158,7 +158,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 	}
 
-	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+	updateEmailOrPassword := func(userId string, email, password *string, tenantId *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 		requestBody := map[string]interface{}{
 			"userId": userId,
 		}
@@ -168,7 +168,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		if password != nil {
 			requestBody["password"] = password
 		}
-		response, err := querier.SendPutRequest("/recipe/user", requestBody)
+		response, err := querier.SendPutRequest(supertokens.GetPathPrefixForTenantId(tenantId)+"/recipe/user", requestBody)
 		if err != nil {
 			return epmodels.UpdateEmailOrPasswordResponse{}, nil
 		}

@@ -47,7 +47,7 @@ func TestCreateUserIdMapping(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -110,7 +110,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, signUpResponse.OK)
 
@@ -144,7 +144,7 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 
 	{ // duplicate of externalUserId
 
-		signUpResponse, err := SignUp("test2@example.com", "testpass123")
+		signUpResponse, err := SignUp("test2@example.com", "testpass123", nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, signUpResponse.OK)
 
@@ -175,7 +175,7 @@ func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)

@@ -44,7 +44,12 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 
-	result, err := (*apiImplementation.SignUpPOST)(formFields, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	var tenantId *string
+	if tenantIdVal, ok := formFieldsRaw["tenantId"].(string); ok {
+		tenantId = &tenantIdVal
+	}
+
+	result, err := (*apiImplementation.SignUpPOST)(formFields, tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

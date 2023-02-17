@@ -59,7 +59,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
+	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -69,19 +69,19 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserById(signUpResponse.OK.User.ID)
+		userResp, err := GetUserById(signUpResponse.OK.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserById(externalUserId)
+		userResp, err := GetUserById(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		userResp, err := GetUserByThirdPartyInfo("google", "googleID", nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -104,7 +104,7 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123")
+	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -116,13 +116,13 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 	assert.NotNil(t, createResp.OK)
 
 	{ // Using supertokens ID
-		userResp, err := GetUserById(signUpResponse.OK.User.ID)
+		userResp, err := GetUserById(signUpResponse.OK.User.ID, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using external ID
-		userResp, err := GetUserById(externalUserId)
+		userResp, err := GetUserById(externalUserId, nil)
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -145,7 +145,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123")
+	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -156,7 +156,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	userResp, err := GetUsersByEmail("test@example.com")
+	userResp, err := GetUsersByEmail("test@example.com", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, userResp)
 	assert.Equal(t, 1, len(userResp))

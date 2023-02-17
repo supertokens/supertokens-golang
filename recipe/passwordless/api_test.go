@@ -737,7 +737,7 @@ func TestAddingPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheE
 	emailForUpdating := emailCodeResendResult["user"].(map[string]interface{})["email"].(string)
 	phoneNumberForUpdating := "+12345678901"
 
-	_, err = UpdateUser(emailCodeResendResult["user"].(map[string]interface{})["id"].(string), &emailForUpdating, &phoneNumberForUpdating)
+	_, err = UpdateUser(emailCodeResendResult["user"].(map[string]interface{})["id"].(string), &emailForUpdating, &phoneNumberForUpdating, nil)
 
 	assert.NoError(t, err)
 
@@ -933,7 +933,7 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("test@example.com", nil, nil)
 	assert.NoError(t, err)
 
 	invalidCodeResendPostBody := map[string]interface{}{
@@ -1050,7 +1050,7 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("test@example.com", nil, nil)
 	assert.NoError(t, err)
 
 	invalidCodeResendPostBody := map[string]interface{}{
@@ -1203,7 +1203,7 @@ func TestConsumeCodeAPIWithExpiredCode(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("test@example.com", nil, nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -1542,10 +1542,10 @@ func TestEmailExistsAPI(t *testing.T) {
 	assert.Equal(t, "OK", emailResult["status"])
 	assert.Equal(t, false, emailResult["exists"])
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("test@example.com", nil, nil)
 	assert.NoError(t, err)
 
-	_, err = ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
+	_, err = ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID, nil)
 	assert.NoError(t, err)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
@@ -1649,10 +1649,10 @@ func TestPhoneNumberExistsAPI(t *testing.T) {
 	assert.Equal(t, "OK", phoneResult["status"])
 	assert.Equal(t, false, phoneResult["exists"])
 
-	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil, nil)
 	assert.NoError(t, err)
 
-	_, err = ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
+	_, err = ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID, nil)
 	assert.NoError(t, err)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/phonenumber/exists", nil)
@@ -1732,7 +1732,7 @@ func TestResendCodeAPI(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil, nil)
 	assert.NoError(t, err)
 
 	validCodeResendPostBody := map[string]interface{}{

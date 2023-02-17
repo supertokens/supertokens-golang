@@ -70,7 +70,12 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, options, userContext)
+		var tenantId *string
+		if tenantIdVal, ok := readBody["tenantId"].(string); ok {
+			tenantId = &tenantIdVal
+		}
+
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, tenantId, options, userContext)
 		if err != nil {
 			return err
 		}

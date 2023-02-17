@@ -74,7 +74,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil)
+		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil) // TODO tenantId
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -113,7 +113,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil)
+		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil) // TODO tenantId
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -170,7 +170,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := passwordless.UpdateUser(userId, &email, nil)
+		updateResponse, updateErr := passwordless.UpdateUser(userId, &email, nil, nil)
 
 		if updateErr != nil {
 			return updateEmailResponse{}, updateErr
@@ -227,7 +227,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, &email, nil)
+		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, &email, nil, nil) // TODO tenantId
 
 		if updateErr != nil {
 			return updateEmailResponse{}, updateErr
@@ -288,7 +288,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := passwordless.UpdateUser(userId, nil, &phone)
+		updateResponse, updateErr := passwordless.UpdateUser(userId, nil, &phone, nil)
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr
@@ -345,7 +345,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, nil, &phone)
+		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, nil, &phone, nil) // TODO tenantId
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr

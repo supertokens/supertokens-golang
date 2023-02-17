@@ -47,13 +47,13 @@ func TestDefaultUserContext(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 						originalSignIn := *originalImplementation.SignIn
-						newSignIn := func(email string, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+						newSignIn := func(email string, password string, tenantId *string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									signInContextWorks = true
 								}
 							}
-							return originalSignIn(email, password, userContext)
+							return originalSignIn(email, password, tenantId, userContext)
 						}
 						*originalImplementation.SignIn = newSignIn
 						return originalImplementation
@@ -61,13 +61,13 @@ func TestDefaultUserContext(t *testing.T) {
 
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignInPOST := *originalImplementation.SignInPOST
-						newSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+						newSignInPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									signInAPIContextWorks = true
 								}
 							}
-							return originalSignInPOST(formFields, options, userContext)
+							return originalSignInPOST(formFields, tenantId, options, userContext)
 						}
 						*originalImplementation.SignInPOST = newSignInPOST
 						return originalImplementation

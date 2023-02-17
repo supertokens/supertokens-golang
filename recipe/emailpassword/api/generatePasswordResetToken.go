@@ -43,8 +43,12 @@ func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options
 	if err != nil {
 		return err
 	}
+	var tenantId *string
+	if tenantIdVal, ok := formFieldsRaw["tenantId"].(string); ok {
+		tenantId = &tenantIdVal
+	}
 
-	resp, err := (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	resp, err := (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, tenantId, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
 	if err != nil {
 		return err
 	}

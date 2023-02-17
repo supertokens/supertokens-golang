@@ -76,7 +76,7 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 		return
 	}
 
-	users, err := GetUsersByEmail("john.doe@example.com")
+	users, err := GetUsersByEmail("john.doe@example.com", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(users))
 }
@@ -131,10 +131,10 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	ThirdPartyManuallyCreateOrUpdateUser("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
-	ThirdPartyManuallyCreateOrUpdateUser("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("mock1", "thirdPartyJohnDoe", "john.doe@example.com", nil)
+	ThirdPartyManuallyCreateOrUpdateUser("mock2", "thirdPartyJohnDoe", "john.doe@example.com", nil)
 
-	users, err := GetUsersByEmail("john.doe@example.com")
+	users, err := GetUsersByEmail("john.doe@example.com", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(users))
 

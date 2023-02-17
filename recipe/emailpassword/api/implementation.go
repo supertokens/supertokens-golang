@@ -26,8 +26,8 @@ import (
 )
 
 func MakeAPIImplementation() epmodels.APIInterface {
-	emailExistsGET := func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
-		user, err := (*options.RecipeImplementation.GetUserByEmail)(email, userContext)
+	emailExistsGET := func(email string, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+		user, err := (*options.RecipeImplementation.GetUserByEmail)(email, tenantId, userContext)
 		if err != nil {
 			return epmodels.EmailExistsGETResponse{}, err
 		}
@@ -36,7 +36,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}, nil
 	}
 
-	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
 		var email string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
@@ -44,7 +44,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}
 		}
 
-		user, err := (*options.RecipeImplementation.GetUserByEmail)(email, userContext)
+		user, err := (*options.RecipeImplementation.GetUserByEmail)(email, tenantId, userContext)
 		if err != nil {
 			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
 		}
@@ -55,7 +55,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}, nil
 		}
 
-		response, err := (*options.RecipeImplementation.CreateResetPasswordToken)(user.ID, userContext)
+		response, err := (*options.RecipeImplementation.CreateResetPasswordToken)(user.ID, tenantId, userContext)
 		if err != nil {
 			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
 		}
@@ -99,7 +99,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}, nil
 	}
 
-	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
 		var newPassword string
 		for _, formField := range formFields {
 			if formField.ID == "password" {
@@ -107,7 +107,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}
 		}
 
-		response, err := (*options.RecipeImplementation.ResetPasswordUsingToken)(token, newPassword, userContext)
+		response, err := (*options.RecipeImplementation.ResetPasswordUsingToken)(token, newPassword, tenantId, userContext)
 		if err != nil {
 			return epmodels.ResetPasswordPOSTResponse{}, err
 		}
@@ -123,7 +123,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}
 	}
 
-	signInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+	signInPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 		var email string
 		var password string
 		for _, formField := range formFields {
@@ -134,7 +134,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}
 		}
 
-		response, err := (*options.RecipeImplementation.SignIn)(email, password, userContext)
+		response, err := (*options.RecipeImplementation.SignIn)(email, password, tenantId, userContext)
 		if err != nil {
 			return epmodels.SignInPOSTResponse{}, err
 		}
@@ -145,7 +145,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}
 
 		user := response.OK.User
-		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, nil, userContext) // TODO pass tenant ID
+		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, tenantId, userContext)
 		if err != nil {
 			return epmodels.SignInPOSTResponse{}, err
 		}
@@ -161,7 +161,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		}, nil
 	}
 
-	signUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+	signUpPOST := func(formFields []epmodels.TypeFormField, tenantId *string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 		var email string
 		var password string
 		for _, formField := range formFields {
@@ -172,7 +172,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}
 		}
 
-		response, err := (*options.RecipeImplementation.SignUp)(email, password, userContext)
+		response, err := (*options.RecipeImplementation.SignUp)(email, password, tenantId, userContext)
 		if err != nil {
 			return epmodels.SignUpPOSTResponse{}, err
 		}

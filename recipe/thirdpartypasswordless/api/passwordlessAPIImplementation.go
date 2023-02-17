@@ -33,8 +33,8 @@ func GetPasswordlessIterfaceImpl(apiImplmentation tplmodels.APIInterface) plessm
 	}
 
 	if apiImplmentation.ConsumeCodePOST != nil && (*apiImplmentation.ConsumeCodePOST) != nil {
-		consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
-			result, err := (*apiImplmentation.ConsumeCodePOST)(userInput, linkCode, preAuthSessionID, options, userContext)
+		consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
+			result, err := (*apiImplmentation.ConsumeCodePOST)(userInput, linkCode, preAuthSessionID, tenantId, options, userContext)
 			if err != nil {
 				return plessmodels.ConsumeCodePOSTResponse{}, err
 			}

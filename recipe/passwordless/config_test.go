@@ -1554,8 +1554,8 @@ func TestBasicOverrideUsageInPasswordLess(t *testing.T) {
 				Override: &plessmodels.OverrideStruct{
 					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
 						originalCodePost := *originalImplementation.CreateCodePOST
-						*originalImplementation.CreateCodePOST = func(email, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
-							res, err := originalCodePost(email, phoneNumber, options, userContext)
+						*originalImplementation.CreateCodePOST = func(email, phoneNumber *string, tenantId *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+							res, err := originalCodePost(email, phoneNumber, tenantId, options, userContext)
 							res.OK.DeviceID = customDeviceId
 							return res, err
 						}
