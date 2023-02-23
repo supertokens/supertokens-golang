@@ -11,7 +11,7 @@ type signOutPostResponse struct {
 }
 
 func SignOutPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (signOutPostResponse, error) {
-	if options.Config.ApiKey != nil {
+	if options.Config.ApiKey != "" {
 		return signOutPostResponse{
 			Status: "OK",
 		}, nil

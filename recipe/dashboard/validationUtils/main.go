@@ -18,5 +18,5 @@ func ValidateApiKey(req *http.Request, config dashboardmodels.TypeNormalisedInpu
 		return false, nil
 	}
 
-	return apiKeyHeaderValue == *config.ApiKey, nil
+	return apiKeyHeaderValue == config.ApiKey, nil
 }

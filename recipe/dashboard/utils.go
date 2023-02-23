@@ -26,7 +26,7 @@ import (
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if config.ApiKey != nil {
+	if config.ApiKey != "" {
 		typeNormalisedInput.ApiKey = config.ApiKey
 		typeNormalisedInput.AuthMode = dashboardmodels.AuthModeAPIKey
 	}

@@ -31,7 +31,7 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 	}
 
 	shouldAllowAccess := func(req *http.Request, config dashboardmodels.TypeNormalisedInput, userContext supertokens.UserContext) (bool, error) {
-		if config.ApiKey == nil {
+		if config.ApiKey == "" {
 			authHeaderValue := req.Header.Get("authorization")
 			// We receive the api key as `Bearer API_KEY`, this retrieves just the key
 			keyParts := strings.Split(authHeaderValue, " ")
