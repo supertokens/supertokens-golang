@@ -65,7 +65,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			userToReturn.LastName = ""
 			userToReturn.Email = response.Email
 			userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
-				Id: response.ThirdParty.ID,
+				Id:     response.ThirdParty.ID,
 				UserId: response.ThirdParty.UserID,
 			}
 		}
@@ -80,7 +80,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 				userToReturn.LastName = ""
 				userToReturn.Email = tpepResponse.Email
 				userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
-					Id: tpepResponse.ThirdParty.ID,
+					Id:     tpepResponse.ThirdParty.ID,
 					UserId: tpepResponse.ThirdParty.UserID,
 				}
 			}
