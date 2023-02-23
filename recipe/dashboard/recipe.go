@@ -41,7 +41,12 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
 
-	recipeImplementation := makeRecipeImplementation()
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return Recipe{}, err
+	}
+
+	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
@@ -156,6 +161,10 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options)
 		} else if id == userPasswordAPI {
 			return userdetails.UserPasswordPut(r.APIImpl, options)
+		} else if id == signInAPI {
+			return api.SignInPost(r.APIImpl, options)
+		} else if id == signOutAPI {
+			return api.SignOutPost(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})

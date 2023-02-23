@@ -50,6 +50,8 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		}
 		dashboardAppPath := options.AppInfo.APIBasePath.AppendPath(normalizedDashboardPath).GetAsStringDangerous()
 
+		authMode := string(options.Config.AuthMode)
+
 		return `
 		<html>
 		<head>
@@ -58,6 +60,7 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 						window.staticBasePath = "` + bundleDomain + `/static"
 						window.dashboardAppPath = "` + dashboardAppPath + `"
 						window.connectionURI = "` + connectionURI + `"
+						window.authMode = "` + authMode + `"
 				</script>
 				<script defer src="` + bundleDomain + `/static/js/bundle.js"></script></head>
 				<link href="` + bundleDomain + `/static/css/main.css" rel="stylesheet" type="text/css">

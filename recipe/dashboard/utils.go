@@ -124,5 +124,15 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 		return &val, nil
 	}
 
+	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), signInAPI) {
+		val := signInAPI
+		return &val, nil
+	}
+
+	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), signOutAPI) {
+		val := signOutAPI
+		return &val, nil
+	}
+
 	return nil, nil
 }

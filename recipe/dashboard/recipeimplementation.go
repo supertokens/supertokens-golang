@@ -17,14 +17,14 @@ package dashboard
 
 import (
 	"fmt"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/validationUtils"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"strings"
-
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func makeRecipeImplementation() dashboardmodels.RecipeInterface {
+func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.RecipeInterface {
 
 	getDashboardBundleLocation := func(userContext supertokens.UserContext) (string, error) {
 		return fmt.Sprintf("https://cdn.jsdelivr.net/gh/supertokens/dashboard@v%s/build/", supertokens.DashboardVersion), nil
@@ -32,21 +32,31 @@ func makeRecipeImplementation() dashboardmodels.RecipeInterface {
 
 	shouldAllowAccess := func(req *http.Request, config dashboardmodels.TypeNormalisedInput, userContext supertokens.UserContext) (bool, error) {
 		if config.ApiKey == nil {
-			// TODO Handle sign in logic here
-			return false, nil
+			authHeaderValue := req.Header.Get("authorization")
+			// We receive the api key as `Bearer API_KEY`, this retrieves just the key
+			keyParts := strings.Split(authHeaderValue, " ")
+			authHeaderValue = keyParts[len(keyParts)-1]
+
+			verifyResponse, err := querier.SendPostRequest("/recipe/dashboard/session/verify", map[string]interface{}{
+				"sessionId": authHeaderValue,
+			})
+
+			if err != nil {
+				return false, err
+			}
+
+			status, ok := verifyResponse["status"]
+
+			return ok && status.(string) == "OK", nil
 		}
 
-		apiKeyHeaderValue := req.Header.Get("authorization")
+		validateKeyResponse, err := validationUtils.ValidateApiKey(req, config, userContext)
 
-		// We receieve the api key as `Bearer API_KEY`, this retrieves just the key
-		keyParts := strings.Split(apiKeyHeaderValue, " ")
-		apiKeyHeaderValue = keyParts[len(keyParts)-1]
-
-		if apiKeyHeaderValue == "" {
-			return false, nil
+		if err != nil {
+			return false, err
 		}
 
-		return apiKeyHeaderValue == *config.ApiKey, nil
+		return validateKeyResponse, nil
 	}
 
 	return dashboardmodels.RecipeInterface{
