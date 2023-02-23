@@ -16,12 +16,20 @@
 package dashboardmodels
 
 type TypeInput struct {
-	ApiKey   string
+	ApiKey   *string
 	Override *OverrideStruct
 }
 
+type TypeAuthMode string
+
+const (
+	AuthModeEmailPassword TypeAuthMode = "email-password"
+	AuthModeAPIKey        TypeAuthMode = "api-key"
+)
+
 type TypeNormalisedInput struct {
-	ApiKey   string
+	ApiKey   *string
+	AuthMode TypeAuthMode
 	Override OverrideStruct
 }
 
@@ -36,11 +44,11 @@ type ThirdParty struct {
 }
 
 type UserType struct {
-	Id         string     `json:"id,omitempty"`
-	TimeJoined uint64     `json:"timeJoined,omitempty"`
-	FirstName  string     `json:"firstName,omitempty"`
-	LastName   string     `json:"lastName,omitempty"`
-	Email      string     `json:"email,omitempty"`
+	Id         string      `json:"id,omitempty"`
+	TimeJoined uint64      `json:"timeJoined,omitempty"`
+	FirstName  string      `json:"firstName,omitempty"`
+	LastName   string      `json:"lastName,omitempty"`
+	Email      string      `json:"email,omitempty"`
 	ThirdParty *ThirdParty `json:"thirdParty,omitempty"`
-	Phone      string     `json:"phoneNumber,omitempty"`
+	Phone      string      `json:"phoneNumber,omitempty"`
 }

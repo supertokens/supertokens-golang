@@ -31,6 +31,11 @@ func makeRecipeImplementation() dashboardmodels.RecipeInterface {
 	}
 
 	shouldAllowAccess := func(req *http.Request, config dashboardmodels.TypeNormalisedInput, userContext supertokens.UserContext) (bool, error) {
+		if config.ApiKey == nil {
+			// TODO Handle sign in logic here
+			return false, nil
+		}
+
 		apiKeyHeaderValue := req.Header.Get("authorization")
 
 		// We receieve the api key as `Bearer API_KEY`, this retrieves just the key
@@ -41,7 +46,7 @@ func makeRecipeImplementation() dashboardmodels.RecipeInterface {
 			return false, nil
 		}
 
-		return apiKeyHeaderValue == config.ApiKey, nil
+		return apiKeyHeaderValue == *config.ApiKey, nil
 	}
 
 	return dashboardmodels.RecipeInterface{

@@ -36,7 +36,7 @@ type Recipe struct {
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config dashboardmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
@@ -52,7 +52,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config d
 	return *r, nil
 }
 
-func recipeInit(config dashboardmodels.TypeInput) supertokens.Recipe {
+func recipeInit(config *dashboardmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onSuperTokensAPIError)

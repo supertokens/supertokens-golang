@@ -23,14 +23,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if strings.Trim(config.ApiKey, " ") == "" {
-		panic("ApiKey provided to Dashboard recipe cannot be empty")
+	if config.ApiKey != nil {
+		typeNormalisedInput.ApiKey = config.ApiKey
+		typeNormalisedInput.AuthMode = dashboardmodels.AuthModeAPIKey
 	}
-
-	typeNormalisedInput.ApiKey = config.ApiKey
 
 	if config.Override != nil {
 		if config.Override.Functions != nil {
@@ -46,6 +45,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) dashboardmodels.TypeNormalisedInput {
 	return dashboardmodels.TypeNormalisedInput{
+		AuthMode: dashboardmodels.AuthModeEmailPassword,
 		Override: dashboardmodels.OverrideStruct{
 			Functions: func(originalImplementation dashboardmodels.RecipeInterface) dashboardmodels.RecipeInterface {
 				return originalImplementation
