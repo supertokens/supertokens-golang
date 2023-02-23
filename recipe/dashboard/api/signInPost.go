@@ -17,27 +17,27 @@ type signInRequestBody struct {
 	Password *string `json:"password"`
 }
 
-func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (signInPostResponse, error) {
+func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
-		return signInPostResponse{}, err
+		return err
 	}
 
 	var readBody signInRequestBody
 	err = json.Unmarshal(body, &readBody)
 	if err != nil {
-		return signInPostResponse{}, err
+		return err
 	}
 
 	if readBody.Email == nil {
-		return signInPostResponse{}, supertokens.BadInputError{
+		return supertokens.BadInputError{
 			Msg: "Required parameter 'email' is missing",
 		}
 	}
 
 	if readBody.Password == nil {
-		return signInPostResponse{}, supertokens.BadInputError{
+		return supertokens.BadInputError{
 			Msg: "Required parameter 'password' is missing",
 		}
 	}
@@ -45,7 +45,7 @@ func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmode
 	querier, querierErr := supertokens.GetNewQuerierInstanceOrThrowError("dashboard")
 
 	if querierErr != nil {
-		return signInPostResponse{}, querierErr
+		return querierErr
 	}
 
 	apiResponse, apiErr := querier.SendPostRequest("/recipe/dashboard/signin", map[string]interface{}{
@@ -54,26 +54,26 @@ func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmode
 	})
 
 	if apiErr != nil {
-		return signInPostResponse{}, apiErr
+		return apiErr
 	}
 
 	status, ok := apiResponse["status"]
 
 	if ok && status == "OK" {
-		return signInPostResponse{
-			Status:    "OK",
-			SessionId: apiResponse["sessionId"].(string),
-		}, nil
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status":    "OK",
+			"sessionId": apiResponse["sessionId"].(string),
+		})
 	}
 
 	if status == "USER_SUSPENDED_ERROR" {
-		return signInPostResponse{
-			Status:  "USER_SUSPENDED_ERROR",
-			Message: apiResponse["message"].(string),
-		}, nil
+		return supertokens.Send200Response(options.Res, map[string]interface{}{
+			"status":  "USER_SUSPENDED_ERROR",
+			"message": apiResponse["message"].(string),
+		})
 	}
 
-	return signInPostResponse{
-		Status: "INVAlID_CREDENTIALS_ERROR",
-	}, nil
+	return supertokens.Send200Response(options.Res, map[string]interface{}{
+		"status": "INVAlID_CREDENTIALS_ERROR",
+	})
 }

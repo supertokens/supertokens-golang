@@ -112,6 +112,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		return api.Dashboard(r.APIImpl, options)
 	} else if id == validateKeyAPI {
 		return api.ValidateKey(r.APIImpl, options)
+	} else if id == signInAPI {
+		return api.SignInPost(r.APIImpl, options)
 	}
 
 	// Do API key validation for the remaining APIs
@@ -161,8 +163,6 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options)
 		} else if id == userPasswordAPI {
 			return userdetails.UserPasswordPut(r.APIImpl, options)
-		} else if id == signInAPI {
-			return api.SignInPost(r.APIImpl, options)
 		} else if id == signOutAPI {
 			return api.SignOutPost(r.APIImpl, options)
 		}
