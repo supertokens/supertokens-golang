@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.10.2] - 2023-02-24
+-   Adds APIs and logic to the dashboard recipe to enable email password based login
+
 ## [0.10.1] - 2023-02-06
 
 -   Email template updates
