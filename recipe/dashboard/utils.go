@@ -26,17 +26,22 @@ import (
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if config.ApiKey != "" {
-		typeNormalisedInput.ApiKey = config.ApiKey
+	_config := dashboardmodels.TypeInput{}
+	if config != nil {
+		_config = *config
+	}
+
+	if _config.ApiKey != "" {
+		typeNormalisedInput.ApiKey = _config.ApiKey
 		typeNormalisedInput.AuthMode = dashboardmodels.AuthModeAPIKey
 	}
 
-	if config.Override != nil {
-		if config.Override.Functions != nil {
-			typeNormalisedInput.Override.Functions = config.Override.Functions
+	if _config.Override != nil {
+		if _config.Override.Functions != nil {
+			typeNormalisedInput.Override.Functions = _config.Override.Functions
 		}
-		if config.Override.APIs != nil {
-			typeNormalisedInput.Override.APIs = config.Override.APIs
+		if _config.Override.APIs != nil {
+			typeNormalisedInput.Override.APIs = _config.Override.APIs
 		}
 	}
 

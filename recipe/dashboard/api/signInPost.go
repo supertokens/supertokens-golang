@@ -57,9 +57,9 @@ func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmode
 		return apiErr
 	}
 
-	status, ok := apiResponse["status"]
+	status := apiResponse["status"]
 
-	if ok && status == "OK" {
+	if status == "OK" {
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"status":    "OK",
 			"sessionId": apiResponse["sessionId"].(string),
