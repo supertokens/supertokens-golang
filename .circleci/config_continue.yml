@@ -14,6 +14,10 @@ jobs:
         docker:
             - image: rishabhpoddar/supertokens_go_driver_testing
         resource_class: large
+        parameters:
+            cdi-version:
+                type: string
+        parallelism: 4
         steps:
             - checkout
             - run: apt-get install lsof
