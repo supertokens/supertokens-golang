@@ -89,6 +89,9 @@ workflows:
                         only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
                         ignore: /.*/
+                matrix:
+                    parameters:
+                        cdi-version: placeholder
             - test-website:
                 requires:
                     - test-dev-tag-as-not-passed
