@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"log"
 	"net/http"
 	"strings"
@@ -92,6 +93,7 @@ func main() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 		},
 	})
 	if err != nil {
