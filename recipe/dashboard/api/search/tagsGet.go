@@ -21,8 +21,8 @@ import (
 )
 
 type searchTagsResponse struct {
-	Status string   `json:"status"`
-	Tags   []string `json:"tags"`
+	Status string        `json:"status"`
+	Tags   []interface{} `json:"tags"`
 }
 
 func SearchTagsGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (searchTagsResponse, error) {
@@ -39,6 +39,6 @@ func SearchTagsGet(apiImplementation dashboardmodels.APIInterface, options dashb
 
 	return searchTagsResponse{
 		Status: "OK",
-		Tags:   apiResponse["tags"].([]string),
+		Tags:   apiResponse["tags"].([]interface{}),
 	}, nil
 }
