@@ -94,7 +94,7 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardm
 		return analyticsPostResponse{}, err
 	}
 
-	url := "https://api.supertokens.com/0/st/telemetry"
+	url := "https://dev.api.supertokens.com/0/st/telemetry"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return analyticsPostResponse{
