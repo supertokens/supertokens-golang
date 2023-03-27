@@ -30,6 +30,7 @@ type superTokens struct {
 	SuperTokens           ConnectionInfo
 	RecipeModules         []RecipeModule
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
+	Telemetry             *bool
 }
 
 // this will be set to true if this is used in a test app environment
@@ -99,11 +100,8 @@ func supertokensInit(config TypeInput) error {
 		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
 	}
 
+	superTokens.Telemetry = config.Telemetry
 	superTokensInstance = superTokens
-
-	if config.Telemetry == nil || *config.Telemetry {
-		sendTelemetry()
-	}
 
 	return nil
 }
