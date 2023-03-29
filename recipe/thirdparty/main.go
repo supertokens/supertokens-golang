@@ -98,6 +98,10 @@ func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvi
 	return providers.GoogleWorkspaces(config)
 }
 
+func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
+	return providers.Bitbucket(config)
+}
+
 func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
 	return providers.Google(config)
 }
