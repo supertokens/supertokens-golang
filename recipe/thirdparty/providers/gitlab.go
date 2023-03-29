@@ -17,6 +17,7 @@ package providers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -97,7 +98,7 @@ func GitLab(config tpmodels.GitLabConfig) tpmodels.TypeProvider {
 						return tpmodels.UserInfo{}, err
 					}
 					userInfo := response.(map[string]interface{})
-					ID := userInfo["id"].(string)
+					ID := fmt.Sprint(userInfo["id"]) // the id returned by gitlab is a number, so we convert to a string
 					_, emailExists := userInfo["email"]
 					if !emailExists {
 						return tpmodels.UserInfo{
