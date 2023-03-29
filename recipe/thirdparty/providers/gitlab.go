@@ -24,13 +24,21 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const bitbucketID = "bitbucket"
+const gitlabID = "gitlab"
 
-func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
+func GitLab(config tpmodels.GitLabConfig) tpmodels.TypeProvider {
+	gitLabURL := "https://gitlab.com"
+	if config.GitLabBaseURL != nil {
+		url, err := supertokens.NewNormalisedURLDomain(*config.GitLabBaseURL)
+		if err != nil {
+			panic(err)
+		}
+		gitLabURL = url.GetAsStringDangerous()
+	}
 	return tpmodels.TypeProvider{
-		ID: bitbucketID,
+		ID: gitlabID,
 		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://bitbucket.org/site/oauth2/access_token"
+			accessTokenAPIURL := gitLabURL + "/oauth/token"
 			accessTokenAPIParams := map[string]string{
 				"client_id":     config.ClientID,
 				"client_secret": config.ClientSecret,
@@ -43,8 +51,8 @@ func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
 				accessTokenAPIParams["redirect_uri"] = *redirectURI
 			}
 
-			authorisationRedirectURL := "https://bitbucket.org/site/oauth2/authorize"
-			scopes := []string{"account", "email"}
+			authorisationRedirectURL := gitLabURL + "/oauth/authorize"
+			scopes := []string{"read_user"}
 			if config.Scope != nil {
 				scopes = config.Scope
 			}
@@ -56,7 +64,6 @@ func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
 
 			authorizationRedirectParams := map[string]interface{}{
 				"scope":         strings.Join(scopes, " "),
-				"access_type":   "offline",
 				"response_type": "code",
 				"client_id":     config.ClientID,
 			}
@@ -78,40 +85,33 @@ func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
 					if err != nil {
 						return tpmodels.UserInfo{}, err
 					}
-					var accessTokenAPIResponse bitbucketGetProfileInfoInput
+					var accessTokenAPIResponse gitlabGetProfileInfoInput
 					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
 					if err != nil {
 						return tpmodels.UserInfo{}, err
 					}
 					accessToken := accessTokenAPIResponse.AccessToken
 					authHeader := "Bearer " + accessToken
-					response, err := getBitbucketAuthRequest(authHeader)
+					response, err := getGitLabAuthRequest(gitLabURL, authHeader)
 					if err != nil {
 						return tpmodels.UserInfo{}, err
 					}
 					userInfo := response.(map[string]interface{})
-					ID := userInfo["uuid"].(string)
-
-					emailResponse, err := getBitbucketEmailRequest(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					var email string
-					var isVerified bool = false
-					emailResponseInfo := emailResponse.(map[string]interface{})
-					for _, emailInfo := range emailResponseInfo["values"].([]interface{}) {
-						emailInfoMap := emailInfo.(map[string]interface{})
-						if emailInfoMap["is_primary"].(bool) {
-							email = emailInfoMap["email"].(string)
-							isVerified = emailInfoMap["is_confirmed"].(bool)
-						}
-					}
-					if email == "" {
+					ID := userInfo["id"].(string)
+					_, emailExists := userInfo["email"]
+					if !emailExists {
 						return tpmodels.UserInfo{
 							ID: ID,
 						}, nil
 					}
-
+					email := userInfo["email"].(string)
+					var isVerified bool
+					_, ok := userInfo["confirmed_at"]
+					if ok && userInfo["confirmed_at"] != nil && userInfo["confirmed_at"].(string) != "" {
+						isVerified = true
+					} else {
+						isVerified = false
+					}
 					return tpmodels.UserInfo{
 						ID: ID,
 						Email: &tpmodels.EmailStruct{
@@ -129,8 +129,8 @@ func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
 	}
 }
 
-func getBitbucketAuthRequest(authHeader string) (interface{}, error) {
-	url := "https://api.bitbucket.org/2.0/user"
+func getGitLabAuthRequest(gitLabUrl string, authHeader string) (interface{}, error) {
+	url := gitLabUrl + "/api/v4/user"
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
@@ -139,16 +139,6 @@ func getBitbucketAuthRequest(authHeader string) (interface{}, error) {
 	return doGetRequest(req)
 }
 
-func getBitbucketEmailRequest(authHeader string) (interface{}, error) {
-	url := "https://api.bitbucket.org/2.0/user/emails"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
-}
-
-type bitbucketGetProfileInfoInput struct {
+type gitlabGetProfileInfoInput struct {
 	AccessToken string `json:"access_token"`
 }
