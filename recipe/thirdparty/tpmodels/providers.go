@@ -25,6 +25,27 @@ type GoogleConfig struct {
 	IsDefault bool
 }
 
+type BitbucketConfig struct {
+	ClientID              string
+	ClientSecret          string
+	Scope                 []string
+	AuthorisationRedirect *struct {
+		Params map[string]interface{}
+	}
+	IsDefault bool
+}
+
+type GitLabConfig struct {
+	ClientID              string
+	ClientSecret          string
+	Scope                 []string
+	AuthorisationRedirect *struct {
+		Params map[string]interface{}
+	}
+	GitLabBaseURL *string
+	IsDefault     bool
+}
+
 type GoogleWorkspacesConfig struct {
 	ClientID              string
 	ClientSecret          string
