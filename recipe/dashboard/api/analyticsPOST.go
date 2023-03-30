@@ -76,25 +76,35 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardm
 	}
 
 	response, err := querier.SendGetRequest("/telemetry", nil)
-	if err == nil {
-		exists := response["exists"].(bool)
+	if err != nil {
+		// We don't send telemetry events if this fails
+		return analyticsPostResponse{
+			Status: "OK",
+		}, nil
+	}
 
-		if exists {
-			data["telemetryId"] = response["telemetryId"].(string)
-		}
+	exists := response["exists"].(bool)
+
+	if exists {
+		data["telemetryId"] = response["telemetryId"].(string)
 	}
 
 	numberOfUsers, err := supertokens.GetUserCount(nil)
-	if err == nil {
-		data["numberOfUsers"] = numberOfUsers
+	if err != nil {
+		// We don't send telemetry events if this fails
+		return analyticsPostResponse{
+			Status: "OK",
+		}, nil
 	}
+
+	data["numberOfUsers"] = numberOfUsers
 
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return analyticsPostResponse{}, err
 	}
 
-	url := "https://dev.api.supertokens.com/0/st/telemetry"
+	url := "https://api.supertokens.com/0/st/telemetry"
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
 		return analyticsPostResponse{
