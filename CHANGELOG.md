@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.10.3] - 2023-03-29
 -   Adds unit test for Apple callback form post
 -   Updates all example apps to also initialise dashboard recipe
+-   Adds login with gitlab (for single tenant only) and bitbucket
 
 ## [0.10.2] - 2023-02-24
 -   Adds APIs and logic to the dashboard recipe to enable email password based login
