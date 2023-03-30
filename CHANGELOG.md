@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.10.4] - 2023-03-30
+
+-   Adds a telemetry API to the dashboard recipe
+
 ## [0.10.3] - 2023-03-29
 -   Adds unit test for Apple callback form post
 -   Updates all example apps to also initialise dashboard recipe
