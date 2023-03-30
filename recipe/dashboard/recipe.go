@@ -165,6 +165,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return userdetails.UserPasswordPut(r.APIImpl, options)
 		} else if id == signOutAPI {
 			return api.SignOutPost(r.APIImpl, options)
+		} else if id == dashboardAnalyticsAPI {
+			return api.AnalyticsPost(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})
