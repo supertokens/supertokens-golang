@@ -64,7 +64,7 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardm
 		"websiteDomain":    supertokensInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 		"apiDomain":        supertokensInstance.AppInfo.APIDomain.GetAsStringDangerous(),
 		"appName":          supertokensInstance.AppInfo.AppName,
-		"sdk":              "supertokens-golang",
+		"sdk":              "golang",
 		"sdkVersion":       supertokens.VERSION,
 		"email":            *readBody.Email,
 		"dashboardVersion": *readBody.DashboardVersion,
