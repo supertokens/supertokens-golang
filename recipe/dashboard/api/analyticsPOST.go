@@ -27,7 +27,7 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardm
 	}
 
 	if instanceError != nil {
-		return analyticsPostResponse{}, nil
+		return analyticsPostResponse{}, instanceError
 	}
 
 	if supertokensInstance.Telemetry != nil && !*supertokensInstance.Telemetry {
