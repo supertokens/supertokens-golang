@@ -187,12 +187,12 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	}
 	if response["status"] == "OK" {
 		return &sessmodels.SessionInformation{
-			SessionHandle:      response["sessionHandle"].(string),
-			UserId:             response["userId"].(string),
-			SessionData:        response["userDataInDatabase"].(map[string]interface{}),
-			Expiry:             uint64(response["expiry"].(float64)),
-			TimeCreated:        uint64(response["timeCreated"].(float64)),
-			AccessTokenPayload: response["userDataInJWT"].(map[string]interface{}),
+			SessionHandle:         response["sessionHandle"].(string),
+			UserId:                response["userId"].(string),
+			SessionDataInDatabase: response["userDataInDatabase"].(map[string]interface{}),
+			Expiry:                uint64(response["expiry"].(float64)),
+			TimeCreated:           uint64(response["timeCreated"].(float64)),
+			AccessTokenPayload:    response["userDataInJWT"].(map[string]interface{}),
 		}, nil
 	}
 	return nil, nil

@@ -69,7 +69,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if sessionInformation == nil {
 			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
-		return sessionInformation.SessionData, nil
+		return sessionInformation.SessionDataInDatabase, nil
 	}
 
 	sessionContainer.UpdateSessionDataWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {

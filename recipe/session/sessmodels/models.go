@@ -220,12 +220,12 @@ type TypeSessionContainer struct {
 type SessionContainer = *TypeSessionContainer
 
 type SessionInformation struct {
-	SessionHandle      string
-	UserId             string
-	SessionData        map[string]interface{}
-	Expiry             uint64
-	AccessTokenPayload map[string]interface{}
-	TimeCreated        uint64
+	SessionHandle         string
+	UserId                string
+	SessionDataInDatabase map[string]interface{}
+	Expiry                uint64
+	AccessTokenPayload    map[string]interface{}
+	TimeCreated           uint64
 }
 
 const SessionContext int = iota

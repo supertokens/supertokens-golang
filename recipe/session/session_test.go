@@ -471,7 +471,7 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "John", sessionInfo.SessionData["name"])
+	assert.Equal(t, "John", sessionInfo.SessionDataInDatabase["name"])
 
 	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "Joel",
@@ -481,7 +481,7 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Joel", sessionInfo.SessionData["name"])
+	assert.Equal(t, "Joel", sessionInfo.SessionDataInDatabase["name"])
 
 	//update session data with wrong session handle
 
@@ -559,7 +559,7 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{}, sessionInfo.SessionData)
+	assert.Equal(t, map[string]interface{}{}, sessionInfo.SessionDataInDatabase)
 
 	UpdateSessionData(sessionHandles[0], map[string]interface{}{
 		"name": "John",
@@ -568,7 +568,7 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "John", sessionInfo.SessionData["name"])
+	assert.Equal(t, "John", sessionInfo.SessionDataInDatabase["name"])
 }
 
 func TestManipulatingJWTpayload(t *testing.T) {
@@ -1078,7 +1078,7 @@ func TestSessionContainerOverride(t *testing.T) {
 							if err != nil {
 								return nil, err
 							}
-							info.SessionData = map[string]interface{}{
+							info.SessionDataInDatabase = map[string]interface{}{
 								"test": 1,
 							}
 							return info, nil

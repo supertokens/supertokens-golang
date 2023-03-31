@@ -74,7 +74,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 
 			if sessionResponse != nil {
 				sessions = append(sessions, SessionType{
-					SessionData:        sessionResponse.SessionData,
+					SessionData:        sessionResponse.SessionDataInDatabase,
 					AccessTokenPayload: sessionResponse.AccessTokenPayload,
 					UserId:             sessionResponse.UserId,
 					Expiry:             sessionResponse.Expiry,
