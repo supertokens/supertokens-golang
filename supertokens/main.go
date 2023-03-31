@@ -59,10 +59,6 @@ func GetUserCount(includeRecipeIds *[]string) (float64, error) {
 	return getUserCount(includeRecipeIds)
 }
 
-func GetUsersSearchParams(order string, paginationToken *string, limit *int, includeRecipeIds *[]string, queryParams map[string]string) (UserPaginationResult, error) {
-	return getUsersWithSearch(order, paginationToken, limit, includeRecipeIds, queryParams)
-}
-
 func GetUsersOldestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
 	return getUsers("ASC", paginationToken, limit, includeRecipeIds)
 }
