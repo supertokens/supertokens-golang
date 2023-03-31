@@ -320,7 +320,50 @@ type UserPaginationResult struct {
 }
 
 // TODO: Add tests
-func getUsers(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
+func getUsers(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
+
+	querier, err := GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	requestBody := map[string]string{
+		"timeJoinedOrder": timeJoinedOrder,
+	}
+	if limit != nil {
+		requestBody["limit"] = strconv.Itoa(*limit)
+	}
+	if paginationToken != nil {
+		requestBody["paginationToken"] = *paginationToken
+	}
+	if includeRecipeIds != nil {
+		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
+	}
+
+	resp, err := querier.SendGetRequest("/users", requestBody)
+
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	temporaryVariable, err := json.Marshal(resp)
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	var result = UserPaginationResult{}
+
+	err = json.Unmarshal(temporaryVariable, &result)
+
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	return result, nil
+}
+
+// TODO: Add tests
+func getUsersWithSearch(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {

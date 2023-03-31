@@ -66,7 +66,7 @@ func TestDeleteUser(t *testing.T) {
 		if err != nil {
 			t.Error(err.Error())
 		}
-		reponseBeforeDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil, nil)
+		reponseBeforeDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -75,7 +75,7 @@ func TestDeleteUser(t *testing.T) {
 		if err != nil {
 			t.Error(err.Error())
 		}
-		reponseAfterDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil, nil)
+		reponseAfterDeletingUser, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}

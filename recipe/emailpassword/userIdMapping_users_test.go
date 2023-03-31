@@ -71,7 +71,7 @@ func TestCreateUserIdMappingAndGetUsers(t *testing.T) {
 		assert.NotNil(t, createResp.OK)
 	}
 
-	userResult, err := supertokens.GetUsersOldestFirst(nil, nil, nil, nil)
+	userResult, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, userResult.Users)
 
