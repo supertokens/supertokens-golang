@@ -396,7 +396,7 @@ func deleteUser(userId string) error {
 		return err
 	}
 
-	if maxVersion(cdiVersion, "2.10") == cdiVersion {
+	if MaxVersion(cdiVersion, "2.10") == cdiVersion {
 		_, err = querier.SendPostRequest("/user/remove", map[string]interface{}{
 			"userId": userId,
 		})

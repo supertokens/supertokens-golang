@@ -30,7 +30,7 @@ func CreateUserIdMapping(supertokensUserId string, externalUserId string, extern
 	if err != nil {
 		return CreateUserIdMappingResult{}, err
 	}
-	if maxVersion(cdiVersion, "2.15") != cdiVersion {
+	if MaxVersion(cdiVersion, "2.15") != cdiVersion {
 		return CreateUserIdMappingResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
@@ -88,7 +88,7 @@ func GetUserIdMapping(userId string, userIdType *UserIdType) (GetUserIdMappingRe
 	if err != nil {
 		return GetUserIdMappingResult{}, err
 	}
-	if maxVersion(cdiVersion, "2.15") != cdiVersion {
+	if MaxVersion(cdiVersion, "2.15") != cdiVersion {
 		return GetUserIdMappingResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
@@ -140,7 +140,7 @@ func DeleteUserIdMapping(userId string, userIdType *UserIdType, force *bool) (De
 	if err != nil {
 		return DeleteUserIdMappingResult{}, err
 	}
-	if maxVersion(cdiVersion, "2.15") != cdiVersion {
+	if MaxVersion(cdiVersion, "2.15") != cdiVersion {
 		return DeleteUserIdMappingResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
@@ -178,7 +178,7 @@ func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *UserIdType, exte
 	if err != nil {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, err
 	}
-	if maxVersion(cdiVersion, "2.15") != cdiVersion {
+	if MaxVersion(cdiVersion, "2.15") != cdiVersion {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, errors.New("Please upgrade the SuperTokens core to >= 3.15.0")
 	}
 
