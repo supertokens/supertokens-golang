@@ -43,7 +43,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
 	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 
-	createNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	createNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		outputTokenTransferMethod := config.GetTokenTransferMethod(req, true, userContext)
@@ -74,7 +74,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
 		sessionResponse, err := createNewSessionHelper(
-			recipeImplHandshakeInfo, config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionData,
+			recipeImplHandshakeInfo, config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase,
 		)
 		if err != nil {
 			return nil, err

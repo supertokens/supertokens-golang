@@ -24,17 +24,17 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if AccessTokenPayload == nil {
 		AccessTokenPayload = map[string]interface{}{}
 	}
-	if sessionData == nil {
-		sessionData = map[string]interface{}{}
+	if sessionDataInDatabase == nil {
+		sessionDataInDatabase = map[string]interface{}{}
 	}
 	requestBody := map[string]interface{}{
 		"userId":             userID,
 		"userDataInJWT":      AccessTokenPayload,
-		"userDataInDatabase": sessionData,
+		"userDataInDatabase": sessionDataInDatabase,
 	}
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
