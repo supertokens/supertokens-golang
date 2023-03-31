@@ -1,12 +1,17 @@
 package api
 
 import (
+	"encoding/json"
+	"strconv"
+	"strings"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func IsValidRecipeId(recipeId string) bool {
@@ -182,4 +187,49 @@ func IsRecipeInitialised(recipeId string) bool {
 	}
 
 	return isRecipeInitialised
+}
+
+// TODO: Add tests
+func getUsersWithSearch(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (supertokens.UserPaginationResult, error) {
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		return supertokens.UserPaginationResult{}, err
+	}
+
+	requestBody := map[string]string{}
+	if searchParams != nil {
+		requestBody = searchParams
+	}
+	requestBody["timeJoinedOrder"] = timeJoinedOrder
+	if limit != nil {
+		requestBody["limit"] = strconv.Itoa(*limit)
+	}
+	if paginationToken != nil {
+		requestBody["paginationToken"] = *paginationToken
+	}
+	if includeRecipeIds != nil {
+		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
+	}
+
+	resp, err := querier.SendGetRequest("/users", requestBody)
+
+	if err != nil {
+		return supertokens.UserPaginationResult{}, err
+	}
+
+	temporaryVariable, err := json.Marshal(resp)
+	if err != nil {
+		return supertokens.UserPaginationResult{}, err
+	}
+
+	var result = supertokens.UserPaginationResult{}
+
+	err = json.Unmarshal(temporaryVariable, &result)
+
+	if err != nil {
+		return supertokens.UserPaginationResult{}, err
+	}
+
+	return result, nil
 }
