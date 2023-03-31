@@ -63,7 +63,8 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		if err != nil {
 			return "", err
 		}
-		if supertokens.MaxVersion(cdiVersion, "2.20") == "2.20" {
+		if supertokens.MaxVersion(cdiVersion, "2.20") == cdiVersion {
+			// Only enable search for CDI version 2.20 and above
 			isSearchEnabled = true
 		}
 
