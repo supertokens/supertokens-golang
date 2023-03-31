@@ -55,7 +55,7 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		authMode := string(options.Config.AuthMode)
 
 		isSearchEnabled := false
-		querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+		querier, err := supertokens.GetNewQuerierInstanceOrThrowError(options.RecipeID)
 		if err != nil {
 			return "", err
 		}
@@ -63,7 +63,7 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		if err != nil {
 			return "", err
 		}
-		if maxVersion(cdiVersion, "2.20") == "2.20" {
+		if supertokens.MaxVersion(cdiVersion, "2.20") == "2.20" {
 			isSearchEnabled = true
 		}
 
