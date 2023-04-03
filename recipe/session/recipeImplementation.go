@@ -319,8 +319,8 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return revokeMultipleSessionsHelper(querier, sessionHandles)
 	}
 
-	updateSessionData := func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
-		return updateSessionDataHelper(querier, sessionHandle, newSessionData)
+	updateSessionDataInDatabase := func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+		return updateSessionDataInDatabaseHelper(querier, sessionHandle, newSessionData)
 	}
 
 	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
@@ -474,7 +474,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		GetAllSessionHandlesForUser: &getAllSessionHandlesForUser,
 		RevokeSession:               &revokeSession,
 		RevokeMultipleSessions:      &revokeMultipleSessions,
-		UpdateSessionData:           &updateSessionData,
+		UpdateSessionDataInDatabase: &updateSessionDataInDatabase,
 		UpdateAccessTokenPayload:    &updateAccessTokenPayload,
 		GetAccessTokenLifeTimeMS:    &getAccessTokenLifeTimeMS,
 		GetRefreshTokenLifeTimeMS:   &getRefreshTokenLifeTimeMS,

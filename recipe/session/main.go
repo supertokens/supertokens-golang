@@ -128,12 +128,12 @@ func RevokeMultipleSessionsWithContext(sessionHandles []string, userContext supe
 	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles, userContext)
 }
 
-func UpdateSessionDataWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+func UpdateSessionDataInDatabaseWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
-	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData, userContext)
+	return (*instance.RecipeImpl.UpdateSessionDataInDatabase)(sessionHandle, newSessionData, userContext)
 }
 
 // Deprecated: use MergeIntoAccessTokenPayloadWithContext instead
@@ -367,8 +367,8 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 	return RevokeMultipleSessionsWithContext(sessionHandles, &map[string]interface{}{})
 }
 
-func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
-	return UpdateSessionDataWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
+func UpdateSessionDataInDatabase(sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
+	return UpdateSessionDataInDatabaseWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
 }
 
 // Deprecated: use MergeIntoAccessTokenPayload instead

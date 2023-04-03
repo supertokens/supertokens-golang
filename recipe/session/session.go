@@ -61,7 +61,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	sessionContainer.GetSessionDataWithContext = func(userContext supertokens.UserContext) (map[string]interface{}, error) {
+	sessionContainer.GetSessionDataInDatabaseWithContext = func(userContext supertokens.UserContext) (map[string]interface{}, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
 			return nil, err
@@ -72,8 +72,8 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return sessionInformation.SessionDataInDatabase, nil
 	}
 
-	sessionContainer.UpdateSessionDataWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
-		updated, err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, userContext)
+	sessionContainer.UpdateSessionDataInDatabaseWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+		updated, err := (*session.recipeImpl.UpdateSessionDataInDatabase)(session.sessionHandle, newSessionData, userContext)
 		if err != nil {
 			return err
 		}
@@ -215,11 +215,11 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	sessionContainer.RevokeSession = func() error {
 		return sessionContainer.RevokeSessionWithContext(&map[string]interface{}{})
 	}
-	sessionContainer.GetSessionData = func() (map[string]interface{}, error) {
-		return sessionContainer.GetSessionDataWithContext(&map[string]interface{}{})
+	sessionContainer.GetSessionDataInDatabase = func() (map[string]interface{}, error) {
+		return sessionContainer.GetSessionDataInDatabaseWithContext(&map[string]interface{}{})
 	}
-	sessionContainer.UpdateSessionData = func(newSessionData map[string]interface{}) error {
-		return sessionContainer.UpdateSessionDataWithContext(newSessionData, &map[string]interface{}{})
+	sessionContainer.UpdateSessionDataInDatabase = func(newSessionData map[string]interface{}) error {
+		return sessionContainer.UpdateSessionDataInDatabaseWithContext(newSessionData, &map[string]interface{}{})
 	}
 	sessionContainer.UpdateAccessTokenPayload = func(newAccessTokenPayload map[string]interface{}) error {
 		return sessionContainer.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})

@@ -31,7 +31,7 @@ type RecipeInterface struct {
 	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)
 	RevokeSession               *func(sessionHandle string, userContext supertokens.UserContext) (bool, error)
 	RevokeMultipleSessions      *func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error)
-	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
+	UpdateSessionDataInDatabase *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)

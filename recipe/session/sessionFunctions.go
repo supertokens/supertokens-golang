@@ -323,7 +323,7 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	return result, nil
 }
 
-func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
+func updateSessionDataInDatabaseHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
 	if newSessionData == nil {
 		newSessionData = map[string]interface{}{}
 	}
