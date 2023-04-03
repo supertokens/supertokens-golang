@@ -21,7 +21,7 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) jwtmodels.RecipeInterface {
-	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
+	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
 		validitySeconds := config.JwtValiditySeconds
 		if validitySecondsPointer != nil {
 			validitySeconds = *validitySecondsPointer
@@ -30,11 +30,18 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 			payload = map[string]interface{}{}
 		}
 
+		shouldUseStaticSigningKey := true
+
+		if useStaticSigningKey != nil {
+			shouldUseStaticSigningKey = *useStaticSigningKey
+		}
+
 		response, err := querier.SendPostRequest("/recipe/jwt", map[string]interface{}{
-			"payload":    payload,
-			"validity":   validitySeconds,
-			"algorithm":  "RS256",
-			"jwksDomain": appInfo.APIDomain.GetAsStringDangerous(),
+			"payload":             payload,
+			"validity":            validitySeconds,
+			"algorithm":           "RS256",
+			"jwksDomain":          appInfo.APIDomain.GetAsStringDangerous(),
+			"useStaticSigningKey": shouldUseStaticSigningKey,
 		})
 		if err != nil {
 			return jwtmodels.CreateJWTResponse{}, err
@@ -54,7 +61,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 		}
 	}
 	getJWKS := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/jwt/jwks", map[string]string{})
+		response, err := querier.SendGetRequest("/.well-known/jwks.json", map[string]string{})
 		if err != nil {
 			return jwtmodels.GetJWKSResponse{}, err
 		}
