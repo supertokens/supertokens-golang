@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Breaking Changes
+
+-   Renamed `GetSessionData` to `GetSessionDataInDatabase` to clarify that it always hits the DB
+-   Renamed `GetSessionDataWithContext` to `GetSessionDataInDatabaseWithContext` to clarify that it always hits the DB
+-   Renamed `UpdateSessionData` to `UpdateSessionDataInDatabase`
+-   Renamed `UpdateSessionDataWithContext` to `UpdateSessionDataInDatabaseWithContext` to clarify that it always hits the DB
+-   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
+-   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
+
 ## [0.10.4] - 2023-03-30
 
 -   Adds a telemetry API to the dashboard recipe
