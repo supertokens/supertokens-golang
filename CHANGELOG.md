@@ -16,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
 -   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
 
+## [0.10.5] - 2023-03-31
+
+-   Adds search APIs to the dashboard recipe
+
 ## [0.10.4] - 2023-03-30
 
 -   Adds a telemetry API to the dashboard recipe

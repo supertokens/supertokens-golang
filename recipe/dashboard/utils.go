@@ -139,6 +139,11 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 		return &val, nil
 	}
 
+	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), searchTagsAPI) {
+		val := searchTagsAPI
+		return &val, nil
+	}
+
 	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), dashboardAnalyticsAPI) {
 		val := dashboardAnalyticsAPI
 		return &val, nil

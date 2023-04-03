@@ -276,16 +276,19 @@ type UserPaginationResult struct {
 }
 
 // TODO: Add tests
-func getUsers(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
+func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return UserPaginationResult{}, err
 	}
 
-	requestBody := map[string]string{
-		"timeJoinedOrder": timeJoinedOrder,
+	requestBody := map[string]string{}
+	if searchParams != nil {
+		requestBody = searchParams
 	}
+	requestBody["timeJoinedOrder"] = timeJoinedOrder
+
 	if limit != nil {
 		requestBody["limit"] = strconv.Itoa(*limit)
 	}
@@ -352,7 +355,7 @@ func deleteUser(userId string) error {
 		return err
 	}
 
-	if maxVersion(cdiVersion, "2.10") == cdiVersion {
+	if MaxVersion(cdiVersion, "2.10") == cdiVersion {
 		_, err = querier.SendPostRequest("/user/remove", map[string]interface{}{
 			"userId": userId,
 		})
