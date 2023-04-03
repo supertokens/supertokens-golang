@@ -15,6 +15,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `UpdateSessionDataWithContext` to `UpdateSessionDataInDatabaseWithContext` to clarify that it always hits the DB
 -   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
 -   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
+-   Added `useStaticSigningKey` to `CreateJWT` and `CreateJWTWithContext`
+
+### Changed
+
+-   Refactors the URL for the JWKS endpoint exposed by SuperTokens core
 
 ## [0.10.5] - 2023-03-31
 
