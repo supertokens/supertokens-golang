@@ -24,17 +24,30 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
 )
 
-func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormField, formFieldsRaw []interface{}) ([]epmodels.TypeFormField, error) {
+func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormField, formFieldsRaw interface{}) ([]epmodels.TypeFormField, error) {
 	if formFieldsRaw == nil {
 		return nil, defaultErrors.New("Missing input param: formFields")
 	}
 
-	if len(formFieldsRaw) == 0 {
+	if _, ok := formFieldsRaw.([]interface{}); !ok {
 		return nil, defaultErrors.New("formFields must be an array")
 	}
 
 	var formFields []epmodels.TypeFormField
-	for _, rawFormField := range formFieldsRaw {
+	for _, rawFormField := range formFieldsRaw.([]interface{}) {
+
+		if _, ok := rawFormField.(map[string]interface{}); !ok {
+			return nil, defaultErrors.New("formFields must be an array of objects containing id and value of type string")
+		}
+
+		if _, ok := rawFormField.(map[string]interface{})["id"].(string); !ok {
+			return nil, defaultErrors.New("formFields must be an array of objects containing id and value of type string")
+		}
+
+		if _, ok := rawFormField.(map[string]interface{})["value"].(string); !ok {
+			return nil, defaultErrors.New("formFields must be an array of objects containing id and value of type string")
+		}
+
 		jsonformField, err := json.Marshal(rawFormField)
 		if err != nil {
 			return nil, err

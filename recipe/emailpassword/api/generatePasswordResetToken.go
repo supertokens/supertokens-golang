@@ -39,7 +39,7 @@ func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options
 		return err
 	}
 
-	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm, formFieldsRaw["formFields"].([]interface{}))
+	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForGenerateTokenForm, formFieldsRaw["formFields"])
 	if err != nil {
 		return err
 	}
