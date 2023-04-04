@@ -17,7 +17,6 @@ package session
 
 import (
 	"context"
-	"errors"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
@@ -150,9 +149,7 @@ func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
-	if instance.OpenIdRecipe == nil {
-		return jwtmodels.CreateJWTResponse{}, errors.New("CreateJWT cannot be used without enabling the Jwt feature")
-	}
+
 	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, userContext, useStaticSigningKey)
 }
 
@@ -161,9 +158,7 @@ func GetJWKSWithContext(userContext supertokens.UserContext) (jwtmodels.GetJWKSR
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
 	}
-	if instance.OpenIdRecipe == nil {
-		return jwtmodels.GetJWKSResponse{}, errors.New("GetJWKS cannot be used without enabling the Jwt feature")
-	}
+
 	return (*instance.OpenIdRecipe.RecipeImpl.GetJWKS)(userContext)
 }
 
@@ -172,9 +167,7 @@ func GetOpenIdDiscoveryConfigurationWithContext(userContext supertokens.UserCont
 	if err != nil {
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, err
 	}
-	if instance.OpenIdRecipe == nil {
-		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, errors.New("GetOpenIdDiscoveryConfiguration cannot be used without enabling the Jwt feature")
-	}
+
 	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
 }
 
