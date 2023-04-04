@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
 -   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
 -   Added `useStaticSigningKey` to `CreateJWT` and `CreateJWTWithContext`
+-   Added support for CDI version `2.19`
+-   Dropped support for CDI version `2.8`-`2.18`
 
 ### Changed
 
