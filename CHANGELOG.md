@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 -   Refactors the URL for the JWKS endpoint exposed by SuperTokens core
+-   The Session recipe now always initializes the OpenID recipe if it hasn't been initialized.
 
 ## [0.10.5] - 2023-03-31
 
