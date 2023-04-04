@@ -17,9 +17,17 @@
 package emailpassword
 
 import (
+	"bytes"
+	"encoding/json"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestDefaultEmailValidator(t *testing.T) {
@@ -55,4 +63,150 @@ func TestDefaultPasswordValidator(t *testing.T) {
 	assert.Equal(t, "Password must contain at least one number", *defaultPasswordValidator("ascdvsdfvsIUOO"))
 
 	assert.Equal(t, "Password must contain at least one alphabet", *defaultPasswordValidator("234235234523"))
+}
+
+func TestInvalidAPIInputForFormFields(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	objToJson := func(obj interface{}) []byte {
+		jsonBytes, err := json.Marshal(obj)
+		assert.NoError(t, err)
+		return jsonBytes
+	}
+
+	testCases := []struct {
+		input    interface{}
+		expected string
+	}{
+		{
+			input:    map[string]interface{}{},
+			expected: "Missing input param: formFields",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": "abcd",
+			},
+			expected: "formFields must be an array",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []string{"hello"},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"hello": "world",
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id": 1,
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id":    1,
+						"value": "world",
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id":    "hello",
+						"value": 1,
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"value": 1,
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id": "hello",
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"value": "world",
+					},
+				},
+			},
+			expected: "formFields must be an array of objects containing id and value of type string",
+		},
+	}
+
+	APIs := []string{
+		"/auth/signup",
+		"/auth/signin",
+		"/auth/user/password/reset/token",
+		"/auth/user/password/reset",
+	}
+
+	for _, testCase := range testCases {
+		for _, api := range APIs {
+			resp, err := http.Post(testServer.URL+api, "application/json", bytes.NewBuffer(objToJson(testCase.input)))
+			assert.NoError(t, err)
+			assert.Equal(t, 500, resp.StatusCode)
+			data, err := ioutil.ReadAll(resp.Body)
+			assert.NoError(t, err)
+			errorMessage := strings.Trim(string(data), "\n \t")
+			assert.Equal(t, testCase.expected, errorMessage)
+		}
+	}
 }
