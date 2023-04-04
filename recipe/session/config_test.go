@@ -918,11 +918,7 @@ func TestJwtFeatureEnabled(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable: true,
-				},
-			}),
+			Init(&sessmodels.TypeInput{}),
 		},
 	}
 	BeforeEach()
@@ -951,11 +947,7 @@ func TestJwtFeatureDisabled(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable: false,
-				},
-			}),
+			Init(nil),
 		},
 	}
 	BeforeEach()
@@ -973,41 +965,6 @@ func TestJwtFeatureDisabled(t *testing.T) {
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
 }
 
-func TestJWTPropertyNameIsAccesedWhenSet(t *testing.T) {
-	customJWTKey := "customJWTKey"
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable:                           true,
-					PropertyNameInAccessTokenPayload: &customJWTKey,
-				},
-			}),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "customJWTKey")
-}
-
 func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1019,11 +976,7 @@ func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable: true,
-				},
-			}),
+			Init(nil),
 		},
 	}
 	BeforeEach()
@@ -1039,37 +992,6 @@ func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
 	}
 	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "jwt")
-}
-
-func TestJWTPropertyThrowsErrorWhenGetsReservedName(t *testing.T) {
-	customJWTKey := "_jwtPName"
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(&sessmodels.TypeInput{
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable:                           true,
-					PropertyNameInAccessTokenPayload: &customJWTKey,
-				},
-			}),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		assert.Equal(t, err.Error(), "_jwtPName is a reserved property name, please use a different key name for the jwt")
-	} else {
-		t.Fail()
-	}
 }
 
 func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
