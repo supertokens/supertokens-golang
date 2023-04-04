@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+-   Fixes panic issue in input validation for emailpassword APIs - https://github.com/supertokens/supertokens-golang/issues/254
+
 ## [0.10.5] - 2023-03-31
 
 -   Adds search APIs to the dashboard recipe
