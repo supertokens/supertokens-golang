@@ -17,35 +17,49 @@ package api
 
 import (
 	"encoding/json"
-	defaultErrors "errors"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/errors"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormField, formFieldsRaw interface{}) ([]epmodels.TypeFormField, error) {
 	if formFieldsRaw == nil {
-		return nil, defaultErrors.New("Missing input param: formFields")
+		return nil, supertokens.BadInputError{
+			Msg: "Missing input param: formFields",
+		}
 	}
 
 	if _, ok := formFieldsRaw.([]interface{}); !ok {
-		return nil, defaultErrors.New("formFields must be an array")
+		return nil, supertokens.BadInputError{
+			Msg: "formFields must be an array",
+		}
 	}
 
 	var formFields []epmodels.TypeFormField
 	for _, rawFormField := range formFieldsRaw.([]interface{}) {
 
 		if _, ok := rawFormField.(map[string]interface{}); !ok {
-			return nil, defaultErrors.New("formFields must be an array of objects containing id and value of type string")
+			return nil, supertokens.BadInputError{
+				Msg: "formFields must be an array of objects containing id and value of type string",
+			}
 		}
 
-		if _, ok := rawFormField.(map[string]interface{})["id"].(string); !ok {
-			return nil, defaultErrors.New("formFields must be an array of objects containing id and value of type string")
+		if rawFormField.(map[string]interface{})["id"] != nil {
+			if _, ok := rawFormField.(map[string]interface{})["id"].(string); !ok {
+				return nil, supertokens.BadInputError{
+					Msg: "formFields must be an array of objects containing id and value of type string",
+				}
+			}
 		}
 
-		if _, ok := rawFormField.(map[string]interface{})["value"].(string); !ok {
-			return nil, defaultErrors.New("formFields must be an array of objects containing id and value of type string")
+		if rawFormField.(map[string]interface{})["value"] != nil {
+			if _, ok := rawFormField.(map[string]interface{})["value"].(string); !ok {
+				return nil, supertokens.BadInputError{
+					Msg: "formFields must be an array of objects containing id and value of type string",
+				}
+			}
 		}
 
 		jsonformField, err := json.Marshal(rawFormField)
@@ -77,7 +91,9 @@ func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormFi
 func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, inputs []epmodels.TypeFormField) error {
 	var validationErrors []errors.ErrorPayload
 	if len(configFormFields) != len(inputs) {
-		return defaultErrors.New("Are you sending too many / too few formFields?")
+		return supertokens.BadInputError{
+			Msg: "Are you sending too many / too few formFields?",
+		}
 	}
 	for _, field := range configFormFields {
 		var input epmodels.TypeFormField

@@ -19,10 +19,9 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
-	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -98,24 +97,28 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 	}
 
 	testCases := []struct {
-		input    interface{}
-		expected string
+		input      interface{}
+		expected   string
+		fieldError bool
 	}{
 		{
-			input:    map[string]interface{}{},
-			expected: "Missing input param: formFields",
+			input:      map[string]interface{}{},
+			expected:   "Missing input param: formFields",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
 				"formFields": "abcd",
 			},
-			expected: "formFields must be an array",
+			expected:   "formFields must be an array",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
 				"formFields": []string{"hello"},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
@@ -123,9 +126,13 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					{
 						"hello": "world",
 					},
+					{
+						"world": "hello",
+					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "Field is not optional",
+			fieldError: true,
 		},
 		{
 			input: map[string]interface{}{
@@ -135,7 +142,8 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
@@ -146,7 +154,8 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
@@ -157,7 +166,8 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
@@ -167,7 +177,8 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
 		},
 		{
 			input: map[string]interface{}{
@@ -175,38 +186,67 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					{
 						"id": "hello",
 					},
+					{
+						"id": "world",
+					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "Field is not optional",
+			fieldError: true,
 		},
 		{
 			input: map[string]interface{}{
 				"formFields": []map[string]interface{}{
 					{
+						"value": "hello",
+					},
+					{
 						"value": "world",
 					},
 				},
 			},
-			expected: "formFields must be an array of objects containing id and value of type string",
+			expected:   "Field is not optional",
+			fieldError: true,
 		},
 	}
 
 	APIs := []string{
 		"/auth/signup",
 		"/auth/signin",
-		"/auth/user/password/reset/token",
-		"/auth/user/password/reset",
 	}
 
 	for _, testCase := range testCases {
 		for _, api := range APIs {
 			resp, err := http.Post(testServer.URL+api, "application/json", bytes.NewBuffer(objToJson(testCase.input)))
 			assert.NoError(t, err)
-			assert.Equal(t, 500, resp.StatusCode)
-			data, err := ioutil.ReadAll(resp.Body)
-			assert.NoError(t, err)
-			errorMessage := strings.Trim(string(data), "\n \t")
-			assert.Equal(t, testCase.expected, errorMessage)
+
+			if testCase.fieldError {
+				assert.Equal(t, 200, resp.StatusCode)
+			} else {
+				assert.Equal(t, 400, resp.StatusCode)
+			}
+			dataInBytes1, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			resp.Body.Close()
+			var data map[string]interface{}
+			err = json.Unmarshal(dataInBytes1, &data)
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			if testCase.fieldError {
+				assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+
+				for _, formField := range data["formFields"].([]interface{}) {
+					errorMessage := formField.(map[string]interface{})["error"]
+					assert.Equal(t, testCase.expected, errorMessage)
+				}
+			} else {
+				assert.Equal(t, testCase.expected, data["message"])
+			}
+
 		}
 	}
 }
