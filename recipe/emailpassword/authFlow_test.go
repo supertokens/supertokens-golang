@@ -854,8 +854,13 @@ func TestFormFieldsHasNoEmailField(t *testing.T) {
 
 	resp.Body.Close()
 
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes1))
-	assert.Equal(t, 500, resp.StatusCode)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	err = json.Unmarshal(dataInBytes1, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -938,8 +943,12 @@ func TestFormFieldsHasNoPasswordField(t *testing.T) {
 
 	resp.Body.Close()
 
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes1))
-	assert.Equal(t, 500, resp.StatusCode)
+	assert.Equal(t, 400, resp.StatusCode)
+	err = json.Unmarshal(dataInBytes1, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -2147,8 +2156,13 @@ func TestFormFieldsAddedInConfigButNotInInputToSignupCheckErrorAboutItBeingMissi
 		t.Error(err.Error())
 	}
 	res.Body.Close()
-	assert.Equal(t, 500, res.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
+	assert.Equal(t, 400, res.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -2380,16 +2394,19 @@ func TestInputFormFieldWithoutEmailField(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 500, resp.StatusCode)
-
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 500, resp.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -2444,17 +2461,19 @@ func TestInputFormFieldWithoutPasswordField(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 500, resp.StatusCode)
-
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 500, resp.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
-
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 }
 
 func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t *testing.T) {
@@ -2529,16 +2548,19 @@ func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 500, resp.StatusCode)
-
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 500, resp.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
