@@ -19,7 +19,6 @@ package emailpassword
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -104,7 +103,7 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 	}{
 		{
 			input:      map[string]interface{}{},
-			expected:   "Missing input param",
+			expected:   "Missing input param: formFields",
 			fieldError: false,
 		},
 		{
@@ -221,8 +220,6 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 			resp, err := http.Post(testServer.URL+api, "application/json", bytes.NewBuffer(objToJson(testCase.input)))
 			assert.NoError(t, err)
 
-			fmt.Println(testCase, api, resp.StatusCode)
-
 			if testCase.fieldError {
 				assert.Equal(t, 200, resp.StatusCode)
 			} else {
@@ -239,16 +236,16 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 				t.Error(err.Error())
 			}
 
-			// if testCase.fieldError {
-			// 	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+			if testCase.fieldError {
+				assert.Equal(t, "FIELD_ERROR", data["status"].(string))
 
-			// 	for _, formField := range data["formFields"].([]interface{}) {
-			// 		errorMessage := formField.(map[string]interface{})["error"]
-			// 		assert.Equal(t, testCase.expected, errorMessage)
-			// 	}
-			// } else {
-			// 	assert.Equal(t, testCase.expected, data["message"])
-			// }
+				for _, formField := range data["formFields"].([]interface{}) {
+					errorMessage := formField.(map[string]interface{})["error"]
+					assert.Equal(t, testCase.expected, errorMessage)
+				}
+			} else {
+				assert.Equal(t, testCase.expected, data["message"])
+			}
 
 		}
 	}
