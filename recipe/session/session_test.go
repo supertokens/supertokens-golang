@@ -463,7 +463,7 @@ func TestManipulatingSessionData(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	UpdateSessionData(sessionHandles[0], map[string]interface{}{
+	UpdateSessionDataInDatabase(sessionHandles[0], map[string]interface{}{
 		"name": "John",
 	})
 
@@ -471,9 +471,9 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "John", sessionInfo.SessionData["name"])
+	assert.Equal(t, "John", sessionInfo.SessionDataInDatabase["name"])
 
-	UpdateSessionData(sessionHandles[0], map[string]interface{}{
+	UpdateSessionDataInDatabase(sessionHandles[0], map[string]interface{}{
 		"name": "Joel",
 	})
 
@@ -481,11 +481,11 @@ func TestManipulatingSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "Joel", sessionInfo.SessionData["name"])
+	assert.Equal(t, "Joel", sessionInfo.SessionDataInDatabase["name"])
 
 	//update session data with wrong session handle
 
-	sessionUpdated, err := UpdateSessionData("random", map[string]interface{}{
+	sessionUpdated, err := UpdateSessionDataInDatabase("random", map[string]interface{}{
 		"name": "Ronit",
 	})
 
@@ -559,16 +559,16 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, map[string]interface{}{}, sessionInfo.SessionData)
+	assert.Equal(t, map[string]interface{}{}, sessionInfo.SessionDataInDatabase)
 
-	UpdateSessionData(sessionHandles[0], map[string]interface{}{
+	UpdateSessionDataInDatabase(sessionHandles[0], map[string]interface{}{
 		"name": "John",
 	})
 	sessionInfo, err = GetSessionInformation(sessionHandles[0])
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "John", sessionInfo.SessionData["name"])
+	assert.Equal(t, "John", sessionInfo.SessionDataInDatabase["name"])
 }
 
 func TestManipulatingJWTpayload(t *testing.T) {
@@ -1078,7 +1078,7 @@ func TestSessionContainerOverride(t *testing.T) {
 							if err != nil {
 								return nil, err
 							}
-							info.SessionData = map[string]interface{}{
+							info.SessionDataInDatabase = map[string]interface{}{
 								"test": 1,
 							}
 							return info, nil
@@ -1103,7 +1103,7 @@ func TestSessionContainerOverride(t *testing.T) {
 	session, err := CreateNewSession(req, res, "testId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
-	data, err := session.GetSessionData()
+	data, err := session.GetSessionDataInDatabase()
 	assert.NoError(t, err)
 
 	assert.Equal(t, 1, data["test"])

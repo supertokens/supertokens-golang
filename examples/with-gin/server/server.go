@@ -66,7 +66,7 @@ func sessioninfo(c *gin.Context) {
 		c.JSON(500, "no session found")
 		return
 	}
-	sessionData, err := sessionContainer.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionDataInDatabase()
 	if err != nil {
 		err = supertokens.ErrorHandler(err, c.Request, c.Writer)
 		if err != nil {

@@ -23,7 +23,7 @@ import (
 )
 
 type RecipeInterface struct {
-	CreateNewSession            *func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (SessionContainer, error)
+	CreateNewSession            *func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)
 	RefreshSession              *func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (*SessionInformation, error)
@@ -31,7 +31,7 @@ type RecipeInterface struct {
 	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)
 	RevokeSession               *func(sessionHandle string, userContext supertokens.UserContext) (bool, error)
 	RevokeMultipleSessions      *func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error)
-	UpdateSessionData           *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
+	UpdateSessionDataInDatabase *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)

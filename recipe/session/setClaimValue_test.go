@@ -68,13 +68,13 @@ func TestShouldSetClaimValueOverwriteClaimValue(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionDataInDatabase, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -126,13 +126,13 @@ func TestShouldSetClaimValueOverwriteClaimValueUsingHandle(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionDataInDatabase, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation

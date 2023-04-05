@@ -31,7 +31,7 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -50,7 +50,7 @@ func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, use
 		}
 	}
 
-	return (*instance.RecipeImpl.CreateNewSession)(req, res, userID, finalAccessTokenPayload, sessionData, userContext)
+	return (*instance.RecipeImpl.CreateNewSession)(req, res, userID, finalAccessTokenPayload, sessionDataInDatabase, userContext)
 }
 
 func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
@@ -128,12 +128,12 @@ func RevokeMultipleSessionsWithContext(sessionHandles []string, userContext supe
 	return (*instance.RecipeImpl.RevokeMultipleSessions)(sessionHandles, userContext)
 }
 
-func UpdateSessionDataWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
+func UpdateSessionDataInDatabaseWithContext(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return false, err
 	}
-	return (*instance.RecipeImpl.UpdateSessionData)(sessionHandle, newSessionData, userContext)
+	return (*instance.RecipeImpl.UpdateSessionDataInDatabase)(sessionHandle, newSessionData, userContext)
 }
 
 // Deprecated: use MergeIntoAccessTokenPayloadWithContext instead
@@ -335,8 +335,8 @@ func GetSessionFromRequestContext(ctx context.Context) sessmodels.SessionContain
 	return temp
 }
 
-func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}) (sessmodels.SessionContainer, error) {
-	return CreateNewSessionWithContext(req, res, userID, accessTokenPayload, sessionData, &map[string]interface{}{})
+func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}) (sessmodels.SessionContainer, error) {
+	return CreateNewSessionWithContext(req, res, userID, accessTokenPayload, sessionDataInDatabase, &map[string]interface{}{})
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
@@ -367,8 +367,8 @@ func RevokeMultipleSessions(sessionHandles []string) ([]string, error) {
 	return RevokeMultipleSessionsWithContext(sessionHandles, &map[string]interface{}{})
 }
 
-func UpdateSessionData(sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
-	return UpdateSessionDataWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
+func UpdateSessionDataInDatabase(sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
+	return UpdateSessionDataInDatabaseWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
 }
 
 // Deprecated: use MergeIntoAccessTokenPayload instead

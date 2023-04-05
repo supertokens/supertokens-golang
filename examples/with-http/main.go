@@ -133,7 +133,7 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("no session found"))
 		return
 	}
-	sessionData, err := sessionContainer.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionDataInDatabase()
 	if err != nil {
 		err = supertokens.ErrorHandler(err, r, w)
 		if err != nil {

@@ -24,17 +24,17 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionData map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if AccessTokenPayload == nil {
 		AccessTokenPayload = map[string]interface{}{}
 	}
-	if sessionData == nil {
-		sessionData = map[string]interface{}{}
+	if sessionDataInDatabase == nil {
+		sessionDataInDatabase = map[string]interface{}{}
 	}
 	requestBody := map[string]interface{}{
 		"userId":             userID,
 		"userDataInJWT":      AccessTokenPayload,
-		"userDataInDatabase": sessionData,
+		"userDataInDatabase": sessionDataInDatabase,
 	}
 	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
 	if err != nil {
@@ -187,12 +187,12 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	}
 	if response["status"] == "OK" {
 		return &sessmodels.SessionInformation{
-			SessionHandle:      response["sessionHandle"].(string),
-			UserId:             response["userId"].(string),
-			SessionData:        response["userDataInDatabase"].(map[string]interface{}),
-			Expiry:             uint64(response["expiry"].(float64)),
-			TimeCreated:        uint64(response["timeCreated"].(float64)),
-			AccessTokenPayload: response["userDataInJWT"].(map[string]interface{}),
+			SessionHandle:         response["sessionHandle"].(string),
+			UserId:                response["userId"].(string),
+			SessionDataInDatabase: response["userDataInDatabase"].(map[string]interface{}),
+			Expiry:                uint64(response["expiry"].(float64)),
+			TimeCreated:           uint64(response["timeCreated"].(float64)),
+			AccessTokenPayload:    response["userDataInJWT"].(map[string]interface{}),
 		}, nil
 	}
 	return nil, nil
@@ -323,7 +323,7 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	return result, nil
 }
 
-func updateSessionDataHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
+func updateSessionDataInDatabaseHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
 	if newSessionData == nil {
 		newSessionData = map[string]interface{}{}
 	}
