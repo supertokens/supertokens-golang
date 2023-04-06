@@ -16,14 +16,14 @@
 package session
 
 import (
-	"crypto"
 	"crypto/rsa"
-	"crypto/sha256"
 	"crypto/x509"
 	b64 "encoding/base64"
 	"encoding/json"
 	"encoding/pem"
 	"errors"
+	"reflect"
+	"strconv"
 	"strings"
 )
 
@@ -33,6 +33,7 @@ type ParsedJWTInfo struct {
 	Header         string
 	Payload        map[string]interface{}
 	Signature      string
+	Version        int
 }
 
 var HEADERS = []string{
@@ -55,9 +56,35 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 		errors.New("Invalid JWT")
 	}
 
+	// V1&V2 is functionally identical, plus all legacy tokens should be V2 now.
+	version := 2
+	// V2 or older tokens did not save the key id;
 	err := checkHeader(splittedInput[0])
 	if err != nil {
-		return ParsedJWTInfo{}, err
+		parsedHeaderBytes, err := b64.StdEncoding.DecodeString(splittedInput[0])
+		if err != nil {
+			return ParsedJWTInfo{}, err
+		}
+
+		parsedHeader := map[string]interface{}{}
+		err = json.Unmarshal(parsedHeaderBytes, &parsedHeader)
+		if err != nil {
+			return ParsedJWTInfo{}, err
+		}
+
+		versionInHeader := parsedHeader["version"]
+
+		if reflect.TypeOf(version).Kind() != reflect.String {
+			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		versionNumber, parseError := strconv.Atoi(versionInHeader.(string))
+
+		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < 3 || parsedHeader["kid"] == nil {
+			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		version = versionNumber
 	}
 
 	payloadBytes, err := b64.StdEncoding.DecodeString(splittedInput[1])
@@ -76,30 +103,8 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 		Header:         splittedInput[0],
 		Payload:        payload,
 		Signature:      splittedInput[2],
+		Version:        version,
 	}, nil
-}
-
-func verifyJWT(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string) error {
-	var publicKey, publicKeyError = getPublicKeyFromStr("-----BEGIN PUBLIC KEY-----\n" + jwtSigningPublicKey + "\n-----END PUBLIC KEY-----")
-	if publicKeyError != nil {
-		return publicKeyError
-	}
-
-	h := sha256.New()
-	h.Write([]byte(jwtInfo.Header + "." + jwtInfo.RawPayload))
-	digest := h.Sum(nil)
-
-	var decodedSignature, decodedSignatureError = b64.StdEncoding.DecodeString(jwtInfo.Signature)
-	if decodedSignatureError != nil {
-		return decodedSignatureError
-	}
-
-	verificationError := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, digest, decodedSignature)
-	if verificationError != nil {
-		return verificationError
-	}
-
-	return nil
 }
 
 func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {

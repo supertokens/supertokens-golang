@@ -33,6 +33,16 @@ import (
 
 var handshakeInfoLock sync.Mutex
 
+var protectedProps = []string{
+	"sub",
+	"iat",
+	"exp",
+	"sessionHandle",
+	"parentRefreshTokenHash1",
+	"refreshTokenHash1",
+	"antiCsrfToken",
+}
+
 func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 
 	// We are defining this here to reduce the scope of legacy code
@@ -93,8 +103,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		attachCreateOrRefreshSessionResponseToRes(config, res, sessionResponse, outputTokenTransferMethod)
+		payload, parseErr := parseJWTWithoutSignatureVerification(sessionResponse.AccessToken.Token)
+		if parseErr != nil {
+			return nil, parseErr
+		}
 
-		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, sessionResponse.Session.Handle, sessionResponse.Session.UserID, sessionResponse.Session.UserDataInAccessToken, res, req, outputTokenTransferMethod, result)
+		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, sessionResponse.Session.Handle, sessionResponse.Session.UserID, payload.Payload, res, req, outputTokenTransferMethod, result)
 		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
@@ -124,7 +138,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 				if err != nil {
 					supertokens.LogDebugMessage(fmt.Sprintf("getSession: ignoring token in %s, because token parsing failed", tokenTransferMethod))
 				} else {
-					err := validateAccessTokenStructure(parsedToken.Payload)
+					err := validateAccessTokenStructure(parsedToken.Payload, parsedToken.Version)
 					if err != nil {
 						supertokens.LogDebugMessage(fmt.Sprintf("getSession: ignoring token in %s, because it doesn't match our access token structure", tokenTransferMethod))
 					} else {
@@ -191,24 +205,32 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		accessTokenStr := accessToken.RawTokenString
 
 		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
-			setToken(
-				config,
-				res,
-				sessmodels.AccessToken,
-				response.AccessToken.Token,
-				// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
-				// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
-				// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
-				// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
-				getCurrTimeInMS()+3153600000000,
-				requestTokenTransferMethod,
-			)
+			tokenError := SetAccessTokenInResponse(config, res, response.AccessToken, response.Session, requestTokenTransferMethod)
+			if tokenError != nil {
+				return nil, tokenError
+			}
 			accessTokenStr = response.AccessToken.Token
 		}
 
 		supertokens.LogDebugMessage("getSession: Success!")
-		sessionContainerInput := makeSessionContainerInput(accessTokenStr, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, result)
+		var payload map[string]interface{}
+
+		if accessToken.Version < 3 {
+			payload = response.Session.UserDataInAccessToken
+		} else {
+			if reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+				payload = accessToken.Payload
+			} else {
+				parsedToken, parseErr := parseJWTWithoutSignatureVerification(response.AccessToken.Token)
+				if parseErr != nil {
+					return nil, parseErr
+				}
+
+				payload = parsedToken.Payload
+			}
+		}
+
+		sessionContainerInput := makeSessionContainerInput(accessTokenStr, response.Session.Handle, response.Session.UserID, payload, res, req, requestTokenTransferMethod, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
@@ -297,7 +319,20 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
 		}
 
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, response.Session.UserDataInAccessToken, res, req, requestTokenTransferMethod, result)
+		responseToken, parseErr := parseJWTWithoutSignatureVerification(response.AccessToken.Token)
+		if parseErr != nil {
+			return nil, err
+		}
+
+		var payload map[string]interface{}
+
+		if responseToken.Version < 3 {
+			payload = response.Session.UserDataInAccessToken
+		} else {
+			payload = responseToken.Payload
+		}
+
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, payload, res, req, requestTokenTransferMethod, result)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
@@ -359,11 +394,18 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		for k, v := range sessionInfo.AccessTokenPayload {
 			newAccessTokenPayload[k] = v
 		}
+
 		for k, v := range accessTokenPayloadUpdate {
 			if v == nil {
 				delete(newAccessTokenPayload, k)
 			} else {
 				newAccessTokenPayload[k] = v
+			}
+		}
+
+		for k, _ := range newAccessTokenPayload {
+			if supertokens.DoesSliceContainString(k, protectedProps) {
+				delete(newAccessTokenPayload, k)
 			}
 		}
 		return (*result.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)

@@ -16,6 +16,8 @@
 package sessmodels
 
 import (
+	"errors"
+	"github.com/MicahParks/keyfunc"
 	"net/http"
 	"time"
 
@@ -25,6 +27,8 @@ import (
 )
 
 type TokenType string
+
+var JWKCacheMaxAgeInMs = 60000
 
 const (
 	AccessToken  TokenType = "access"
@@ -60,6 +64,51 @@ func (h *HandshakeInfo) GetJwtSigningPublicKeyList() []KeyInfo {
 
 func (h *HandshakeInfo) SetJwtSigningPublicKeyList(updatedList []KeyInfo) {
 	h.rawJwtSigningPublicKeyList = updatedList
+}
+
+type GetJWKSFunction = func() (*keyfunc.JWKS, error)
+
+func GetJWKS() []GetJWKSFunction {
+	result := []GetJWKSFunction{}
+	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
+
+	for _, path := range corePaths {
+		result = append(result, func() (*keyfunc.JWKS, error) {
+			// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
+			// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
+			// RefreshInterval - Refreshes should occur every 60 seconds
+			jwks, err := keyfunc.Get(path, keyfunc.Options{
+				RefreshUnknownKID: true,
+				RefreshRateLimit:  time.Millisecond * 500,
+				RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
+			})
+
+			return jwks, err
+		})
+	}
+
+	return result
+}
+
+func GetCombinedJWKS() (*keyfunc.JWKS, error) {
+	var lastError error
+	jwks := GetJWKS()
+
+	if len(jwks) == 0 {
+		return nil, errors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
+	}
+
+	for _, jwk := range jwks {
+		jwksResult, err := jwk()
+
+		if err != nil {
+			lastError = nil
+		} else {
+			return jwksResult, nil
+		}
+	}
+
+	return nil, lastError
 }
 
 func getCurrTimeInMS() uint64 {

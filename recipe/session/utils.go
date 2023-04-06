@@ -271,6 +271,25 @@ func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedI
 	}
 }
 
+func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, accessToken sessmodels.CreateOrRefreshAPIResponseToken, session sessmodels.SessionStruct, tokenTransferMethod sessmodels.TokenTransferMethod) error {
+	responseToken, err := parseJWTWithoutSignatureVerification(accessToken.Token)
+	if err != nil {
+		return err
+	}
+
+	var payload map[string]interface{}
+
+	if responseToken.Version == 3 {
+		payload = responseToken.Payload
+	} else {
+		payload = session.UserDataInAccessToken
+	}
+
+	setFrontTokenInHeaders(res, session.UserID, accessToken.Expiry, payload)
+	setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+3153600000000, tokenTransferMethod)
+	return nil
+}
+
 func sendTryRefreshTokenResponse(recipeInstance Recipe, _ string, _ *http.Request, response http.ResponseWriter) error {
 	return supertokens.SendNon200ResponseWithMessage(response, "try refresh token", recipeInstance.Config.SessionExpiredStatusCode)
 }

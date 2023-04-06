@@ -303,3 +303,12 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	}
 	return parsedURL, nil
 }
+
+func DoesSliceContainString(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
+}
