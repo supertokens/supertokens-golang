@@ -16,11 +16,8 @@
 package session
 
 import (
-	"crypto/rsa"
-	"crypto/x509"
-	b64 "encoding/base64"
+	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
 	"reflect"
 	"strconv"
@@ -61,7 +58,7 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 	// V2 or older tokens did not save the key id;
 	err := checkHeader(splittedInput[0])
 	if err != nil {
-		parsedHeaderBytes, err := b64.StdEncoding.DecodeString(splittedInput[0])
+		parsedHeaderBytes, err := base64.RawStdEncoding.DecodeString(splittedInput[0])
 		if err != nil {
 			return ParsedJWTInfo{}, err
 		}
@@ -74,7 +71,7 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 
 		versionInHeader := parsedHeader["version"]
 
-		if reflect.TypeOf(version).Kind() != reflect.String {
+		if reflect.TypeOf(versionInHeader).Kind() != reflect.String {
 			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
@@ -87,7 +84,7 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 		version = versionNumber
 	}
 
-	payloadBytes, err := b64.StdEncoding.DecodeString(splittedInput[1])
+	payloadBytes, err := base64.RawStdEncoding.DecodeString(splittedInput[1])
 	if err != nil {
 		return ParsedJWTInfo{}, err
 	}
@@ -105,18 +102,4 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 		Signature:      splittedInput[2],
 		Version:        version,
 	}, nil
-}
-
-func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {
-	block, _ := pem.Decode([]byte(str))
-	if block == nil {
-		return nil, errors.New("failed to parse PEM block containing the public key")
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, errors.New("failed to parse DER encoded public key:" + err.Error())
-	}
-
-	return pub.(*rsa.PublicKey), nil
 }
