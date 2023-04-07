@@ -965,35 +965,6 @@ func TestJwtFeatureDisabled(t *testing.T) {
 	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.Enable, false)
 }
 
-func TestJWTPropertyNameIsSetCorrectlyByDefault(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(nil),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	assert.Nil(t, singletoneSessionRecipeInstance.Config.Jwt.Issuer)
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.Jwt.PropertyNameInAccessTokenPayload, "jwt")
-}
-
 func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	customAPIGatewayPath := "/gateway"
 	customAntiCsrfVal := "VIA_TOKEN"
