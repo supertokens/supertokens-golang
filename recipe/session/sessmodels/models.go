@@ -130,16 +130,17 @@ type RegenerateAccessTokenResponse struct {
 }
 
 type TypeInput struct {
-	CookieSecure                    *bool
-	CookieSameSite                  *string
-	SessionExpiredStatusCode        *int
-	InvalidClaimStatusCode          *int
-	CookieDomain                    *string
-	AntiCsrf                        *string
-	Override                        *OverrideStruct
-	ErrorHandlers                   *ErrorHandlers
-	GetTokenTransferMethod          func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-	UseDynamicAccessTokenSigningKey *bool
+	CookieSecure                                 *bool
+	CookieSameSite                               *string
+	SessionExpiredStatusCode                     *int
+	InvalidClaimStatusCode                       *int
+	CookieDomain                                 *string
+	AntiCsrf                                     *string
+	Override                                     *OverrideStruct
+	ErrorHandlers                                *ErrorHandlers
+	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
+	UseDynamicAccessTokenSigningKey              *bool
+	ExposeAccessTokenToFrontendInCookieBasedAuth *bool
 }
 
 type OverrideStruct struct {
@@ -155,17 +156,18 @@ type ErrorHandlers struct {
 }
 
 type TypeNormalisedInput struct {
-	RefreshTokenPath                supertokens.NormalisedURLPath
-	CookieDomain                    *string
-	CookieSameSite                  string
-	CookieSecure                    bool
-	SessionExpiredStatusCode        int
-	InvalidClaimStatusCode          int
-	AntiCsrf                        string
-	Override                        OverrideStruct
-	ErrorHandlers                   NormalisedErrorHandlers
-	GetTokenTransferMethod          func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-	UseDynamicAccessTokenSigningKey bool
+	RefreshTokenPath                             supertokens.NormalisedURLPath
+	CookieDomain                                 *string
+	CookieSameSite                               string
+	CookieSecure                                 bool
+	SessionExpiredStatusCode                     int
+	InvalidClaimStatusCode                       int
+	AntiCsrf                                     string
+	Override                                     OverrideStruct
+	ErrorHandlers                                NormalisedErrorHandlers
+	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
+	UseDynamicAccessTokenSigningKey              bool
+	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 }
 
 type JWTNormalisedConfig struct {

@@ -40,6 +40,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Removed `GetAccessTokenLifeTimeMS` and `GetRefreshTokenLifeTimeMS` functions
 -   Added `UseDynamicAccessTokenSigningKey` (defaults to `true`) option to the Session recipe config
 -   Added new optional `useDynamicAccessTokenSigningKey` param to `CreateNewSession` and `CreateNewSessionWithContext`
+-   Added `ExposeAccessTokenToFrontendInCookieBasedAuth` (defaults to `false`) option to the Session recipe config
 
 ## [0.10.5] - 2023-03-31
 

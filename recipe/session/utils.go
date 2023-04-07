@@ -106,6 +106,12 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		useDynamicAccessTokenSigningKey = *config.UseDynamicAccessTokenSigningKey
 	}
 
+	exposeAccessTokenToFrontendInCookieBasedAuth := false
+
+	if config != nil && config.ExposeAccessTokenToFrontendInCookieBasedAuth != nil {
+		exposeAccessTokenToFrontendInCookieBasedAuth = *config.ExposeAccessTokenToFrontendInCookieBasedAuth
+	}
+
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
 		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
@@ -171,8 +177,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		InvalidClaimStatusCode:          invalidClaimStatusCode,
 		AntiCsrf:                        antiCsrf,
 		UseDynamicAccessTokenSigningKey: useDynamicAccessTokenSigningKey,
-		ErrorHandlers:                   errorHandlers,
-		GetTokenTransferMethod:          config.GetTokenTransferMethod,
+		ExposeAccessTokenToFrontendInCookieBasedAuth: exposeAccessTokenToFrontendInCookieBasedAuth,
+		ErrorHandlers:          errorHandlers,
+		GetTokenTransferMethod: config.GetTokenTransferMethod,
 		Override: sessmodels.OverrideStruct{
 			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 				return originalImplementation
@@ -286,7 +293,19 @@ func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.Re
 	}
 
 	setFrontTokenInHeaders(res, session.UserID, accessToken.Expiry, payload)
+	// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
+	// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
+	// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
+	// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
 	setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+3153600000000, tokenTransferMethod)
+
+	if config.ExposeAccessTokenToFrontendInCookieBasedAuth && tokenTransferMethod == sessmodels.CookieTransferMethod {
+		// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
+		// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
+		// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
+		// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
+		setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+3153600000000, sessmodels.HeaderTransferMethod)
+	}
 	return nil
 }
 
