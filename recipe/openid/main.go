@@ -30,7 +30,7 @@ func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, userContext, useStaticSigningKey)
+	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext)
 }
 
 func GetJWKSWithContext(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
