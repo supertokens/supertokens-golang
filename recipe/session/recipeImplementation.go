@@ -50,7 +50,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	var result sessmodels.RecipeInterface
 
-	createNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	createNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, useDynamicAccessTokenSigningKey *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		outputTokenTransferMethod := config.GetTokenTransferMethod(req, true, userContext)
@@ -80,8 +80,15 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
+
+		useDynamicSigningKey := useDynamicAccessTokenSigningKey
+
+		if useDynamicSigningKey == nil {
+			useDynamicSigningKey = &config.UseDynamicAccessTokenSigningKey
+		}
+
 		sessionResponse, err := createNewSessionHelper(
-			config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase,
+			config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase, useDynamicSigningKey,
 		)
 		if err != nil {
 			return nil, err

@@ -93,13 +93,13 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 					Override: &sessmodels.OverrideStruct{
 						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 							ogCNS := *originalImplementation.CreateNewSession
-							(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload, sessionDataInDatabase map[string]interface{}, useDynamicAccessTokenSigningKey *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 								if accessTokenPayload == nil {
 									accessTokenPayload = map[string]interface{}{}
 								}
 								accessTokenPayload["customClaim"] = "customValue"
 
-								return ogCNS(req, res, userID, accessTokenPayload, sessionDataInDatabase, userContext)
+								return ogCNS(req, res, userID, accessTokenPayload, sessionDataInDatabase, nil, userContext)
 							}
 							return originalImplementation
 						},
@@ -403,7 +403,7 @@ func login(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userID := body["userId"].(string)
-	sess, _ := session.CreateNewSession(request, response, userID, nil, nil)
+	sess, _ := session.CreateNewSession(request, response, userID, nil, nil, nil)
 	response.Write([]byte(sess.GetUserID()))
 }
 

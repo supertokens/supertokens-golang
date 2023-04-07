@@ -100,6 +100,12 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		antiCsrf = *config.AntiCsrf
 	}
 
+	useDynamicAccessTokenSigningKey := true
+
+	if config != nil && config.UseDynamicAccessTokenSigningKey != nil {
+		useDynamicAccessTokenSigningKey = *config.UseDynamicAccessTokenSigningKey
+	}
+
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
 		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
@@ -157,15 +163,16 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
-		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
-		CookieDomain:             cookieDomain,
-		CookieSameSite:           cookieSameSite,
-		CookieSecure:             cookieSecure,
-		SessionExpiredStatusCode: sessionExpiredStatusCode,
-		InvalidClaimStatusCode:   invalidClaimStatusCode,
-		AntiCsrf:                 antiCsrf,
-		ErrorHandlers:            errorHandlers,
-		GetTokenTransferMethod:   config.GetTokenTransferMethod,
+		RefreshTokenPath:                appInfo.APIBasePath.AppendPath(refreshAPIPath),
+		CookieDomain:                    cookieDomain,
+		CookieSameSite:                  cookieSameSite,
+		CookieSecure:                    cookieSecure,
+		SessionExpiredStatusCode:        sessionExpiredStatusCode,
+		InvalidClaimStatusCode:          invalidClaimStatusCode,
+		AntiCsrf:                        antiCsrf,
+		UseDynamicAccessTokenSigningKey: useDynamicAccessTokenSigningKey,
+		ErrorHandlers:                   errorHandlers,
+		GetTokenTransferMethod:          config.GetTokenTransferMethod,
 		Override: sessmodels.OverrideStruct{
 			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 				return originalImplementation
