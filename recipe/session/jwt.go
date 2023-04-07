@@ -16,9 +16,8 @@
 package session
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"errors"
+	"github.com/golang-jwt/jwt/v4"
 	"reflect"
 	"strconv"
 	"strings"
@@ -47,8 +46,8 @@ func checkHeader(header string) error {
 	return errors.New("Invalid JWT header")
 }
 
-func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
-	splittedInput := strings.Split(jwt, ".")
+func parseJWTWithoutSignatureVerification(token string) (ParsedJWTInfo, error) {
+	splittedInput := strings.Split(token, ".")
 	if len(splittedInput) != 3 {
 		errors.New("Invalid JWT")
 	}
@@ -57,19 +56,20 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 	version := 2
 	// V2 or older tokens did not save the key id;
 	err := checkHeader(splittedInput[0])
+
+	unverifiedToken, _, rawParseError := new(jwt.Parser).ParseUnverified(token, jwt.MapClaims{})
+	if rawParseError != nil {
+		return ParsedJWTInfo{}, rawParseError
+	}
+
 	if err != nil {
-		parsedHeaderBytes, err := base64.RawStdEncoding.DecodeString(splittedInput[0])
-		if err != nil {
-			return ParsedJWTInfo{}, err
-		}
+		parsedHeader := unverifiedToken.Header
 
-		parsedHeader := map[string]interface{}{}
-		err = json.Unmarshal(parsedHeaderBytes, &parsedHeader)
-		if err != nil {
-			return ParsedJWTInfo{}, err
-		}
+		versionInHeader, ok := parsedHeader["version"]
 
-		versionInHeader := parsedHeader["version"]
+		if !ok {
+			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
 
 		if reflect.TypeOf(versionInHeader).Kind() != reflect.String {
 			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
@@ -84,18 +84,18 @@ func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
 		version = versionNumber
 	}
 
-	payloadBytes, err := base64.RawStdEncoding.DecodeString(splittedInput[1])
-	if err != nil {
-		return ParsedJWTInfo{}, err
-	}
 	payload := map[string]interface{}{}
-	err = json.Unmarshal(payloadBytes, &payload)
-	if err != nil {
-		return ParsedJWTInfo{}, err
+
+	claims, ok := unverifiedToken.Claims.(jwt.MapClaims)
+
+	if ok {
+		payload = claims
+	} else {
+		return ParsedJWTInfo{}, errors.New("Invalid JWT")
 	}
 
 	return ParsedJWTInfo{
-		RawTokenString: jwt,
+		RawTokenString: token,
 		RawPayload:     splittedInput[1],
 		Header:         splittedInput[0],
 		Payload:        payload,

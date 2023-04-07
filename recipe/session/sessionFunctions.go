@@ -66,7 +66,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		}
 	}
 
-	accessTokenInfo, err = getInfoFromAccessToken(parsedAccessToken, *combinedJwks, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+	accessTokenInfo, err = getInfoFromAccessToken(parsedAccessToken, *combinedJwks, config.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 	if err != nil {
 		if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 			return sessmodels.GetSessionResponse{}, err
@@ -74,8 +74,15 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 
 		payload := parsedAccessToken.Payload
 
-		expiryTime := uint64(payload["expiryTime"].(float64))
-		timeCreated := uint64(payload["timeCreated"].(float64))
+		expiryTimeInPayload, expiryOk := payload["expiryTime"]
+		timeCreatedInPayload, timeCreatedOk := payload["timeCreated"]
+
+		if !expiryOk || !timeCreatedOk {
+			return sessmodels.GetSessionResponse{}, err
+		}
+
+		expiryTime := uint64(expiryTimeInPayload.(float64))
+		timeCreated := uint64(timeCreatedInPayload.(float64))
 
 		if parsedAccessToken.Version < 3 {
 			if expiryTime < getCurrTimeInMS() {
@@ -129,7 +136,9 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 	requestBody := map[string]interface{}{
 		"accessToken":     parsedAccessToken.RawTokenString,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
-		"enableAntiCsrf":  recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf":  config.AntiCsrf == antiCSRF_VIA_TOKEN,
+		// TODO NEMI: Dont hardcode
+		"checkDatabase": true,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken
