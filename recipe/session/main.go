@@ -145,7 +145,7 @@ func UpdateAccessTokenPayloadWithContext(sessionHandle string, newAccessTokenPay
 	return (*instance.RecipeImpl.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
 }
 
-func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
@@ -153,7 +153,7 @@ func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer
 	if instance.OpenIdRecipe == nil {
 		return jwtmodels.CreateJWTResponse{}, errors.New("CreateJWT cannot be used without enabling the Jwt feature")
 	}
-	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, userContext, useStaticSigningKey)
+	return (*instance.OpenIdRecipe.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext)
 }
 
 func GetJWKSWithContext(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
@@ -376,8 +376,8 @@ func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[st
 	return UpdateAccessTokenPayloadWithContext(sessionHandle, newAccessTokenPayload, &map[string]interface{}{})
 }
 
-func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
-	return CreateJWTWithContext(payload, validitySecondsPointer, &map[string]interface{}{}, useStaticSigningKey)
+func CreateJWT(payload map[string]interface{}, useStaticSigningKey *bool, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+	return CreateJWTWithContext(payload, validitySecondsPointer, useStaticSigningKey, &map[string]interface{}{})
 }
 
 func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
