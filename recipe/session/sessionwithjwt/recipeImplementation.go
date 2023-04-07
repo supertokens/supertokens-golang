@@ -209,7 +209,7 @@ func addJWTToAccessTokenPayload(accessTokenPayload map[string]interface{}, jwtEx
 		payloadInJWT[k] = v
 	}
 
-	jwtResponse, err := (*openidRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry, userContext, nil)
+	jwtResponse, err := (*openidRecipeImplementation.CreateJWT)(payloadInJWT, &jwtExpiry, nil, userContext)
 	if err != nil {
 		return map[string]interface{}{}, err
 	}
