@@ -56,7 +56,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 	return resp, nil
 }
 
-func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (sessmodels.GetSessionResponse, error) {
+func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool, alwaysCheckCore bool) (sessmodels.GetSessionResponse, error) {
 	var accessTokenInfo *accessTokenInfoStruct = nil
 	var err error = nil
 	combinedJwks, jwksError := sessmodels.GetCombinedJWKS()
@@ -137,8 +137,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		"accessToken":     parsedAccessToken.RawTokenString,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
 		"enableAntiCsrf":  config.AntiCsrf == antiCSRF_VIA_TOKEN,
-		// TODO NEMI: Dont hardcode
-		"checkDatabase": true,
+		"checkDatabase":   alwaysCheckCore,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken
