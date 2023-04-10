@@ -139,7 +139,6 @@ type TypeInput struct {
 	Override                                     *OverrideStruct
 	ErrorHandlers                                *ErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-	UseDynamicAccessTokenSigningKey              *bool
 	ExposeAccessTokenToFrontendInCookieBasedAuth *bool
 }
 
@@ -166,7 +165,6 @@ type TypeNormalisedInput struct {
 	Override                                     OverrideStruct
 	ErrorHandlers                                NormalisedErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-	UseDynamicAccessTokenSigningKey              bool
 	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 }
 

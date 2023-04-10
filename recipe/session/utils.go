@@ -100,12 +100,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		antiCsrf = *config.AntiCsrf
 	}
 
-	useDynamicAccessTokenSigningKey := true
-
-	if config != nil && config.UseDynamicAccessTokenSigningKey != nil {
-		useDynamicAccessTokenSigningKey = *config.UseDynamicAccessTokenSigningKey
-	}
-
 	exposeAccessTokenToFrontendInCookieBasedAuth := false
 
 	if config != nil && config.ExposeAccessTokenToFrontendInCookieBasedAuth != nil {
@@ -169,14 +163,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
-		RefreshTokenPath:                appInfo.APIBasePath.AppendPath(refreshAPIPath),
-		CookieDomain:                    cookieDomain,
-		CookieSameSite:                  cookieSameSite,
-		CookieSecure:                    cookieSecure,
-		SessionExpiredStatusCode:        sessionExpiredStatusCode,
-		InvalidClaimStatusCode:          invalidClaimStatusCode,
-		AntiCsrf:                        antiCsrf,
-		UseDynamicAccessTokenSigningKey: useDynamicAccessTokenSigningKey,
+		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
+		CookieDomain:             cookieDomain,
+		CookieSameSite:           cookieSameSite,
+		CookieSecure:             cookieSecure,
+		SessionExpiredStatusCode: sessionExpiredStatusCode,
+		InvalidClaimStatusCode:   invalidClaimStatusCode,
+		AntiCsrf:                 antiCsrf,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: exposeAccessTokenToFrontendInCookieBasedAuth,
 		ErrorHandlers:          errorHandlers,
 		GetTokenTransferMethod: config.GetTokenTransferMethod,

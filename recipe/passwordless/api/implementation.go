@@ -61,7 +61,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			}
 		}
 
-		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, nil, userContext)
+		session, err := session.CreateNewSessionWithContext(options.Req, options.Res, user.ID, map[string]interface{}{}, map[string]interface{}{}, userContext)
 		if err != nil {
 			return plessmodels.ConsumeCodePOSTResponse{}, err
 		}

@@ -24,7 +24,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}, useDynamicAccessTokenSigningKey *bool) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if AccessTokenPayload == nil {
 		AccessTokenPayload = map[string]interface{}{}
 	}
@@ -32,11 +32,10 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 		sessionDataInDatabase = map[string]interface{}{}
 	}
 	requestBody := map[string]interface{}{
-		"userId":               userID,
-		"userDataInJWT":        AccessTokenPayload,
-		"userDataInDatabase":   sessionDataInDatabase,
-		"enableAntiCsrf":       !disableAntiCsrf && config.AntiCsrf == antiCSRF_VIA_TOKEN,
-		"useDynamicSigningKey": useDynamicAccessTokenSigningKey,
+		"userId":             userID,
+		"userDataInJWT":      AccessTokenPayload,
+		"userDataInDatabase": sessionDataInDatabase,
+		"enableAntiCsrf":     !disableAntiCsrf && config.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 
 	response, err := querier.SendPostRequest("/recipe/session", requestBody)
