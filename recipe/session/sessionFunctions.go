@@ -122,7 +122,6 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		}
 	}
 
-	// TODO NEMI: Add always check core
 	if accessTokenInfo != nil &&
 		accessTokenInfo.parentRefreshTokenHash1 == nil {
 		return sessmodels.GetSessionResponse{
