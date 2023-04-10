@@ -81,10 +81,6 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			},
 			RecipeList: []supertokens.Recipe{
 				session.Init(&sessmodels.TypeInput{
-					Jwt: &sessmodels.JWTInputConfig{
-						Enable:                           true,
-						PropertyNameInAccessTokenPayload: &jwtPropertyName,
-					},
 					ErrorHandlers: &sessmodels.ErrorHandlers{
 						OnUnauthorised: func(message string, req *http.Request, res http.ResponseWriter) error {
 							res.Header().Set("Content-Type", "text/html; charset=utf-8")

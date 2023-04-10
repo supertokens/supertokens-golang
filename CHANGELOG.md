@@ -15,6 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `UpdateSessionDataWithContext` to `UpdateSessionDataInDatabaseWithContext` to clarify that it always hits the DB
 -   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
 -   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
+-   Added `useStaticSigningKey` to `CreateJWT` and `CreateJWTWithContext`
+-   Added support for CDI version `2.19`
+-   Dropped support for CDI version `2.8`-`2.18`
+-   JWT and OpenId related configuration has been removed from the Session recipe config. If necessary, they can be added by initializing the OpenId recipe before the Session recipe.
+
+### Changed
+
+-   Refactors the URL for the JWKS endpoint exposed by SuperTokens core
+-   The Session recipe now always initializes the OpenID recipe if it hasn't been initialized.
 
 ## [0.10.5] - 2023-03-31
 

@@ -23,14 +23,14 @@ import (
 )
 
 func makeRecipeImplementation(config openidmodels.TypeNormalisedInput, jwtRecipeImplementation jwtmodels.RecipeInterface) openidmodels.RecipeInterface {
-	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
+	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 		issuer := config.IssuerDomain.GetAsStringDangerous() + config.IssuerPath.GetAsStringDangerous()
 		if payload == nil {
 			payload = map[string]interface{}{}
 		}
 
 		payload["iss"] = issuer
-		return (*jwtRecipeImplementation.CreateJWT)(payload, validitySecondsPointer, userContext)
+		return (*jwtRecipeImplementation.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext)
 	}
 
 	getJWKS := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {

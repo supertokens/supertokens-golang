@@ -150,13 +150,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	Jwt := sessmodels.JWTNormalisedConfig{Enable: false, PropertyNameInAccessTokenPayload: "jwt"}
-	if config != nil && config.Jwt != nil {
-		Jwt.Enable = config.Jwt.Enable
-		Jwt.Issuer = config.Jwt.Issuer
-		if config.Jwt.PropertyNameInAccessTokenPayload != nil {
-			Jwt.PropertyNameInAccessTokenPayload = *config.Jwt.PropertyNameInAccessTokenPayload
-		}
-	}
 	if sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY == Jwt.PropertyNameInAccessTokenPayload {
 		return sessmodels.TypeNormalisedInput{}, errors.New(sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY + " is a reserved property name, please use a different key name for the jwt")
 	}

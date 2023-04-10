@@ -47,8 +47,8 @@ func TestOverridingFunctions(t *testing.T) {
 					Functions: func(originalImplementation jwtmodels.RecipeInterface) jwtmodels.RecipeInterface {
 						createJWToriginal := *originalImplementation.CreateJWT
 						getJWKSOriginal := *originalImplementation.GetJWKS
-						*originalImplementation.CreateJWT = func(payload map[string]interface{}, validitySeconds *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
-							resp, err := createJWToriginal(payload, validitySeconds, userContext)
+						*originalImplementation.CreateJWT = func(payload map[string]interface{}, validitySeconds *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
+							resp, err := createJWToriginal(payload, validitySeconds, useStaticSigningKey, userContext)
 							if err != nil {
 								t.Error(err.Error())
 								return jwtmodels.CreateJWTResponse{}, err
@@ -106,7 +106,7 @@ func TestOverridingFunctions(t *testing.T) {
 		}
 		payload := result["payload"]
 		validity := uint64(1000)
-		resp, err := CreateJWT(payload.(map[string]interface{}), &validity)
+		resp, err := CreateJWT(payload.(map[string]interface{}), nil, &validity)
 		if err != nil {
 			t.Error(err.Error())
 		}
