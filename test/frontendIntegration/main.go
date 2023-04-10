@@ -348,7 +348,7 @@ func updateJwt(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userSession := session.GetSessionFromRequestContext(request.Context())
-	userSession.UpdateAccessTokenPayload(body)
+	userSession.MergeIntoAccessTokenPayload(body)
 	json.NewEncoder(response).Encode(userSession.GetAccessTokenPayload())
 }
 
@@ -356,7 +356,7 @@ func updateJwtWithHandle(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userSession := session.GetSessionFromRequestContext(request.Context())
-	session.UpdateAccessTokenPayload(userSession.GetHandle(), body)
+	session.MergeIntoAccessTokenPayload(userSession.GetHandle(), body)
 	json.NewEncoder(response).Encode(userSession.GetAccessTokenPayload())
 }
 

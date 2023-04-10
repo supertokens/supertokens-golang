@@ -362,10 +362,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return updateSessionDataInDatabaseHelper(querier, sessionHandle, newSessionData)
 	}
 
-	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
-		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
-	}
-
 	regenerateAccessToken := func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
 		return regenerateAccessTokenHelper(querier, newAccessTokenPayload, accessToken)
 	}
@@ -396,7 +392,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 				delete(newAccessTokenPayload, k)
 			}
 		}
-		return (*result.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
+		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
 	}
 
 	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
@@ -505,7 +501,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		RevokeSession:               &revokeSession,
 		RevokeMultipleSessions:      &revokeMultipleSessions,
 		UpdateSessionDataInDatabase: &updateSessionDataInDatabase,
-		UpdateAccessTokenPayload:    &updateAccessTokenPayload,
 		RegenerateAccessToken:       &regenerateAccessToken,
 
 		MergeIntoAccessTokenPayload: &mergeIntoAccessTokenPayload,
