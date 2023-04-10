@@ -171,14 +171,6 @@ func GetOpenIdDiscoveryConfigurationWithContext(userContext supertokens.UserCont
 	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
 }
 
-func RegenerateAccessTokenWithContext(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return nil, err
-	}
-	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, newAccessTokenPayload, userContext)
-}
-
 func ValidateClaimsForSessionHandleWithContext(
 	sessionHandle string,
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionInfo sessmodels.SessionInformation, userContext supertokens.UserContext) []claims.SessionClaimValidator,
@@ -379,10 +371,6 @@ func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
 
 func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
 	return GetOpenIdDiscoveryConfigurationWithContext(&map[string]interface{}{})
-}
-
-func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string) (*sessmodels.RegenerateAccessTokenResponse, error) {
-	return RegenerateAccessTokenWithContext(accessToken, newAccessTokenPayload, sessionHandle, &map[string]interface{}{})
 }
 
 func ValidateClaimsForSessionHandle(
