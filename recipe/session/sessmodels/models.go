@@ -111,14 +111,7 @@ type TypeInput struct {
 	AntiCsrf                 *string
 	Override                 *OverrideStruct
 	ErrorHandlers            *ErrorHandlers
-	Jwt                      *JWTInputConfig
 	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-}
-
-type JWTInputConfig struct {
-	Issuer                           *string
-	Enable                           bool
-	PropertyNameInAccessTokenPayload *string
 }
 
 type OverrideStruct struct {

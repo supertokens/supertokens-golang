@@ -28,10 +28,6 @@ func TestJWTShouldCreateRightAccessTokenPayloadWithClaims(t *testing.T) {
 				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 					return sessmodels.CookieTransferMethod
 				},
-
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable: true,
-				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
@@ -119,8 +115,6 @@ func TestAssertClaimsWithPayloadWithJWTAndCallRightUpdateAccessTokenPayload(t *t
 				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 					return sessmodels.CookieTransferMethod
 				},
-
-				Jwt: &sessmodels.JWTInputConfig{Enable: true},
 			}),
 		},
 	}
@@ -215,10 +209,6 @@ func TestMergeIntoAccessTokenPayloadForJWT(t *testing.T) {
 			Init(&sessmodels.TypeInput{
 				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 					return sessmodels.CookieTransferMethod
-				},
-
-				Jwt: &sessmodels.JWTInputConfig{
-					Enable: true,
 				},
 			}),
 		},
