@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Removed the handshake call to improve start-up times
 -   Removed `GetAccessTokenLifeTimeMS` and `GetRefreshTokenLifeTimeMS` functions
 -   Added `ExposeAccessTokenToFrontendInCookieBasedAuth` (defaults to `false`) option to the Session recipe config
+-   Added new `checkDatabase` param to `verifySession` and `getSession`
 
 ## [0.10.5] - 2023-03-31
 
