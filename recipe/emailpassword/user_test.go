@@ -23,6 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -39,7 +40,11 @@ func TestGetUsersOldestFirst(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -142,7 +147,11 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -244,7 +253,11 @@ func TestGetUserCount(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 

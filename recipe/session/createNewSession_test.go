@@ -24,16 +24,19 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -57,7 +60,7 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(rw, "rope", accessTokenPayload, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 
@@ -90,16 +93,19 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							nilClaim, _ := NilClaim()
 							accessTokenPayload, err := nilClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -123,7 +129,7 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(rw, "rope", accessTokenPayload, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 
@@ -166,10 +172,13 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							nAccessTokenPayload := map[string]interface{}{}
 							for k, v := range accessTokenPayload {
 								nAccessTokenPayload[k] = v
@@ -182,7 +191,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 							for k, v := range customClaims {
 								nAccessTokenPayload[k] = v
 							}
-							return oCreateNewSession(res, userID, nAccessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(req, res, userID, nAccessTokenPayload, sessionData, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -216,7 +225,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(rw, "rope", payloadParam, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "rope", payloadParam, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 

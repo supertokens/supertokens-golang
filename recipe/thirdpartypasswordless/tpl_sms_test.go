@@ -27,6 +27,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -43,7 +44,15 @@ func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 			Enabled: true,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -110,7 +119,15 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -198,7 +215,15 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 			},
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
@@ -303,7 +328,15 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 			Service: twilioService,
 		},
 	}
-	testServer := supertokensInitForTest(t, session.Init(nil), Init(tplConfig))
+	testServer := supertokensInitForTest(
+		t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
 	defer testServer.Close()
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")

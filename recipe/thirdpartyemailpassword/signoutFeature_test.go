@@ -52,6 +52,9 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -106,7 +109,7 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 	}
 
 	assert.Equal(t, "OK", result["status"])
-	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	resp1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -129,15 +132,12 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 	assert.Equal(t, "OK", result1["status"])
 	assert.Equal(t, "", cookieData1["sAccessToken"])
 	assert.Equal(t, "", cookieData1["sRefreshToken"])
-	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData1["accessTokenDomain"])
 	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
 
 	resp2, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
@@ -160,7 +160,7 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 
 	assert.Equal(t, "OK", result2["status"])
 
-	resp3, err := unittesting.SignoutRequest(testServer.URL, cookieData2["sAccessToken"], cookieData2["sIdRefreshToken"], cookieData2["antiCsrf"])
+	resp3, err := unittesting.SignoutRequest(testServer.URL, cookieData2["sAccessToken"], cookieData2["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -183,13 +183,10 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 	assert.Equal(t, "OK", result3["status"])
 	assert.Equal(t, "", cookieData3["sAccessToken"])
 	assert.Equal(t, "", cookieData3["sRefreshToken"])
-	assert.Equal(t, "", cookieData3["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData3["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData3["accessTokenDomain"])
 	assert.Equal(t, "", cookieData3["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData3["idRefreshTokenDomain"])
 }

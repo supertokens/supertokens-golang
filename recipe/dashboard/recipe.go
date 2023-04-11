@@ -20,6 +20,7 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/search"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -36,12 +37,17 @@ type Recipe struct {
 
 var singletonInstance *Recipe
 
-func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config dashboardmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
+func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (Recipe, error) {
 	r := &Recipe{}
 	verifiedConfig := validateAndNormaliseUserInput(appInfo, config)
 	r.Config = verifiedConfig
 
-	recipeImplementation := makeRecipeImplementation()
+	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
+	if err != nil {
+		return Recipe{}, err
+	}
+
+	recipeImplementation := makeRecipeImplementation(*querierInstance)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
@@ -52,7 +58,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config d
 	return *r, nil
 }
 
-func recipeInit(config dashboardmodels.TypeInput) supertokens.Recipe {
+func recipeInit(config *dashboardmodels.TypeInput) supertokens.Recipe {
 	return func(appInfo supertokens.NormalisedAppinfo, onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) (*supertokens.RecipeModule, error) {
 		if singletonInstance == nil {
 			recipe, err := MakeRecipe(RECIPE_ID, appInfo, config, onSuperTokensAPIError)
@@ -107,6 +113,8 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		return api.Dashboard(r.APIImpl, options)
 	} else if id == validateKeyAPI {
 		return api.ValidateKey(r.APIImpl, options)
+	} else if id == signInAPI {
+		return api.SignInPost(r.APIImpl, options)
 	}
 
 	// Do API key validation for the remaining APIs
@@ -156,6 +164,12 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options)
 		} else if id == userPasswordAPI {
 			return userdetails.UserPasswordPut(r.APIImpl, options)
+		} else if id == searchTagsAPI {
+			return search.SearchTagsGet(r.APIImpl, options)
+		} else if id == signOutAPI {
+			return api.SignOutPost(r.APIImpl, options)
+		} else if id == dashboardAnalyticsAPI {
+			return api.AnalyticsPost(r.APIImpl, options)
 		}
 		return nil, errors.New("should never come here")
 	})

@@ -16,6 +16,8 @@
 package api
 
 import (
+	"strconv"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -50,6 +52,22 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		}
 		dashboardAppPath := options.AppInfo.APIBasePath.AppendPath(normalizedDashboardPath).GetAsStringDangerous()
 
+		authMode := string(options.Config.AuthMode)
+
+		isSearchEnabled := false
+		querier, err := supertokens.GetNewQuerierInstanceOrThrowError(options.RecipeID)
+		if err != nil {
+			return "", err
+		}
+		cdiVersion, err := querier.GetQuerierAPIVersion()
+		if err != nil {
+			return "", err
+		}
+		if supertokens.MaxVersion(cdiVersion, "2.20") == cdiVersion {
+			// Only enable search for CDI version 2.20 and above
+			isSearchEnabled = true
+		}
+
 		return `
 		<html>
 		<head>
@@ -58,6 +76,8 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 						window.staticBasePath = "` + bundleDomain + `/static"
 						window.dashboardAppPath = "` + dashboardAppPath + `"
 						window.connectionURI = "` + connectionURI + `"
+						window.authMode = "` + authMode + `"
+						window.isSearchEnabled = "` + strconv.FormatBool(isSearchEnabled) + `"
 				</script>
 				<script defer src="` + bundleDomain + `/static/js/bundle.js"></script></head>
 				<link href="` + bundleDomain + `/static/css/main.css" rel="stylesheet" type="text/css">

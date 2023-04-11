@@ -16,7 +16,6 @@
 package supertokens
 
 import (
-	"bytes"
 	"encoding/json"
 	"errors"
 	"flag"
@@ -30,6 +29,7 @@ type superTokens struct {
 	SuperTokens           ConnectionInfo
 	RecipeModules         []RecipeModule
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
+	Telemetry             *bool
 }
 
 // this will be set to true if this is used in a test app environment
@@ -99,11 +99,8 @@ func supertokensInit(config TypeInput) error {
 		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
 	}
 
+	superTokens.Telemetry = config.Telemetry
 	superTokensInstance = superTokens
-
-	if config.Telemetry == nil || *config.Telemetry {
-		sendTelemetry()
-	}
 
 	return nil
 }
@@ -117,47 +114,6 @@ func GetInstanceOrThrowError() (*superTokens, error) {
 		return superTokensInstance, nil
 	}
 	return nil, errors.New("initialisation not done. Did you forget to call the SuperTokens.init function?")
-}
-
-func sendTelemetry() {
-	if IsRunningInTestMode() {
-		// if running in test mode, we do not want to send this.
-		return
-	}
-	querier, err := GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		return
-	}
-
-	response, err := querier.SendGetRequest("/telemetry", nil)
-	if err != nil {
-		return
-	}
-	exists := response["exists"].(bool)
-
-	url := "https://api.supertokens.com/0/st/telemetry"
-
-	data := map[string]interface{}{
-		"appName":       superTokensInstance.AppInfo.AppName,
-		"websiteDomain": superTokensInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-		"sdk":           "golang",
-	}
-	if exists {
-		data["telemetryId"] = response["telemetryId"].(string)
-	}
-	jsonData, err := json.Marshal(data)
-	if err != nil {
-		return
-	}
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		return
-	}
-	req.Header.Set("content-type", "application/json; charset=utf-8")
-	req.Header.Set("api-version", "2")
-
-	client := &http.Client{}
-	client.Do(req)
 }
 
 func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
@@ -320,16 +276,19 @@ type UserPaginationResult struct {
 }
 
 // TODO: Add tests
-func getUsers(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
+func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
 		return UserPaginationResult{}, err
 	}
 
-	requestBody := map[string]string{
-		"timeJoinedOrder": timeJoinedOrder,
+	requestBody := map[string]string{}
+	if searchParams != nil {
+		requestBody = searchParams
 	}
+	requestBody["timeJoinedOrder"] = timeJoinedOrder
+
 	if limit != nil {
 		requestBody["limit"] = strconv.Itoa(*limit)
 	}
@@ -396,7 +355,7 @@ func deleteUser(userId string) error {
 		return err
 	}
 
-	if maxVersion(cdiVersion, "2.10") == cdiVersion {
+	if MaxVersion(cdiVersion, "2.10") == cdiVersion {
 		_, err = querier.SendPostRequest("/user/remove", map[string]interface{}{
 			"userId": userId,
 		})

@@ -91,7 +91,11 @@ func TestSignInAPIworksWithValidInput(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -166,7 +170,11 @@ func TestSigninAPIthrowsAnErrorWhenEmailDoesNotMatch(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -231,7 +239,11 @@ func TestSigninAPIThrowsErrorWhenPasswordIsIncorrect(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 	BeforeEach()
@@ -295,7 +307,11 @@ func TestBadInputNoPostBodyToSignInAPI(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -360,6 +376,9 @@ func TestSuccessfullSigInYieldsSession(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -419,15 +438,10 @@ func TestSuccessfullSigInYieldsSession(t *testing.T) {
 
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenDomain"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenDomain"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenDomain"])
@@ -461,7 +475,11 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -549,7 +567,11 @@ func TestCustomPasswordValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *te
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -620,7 +642,11 @@ func TestPasswordFieldValidationError(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -686,7 +712,11 @@ func TestEmailFieldValidationError(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -757,7 +787,11 @@ func TestFormFieldsHasNoEmailField(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -820,8 +854,13 @@ func TestFormFieldsHasNoEmailField(t *testing.T) {
 
 	resp.Body.Close()
 
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes1))
-	assert.Equal(t, 500, resp.StatusCode)
+	assert.Equal(t, 400, resp.StatusCode)
+
+	err = json.Unmarshal(dataInBytes1, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -837,7 +876,11 @@ func TestFormFieldsHasNoPasswordField(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -900,8 +943,12 @@ func TestFormFieldsHasNoPasswordField(t *testing.T) {
 
 	resp.Body.Close()
 
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes1))
-	assert.Equal(t, 500, resp.StatusCode)
+	assert.Equal(t, 400, resp.StatusCode)
+	err = json.Unmarshal(dataInBytes1, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -917,7 +964,11 @@ func TestInvalidEmailAndWrongPassword(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -988,7 +1039,11 @@ func TestGetUserByEmail(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1051,7 +1106,11 @@ func TestGetUserById(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1128,7 +1187,11 @@ func TestHandlePostSignInFunction(t *testing.T) {
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1187,6 +1250,9 @@ func TestDefaultSignoutRouteRevokesSession(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1224,7 +1290,7 @@ func TestDefaultSignoutRouteRevokesSession(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 	assert.Equal(t, "OK", data["status"])
 
-	res1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	res1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1234,15 +1300,12 @@ func TestDefaultSignoutRouteRevokesSession(t *testing.T) {
 
 	assert.Equal(t, "", cookieData1["sAccessToken"])
 	assert.Equal(t, "", cookieData1["sRefreshToken"])
-	assert.Equal(t, "", cookieData1["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData1["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData1["accessTokenDomain"])
 	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData1["idRefreshTokenDomain"])
 }
 
 func TestCallingTheAPIwithoutSessionShouldReturnOk(t *testing.T) {
@@ -1257,7 +1320,11 @@ func TestCallingTheAPIwithoutSessionShouldReturnOk(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1316,6 +1383,9 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1357,7 +1427,7 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 
 	time.Sleep(5 * time.Second)
 
-	res1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	res1, err := unittesting.SignoutRequest(testServer.URL, cookieData["sAccessToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1378,7 +1448,7 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 	}
 	assert.Equal(t, "try refresh token", data1["message"])
 
-	res2, err := unittesting.SessionRefresh(testServer.URL, cookieData["sRefreshToken"], cookieData["sIdRefreshToken"], cookieData["antiCsrf"])
+	res2, err := unittesting.SessionRefresh(testServer.URL, cookieData["sRefreshToken"], cookieData["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1386,7 +1456,7 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 
 	cookieData1 := unittesting.ExtractInfoFromResponse(res2)
 
-	res3, err := unittesting.SignoutRequest(testServer.URL, cookieData1["sAccessToken"], cookieData1["sIdRefreshToken"], cookieData1["antiCsrf"])
+	res3, err := unittesting.SignoutRequest(testServer.URL, cookieData1["sAccessToken"], cookieData1["antiCsrf"])
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1396,15 +1466,12 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 
 	assert.Equal(t, "", cookieData2["sAccessToken"])
 	assert.Equal(t, "", cookieData2["sRefreshToken"])
-	assert.Equal(t, "", cookieData2["sIdRefreshToken"])
 
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData2["refreshTokenExpiry"])
 	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData2["accessTokenExpiry"])
-	assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData2["idRefreshTokenExpiry"])
 
 	assert.Equal(t, "", cookieData2["accessTokenDomain"])
 	assert.Equal(t, "", cookieData2["refreshTokenDomain"])
-	assert.Equal(t, "", cookieData2["idRefreshTokenDomain"])
 }
 
 //Signup Feature tests
@@ -1464,7 +1531,11 @@ func TestSignUpAPIworksWithValidInput(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1517,7 +1588,11 @@ func TestSignUpAPIThrowsErrorInCaseOfDuplicateEmail(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1591,7 +1666,11 @@ func TestSignUpAPIThrowsErrorForInvalidEmailAndPassword(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1649,7 +1728,11 @@ func TestBadInputNoPostBodyToSignUpAPI(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1692,7 +1775,11 @@ func TestBadInputFormFieldsElementsHaveNoId(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -1770,6 +1857,9 @@ func TestSuccessfullSigUpYieldsSession(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1811,15 +1901,10 @@ func TestSuccessfullSigUpYieldsSession(t *testing.T) {
 
 	assert.NotNil(t, cookieData["sAccessToken"])
 	assert.NotNil(t, cookieData["sRefreshToken"])
-	assert.NotNil(t, cookieData["sIdRefreshToken"])
 
 	assert.NotNil(t, cookieData["refreshTokenExpiry"])
 	assert.NotNil(t, cookieData["refreshTokenDomain"])
 	assert.NotNil(t, cookieData["refreshTokenHttpOnly"])
-
-	assert.NotNil(t, cookieData["idRefreshTokenExpiry"])
-	assert.NotNil(t, cookieData["idRefreshTokenDomain"])
-	assert.NotNil(t, cookieData["idRefreshTokenHttpOnly"])
 
 	assert.NotNil(t, cookieData["accessTokenExpiry"])
 	assert.NotNil(t, cookieData["accessTokenDomain"])
@@ -1849,6 +1934,9 @@ func TestExtraFieldAddingInSignupFormFieldWorks(t *testing.T) {
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -1944,7 +2032,11 @@ func TestThatCustomFieldsAreSentUsingHandlePostSignup(t *testing.T) {
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2036,6 +2128,9 @@ func TestFormFieldsAddedInConfigButNotInInputToSignupCheckErrorAboutItBeingMissi
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
 			}),
 		},
 	}
@@ -2061,8 +2156,13 @@ func TestFormFieldsAddedInConfigButNotInInputToSignupCheckErrorAboutItBeingMissi
 		t.Error(err.Error())
 	}
 	res.Body.Close()
-	assert.Equal(t, 500, res.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
+	assert.Equal(t, 400, res.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -2086,7 +2186,11 @@ func TestBadCaseInputWithoutOtional(t *testing.T) {
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2172,7 +2276,11 @@ func TestGoodCaseInputWithOtional(t *testing.T) {
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2247,7 +2355,11 @@ func TestInputFormFieldWithoutEmailField(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2282,16 +2394,19 @@ func TestInputFormFieldWithoutEmailField(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 500, resp.StatusCode)
-
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 500, resp.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -2307,7 +2422,11 @@ func TestInputFormFieldWithoutPasswordField(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2342,17 +2461,19 @@ func TestInputFormFieldWithoutPasswordField(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 500, resp.StatusCode)
-
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 500, resp.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
-
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 }
 
 func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t *testing.T) {
@@ -2380,7 +2501,11 @@ func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2423,16 +2548,19 @@ func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 500, resp.StatusCode)
-
 	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 500, resp.StatusCode)
-	assert.Equal(t, "Are you sending too many / too few formFields?\n", string(dataInBytes))
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
 
 }
 
@@ -2461,7 +2589,11 @@ func TestInputFormFieldHasSameNumberOfCustomFiledsThanInConfigFormFieldsButAMism
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2563,7 +2695,11 @@ func TestCustomFieldValidationError(t *testing.T) {
 					},
 				},
 			}),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2647,7 +2783,11 @@ func TestSignupPasswordFieldValidationError(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2699,7 +2839,11 @@ func TestSignupEmailFieldValidationError(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 
@@ -2751,7 +2895,11 @@ func TestInputEmailIsTrimmed(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
-			session.Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
 		},
 	}
 

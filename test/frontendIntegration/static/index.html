@@ -2,8 +2,8 @@
 <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
 <script src="https://unpkg.com/axios-mock-adapter/dist/axios-mock-adapter.js"></script>
 <script type="module">
-    import umdAssert from 'https://cdn.skypack.dev/umd-assert';
-    window.assert = umdAssert;
+  import umdAssert from 'https://cdn.skypack.dev/umd-assert';
+  window.assert = umdAssert;
 </script>
 
 <script>
@@ -72,6 +72,17 @@
         }
 
         return Promise.all(loadPromises);
+    }
+    
+    function deleteAllCookies() {
+        var cookies = document.cookie.split(";");
+
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i];
+            var eqPos = cookie.indexOf("=");
+            var name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+            document.cookie = name + "=;expires=Thu, 01 Jan 1970 00:00:00 GMT";
+        }
     }
 </script>
 

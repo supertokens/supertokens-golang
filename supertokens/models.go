@@ -20,12 +20,14 @@ import (
 )
 
 type NormalisedAppinfo struct {
-	AppName         string
-	WebsiteDomain   NormalisedURLDomain
-	APIDomain       NormalisedURLDomain
-	APIBasePath     NormalisedURLPath
-	APIGatewayPath  NormalisedURLPath
-	WebsiteBasePath NormalisedURLPath
+	AppName               string
+	WebsiteDomain         NormalisedURLDomain
+	APIDomain             NormalisedURLDomain
+	TopLevelAPIDomain     string
+	TopLevelWebsiteDomain string
+	APIBasePath           NormalisedURLPath
+	APIGatewayPath        NormalisedURLPath
+	WebsiteBasePath       NormalisedURLPath
 }
 
 type AppInfo struct {

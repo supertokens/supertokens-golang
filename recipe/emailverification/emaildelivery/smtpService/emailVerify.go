@@ -507,13 +507,6 @@ const emailVerificationTemplate = `<!doctype html>
             text-decoration: underline;
         }
 
-        @media only screen and (min-width:768px) {
-            .templateContainer {
-                width: 600px !important;
-            }
-
-        }
-
         @media only screen and (max-width: 480px) {
 
             body,

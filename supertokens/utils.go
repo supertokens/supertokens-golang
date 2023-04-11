@@ -24,10 +24,13 @@ import (
 	"io/ioutil"
 	"math"
 	"net/http"
+	"net/url"
 	"reflect"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"golang.org/x/net/publicsuffix"
 )
 
 func IsAnIPAddress(ipaddress string) (bool, error) {
@@ -66,6 +69,15 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 		return NormalisedAppinfo{}, err
 	}
 
+	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(apiDomain.GetAsStringDangerous())
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+	topLevelWebsiteDomain, err := GetTopLevelDomainForSameSiteResolution(websiteDomain.GetAsStringDangerous())
+	if err != nil {
+		return NormalisedAppinfo{}, err
+	}
+
 	APIBasePathStr := "/auth"
 	if appInfo.APIBasePath != nil {
 		APIBasePathStr = *appInfo.APIBasePath
@@ -85,12 +97,14 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 		return NormalisedAppinfo{}, err
 	}
 	return NormalisedAppinfo{
-		AppName:         appInfo.AppName,
-		APIGatewayPath:  apiGatewayPath,
-		WebsiteDomain:   websiteDomain,
-		APIDomain:       apiDomain,
-		APIBasePath:     apiBasePath,
-		WebsiteBasePath: websiteBasePath,
+		AppName:               appInfo.AppName,
+		APIGatewayPath:        apiGatewayPath,
+		WebsiteDomain:         websiteDomain,
+		APIDomain:             apiDomain,
+		APIBasePath:           apiBasePath,
+		TopLevelAPIDomain:     topLevelAPIDomain,
+		TopLevelWebsiteDomain: topLevelWebsiteDomain,
+		WebsiteBasePath:       websiteBasePath,
 	}, nil
 }
 
@@ -109,13 +123,13 @@ func getLargestVersionFromIntersection(v1 []string, v2 []string) *string {
 	}
 	maxVersionSoFar := intersection[0]
 	for i := 1; i < len(intersection); i++ {
-		maxVersionSoFar = maxVersion(intersection[i], maxVersionSoFar)
+		maxVersionSoFar = MaxVersion(intersection[i], maxVersionSoFar)
 	}
 	return &maxVersionSoFar
 }
 
 // MaxVersion returns max of v1 and v2
-func maxVersion(version1 string, version2 string) string {
+func MaxVersion(version1 string, version2 string) string {
 	var splittedv1 = strings.Split(version1, ".")
 	var splittedv2 = strings.Split(version2, ".")
 	var minLength = len(splittedv1)
@@ -268,4 +282,24 @@ func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
 			"request": r,
 		},
 	}
+}
+
+func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
+	urlObj, err := url.Parse(URL)
+	if err != nil {
+		return "", err
+	}
+	hostname := urlObj.Hostname()
+	isAnIP, err := IsAnIPAddress(hostname)
+	if err != nil {
+		return "", err
+	}
+	if strings.HasPrefix(hostname, "localhost") || strings.HasPrefix(hostname, "localhost.org") || isAnIP {
+		return "localhost", nil
+	}
+	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
+	if err != nil {
+		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
+	}
+	return parsedURL, nil
 }

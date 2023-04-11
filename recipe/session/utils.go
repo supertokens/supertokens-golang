@@ -27,7 +27,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"golang.org/x/net/publicsuffix"
 )
 
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
@@ -43,15 +42,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	topLevelAPIDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.APIDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-	topLevelWebsiteDomain, err := GetTopLevelDomainForSameSiteResolution(appInfo.WebsiteDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-
 	apiDomainScheme, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
 	if err != nil {
 		return sessmodels.TypeNormalisedInput{}, err
@@ -62,10 +52,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	cookieSameSite := cookieSameSite_LAX
-	if topLevelAPIDomain != topLevelWebsiteDomain {
-		cookieSameSite = cookieSameSite_NONE
-	}
-	if apiDomainScheme != websiteDomainScheme {
+	if apiDomainScheme != websiteDomainScheme || appInfo.TopLevelAPIDomain != appInfo.TopLevelWebsiteDomain {
 		cookieSameSite = cookieSameSite_NONE
 	}
 
@@ -157,23 +144,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	IsAnIPAPIDomain, err := supertokens.IsAnIPAddress(topLevelAPIDomain)
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-	IsAnIPWebsiteDomain, err := supertokens.IsAnIPAddress(topLevelWebsiteDomain)
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-
-	if cookieSameSite == cookieSameSite_NONE &&
-		!cookieSecure && !((topLevelAPIDomain == "localhost" || IsAnIPAPIDomain) &&
-		(topLevelWebsiteDomain == "localhost" || IsAnIPWebsiteDomain)) {
-		// We can allow insecure cookie when both website & API domain are localhost or an IP
-		// When either of them is a different domain, API domain needs to have https and a secure cookie to work
-		return sessmodels.TypeNormalisedInput{}, errors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-	}
-
 	refreshAPIPath, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
 	if err != nil {
 		return sessmodels.TypeNormalisedInput{}, err
@@ -191,6 +161,14 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New(sessionwithjwt.ACCESS_TOKEN_PAYLOAD_JWT_PROPERTY_NAME_KEY + " is a reserved property name, please use a different key name for the jwt")
 	}
 
+	if config == nil {
+		config = &sessmodels.TypeInput{}
+	}
+
+	if config.GetTokenTransferMethod == nil {
+		config.GetTokenTransferMethod = defaultGetTokenTransferMethod
+	}
+
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
@@ -201,6 +179,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		AntiCsrf:                 antiCsrf,
 		ErrorHandlers:            errorHandlers,
 		Jwt:                      Jwt,
+		GetTokenTransferMethod:   config.GetTokenTransferMethod,
 		Override: sessmodels.OverrideStruct{
 			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 				return originalImplementation
@@ -229,26 +208,6 @@ func normaliseSameSiteOrThrowError(sameSite string) (string, error) {
 		return "", errors.New(`cookie same site must be one of "strict", "lax", or "none"`)
 	}
 	return sameSite, nil
-}
-
-func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
-	urlObj, err := url.Parse(URL)
-	if err != nil {
-		return "", err
-	}
-	hostname := urlObj.Hostname()
-	isAnIP, err := supertokens.IsAnIPAddress(hostname)
-	if err != nil {
-		return "", err
-	}
-	if strings.HasPrefix(hostname, "localhost") || strings.HasPrefix(hostname, "localhost.org") || isAnIP {
-		return "localhost", nil
-	}
-	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
-	if err != nil {
-		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
-	}
-	return parsedURL, nil
 }
 
 func GetURLScheme(URL string) (string, error) {
@@ -296,14 +255,24 @@ func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
 }
 
-func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, response sessmodels.CreateOrRefreshAPIResponse) {
+func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, response sessmodels.CreateOrRefreshAPIResponse, tokenTransferMethod sessmodels.TokenTransferMethod) {
 	accessToken := response.AccessToken
 	refreshToken := response.RefreshToken
-	idRefreshToken := response.IDRefreshToken
 	setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
-	attachAccessTokenToCookie(config, res, accessToken.Token, accessToken.Expiry)
-	attachRefreshTokenToCookie(config, res, refreshToken.Token, refreshToken.Expiry)
-	setIDRefreshTokenInHeaderAndCookie(config, res, idRefreshToken.Token, idRefreshToken.Expiry)
+	setToken(
+		config,
+		res,
+		sessmodels.AccessToken,
+		accessToken.Token,
+		// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
+		// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
+		// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
+		// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
+		getCurrTimeInMS()+3153600000000,
+		tokenTransferMethod,
+	)
+	setToken(config, res, sessmodels.RefreshToken, refreshToken.Token, refreshToken.Expiry, tokenTransferMethod)
+
 	if response.AntiCsrfToken != nil {
 		setAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
 	}
@@ -330,10 +299,6 @@ func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string,
 		return err
 	}
 	return supertokens.SendNon200ResponseWithMessage(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
-}
-
-func frontendHasInterceptor(req *http.Request) bool {
-	return getRidFromHeader(req) != nil
 }
 
 func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
@@ -390,4 +355,34 @@ func getRequiredClaimValidators(
 		}
 	}
 	return globalClaimValidators, nil
+}
+
+func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+	// We allow fallback (checking headers then cookies) by default when validating
+
+	if !forCreateNewSession {
+		return sessmodels.AnyTransferMethod
+	}
+
+	// In create new session we respect the frontend preference by default
+	authMode := getAuthmodeFromHeader(req)
+	if authMode == nil {
+		return sessmodels.AnyTransferMethod
+	}
+	switch *authMode {
+	case sessmodels.CookieTransferMethod:
+		return sessmodels.CookieTransferMethod
+	case sessmodels.HeaderTransferMethod:
+		return sessmodels.HeaderTransferMethod
+	default:
+		return sessmodels.AnyTransferMethod
+	}
+}
+
+func getRidFromHeader(req *http.Request) *string {
+	rid := req.Header.Get("rid")
+	if rid == "" {
+		return nil
+	}
+	return &rid
 }
