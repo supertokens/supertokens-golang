@@ -21,3 +21,4 @@ gin/
 apiPassword
 releasePassword
 .vscode/
+.idea
