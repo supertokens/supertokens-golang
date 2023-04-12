@@ -379,6 +379,12 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			newAccessTokenPayload[k] = v
 		}
 
+		for k, _ := range newAccessTokenPayload {
+			if supertokens.DoesSliceContainString(k, protectedProps) {
+				delete(newAccessTokenPayload, k)
+			}
+		}
+
 		for k, v := range accessTokenPayloadUpdate {
 			if v == nil {
 				delete(newAccessTokenPayload, k)
@@ -387,11 +393,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			}
 		}
 
-		for k, _ := range newAccessTokenPayload {
-			if supertokens.DoesSliceContainString(k, protectedProps) {
-				delete(newAccessTokenPayload, k)
-			}
-		}
 		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
 	}
 
