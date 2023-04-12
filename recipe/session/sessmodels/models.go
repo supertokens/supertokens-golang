@@ -91,6 +91,15 @@ func GetJWKS() []GetJWKSFunction {
 	return result
 }
 
+/**
+This function is meant to fetch all available JWKs from all core instances and combine them into a sincle array.
+In most cases all core instances will return the same repsonse for the JWKS endpoint because they are all connected
+to the same database.
+
+Since the case where the same backend is connected to separate core instances with different databases connected
+to the instances is considered a very edge case situation, this function does not consider that scenario. So even
+the function logic does not combine anything as such, the final result is as if it did.
+*/
 func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 	var lastError error
 	jwks := GetJWKS()
@@ -99,6 +108,13 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 		return nil, errors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
 	}
 
+	/**
+	Because this function assumes that all core instances would return the same response for the JWKS endpoint,
+	we do not want to return an error unless ALL of the instances return an error. Even if a single core returns
+	a valid response we return that.
+
+	If all of them return an error, we assume that all of them failed for the same reason and return the last error.
+	*/
 	for _, jwk := range jwks {
 		jwksResult, err := jwk()
 
