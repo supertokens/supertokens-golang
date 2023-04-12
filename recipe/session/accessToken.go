@@ -38,7 +38,7 @@ type accessTokenInfoStruct struct {
 func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrfCheck bool) (*accessTokenInfoStruct, error) {
 	var payload map[string]interface{}
 
-	if jwtInfo.Version == 3 {
+	if jwtInfo.Version >= 3 {
 		parsedToken, parseError := jwt.Parse(jwtInfo.RawTokenString, jwks.Keyfunc)
 		if parseError != nil {
 			return nil, sterrors.TryRefreshTokenError{
@@ -91,13 +91,13 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrf
 			jwksToUse, jwksError := keyfunc.NewJSON(jsonString)
 			if jwksError != nil {
 				return nil, sterrors.TryRefreshTokenError{
-					Msg: "Invalud JWT resoinse",
+					Msg: "Invalid JWT response",
 				}
 			}
 
 			parsedToken, parseErr := jwt.Parse(jwtInfo.RawTokenString, jwksToUse.Keyfunc)
 
-			if parseErr != nil && errors.Is(parseErr, jwt.ErrSignatureInvalid) {
+			if parseErr != nil && (errors.Is(parseErr, jwt.ErrSignatureInvalid) || errors.Is(parseErr, keyfunc.ErrKIDNotFound)) {
 				continue
 			}
 
@@ -144,7 +144,7 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrf
 	var expiryTime uint64
 	var timeCreated uint64
 	var userData map[string]interface{}
-	if jwtInfo.Version == 3 {
+	if jwtInfo.Version >= 3 {
 		userID = *sanitizeStringInput(payload["sub"])
 		expiryTime = *sanitizeNumberInputAsUint64(payload["exp"]) * uint64(1000)
 		timeCreated = *sanitizeNumberInputAsUint64(payload["iat"]) * uint64(1000)

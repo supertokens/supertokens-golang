@@ -28,7 +28,8 @@ import (
 
 type TokenType string
 
-var JWKCacheMaxAgeInMs = 60000
+var JWKCacheMaxAgeInMs = 600000
+var JWKRefreshRateLimit = 500
 
 const (
 	AccessToken  TokenType = "access"
@@ -76,10 +77,10 @@ func GetJWKS() []GetJWKSFunction {
 		result = append(result, func() (*keyfunc.JWKS, error) {
 			// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
 			// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
-			// RefreshInterval - Refreshes should occur every 60 seconds
+			// RefreshInterval - Refreshes should occur every 600 seconds
 			jwks, err := keyfunc.Get(path, keyfunc.Options{
 				RefreshUnknownKID: true,
-				RefreshRateLimit:  time.Millisecond * 500,
+				RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
 				RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
 			})
 
