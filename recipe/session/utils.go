@@ -242,21 +242,8 @@ func getCurrTimeInMS() uint64 {
 }
 
 func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, response sessmodels.CreateOrRefreshAPIResponse, tokenTransferMethod sessmodels.TokenTransferMethod) {
-	accessToken := response.AccessToken
 	refreshToken := response.RefreshToken
-	setFrontTokenInHeaders(res, response.Session.UserID, response.AccessToken.Expiry, response.Session.UserDataInAccessToken)
-	setToken(
-		config,
-		res,
-		sessmodels.AccessToken,
-		accessToken.Token,
-		// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
-		// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
-		// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
-		// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
-		getCurrTimeInMS()+3153600000000,
-		tokenTransferMethod,
-	)
+	SetAccessTokenInResponse(config, res, response.AccessToken, response.Session, tokenTransferMethod)
 	setToken(config, res, sessmodels.RefreshToken, refreshToken.Token, refreshToken.Expiry, tokenTransferMethod)
 
 	if response.AntiCsrfToken != nil {
@@ -272,7 +259,7 @@ func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.Re
 
 	var payload map[string]interface{}
 
-	if responseToken.Version == 3 {
+	if responseToken.Version >= 3 {
 		payload = responseToken.Payload
 	} else {
 		payload = session.UserDataInAccessToken
