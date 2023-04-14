@@ -16,7 +16,6 @@
 package session
 
 import (
-	"encoding/json"
 	"errors"
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
@@ -65,39 +64,18 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrf
 	} else {
 		keys := []interface{}{}
 
+		// Read only key returns all public keys that can be used for JWT verification
 		for _, value := range jwks.ReadOnlyKeys() {
 			keys = append(keys, value)
 		}
 
 		for _, key := range keys {
-			/**
-			For each key we need to create a jwks structure to use with the verification library
-			{
-				keys: [...]
-			}
-			*/
-			keysTemp := [1]interface{}{key}
-			jwksTemp := map[string]interface{}{
-				"keys": keysTemp,
-			}
+			parsedToken, parseErr := jwt.Parse(jwtInfo.RawTokenString, func(token *jwt.Token) (interface{}, error) {
+				// The key returned here is used by Parse to verify the JWT
+				return key, nil
+			})
 
-			jsonString, marshalError := json.Marshal(jwksTemp)
-			if marshalError != nil {
-				return nil, sterrors.TryRefreshTokenError{
-					Msg: "Invalid JWK response",
-				}
-			}
-
-			jwksToUse, jwksError := keyfunc.NewJSON(jsonString)
-			if jwksError != nil {
-				return nil, sterrors.TryRefreshTokenError{
-					Msg: "Invalid JWT response",
-				}
-			}
-
-			parsedToken, parseErr := jwt.Parse(jwtInfo.RawTokenString, jwksToUse.Keyfunc)
-
-			if parseErr != nil && (errors.Is(parseErr, jwt.ErrSignatureInvalid) || errors.Is(parseErr, keyfunc.ErrKIDNotFound)) {
+			if parseErr != nil && errors.Is(parseErr, jwt.ErrSignatureInvalid) {
 				continue
 			}
 
