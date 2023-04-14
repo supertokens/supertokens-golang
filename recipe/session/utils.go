@@ -28,6 +28,8 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+var accessTokenCookiesExpiryDurationMillis = 3153600000000
+
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
 	var (
 		cookieDomain *string = nil
@@ -276,15 +278,15 @@ func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.Re
 	// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
 	// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 	// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
-	// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
-	setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+3153600000000, tokenTransferMethod)
+	// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
+	setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), tokenTransferMethod)
 
 	if config.ExposeAccessTokenToFrontendInCookieBasedAuth && tokenTransferMethod == sessmodels.CookieTransferMethod {
 		// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
 		// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 		// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
-		// Setting them to infinity would require special case handling on the frontend and just adding 10 years seems enough.
-		setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+3153600000000, sessmodels.HeaderTransferMethod)
+		// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
+		setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), sessmodels.HeaderTransferMethod)
 	}
 	return nil
 }
