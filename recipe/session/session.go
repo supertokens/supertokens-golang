@@ -150,6 +150,13 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 	sessionContainer.MergeIntoAccessTokenPayloadWithContext = func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
 		accessTokenPayload := sessionContainer.GetAccessTokenPayloadWithContext(userContext)
+
+		for k, _ := range accessTokenPayload {
+			if supertokens.DoesSliceContainString(k, protectedProps) {
+				delete(accessTokenPayload, k)
+			}
+		}
+
 		for k, v := range accessTokenPayloadUpdate {
 			if v == nil {
 				delete(accessTokenPayload, k)
@@ -157,7 +164,60 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 				accessTokenPayload[k] = v
 			}
 		}
-		return sessionContainer.UpdateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
+
+		querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+		if err != nil {
+			return err
+		}
+
+		response, err := regenerateAccessTokenHelper(*querier, &accessTokenPayload, sessionContainer.GetAccessToken())
+
+		if err != nil {
+			return errors.UnauthorizedError{
+				Msg: errors.UnauthorizedErrorStr,
+			}
+		}
+
+		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+			responseToken, parseError := parseJWTWithoutSignatureVerification(response.AccessToken.Token)
+			if parseError != nil {
+				return parseError
+			}
+
+			var payload map[string]interface{}
+			if responseToken.Version < 3 {
+				payload = response.Session.UserDataInAccessToken
+			} else {
+				payload = responseToken.Payload
+			}
+
+			session.userDataInAccessToken = payload
+			session.accessToken = response.AccessToken.Token
+			setTokenErr := SetAccessTokenInResponse(config, session.res, response.AccessToken, response.Session, session.tokenTransferMethod)
+			if setTokenErr != nil {
+				return setTokenErr
+			}
+		} else {
+			// This case means that the access token has expired between the validation and this update
+			// We can't update the access token on the FE, as it will need to call refresh anyway but we handle this as a successful update during this request.
+			// the changes will be reflected on the FE after refresh is called
+			currentAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
+			userDataInJWT := response.Session.UserDataInAccessToken
+
+			userDataInAccessToken := map[string]interface{}{}
+
+			for k, v := range currentAccessTokenPayload {
+				userDataInAccessToken[k] = v
+			}
+
+			for k, v := range userDataInJWT {
+				userDataInAccessToken[k] = v
+			}
+
+			session.userDataInAccessToken = userDataInAccessToken
+		}
+
+		return nil
 	}
 
 	sessionContainer.GetHandleWithContext = func(userContext supertokens.UserContext) string {
@@ -174,6 +234,10 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 
 		if validateClaimResponse.AccessTokenPayloadUpdate != nil {
+			for _, protectedKey := range protectedProps {
+				delete(validateClaimResponse.AccessTokenPayloadUpdate, protectedKey)
+			}
+
 			err := sessionContainer.MergeIntoAccessTokenPayloadWithContext(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
 			if err != nil {
 				return err

@@ -24,7 +24,7 @@ const (
 const VERSION = "0.10.5"
 
 var (
-	cdiSupported = []string{"2.19"}
+	cdiSupported = []string{"2.21"}
 )
 
 const DashboardVersion = "0.6"

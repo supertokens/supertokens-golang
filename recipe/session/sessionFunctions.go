@@ -35,22 +35,13 @@ func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, c
 		"userId":             userID,
 		"userDataInJWT":      AccessTokenPayload,
 		"userDataInDatabase": sessionDataInDatabase,
+		"enableAntiCsrf":     !disableAntiCsrf && config.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
-	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-	if err != nil {
-		return sessmodels.CreateOrRefreshAPIResponse{}, err
-	}
-	requestBody["enableAntiCsrf"] = !disableAntiCsrf && recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN
+
 	response, err := querier.SendPostRequest("/recipe/session", requestBody)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
-	updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
-
-	delete(response, "status")
-	delete(response, "jwtSigningPublicKey")
-	delete(response, "jwtSigningPublicKeyExpiryTime")
-	delete(response, "jwtSigningPublicKeyList")
 
 	responseByte, err := json.Marshal(response)
 	if err != nil {
@@ -61,51 +52,57 @@ func createNewSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, c
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
+
 	return resp, nil
 }
 
 func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, containsCustomHeader bool) (sessmodels.GetSessionResponse, error) {
-	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-	if err != nil {
-		return sessmodels.GetSessionResponse{}, err
+	var accessTokenInfo *accessTokenInfoStruct = nil
+	var err error = nil
+	combinedJwks, jwksError := sessmodels.GetCombinedJWKS()
+	if jwksError != nil {
+		if !defaultErrors.As(jwksError, &errors.TryRefreshTokenError{}) {
+			return sessmodels.GetSessionResponse{}, jwksError
+		}
 	}
 
-	var accessTokenInfo *accessTokenInfoStruct = nil
-	foundASigningKeyThatIsOlderThanTheAccessToken := false
-	for _, key := range recipeImplHandshakeInfo.GetJwtSigningPublicKeyList() {
+	accessTokenInfo, err = getInfoFromAccessToken(parsedAccessToken, *combinedJwks, config.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+	if err != nil {
+		if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
+			return sessmodels.GetSessionResponse{}, err
+		}
 
-		accessTokenInfo, err = getInfoFromAccessToken(parsedAccessToken, key.PublicKey, recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN && doAntiCsrfCheck)
-		if err != nil {
-			if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
-				return sessmodels.GetSessionResponse{}, err
-			}
+		payload := parsedAccessToken.Payload
 
-			payload := parsedAccessToken.Payload
+		expiryTimeInPayload, expiryOk := payload["expiryTime"]
+		timeCreatedInPayload, timeCreatedOk := payload["timeCreated"]
 
-			expiryTime := uint64(payload["expiryTime"].(float64))
-			timeCreated := uint64(payload["timeCreated"].(float64))
+		if !expiryOk || !timeCreatedOk {
+			return sessmodels.GetSessionResponse{}, err
+		}
 
+		expiryTime := uint64(expiryTimeInPayload.(float64))
+		timeCreated := uint64(timeCreatedInPayload.(float64))
+
+		if parsedAccessToken.Version < 3 {
 			if expiryTime < getCurrTimeInMS() {
 				return sessmodels.GetSessionResponse{}, err
 			}
 
-			if timeCreated >= key.CreatedAt {
-				foundASigningKeyThatIsOlderThanTheAccessToken = true
-				break
+			// We check if the token was created since the last time we refreshed the keys from the core
+			// Since we do not know the exact timing of the last refresh, we check against the max age
+			if timeCreated <= (getCurrTimeInMS() - uint64(sessmodels.JWKCacheMaxAgeInMs)) {
+				return sessmodels.GetSessionResponse{}, err
 			}
 		} else {
-			foundASigningKeyThatIsOlderThanTheAccessToken = true
-		}
-	}
-
-	if !foundASigningKeyThatIsOlderThanTheAccessToken {
-		return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{
-			Msg: "Access token has expired. Please call the refresh API",
+			// Since v3 (and above) tokens contain a kid we can trust the cache-refresh mechanism of the jwt library.
+			// This means we do not need to call the core since the signature wouldn't pass verification anyway.
+			return sessmodels.GetSessionResponse{}, err
 		}
 	}
 
 	if doAntiCsrfCheck {
-		if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN {
+		if config.AntiCsrf == antiCSRF_VIA_TOKEN {
 			if accessTokenInfo != nil {
 				if antiCsrfToken == nil || *antiCsrfToken != *accessTokenInfo.antiCsrfToken {
 					if antiCsrfToken == nil {
@@ -117,7 +114,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 					}
 				}
 			}
-		} else if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
+		} else if config.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER {
 			if !containsCustomHeader {
 				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because custom header (rid) was not passed")
 				return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API"}
@@ -125,8 +122,8 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		}
 	}
 
+	// TODO NEMI: Add always check core
 	if accessTokenInfo != nil &&
-		!recipeImplHandshakeInfo.AccessTokenBlacklistingEnabled &&
 		accessTokenInfo.parentRefreshTokenHash1 == nil {
 		return sessmodels.GetSessionResponse{
 			Session: sessmodels.SessionStruct{
@@ -139,7 +136,9 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 	requestBody := map[string]interface{}{
 		"accessToken":     parsedAccessToken.RawTokenString,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
-		"enableAntiCsrf":  recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf":  config.AntiCsrf == antiCSRF_VIA_TOKEN,
+		// TODO NEMI: Dont hardcode
+		"checkDatabase": true,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken
@@ -152,10 +151,7 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 
 	status := response["status"]
 	if status.(string) == "OK" {
-		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
 		delete(response, "status")
-		delete(response, "jwtSigningPublicKey")
-		delete(response, "jwtSigningPublicKeyExpiryTime")
 		responseByte, err := json.Marshal(response)
 		if err != nil {
 			return sessmodels.GetSessionResponse{}, err
@@ -170,8 +166,6 @@ func getSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config 
 		supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because of core response")
 		return sessmodels.GetSessionResponse{}, errors.UnauthorizedError{Msg: response["message"].(string)}
 	} else {
-		updateJwtSigningPublicKeyInfo(&recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
-
 		supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because of core response")
 		return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: response["message"].(string)}
 	}
@@ -199,12 +193,7 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 }
 
 func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, containsCustomHeader bool, tokenTransferMethod sessmodels.TokenTransferMethod) (sessmodels.CreateOrRefreshAPIResponse, error) {
-	err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-	if err != nil {
-		return sessmodels.CreateOrRefreshAPIResponse{}, err
-	}
-
-	if recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER && tokenTransferMethod == sessmodels.CookieTransferMethod {
+	if config.AntiCsrf == antiCSRF_VIA_CUSTOM_HEADER && tokenTransferMethod == sessmodels.CookieTransferMethod {
 		if !containsCustomHeader {
 			clearTokens := false
 			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
@@ -217,7 +206,7 @@ func refreshSessionHelper(recipeImplHandshakeInfo *sessmodels.HandshakeInfo, con
 
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
-		"enableAntiCsrf": tokenTransferMethod == sessmodels.CookieTransferMethod && recipeImplHandshakeInfo.AntiCsrf == antiCSRF_VIA_TOKEN,
+		"enableAntiCsrf": tokenTransferMethod == sessmodels.CookieTransferMethod && config.AntiCsrf == antiCSRF_VIA_TOKEN,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken

@@ -16,14 +16,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
 -   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
 -   Added `useStaticSigningKey` to `CreateJWT` and `CreateJWTWithContext`
--   Added support for CDI version `2.19`
--   Dropped support for CDI version `2.8`-`2.18`
+-   Added support for CDI version `2.21`
+-   Dropped support for CDI version `2.8`-`2.20`
+-   `GetAccessTokenPayload` will now return standard (`sub`, `iat`, `exp`) claims and some SuperTokens specific claims along the user defined ones in `GetAccessTokenPayload`.
+-   Some claim names are now prohibited in the root level of the access token payload
+    -   They are: `sub`, `iat`, `exp`, `sessionHandle`, `parentRefreshTokenHash1`, `refreshTokenHash1`, `antiCsrfToken`
+    -   If you used these in the root level of the access token payload, then you'll need to migrate your sessions or they will be logged out during the next refresh
+    -   These props should be renamed (e.g., by adding a prefix) or moved inside an object in the access token payload
+    -   You can migrate these sessions by updating their payload to match your new structure, by calling `MergeIntoAccessTokenPayload`
+-   New access tokens are valid JWTs now
+    -   They can be used directly (i.e.: by calling `GetAccessToken` on the session) if you need a JWT
+    -   The `jwt` prop in the access token payload is removed
 -   JWT and OpenId related configuration has been removed from the Session recipe config. If necessary, they can be added by initializing the OpenId recipe before the Session recipe.
 
 ### Changed
 
 -   Refactors the URL for the JWKS endpoint exposed by SuperTokens core
+-   Added new optional `useStaticSigningKey` param to `CreateJWT`
 -   The Session recipe now always initializes the OpenID recipe if it hasn't been initialized.
+-   Refactored how access token validation is done
+-   Added support for new access token version
 
 ## [0.10.5] - 2023-03-31
 
