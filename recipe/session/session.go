@@ -83,42 +83,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return nil
 	}
 
-	sessionContainer.UpdateAccessTokenPayloadWithContext = func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
-		if newAccessTokenPayload == nil {
-			newAccessTokenPayload = map[string]interface{}{}
-		}
-
-		resp, err := (*session.recipeImpl.RegenerateAccessToken)(session.accessToken, &newAccessTokenPayload, userContext)
-
-		if err != nil {
-			return err
-		}
-
-		if resp == nil {
-			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
-		}
-
-		session.userDataInAccessToken = resp.Session.UserDataInAccessToken
-
-		if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			session.accessToken = resp.AccessToken.Token
-			setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-			setToken(
-				config,
-				session.res,
-				sessmodels.AccessToken,
-				resp.AccessToken.Token,
-				// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
-				// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
-				// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
-				// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-				getCurrTimeInMS()+3153600000000,
-				session.tokenTransferMethod,
-			)
-		}
-		return nil
-	}
-
 	sessionContainer.GetTimeCreatedWithContext = func(userContext supertokens.UserContext) (uint64, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
@@ -284,9 +248,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 	sessionContainer.UpdateSessionDataInDatabase = func(newSessionData map[string]interface{}) error {
 		return sessionContainer.UpdateSessionDataInDatabaseWithContext(newSessionData, &map[string]interface{}{})
-	}
-	sessionContainer.UpdateAccessTokenPayload = func(newAccessTokenPayload map[string]interface{}) error {
-		return sessionContainer.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
 	}
 	sessionContainer.GetUserID = func() string {
 		return sessionContainer.GetUserIDWithContext(&map[string]interface{}{})

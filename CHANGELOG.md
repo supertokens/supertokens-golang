@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Breaking Changes
 
+-   Changed the interface and configuration of the Session recipe, see below for details. If you do not use the Session recipe directly and do not provide custom configuration, then no migration is necessary.
 -   Renamed `GetSessionData` to `GetSessionDataInDatabase` to clarify that it always hits the DB
 -   Renamed `GetSessionDataWithContext` to `GetSessionDataInDatabaseWithContext` to clarify that it always hits the DB
 -   Renamed `UpdateSessionData` to `UpdateSessionDataInDatabase`
@@ -39,7 +40,198 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Removed the handshake call to improve start-up times
 -   Removed `GetAccessTokenLifeTimeMS` and `GetRefreshTokenLifeTimeMS` functions
 -   Added `ExposeAccessTokenToFrontendInCookieBasedAuth` (defaults to `false`) option to the Session recipe config
--   Added new `checkDatabase` param to `verifySession` and `getSession`
+-   Added new `checkDatabase` param to `VerifySession` and `GetSession`
+-   Removed deprecated `UpdateAccessTokenPayload`, `UpdateAccessTokenPayloadWithContext`, `RegenerateAccessToken` and `RegenerateAccessTokenWithContext` from the Session recipe interface
+
+### Migration
+
+#### If self-hosting core
+
+1. You need to update the core version
+2. There are manual migration steps needed. Check out the core changelogs for more details.
+
+#### If you used the jwt feature of the session recipe
+
+1. Add `ExposeAccessTokenToFrontendInCookieBasedAuth: true` to the Session recipe config on the backend if you need to access the JWT on the frontend.
+2. On the frontend where you accessed the JWT before by: `(await Session.getAccessTokenPayloadSecurely()).jwt` update to:
+
+```tsx
+let jwt = null;
+const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
+if (accessTokenPayload.jwt === undefined) {
+    jwt = await Session.getAccessToken();
+} else {
+    // This branch is only required if there are valid access tokens created before the update
+    // It can be removed after the validity period ends
+    jwt = accessTokenPayload.jwt;
+}
+```
+
+3. On the backend if you accessed the JWT before by `session.GetAccessTokenPayload()["jwt"]` please update to:
+
+```go
+var jwt string
+accessTokenPayload := session.GetAccessTokenPayload();
+if (accessTokenPayload["jwt"] == nil) {
+    jwt =  session.GetAccessToken();
+} else {
+    // This branch is only required if there are valid access tokens created before the update
+    // It can be removed after the validity period ends
+    jwt = accessTokenPayload["jwt"].(string);
+}
+```
+
+#### If you used to set an issuer in the session recipe `Jwt` configuration
+
+-   You can add an issuer claim to access tokens by overriding the `CreateNewSession` function in the session recipe init.
+    -   Check out https://supertokens.com/docs/passwordless/common-customizations/sessions/claims/access-token-payload#during-session-creation for more information
+-   You can add an issuer claim to JWTs created by the JWT recipe by passing the `iss` claim as part of the payload.
+-   You can set the OpenId discovery configuration as follows:
+
+Before:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+        RecipeList: []supertokens.Recipe{
+            session.Init(&sessmodels.TypeInput{
+                Jwt: &sessmodels.JWTInputConfig{
+                    Enable: true,
+					Issuer: "...",
+                },
+            }),
+        },
+    })
+}
+```
+
+After:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+	RecipeList: []supertokens.Recipe{
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.HeaderTransferMethod
+			},
+			Override: &sessmodels.OverrideStruct{
+				OpenIdFeature: &openidmodels.OverrideStruct{
+					Functions: func(originalImplementation openidmodels.RecipeInterface) openidmodels.RecipeInterface {
+						(*originalImplementation.GetOpenIdDiscoveryConfiguration) = func(userContext *map[string]interface{}) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+							return openidmodels.GetOpenIdDiscoveryConfigurationResponse{
+								OK: &struct{Issuer string; Jwks_uri string}{
+									Issuer:   "your issuer",
+									Jwks_uri: "https://your.api.domain/auth/jwt/jwks.json",
+								},
+							}, nil
+						}
+
+						return originalImplementation
+					},
+				},
+			},
+		}),
+	},
+})
+}
+```
+
+#### If you used `sessionData` (not `accessTokenPayload`)
+
+Related functions/prop names have changes (`sessionData` became `sessionDataFromDatabase`):
+
+-   Renamed `GetSessionData` to `GetSessionDataFromDatabase` to clarify that it always hits the DB
+-   Renamed `UpdateSessionData` to `UpdateSessionDataInDatabase`
+-   Renamed `sessionData` to `sessionDataInDatabase` in `SessionInformation` and the input to `CreateNewSession`
+
+#### If you used to set `access_token_blacklisting` in the core config
+
+-   You should now set `CheckDatabase` to true in the verifySession params.
+
+#### If you used to use standard/protected props in the access token payload root:
+
+1. Update you application logic to rename those props (e.g., by adding a prefix)
+2. Update the session recipe config (in this example `sub` is the protected property we are updating by adding tha `app` prefix):
+
+Before:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+	RecipeList: []supertokens.Recipe{
+		session.Init(&sessmodels.TypeInput{
+			Override: &sessmodels.OverrideStruct{
+				Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+					originalCreateNewSession := *originalImplementation.CreateNewSession
+					(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						if accessTokenPayload == nil {
+							accessTokenPayload = map[string]interface{}{}
+						}
+
+						accessTokenPayload["sub"] = userID + "!!!"
+
+						return originalCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+					}
+
+					return originalImplementation
+				},
+			},
+		}),
+	},
+})
+}
+```
+
+After:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+	RecipeList: []supertokens.Recipe{
+		session.Init(&sessmodels.TypeInput{
+			Override: &sessmodels.OverrideStruct{
+				Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+					originalGetSession := *originalImplementation.GetSession
+
+					(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext *map[string]interface{}) (*sessmodels.TypeSessionContainer, error) {
+						result, err := originalGetSession(req, res, options, userContext)
+
+						if result != nil {
+							originalPayload := result.GetAccessTokenPayload()
+
+							if originalPayload["appSub"] == nil {
+								result.MergeIntoAccessTokenPayload(map[string]interface{}{
+									"appSub": originalPayload["sub"],
+									"sub": nil,
+								})
+							}
+						}
+
+						return result, err
+					}
+
+					originalCreateNewSession := *originalImplementation.CreateNewSession
+
+
+					(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext *map[string]interface{}) (*sessmodels.TypeSessionContainer, error) {
+						if accessTokenPayload == nil {
+							accessTokenPayload = map[string]interface{}{}
+						}
+
+						accessTokenPayload["sub"] = userID + "!!!"
+
+						return originalCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+					}
+
+					return originalImplementation
+				},
+			},
+		}),
+	},
+})
+}
+```
 
 ## [0.10.5] - 2023-03-31
 

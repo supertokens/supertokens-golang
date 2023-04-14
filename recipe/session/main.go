@@ -135,15 +135,6 @@ func UpdateSessionDataInDatabaseWithContext(sessionHandle string, newSessionData
 	return (*instance.RecipeImpl.UpdateSessionDataInDatabase)(sessionHandle, newSessionData, userContext)
 }
 
-// Deprecated: use MergeIntoAccessTokenPayloadWithContext instead
-func UpdateAccessTokenPayloadWithContext(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return false, err
-	}
-	return (*instance.RecipeImpl.UpdateAccessTokenPayload)(sessionHandle, newAccessTokenPayload, userContext)
-}
-
 func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
@@ -169,14 +160,6 @@ func GetOpenIdDiscoveryConfigurationWithContext(userContext supertokens.UserCont
 	}
 
 	return (*instance.OpenIdRecipe.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
-}
-
-func RegenerateAccessTokenWithContext(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return nil, err
-	}
-	return (*instance.RecipeImpl.RegenerateAccessToken)(accessToken, newAccessTokenPayload, userContext)
 }
 
 func ValidateClaimsForSessionHandleWithContext(
@@ -364,11 +347,6 @@ func UpdateSessionDataInDatabase(sessionHandle string, newSessionData map[string
 	return UpdateSessionDataInDatabaseWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
 }
 
-// Deprecated: use MergeIntoAccessTokenPayload instead
-func UpdateAccessTokenPayload(sessionHandle string, newAccessTokenPayload map[string]interface{}) (bool, error) {
-	return UpdateAccessTokenPayloadWithContext(sessionHandle, newAccessTokenPayload, &map[string]interface{}{})
-}
-
 func CreateJWT(payload map[string]interface{}, useStaticSigningKey *bool, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
 	return CreateJWTWithContext(payload, validitySecondsPointer, useStaticSigningKey, &map[string]interface{}{})
 }
@@ -379,10 +357,6 @@ func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
 
 func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
 	return GetOpenIdDiscoveryConfigurationWithContext(&map[string]interface{}{})
-}
-
-func RegenerateAccessToken(accessToken string, newAccessTokenPayload *map[string]interface{}, sessionHandle string) (*sessmodels.RegenerateAccessTokenResponse, error) {
-	return RegenerateAccessTokenWithContext(accessToken, newAccessTokenPayload, sessionHandle, &map[string]interface{}{})
 }
 
 func ValidateClaimsForSessionHandle(
