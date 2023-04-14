@@ -50,9 +50,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	var result sessmodels.RecipeInterface
 
-	var recipeImplHandshakeInfo *sessmodels.HandshakeInfo = nil
-	getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-
 	createNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
@@ -84,7 +81,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
 		sessionResponse, err := createNewSessionHelper(
-			recipeImplHandshakeInfo, config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase,
+			config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase,
 		)
 		if err != nil {
 			return nil, err
@@ -197,7 +194,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: " + strconv.FormatBool(*doAntiCsrfCheck))
 
-		response, err := getSessionHelper(recipeImplHandshakeInfo, config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
+		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
 		if err != nil {
 			return nil, err
 		}
@@ -286,7 +283,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-		response, err := refreshSessionHelper(recipeImplHandshakeInfo, config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
+		response, err := refreshSessionHelper(config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
 		if err != nil {
 			unauthorisedErr := errors.UnauthorizedError{}
 			isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
@@ -360,22 +357,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	updateAccessTokenPayload := func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
-	}
-
-	getAccessTokenLifeTimeMS := func(userContext supertokens.UserContext) (uint64, error) {
-		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-		if err != nil {
-			return 0, err
-		}
-		return recipeImplHandshakeInfo.AccessTokenValidity, nil
-	}
-
-	getRefreshTokenLifeTimeMS := func(userContext supertokens.UserContext) (uint64, error) {
-		err := getHandshakeInfo(&recipeImplHandshakeInfo, config, querier, false)
-		if err != nil {
-			return 0, err
-		}
-		return recipeImplHandshakeInfo.RefreshTokenValidity, nil
 	}
 
 	regenerateAccessToken := func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
@@ -519,8 +500,6 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		RevokeMultipleSessions:      &revokeMultipleSessions,
 		UpdateSessionDataInDatabase: &updateSessionDataInDatabase,
 		UpdateAccessTokenPayload:    &updateAccessTokenPayload,
-		GetAccessTokenLifeTimeMS:    &getAccessTokenLifeTimeMS,
-		GetRefreshTokenLifeTimeMS:   &getRefreshTokenLifeTimeMS,
 		RegenerateAccessToken:       &regenerateAccessToken,
 
 		MergeIntoAccessTokenPayload: &mergeIntoAccessTokenPayload,
@@ -534,53 +513,4 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	return result
-}
-
-// updates recipeImplHandshakeInfo in place.
-func getHandshakeInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, config sessmodels.TypeNormalisedInput, querier supertokens.Querier, forceFetch bool) error {
-	handshakeInfoLock.Lock()
-	defer handshakeInfoLock.Unlock()
-	if *recipeImplHandshakeInfo == nil ||
-		len((*recipeImplHandshakeInfo).GetJwtSigningPublicKeyList()) == 0 ||
-		forceFetch {
-		response, err := querier.SendPostRequest("/recipe/handshake", nil)
-		if err != nil {
-			return err
-		}
-
-		*recipeImplHandshakeInfo = &sessmodels.HandshakeInfo{
-			AntiCsrf:                       config.AntiCsrf,
-			AccessTokenBlacklistingEnabled: response["accessTokenBlacklistingEnabled"].(bool),
-			AccessTokenValidity:            uint64(response["accessTokenValidity"].(float64)),
-			RefreshTokenValidity:           uint64(response["refreshTokenValidity"].(float64)),
-		}
-
-		updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, getKeyInfoFromJson(response), response["jwtSigningPublicKey"].(string), uint64(response["jwtSigningPublicKeyExpiryTime"].(float64)))
-
-	}
-	return nil
-}
-
-func updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
-	if len(keyList) == 0 {
-		// means we are using an older CDI version
-		keyList = []sessmodels.KeyInfo{
-			{
-				PublicKey:  newKey,
-				ExpiryTime: newExpiry,
-				CreatedAt:  getCurrTimeInMS(),
-			},
-		}
-	}
-
-	if *recipeImplHandshakeInfo != nil {
-		(*recipeImplHandshakeInfo).SetJwtSigningPublicKeyList(keyList)
-	}
-
-}
-
-func updateJwtSigningPublicKeyInfo(recipeImplHandshakeInfo **sessmodels.HandshakeInfo, keyList []sessmodels.KeyInfo, newKey string, newExpiry uint64) {
-	handshakeInfoLock.Lock()
-	defer handshakeInfoLock.Unlock()
-	updateJwtSigningPublicKeyInfoWithoutLock(recipeImplHandshakeInfo, keyList, newKey, newExpiry)
 }

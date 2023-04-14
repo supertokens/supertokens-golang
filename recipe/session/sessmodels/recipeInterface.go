@@ -34,8 +34,6 @@ type RecipeInterface struct {
 	UpdateSessionDataInDatabase *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	UpdateAccessTokenPayload    *func(sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error)
-	GetAccessTokenLifeTimeMS    *func(userContext supertokens.UserContext) (uint64, error)
-	GetRefreshTokenLifeTimeMS   *func(userContext supertokens.UserContext) (uint64, error)
 	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*RegenerateAccessTokenResponse, error)
 
 	GetGlobalClaimValidators   *func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)

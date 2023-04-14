@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   The Session recipe now always initializes the OpenID recipe if it hasn't been initialized.
 -   Refactored how access token validation is done
 -   Added support for new access token version
+-   Removed the handshake call to improve start-up times
+-   Removed `GetAccessTokenLifeTimeMS` and `GetRefreshTokenLifeTimeMS` functions
 
 ## [0.10.5] - 2023-03-31
 

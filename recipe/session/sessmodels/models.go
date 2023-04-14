@@ -45,28 +45,6 @@ const (
 	AnyTransferMethod    TokenTransferMethod = "any"
 )
 
-type HandshakeInfo struct {
-	rawJwtSigningPublicKeyList     []KeyInfo
-	AntiCsrf                       string
-	AccessTokenBlacklistingEnabled bool
-	AccessTokenValidity            uint64
-	RefreshTokenValidity           uint64
-}
-
-func (h *HandshakeInfo) GetJwtSigningPublicKeyList() []KeyInfo {
-	result := []KeyInfo{}
-	for _, key := range h.rawJwtSigningPublicKeyList {
-		if key.ExpiryTime > getCurrTimeInMS() {
-			result = append(result, key)
-		}
-	}
-	return result
-}
-
-func (h *HandshakeInfo) SetJwtSigningPublicKeyList(updatedList []KeyInfo) {
-	h.rawJwtSigningPublicKeyList = updatedList
-}
-
 type GetJWKSFunction = func() (*keyfunc.JWKS, error)
 
 func GetJWKS() []GetJWKSFunction {
@@ -193,7 +171,6 @@ type TypeNormalisedInput struct {
 	AntiCsrf                 string
 	Override                 OverrideStruct
 	ErrorHandlers            NormalisedErrorHandlers
-	Jwt                      JWTNormalisedConfig
 	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 }
 
