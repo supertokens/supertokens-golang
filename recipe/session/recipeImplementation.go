@@ -80,6 +80,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
+
 		sessionResponse, err := createNewSessionHelper(
 			config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase,
 		)
@@ -194,7 +195,13 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: " + strconv.FormatBool(*doAntiCsrfCheck))
 
-		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil)
+		alwaysCheckCore := false
+
+		if options.CheckDatabase != nil {
+			alwaysCheckCore = *options.CheckDatabase == true
+		}
+
+		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil, alwaysCheckCore)
 		if err != nil {
 			return nil, err
 		}
