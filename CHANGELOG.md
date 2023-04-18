@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.10.8] - 2023-04-18
+- Email template for verify email updated 
+
 ## [0.10.7] - 2023-04-11
 - Changed email template to render correctly in outlook
 
