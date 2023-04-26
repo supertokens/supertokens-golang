@@ -53,6 +53,11 @@ func CreateNewSessionWithContextWithoutRequestResponse(userID string, accessToke
 		finalAccessTokenPayload = map[string]interface{}{}
 	}
 
+	appInfo := instance.RecipeModule.GetAppInfo()
+	issuer := appInfo.APIDomain.GetAsStringDangerous() + appInfo.APIBasePath.GetAsStringDangerous()
+
+	finalAccessTokenPayload["iss"] = issuer
+
 	for _, claim := range claimsAddedByOtherRecipes {
 		finalAccessTokenPayload, err = claim.Build(userID, finalAccessTokenPayload, userContext)
 		if err != nil {
