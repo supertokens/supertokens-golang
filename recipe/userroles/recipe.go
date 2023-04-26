@@ -17,9 +17,9 @@ package userroles
 
 import (
 	"errors"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesclaims"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"

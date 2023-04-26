@@ -277,11 +277,28 @@ func ErrorIfNoResponse(res http.ResponseWriter) error {
 }
 
 func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
-	return &map[string]interface{}{
-		"_default": map[string]interface{}{
-			"request": r,
-		},
+	return SetRequestInUserContextIfNotDefined(nil, r)
+}
+
+func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r *http.Request) UserContext {
+	var _userContext map[string]interface{}
+
+	if userContext == nil {
+		_userContext = map[string]interface{}{}
 	}
+
+	defaultObj, ok := _userContext["_default"]
+
+	if !ok {
+		_userContext["_default"] = map[string]interface{}{}
+	}
+
+	if reflect.TypeOf(defaultObj).Kind() != reflect.TypeOf(map[string]interface{}{}).Kind() {
+		defaultObj.(map[string]interface{})["request"] = r
+		_userContext["_default"] = defaultObj
+	}
+
+	return &_userContext
 }
 
 func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {

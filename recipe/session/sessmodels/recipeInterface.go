@@ -16,16 +16,37 @@
 package sessmodels
 
 import (
-	"net/http"
-
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+type CreateNewSessionResponse struct {
+	Status  string
+	Session SessionContainer
+}
+
+type GetSessionFunctionResponse struct {
+	Status  string
+	Session *SessionContainer
+	Error   *error
+}
+
+type GetSessionMainFunctionClaimResponse struct {
+	Message               string
+	ClaimValidationErrors []claims.ClaimValidationError
+}
+
+type GetSessionMainFunctionResponse struct {
+	Status   string
+	Session  *SessionContainer
+	Error    *error
+	Response *GetSessionMainFunctionClaimResponse
+}
+
 type RecipeInterface struct {
-	CreateNewSession            *func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (SessionContainer, error)
-	GetSession                  *func(req *http.Request, res http.ResponseWriter, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)
-	RefreshSession              *func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (SessionContainer, error)
+	CreateNewSession            *func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (CreateNewSessionResponse, error)
+	GetSession                  *func(accessToken string, antiCSRFToken *string, options *GetSessionOptions, userContext supertokens.UserContext) (GetSessionFunctionResponse, error)
+	RefreshSession              *func(refreshToken string, antiCSRFToken *string, disableAntiCSRF bool, userContext supertokens.UserContext) (GetSessionFunctionResponse, error)
 	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (*SessionInformation, error)
 	RevokeAllSessionsForUser    *func(userID string, userContext supertokens.UserContext) ([]string, error)
 	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)

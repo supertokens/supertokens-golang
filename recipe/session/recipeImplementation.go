@@ -20,9 +20,7 @@ import (
 	"encoding/json"
 	defaultErrors "errors"
 	"fmt"
-	"net/http"
 	"reflect"
-	"strconv"
 	"sync"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
@@ -43,157 +41,66 @@ var protectedProps = []string{
 	"antiCsrfToken",
 }
 
-func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
-
-	// We are defining this here to reduce the scope of legacy code
-	const LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME = "sIdRefreshToken"
-
+func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
 
-	createNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.CreateNewSessionResponse, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
-		outputTokenTransferMethod := config.GetTokenTransferMethod(req, true, userContext)
-		if outputTokenTransferMethod == sessmodels.AnyTransferMethod {
-			outputTokenTransferMethod = sessmodels.HeaderTransferMethod
-		}
-
-		supertokens.LogDebugMessage(fmt.Sprintf("createNewSession: using transfer method %s", outputTokenTransferMethod))
-
-		isTopLevelAPIDomainIPAddress, err := supertokens.IsAnIPAddress(appInfo.TopLevelAPIDomain)
-		if err != nil {
-			return nil, err
-		}
-		isTopLevelWebsiteDomainIPAddress, err := supertokens.IsAnIPAddress(appInfo.TopLevelWebsiteDomain)
-		if err != nil {
-			return nil, err
-		}
-
-		if outputTokenTransferMethod == sessmodels.CookieTransferMethod &&
-			config.CookieSameSite == "none" &&
-			!config.CookieSecure &&
-			!((appInfo.TopLevelAPIDomain == "localhost" || isTopLevelAPIDomainIPAddress) &&
-				(appInfo.TopLevelWebsiteDomain == "localhost" || isTopLevelWebsiteDomainIPAddress)) {
-			// We can allow insecure cookie when both website & API domain are localhost or an IP
-			// When either of them is a different domain, API domain needs to have https and a secure cookie to work
-			return nil, defaultErrors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
-		}
-
-		disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
-
 		sessionResponse, err := createNewSessionHelper(
-			config, querier, userID, disableAntiCSRF, accessTokenPayload, sessionDataInDatabase,
+			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase,
 		)
 		if err != nil {
-			return nil, err
+			return sessmodels.CreateNewSessionResponse{}, err
 		}
 
-		for _, tokenTransferMethod := range availableTokenTransferMethods {
-			if tokenTransferMethod != outputTokenTransferMethod {
-				token, err := getToken(req, sessmodels.AccessToken, tokenTransferMethod)
-				if err != nil {
-					return nil, err
-				}
-				if token != nil {
-					clearSession(config, res, tokenTransferMethod)
-				}
-			}
-		}
+		supertokens.LogDebugMessage("createNewSession: Finished")
 
-		attachCreateOrRefreshSessionResponseToRes(config, res, sessionResponse, outputTokenTransferMethod)
-		payload, parseErr := parseJWTWithoutSignatureVerification(sessionResponse.AccessToken.Token)
+		parsedJWT, parseErr := ParseJWTWithoutSignatureVerification(sessionResponse.AccessToken.Token)
 		if parseErr != nil {
-			return nil, parseErr
+			return sessmodels.CreateNewSessionResponse{}, parseErr
 		}
 
-		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, sessionResponse.Session.Handle, sessionResponse.Session.UserID, payload.Payload, res, req, outputTokenTransferMethod, result)
-		return newSessionContainer(config, &sessionContainerInput), nil
+		frontToken := BuildFrontToken(sessionResponse.Session.UserID, sessionResponse.Session.ExpiryTime, sessionResponse.Session.UserDataInAccessToken)
+		session := sessionResponse.Session
+		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, parsedJWT.Payload, result, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
+		return sessmodels.CreateNewSessionResponse{
+			Status:  "OK",
+			Session: newSessionContainer(config, &sessionContainerInput),
+		}, nil
 	}
 
 	// In all cases if sIdRefreshToken token exists (so it's a legacy session) we return TRY_REFRESH_TOKEN. The refresh endpoint will clear this cookie and try to upgrade the session.
 	// Check https://supertokens.com/docs/contribute/decisions/session/0007 for further details and a table of expected behaviours
-	getSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		idRefreshToken := getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME)
-		if idRefreshToken != nil {
-			return nil, errors.TryRefreshTokenError{
-				Msg: "using legacy session, please call the refresh API",
-			}
+	getSession := func(accessTokenString string, antiCsrfToken *string, options *sessmodels.GetSessionOptions, userContext supertokens.UserContext) (sessmodels.GetSessionFunctionResponse, error) {
+		if options != nil && *options.AntiCsrfCheck != false && config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER {
+			return sessmodels.GetSessionFunctionResponse{}, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
-		sessionOptional := options != nil && options.SessionRequired != nil && !*options.SessionRequired
-		supertokens.LogDebugMessage(fmt.Sprintf("getSession: optional validation %v", sessionOptional))
+		supertokens.LogDebugMessage("getSession: Started")
+		var accessToken *sessmodels.ParsedJWTInfo
 
-		accessTokens := map[sessmodels.TokenTransferMethod]*ParsedJWTInfo{}
+		accessTokenResponse, err := ParseJWTWithoutSignatureVerification(accessTokenString)
 
-		// We check all token transfer methods for available access tokens
-		for _, tokenTransferMethod := range availableTokenTransferMethods {
-			token, err := getToken(req, sessmodels.AccessToken, tokenTransferMethod)
-			if err != nil {
-				return nil, err
-			}
-			if token != nil {
-				parsedToken, err := parseJWTWithoutSignatureVerification(*token)
-				if err != nil {
-					supertokens.LogDebugMessage(fmt.Sprintf("getSession: ignoring token in %s, because token parsing failed", tokenTransferMethod))
-				} else {
-					err := validateAccessTokenStructure(parsedToken.Payload, parsedToken.Version)
-					if err != nil {
-						supertokens.LogDebugMessage(fmt.Sprintf("getSession: ignoring token in %s, because it doesn't match our access token structure", tokenTransferMethod))
-					} else {
-						supertokens.LogDebugMessage(fmt.Sprintf("getSession: got access token from %s", tokenTransferMethod))
-						accessTokens[tokenTransferMethod] = &parsedToken
-					}
-				}
-			}
+		if err != nil {
+			supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because parsing failed")
+			return sessmodels.GetSessionFunctionResponse{
+				Status:  "UNAUTHORISED",
+				Session: nil,
+				Error:   &err,
+			}, nil
 		}
 
-		allowedTokenTransferMethod := config.GetTokenTransferMethod(req, false, userContext)
+		err = ValidateAccessTokenStructure(accessTokenResponse.Payload, accessTokenResponse.Version)
 
-		var requestTokenTransferMethod sessmodels.TokenTransferMethod
-		var accessToken *ParsedJWTInfo
-
-		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.HeaderTransferMethod) && (accessTokens[sessmodels.HeaderTransferMethod] != nil) {
-			supertokens.LogDebugMessage("getSession: using header transfer method")
-			requestTokenTransferMethod = sessmodels.HeaderTransferMethod
-			accessToken = accessTokens[sessmodels.HeaderTransferMethod]
-		} else if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && (accessTokens[sessmodels.CookieTransferMethod] != nil) {
-			supertokens.LogDebugMessage("getSession: using cookie transfer method")
-			requestTokenTransferMethod = sessmodels.CookieTransferMethod
-			accessToken = accessTokens[sessmodels.CookieTransferMethod]
-		} else {
-			if sessionOptional {
-				supertokens.LogDebugMessage("getSession: returning undefined because accessToken is undefined and sessionRequired is false")
-				return nil, nil
-			}
-
-			supertokens.LogDebugMessage("getSession: UNAUTHORISED because accessToken in request is undefined")
-			False := false
-			return nil, errors.UnauthorizedError{
-				Msg: "Session does not exist. Are you sending the session tokens in the request as with the appropriate token transfer method?",
-				// we do not clear the session here because of a
-				// race condition mentioned here: https://github.com/supertokens/supertokens-node/issues/17
-				ClearTokens: &False,
-			}
+		if err != nil {
+			supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because parsing failed")
+			return sessmodels.GetSessionFunctionResponse{
+				Status:  "UNAUTHORISED",
+				Session: nil,
+				Error:   &err,
+			}, nil
 		}
-
-		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-		var doAntiCsrfCheck *bool
-
-		if options != nil {
-			doAntiCsrfCheck = options.AntiCsrfCheck
-		}
-
-		if doAntiCsrfCheck == nil {
-			doAntiCsrfCheckBool := req.Method != http.MethodGet
-			doAntiCsrfCheck = &doAntiCsrfCheckBool
-		}
-
-		if requestTokenTransferMethod == sessmodels.HeaderTransferMethod {
-			False := false
-			doAntiCsrfCheck = &False
-		}
-
-		supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: " + strconv.FormatBool(*doAntiCsrfCheck))
 
 		alwaysCheckCore := false
 
@@ -201,145 +108,111 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			alwaysCheckCore = *options.CheckDatabase == true
 		}
 
-		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, *doAntiCsrfCheck, getRidFromHeader(req) != nil, alwaysCheckCore)
+		doAntiCsrfCheck := options != nil && *options.AntiCsrfCheck != false
+
+		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, doAntiCsrfCheck, alwaysCheckCore)
 		if err != nil {
-			return nil, err
-		}
-
-		accessTokenStr := accessToken.RawTokenString
-
-		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			tokenError := SetAccessTokenInResponse(config, res, response.AccessToken, response.Session, requestTokenTransferMethod)
-			if tokenError != nil {
-				return nil, tokenError
+			if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
+				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN_ERROR because of an exception during getSession")
+				return sessmodels.GetSessionFunctionResponse{
+					Status:  "TRY_REFRESH_TOKEN_ERROR",
+					Session: nil,
+					Error:   &err,
+				}, nil
 			}
-			accessTokenStr = response.AccessToken.Token
+
+			supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because of an exception during getSession")
+			return sessmodels.GetSessionFunctionResponse{
+				Status:  "UNAUTHORISED",
+				Session: nil,
+				Error:   &err,
+			}, nil
 		}
 
 		supertokens.LogDebugMessage("getSession: Success!")
 		var payload map[string]interface{}
 
-		if accessToken.Version < 3 {
-			payload = response.Session.UserDataInAccessToken
-		} else {
-			if reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-				payload = accessToken.Payload
-			} else {
-				parsedToken, parseErr := parseJWTWithoutSignatureVerification(response.AccessToken.Token)
-				if parseErr != nil {
-					return nil, parseErr
-				}
+		if reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+			parsedToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 
-				payload = parsedToken.Payload
+			if parseErr != nil {
+				return sessmodels.GetSessionFunctionResponse{}, parseErr
 			}
+
+			payload = parsedToken.Payload
+		} else {
+			payload = accessToken.Payload
 		}
 
-		sessionContainerInput := makeSessionContainerInput(accessTokenStr, response.Session.Handle, response.Session.UserID, payload, res, req, requestTokenTransferMethod, result)
+		accessTokenStringForSession := accessTokenString
+
+		accessTokenNil := reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{})
+
+		if !accessTokenNil {
+			accessTokenStringForSession = response.AccessToken.Token
+		}
+
+		frontToken := BuildFrontToken(response.Session.UserID, response.Session.ExpiryTime, response.Session.UserDataInAccessToken)
+		session := response.Session
+
+		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, payload, result, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
-		return sessionContainer, nil
+		return sessmodels.GetSessionFunctionResponse{
+			Status:  "OK",
+			Session: &sessionContainer,
+			Error:   nil,
+		}, nil
 	}
 
 	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
-	refreshSession := func(req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.GetSessionFunctionResponse, error) {
+		if disableAntiCsrf != true && config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER {
+			return sessmodels.GetSessionFunctionResponse{}, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
+		}
+
 		supertokens.LogDebugMessage("refreshSession: Started")
 
-		refreshTokens := map[sessmodels.TokenTransferMethod]*string{}
-		// We check all token transfer methods for available refresh tokens
-		// We do this so that we can later clear all we are not overwriting
-		for _, tokenTransferMethod := range availableTokenTransferMethods {
-			token, err := getToken(req, sessmodels.RefreshToken, tokenTransferMethod)
-			if err != nil {
-				return nil, err
-			}
-			refreshTokens[tokenTransferMethod] = token
-			if token != nil {
-				supertokens.LogDebugMessage("refreshSession: got refresh token from " + string(tokenTransferMethod))
-			}
-		}
-
-		allowedTokenTransferMethod := config.GetTokenTransferMethod(req, false, userContext)
-		supertokens.LogDebugMessage("refreshSession: getTokenTransferMethod returned " + string(allowedTokenTransferMethod))
-
-		var requestTokenTransferMethod sessmodels.TokenTransferMethod
-		var refreshToken *string
-
-		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.HeaderTransferMethod) && refreshTokens[sessmodels.HeaderTransferMethod] != nil {
-			supertokens.LogDebugMessage("refreshSession: using header transfer method")
-			requestTokenTransferMethod = sessmodels.HeaderTransferMethod
-			refreshToken = refreshTokens[sessmodels.HeaderTransferMethod]
-		} else if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && refreshTokens[sessmodels.CookieTransferMethod] != nil {
-			supertokens.LogDebugMessage("refreshSession: using cookie transfer method")
-			requestTokenTransferMethod = sessmodels.CookieTransferMethod
-			refreshToken = refreshTokens[sessmodels.CookieTransferMethod]
-		} else {
-			if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
-				supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh token was not found")
-				setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
-			}
-
-			supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token in request is undefined")
-			False := false
-			return nil, errors.UnauthorizedError{
-				Msg:         "Refresh token not found. Are you sending the refresh token in the request as a cookie?",
-				ClearTokens: &False,
-			}
-		}
-
-		antiCsrfToken := getAntiCsrfTokenFromHeaders(req)
-		response, err := refreshSessionHelper(config, querier, *refreshToken, antiCsrfToken, getRidFromHeader(req) != nil, requestTokenTransferMethod)
+		response, err := refreshSessionHelper(config, querier, refreshToken, antiCsrfToken, disableAntiCsrf)
 		if err != nil {
 			unauthorisedErr := errors.UnauthorizedError{}
 			isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
 			isTokenTheftDetectedErr := defaultErrors.As(err, &errors.TokenTheftDetectedError{})
 
-			// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
+			// This token isn't handled by GetToken/setToken to limit the scope of this legacy/migration code
 			if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
-				if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
-					supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
-					setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
-				}
+				return sessmodels.GetSessionFunctionResponse{
+					Status: "TOKEN_THEFT_DETECTED",
+					Error:  &err,
+				}, nil
 			}
-			return nil, err
-		}
 
-		supertokens.LogDebugMessage("refreshSession: Attaching refreshed session info as " + string(requestTokenTransferMethod))
-
-		// We clear the tokens in all token transfer methods we are not going to overwrite
-		for _, tokenTransferMethod := range availableTokenTransferMethods {
-			if tokenTransferMethod != requestTokenTransferMethod && refreshTokens[tokenTransferMethod] != nil {
-				clearSession(config, res, tokenTransferMethod)
-			}
+			return sessmodels.GetSessionFunctionResponse{
+				Status: "UNAUTHORISED",
+				Error:  &err,
+			}, nil
 		}
-		attachCreateOrRefreshSessionResponseToRes(config, res, response, requestTokenTransferMethod)
 		supertokens.LogDebugMessage("refreshSession: Success!")
 
-		// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
-		if getCookieValue(req, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME) != nil {
-			supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token after successfull refresh")
-			setCookie(config, res, LEGACY_ID_REFRESH_TOKEN_COOKIE_NAME, "", 0, "accessTokenPath")
-		}
-
-		responseToken, parseErr := parseJWTWithoutSignatureVerification(response.AccessToken.Token)
+		responseToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 		if parseErr != nil {
-			return nil, err
+			return sessmodels.GetSessionFunctionResponse{}, err
 		}
 
-		var payload map[string]interface{}
+		session := response.Session
+		frontToken := BuildFrontToken(session.UserID, session.ExpiryTime, responseToken.Payload)
 
-		if responseToken.Version < 3 {
-			payload = response.Session.UserDataInAccessToken
-		} else {
-			payload = responseToken.Payload
-		}
-
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, response.Session.Handle, response.Session.UserID, payload, res, req, requestTokenTransferMethod, result)
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, responseToken.Payload, result, frontToken, antiCsrfToken, nil, &response.RefreshToken, true)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
-		return sessionContainer, nil
+		return sessmodels.GetSessionFunctionResponse{
+			Status:  "OK",
+			Session: &sessionContainer,
+			Error:   nil,
+		}, nil
 	}
 
 	revokeAllSessionsForUser := func(userID string, userContext supertokens.UserContext) ([]string, error) {
@@ -433,7 +306,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			accessTokenPayloadUpdate = accessTokenPayload
 		}
 
-		invalidClaims := validateClaimsInPayload(claimValidators, accessTokenPayload, userContext)
+		invalidClaims := ValidateClaimsInPayload(claimValidators, accessTokenPayload, userContext)
 
 		if len(accessTokenPayloadUpdate) == 0 {
 			accessTokenPayloadUpdate = nil
@@ -446,7 +319,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	validateClaimsInJWTPayload := func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.ClaimValidationError, error) {
-		invalidClaims := validateClaimsInPayload(claimValidators, jwtPayload, userContext)
+		invalidClaims := ValidateClaimsInPayload(claimValidators, jwtPayload, userContext)
 		return invalidClaims, nil
 	}
 

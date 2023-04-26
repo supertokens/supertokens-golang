@@ -20,21 +20,22 @@ import (
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	sterrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"strings"
 )
 
-type accessTokenInfoStruct struct {
-	sessionHandle           string
-	userID                  string
-	refreshTokenHash1       string
-	parentRefreshTokenHash1 *string
-	userData                map[string]interface{}
-	antiCsrfToken           *string
-	expiryTime              uint64
-	timeCreated             uint64
+type AccessTokenInfoStruct struct {
+	SessionHandle           string
+	UserID                  string
+	RefreshTokenHash1       string
+	ParentRefreshTokenHash1 *string
+	UserData                map[string]interface{}
+	AntiCsrfToken           *string
+	ExpiryTime              uint64
+	TimeCreated             uint64
 }
 
-func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrfCheck bool) (*accessTokenInfoStruct, error) {
+func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrfCheck bool) (*AccessTokenInfoStruct, error) {
 	var payload map[string]interface{}
 
 	if jwtInfo.Version >= 3 {
@@ -110,14 +111,14 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrf
 		}
 	}
 
-	err := validateAccessTokenStructure(payload, jwtInfo.Version)
+	err := ValidateAccessTokenStructure(payload, jwtInfo.Version)
 	if err != nil {
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: err.Error(),
 		}
 	}
 
-	// We can assume these as defined, since validateAccessTokenStructure checks this
+	// We can assume these as defined, since ValidateAccessTokenStructure checks this
 	var userID string
 	var expiryTime uint64
 	var timeCreated uint64
@@ -129,15 +130,15 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrf
 		userData = payload
 	} else {
 		userID = *sanitizeStringInput(payload["userId"])
-		expiryTime = *sanitizeNumberInputAsUint64(payload["expiryTime"])
-		timeCreated = *sanitizeNumberInputAsUint64(payload["timeCreated"])
-		userData = payload["userData"].(map[string]interface{})
+		expiryTime = *sanitizeNumberInputAsUint64(payload["ExpiryTime"])
+		timeCreated = *sanitizeNumberInputAsUint64(payload["TimeCreated"])
+		userData = payload["UserData"].(map[string]interface{})
 	}
 
-	sessionHandle := sanitizeStringInput(payload["sessionHandle"])
-	refreshTokenHash1 := sanitizeStringInput(payload["refreshTokenHash1"])
-	parentRefreshTokenHash1 := sanitizeStringInput(payload["parentRefreshTokenHash1"])
-	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
+	sessionHandle := sanitizeStringInput(payload["SessionHandle"])
+	refreshTokenHash1 := sanitizeStringInput(payload["RefreshTokenHash1"])
+	parentRefreshTokenHash1 := sanitizeStringInput(payload["ParentRefreshTokenHash1"])
+	antiCsrfToken := sanitizeStringInput(payload["AntiCsrfToken"])
 
 	if antiCsrfToken == nil && doAntiCsrfCheck {
 		return nil, sterrors.TryRefreshTokenError{
@@ -145,35 +146,35 @@ func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrf
 		}
 	}
 
-	if expiryTime < getCurrTimeInMS() {
+	if expiryTime < GetCurrTimeInMS() {
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Access token expired",
 		}
 	}
 
-	return &accessTokenInfoStruct{
-		sessionHandle:           *sessionHandle,
-		userID:                  userID,
-		refreshTokenHash1:       *refreshTokenHash1,
-		parentRefreshTokenHash1: parentRefreshTokenHash1,
-		userData:                userData,
-		antiCsrfToken:           antiCsrfToken,
-		expiryTime:              expiryTime,
-		timeCreated:             timeCreated,
+	return &AccessTokenInfoStruct{
+		SessionHandle:           *sessionHandle,
+		UserID:                  userID,
+		RefreshTokenHash1:       *refreshTokenHash1,
+		ParentRefreshTokenHash1: parentRefreshTokenHash1,
+		UserData:                userData,
+		AntiCsrfToken:           antiCsrfToken,
+		ExpiryTime:              expiryTime,
+		TimeCreated:             timeCreated,
 	}, nil
 }
 
-func validateAccessTokenStructure(payload map[string]interface{}, version int) error {
+func ValidateAccessTokenStructure(payload map[string]interface{}, version int) error {
 	err := errors.New("Access token does not contain all the information. Maybe the structure has changed?")
 
 	if version >= 3 {
-		if _, ok := payload["sessionHandle"].(string); !ok {
+		if _, ok := payload["SessionHandle"].(string); !ok {
 			return err
 		}
 		if _, ok := payload["sub"].(string); !ok {
 			return err
 		}
-		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+		if _, ok := payload["RefreshTokenHash1"].(string); !ok {
 			return err
 		}
 		if _, ok := payload["exp"].(float64); !ok {
@@ -183,25 +184,25 @@ func validateAccessTokenStructure(payload map[string]interface{}, version int) e
 			return err
 		}
 	} else {
-		if _, ok := payload["sessionHandle"].(string); !ok {
+		if _, ok := payload["SessionHandle"].(string); !ok {
 			return err
 		}
 		if _, ok := payload["userId"].(string); !ok {
 			return err
 		}
-		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+		if _, ok := payload["RefreshTokenHash1"].(string); !ok {
 			return err
 		}
-		if payload["userData"] == nil {
+		if payload["UserData"] == nil {
 			return err
 		}
-		if _, ok := payload["userData"].(map[string]interface{}); !ok {
+		if _, ok := payload["UserData"].(map[string]interface{}); !ok {
 			return err
 		}
-		if _, ok := payload["expiryTime"].(float64); !ok {
+		if _, ok := payload["ExpiryTime"].(float64); !ok {
 			return err
 		}
-		if _, ok := payload["timeCreated"].(float64); !ok {
+		if _, ok := payload["TimeCreated"].(float64); !ok {
 			return err
 		}
 	}

@@ -13,7 +13,7 @@
  * under the License.
  */
 
-package api
+package session
 
 import (
 	"net/http"
@@ -25,7 +25,7 @@ import (
 
 func MakeAPIImplementation() sessmodels.APIInterface {
 	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
+		return RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 	}
 
 	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
@@ -41,10 +41,15 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 
 		refreshTokenPath := options.Config.RefreshTokenPath
 		if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
-			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
+			session, err := RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 			return session, err
 		} else {
-			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			sessionContainer, err := GetSessionFromRequest(*options.Req, options.Res, options.Config, &sessmodels.GetSessionOptions{
+				AntiCsrfCheck:                 verifySessionOptions.AntiCsrfCheck,
+				SessionRequired:               verifySessionOptions.SessionRequired,
+				CheckDatabase:                 verifySessionOptions.CheckDatabase,
+				OverrideGlobalClaimValidators: verifySessionOptions.OverrideGlobalClaimValidators,
+			}, options.RecipeImplementation, userContext)
 			if err != nil {
 				return nil, err
 			}
@@ -58,12 +63,12 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
 			}
 			claimValidators := options.ClaimValidatorsAddedByOtherRecipes
-			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidators, userContext)
+			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)((*sessionContainer).GetUserID(), claimValidators, userContext)
 			if err != nil {
 				return nil, err
 			}
 			if overrideGlobalClaimValidators != nil {
-				claimValidators, err = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
+				claimValidators, err = overrideGlobalClaimValidators(claimValidators, *sessionContainer, userContext)
 				if err != nil {
 					return nil, err
 				}
@@ -72,12 +77,12 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			if err != nil {
 				return nil, err
 			}
-			err = sessionContainer.AssertClaimsWithContext(claimValidators, userContext)
+			err = (*sessionContainer).AssertClaimsWithContext(claimValidators, userContext)
 			if err != nil {
 				return nil, err
 			}
 
-			return sessionContainer, nil
+			return *sessionContainer, nil
 		}
 	}
 

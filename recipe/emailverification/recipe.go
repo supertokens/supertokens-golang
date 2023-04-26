@@ -17,13 +17,13 @@ package emailverification
 
 import (
 	"errors"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 

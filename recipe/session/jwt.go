@@ -18,19 +18,11 @@ package session
 import (
 	"errors"
 	"github.com/golang-jwt/jwt/v4"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"reflect"
 	"strconv"
 	"strings"
 )
-
-type ParsedJWTInfo struct {
-	RawTokenString string
-	RawPayload     string
-	Header         string
-	Payload        map[string]interface{}
-	Signature      string
-	Version        int
-}
 
 var HEADERS = []string{
 	"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsInZlcnNpb24iOiIxIn0=", // {"alg":"RS256","typ":"JWT","version":"1"}
@@ -46,8 +38,9 @@ func checkHeader(header string) error {
 	return errors.New("Invalid JWT header")
 }
 
-func parseJWTWithoutSignatureVerification(token string) (ParsedJWTInfo, error) {
+func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInfo, error) {
 	splittedInput := strings.Split(token, ".")
+	var kid *string
 	if len(splittedInput) != 3 {
 		errors.New("Invalid JWT")
 	}
@@ -59,7 +52,7 @@ func parseJWTWithoutSignatureVerification(token string) (ParsedJWTInfo, error) {
 
 	unverifiedToken, _, rawParseError := new(jwt.Parser).ParseUnverified(token, jwt.MapClaims{})
 	if rawParseError != nil {
-		return ParsedJWTInfo{}, rawParseError
+		return sessmodels.ParsedJWTInfo{}, rawParseError
 	}
 
 	if err != nil {
@@ -68,17 +61,30 @@ func parseJWTWithoutSignatureVerification(token string) (ParsedJWTInfo, error) {
 		versionInHeader, ok := parsedHeader["version"]
 
 		if !ok {
-			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
 		if reflect.TypeOf(versionInHeader).Kind() != reflect.String {
-			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
 		versionNumber, parseError := strconv.Atoi(versionInHeader.(string))
 
+		kidInHeader, ok := parsedHeader["kid"]
+
+		if !ok {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		if reflect.TypeOf(kidInHeader).Kind() != reflect.String {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		kidString := kidInHeader.(string)
+		kid = &kidString
+
 		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < 3 || parsedHeader["kid"] == nil {
-			return ParsedJWTInfo{}, errors.New("JWT header mismatch")
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
 		version = versionNumber
@@ -91,15 +97,16 @@ func parseJWTWithoutSignatureVerification(token string) (ParsedJWTInfo, error) {
 	if ok {
 		payload = claims
 	} else {
-		return ParsedJWTInfo{}, errors.New("Invalid JWT")
+		return sessmodels.ParsedJWTInfo{}, errors.New("Invalid JWT")
 	}
 
-	return ParsedJWTInfo{
+	return sessmodels.ParsedJWTInfo{
 		RawTokenString: token,
 		RawPayload:     splittedInput[1],
 		Header:         splittedInput[0],
 		Payload:        payload,
 		Signature:      splittedInput[2],
 		Version:        version,
+		KID:            kid,
 	}, nil
 }

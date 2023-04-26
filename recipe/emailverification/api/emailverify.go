@@ -39,8 +39,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 		sessionRequired := false
 		sessionContainer, err := session.GetSessionWithContext(
-			options.Req, options.Res,
-			&sessmodels.VerifySessionOptions{
+			*options.Req, options.Res,
+			&sessmodels.GetSessionOptions{
 				SessionRequired: &sessionRequired,
 				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 					validators := []claims.SessionClaimValidator{}
@@ -70,7 +70,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, options, userContext)
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), *sessionContainer, options, userContext)
 		if err != nil {
 			return err
 		}
@@ -97,9 +97,9 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 
 		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 		sessionContainer, err := session.GetSessionWithContext(
-			options.Req,
+			*options.Req,
 			options.Res,
-			&sessmodels.VerifySessionOptions{
+			&sessmodels.GetSessionOptions{
 				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 					validators := []claims.SessionClaimValidator{}
 					return validators, nil
@@ -111,7 +111,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return err
 		}
 
-		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(sessionContainer, options, userContext)
+		isVerified, err := (*apiImplementation.IsEmailVerifiedGET)(*sessionContainer, options, userContext)
 		if err != nil {
 			return err
 		}
