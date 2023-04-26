@@ -885,12 +885,12 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 	}))
 
 	mux.HandleFunc("/logout", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
-		sessionContainer, err := GetSession(r, w, nil)
+		sessionContainer, err := GetSession(*r, w, nil)
 		if err != nil {
 			w.WriteHeader(500)
 			return
 		}
-		RevokeSession(sessionContainer.GetHandle())
+		RevokeSession((*sessionContainer).GetHandle())
 		resp := map[string]interface{}{
 			"message": true,
 		}

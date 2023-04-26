@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     -   They can be used directly (i.e.: by calling `GetAccessToken` on the session) if you need a JWT
     -   The `jwt` prop in the access token payload is removed
 -   JWT and OpenId related configuration has been removed from the Session recipe config. If necessary, they can be added by initializing the OpenId recipe before the Session recipe.
+-   Changed the Session recipe interface - CreateNewSession, GetSession and RefreshSession overrides now do not take response and request and return status instead of throwing
 
 ### Changed
 
@@ -42,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Added `ExposeAccessTokenToFrontendInCookieBasedAuth` (defaults to `false`) option to the Session recipe config
 -   Added new `checkDatabase` param to `VerifySession` and `GetSession`
 -   Removed deprecated `UpdateAccessTokenPayload`, `UpdateAccessTokenPayloadWithContext`, `RegenerateAccessToken` and `RegenerateAccessTokenWithContext` from the Session recipe interface
+-   Added `CreateNewSessionWithoutRequestResponse`, `CreateNewSessionWithContextWithoutRequestResponse`, `GetSessionWithoutRequestResponse`, `GetSessionWithContextWithoutRequestResponse`, `RefreshSession`, `RefreshSessionWithContextWithoutRequestResponse` to the Session recipe.
+-   Added `GetAllSessionTokensDangerously` to session objects (`SessionContainer`)
+-   Added `AttachToRequestResponse` to session objects (`SessionContainer`)
 
 ### Migration
 
@@ -152,7 +156,7 @@ Related functions/prop names have changes (`sessionData` became `sessionDataFrom
 #### If you used to use standard/protected props in the access token payload root:
 
 1. Update you application logic to rename those props (e.g., by adding a prefix)
-2. Update the session recipe config (in this example `sub` is the protected property we are updating by adding tha `app` prefix):
+2. Update the session recipe config (in this example `sub` is the protected property we are updating by adding the `app` prefix):
 
 Before:
 
