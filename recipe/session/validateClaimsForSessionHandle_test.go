@@ -29,11 +29,11 @@ func TestValidateShouldReturnRightValidationErrors(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.CreateNewSessionResponse, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
-								return sessmodels.CreateNewSessionResponse{}, err
+								return nil, err
 							}
 							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
 						}

@@ -44,37 +44,34 @@ var protectedProps = []string{
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
 
-	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.CreateNewSessionResponse, error) {
+	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		sessionResponse, err := createNewSessionHelper(
 			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase,
 		)
 		if err != nil {
-			return sessmodels.CreateNewSessionResponse{}, err
+			return nil, err
 		}
 
 		supertokens.LogDebugMessage("createNewSession: Finished")
 
 		parsedJWT, parseErr := ParseJWTWithoutSignatureVerification(sessionResponse.AccessToken.Token)
 		if parseErr != nil {
-			return sessmodels.CreateNewSessionResponse{}, parseErr
+			return nil, parseErr
 		}
 
 		frontToken := BuildFrontToken(sessionResponse.Session.UserID, sessionResponse.Session.ExpiryTime, sessionResponse.Session.UserDataInAccessToken)
 		session := sessionResponse.Session
 		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, parsedJWT.Payload, result, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
-		return sessmodels.CreateNewSessionResponse{
-			Status:  "OK",
-			Session: newSessionContainer(config, &sessionContainerInput),
-		}, nil
+		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
 	// In all cases if sIdRefreshToken token exists (so it's a legacy session) we return TRY_REFRESH_TOKEN. The refresh endpoint will clear this cookie and try to upgrade the session.
 	// Check https://supertokens.com/docs/contribute/decisions/session/0007 for further details and a table of expected behaviours
-	getSession := func(accessTokenString string, antiCsrfToken *string, options *sessmodels.GetSessionOptions, userContext supertokens.UserContext) (sessmodels.GetSessionFunctionResponse, error) {
+	getSession := func(accessTokenString string, antiCsrfToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
 		if options != nil && *options.AntiCsrfCheck != false && config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER {
-			return sessmodels.GetSessionFunctionResponse{}, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
+			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
 		supertokens.LogDebugMessage("getSession: Started")
@@ -83,23 +80,31 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		accessTokenResponse, err := ParseJWTWithoutSignatureVerification(accessTokenString)
 
 		if err != nil {
+			if options != nil && *options.SessionRequired == false {
+				supertokens.LogDebugMessage("getSession: Returning nil because parsing failed and sessionRequired is false")
+				return nil, nil
+			}
+
 			supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because parsing failed")
-			return sessmodels.GetSessionFunctionResponse{
-				Status:  "UNAUTHORISED",
-				Session: nil,
-				Error:   &err,
-			}, nil
+			return nil, errors.UnauthorizedError{
+				Msg:         "Token parsing failed",
+				ClearTokens: nil,
+			}
 		}
 
 		err = ValidateAccessTokenStructure(accessTokenResponse.Payload, accessTokenResponse.Version)
 
 		if err != nil {
+			if options != nil && *options.SessionRequired == false {
+				supertokens.LogDebugMessage("getSession: Returning nil because parsing failed and sessionRequired is false")
+				return nil, nil
+			}
+
 			supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because parsing failed")
-			return sessmodels.GetSessionFunctionResponse{
-				Status:  "UNAUTHORISED",
-				Session: nil,
-				Error:   &err,
-			}, nil
+			return nil, errors.UnauthorizedError{
+				Msg:         "Token parsing failed",
+				ClearTokens: nil,
+			}
 		}
 
 		alwaysCheckCore := false
@@ -112,21 +117,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, doAntiCsrfCheck, alwaysCheckCore)
 		if err != nil {
-			if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
-				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN_ERROR because of an exception during getSession")
-				return sessmodels.GetSessionFunctionResponse{
-					Status:  "TRY_REFRESH_TOKEN_ERROR",
-					Session: nil,
-					Error:   &err,
-				}, nil
-			}
-
-			supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because of an exception during getSession")
-			return sessmodels.GetSessionFunctionResponse{
-				Status:  "UNAUTHORISED",
-				Session: nil,
-				Error:   &err,
-			}, nil
+			return nil, err
 		}
 
 		supertokens.LogDebugMessage("getSession: Success!")
@@ -136,7 +127,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			parsedToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 
 			if parseErr != nil {
-				return sessmodels.GetSessionFunctionResponse{}, parseErr
+				return nil, parseErr
 			}
 
 			payload = parsedToken.Payload
@@ -158,48 +149,29 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, payload, result, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
-		return sessmodels.GetSessionFunctionResponse{
-			Status:  "OK",
-			Session: &sessionContainer,
-			Error:   nil,
-		}, nil
+		return &sessionContainer, nil
 	}
 
 	getSessionInformation := func(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
-	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.GetSessionFunctionResponse, error) {
+	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		if disableAntiCsrf != true && config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER {
-			return sessmodels.GetSessionFunctionResponse{}, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
+			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
 		supertokens.LogDebugMessage("refreshSession: Started")
 
 		response, err := refreshSessionHelper(config, querier, refreshToken, antiCsrfToken, disableAntiCsrf)
 		if err != nil {
-			unauthorisedErr := errors.UnauthorizedError{}
-			isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
-			isTokenTheftDetectedErr := defaultErrors.As(err, &errors.TokenTheftDetectedError{})
-
-			// This token isn't handled by GetToken/setToken to limit the scope of this legacy/migration code
-			if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
-				return sessmodels.GetSessionFunctionResponse{
-					Status: "TOKEN_THEFT_DETECTED",
-					Error:  &err,
-				}, nil
-			}
-
-			return sessmodels.GetSessionFunctionResponse{
-				Status: "UNAUTHORISED",
-				Error:  &err,
-			}, nil
+			return nil, err
 		}
 		supertokens.LogDebugMessage("refreshSession: Success!")
 
 		responseToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 		if parseErr != nil {
-			return sessmodels.GetSessionFunctionResponse{}, err
+			return nil, err
 		}
 
 		session := response.Session
@@ -208,11 +180,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, responseToken.Payload, result, frontToken, antiCsrfToken, nil, &response.RefreshToken, true)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
-		return sessmodels.GetSessionFunctionResponse{
-			Status:  "OK",
-			Session: &sessionContainer,
-			Error:   nil,
-		}, nil
+		return sessionContainer, nil
 	}
 
 	revokeAllSessionsForUser := func(userID string, userContext supertokens.UserContext) ([]string, error) {
@@ -248,7 +216,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return false, nil
 		}
 		newAccessTokenPayload := map[string]interface{}{}
-		for k, v := range sessionInfo.AccessTokenPayload {
+		for k, v := range sessionInfo.CustomClaimsInAccessTokenPayload {
 			newAccessTokenPayload[k] = v
 		}
 
@@ -356,7 +324,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		return sessmodels.GetClaimValueResult{
 			OK: &struct{ Value interface{} }{
-				Value: claim.GetValueFromPayload(sessionInfo.AccessTokenPayload, userContext),
+				Value: claim.GetValueFromPayload(sessionInfo.CustomClaimsInAccessTokenPayload, userContext),
 			},
 		}, nil
 	}

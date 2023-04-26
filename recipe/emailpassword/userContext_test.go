@@ -82,7 +82,7 @@ func TestDefaultUserContext(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						originalCreateNewSession := *originalImplementation.CreateNewSession
-						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.CreateNewSessionResponse, error) {
+						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									createNewSessionContextWorks = true

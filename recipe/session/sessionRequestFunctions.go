@@ -79,6 +79,11 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 	disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
 
 	sessionResponse, err := (*recipeImpl.CreateNewSession)(userID, finalAccessTokenPayload, sessionDataInDatabase, &disableAntiCSRF, userContext)
+
+	if err != nil {
+		return nil, err
+	}
+
 	supertokens.LogDebugMessage("createNewSession: Session created in core built")
 
 	for _, tokenTransferMethod := range AvailableTokenTransferMethods {
@@ -95,19 +100,17 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 
 	supertokens.LogDebugMessage("createNewSession: Cleared old tokens")
 
-	if sessionResponse.Status == "OK" {
-		sessionResponse.Session.AttachToRequestResponse(sessmodels.RequestResponseInfo{
-			Res:                 res,
-			Req:                 *req,
-			TokenTransferMethod: outputTokenTransferMethod,
-		})
-		supertokens.LogDebugMessage("createNewSession: Attached new tokens to res")
-	}
+	sessionResponse.AttachToRequestResponse(sessmodels.RequestResponseInfo{
+		Res:                 res,
+		Req:                 *req,
+		TokenTransferMethod: outputTokenTransferMethod,
+	})
+	supertokens.LogDebugMessage("createNewSession: Attached new tokens to res")
 
-	return sessionResponse.Session, nil
+	return sessionResponse, nil
 }
 
-func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.GetSessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.VerifySessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
 	idRefreshToken := GetCookieValue(&req, legacyIdRefreshTokenCookieName)
 	if idRefreshToken != nil {
 		return nil, errors.TryRefreshTokenError{
@@ -196,11 +199,7 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 		return nil, err
 	}
 
-	if result.Status == "TRY_REFRESH_TOKEN" || result.Status == "UNAUTHORISED" {
-		return nil, *result.Error
-	}
-
-	sessionResult := result.Session
+	sessionResult := result
 	if sessionResult != nil {
 		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
 		if options != nil {
@@ -220,16 +219,16 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 		if err != nil {
 			return nil, err
 		}
-	}
 
-	err = (*sessionResult).AttachToRequestResponse(sessmodels.RequestResponseInfo{
-		Res:                 res,
-		Req:                 req,
-		TokenTransferMethod: requestTokenTransferMethod,
-	})
+		err = (*sessionResult).AttachToRequestResponse(sessmodels.RequestResponseInfo{
+			Res:                 res,
+			Req:                 req,
+			TokenTransferMethod: requestTokenTransferMethod,
+		})
 
-	if err != nil {
-		return nil, err
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return sessionResult, nil
@@ -298,28 +297,21 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 	}
 
 	result, err := (*recipeImpl.RefreshSession)(*refreshToken, antiCsrfToken, disableAntiCSRF, userContext)
+
 	if err != nil {
-		return nil, err
-	}
+		unauthorisedErr := errors.UnauthorizedError{}
+		isUnauthorisedErr := defaultErrors.As(err, &unauthorisedErr)
+		isTokenTheftDetectedErr := defaultErrors.As(err, &errors.TokenTheftDetectedError{})
 
-	if result.Status != "OK" {
-		if result.Status == "TOKEN_THEFT_DETECTED" || result.Error != nil {
-			unauthorisedErr := errors.UnauthorizedError{}
-			isUnauthorisedErr := defaultErrors.As(*result.Error, &unauthorisedErr)
-			isTokenTheftDetectedErr := defaultErrors.As(*result.Error, &errors.TokenTheftDetectedError{})
-
-			// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
-			if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
-				if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
-					supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
-					SetCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
-				}
+		// This token isn't handled by getToken/setToken to limit the scope of this legacy/migration code
+		if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
+			if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
+				supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
+				SetCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
 			}
 		}
 
-		if result.Status == "TOKEN_THEFT_DETECTED" || result.Status == "UNAUTHORISED" {
-			return nil, err
-		}
+		return nil, err
 	}
 
 	supertokens.LogDebugMessage("refreshSession: Attaching refreshed session info as " + string(requestTokenTransferMethod))
@@ -330,7 +322,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 		}
 	}
 
-	(*result.Session).AttachToRequestResponse(sessmodels.RequestResponseInfo{
+	(*result).AttachToRequestResponse(sessmodels.RequestResponseInfo{
 		Res:                 res,
 		Req:                 *req,
 		TokenTransferMethod: requestTokenTransferMethod,
@@ -343,5 +335,5 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 		SetCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
 	}
 
-	return *result.Session, nil
+	return result, nil
 }

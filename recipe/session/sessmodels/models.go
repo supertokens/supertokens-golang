@@ -186,13 +186,6 @@ type JWTNormalisedConfig struct {
 	PropertyNameInAccessTokenPayload string
 }
 
-type GetSessionOptions struct {
-	AntiCsrfCheck                 *bool
-	SessionRequired               *bool
-	CheckDatabase                 *bool
-	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
-}
-
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
@@ -275,12 +268,12 @@ type TypeSessionContainer struct {
 type SessionContainer = *TypeSessionContainer
 
 type SessionInformation struct {
-	SessionHandle         string
-	UserId                string
-	SessionDataInDatabase map[string]interface{}
-	Expiry                uint64
-	AccessTokenPayload    map[string]interface{}
-	TimeCreated           uint64
+	SessionHandle                    string
+	UserId                           string
+	SessionDataInDatabase            map[string]interface{}
+	Expiry                           uint64
+	CustomClaimsInAccessTokenPayload map[string]interface{}
+	TimeCreated                      uint64
 }
 
 type ParsedJWTInfo struct {

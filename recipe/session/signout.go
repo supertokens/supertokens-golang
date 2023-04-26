@@ -30,7 +30,7 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	False := false
-	sessionContainer, err := GetSessionFromRequest(*options.Req, options.Res, options.Config, &sessmodels.GetSessionOptions{
+	sessionContainer, err := GetSessionFromRequest(*options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{
 		SessionRequired: &False,
 		OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 			return []claims.SessionClaimValidator{}, nil

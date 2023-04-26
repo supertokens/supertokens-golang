@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     -   The `jwt` prop in the access token payload is removed
 -   JWT and OpenId related configuration has been removed from the Session recipe config. If necessary, they can be added by initializing the OpenId recipe before the Session recipe.
 -   Changed the Session recipe interface - CreateNewSession, GetSession and RefreshSession overrides now do not take response and request and return status instead of throwing
+-   Renamed `AccessTokenPayload` to `CustomClaimsInAccessTokenPayload` in `SessionInformation` (the return value of `GetSessionInformation`). This reflects the fact that it doesn't contain some default claims (`sub`, `iat`, etc.)
 
 ### Changed
 

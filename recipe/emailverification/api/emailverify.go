@@ -40,7 +40,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 		sessionRequired := false
 		sessionContainer, err := session.GetSessionWithContext(
 			*options.Req, options.Res,
-			&sessmodels.GetSessionOptions{
+			&sessmodels.VerifySessionOptions{
 				SessionRequired: &sessionRequired,
 				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 					validators := []claims.SessionClaimValidator{}
@@ -99,7 +99,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 		sessionContainer, err := session.GetSessionWithContext(
 			*options.Req,
 			options.Res,
-			&sessmodels.GetSessionOptions{
+			&sessmodels.VerifySessionOptions{
 				OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 					validators := []claims.SessionClaimValidator{}
 					return validators, nil
