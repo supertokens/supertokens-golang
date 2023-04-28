@@ -221,7 +221,7 @@ type SessionTokens struct {
 
 type RequestResponseInfo struct {
 	Res                 http.ResponseWriter
-	Req                 http.Request
+	Req                 *http.Request
 	TokenTransferMethod TokenTransferMethod
 }
 

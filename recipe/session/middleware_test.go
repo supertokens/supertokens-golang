@@ -152,7 +152,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -442,7 +442,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -722,7 +722,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -1015,7 +1015,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})

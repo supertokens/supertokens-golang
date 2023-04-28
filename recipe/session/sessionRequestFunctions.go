@@ -105,7 +105,7 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 
 	sessionResponse.AttachToRequestResponse(sessmodels.RequestResponseInfo{
 		Res:                 res,
-		Req:                 *req,
+		Req:                 req,
 		TokenTransferMethod: outputTokenTransferMethod,
 	})
 	supertokens.LogDebugMessage("createNewSession: Attached new tokens to res")
@@ -113,8 +113,8 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 	return sessionResponse, nil
 }
 
-func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.VerifySessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-	idRefreshToken := GetCookieValue(&req, legacyIdRefreshTokenCookieName)
+func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.VerifySessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	idRefreshToken := GetCookieValue(req, legacyIdRefreshTokenCookieName)
 	if idRefreshToken != nil {
 		return nil, errors.TryRefreshTokenError{
 			Msg: "using legacy sessionResult, please call the refresh API",
@@ -128,7 +128,7 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 
 	// We check all token transfer methods for available access tokens
 	for _, tokenTransferMethod := range AvailableTokenTransferMethods {
-		token, err := GetToken(&req, sessmodels.AccessToken, tokenTransferMethod)
+		token, err := GetToken(req, sessmodels.AccessToken, tokenTransferMethod)
 		if err != nil {
 			return nil, err
 		}
@@ -148,7 +148,7 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 		}
 	}
 
-	allowedTokenTransferMethod := config.GetTokenTransferMethod(&req, false, userContext)
+	allowedTokenTransferMethod := config.GetTokenTransferMethod(req, false, userContext)
 
 	var requestTokenTransferMethod sessmodels.TokenTransferMethod
 	var accessToken *sessmodels.ParsedJWTInfo
@@ -177,7 +177,7 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 		}
 	}
 
-	antiCsrfToken := GetAntiCsrfTokenFromHeaders(&req)
+	antiCsrfToken := GetAntiCsrfTokenFromHeaders(req)
 	var doAntiCsrfCheck *bool
 
 	if options != nil {
@@ -327,7 +327,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 
 	(*result).AttachToRequestResponse(sessmodels.RequestResponseInfo{
 		Res:                 res,
-		Req:                 *req,
+		Req:                 req,
 		TokenTransferMethod: requestTokenTransferMethod,
 	})
 

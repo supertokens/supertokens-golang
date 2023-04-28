@@ -44,7 +44,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			session, err := RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 			return session, err
 		} else {
-			sessionContainer, err := GetSessionFromRequest(*options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{
+			sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{
 				AntiCsrfCheck:                 verifySessionOptions.AntiCsrfCheck,
 				SessionRequired:               verifySessionOptions.SessionRequired,
 				CheckDatabase:                 verifySessionOptions.CheckDatabase,
