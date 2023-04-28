@@ -72,7 +72,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 
 	unittesting.SigninupCustomRequest(testServer.URL, "test@gmail.com", "testPass0")
 	unittesting.SigninupCustomRequest(testServer.URL, "test1@gmail.com", "testPass1")
-	unittesting.SigninupCustomRequest(testServer.URL, "test2@gmail.com", "testPass2")
+	unittesting.SigninupCustomRequest(testServer.URL, "john@gmail.com", "testPass2")
 	unittesting.SigninupCustomRequest(testServer.URL, "test3@gmail.com", "testPass3")
 	unittesting.SigninupCustomRequest(testServer.URL, "test4@gmail.com", "testPass4")
 
@@ -122,6 +122,24 @@ func TestGetUsersOldesFirst(t *testing.T) {
 	} else {
 		t.Fail()
 	}
+
+	customLimit = 10
+	query := make(map[string]string)
+	query["email"] = "doe"
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 0)
+	}
+
+	query["email"] = "john"
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 1)
+	}
 }
 
 func TestGetUsersNewestFirst(t *testing.T) {
@@ -167,7 +185,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 
 	unittesting.SigninupCustomRequest(testServer.URL, "test@gmail.com", "testPass0")
 	unittesting.SigninupCustomRequest(testServer.URL, "test1@gmail.com", "testPass1")
-	unittesting.SigninupCustomRequest(testServer.URL, "test2@gmail.com", "testPass2")
+	unittesting.SigninupCustomRequest(testServer.URL, "john@gmail.com", "testPass2")
 	unittesting.SigninupCustomRequest(testServer.URL, "test3@gmail.com", "testPass3")
 	unittesting.SigninupCustomRequest(testServer.URL, "test4@gmail.com", "testPass4")
 
@@ -217,6 +235,24 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		assert.Contains(t, err.Error(), "limit must a positive integer with min value 1")
 	} else {
 		t.Fail()
+	}
+
+	customLimit = 10
+	query := make(map[string]string)
+	query["email"] = "doe"
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 0)
+	}
+
+	query["email"] = "john"
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 1)
 	}
 }
 
