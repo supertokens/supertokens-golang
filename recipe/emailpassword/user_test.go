@@ -81,7 +81,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	users, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
+	users, err := supertokens.GetUsersOldestFirst(nil, nil, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -90,7 +90,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	assert.Nil(t, users.NextPaginationToken)
 
 	limit := 1
-	users, err = supertokens.GetUsersOldestFirst(nil, &limit, nil)
+	users, err = supertokens.GetUsersOldestFirst(nil, &limit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -99,7 +99,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	assert.NotNil(t, users.NextPaginationToken)
 	assert.Equal(t, "test@gmail.com", users.Users[0].User["email"])
 
-	users, err = supertokens.GetUsersOldestFirst(users.NextPaginationToken, &limit, nil)
+	users, err = supertokens.GetUsersOldestFirst(users.NextPaginationToken, &limit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -109,7 +109,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	assert.Equal(t, "test1@gmail.com", users.Users[0].User["email"])
 
 	limit = 5
-	users, err = supertokens.GetUsersOldestFirst(users.NextPaginationToken, &limit, nil)
+	users, err = supertokens.GetUsersOldestFirst(users.NextPaginationToken, &limit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -119,7 +119,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 
 	customPaginationToken := "invalid-pagination-token"
 	limit = 10
-	users, err = supertokens.GetUsersOldestFirst(&customPaginationToken, &limit, nil)
+	users, err = supertokens.GetUsersOldestFirst(&customPaginationToken, &limit, nil, nil)
 	if err != nil {
 		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: invalid pagination token\n", err.Error())
 	} else {
@@ -127,7 +127,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	}
 
 	limit = -1
-	users, err = supertokens.GetUsersOldestFirst(nil, &limit, nil)
+	users, err = supertokens.GetUsersOldestFirst(nil, &limit, nil, nil)
 	if err != nil {
 		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
 	} else {
@@ -187,7 +187,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	users, err := supertokens.GetUsersNewestFirst(nil, nil, nil)
+	users, err := supertokens.GetUsersNewestFirst(nil, nil, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -196,7 +196,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	assert.Nil(t, users.NextPaginationToken)
 
 	limit := 1
-	users, err = supertokens.GetUsersNewestFirst(nil, &limit, nil)
+	users, err = supertokens.GetUsersNewestFirst(nil, &limit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -205,7 +205,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	assert.NotNil(t, users.NextPaginationToken)
 	assert.Equal(t, "test4@gmail.com", users.Users[0].User["email"])
 
-	users, err = supertokens.GetUsersNewestFirst(users.NextPaginationToken, &limit, nil)
+	users, err = supertokens.GetUsersNewestFirst(users.NextPaginationToken, &limit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -215,7 +215,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	assert.Equal(t, "test3@gmail.com", users.Users[0].User["email"])
 
 	limit = 5
-	users, err = supertokens.GetUsersNewestFirst(users.NextPaginationToken, &limit, nil)
+	users, err = supertokens.GetUsersNewestFirst(users.NextPaginationToken, &limit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -225,7 +225,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 
 	customPaginationToken := "invalid-pagination-token"
 	limit = 10
-	users, err = supertokens.GetUsersNewestFirst(&customPaginationToken, &limit, nil)
+	users, err = supertokens.GetUsersNewestFirst(&customPaginationToken, &limit, nil, nil)
 	if err != nil {
 		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: invalid pagination token\n", err.Error())
 	} else {
@@ -233,7 +233,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	}
 
 	limit = -1
-	users, err = supertokens.GetUsersNewestFirst(nil, &limit, nil)
+	users, err = supertokens.GetUsersNewestFirst(nil, &limit, nil, nil)
 	if err != nil {
 		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
 	} else {
