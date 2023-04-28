@@ -46,7 +46,7 @@ func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options e
 		return err
 	}
 
-	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(*sessionContainer, options, userContext)
+	response, err := (*apiImplementation.GenerateEmailVerifyTokenPOST)(sessionContainer, options, userContext)
 	if err != nil {
 		return err
 	}
