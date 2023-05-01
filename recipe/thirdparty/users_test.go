@@ -123,7 +123,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 		t.Fail()
 	}
 
-	querier, err := supertokens.GetNewQuerierInstanceOrThrowError(options.RecipeID)
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("thirdparty")
 	if err != nil {
 		t.Fail()
 	}
@@ -250,7 +250,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		t.Fail()
 	}
 
-	querier, err := supertokens.GetNewQuerierInstanceOrThrowError(options.RecipeID)
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("thirdparty")
 	if err != nil {
 		t.Fail()
 	}
