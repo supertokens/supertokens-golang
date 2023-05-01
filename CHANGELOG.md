@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.11.0] - 2023-04-28
+- Added missing arguments in `GetUsersNewestFirst` and `GetUsersOldestFirst`
+
 ## [0.10.8] - 2023-04-18
 - Email template for verify email updated 
 
