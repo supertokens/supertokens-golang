@@ -123,6 +123,19 @@ func TestGetUsersOldesFirst(t *testing.T) {
 		t.Fail()
 	}
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError(options.RecipeID)
+	if err != nil {
+		t.Fail()
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Fail()
+	}
+
+	if supertokens.MaxVersion(cdiVersion, "2.20") != cdiVersion {
+		t.Skip()
+	}
+
 	customLimit = 10
 	query := make(map[string]string)
 	query["email"] = "doe"
@@ -235,6 +248,19 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		assert.Contains(t, err.Error(), "limit must a positive integer with min value 1")
 	} else {
 		t.Fail()
+	}
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError(options.RecipeID)
+	if err != nil {
+		t.Fail()
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Fail()
+	}
+
+	if supertokens.MaxVersion(cdiVersion, "2.20") != cdiVersion {
+		t.Skip()
 	}
 
 	customLimit = 10
