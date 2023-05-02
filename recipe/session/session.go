@@ -328,7 +328,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			RefreshToken:                  refreshToken,
 			AntiCsrfToken:                 session.antiCSRFToken,
 			FrontToken:                    session.frontToken,
-			AccessAndFrontendTokenUpdates: session.accessTokenUpdated,
+			AccessAndFrontendTokenUpdated: session.accessTokenUpdated,
 		}
 	}
 

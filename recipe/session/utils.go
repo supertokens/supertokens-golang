@@ -115,12 +115,6 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		antiCsrf = *config.AntiCsrf
 	}
 
-	exposeAccessTokenToFrontendInCookieBasedAuth := false
-
-	if config != nil && config.ExposeAccessTokenToFrontendInCookieBasedAuth != nil {
-		exposeAccessTokenToFrontendInCookieBasedAuth = *config.ExposeAccessTokenToFrontendInCookieBasedAuth
-	}
-
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
 		OnTokenTheftDetected: func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error {
 			recipeInstance, err := getRecipeInstanceOrThrowError()
@@ -191,7 +185,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		InvalidClaimStatusCode:   invalidClaimStatusCode,
 		AntiCsrf:                 antiCsrf,
-		ExposeAccessTokenToFrontendInCookieBasedAuth: exposeAccessTokenToFrontendInCookieBasedAuth,
+		ExposeAccessTokenToFrontendInCookieBasedAuth: config.ExposeAccessTokenToFrontendInCookieBasedAuth,
 		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
 		ErrorHandlers:                                errorHandlers,
 		GetTokenTransferMethod:                       config.GetTokenTransferMethod,

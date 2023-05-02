@@ -417,7 +417,7 @@ func UpdateSessionDataInDatabase(sessionHandle string, newSessionData map[string
 	return UpdateSessionDataInDatabaseWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
 }
 
-func CreateJWT(payload map[string]interface{}, useStaticSigningKey *bool, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
 	return CreateJWTWithContext(payload, validitySecondsPointer, useStaticSigningKey, &map[string]interface{}{})
 }
 
