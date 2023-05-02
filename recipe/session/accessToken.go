@@ -130,15 +130,15 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 		userData = payload
 	} else {
 		userID = *sanitizeStringInput(payload["userId"])
-		expiryTime = *sanitizeNumberInputAsUint64(payload["ExpiryTime"])
-		timeCreated = *sanitizeNumberInputAsUint64(payload["TimeCreated"])
-		userData = payload["UserData"].(map[string]interface{})
+		expiryTime = *sanitizeNumberInputAsUint64(payload["expiryTime"])
+		timeCreated = *sanitizeNumberInputAsUint64(payload["timeCreated"])
+		userData = payload["userData"].(map[string]interface{})
 	}
 
-	sessionHandle := sanitizeStringInput(payload["SessionHandle"])
-	refreshTokenHash1 := sanitizeStringInput(payload["RefreshTokenHash1"])
-	parentRefreshTokenHash1 := sanitizeStringInput(payload["ParentRefreshTokenHash1"])
-	antiCsrfToken := sanitizeStringInput(payload["AntiCsrfToken"])
+	sessionHandle := sanitizeStringInput(payload["sessionHandle"])
+	refreshTokenHash1 := sanitizeStringInput(payload["refreshTokenHash1"])
+	parentRefreshTokenHash1 := sanitizeStringInput(payload["parentRefreshTokenHash1"])
+	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
 
 	if antiCsrfToken == nil && doAntiCsrfCheck {
 		return nil, sterrors.TryRefreshTokenError{
@@ -168,13 +168,13 @@ func ValidateAccessTokenStructure(payload map[string]interface{}, version int) e
 	err := errors.New("Access token does not contain all the information. Maybe the structure has changed?")
 
 	if version >= 3 {
-		if _, ok := payload["SessionHandle"].(string); !ok {
+		if _, ok := payload["sessionHandle"].(string); !ok {
 			return err
 		}
 		if _, ok := payload["sub"].(string); !ok {
 			return err
 		}
-		if _, ok := payload["RefreshTokenHash1"].(string); !ok {
+		if _, ok := payload["refreshTokenHash1"].(string); !ok {
 			return err
 		}
 		if _, ok := payload["exp"].(float64); !ok {
@@ -184,25 +184,25 @@ func ValidateAccessTokenStructure(payload map[string]interface{}, version int) e
 			return err
 		}
 	} else {
-		if _, ok := payload["SessionHandle"].(string); !ok {
+		if _, ok := payload["sessionHandle"].(string); !ok {
 			return err
 		}
 		if _, ok := payload["userId"].(string); !ok {
 			return err
 		}
-		if _, ok := payload["RefreshTokenHash1"].(string); !ok {
+		if _, ok := payload["refreshTokenHash1"].(string); !ok {
 			return err
 		}
 		if payload["UserData"] == nil {
 			return err
 		}
-		if _, ok := payload["UserData"].(map[string]interface{}); !ok {
+		if _, ok := payload["userData"].(map[string]interface{}); !ok {
 			return err
 		}
-		if _, ok := payload["ExpiryTime"].(float64); !ok {
+		if _, ok := payload["expiryTime"].(float64); !ok {
 			return err
 		}
-		if _, ok := payload["TimeCreated"].(float64); !ok {
+		if _, ok := payload["timeCreated"].(float64); !ok {
 			return err
 		}
 	}

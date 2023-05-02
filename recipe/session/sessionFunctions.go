@@ -112,9 +112,9 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 
 		if tokenUsesDynamicKey != config.UseDynamicAccessTokenSigningKey {
 			supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because the access token doesn't match the useDynamicAccessTokenSigningKey in the config")
-		}
 
-		return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "The access token doesn't match the useDynamicAccessTokenSigningKey setting"}
+			return sessmodels.GetSessionResponse{}, errors.TryRefreshTokenError{Msg: "The access token doesn't match the useDynamicAccessTokenSigningKey setting"}
+		}
 	}
 
 	if doAntiCsrfCheck {

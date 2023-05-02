@@ -29,5 +29,5 @@ const (
 
 	CookieSameSite_NONE   = "none"
 	CookieSameSite_LAX    = "lax"
-	cookieSameSite_STRICT = "strict"
+	CookieSameSite_STRICT = "strict"
 )

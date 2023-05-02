@@ -222,7 +222,7 @@ var accessTokenCookiesExpiryDurationMillis = 3153600000000
 func normaliseSameSiteOrThrowError(sameSite string) (string, error) {
 	sameSite = strings.TrimSpace(sameSite)
 	sameSite = strings.ToLower(sameSite)
-	if sameSite != cookieSameSite_STRICT && sameSite != CookieSameSite_LAX && sameSite != CookieSameSite_NONE {
+	if sameSite != CookieSameSite_STRICT && sameSite != CookieSameSite_LAX && sameSite != CookieSameSite_NONE {
 		return "", errors.New(`cookie same site must be one of "strict", "lax", or "none"`)
 	}
 	return sameSite, nil
