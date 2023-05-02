@@ -114,7 +114,7 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 	idRefreshToken := GetCookieValue(&req, legacyIdRefreshTokenCookieName)
 	if idRefreshToken != nil {
 		return nil, errors.TryRefreshTokenError{
-			Msg: "using legacy sessionResult, please call the refresh API",
+			Msg: "using legacy session, please call the refresh API",
 		}
 	}
 

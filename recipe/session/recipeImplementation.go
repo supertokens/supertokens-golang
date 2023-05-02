@@ -61,7 +61,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			return nil, parseErr
 		}
 
-		frontToken := BuildFrontToken(sessionResponse.Session.UserID, sessionResponse.Session.ExpiryTime, sessionResponse.Session.UserDataInAccessToken)
+		frontToken := BuildFrontToken(sessionResponse.Session.UserID, sessionResponse.Session.ExpiryTime, parsedJWT.Payload)
 		session := sessionResponse.Session
 		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, parsedJWT.Payload, result, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
 		return newSessionContainer(config, &sessionContainerInput), nil
@@ -143,7 +143,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			accessTokenStringForSession = response.AccessToken.Token
 		}
 
-		frontToken := BuildFrontToken(response.Session.UserID, response.Session.ExpiryTime, response.Session.UserDataInAccessToken)
+		frontToken := BuildFrontToken(response.Session.UserID, response.Session.ExpiryTime, payload)
 		session := response.Session
 
 		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, payload, result, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
