@@ -16,7 +16,6 @@
 package emailpassword
 
 import (
-	"errors"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -171,9 +170,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 				formFields := getEmailPasswordConfig().SignUpFeature.FormFields
 				for i := range formFields {
 					if formFields[i].ID == "password" {
-						err := formFields[i].Validate(password)
-						if err == nil {
-							return epmodels.UpdateEmailOrPasswordResponse{PasswordPolicyViolatedError: &struct{}{}}, errors.New(*err)
+						err := formFields[i].Validate(*password)
+						if err != nil {
+							errResponse := epmodels.PasswordPolicyViolatedError{
+								FailureReason: err,
+							}
+							return epmodels.UpdateEmailOrPasswordResponse{PasswordPolicyViolatedError: &errResponse}, nil
 						}
 					}
 				}

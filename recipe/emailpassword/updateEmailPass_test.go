@@ -98,10 +98,9 @@ func TestUpdateEmailPass(t *testing.T) {
 	}
 
 	email := "test2@gmail.com"
-	password := "testPass"
+	password := "testPass1"
 
 	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil)
-
 	res1, err := unittesting.SignInRequest("testrandom@gmail.com", "validpass123", testServer.URL)
 
 	if err != nil {
@@ -140,6 +139,12 @@ func TestUpdateEmailPass(t *testing.T) {
 
 	assert.Equal(t, "OK", data2["status"])
 	assert.Equal(t, email, data2["user"].(map[string]interface{})["email"])
+
+	password = "test"
+	applyPasswordPolicy := true
+	res3, err := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, &applyPasswordPolicy)
+	assert.NotNil(t, res3.PasswordPolicyViolatedError)
+	assert.Equal(t, "Password must contain at least 8 characters, including a number", *res3.PasswordPolicyViolatedError.FailureReason)
 }
 
 func TestAPICustomResponse(t *testing.T) {

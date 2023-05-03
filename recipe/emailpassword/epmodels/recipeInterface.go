@@ -59,5 +59,9 @@ type UpdateEmailOrPasswordResponse struct {
 	OK                          *struct{}
 	UnknownUserIdError          *struct{}
 	EmailAlreadyExistsError     *struct{}
-	PasswordPolicyViolatedError *struct{}
+	PasswordPolicyViolatedError *PasswordPolicyViolatedError
+}
+
+type PasswordPolicyViolatedError struct {
+	FailureReason *string
 }
