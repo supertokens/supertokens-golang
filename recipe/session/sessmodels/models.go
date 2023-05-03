@@ -118,6 +118,7 @@ type SessionStruct struct {
 	Handle                string                 `json:"handle"`
 	UserID                string                 `json:"userId"`
 	UserDataInAccessToken map[string]interface{} `json:"userDataInJWT"`
+	ExpiryTime            uint64                 `json:"expiryTime"`
 }
 
 type CreateOrRefreshAPIResponseToken struct {
@@ -127,6 +128,7 @@ type CreateOrRefreshAPIResponseToken struct {
 }
 
 type GetSessionResponse struct {
+	Status      string
 	Session     SessionStruct                   `json:"session"`
 	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
@@ -148,6 +150,7 @@ type TypeInput struct {
 	ErrorHandlers                                *ErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 	ExposeAccessTokenToFrontendInCookieBasedAuth *bool
+	UseDynamicAccessTokenSigningKey              *bool
 }
 
 type OverrideStruct struct {
@@ -174,6 +177,7 @@ type TypeNormalisedInput struct {
 	ErrorHandlers                                NormalisedErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 	ExposeAccessTokenToFrontendInCookieBasedAuth bool
+	UseDynamicAccessTokenSigningKey              bool
 }
 
 type JWTNormalisedConfig struct {
@@ -207,16 +211,31 @@ type NormalisedErrorHandlers struct {
 	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
 }
 
+type SessionTokens struct {
+	AccessToken                   string
+	RefreshToken                  *string
+	AntiCsrfToken                 *string
+	FrontToken                    string
+	AccessAndFrontendTokenUpdates bool
+}
+
+type RequestResponseInfo struct {
+	Res                 http.ResponseWriter
+	Req                 http.Request
+	TokenTransferMethod TokenTransferMethod
+}
+
 type TypeSessionContainer struct {
-	RevokeSession               func() error
-	GetSessionDataInDatabase    func() (map[string]interface{}, error)
-	UpdateSessionDataInDatabase func(newSessionData map[string]interface{}) error
-	GetUserID                   func() string
-	GetAccessTokenPayload       func() map[string]interface{}
-	GetHandle                   func() string
-	GetAccessToken              func() string
-	GetTimeCreated              func() (uint64, error)
-	GetExpiry                   func() (uint64, error)
+	RevokeSession                  func() error
+	GetSessionDataInDatabase       func() (map[string]interface{}, error)
+	UpdateSessionDataInDatabase    func(newSessionData map[string]interface{}) error
+	GetUserID                      func() string
+	GetAccessTokenPayload          func() map[string]interface{}
+	GetHandle                      func() string
+	GetAllSessionTokensDangerously func() SessionTokens
+	GetAccessToken                 func() string
+	GetTimeCreated                 func() (uint64, error)
+	GetExpiry                      func() (uint64, error)
 
 	RevokeSessionWithContext               func(userContext supertokens.UserContext) error
 	GetSessionDataInDatabaseWithContext    func(userContext supertokens.UserContext) (map[string]interface{}, error)
@@ -238,22 +257,33 @@ type TypeSessionContainer struct {
 
 	MergeIntoAccessTokenPayload func(accessTokenPayloadUpdate map[string]interface{}) error
 
-	AssertClaims     func(claimValidators []claims.SessionClaimValidator) error
-	FetchAndSetClaim func(claim *claims.TypeSessionClaim) error
-	SetClaimValue    func(claim *claims.TypeSessionClaim, value interface{}) error
-	GetClaimValue    func(claim *claims.TypeSessionClaim) interface{}
-	RemoveClaim      func(claim *claims.TypeSessionClaim) error
+	AssertClaims            func(claimValidators []claims.SessionClaimValidator) error
+	FetchAndSetClaim        func(claim *claims.TypeSessionClaim) error
+	SetClaimValue           func(claim *claims.TypeSessionClaim, value interface{}) error
+	GetClaimValue           func(claim *claims.TypeSessionClaim) interface{}
+	RemoveClaim             func(claim *claims.TypeSessionClaim) error
+	AttachToRequestResponse func(info RequestResponseInfo) error
 }
 
 type SessionContainer = *TypeSessionContainer
 
 type SessionInformation struct {
-	SessionHandle         string
-	UserId                string
-	SessionDataInDatabase map[string]interface{}
-	Expiry                uint64
-	AccessTokenPayload    map[string]interface{}
-	TimeCreated           uint64
+	SessionHandle                    string
+	UserId                           string
+	SessionDataInDatabase            map[string]interface{}
+	Expiry                           uint64
+	CustomClaimsInAccessTokenPayload map[string]interface{}
+	TimeCreated                      uint64
+}
+
+type ParsedJWTInfo struct {
+	RawTokenString string
+	RawPayload     string
+	Header         string
+	Payload        map[string]interface{}
+	Signature      string
+	Version        int
+	KID            *string
 }
 
 const SessionContext int = iota

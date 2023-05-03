@@ -65,13 +65,13 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionDataInDatabase, userContext)
+							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -122,13 +122,13 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionDataInDatabase, userContext)
+							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -160,7 +160,7 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 
 	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
 	assert.NoError(t, err)
-	accessTokenPayload = sessInfo.AccessTokenPayload
+	accessTokenPayload = sessInfo.CustomClaimsInAccessTokenPayload
 	assert.Equal(t, 0, len(accessTokenPayload))
 }
 

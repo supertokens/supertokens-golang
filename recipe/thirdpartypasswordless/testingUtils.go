@@ -17,6 +17,7 @@ package thirdpartypasswordless
 
 import (
 	"errors"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -24,7 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"

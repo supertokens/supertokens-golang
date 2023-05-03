@@ -131,7 +131,7 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 
 	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
 	assert.NoError(t, err)
-	accessTokenPayload := sessInfo.AccessTokenPayload
+	accessTokenPayload := sessInfo.CustomClaimsInAccessTokenPayload
 
 	assert.Equal(t, 1, len(accessTokenPayload))
 	assert.NotNil(t, accessTokenPayload["st-true"])

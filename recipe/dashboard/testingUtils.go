@@ -16,9 +16,9 @@
 package dashboard
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"testing"
 
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )

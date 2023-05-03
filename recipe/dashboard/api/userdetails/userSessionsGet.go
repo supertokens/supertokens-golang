@@ -24,12 +24,12 @@ import (
 )
 
 type SessionType struct {
-	SessionDataInDatabase interface{} `json:"sessionDataInDatabase"`
-	AccessTokenPayload    interface{} `json:"accessTokenPayload"`
-	UserId                string      `json:"userId"`
-	Expiry                uint64      `json:"expiry"`
-	TimeCreated           uint64      `json:"timeCreated"`
-	SessionHandle         string      `json:"sessionHandle"`
+	SessionDataInDatabase            interface{} `json:"sessionDataInDatabase"`
+	CustomClaimsInAccessTokenPayload interface{} `json:"accessTokenPayload"`
+	UserId                           string      `json:"userId"`
+	Expiry                           uint64      `json:"expiry"`
+	TimeCreated                      uint64      `json:"timeCreated"`
+	SessionHandle                    string      `json:"sessionHandle"`
 }
 
 type userSessionsGetResponse struct {
@@ -74,12 +74,12 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 
 			if sessionResponse != nil {
 				sessions = append(sessions, SessionType{
-					SessionDataInDatabase: sessionResponse.SessionDataInDatabase,
-					AccessTokenPayload:    sessionResponse.AccessTokenPayload,
-					UserId:                sessionResponse.UserId,
-					Expiry:                sessionResponse.Expiry,
-					TimeCreated:           sessionResponse.TimeCreated,
-					SessionHandle:         sessionResponse.SessionHandle,
+					SessionDataInDatabase:            sessionResponse.SessionDataInDatabase,
+					CustomClaimsInAccessTokenPayload: sessionResponse.CustomClaimsInAccessTokenPayload,
+					UserId:                           sessionResponse.UserId,
+					Expiry:                           sessionResponse.Expiry,
+					TimeCreated:                      sessionResponse.TimeCreated,
+					SessionHandle:                    sessionResponse.SessionHandle,
 				})
 			}
 

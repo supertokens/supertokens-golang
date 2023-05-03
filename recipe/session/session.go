@@ -16,7 +16,6 @@
 package session
 
 import (
-	"net/http"
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
@@ -29,23 +28,38 @@ type SessionContainerInput struct {
 	sessionHandle         string
 	userID                string
 	userDataInAccessToken map[string]interface{}
-	res                   http.ResponseWriter
 	accessToken           string
+	frontToken            string
+	refreshToken          *sessmodels.CreateOrRefreshAPIResponseToken
 	recipeImpl            sessmodels.RecipeInterface
-	req                   *http.Request
-	tokenTransferMethod   sessmodels.TokenTransferMethod
+	antiCSRFToken         *string
+	requestResponseInfo   *sessmodels.RequestResponseInfo
+	accessTokenUpdated    bool
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
+func makeSessionContainerInput(
+	accessToken string,
+	sessionHandle string,
+	userID string,
+	userDataInAccessToken map[string]interface{},
+	recipeImpl sessmodels.RecipeInterface,
+	frontToken string,
+	antiCSRFToken *string,
+	info *sessmodels.RequestResponseInfo,
+	refreshToken *sessmodels.CreateOrRefreshAPIResponseToken,
+	accessTokenUpdated bool,
+) SessionContainerInput {
 	return SessionContainerInput{
 		sessionHandle:         sessionHandle,
 		userID:                userID,
 		userDataInAccessToken: userDataInAccessToken,
-		res:                   res,
 		accessToken:           accessToken,
+		frontToken:            frontToken,
+		refreshToken:          refreshToken,
 		recipeImpl:            recipeImpl,
-		req:                   req,
-		tokenTransferMethod:   tokenTransferMethod,
+		antiCSRFToken:         antiCSRFToken,
+		requestResponseInfo:   info,
+		accessTokenUpdated:    accessTokenUpdated,
 	}
 }
 
@@ -57,7 +71,16 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if err != nil {
 			return err
 		}
-		clearSession(config, session.res, session.tokenTransferMethod)
+
+		if session.requestResponseInfo != nil {
+			// we do not check the output of calling revokeSession
+			// before clearing the cookies because we are revoking the
+			// current API request's session.
+			// If we instead clear the cookies only when revokeSession
+			// returns true, it can cause this kind of a bug:
+			// https://github.com/supertokens/supertokens-node/issues/343
+			ClearSession(config, session.requestResponseInfo.Res, session.requestResponseInfo.TokenTransferMethod)
+		}
 		return nil
 	}
 
@@ -143,7 +166,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 
 		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			responseToken, parseError := parseJWTWithoutSignatureVerification(response.AccessToken.Token)
+			responseToken, parseError := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 			if parseError != nil {
 				return parseError
 			}
@@ -157,9 +180,14 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 			session.userDataInAccessToken = payload
 			session.accessToken = response.AccessToken.Token
-			setTokenErr := SetAccessTokenInResponse(config, session.res, response.AccessToken, response.Session, session.tokenTransferMethod)
-			if setTokenErr != nil {
-				return setTokenErr
+			session.frontToken = BuildFrontToken(session.userID, response.AccessToken.Expiry, payload)
+			session.accessTokenUpdated = true
+
+			if session.requestResponseInfo != nil {
+				setTokenErr := SetAccessTokenInResponse(config, session.requestResponseInfo.Res, session.accessToken, session.frontToken, session.requestResponseInfo.TokenTransferMethod)
+				if setTokenErr != nil {
+					return setTokenErr
+				}
 			}
 		} else {
 			// This case means that the access token has expired between the validation and this update
@@ -286,6 +314,48 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 	sessionContainer.RemoveClaim = func(claim *claims.TypeSessionClaim) error {
 		return sessionContainer.RemoveClaimWithContext(claim, &map[string]interface{}{})
+	}
+
+	sessionContainer.GetAllSessionTokensDangerously = func() sessmodels.SessionTokens {
+		var refreshToken *string = nil
+
+		if session.refreshToken != nil {
+			refreshToken = &session.refreshToken.Token
+		}
+
+		return sessmodels.SessionTokens{
+			AccessToken:                   session.accessToken,
+			RefreshToken:                  refreshToken,
+			AntiCsrfToken:                 session.antiCSRFToken,
+			FrontToken:                    session.frontToken,
+			AccessAndFrontendTokenUpdates: session.accessTokenUpdated,
+		}
+	}
+
+	sessionContainer.AttachToRequestResponse = func(info sessmodels.RequestResponseInfo) error {
+		session.requestResponseInfo = &info
+
+		if session.accessTokenUpdated {
+			err := SetAccessTokenInResponse(config, info.Res, session.accessToken, session.frontToken, info.TokenTransferMethod)
+
+			if err != nil {
+				return err
+			}
+
+			if session.refreshToken != nil {
+				err = setToken(config, info.Res, sessmodels.RefreshToken, session.refreshToken.Token, session.refreshToken.Expiry, info.TokenTransferMethod)
+
+				if err != nil {
+					return err
+				}
+			}
+
+			if session.antiCSRFToken != nil {
+				setAntiCsrfTokenInHeaders(info.Res, *session.antiCSRFToken)
+			}
+		}
+
+		return nil
 	}
 
 	return sessionContainer

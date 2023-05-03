@@ -121,7 +121,7 @@ func TestTokenTheftDetection(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -212,7 +212,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -300,7 +300,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -633,7 +633,7 @@ func TestManipulatingJWTpayload(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	tokenUpdated, err := UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
+	tokenUpdated, err := MergeIntoAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value",
 	})
 
@@ -644,9 +644,9 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "value", sessionInfo.AccessTokenPayload["key"])
+	assert.Equal(t, "value", sessionInfo.CustomClaimsInAccessTokenPayload["key"])
 
-	tokenUpdated, err = UpdateAccessTokenPayload(sessionHandles[0], map[string]interface{}{
+	tokenUpdated, err = MergeIntoAccessTokenPayload(sessionHandles[0], map[string]interface{}{
 		"key": "value2",
 	})
 
@@ -657,9 +657,9 @@ func TestManipulatingJWTpayload(t *testing.T) {
 
 	assert.NoError(t, err)
 
-	assert.Equal(t, "value2", sessionInfo1.AccessTokenPayload["key"])
+	assert.Equal(t, "value2", sessionInfo1.CustomClaimsInAccessTokenPayload["key"])
 
-	tokenUpdated, err = UpdateAccessTokenPayload("random", map[string]interface{}{
+	tokenUpdated, err = MergeIntoAccessTokenPayload("random", map[string]interface{}{
 		"key": "value3",
 	})
 
@@ -708,7 +708,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		sess, err := GetSession(*r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -724,7 +724,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		SessionRequired: &customSessionRequiredValue1,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
+		sess, err := GetSession(*r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue1,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 		})

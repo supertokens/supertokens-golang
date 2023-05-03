@@ -13,7 +13,7 @@
  * under the License.
  */
 
-package api
+package session
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"

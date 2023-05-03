@@ -1,36 +1,49 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
- *
- * This software is licensed under the Apache License, Version 2.0 (the
- * "License") as published by the Apache Software Foundation.
- *
- * You may not use this file except in compliance with the License. You may
- * obtain a copy of the License at http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations
- * under the License.
- */
-
 package session
 
 import (
 	"errors"
 	"fmt"
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
-
-	"github.com/supertokens/supertokens-golang/recipe/session/claims"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-var accessTokenCookiesExpiryDurationMillis = 3153600000000
+func GetRidFromHeader(req *http.Request) *string {
+	rid := req.Header.Get("rid")
+	if rid == "" {
+		return nil
+	}
+	return &rid
+}
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
+func GetRequiredClaimValidators(
+	sessionContainer sessmodels.SessionContainer,
+	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error),
+	userContext supertokens.UserContext,
+) ([]claims.SessionClaimValidator, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
+	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
+	if err != nil {
+		return nil, err
+	}
+	if overrideGlobalClaimValidators != nil {
+		globalClaimValidators, err = overrideGlobalClaimValidators(globalClaimValidators, sessionContainer, userContext)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return globalClaimValidators, nil
+}
+
+func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
 	var (
 		cookieDomain *string = nil
 		err          error
@@ -52,9 +65,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, err
 	}
 
-	cookieSameSite := cookieSameSite_LAX
+	cookieSameSite := CookieSameSite_LAX
 	if apiDomainScheme != websiteDomainScheme || appInfo.TopLevelAPIDomain != appInfo.TopLevelWebsiteDomain {
-		cookieSameSite = cookieSameSite_NONE
+		cookieSameSite = CookieSameSite_NONE
 	}
 
 	if config != nil && config.CookieSameSite != nil {
@@ -86,17 +99,17 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	if config != nil && config.AntiCsrf != nil {
-		if *config.AntiCsrf != antiCSRF_NONE && *config.AntiCsrf != antiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != antiCSRF_VIA_TOKEN {
+		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
 			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
 		}
 	}
 
-	antiCsrf := antiCSRF_NONE
+	antiCsrf := AntiCSRF_NONE
 	if config == nil || config.AntiCsrf == nil {
-		if cookieSameSite == cookieSameSite_NONE {
-			antiCsrf = antiCSRF_VIA_CUSTOM_HEADER
+		if cookieSameSite == CookieSameSite_NONE {
+			antiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
 		} else {
-			antiCsrf = antiCSRF_NONE
+			antiCsrf = AntiCSRF_NONE
 		}
 	} else {
 		antiCsrf = *config.AntiCsrf
@@ -151,7 +164,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	refreshAPIPath, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
+	refreshAPIPath, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
 	if err != nil {
 		return sessmodels.TypeNormalisedInput{}, err
 	}
@@ -164,6 +177,12 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		config.GetTokenTransferMethod = defaultGetTokenTransferMethod
 	}
 
+	useDynamicSigningKey := true
+
+	if config.UseDynamicAccessTokenSigningKey != nil {
+		useDynamicSigningKey = *config.UseDynamicAccessTokenSigningKey
+	}
+
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
@@ -173,8 +192,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		InvalidClaimStatusCode:   invalidClaimStatusCode,
 		AntiCsrf:                 antiCsrf,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: exposeAccessTokenToFrontendInCookieBasedAuth,
-		ErrorHandlers:          errorHandlers,
-		GetTokenTransferMethod: config.GetTokenTransferMethod,
+		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
+		ErrorHandlers:                                errorHandlers,
+		GetTokenTransferMethod:                       config.GetTokenTransferMethod,
 		Override: sessmodels.OverrideStruct{
 			Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 				return originalImplementation
@@ -196,10 +216,13 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	return typeNormalisedInput, nil
 }
+
+var accessTokenCookiesExpiryDurationMillis = 3153600000000
+
 func normaliseSameSiteOrThrowError(sameSite string) (string, error) {
 	sameSite = strings.TrimSpace(sameSite)
 	sameSite = strings.ToLower(sameSite)
-	if sameSite != cookieSameSite_STRICT && sameSite != cookieSameSite_LAX && sameSite != cookieSameSite_NONE {
+	if sameSite != CookieSameSite_STRICT && sameSite != CookieSameSite_LAX && sameSite != CookieSameSite_NONE {
 		return "", errors.New(`cookie same site must be one of "strict", "lax", or "none"`)
 	}
 	return sameSite, nil
@@ -246,47 +269,24 @@ func normaliseSessionScopeOrThrowError(sessionScope string) (*string, error) {
 	return &noDotNormalised, nil
 }
 
-func getCurrTimeInMS() uint64 {
+func GetCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
 }
 
-func attachCreateOrRefreshSessionResponseToRes(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, response sessmodels.CreateOrRefreshAPIResponse, tokenTransferMethod sessmodels.TokenTransferMethod) {
-	refreshToken := response.RefreshToken
-	SetAccessTokenInResponse(config, res, response.AccessToken, response.Session, tokenTransferMethod)
-	setToken(config, res, sessmodels.RefreshToken, refreshToken.Token, refreshToken.Expiry, tokenTransferMethod)
-
-	if response.AntiCsrfToken != nil {
-		setAntiCsrfTokenInHeaders(res, *response.AntiCsrfToken)
-	}
-}
-
-func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, accessToken sessmodels.CreateOrRefreshAPIResponseToken, session sessmodels.SessionStruct, tokenTransferMethod sessmodels.TokenTransferMethod) error {
-	responseToken, err := parseJWTWithoutSignatureVerification(accessToken.Token)
-	if err != nil {
-		return err
-	}
-
-	var payload map[string]interface{}
-
-	if responseToken.Version >= 3 {
-		payload = responseToken.Payload
-	} else {
-		payload = session.UserDataInAccessToken
-	}
-
-	setFrontTokenInHeaders(res, session.UserID, accessToken.Expiry, payload)
+func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, accessToken string, frontToken string, tokenTransferMethod sessmodels.TokenTransferMethod) error {
+	setFrontTokenInHeaders(res, frontToken)
 	// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
 	// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 	// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
 	// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-	setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), tokenTransferMethod)
+	setToken(config, res, sessmodels.AccessToken, accessToken, GetCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), tokenTransferMethod)
 
 	if config.ExposeAccessTokenToFrontendInCookieBasedAuth && tokenTransferMethod == sessmodels.CookieTransferMethod {
 		// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
 		// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 		// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
 		// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-		setToken(config, res, sessmodels.AccessToken, accessToken.Token, getCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), sessmodels.HeaderTransferMethod)
+		setToken(config, res, sessmodels.AccessToken, accessToken, GetCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), sessmodels.HeaderTransferMethod)
 	}
 	return nil
 }
@@ -322,7 +322,7 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 		for _, k := range response["jwtSigningPublicKeyList"].([]interface{}) {
 			keyList = append(keyList, sessmodels.KeyInfo{
 				PublicKey:  (k.((map[string]interface{})))["publicKey"].(string),
-				ExpiryTime: uint64((k.((map[string]interface{})))["expiryTime"].(float64)),
+				ExpiryTime: uint64((k.((map[string]interface{})))["ExpiryTime"].(float64)),
 				CreatedAt:  uint64((k.((map[string]interface{})))["createdAt"].(float64)),
 			})
 		}
@@ -331,7 +331,7 @@ func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
 	return keyList
 }
 
-func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []claims.ClaimValidationError {
+func ValidateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []claims.ClaimValidationError {
 	validationErrors := []claims.ClaimValidationError{}
 
 	for _, validator := range claimValidators {
@@ -347,29 +347,6 @@ func validateClaimsInPayload(claimValidators []claims.SessionClaimValidator, new
 	return validationErrors
 }
 
-func getRequiredClaimValidators(
-	sessionContainer sessmodels.SessionContainer,
-	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error),
-	userContext supertokens.UserContext,
-) ([]claims.SessionClaimValidator, error) {
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return nil, err
-	}
-	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
-	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
-	if err != nil {
-		return nil, err
-	}
-	if overrideGlobalClaimValidators != nil {
-		globalClaimValidators, err = overrideGlobalClaimValidators(globalClaimValidators, sessionContainer, userContext)
-		if err != nil {
-			return nil, err
-		}
-	}
-	return globalClaimValidators, nil
-}
-
 func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 	// We allow fallback (checking headers then cookies) by default when validating
 
@@ -378,7 +355,7 @@ func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool, 
 	}
 
 	// In create new session we respect the frontend preference by default
-	authMode := getAuthmodeFromHeader(req)
+	authMode := GetAuthmodeFromHeader(req)
 	if authMode == nil {
 		return sessmodels.AnyTransferMethod
 	}
@@ -390,12 +367,4 @@ func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool, 
 	default:
 		return sessmodels.AnyTransferMethod
 	}
-}
-
-func getRidFromHeader(req *http.Request) *string {
-	rid := req.Header.Get("rid")
-	if rid == "" {
-		return nil
-	}
-	return &rid
 }

@@ -35,8 +35,19 @@ func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, use
 	if err != nil {
 		return nil, err
 	}
+	config := instance.Config
+	appInfo := instance.RecipeModule.GetAppInfo()
 
-	claimsAddedByOtherRecipes := instance.getClaimsAddedByOtherRecipes()
+	return CreateNewSessionInRequest(req, res, config, appInfo, *instance, instance.RecipeImpl, userID, accessTokenPayload, sessionDataInDatabase, userContext)
+}
+
+func CreateNewSessionWithContextWithoutRequestResponse(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+
+	claimsAddedByOtherRecipes := instance.GetClaimsAddedByOtherRecipes()
 	finalAccessTokenPayload := accessTokenPayload
 	if finalAccessTokenPayload == nil {
 		finalAccessTokenPayload = map[string]interface{}{}
@@ -49,34 +60,61 @@ func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, use
 		}
 	}
 
-	return (*instance.RecipeImpl.CreateNewSession)(req, res, userID, finalAccessTokenPayload, sessionDataInDatabase, userContext)
+	_disableAntiCSRF := false
+
+	if disableAntiCSRF != nil {
+		_disableAntiCSRF = *disableAntiCSRF
+	}
+
+	return (*instance.RecipeImpl.CreateNewSession)(userID, accessTokenPayload, sessionDataInDatabase, &_disableAntiCSRF, userContext)
 }
 
-func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func GetSessionWithContext(req http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	sessionContainer, err := (*instance.RecipeImpl.GetSession)(req, res, options, userContext)
+	config := instance.Config
+
+	return GetSessionFromRequest(req, res, config, options, instance.RecipeImpl, userContext)
+}
+
+func GetSessionWithContextWithoutRequestResponse(accessToken string, antiCSRFToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
 
-	if sessionContainer != nil {
+	result, err := (*instance.RecipeImpl.GetSession)(accessToken, antiCSRFToken, options, userContext)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if result != nil {
 		var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
 		if options != nil {
 			overrideGlobalClaimValidators = options.OverrideGlobalClaimValidators
 		}
-		claimValidators, err := getRequiredClaimValidators(sessionContainer, overrideGlobalClaimValidators, userContext)
+
 		if err != nil {
 			return nil, err
 		}
-		err = sessionContainer.AssertClaimsWithContext(claimValidators, userContext)
+		claimValidators, err := GetRequiredClaimValidators(*result, overrideGlobalClaimValidators, userContext)
+
 		if err != nil {
 			return nil, err
 		}
+
+		err = (*result).AssertClaimsWithContext(claimValidators, userContext)
+
+		if err != nil {
+			return nil, err
+		}
+
 	}
-	return sessionContainer, nil
+
+	return *result, nil
 }
 
 func GetSessionInformationWithContext(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
@@ -92,7 +130,22 @@ func RefreshSessionWithContext(req *http.Request, res http.ResponseWriter, userC
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.RefreshSession)(req, res, userContext)
+	return RefreshSessionInRequest(req, res, instance.Config, instance.RecipeImpl, userContext)
+}
+
+func RefreshSessionWithContextWithoutRequestResponse(refreshToken string, disableAntiCSRF *bool, antiCSRFToken *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	instance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+
+	_disableAntiCSRF := false
+
+	if disableAntiCSRF != nil {
+		_disableAntiCSRF = *disableAntiCSRF
+	}
+
+	return (*instance.RecipeImpl.RefreshSession)(refreshToken, antiCSRFToken, _disableAntiCSRF, userContext)
 }
 
 func RevokeAllSessionsForUserWithContext(userID string, userContext supertokens.UserContext) ([]string, error) {
@@ -194,7 +247,7 @@ func ValidateClaimsForSessionHandleWithContext(
 		claimValidators = overrideGlobalClaimValidators(claimValidators, *sessionInfo, userContext)
 	}
 
-	claimValidationResponse, err := (*instance.RecipeImpl.ValidateClaims)(sessionInfo.UserId, sessionInfo.AccessTokenPayload, claimValidators, userContext)
+	claimValidationResponse, err := (*instance.RecipeImpl.ValidateClaims)(sessionInfo.UserId, sessionInfo.CustomClaimsInAccessTokenPayload, claimValidators, userContext)
 	if err != nil {
 		return sessmodels.ValidateClaimsResponse{}, err
 	}
@@ -315,8 +368,16 @@ func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string,
 	return CreateNewSessionWithContext(req, res, userID, accessTokenPayload, sessionDataInDatabase, &map[string]interface{}{})
 }
 
-func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
+func CreateNewSessionWithoutRequestResponse(userId string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool) (sessmodels.SessionContainer, error) {
+	return CreateNewSessionWithContextWithoutRequestResponse(userId, accessTokenPayload, sessionDataInDatabase, disableAntiCSRF, nil)
+}
+
+func GetSession(req http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
 	return GetSessionWithContext(req, res, options, &map[string]interface{}{})
+}
+
+func GetSessionWithoutRequestResponse(accessToken string, antiCSRFToken *string, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
+	return GetSessionWithContextWithoutRequestResponse(accessToken, antiCSRFToken, options, nil)
 }
 
 func GetSessionInformation(sessionHandle string) (*sessmodels.SessionInformation, error) {
@@ -325,6 +386,10 @@ func GetSessionInformation(sessionHandle string) (*sessmodels.SessionInformation
 
 func RefreshSession(req *http.Request, res http.ResponseWriter) (sessmodels.SessionContainer, error) {
 	return RefreshSessionWithContext(req, res, &map[string]interface{}{})
+}
+
+func RefreshSessionWithoutRequestResponse(refreshToken string, disableAntiCSRF *bool, antiCSRFToken *string) (sessmodels.SessionContainer, error) {
+	return RefreshSessionWithContextWithoutRequestResponse(refreshToken, disableAntiCSRF, antiCSRFToken, nil)
 }
 
 func RevokeAllSessionsForUser(userID string) ([]string, error) {
