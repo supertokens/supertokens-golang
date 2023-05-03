@@ -100,7 +100,7 @@ func TestUpdateEmailPass(t *testing.T) {
 	email := "test2@gmail.com"
 	password := "testPass"
 
-	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password)
+	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil)
 
 	res1, err := unittesting.SignInRequest("testrandom@gmail.com", "validpass123", testServer.URL)
 

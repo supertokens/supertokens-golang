@@ -26,10 +26,9 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier) tpepmodels.RecipeInterface {
+func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPartyQuerier *supertokens.Querier, getEmailPasswordConfig func() epmodels.TypeNormalisedInput) tpepmodels.RecipeInterface {
 	result := tpepmodels.RecipeInterface{}
-
-	emailPasswordImplementation := emailpassword.MakeRecipeImplementation(emailPasswordQuerier)
+	emailPasswordImplementation := emailpassword.MakeRecipeImplementation(emailPasswordQuerier, getEmailPasswordConfig)
 	var thirdPartyImplementation *tpmodels.RecipeInterface
 	if thirdPartyQuerier != nil {
 		thirdPartyImplementationTemp := thirdparty.MakeRecipeImplementation(*thirdPartyQuerier)
@@ -228,7 +227,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 	}
 
 	ogUpdateEmailOrPassword := *emailPasswordImplementation.UpdateEmailOrPassword
-	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+	updateEmailOrPassword := func(userId string, email, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 		user, err := (*result.GetUserByID)(userId, userContext)
 		if err != nil {
 			return epmodels.UpdateEmailOrPasswordResponse{}, err
@@ -242,7 +241,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 			return epmodels.UpdateEmailOrPasswordResponse{}, errors.New("cannot update email or password of a user who signed up using third party login")
 		}
 
-		return ogUpdateEmailOrPassword(userId, email, password, userContext)
+		return ogUpdateEmailOrPassword(userId, email, password, applyPasswordPolicy, userContext)
 	}
 
 	result.GetUserByID = &getUserByID

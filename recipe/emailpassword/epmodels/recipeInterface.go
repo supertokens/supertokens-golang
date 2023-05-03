@@ -24,7 +24,7 @@ type RecipeInterface struct {
 	GetUserByEmail           *func(email string, userContext supertokens.UserContext) (*User, error)
 	CreateResetPasswordToken *func(userID string, userContext supertokens.UserContext) (CreateResetPasswordTokenResponse, error)
 	ResetPasswordUsingToken  *func(token string, newPassword string, userContext supertokens.UserContext) (ResetPasswordUsingTokenResponse, error)
-	UpdateEmailOrPassword    *func(userId string, email *string, password *string, userContext supertokens.UserContext) (UpdateEmailOrPasswordResponse, error)
+	UpdateEmailOrPassword    *func(userId string, email *string, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (UpdateEmailOrPasswordResponse, error)
 }
 
 type SignUpResponse struct {
@@ -56,7 +56,8 @@ type ResetPasswordUsingTokenResponse struct {
 }
 
 type UpdateEmailOrPasswordResponse struct {
-	OK                      *struct{}
-	UnknownUserIdError      *struct{}
-	EmailAlreadyExistsError *struct{}
+	OK                          *struct{}
+	UnknownUserIdError          *struct{}
+	EmailAlreadyExistsError     *struct{}
+	PasswordPolicyViolatedError *struct{}
 }

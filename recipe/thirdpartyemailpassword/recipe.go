@@ -54,6 +54,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, err
 	}
 	r.Config = verifiedConfig
+	var emailPasswordRecipe emailpassword.Recipe
 	{
 		emailpasswordquerierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(emailpassword.RECIPE_ID)
 		if err != nil {
@@ -63,14 +64,14 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		if err != nil {
 			return Recipe{}, err
 		}
-
-		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance))
+		var getEmailPasswordConfig = func() epmodels.TypeNormalisedInput {
+			return emailPasswordRecipe.Config
+		}
+		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance, getEmailPasswordConfig))
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
-	var emailPasswordRecipe emailpassword.Recipe
 	emailPasswordRecipeImpl := recipeimplementation.MakeEmailPasswordRecipeImplementation(r.RecipeImpl)
-
 	if emailDeliveryIngredient != nil {
 		r.EmailDelivery = *emailDeliveryIngredient
 	} else {

@@ -91,12 +91,12 @@ func ResetPasswordUsingTokenWithContext(token, newPassword string, userContext s
 	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext)
 }
 
-func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, applyPasswordPOlicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
 	}
-	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, userContext)
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPOlicy, userContext)
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
@@ -139,8 +139,8 @@ func ResetPasswordUsingToken(token, newPassword string) (epmodels.ResetPasswordU
 	return ResetPasswordUsingTokenWithContext(token, newPassword, &map[string]interface{}{})
 }
 
-func UpdateEmailOrPassword(userId string, email *string, password *string) (epmodels.UpdateEmailOrPasswordResponse, error) {
-	return UpdateEmailOrPasswordWithContext(userId, email, password, &map[string]interface{}{})
+func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool) (epmodels.UpdateEmailOrPasswordResponse, error) {
+	return UpdateEmailOrPasswordWithContext(userId, email, password, applyPasswordPolicy, &map[string]interface{}{})
 }
 
 func SendEmail(input emaildelivery.EmailType) error {
