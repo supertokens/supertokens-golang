@@ -110,7 +110,7 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 	return sessionResponse, nil
 }
 
-func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.VerifySessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (*sessmodels.SessionContainer, error) {
+func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.VerifySessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	idRefreshToken := GetCookieValue(&req, legacyIdRefreshTokenCookieName)
 	if idRefreshToken != nil {
 		return nil, errors.TryRefreshTokenError{
@@ -231,7 +231,7 @@ func GetSessionFromRequest(req http.Request, res http.ResponseWriter, config ses
 		}
 	}
 
-	return sessionResult, nil
+	return *sessionResult, nil
 }
 
 func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {

@@ -68,7 +68,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				return nil, err
 			}
 			if overrideGlobalClaimValidators != nil {
-				claimValidators, err = overrideGlobalClaimValidators(claimValidators, *sessionContainer, userContext)
+				claimValidators, err = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
 				if err != nil {
 					return nil, err
 				}
@@ -82,7 +82,7 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 				return nil, err
 			}
 
-			return *sessionContainer, nil
+			return sessionContainer, nil
 		}
 	}
 

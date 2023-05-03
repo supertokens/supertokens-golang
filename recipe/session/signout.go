@@ -41,7 +41,7 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		return err
 	}
 
-	resp, err := (*apiImplementation.SignOutPOST)(*sessionContainer, options, userContext)
+	resp, err := (*apiImplementation.SignOutPOST)(sessionContainer, options, userContext)
 	if err != nil {
 		return err
 	}
