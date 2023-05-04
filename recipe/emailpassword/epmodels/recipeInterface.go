@@ -63,5 +63,5 @@ type UpdateEmailOrPasswordResponse struct {
 }
 
 type PasswordPolicyViolatedError struct {
-	FailureReason *string
+	FailureReason string
 }

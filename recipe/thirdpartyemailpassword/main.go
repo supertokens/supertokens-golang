@@ -91,12 +91,12 @@ func ResetPasswordUsingTokenWithContext(token, newPassword string, userContext s
 	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext)
 }
 
-func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, applyPasswordPOlicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
 	}
-	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPOlicy, userContext)
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, userContext)
 }
 
 func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {

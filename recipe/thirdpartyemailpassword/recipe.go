@@ -65,7 +65,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 			return Recipe{}, err
 		}
 		var getEmailPasswordConfig = func() epmodels.TypeNormalisedInput {
-			return emailPasswordRecipe.Config
+			return r.emailPasswordRecipe.Config
 		}
 		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance, getEmailPasswordConfig))
 	}

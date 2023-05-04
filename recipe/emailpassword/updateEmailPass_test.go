@@ -144,7 +144,7 @@ func TestUpdateEmailPass(t *testing.T) {
 	applyPasswordPolicy := true
 	res3, err := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, &applyPasswordPolicy)
 	assert.NotNil(t, res3.PasswordPolicyViolatedError)
-	assert.Equal(t, "Password must contain at least 8 characters, including a number", *res3.PasswordPolicyViolatedError.FailureReason)
+	assert.Equal(t, "Password must contain at least 8 characters, including a number", res3.PasswordPolicyViolatedError.FailureReason)
 }
 
 func TestAPICustomResponse(t *testing.T) {

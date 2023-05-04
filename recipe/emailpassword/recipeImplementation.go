@@ -173,7 +173,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 						err := formFields[i].Validate(*password)
 						if err != nil {
 							errResponse := epmodels.PasswordPolicyViolatedError{
-								FailureReason: err,
+								FailureReason: *err,
 							}
 							return epmodels.UpdateEmailOrPasswordResponse{PasswordPolicyViolatedError: &errResponse}, nil
 						}
