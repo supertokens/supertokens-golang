@@ -238,6 +238,16 @@ func main() {
 }
 ```
 
+## [0.10.8] - 2023-04-18
+- Email template for verify email updated 
+
+## [0.10.7] - 2023-04-11
+- Changed email template to render correctly in outlook
+
+## [0.10.6]
+
+-   Fixes panic issue in input validation for emailpassword APIs - https://github.com/supertokens/supertokens-golang/issues/254
+
 ## [0.10.5] - 2023-03-31
 
 -   Adds search APIs to the dashboard recipe
