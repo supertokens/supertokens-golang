@@ -121,7 +121,7 @@ func TestTokenTheftDetection(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -212,7 +212,7 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -300,7 +300,7 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -708,7 +708,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		SessionRequired: &customSessionRequiredValue,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sess, err := GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck,
 		})
@@ -724,7 +724,7 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 		SessionRequired: &customSessionRequiredValue1,
 		AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 	}, func(rw http.ResponseWriter, r *http.Request) {
-		sess, err := GetSession(*r, rw, &sessmodels.VerifySessionOptions{
+		sess, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
 			SessionRequired: &customSessionRequiredValue1,
 			AntiCsrfCheck:   &customValForAntiCsrfCheck1,
 		})

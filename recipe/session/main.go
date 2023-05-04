@@ -53,6 +53,11 @@ func CreateNewSessionWithContextWithoutRequestResponse(userID string, accessToke
 		finalAccessTokenPayload = map[string]interface{}{}
 	}
 
+	appInfo := instance.RecipeModule.GetAppInfo()
+	issuer := appInfo.APIDomain.GetAsStringDangerous() + appInfo.APIBasePath.GetAsStringDangerous()
+
+	finalAccessTokenPayload["iss"] = issuer
+
 	for _, claim := range claimsAddedByOtherRecipes {
 		finalAccessTokenPayload, err = claim.Build(userID, finalAccessTokenPayload, userContext)
 		if err != nil {
@@ -69,7 +74,7 @@ func CreateNewSessionWithContextWithoutRequestResponse(userID string, accessToke
 	return (*instance.RecipeImpl.CreateNewSession)(userID, accessTokenPayload, sessionDataInDatabase, &_disableAntiCSRF, userContext)
 }
 
-func GetSessionWithContext(req http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func GetSessionWithContext(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -100,7 +105,7 @@ func GetSessionWithContextWithoutRequestResponse(accessToken string, antiCSRFTok
 		if err != nil {
 			return nil, err
 		}
-		claimValidators, err := GetRequiredClaimValidators(*result, overrideGlobalClaimValidators, userContext)
+		claimValidators, err := GetRequiredClaimValidators(result, overrideGlobalClaimValidators, userContext)
 
 		if err != nil {
 			return nil, err
@@ -114,7 +119,7 @@ func GetSessionWithContextWithoutRequestResponse(accessToken string, antiCSRFTok
 
 	}
 
-	return *result, nil
+	return result, nil
 }
 
 func GetSessionInformationWithContext(sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
@@ -372,7 +377,7 @@ func CreateNewSessionWithoutRequestResponse(userId string, accessTokenPayload ma
 	return CreateNewSessionWithContextWithoutRequestResponse(userId, accessTokenPayload, sessionDataInDatabase, disableAntiCSRF, nil)
 }
 
-func GetSession(req http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
+func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {
 	return GetSessionWithContext(req, res, options, &map[string]interface{}{})
 }
 
@@ -412,7 +417,7 @@ func UpdateSessionDataInDatabase(sessionHandle string, newSessionData map[string
 	return UpdateSessionDataInDatabaseWithContext(sessionHandle, newSessionData, &map[string]interface{}{})
 }
 
-func CreateJWT(payload map[string]interface{}, useStaticSigningKey *bool, validitySecondsPointer *uint64) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
 	return CreateJWTWithContext(payload, validitySecondsPointer, useStaticSigningKey, &map[string]interface{}{})
 }
 

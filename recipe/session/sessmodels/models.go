@@ -149,7 +149,7 @@ type TypeInput struct {
 	Override                                     *OverrideStruct
 	ErrorHandlers                                *ErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-	ExposeAccessTokenToFrontendInCookieBasedAuth *bool
+	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 	UseDynamicAccessTokenSigningKey              *bool
 }
 
@@ -216,12 +216,12 @@ type SessionTokens struct {
 	RefreshToken                  *string
 	AntiCsrfToken                 *string
 	FrontToken                    string
-	AccessAndFrontendTokenUpdates bool
+	AccessAndFrontendTokenUpdated bool
 }
 
 type RequestResponseInfo struct {
 	Res                 http.ResponseWriter
-	Req                 http.Request
+	Req                 *http.Request
 	TokenTransferMethod TokenTransferMethod
 }
 
