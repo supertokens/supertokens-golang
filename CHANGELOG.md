@@ -238,6 +238,9 @@ func main() {
 }
 ```
 
+## [0.11.0] - 2023-04-28
+- Added missing arguments in `GetUsersNewestFirst` and `GetUsersOldestFirst`
+
 ## [0.10.8] - 2023-04-18
 - Email template for verify email updated 
 

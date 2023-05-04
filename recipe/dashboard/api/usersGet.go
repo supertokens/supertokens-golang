@@ -84,9 +84,9 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	if len(queryParamsObject) != 0 {
 		usersResponse, err = supertokens.GetUsersWithSearchParams(timeJoinedOrder, paginationTokenPtr, &limit, nil, queryParamsObject)
 	} else if timeJoinedOrder == "ASC" {
-		usersResponse, err = supertokens.GetUsersOldestFirst(paginationTokenPtr, &limit, nil)
+		usersResponse, err = supertokens.GetUsersOldestFirst(paginationTokenPtr, &limit, nil, nil)
 	} else {
-		usersResponse, err = supertokens.GetUsersNewestFirst(paginationTokenPtr, &limit, nil)
+		usersResponse, err = supertokens.GetUsersNewestFirst(paginationTokenPtr, &limit, nil, nil)
 	}
 	if err != nil {
 		return UsersGetResponse{}, err

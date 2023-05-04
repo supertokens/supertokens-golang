@@ -59,12 +59,12 @@ func GetUserCount(includeRecipeIds *[]string) (float64, error) {
 	return getUserCount(includeRecipeIds)
 }
 
-func GetUsersOldestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
-	return GetUsersWithSearchParams("ASC", paginationToken, limit, includeRecipeIds, nil)
+func GetUsersOldestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {
+	return GetUsersWithSearchParams("ASC", paginationToken, limit, includeRecipeIds, query)
 }
 
-func GetUsersNewestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string) (UserPaginationResult, error) {
-	return GetUsersWithSearchParams("DESC", paginationToken, limit, includeRecipeIds, nil)
+func GetUsersNewestFirst(paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {
+	return GetUsersWithSearchParams("DESC", paginationToken, limit, includeRecipeIds, query)
 }
 
 func DeleteUser(userId string) error {
