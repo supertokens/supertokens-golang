@@ -106,8 +106,8 @@ func MakeEmailPasswordRecipeImplementation(recipeImplementation tpepmodels.Recip
 		return (*recipeImplementation.ResetPasswordUsingToken)(token, newPassword, userContext)
 	}
 
-	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
-		return (*recipeImplementation.UpdateEmailOrPassword)(userId, email, password, userContext)
+	updateEmailOrPassword := func(userId string, email, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+		return (*recipeImplementation.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, userContext)
 	}
 
 	return epmodels.RecipeInterface{

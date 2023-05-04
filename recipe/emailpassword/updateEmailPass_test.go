@@ -98,10 +98,9 @@ func TestUpdateEmailPass(t *testing.T) {
 	}
 
 	email := "test2@gmail.com"
-	password := "testPass"
+	password := "testPass1"
 
-	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password)
-
+	UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil)
 	res1, err := unittesting.SignInRequest("testrandom@gmail.com", "validpass123", testServer.URL)
 
 	if err != nil {
@@ -140,6 +139,96 @@ func TestUpdateEmailPass(t *testing.T) {
 
 	assert.Equal(t, "OK", data2["status"])
 	assert.Equal(t, email, data2["user"].(map[string]interface{})["email"])
+
+	password = "test"
+	applyPasswordPolicy := true
+	res3, err := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, &applyPasswordPolicy)
+	assert.NotNil(t, res3.PasswordPolicyViolatedError)
+	assert.Equal(t, "Password must contain at least 8 characters, including a number", res3.PasswordPolicyViolatedError.FailureReason)
+}
+
+func TestUpdateEmailPassWithCustomValidator(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{SignUpFeature: &epmodels.TypeInputSignUp{FormFields: []epmodels.TypeInputFormField{
+				{
+					ID: "password",
+					Validate: func(value interface{}) *string {
+						if len(value.(string)) > 5 {
+							return nil
+						}
+						err := "Password length must be more than 5 characters"
+						return &err
+					},
+				},
+			}}}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.7", cdiVersion) == "2.7" {
+		return
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	_, err = unittesting.SignupRequest("testrandom@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	res, err := unittesting.SignInRequest("testrandom@gmail.com", "validpass123", testServer.URL)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+	dataInBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	res.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	email := "testrandom@gmail.com"
+	password := "test"
+
+	res1, err := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil)
+	assert.NotNil(t, res1.PasswordPolicyViolatedError)
+	assert.Equal(t, "Password length must be more than 5 characters", res1.PasswordPolicyViolatedError.FailureReason)
+
 }
 
 func TestAPICustomResponse(t *testing.T) {
