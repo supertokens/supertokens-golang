@@ -18,9 +18,10 @@ package session
 import (
 	defaultErrors "errors"
 	"fmt"
-	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"net/http"
 	"strconv"
+
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"

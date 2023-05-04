@@ -106,7 +106,7 @@ func TestOverridingFunctions(t *testing.T) {
 		}
 		payload := result["payload"]
 		validity := uint64(1000)
-		resp, err := CreateJWT(payload.(map[string]interface{}), nil, &validity)
+		resp, err := CreateJWT(payload.(map[string]interface{}), &validity, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
