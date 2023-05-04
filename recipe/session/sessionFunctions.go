@@ -163,6 +163,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	status := response["status"]
 	if status.(string) == "OK" {
 		delete(response, "status")
+
 		responseByte, err := json.Marshal(response)
 		if err != nil {
 			return sessmodels.GetSessionResponse{}, err
@@ -172,6 +173,8 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		if err != nil {
 			return sessmodels.GetSessionResponse{}, err
 		}
+
+		result.Session.ExpiryTime = result.AccessToken.Expiry
 		return result, nil
 	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
 		supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because of core response")

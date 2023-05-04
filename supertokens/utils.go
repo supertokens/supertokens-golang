@@ -293,7 +293,7 @@ func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r 
 		_userContext["_default"] = map[string]interface{}{}
 	}
 
-	if reflect.TypeOf(defaultObj).Kind() != reflect.TypeOf(map[string]interface{}{}).Kind() {
+	if reflect.TypeOf(_userContext["_default"]).Kind() != reflect.TypeOf(map[string]interface{}{}).Kind() {
 		defaultObj.(map[string]interface{})["request"] = r
 		_userContext["_default"] = defaultObj
 	}

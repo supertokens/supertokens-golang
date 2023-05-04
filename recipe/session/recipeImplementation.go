@@ -20,16 +20,12 @@ import (
 	"encoding/json"
 	defaultErrors "errors"
 	"fmt"
-	"reflect"
-	"sync"
-
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"reflect"
 )
-
-var handshakeInfoLock sync.Mutex
 
 var protectedProps = []string{
 	"sub",
@@ -157,7 +153,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		if disableAntiCsrf != true && config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER {
+		if disableAntiCsrf != true && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
