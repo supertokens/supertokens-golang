@@ -33,10 +33,11 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 		sessionDataInDatabase = map[string]interface{}{}
 	}
 	requestBody := map[string]interface{}{
-		"userId":             userID,
-		"userDataInJWT":      AccessTokenPayload,
-		"userDataInDatabase": sessionDataInDatabase,
-		"enableAntiCsrf":     !disableAntiCsrf && config.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"userId":               userID,
+		"userDataInJWT":        AccessTokenPayload,
+		"userDataInDatabase":   sessionDataInDatabase,
+		"enableAntiCsrf":       !disableAntiCsrf && config.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"useDynamicSigningKey": config.UseDynamicAccessTokenSigningKey,
 	}
 
 	response, err := querier.SendPostRequest("/recipe/session", requestBody)
@@ -163,6 +164,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	status := response["status"]
 	if status.(string) == "OK" {
 		delete(response, "status")
+
 		responseByte, err := json.Marshal(response)
 		if err != nil {
 			return sessmodels.GetSessionResponse{}, err
@@ -172,6 +174,18 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		if err != nil {
 			return sessmodels.GetSessionResponse{}, err
 		}
+
+		var expiryToSet uint64
+
+		if result.AccessToken.Token != "" {
+			expiryToSet = result.AccessToken.Expiry
+		} else if accessTokenInfo != nil {
+			expiryToSet = accessTokenInfo.ExpiryTime
+		} else {
+			expiryToSet = *sanitizeNumberInputAsUint64(parsedAccessToken.Payload["expiryTime"])
+		}
+
+		result.Session.ExpiryTime = expiryToSet
 		return result, nil
 	} else if response["status"].(string) == errors.UnauthorizedErrorStr {
 		supertokens.LogDebugMessage("getSession: Returning UNAUTHORISED because of core response")

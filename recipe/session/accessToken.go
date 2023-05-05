@@ -193,7 +193,7 @@ func ValidateAccessTokenStructure(payload map[string]interface{}, version int) e
 		if _, ok := payload["refreshTokenHash1"].(string); !ok {
 			return err
 		}
-		if payload["UserData"] == nil {
+		if payload["userData"] == nil {
 			return err
 		}
 		if _, ok := payload["userData"].(map[string]interface{}); !ok {

@@ -195,9 +195,37 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		doAntiCsrfCheck = &False
 	}
 
+	if *doAntiCsrfCheck && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+		if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+			if GetRidFromHeader(req) == nil {
+				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because custom header (rid) was not passed")
+				return nil, errors.TryRefreshTokenError{
+					Msg: "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request, or set doAntiCsrfCheck to false for this API",
+				}
+			}
+
+			supertokens.LogDebugMessage("getSession: VIA_CUSTOM_HEADER anti-csrf check passed")
+			False := false
+			doAntiCsrfCheck = &False
+		}
+	}
+
 	supertokens.LogDebugMessage("getSession: Value of doAntiCsrfCheck is: " + strconv.FormatBool(*doAntiCsrfCheck))
 
-	result, err := (*recipeImpl.GetSession)(accessToken.RawTokenString, antiCsrfToken, options, userContext)
+	_verifySessionOptionsToPass := sessmodels.VerifySessionOptions{
+		AntiCsrfCheck: doAntiCsrfCheck,
+	}
+
+	if options != nil {
+		_verifySessionOptionsToPass = sessmodels.VerifySessionOptions{
+			AntiCsrfCheck:                 _verifySessionOptionsToPass.AntiCsrfCheck,
+			SessionRequired:               options.SessionRequired,
+			CheckDatabase:                 options.CheckDatabase,
+			OverrideGlobalClaimValidators: options.OverrideGlobalClaimValidators,
+		}
+	}
+
+	result, err := (*recipeImpl.GetSession)(accessToken.RawTokenString, antiCsrfToken, &_verifySessionOptionsToPass, userContext)
 
 	if err != nil {
 		return nil, err
@@ -292,7 +320,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
 			clearTokens := false
 			return nil, errors.UnauthorizedError{
-				Msg:         "anti-csrf check failed. Please pass 'rid: \\\"session\\\"' header in the request.",
+				Msg:         "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.",
 				ClearTokens: &clearTokens,
 			}
 		}

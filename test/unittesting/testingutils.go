@@ -243,6 +243,18 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	var refreshTokenFromHeader string = res.Header.Get("st-refresh-token")
 	var accessTokenFromHeader string = res.Header.Get("st-access-token")
 
+	refreshTokenFromAny := refreshToken
+
+	if refreshTokenFromAny == "" {
+		refreshTokenFromAny = refreshTokenFromHeader
+	}
+
+	accessTokenFromAny := accessToken
+
+	if accessTokenFromAny == "" {
+		accessTokenFromAny = accessTokenFromHeader
+	}
+
 	return map[string]string{
 		"antiCsrf":             antiCsrfVal,
 		"sAccessToken":         accessToken,
@@ -257,6 +269,8 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 
 		"refreshTokenFromHeader": refreshTokenFromHeader,
 		"accessTokenFromHeader":  accessTokenFromHeader,
+		"refreshTokenFromAny":    refreshTokenFromAny,
+		"accessTokenFromAny":     accessTokenFromAny,
 	}
 }
 

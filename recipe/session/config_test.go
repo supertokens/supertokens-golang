@@ -1155,3 +1155,63 @@ func TestValidSameSiteNoneConfig(t *testing.T) {
 		AfterEach()
 	}
 }
+
+func TestThatJWKSAndOpenIdEndpointsAreExposed(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+	BeforeEach()
+
+	unittesting.StartUpST("localhost", "8080")
+
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	recipe, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	apisHandled, err := recipe.RecipeModule.GetAPIsHandled()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	var jwksAPI supertokens.APIHandled
+	var openIdAPI supertokens.APIHandled
+
+	for _, apiHandled := range apisHandled {
+		if apiHandled.ID == "/jwt/jwks.json" {
+			jwksAPI = apiHandled
+		}
+
+		if apiHandled.ID == "/.well-known/openid-configuration" {
+			openIdAPI = apiHandled
+		}
+	}
+
+	assert.NotNil(t, jwksAPI)
+	assert.Equal(t, jwksAPI.PathWithoutAPIBasePath.GetAsStringDangerous(), "/jwt/jwks.json")
+
+	assert.NotNil(t, openIdAPI)
+	assert.Equal(t, openIdAPI.PathWithoutAPIBasePath.GetAsStringDangerous(), "/.well-known/openid-configuration")
+}

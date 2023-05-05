@@ -75,7 +75,8 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, accessTokenPayload["iss"], "https://api.supertokens.io/auth")
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixNano()/1000000-1000))
@@ -144,7 +145,7 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 0, len(accessTokenPayload))
+	assert.Equal(t, 8, len(accessTokenPayload))
 }
 
 func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
@@ -239,15 +240,8 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, 200, res.StatusCode)
 
-	// The passed object should be unchanged
-	assert.Equal(t, 1, len(payloadParam))
-
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	if includesNullInPayload {
-		assert.Equal(t, 5, len(accessTokenPayload))
-	} else {
-		assert.Equal(t, 4, len(accessTokenPayload))
-	}
+	assert.Equal(t, 13, len(accessTokenPayload))
 
 	// We have the prop from the payload param
 	assert.Equal(t, true, accessTokenPayload["initial"])

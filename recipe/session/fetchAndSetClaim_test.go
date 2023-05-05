@@ -47,7 +47,7 @@ func TestShouldNotChangeIfFetchValueReturnsNil(t *testing.T) {
 	err = sessionContainer.FetchAndSetClaim(nilClaim)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 0, len(accessTokenPayload))
+	assert.Equal(t, 8, len(accessTokenPayload))
 }
 
 func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
@@ -86,7 +86,7 @@ func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
 	err = sessionContainer.FetchAndSetClaim(trueClaim)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixNano()/1000000-1000))
@@ -133,7 +133,7 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 	assert.NoError(t, err)
 	accessTokenPayload := sessInfo.CustomClaimsInAccessTokenPayload
 
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 2, len(accessTokenPayload))
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixNano()/1000000-1000))

@@ -94,14 +94,14 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 
 	trueClaim, _ := TrueClaim()
 	err = sessionContainer.RemoveClaim(trueClaim)
 	assert.NoError(t, err)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 0, len(accessTokenPayload))
+	assert.Equal(t, 8, len(accessTokenPayload))
 }
 
 func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
@@ -151,7 +151,7 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 
 	trueClaim, _ := TrueClaim()
 	ok, err := RemoveClaim(sessionContainer.GetHandle(), trueClaim)
@@ -161,7 +161,7 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
 	assert.NoError(t, err)
 	accessTokenPayload = sessInfo.CustomClaimsInAccessTokenPayload
-	assert.Equal(t, 0, len(accessTokenPayload))
+	assert.Equal(t, 1, len(accessTokenPayload))
 }
 
 func TestShouldRemoveWorkForNonExistantHandle(t *testing.T) {
