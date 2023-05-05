@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.12.0] - 2023-05-05
 
+### Added
+
+- added optional password policy check in `updateEmailOrPassword`
+
 ### Breaking Changes
 
 -   Changed the interface and configuration of the Session recipe, see below for details. If you do not use the Session recipe directly and do not provide custom configuration, then no migration is necessary.
