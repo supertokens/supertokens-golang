@@ -286,6 +286,8 @@ func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r 
 
 	if userContext == nil {
 		_userContext = map[string]interface{}{}
+	} else {
+		_userContext = *userContext
 	}
 
 	defaultObj, ok := _userContext["_default"]

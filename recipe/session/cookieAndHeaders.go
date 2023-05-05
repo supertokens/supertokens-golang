@@ -19,6 +19,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -158,6 +160,7 @@ func GetToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod 
 }
 
 func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, tokenType sessmodels.TokenType, value string, expires uint64, transferMethod sessmodels.TokenTransferMethod) error {
+	supertokens.LogDebugMessage(fmt.Sprint("setToken: Setting ", tokenType, " token as ", transferMethod))
 	if transferMethod == sessmodels.CookieTransferMethod {
 		cookieName, err := getCookieNameFromTokenType(tokenType)
 		if err != nil {
@@ -169,7 +172,7 @@ func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, to
 		} else if tokenType == sessmodels.RefreshToken {
 			pathType = "refreshTokenPath"
 		}
-		SetCookie(config, res, cookieName, value, expires, pathType)
+		setCookie(config, res, cookieName, value, expires, pathType)
 	} else if transferMethod == sessmodels.HeaderTransferMethod {
 		headerName, err := getResponseHeaderNameForTokenType(tokenType)
 		if err != nil {
@@ -193,7 +196,7 @@ func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey boo
 	}
 }
 
-func SetCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
+func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
 	var domain string
 	if config.CookieDomain != nil {
 		domain = *config.CookieDomain

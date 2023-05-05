@@ -28,7 +28,7 @@ import (
 
 type TokenType string
 
-var JWKCacheMaxAgeInMs = 600000
+var JWKCacheMaxAgeInMs = 60000
 var JWKRefreshRateLimit = 500
 
 const (

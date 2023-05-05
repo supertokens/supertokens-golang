@@ -308,23 +308,6 @@ func sendTokenTheftDetectedResponse(recipeInstance Recipe, sessionHandle string,
 	return supertokens.SendNon200ResponseWithMessage(response, "token theft detected", recipeInstance.Config.SessionExpiredStatusCode)
 }
 
-func getKeyInfoFromJson(response map[string]interface{}) []sessmodels.KeyInfo {
-	keyList := []sessmodels.KeyInfo{}
-
-	_, ok := response["jwtSigningPublicKeyList"]
-	if ok {
-		for _, k := range response["jwtSigningPublicKeyList"].([]interface{}) {
-			keyList = append(keyList, sessmodels.KeyInfo{
-				PublicKey:  (k.((map[string]interface{})))["publicKey"].(string),
-				ExpiryTime: uint64((k.((map[string]interface{})))["ExpiryTime"].(float64)),
-				CreatedAt:  uint64((k.((map[string]interface{})))["createdAt"].(float64)),
-			})
-		}
-	}
-
-	return keyList
-}
-
 func ValidateClaimsInPayload(claimValidators []claims.SessionClaimValidator, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) []claims.ClaimValidationError {
 	validationErrors := []claims.ClaimValidationError{}
 

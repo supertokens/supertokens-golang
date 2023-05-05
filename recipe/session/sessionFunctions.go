@@ -83,10 +83,10 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 			return sessmodels.GetSessionResponse{}, err
 		}
 
-		expiryTime := uint64(expiryTimeInPayload.(float64))
-		timeCreated := uint64(timeCreatedInPayload.(float64))
-
 		if parsedAccessToken.Version < 3 {
+			expiryTime := uint64(expiryTimeInPayload.(float64))
+			timeCreated := uint64(timeCreatedInPayload.(float64))
+
 			if expiryTime < GetCurrTimeInMS() {
 				return sessmodels.GetSessionResponse{}, err
 			}

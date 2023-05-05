@@ -18,7 +18,6 @@ package session
 import (
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -62,30 +61,6 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 
 			if sessionContainer == nil {
 				return nil, nil
-			}
-
-			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
-			if verifySessionOptions != nil {
-				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
-			}
-			claimValidators := options.ClaimValidatorsAddedByOtherRecipes
-			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)((*sessionContainer).GetUserID(), claimValidators, userContext)
-			if err != nil {
-				return nil, err
-			}
-			if overrideGlobalClaimValidators != nil {
-				claimValidators, err = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			if err != nil {
-				return nil, err
-			}
-			err = (*sessionContainer).AssertClaimsWithContext(claimValidators, userContext)
-			if err != nil {
-				return nil, err
 			}
 
 			return sessionContainer, nil

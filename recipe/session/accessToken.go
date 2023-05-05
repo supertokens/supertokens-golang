@@ -101,6 +101,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 				}
 
 				payload = claimsMap
+				break
 			}
 		}
 	}

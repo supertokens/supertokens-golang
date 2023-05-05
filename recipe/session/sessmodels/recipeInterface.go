@@ -20,29 +20,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type CreateNewSessionResponse struct {
-	Status  string
-	Session SessionContainer
-}
-
-type GetSessionFunctionResponse struct {
-	Status  string
-	Session *SessionContainer
-	Error   *error
-}
-
-type GetSessionMainFunctionClaimResponse struct {
-	Message               string
-	ClaimValidationErrors []claims.ClaimValidationError
-}
-
-type GetSessionMainFunctionResponse struct {
-	Status   string
-	Session  *SessionContainer
-	Error    *error
-	Response *GetSessionMainFunctionClaimResponse
-}
-
 type RecipeInterface struct {
 	CreateNewSession            *func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSession                  *func(accessToken string, antiCSRFToken *string, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)

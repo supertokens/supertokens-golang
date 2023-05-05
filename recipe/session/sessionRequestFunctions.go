@@ -300,7 +300,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 	} else {
 		if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
 			supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh token was not found")
-			SetCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
+			setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
 		}
 
 		supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token in request is undefined")
@@ -339,7 +339,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 		if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
 			if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
 				supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
-				SetCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
+				setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
 			}
 		}
 
@@ -364,7 +364,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 
 	if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
 		supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token after successful refresh")
-		SetCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
+		setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
 	}
 
 	return result, nil
