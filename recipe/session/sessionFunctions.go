@@ -74,16 +74,15 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 			return sessmodels.GetSessionResponse{}, err
 		}
 
-		payload := parsedAccessToken.Payload
-
-		expiryTimeInPayload, expiryOk := payload["expiryTime"]
-		timeCreatedInPayload, timeCreatedOk := payload["timeCreated"]
-
-		if !expiryOk || !timeCreatedOk {
-			return sessmodels.GetSessionResponse{}, err
-		}
-
 		if parsedAccessToken.Version < 3 {
+			payload := parsedAccessToken.Payload
+			expiryTimeInPayload, expiryOk := payload["expiryTime"]
+			timeCreatedInPayload, timeCreatedOk := payload["timeCreated"]
+
+			if !expiryOk || !timeCreatedOk {
+				return sessmodels.GetSessionResponse{}, err
+			}
+
 			expiryTime := uint64(expiryTimeInPayload.(float64))
 			timeCreated := uint64(timeCreatedInPayload.(float64))
 
