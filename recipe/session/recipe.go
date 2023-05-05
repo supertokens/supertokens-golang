@@ -225,5 +225,4 @@ func (r *Recipe) getClaimValidatorsAddedByOtherRecipes() []claims.SessionClaimVa
 
 func ResetForTest() {
 	singletonInstance = nil
-	didGetSessionCallCore = false
 }

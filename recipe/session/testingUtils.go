@@ -28,6 +28,7 @@ var didGetSessionCallCore = false
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
+	didGetSessionCallCore = false
 }
 
 func BeforeEach() {
