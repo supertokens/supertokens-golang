@@ -823,6 +823,74 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 	assert.NotEmpty(t, res["message"].(string))
 }
 
+/**
+This test is to make sure that we dont always call the core for session verification by default.
+1. Create a session
+2. Call get session and expect to not call the core
+3. Call refresh session
+4. Call get session and expect the core to be called
+*/
+func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	createSessionResp, err := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	createdTokens := createSessionResp.GetAllSessionTokensDangerously()
+	assert.True(t, createdTokens.AccessToken != "")
+	assert.True(t, *createdTokens.RefreshToken != "")
+	assert.True(t, createdTokens.FrontToken != "")
+
+	getSessionResp, err := GetSessionWithoutRequestResponse(createdTokens.AccessToken, createdTokens.AntiCsrfToken, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.False(t, didGetSessionCallCore)
+	newTokens := getSessionResp.GetAllSessionTokensDangerously()
+	assert.True(t, newTokens.AccessToken != "")
+	assert.True(t, newTokens.RefreshToken == nil)
+	assert.True(t, newTokens.FrontToken != "")
+
+	refreshResp, err := RefreshSessionWithoutRequestResponse(*createdTokens.RefreshToken, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokensAfterRefresh := refreshResp.GetAllSessionTokensDangerously()
+	assert.True(t, tokensAfterRefresh.AccessToken != "")
+	assert.True(t, *tokensAfterRefresh.RefreshToken != "")
+	assert.True(t, tokensAfterRefresh.FrontToken != "")
+
+	getSessionResp, err = GetSessionWithoutRequestResponse(tokensAfterRefresh.AccessToken, tokensAfterRefresh.AntiCsrfToken, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.True(t, didGetSessionCallCore)
+}
+
 type typeTestEndpoint struct {
 	path                          string
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)

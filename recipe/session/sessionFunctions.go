@@ -156,6 +156,9 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		requestBody["antiCsrfToken"] = *antiCsrfToken
 	}
 
+	if supertokens.IsRunningInTestMode() {
+		didGetSessionCallCore = true
+	}
 	response, err := querier.SendPostRequest("/recipe/session/verify", requestBody)
 	if err != nil {
 		return sessmodels.GetSessionResponse{}, err

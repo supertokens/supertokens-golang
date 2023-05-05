@@ -22,6 +22,9 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+// Testing constants
+var didGetSessionCallCore = false
+
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
