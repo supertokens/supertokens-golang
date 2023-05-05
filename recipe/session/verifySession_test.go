@@ -878,6 +878,7 @@ func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
 		t.Error(err.Error())
 	}
 
+	assert.False(t, didGetSessionCallCore)
 	tokensAfterRefresh := refreshResp.GetAllSessionTokensDangerously()
 	assert.True(t, tokensAfterRefresh.AccessToken != "")
 	assert.True(t, *tokensAfterRefresh.RefreshToken != "")
