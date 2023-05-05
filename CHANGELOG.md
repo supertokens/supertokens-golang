@@ -156,6 +156,10 @@ Related functions/prop names have changes (`sessionData` became `sessionDataFrom
 
 -   You should now set `CheckDatabase` to true in the verifySession params.
 
+#### If you used to set `access_token_signing_key_dynamic` in the core config
+
+-   You should now set `useDynamicAccessTokenSigningKey` in the Session recipe config.
+
 #### If you used to use standard/protected props in the access token payload root:
 
 1. Update you application logic to rename those props (e.g., by adding a prefix)
@@ -238,6 +242,63 @@ func main() {
 	},
 })
 }
+```
+
+#### If you added an override for `CreateNewSession`/`RefreshSession`/`GetSession`:
+
+This example uses `GetSession`, but the changes required for the other ones are very similar. Before:
+
+```go
+session.Init(&sessmodels.TypeInput{
+    Override: &sessmodels.OverrideStruct{
+        Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+            originalGetSession := *originalImplementation.GetSession
+
+            newGetSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+                response, err := originalGetSession(req, res, options, userContext)
+
+                if err != nil {
+                    return nil, err
+                }
+
+                return response, nil
+            }
+            
+            *originalImplementation.GetSession = newGetSession
+            return originalImplementation
+        },
+    },
+})
+```
+
+After:
+
+```go
+session.Init(&sessmodels.TypeInput{
+    Override: &sessmodels.OverrideStruct{
+        Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+            originalGetSession := *originalImplementation.GetSession
+
+            newGetSession := func(accessToken string, antiCSRFToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+                defaultUserContext := (*userContext)["_default"].(map[string]interface{})
+                request := defaultUserContext["request"]
+                
+                print(request)
+                
+                response, err := originalGetSession(accessToken, antiCSRFToken, options, userContext)
+                if err != nil {
+                    return nil, err
+                }
+                
+                return response, nil
+            }
+            
+            *originalImplementation.GetSession = newGetSession
+
+            return originalImplementation
+        },
+    },
+}),
 ```
 
 ## [0.11.0] - 2023-04-28
