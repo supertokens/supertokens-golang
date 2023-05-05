@@ -16,24 +16,15 @@
 package session
 
 import (
-	"crypto"
-	"crypto/rsa"
-	"crypto/sha256"
-	"crypto/x509"
-	b64 "encoding/base64"
+	"encoding/base64"
 	"encoding/json"
-	"encoding/pem"
 	"errors"
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"reflect"
+	"strconv"
 	"strings"
 )
-
-type ParsedJWTInfo struct {
-	RawTokenString string
-	RawPayload     string
-	Header         string
-	Payload        map[string]interface{}
-	Signature      string
-}
 
 var HEADERS = []string{
 	"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCIsInZlcnNpb24iOiIxIn0=", // {"alg":"RS256","typ":"JWT","version":"1"}
@@ -49,69 +40,91 @@ func checkHeader(header string) error {
 	return errors.New("Invalid JWT header")
 }
 
-func parseJWTWithoutSignatureVerification(jwt string) (ParsedJWTInfo, error) {
-	splittedInput := strings.Split(jwt, ".")
+func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInfo, error) {
+	splittedInput := strings.Split(token, ".")
+	var kid *string
 	if len(splittedInput) != 3 {
 		errors.New("Invalid JWT")
 	}
 
+	// V1&V2 is functionally identical, plus all legacy tokens should be V2 now.
+	version := 2
+	// V2 or older tokens did not save the key id;
 	err := checkHeader(splittedInput[0])
-	if err != nil {
-		return ParsedJWTInfo{}, err
-	}
-
-	payloadBytes, err := b64.StdEncoding.DecodeString(splittedInput[1])
-	if err != nil {
-		return ParsedJWTInfo{}, err
-	}
 	payload := map[string]interface{}{}
-	err = json.Unmarshal(payloadBytes, &payload)
+
+	// If err != nil, it is a V3 token (or above)
 	if err != nil {
-		return ParsedJWTInfo{}, err
+		unverifiedToken, _, rawParseError := new(jwt.Parser).ParseUnverified(token, jwt.MapClaims{})
+		if rawParseError != nil {
+			return sessmodels.ParsedJWTInfo{}, rawParseError
+		}
+
+		parsedHeader := unverifiedToken.Header
+
+		versionInHeader, ok := parsedHeader["version"]
+
+		if !ok {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		if reflect.TypeOf(versionInHeader).Kind() != reflect.String {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		versionNumber, parseError := strconv.Atoi(versionInHeader.(string))
+
+		kidInHeader, ok := parsedHeader["kid"]
+
+		if !ok {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		if reflect.TypeOf(kidInHeader).Kind() != reflect.String {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		kidString := kidInHeader.(string)
+		kid = &kidString
+
+		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < 3 || parsedHeader["kid"] == nil {
+			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+		}
+
+		version = versionNumber
+
+		claims, ok := unverifiedToken.Claims.(jwt.MapClaims)
+
+		if ok {
+			payload = claims
+		} else {
+			return sessmodels.ParsedJWTInfo{}, errors.New("Invalid JWT")
+		}
+	} else {
+		bytes, err := base64.StdEncoding.DecodeString(splittedInput[1])
+
+		if err != nil {
+			return sessmodels.ParsedJWTInfo{}, err
+		}
+
+		decodedJson := map[string]interface{}{}
+		err = json.Unmarshal(bytes, &decodedJson)
+
+		if err != nil {
+			return sessmodels.ParsedJWTInfo{}, err
+		}
+
+		payload = decodedJson
+
 	}
 
-	return ParsedJWTInfo{
-		RawTokenString: jwt,
+	return sessmodels.ParsedJWTInfo{
+		RawTokenString: token,
 		RawPayload:     splittedInput[1],
 		Header:         splittedInput[0],
 		Payload:        payload,
 		Signature:      splittedInput[2],
+		Version:        version,
+		KID:            kid,
 	}, nil
-}
-
-func verifyJWT(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string) error {
-	var publicKey, publicKeyError = getPublicKeyFromStr("-----BEGIN PUBLIC KEY-----\n" + jwtSigningPublicKey + "\n-----END PUBLIC KEY-----")
-	if publicKeyError != nil {
-		return publicKeyError
-	}
-
-	h := sha256.New()
-	h.Write([]byte(jwtInfo.Header + "." + jwtInfo.RawPayload))
-	digest := h.Sum(nil)
-
-	var decodedSignature, decodedSignatureError = b64.StdEncoding.DecodeString(jwtInfo.Signature)
-	if decodedSignatureError != nil {
-		return decodedSignatureError
-	}
-
-	verificationError := rsa.VerifyPKCS1v15(publicKey, crypto.SHA256, digest, decodedSignature)
-	if verificationError != nil {
-		return verificationError
-	}
-
-	return nil
-}
-
-func getPublicKeyFromStr(str string) (*rsa.PublicKey, error) {
-	block, _ := pem.Decode([]byte(str))
-	if block == nil {
-		return nil, errors.New("failed to parse PEM block containing the public key")
-	}
-
-	pub, err := x509.ParsePKIXPublicKey(block.Bytes)
-	if err != nil {
-		return nil, errors.New("failed to parse DER encoded public key:" + err.Error())
-	}
-
-	return pub.(*rsa.PublicKey), nil
 }

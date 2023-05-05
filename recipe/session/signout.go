@@ -13,7 +13,7 @@
  * under the License.
  */
 
-package api
+package session
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
@@ -30,12 +30,12 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	False := false
-	sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, &sessmodels.VerifySessionOptions{
+	sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{
 		SessionRequired: &False,
 		OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 			return []claims.SessionClaimValidator{}, nil
 		},
-	}, userContext)
+	}, options.RecipeImplementation, userContext)
 
 	if err != nil {
 		return err

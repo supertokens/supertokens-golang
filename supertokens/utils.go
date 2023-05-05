@@ -277,11 +277,32 @@ func ErrorIfNoResponse(res http.ResponseWriter) error {
 }
 
 func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
-	return &map[string]interface{}{
-		"_default": map[string]interface{}{
-			"request": r,
-		},
+	return SetRequestInUserContextIfNotDefined(nil, r)
+}
+
+func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r *http.Request) UserContext {
+	var _userContext map[string]interface{}
+	emptyMap := map[string]interface{}{}
+
+	if userContext == nil {
+		_userContext = map[string]interface{}{}
+	} else {
+		_userContext = *userContext
 	}
+
+	defaultObj, ok := _userContext["_default"]
+
+	if !ok {
+		_userContext["_default"] = map[string]interface{}{}
+		defaultObj = _userContext["_default"]
+	}
+
+	if reflect.TypeOf(_userContext["_default"]).Kind() == reflect.TypeOf(emptyMap).Kind() {
+		defaultObj.(map[string]interface{})["request"] = r
+		_userContext["_default"] = defaultObj
+	}
+
+	return &_userContext
 }
 
 func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
@@ -302,4 +323,13 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
 	}
 	return parsedURL, nil
+}
+
+func DoesSliceContainString(a string, list []string) bool {
+	for _, b := range list {
+		if b == a {
+			return true
+		}
+	}
+	return false
 }

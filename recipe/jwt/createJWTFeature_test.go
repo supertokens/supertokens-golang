@@ -60,6 +60,6 @@ func TestSendingZeroValidityThrowsAnError(t *testing.T) {
 	}
 
 	vaildityPointer := uint64(0)
-	_, err = CreateJWT(map[string]interface{}{}, &vaildityPointer)
+	_, err = CreateJWT(map[string]interface{}{}, &vaildityPointer, nil)
 	assert.Contains(t, err.Error(), "validity must be greater than or equal to 0")
 }

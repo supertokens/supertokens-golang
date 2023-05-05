@@ -13,19 +13,18 @@
  * under the License.
  */
 
-package api
+package session
 
 import (
 	"net/http"
 
-	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func MakeAPIImplementation() sessmodels.APIInterface {
 	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		return (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
+		return RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 	}
 
 	verifySession := func(verifySessionOptions *sessmodels.VerifySessionOptions, options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
@@ -41,40 +40,27 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 
 		refreshTokenPath := options.Config.RefreshTokenPath
 		if incomingPath.Equals(refreshTokenPath) && method == http.MethodPost {
-			session, err := (*options.RecipeImplementation.RefreshSession)(options.Req, options.Res, userContext)
+			session, err := RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 			return session, err
 		} else {
-			sessionContainer, err := (*options.RecipeImplementation.GetSession)(options.Req, options.Res, verifySessionOptions, userContext)
+			var _verifySessionOptionsToPass *sessmodels.VerifySessionOptions
+
+			if verifySessionOptions != nil {
+				_verifySessionOptionsToPass = &sessmodels.VerifySessionOptions{
+					AntiCsrfCheck:                 verifySessionOptions.AntiCsrfCheck,
+					SessionRequired:               verifySessionOptions.SessionRequired,
+					CheckDatabase:                 verifySessionOptions.CheckDatabase,
+					OverrideGlobalClaimValidators: verifySessionOptions.OverrideGlobalClaimValidators,
+				}
+			}
+
+			sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, _verifySessionOptionsToPass, options.RecipeImplementation, userContext)
 			if err != nil {
 				return nil, err
 			}
 
 			if sessionContainer == nil {
 				return nil, nil
-			}
-
-			var overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) = nil
-			if verifySessionOptions != nil {
-				overrideGlobalClaimValidators = verifySessionOptions.OverrideGlobalClaimValidators
-			}
-			claimValidators := options.ClaimValidatorsAddedByOtherRecipes
-			claimValidators, err = (*options.RecipeImplementation.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidators, userContext)
-			if err != nil {
-				return nil, err
-			}
-			if overrideGlobalClaimValidators != nil {
-				claimValidators, err = overrideGlobalClaimValidators(claimValidators, sessionContainer, userContext)
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			if err != nil {
-				return nil, err
-			}
-			err = sessionContainer.AssertClaimsWithContext(claimValidators, userContext)
-			if err != nil {
-				return nil, err
 			}
 
 			return sessionContainer, nil

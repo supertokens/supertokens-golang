@@ -256,6 +256,24 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 
 type httpRequestFunction func(url string) (*http.Response, error)
 
+func GetAllCoreUrlsForPath(path string) []string {
+	if QuerierHosts == nil {
+		return []string{}
+	}
+
+	normalisedPath := NormalisedURLPath{value: path}
+	result := []string{}
+
+	for _, host := range QuerierHosts {
+		currentDomain := host.Domain.GetAsStringDangerous()
+		currentBasePath := host.BasePath.GetAsStringDangerous()
+
+		result = append(result, currentDomain+currentBasePath+normalisedPath.GetAsStringDangerous())
+	}
+
+	return result
+}
+
 func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int) (map[string]interface{}, error) {
 	if numberOfTries == 0 {
 		return nil, errors.New("no SuperTokens core available to query")
@@ -301,4 +319,8 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 
 func ResetQuerierForTest() {
 	querierInitCalled = false
+}
+
+func (q *Querier) SetApiVersionForTests(apiVersion string) {
+	querierAPIVersion = apiVersion
 }

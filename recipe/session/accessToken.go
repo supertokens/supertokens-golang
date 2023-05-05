@@ -16,97 +16,198 @@
 package session
 
 import (
-	defaultErrors "errors"
+	"errors"
+	"github.com/MicahParks/keyfunc"
+	"github.com/golang-jwt/jwt/v4"
+	sterrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"strings"
-
-	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 )
 
-type accessTokenInfoStruct struct {
-	sessionHandle           string
-	userID                  string
-	refreshTokenHash1       string
-	parentRefreshTokenHash1 *string
-	userData                map[string]interface{}
-	antiCsrfToken           *string
-	expiryTime              uint64
-	timeCreated             uint64
+type AccessTokenInfoStruct struct {
+	SessionHandle           string
+	UserID                  string
+	RefreshTokenHash1       string
+	ParentRefreshTokenHash1 *string
+	UserData                map[string]interface{}
+	AntiCsrfToken           *string
+	ExpiryTime              uint64
+	TimeCreated             uint64
 }
 
-func getInfoFromAccessToken(jwtInfo ParsedJWTInfo, jwtSigningPublicKey string, doAntiCsrfCheck bool) (*accessTokenInfoStruct, error) {
+func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrfCheck bool) (*AccessTokenInfoStruct, error) {
+	var payload map[string]interface{}
 
-	err := verifyJWT(jwtInfo, jwtSigningPublicKey)
+	if jwtInfo.Version >= 3 {
+		parsedToken, parseError := jwt.Parse(jwtInfo.RawTokenString, jwks.Keyfunc)
+		if parseError != nil {
+			return nil, sterrors.TryRefreshTokenError{
+				Msg: parseError.Error(),
+			}
+		}
+
+		if parsedToken.Valid {
+			claims, ok := parsedToken.Claims.(jwt.MapClaims)
+			if !ok {
+				return nil, sterrors.TryRefreshTokenError{
+					Msg: "Invalid JWT claims",
+				}
+			}
+
+			// Convert the claims to a key-value pair
+			claimsMap := make(map[string]interface{})
+			for key, value := range claims {
+				claimsMap[key] = value
+			}
+
+			payload = claimsMap
+		}
+	} else {
+		keys := []interface{}{}
+
+		// Read only key returns all public keys that can be used for JWT verification
+		for _, value := range jwks.ReadOnlyKeys() {
+			keys = append(keys, value)
+		}
+
+		for _, key := range keys {
+			parsedToken, parseErr := jwt.Parse(jwtInfo.RawTokenString, func(token *jwt.Token) (interface{}, error) {
+				// The key returned here is used by Parse to verify the JWT
+				return key, nil
+			})
+
+			if parseErr != nil && errors.Is(parseErr, jwt.ErrSignatureInvalid) {
+				continue
+			}
+
+			if parseErr != nil {
+				return nil, sterrors.TryRefreshTokenError{
+					Msg: parseErr.Error(),
+				}
+			}
+
+			if parsedToken.Valid {
+				claims, ok := parsedToken.Claims.(jwt.MapClaims)
+				if !ok {
+					return nil, sterrors.TryRefreshTokenError{
+						Msg: "Invalid JWT claims",
+					}
+				}
+
+				// Convert the claims to a key-value pair
+				claimsMap := make(map[string]interface{})
+				for key, value := range claims {
+					claimsMap[key] = value
+				}
+
+				payload = claimsMap
+				break
+			}
+		}
+	}
+
+	if payload == nil {
+		return nil, sterrors.TryRefreshTokenError{
+			Msg: "Invalid JWT",
+		}
+	}
+
+	err := ValidateAccessTokenStructure(payload, jwtInfo.Version)
 	if err != nil {
-		return nil, errors.TryRefreshTokenError{
+		return nil, sterrors.TryRefreshTokenError{
 			Msg: err.Error(),
 		}
 	}
 
-	payload := jwtInfo.Payload
-	// This should be called before this function, but the check is very quick, so we can also do them here
-	err = validateAccessTokenStructure(payload)
-	if err != nil {
-		return nil, errors.TryRefreshTokenError{
-			Msg: err.Error(),
-		}
+	// We can assume these as defined, since ValidateAccessTokenStructure checks this
+	var userID string
+	var expiryTime uint64
+	var timeCreated uint64
+	var userData map[string]interface{}
+	if jwtInfo.Version >= 3 {
+		userID = *sanitizeStringInput(payload["sub"])
+		expiryTime = *sanitizeNumberInputAsUint64(payload["exp"]) * uint64(1000)
+		timeCreated = *sanitizeNumberInputAsUint64(payload["iat"]) * uint64(1000)
+		userData = payload
+	} else {
+		userID = *sanitizeStringInput(payload["userId"])
+		expiryTime = *sanitizeNumberInputAsUint64(payload["expiryTime"])
+		timeCreated = *sanitizeNumberInputAsUint64(payload["timeCreated"])
+		userData = payload["userData"].(map[string]interface{})
 	}
 
-	// We can assume these as defined, since validateAccessTokenPayload checks this
 	sessionHandle := sanitizeStringInput(payload["sessionHandle"])
-	userID := sanitizeStringInput(payload["userId"])
 	refreshTokenHash1 := sanitizeStringInput(payload["refreshTokenHash1"])
 	parentRefreshTokenHash1 := sanitizeStringInput(payload["parentRefreshTokenHash1"])
-	userData := payload["userData"].(map[string]interface{})
 	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
-	expiryTime := sanitizeNumberInputAsUint64(payload["expiryTime"])
-	timeCreated := sanitizeNumberInputAsUint64(payload["timeCreated"])
 
 	if antiCsrfToken == nil && doAntiCsrfCheck {
-		return nil, defaultErrors.New("Access token does not contain the anti-csrf token.")
+		return nil, sterrors.TryRefreshTokenError{
+			Msg: "Access token does not contain the anti-csrf token.",
+		}
 	}
 
-	if *expiryTime < getCurrTimeInMS() {
-		return nil, errors.TryRefreshTokenError{
+	if expiryTime < GetCurrTimeInMS() {
+		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Access token expired",
 		}
 	}
 
-	return &accessTokenInfoStruct{
-		sessionHandle:           *sessionHandle,
-		userID:                  *userID,
-		refreshTokenHash1:       *refreshTokenHash1,
-		parentRefreshTokenHash1: parentRefreshTokenHash1,
-		userData:                userData,
-		antiCsrfToken:           antiCsrfToken,
-		expiryTime:              *expiryTime,
-		timeCreated:             *timeCreated,
+	return &AccessTokenInfoStruct{
+		SessionHandle:           *sessionHandle,
+		UserID:                  userID,
+		RefreshTokenHash1:       *refreshTokenHash1,
+		ParentRefreshTokenHash1: parentRefreshTokenHash1,
+		UserData:                userData,
+		AntiCsrfToken:           antiCsrfToken,
+		ExpiryTime:              expiryTime,
+		TimeCreated:             timeCreated,
 	}, nil
 }
 
-func validateAccessTokenStructure(payload map[string]interface{}) error {
-	err := defaultErrors.New("Access token does not contain all the information. Maybe the structure has changed?")
+func ValidateAccessTokenStructure(payload map[string]interface{}, version int) error {
+	err := errors.New("Access token does not contain all the information. Maybe the structure has changed?")
 
-	if _, ok := payload["sessionHandle"].(string); !ok {
-		return err
+	if version >= 3 {
+		if _, ok := payload["sessionHandle"].(string); !ok {
+			return err
+		}
+		if _, ok := payload["sub"].(string); !ok {
+			return err
+		}
+		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+			return err
+		}
+		if _, ok := payload["exp"].(float64); !ok {
+			return err
+		}
+		if _, ok := payload["iat"].(float64); !ok {
+			return err
+		}
+	} else {
+		if _, ok := payload["sessionHandle"].(string); !ok {
+			return err
+		}
+		if _, ok := payload["userId"].(string); !ok {
+			return err
+		}
+		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+			return err
+		}
+		if payload["userData"] == nil {
+			return err
+		}
+		if _, ok := payload["userData"].(map[string]interface{}); !ok {
+			return err
+		}
+		if _, ok := payload["expiryTime"].(float64); !ok {
+			return err
+		}
+		if _, ok := payload["timeCreated"].(float64); !ok {
+			return err
+		}
 	}
-	if _, ok := payload["userId"].(string); !ok {
-		return err
-	}
-	if _, ok := payload["refreshTokenHash1"].(string); !ok {
-		return err
-	}
-	if payload["userData"] == nil {
-		return err
-	}
-	if _, ok := payload["userData"].(map[string]interface{}); !ok {
-		return err
-	}
-	if _, ok := payload["expiryTime"].(float64); !ok {
-		return err
-	}
-	if _, ok := payload["timeCreated"].(float64); !ok {
-		return err
-	}
+
 	return nil
 }
 
