@@ -16,6 +16,8 @@
 package session
 
 import (
+	"encoding/base64"
+	"encoding/json"
 	"errors"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -49,13 +51,15 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 	version := 2
 	// V2 or older tokens did not save the key id;
 	err := checkHeader(splittedInput[0])
+	payload := map[string]interface{}{}
 
-	unverifiedToken, _, rawParseError := new(jwt.Parser).ParseUnverified(token, jwt.MapClaims{})
-	if rawParseError != nil {
-		return sessmodels.ParsedJWTInfo{}, rawParseError
-	}
-
+	// If err != nil, it is a V3 token (or above)
 	if err != nil {
+		unverifiedToken, _, rawParseError := new(jwt.Parser).ParseUnverified(token, jwt.MapClaims{})
+		if rawParseError != nil {
+			return sessmodels.ParsedJWTInfo{}, rawParseError
+		}
+
 		parsedHeader := unverifiedToken.Header
 
 		versionInHeader, ok := parsedHeader["version"]
@@ -88,16 +92,30 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 		}
 
 		version = versionNumber
-	}
 
-	payload := map[string]interface{}{}
+		claims, ok := unverifiedToken.Claims.(jwt.MapClaims)
 
-	claims, ok := unverifiedToken.Claims.(jwt.MapClaims)
-
-	if ok {
-		payload = claims
+		if ok {
+			payload = claims
+		} else {
+			return sessmodels.ParsedJWTInfo{}, errors.New("Invalid JWT")
+		}
 	} else {
-		return sessmodels.ParsedJWTInfo{}, errors.New("Invalid JWT")
+		bytes, err := base64.StdEncoding.DecodeString(splittedInput[1])
+
+		if err != nil {
+			return sessmodels.ParsedJWTInfo{}, err
+		}
+
+		decodedJson := map[string]interface{}{}
+		err = json.Unmarshal(bytes, &decodedJson)
+
+		if err != nil {
+			return sessmodels.ParsedJWTInfo{}, err
+		}
+
+		payload = decodedJson
+
 	}
 
 	return sessmodels.ParsedJWTInfo{

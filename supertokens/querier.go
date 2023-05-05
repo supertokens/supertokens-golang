@@ -320,3 +320,7 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 func ResetQuerierForTest() {
 	querierInitCalled = false
 }
+
+func (q *Querier) SetApiVersionForTests(apiVersion string) {
+	querierAPIVersion = apiVersion
+}

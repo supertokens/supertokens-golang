@@ -44,12 +44,18 @@ func MakeAPIImplementation() sessmodels.APIInterface {
 			session, err := RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 			return session, err
 		} else {
-			sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{
-				AntiCsrfCheck:                 verifySessionOptions.AntiCsrfCheck,
-				SessionRequired:               verifySessionOptions.SessionRequired,
-				CheckDatabase:                 verifySessionOptions.CheckDatabase,
-				OverrideGlobalClaimValidators: verifySessionOptions.OverrideGlobalClaimValidators,
-			}, options.RecipeImplementation, userContext)
+			var _verifySessionOptionsToPass *sessmodels.VerifySessionOptions
+
+			if verifySessionOptions != nil {
+				_verifySessionOptionsToPass = &sessmodels.VerifySessionOptions{
+					AntiCsrfCheck:                 verifySessionOptions.AntiCsrfCheck,
+					SessionRequired:               verifySessionOptions.SessionRequired,
+					CheckDatabase:                 verifySessionOptions.CheckDatabase,
+					OverrideGlobalClaimValidators: verifySessionOptions.OverrideGlobalClaimValidators,
+				}
+			}
+
+			sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, _verifySessionOptionsToPass, options.RecipeImplementation, userContext)
 			if err != nil {
 				return nil, err
 			}

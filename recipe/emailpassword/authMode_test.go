@@ -456,6 +456,25 @@ func TestVerifySessionBehaviour(t *testing.T) {
 		{getTokenTransferMethodRes: "cookie", sessionRequired: false, authHeader: false, authCookie: true, output: "validatecookie"},
 	}
 
+	//behaviourTable := []struct {
+	//	getTokenTransferMethodRes string
+	//	sessionRequired           bool
+	//	authHeader                bool
+	//	authCookie                bool
+	//	output                    string
+	//}{
+	//	{getTokenTransferMethodRes: "any", sessionRequired: true, authHeader: true, authCookie: true, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "any", sessionRequired: false, authHeader: true, authCookie: true, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "header", sessionRequired: true, authHeader: true, authCookie: true, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "header", sessionRequired: false, authHeader: true, authCookie: true, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "any", sessionRequired: true, authHeader: true, authCookie: false, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "any", sessionRequired: false, authHeader: true, authCookie: false, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "header", sessionRequired: true, authHeader: true, authCookie: false, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "header", sessionRequired: false, authHeader: true, authCookie: false, output: "validateheader"},
+	//	//{getTokenTransferMethodRes: "any", sessionRequired: true, authHeader: false, authCookie: true, output: "validatecookie"},
+	//	//{getTokenTransferMethodRes: "any", sessionRequired: false, authHeader: false, authCookie: true, output: "validatecookie"},
+	//}
+
 	for _, behaviour := range behaviourTable {
 		t.Run(fmt.Sprintf("behaviour: %v with valid token", behaviour), func(t *testing.T) {
 			configValue := supertokens.TypeInput{

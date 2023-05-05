@@ -3,6 +3,7 @@ package session
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -70,7 +71,7 @@ func TestThatItAttachesTokensWithEnabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -111,7 +112,7 @@ func TestThatItAttachesTokensWithDisabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -153,7 +154,7 @@ func TestShouldAttachTokensWhenEnabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -211,7 +212,7 @@ func TestShouldAttachTokensWhenDisabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -226,7 +227,6 @@ func TestShouldAttachTokensWhenDisabled(t *testing.T) {
 	appSub := "asdf"
 	body := map[string]map[string]*string{
 		"payload": {
-			"sub":    nil,
 			"appSub": &appSub,
 		},
 	}
@@ -270,7 +270,7 @@ func TestShouldAttachTokensAfterRefreshAndVerifyWhenEnabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -335,7 +335,7 @@ func TestShouldAttachTokensAfterRefreshAndVerifyWhenDisabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -401,7 +401,7 @@ func TestShouldAttachTokensAfterRefreshWhenEnabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -454,7 +454,7 @@ func TestShouldAttachTokensAfterRefreshWhenDisabled(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	testServer := getTestServer(t)
+	testServer := GetTestServer(t)
 	defer func() {
 		testServer.Close()
 	}()
@@ -492,15 +492,55 @@ func checkResponse(t *testing.T, res *http.Response, exposed bool) {
 	}
 }
 
-func getTestServer(t *testing.T) *httptest.Server {
+func GetTestServer(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 	checkDBTrue := true
+	checkDBFalse := false
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		dataInBytes, err := ioutil.ReadAll(r.Body)
+		if err != nil {
+			t.Error(err.Error())
+		}
+		var result map[string]interface{}
+		err = json.Unmarshal(dataInBytes, &result)
+
+		var payload map[string]interface{}
+
+		if result["payload"] != nil {
+			payload = result["payload"].(map[string]interface{})
+		}
+
+		_, err2 := CreateNewSession(r, rw, "uniqueId", payload, map[string]interface{}{})
+
+		if err2 != nil {
+			http.Error(rw, fmt.Sprint(err2), 400)
+		}
 	})
 
 	mux.HandleFunc("/verify", verifySession(true, &checkDBTrue, func(rw http.ResponseWriter, r *http.Request) {
+		session := GetSessionFromRequestContext(r.Context())
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"message":       true,
+			"sessionHandle": session.GetHandle(),
+			"sessionExists": session != nil,
+		})
+	}))
+
+	mux.HandleFunc("/verify-no-db", verifySession(true, &checkDBFalse, func(rw http.ResponseWriter, r *http.Request) {
+		session := GetSessionFromRequestContext(r.Context())
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"message":       true,
+			"sessionHandle": session.GetHandle(),
+			"sessionExists": session != nil,
+		})
+	}))
+
+	mux.HandleFunc("/verify-checkdb", verifySession(true, &checkDBTrue, func(rw http.ResponseWriter, r *http.Request) {
 		session := GetSessionFromRequestContext(r.Context())
 		rw.Header().Set("Content-Type", "application/json")
 		rw.WriteHeader(http.StatusOK)
@@ -531,6 +571,19 @@ func getTestServer(t *testing.T) *httptest.Server {
 			"sessionHandle": session.GetHandle(),
 			"sessionExists": session != nil,
 			"newPayload":    session.GetAccessTokenPayload(),
+		})
+	}))
+
+	mux.HandleFunc("/revoke-session", verifySession(true, nil, func(rw http.ResponseWriter, r *http.Request) {
+		session := GetSessionFromRequestContext(r.Context())
+		err := session.RevokeSession()
+		assert.NoError(t, err)
+
+		rw.Header().Set("Content-Type", "application/json")
+		rw.WriteHeader(http.StatusOK)
+		json.NewEncoder(rw).Encode(map[string]interface{}{
+			"message":       true,
+			"sessionHandle": session.GetHandle(),
 		})
 	}))
 

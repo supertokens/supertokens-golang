@@ -282,6 +282,7 @@ func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
 
 func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r *http.Request) UserContext {
 	var _userContext map[string]interface{}
+	emptyMap := map[string]interface{}{}
 
 	if userContext == nil {
 		_userContext = map[string]interface{}{}
@@ -291,9 +292,10 @@ func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r 
 
 	if !ok {
 		_userContext["_default"] = map[string]interface{}{}
+		defaultObj = _userContext["_default"]
 	}
 
-	if reflect.TypeOf(_userContext["_default"]).Kind() != reflect.TypeOf(map[string]interface{}{}).Kind() {
+	if reflect.TypeOf(_userContext["_default"]).Kind() == reflect.TypeOf(emptyMap).Kind() {
 		defaultObj.(map[string]interface{})["request"] = r
 		_userContext["_default"] = defaultObj
 	}

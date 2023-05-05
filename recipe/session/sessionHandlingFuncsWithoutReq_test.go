@@ -326,7 +326,7 @@ func TestShouldReturnErrorForClaimValidationFailures(t *testing.T) {
 	})
 
 	assert.NotNil(t, sessionErr)
-	assert.True(t, errors.As(err2, &sessionError.InvalidClaimError{}))
+	assert.True(t, errors.As(sessionErr, &sessionError.InvalidClaimError{}))
 }
 
 func TestShouldRefreshSession(t *testing.T) {
