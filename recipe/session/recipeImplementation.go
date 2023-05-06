@@ -176,7 +176,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		}
 
 		session := response.Session
-		frontToken := BuildFrontToken(session.UserID, session.ExpiryTime, responseToken.Payload)
+		frontToken := BuildFrontToken(session.UserID, response.AccessToken.Expiry, responseToken.Payload)
 
 		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, responseToken.Payload, result, frontToken, response.AntiCsrfToken, nil, &response.RefreshToken, true)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
