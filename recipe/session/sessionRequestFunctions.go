@@ -151,31 +151,19 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 
 	allowedTokenTransferMethod := config.GetTokenTransferMethod(req, false, userContext)
 
-	var requestTokenTransferMethod sessmodels.TokenTransferMethod
+	var requestTokenTransferMethod *sessmodels.TokenTransferMethod
 	var accessToken *sessmodels.ParsedJWTInfo
 
 	if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.HeaderTransferMethod) && (accessTokens[sessmodels.HeaderTransferMethod] != nil) {
 		supertokens.LogDebugMessage("getSession: using header transfer method")
-		requestTokenTransferMethod = sessmodels.HeaderTransferMethod
+		headerMethod := sessmodels.HeaderTransferMethod
+		requestTokenTransferMethod = &headerMethod
 		accessToken = accessTokens[sessmodels.HeaderTransferMethod]
 	} else if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && (accessTokens[sessmodels.CookieTransferMethod] != nil) {
 		supertokens.LogDebugMessage("getSession: using cookie transfer method")
-		requestTokenTransferMethod = sessmodels.CookieTransferMethod
+		cookieMethod := sessmodels.CookieTransferMethod
+		requestTokenTransferMethod = &cookieMethod
 		accessToken = accessTokens[sessmodels.CookieTransferMethod]
-	} else {
-		if sessionOptional {
-			supertokens.LogDebugMessage("getSession: returning undefined because accessToken is undefined and sessionRequired is false")
-			return nil, nil
-		}
-
-		supertokens.LogDebugMessage("getSession: UNAUTHORISED because accessToken in request is undefined")
-		False := false
-		return nil, errors.UnauthorizedError{
-			Msg: "Session does not exist. Are you sending the sessionResult tokens in the request as with the appropriate token transfer method?",
-			// we do not clear the sessionResult here because of a
-			// race condition mentioned here: https://github.com/supertokens/supertokens-node/issues/17
-			ClearTokens: &False,
-		}
 	}
 
 	antiCsrfToken := GetAntiCsrfTokenFromHeaders(req)
@@ -190,7 +178,7 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		doAntiCsrfCheck = &doAntiCsrfCheckBool
 	}
 
-	if requestTokenTransferMethod == sessmodels.HeaderTransferMethod {
+	if requestTokenTransferMethod != nil && *requestTokenTransferMethod == sessmodels.HeaderTransferMethod {
 		False := false
 		doAntiCsrfCheck = &False
 	}
@@ -225,7 +213,13 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		}
 	}
 
-	result, err := (*recipeImpl.GetSession)(accessToken.RawTokenString, antiCsrfToken, &_verifySessionOptionsToPass, userContext)
+	var rawTokenString *string
+
+	if accessToken != nil {
+		rawTokenString = &accessToken.RawTokenString
+	}
+
+	result, err := (*recipeImpl.GetSession)(rawTokenString, antiCsrfToken, &_verifySessionOptionsToPass, userContext)
 
 	if err != nil {
 		return nil, err
@@ -252,10 +246,18 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 			return nil, err
 		}
 
+		transferMethod := sessmodels.HeaderTransferMethod
+
+		if requestTokenTransferMethod != nil {
+			transferMethod = *requestTokenTransferMethod
+		} else if allowedTokenTransferMethod != sessmodels.AnyTransferMethod {
+			transferMethod = allowedTokenTransferMethod
+		}
+
 		err = (*sessionResult).AttachToRequestResponse(sessmodels.RequestResponseInfo{
 			Res:                 res,
 			Req:                 req,
-			TokenTransferMethod: requestTokenTransferMethod,
+			TokenTransferMethod: transferMethod,
 		})
 
 		if err != nil {
