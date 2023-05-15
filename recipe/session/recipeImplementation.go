@@ -65,15 +65,32 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	// In all cases if sIdRefreshToken token exists (so it's a legacy session) we return TRY_REFRESH_TOKEN. The refresh endpoint will clear this cookie and try to upgrade the session.
 	// Check https://supertokens.com/docs/contribute/decisions/session/0007 for further details and a table of expected behaviours
-	getSession := func(accessTokenString string, antiCsrfToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	getSession := func(accessTokenString *string, antiCsrfToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		if options != nil && options.AntiCsrfCheck != nil && *options.AntiCsrfCheck != false && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
 		supertokens.LogDebugMessage("getSession: Started")
+
+		if accessTokenString == nil {
+			if options != nil && options.SessionRequired != nil && *options.SessionRequired == false {
+				supertokens.LogDebugMessage("getSession: returning nil because accessToken is nil and sessionRequired is false")
+				return nil, nil
+			}
+
+			supertokens.LogDebugMessage("getSession: UNAUTHORISED because accessToken in request is nil")
+			False := false
+			return nil, errors.UnauthorizedError{
+				Msg: "Session does not exist. Are you sending the session tokens in the request with the appropriate token transfer method?",
+				// we do not clear the session here because of a
+				// race condition mentioned here: https://github.com/supertokens/supertokens-node/issues/17
+				ClearTokens: &False,
+			}
+		}
+
 		var accessToken *sessmodels.ParsedJWTInfo
 
-		accessTokenResponse, err := ParseJWTWithoutSignatureVerification(accessTokenString)
+		accessTokenResponse, err := ParseJWTWithoutSignatureVerification(*accessTokenString)
 
 		if err != nil {
 			if options != nil && *options.SessionRequired == false {
@@ -136,7 +153,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			payload = accessToken.Payload
 		}
 
-		accessTokenStringForSession := accessTokenString
+		accessTokenStringForSession := *accessTokenString
 
 		accessTokenNil := reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{})
 

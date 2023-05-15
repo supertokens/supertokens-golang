@@ -90,7 +90,7 @@ func GetSessionWithContextWithoutRequestResponse(accessToken string, antiCSRFTok
 		return nil, err
 	}
 
-	result, err := (*instance.RecipeImpl.GetSession)(accessToken, antiCSRFToken, options, userContext)
+	result, err := (*instance.RecipeImpl.GetSession)(&accessToken, antiCSRFToken, options, userContext)
 
 	if err != nil {
 		return nil, err

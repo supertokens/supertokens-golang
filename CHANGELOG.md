@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.12.1] - 2023-05-12
+
+### Changes
+
+-   Made the access token string optional in the overrideable `GetSession` function
+-   Moved checking if the access token is nil into the overrideable `GetSession` function
+
 ## [0.12.0] - 2023-05-05
 
 ### Added
