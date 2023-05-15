@@ -246,6 +246,11 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 			return nil, err
 		}
 
+		// requestTransferMethod can only be nil here if the user has overridden GetSession
+		// to load the session by a custom method in that (very niche) case they also need to
+		// override how the session is attached to the response.
+		// In that scenario the transferMethod passed to attachToRequestResponse likely doesn't
+		// matter, still, we follow the general fallback logic
 		transferMethod := sessmodels.HeaderTransferMethod
 
 		if requestTokenTransferMethod != nil {
