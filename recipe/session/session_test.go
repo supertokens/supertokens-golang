@@ -1131,6 +1131,22 @@ func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
 		t.Error(err.Error())
 	}
 
+	mux := http.NewServeMux()
+	False := false
+	mux.HandleFunc("/getSession", func(rw http.ResponseWriter, r *http.Request) {
+		response, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
+			SessionRequired: &False,
+		})
+
+		assert.NoError(t, err)
+		assert.Nil(t, response)
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
+
 	validity := uint64(60)
 	response, err := CreateJWT(map[string]interface{}{}, &validity, nil)
 
@@ -1139,17 +1155,15 @@ func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
 	}
 
 	jwt := response.OK.Jwt
-	False := false
 
-	getSessionRespone, err := GetSessionWithoutRequestResponse(jwt, nil, &sessmodels.VerifySessionOptions{
-		SessionRequired: &False,
-	})
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
+	req.Header.Add("Authorization", "Bearer "+jwt)
+	assert.NoError(t, err)
+	_, err = http.DefaultClient.Do(req)
 
 	if err != nil {
 		t.Error(err.Error())
 	}
-
-	assert.Nil(t, getSessionRespone)
 }
 
 type MockResponseWriter struct{}
