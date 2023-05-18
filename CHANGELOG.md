@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+-   Adds additional tests for the session recipe
+
 ## [0.12.1] - 2023-05-12
 
 ### Changes
