@@ -1109,6 +1109,49 @@ func TestSessionContainerOverride(t *testing.T) {
 	assert.Equal(t, 1, data["test"])
 }
 
+func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	validity := uint64(60)
+	response, err := CreateJWT(map[string]interface{}{}, &validity, nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	jwt := response.OK.Jwt
+	False := false
+
+	getSessionRespone, err := GetSessionWithoutRequestResponse(jwt, nil, &sessmodels.VerifySessionOptions{
+		SessionRequired: &False,
+	})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Nil(t, getSessionRespone)
+}
+
 type MockResponseWriter struct{}
 
 func (mw MockResponseWriter) Header() http.Header {
