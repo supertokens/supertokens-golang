@@ -1166,6 +1166,55 @@ func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
 	}
 }
 
+func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSessionRequiredFalse(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	False := false
+	True := true
+	mux.HandleFunc("/getSession", func(rw http.ResponseWriter, r *http.Request) {
+		response, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{
+			SessionRequired: &False,
+			CheckDatabase:   &True,
+		})
+
+		assert.NoError(t, err)
+		assert.Nil(t, response)
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
+	assert.NoError(t, err)
+	_, err = http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
+
 type MockResponseWriter struct{}
 
 func (mw MockResponseWriter) Header() http.Header {
