@@ -7,7 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.12.2] - 2023-05-19
+
 -   Adds additional tests for the session recipe
+-   Fixes https://github.com/supertokens/supertokens-golang/issues/284
 
 ## [0.12.1] - 2023-05-12
 
