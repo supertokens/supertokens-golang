@@ -17,6 +17,7 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	sterrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
@@ -42,7 +43,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	if jwtInfo.Version >= 3 {
 		parsedToken, parseError := jwt.Parse(jwtInfo.RawTokenString, jwks.Keyfunc)
 		if parseError != nil {
-			supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed")
+			supertokens.LogDebugMessage(fmt.Sprintf("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed - %s", parseError))
 			return nil, sterrors.TryRefreshTokenError{
 				Msg: parseError.Error(),
 			}

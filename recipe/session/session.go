@@ -16,6 +16,7 @@
 package session
 
 import (
+	"fmt"
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
@@ -164,7 +165,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		response, err := regenerateAccessTokenHelper(*querier, &accessTokenPayload, sessionContainer.GetAccessToken())
 
 		if err != nil {
-			supertokens.LogDebugMessage("MergeIntoAccessTokenPayloadWithContext: Returning UnauthorizedError because regenerateAccessTokenHelper returned an error")
+			supertokens.LogDebugMessage(fmt.Sprintf("MergeIntoAccessTokenPayloadWithContext: Returning UnauthorizedError because we could not regenerate the session - %s", err))
 			return errors.UnauthorizedError{
 				Msg: errors.UnauthorizedErrorStr,
 			}
