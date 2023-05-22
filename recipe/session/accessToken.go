@@ -21,6 +21,7 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 	sterrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"strings"
 )
 
@@ -41,6 +42,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	if jwtInfo.Version >= 3 {
 		parsedToken, parseError := jwt.Parse(jwtInfo.RawTokenString, jwks.Keyfunc)
 		if parseError != nil {
+			supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed")
 			return nil, sterrors.TryRefreshTokenError{
 				Msg: parseError.Error(),
 			}
@@ -49,6 +51,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 		if parsedToken.Valid {
 			claims, ok := parsedToken.Claims.(jwt.MapClaims)
 			if !ok {
+				supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token claims are invalid")
 				return nil, sterrors.TryRefreshTokenError{
 					Msg: "Invalid JWT claims",
 				}
@@ -81,6 +84,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 			}
 
 			if parseErr != nil {
+				supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed")
 				return nil, sterrors.TryRefreshTokenError{
 					Msg: parseErr.Error(),
 				}
@@ -89,6 +93,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 			if parsedToken.Valid {
 				claims, ok := parsedToken.Claims.(jwt.MapClaims)
 				if !ok {
+					supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token claims are invalid")
 					return nil, sterrors.TryRefreshTokenError{
 						Msg: "Invalid JWT claims",
 					}
@@ -107,6 +112,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	}
 
 	if payload == nil {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token JWT has no payload")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Invalid JWT",
 		}
@@ -114,6 +120,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 
 	err := ValidateAccessTokenStructure(payload, jwtInfo.Version)
 	if err != nil {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because ValidateAccessTokenStructure returned an error")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: err.Error(),
 		}
@@ -142,12 +149,14 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
 
 	if antiCsrfToken == nil && doAntiCsrfCheck {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access does not contain the anti-csrf token.")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Access token does not contain the anti-csrf token.",
 		}
 	}
 
 	if expiryTime < GetCurrTimeInMS() {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access is expired")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Access token expired",
 		}
