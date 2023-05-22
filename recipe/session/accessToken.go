@@ -17,10 +17,12 @@ package session
 
 import (
 	"errors"
+	"fmt"
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	sterrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"strings"
 )
 
@@ -41,6 +43,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	if jwtInfo.Version >= 3 {
 		parsedToken, parseError := jwt.Parse(jwtInfo.RawTokenString, jwks.Keyfunc)
 		if parseError != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed - %s", parseError))
 			return nil, sterrors.TryRefreshTokenError{
 				Msg: parseError.Error(),
 			}
@@ -49,6 +52,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 		if parsedToken.Valid {
 			claims, ok := parsedToken.Claims.(jwt.MapClaims)
 			if !ok {
+				supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token claims are invalid")
 				return nil, sterrors.TryRefreshTokenError{
 					Msg: "Invalid JWT claims",
 				}
@@ -81,6 +85,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 			}
 
 			if parseErr != nil {
+				supertokens.LogDebugMessage(fmt.Sprintf("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed - %s", parseErr))
 				return nil, sterrors.TryRefreshTokenError{
 					Msg: parseErr.Error(),
 				}
@@ -89,6 +94,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 			if parsedToken.Valid {
 				claims, ok := parsedToken.Claims.(jwt.MapClaims)
 				if !ok {
+					supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token claims are invalid")
 					return nil, sterrors.TryRefreshTokenError{
 						Msg: "Invalid JWT claims",
 					}
@@ -107,6 +113,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	}
 
 	if payload == nil {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token JWT has no payload")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Invalid JWT",
 		}
@@ -114,6 +121,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 
 	err := ValidateAccessTokenStructure(payload, jwtInfo.Version)
 	if err != nil {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because ValidateAccessTokenStructure returned an error")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: err.Error(),
 		}
@@ -142,12 +150,14 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
 
 	if antiCsrfToken == nil && doAntiCsrfCheck {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access does not contain the anti-csrf token.")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Access token does not contain the anti-csrf token.",
 		}
 	}
 
 	if expiryTime < GetCurrTimeInMS() {
+		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access is expired")
 		return nil, sterrors.TryRefreshTokenError{
 			Msg: "Access token expired",
 		}
@@ -169,41 +179,55 @@ func ValidateAccessTokenStructure(payload map[string]interface{}, version int) e
 	err := errors.New("Access token does not contain all the information. Maybe the structure has changed?")
 
 	if version >= 3 {
+		supertokens.LogDebugMessage("ValidateAccessTokenStructure: Access token is using version >= 3")
 		if _, ok := payload["sessionHandle"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: sessionHandle not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["sub"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: sub claim not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: refreshTokenHash1 not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["exp"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: exp claim not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["iat"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: iat claim not found in JWT payload")
 			return err
 		}
 	} else {
+		supertokens.LogDebugMessage("ValidateAccessTokenStructure: Access token is using version < 3")
 		if _, ok := payload["sessionHandle"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: sessionHandle not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["userId"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: userId not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: refreshTokenHash1 not found in JWT payload")
 			return err
 		}
 		if payload["userData"] == nil {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: userData not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["userData"].(map[string]interface{}); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: userData is invalid in JWT payload")
 			return err
 		}
 		if _, ok := payload["expiryTime"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: expiryTime not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["timeCreated"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: timeCreated not found in JWT payload")
 			return err
 		}
 	}
