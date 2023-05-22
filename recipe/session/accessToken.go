@@ -178,41 +178,55 @@ func ValidateAccessTokenStructure(payload map[string]interface{}, version int) e
 	err := errors.New("Access token does not contain all the information. Maybe the structure has changed?")
 
 	if version >= 3 {
+		supertokens.LogDebugMessage("ValidateAccessTokenStructure: Access token is using version >= 3")
 		if _, ok := payload["sessionHandle"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: sessionHandle not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["sub"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: sub claim not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: refreshTokenHash1 not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["exp"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: exp claim not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["iat"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: iat claim not found in JWT payload")
 			return err
 		}
 	} else {
+		supertokens.LogDebugMessage("ValidateAccessTokenStructure: Access token is using version < 3")
 		if _, ok := payload["sessionHandle"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: sessionHandle not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["userId"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: userId not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["refreshTokenHash1"].(string); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: refreshTokenHash1 not found in JWT payload")
 			return err
 		}
 		if payload["userData"] == nil {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: userData not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["userData"].(map[string]interface{}); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: userData is invalid in JWT payload")
 			return err
 		}
 		if _, ok := payload["expiryTime"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: expiryTime not found in JWT payload")
 			return err
 		}
 		if _, ok := payload["timeCreated"].(float64); !ok {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: timeCreated not found in JWT payload")
 			return err
 		}
 	}

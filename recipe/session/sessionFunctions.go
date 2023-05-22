@@ -236,17 +236,20 @@ func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier superto
 
 	response, err := querier.SendPostRequest("/recipe/session/refresh", requestBody)
 	if err != nil {
+		supertokens.LogDebugMessage("refreshSessionHelper: Call to /recipe/session/refresh API failed")
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
 	if response["status"] == "OK" {
 		delete(response, "status")
 		responseByte, err := json.Marshal(response)
 		if err != nil {
+			supertokens.LogDebugMessage("refreshSessionHelper: Could not parse response from /recipe/session/refresh API")
 			return sessmodels.CreateOrRefreshAPIResponse{}, err
 		}
 		var result sessmodels.CreateOrRefreshAPIResponse
 		err = json.Unmarshal(responseByte, &result)
 		if err != nil {
+			supertokens.LogDebugMessage("refreshSessionHelper: Could not decode response from /recipe/session/refresh API")
 			return sessmodels.CreateOrRefreshAPIResponse{}, err
 		}
 		return result, nil
@@ -379,6 +382,7 @@ func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayl
 		"userDataInJWT": newAccessTokenPayload,
 	})
 	if err != nil {
+		supertokens.LogDebugMessage("regenerateAccessTokenHelper: Call to /recipe/session/regenerate failed")
 		return nil, err
 	}
 	if response["status"].(string) == errors.UnauthorizedErrorStr {
@@ -386,11 +390,13 @@ func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayl
 	}
 	responseByte, err := json.Marshal(response)
 	if err != nil {
+		supertokens.LogDebugMessage("regenerateAccessTokenHelper: Failed to parse response from core")
 		return nil, err
 	}
 	var resp sessmodels.RegenerateAccessTokenResponse
 	err = json.Unmarshal(responseByte, &resp)
 	if err != nil {
+		supertokens.LogDebugMessage("regenerateAccessTokenHelper: Failed to decode response from core")
 		return nil, err
 	}
 	return &resp, nil

@@ -176,6 +176,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		if disableAntiCsrf != true && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+			supertokens.LogDebugMessage("refreshSession: Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
@@ -189,6 +190,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		responseToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 		if parseErr != nil {
+			supertokens.LogDebugMessage("refreshSession: Failed to parse access token")
 			return nil, err
 		}
 
