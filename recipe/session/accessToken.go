@@ -85,7 +85,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS,
 			}
 
 			if parseErr != nil {
-				supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed")
+				supertokens.LogDebugMessage(fmt.Sprintf("GetInfoFromAccessToken: Returning TryRefreshTokenError because access token parsing failed - %s", parseErr))
 				return nil, sterrors.TryRefreshTokenError{
 					Msg: parseErr.Error(),
 				}
