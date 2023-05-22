@@ -351,6 +351,10 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 			}
 		}
 
+		if isUnauthorisedErr {
+			supertokens.LogDebugMessage("RefreshSessionInRequest: Returning UnauthorizedError because RefreshSession returned an error")
+		}
+
 		return nil, err
 	}
 
