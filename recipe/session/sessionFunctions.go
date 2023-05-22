@@ -63,6 +63,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	var err error = nil
 	combinedJwks, jwksError := sessmodels.GetCombinedJWKS()
 	if jwksError != nil {
+		supertokens.LogDebugMessage("getSessionHelper: Returning TryRefreshTokenError because there was an error fetching JWKs")
 		if !defaultErrors.As(jwksError, &errors.TryRefreshTokenError{}) {
 			return sessmodels.GetSessionResponse{}, jwksError
 		}
@@ -71,6 +72,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	accessTokenInfo, err = GetInfoFromAccessToken(parsedAccessToken, *combinedJwks, config.AntiCsrf == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 	if err != nil {
 		if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
+			supertokens.LogDebugMessage("getSessionHelper: Returning TryRefreshTokenError because GetInfoFromAccessToken returned an error")
 			return sessmodels.GetSessionResponse{}, err
 		}
 
