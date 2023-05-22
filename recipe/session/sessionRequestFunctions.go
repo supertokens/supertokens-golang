@@ -117,6 +117,7 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, options *sessmodels.VerifySessionOptions, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	idRefreshToken := GetCookieValue(req, legacyIdRefreshTokenCookieName)
 	if idRefreshToken != nil {
+		supertokens.LogDebugMessage("GetSessionFromRequest: Returning TryRefreshTokenError because the request is using a legacy session and should be refreshed")
 		return nil, errors.TryRefreshTokenError{
 			Msg: "using legacy session, please call the refresh API",
 		}
