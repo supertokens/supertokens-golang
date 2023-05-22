@@ -90,6 +90,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return nil, err
 		}
 		if sessionInformation == nil {
+			supertokens.LogDebugMessage("GetSessionDataInDatabaseWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.SessionDataInDatabase, nil
@@ -101,6 +102,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return err
 		}
 		if !updated {
+			supertokens.LogDebugMessage("UpdateSessionDataInDatabaseWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return nil
@@ -112,6 +114,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
+			supertokens.LogDebugMessage("GetTimeCreatedWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.TimeCreated, nil
@@ -123,6 +126,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
+			supertokens.LogDebugMessage("GetExpiryWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.Expiry, nil
@@ -160,6 +164,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		response, err := regenerateAccessTokenHelper(*querier, &accessTokenPayload, sessionContainer.GetAccessToken())
 
 		if err != nil {
+			supertokens.LogDebugMessage("MergeIntoAccessTokenPayloadWithContext: Returning UnauthorizedError because regenerateAccessTokenHelper returned an error")
 			return errors.UnauthorizedError{
 				Msg: errors.UnauthorizedErrorStr,
 			}
