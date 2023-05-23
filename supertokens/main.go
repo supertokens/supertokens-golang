@@ -70,3 +70,7 @@ func GetUsersNewestFirst(paginationToken *string, limit *int, includeRecipeIds *
 func DeleteUser(userId string) error {
 	return deleteUser(userId)
 }
+
+func GetRequestFromUserContext(userContext UserContext) *http.Request {
+	return getRequestFromUserContext(userContext)
+}

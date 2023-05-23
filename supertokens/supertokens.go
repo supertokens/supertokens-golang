@@ -20,6 +20,7 @@ import (
 	"errors"
 	"flag"
 	"net/http"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -377,4 +378,24 @@ func ResetForTest() {
 
 func IsRunningInTestMode() bool {
 	return flag.Lookup("test.v") != nil || IsTestFlag
+}
+
+func getRequestFromUserContext(userContext UserContext) *http.Request {
+	if userContext == nil {
+		return nil
+	}
+
+	_userContext := *userContext
+	defaultObj, ok := _userContext["_default"]
+
+	if !ok {
+		return nil
+	}
+
+	emptyMap := map[string]interface{}{}
+	if reflect.TypeOf(defaultObj).Kind() != reflect.TypeOf(emptyMap).Kind() {
+		return nil
+	}
+
+	return defaultObj.(map[string]interface{})["request"].(*http.Request)
 }
