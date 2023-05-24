@@ -34,6 +34,10 @@ const emailVerificationTemplate = `<!doctype html>
     <title>*|MC:SUBJECT|*</title>
 
     <style type="text/css">
+		body {
+			max-width: 100vw;
+			overflow: hidden;
+		}
         p {
             margin: 10px 0;
             padding: 0;
@@ -782,6 +786,11 @@ const emailVerificationTemplate = `<!doctype html>
             }
 
         }
+		@media only screen and (max-width: 480px) {
+			#meant-for {
+				padding: 20px;
+			}
+		}
     </style>
 </head>
 

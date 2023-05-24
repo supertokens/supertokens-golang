@@ -34,6 +34,10 @@ const magicLinkAndOtpLoginTemplate = `<!doctype html>
 	<title>*|MC:SUBJECT|*</title>
 
 	<style type="text/css">
+		body {
+			max-width: 100vw;
+			overflow: hidden;
+		}
 		p {
 			margin: 10px 0;
 			padding: 0;
@@ -1013,6 +1017,10 @@ const magicLinkLoginTemplate = `<!doctype html>
 	<title>*|MC:SUBJECT|*</title>
 
 	<style type="text/css">
+		body {
+			max-width: 100vw;
+			overflow: hidden;
+		}
 		p {
 			margin: 10px 0;
 			padding: 0;
@@ -1931,6 +1939,10 @@ const otpLoginTemplate = `<!doctype html>
 	<title>*|MC:SUBJECT|*</title>
 
 	<style type="text/css">
+		body {
+			max-width: 100vw;
+			overflow: hidden;
+		}
 		p {
 			margin: 10px 0;
 			padding: 0;
