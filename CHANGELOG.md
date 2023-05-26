@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+### Fixes
+
+-   Fixes bug in debug logging where line number was being printed incorrectly.
+
 ## [0.12.4] - 2023-05-23
 
 ### Changes
