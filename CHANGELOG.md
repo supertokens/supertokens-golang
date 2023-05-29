@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changes
 
--   Made changes to email templates to support superhuman 
+-   Update email templates to fix an issue with styling on some email clients 
 
 ## [0.12.4] - 2023-05-23
 
