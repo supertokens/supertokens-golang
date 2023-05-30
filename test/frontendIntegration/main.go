@@ -81,9 +81,11 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 		if len(os.Args) == 2 {
 			port = os.Args[1]
 		}
-		antiCsrf := "NONE"
+		none := "NONE"
+		viaToken := "VIA_TOKEN"
+		antiCsrf := sessmodels.AntiCsrfType{String: &none}
 		if enableAntiCsrf {
-			antiCsrf = "VIA_TOKEN"
+			antiCsrf.String = &viaToken
 		}
 		err := supertokens.Init(supertokens.TypeInput{
 			Supertokens: &supertokens.ConnectionInfo{
@@ -109,13 +111,13 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 					Override: &sessmodels.OverrideStruct{
 						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 							ogCNS := *originalImplementation.CreateNewSession
-							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, antiCsrfMode *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 								if accessTokenPayload == nil {
 									accessTokenPayload = map[string]interface{}{}
 								}
 								accessTokenPayload["customClaim"] = "customValue"
 
-								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, antiCsrfMode, userContext)
 							}
 							return originalImplementation
 						},
@@ -136,9 +138,11 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 		if len(os.Args) == 2 {
 			port = os.Args[1]
 		}
-		antiCsrf := "NONE"
+		none := "NONE"
+		viaToken := "VIA_TOKEN"
+		antiCsrf := sessmodels.AntiCsrfType{String: &none}
 		if enableAntiCsrf {
-			antiCsrf = "VIA_TOKEN"
+			antiCsrf.String = &viaToken
 		}
 		err := supertokens.Init(supertokens.TypeInput{
 			Supertokens: &supertokens.ConnectionInfo{
@@ -163,13 +167,13 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 					Override: &sessmodels.OverrideStruct{
 						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 							ogCNS := *originalImplementation.CreateNewSession
-							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, antiCsrfMode *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 								if accessTokenPayload == nil {
 									accessTokenPayload = map[string]interface{}{}
 								}
 								accessTokenPayload["customClaim"] = "customValue"
 
-								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, antiCsrfMode, userContext)
 							}
 							return originalImplementation
 						},
@@ -190,9 +194,11 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 		if len(os.Args) == 2 {
 			port = os.Args[1]
 		}
-		antiCsrf := "NONE"
+		none := "NONE"
+		viaToken := "VIA_TOKEN"
+		antiCsrf := sessmodels.AntiCsrfType{String: &none}
 		if enableAntiCsrf {
-			antiCsrf = "VIA_TOKEN"
+			antiCsrf.String = &viaToken
 		}
 		err := supertokens.Init(supertokens.TypeInput{
 			Supertokens: &supertokens.ConnectionInfo{

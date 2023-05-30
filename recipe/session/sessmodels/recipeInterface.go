@@ -21,9 +21,9 @@ import (
 )
 
 type RecipeInterface struct {
-	CreateNewSession            *func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (SessionContainer, error)
-	GetSession                  *func(accessToken *string, antiCSRFToken *string, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)
-	RefreshSession              *func(refreshToken string, antiCSRFToken *string, disableAntiCSRF bool, userContext supertokens.UserContext) (SessionContainer, error)
+	CreateNewSession            *func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, antiCsrfMode *string, userContext supertokens.UserContext) (SessionContainer, error)
+	GetSession                  *func(accessToken *string, antiCSRFToken *string, options *VerifySessionOptions, antiCsrfMode *string, userContext supertokens.UserContext) (SessionContainer, error)
+	RefreshSession              *func(refreshToken string, antiCSRFToken *string, disableAntiCSRF bool, antiCsrfMode *string, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (*SessionInformation, error)
 	RevokeAllSessionsForUser    *func(userID string, userContext supertokens.UserContext) ([]string, error)
 	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)

@@ -40,11 +40,11 @@ var protectedProps = []string{
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
 
-	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, antiCsrfMode *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		sessionResponse, err := createNewSessionHelper(
-			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase,
+			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase, antiCsrfMode,
 		)
 		if err != nil {
 			return nil, err
@@ -65,8 +65,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 	// In all cases if sIdRefreshToken token exists (so it's a legacy session) we return TRY_REFRESH_TOKEN. The refresh endpoint will clear this cookie and try to upgrade the session.
 	// Check https://supertokens.com/docs/contribute/decisions/session/0007 for further details and a table of expected behaviours
-	getSession := func(accessTokenString *string, antiCsrfToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		if options != nil && options.AntiCsrfCheck != nil && *options.AntiCsrfCheck != false && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+	getSession := func(accessTokenString *string, antiCsrfToken *string, options *sessmodels.VerifySessionOptions, antiCsrfMode *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		if options != nil && options.AntiCsrfCheck != nil && *options.AntiCsrfCheck != false && *antiCsrfMode == AntiCSRF_VIA_CUSTOM_HEADER {
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
@@ -133,7 +133,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			doAntiCsrfCheck = false
 		}
 
-		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, doAntiCsrfCheck, alwaysCheckCore)
+		response, err := getSessionHelper(config, querier, *accessToken, antiCsrfToken, doAntiCsrfCheck, alwaysCheckCore, antiCsrfMode)
 		if err != nil {
 			return nil, err
 		}
@@ -174,14 +174,14 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return getSessionInformationHelper(querier, sessionHandle)
 	}
 
-	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		if disableAntiCsrf != true && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, antiCsrfMode *string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+		if disableAntiCsrf != true && *antiCsrfMode == AntiCSRF_VIA_CUSTOM_HEADER {
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
 		supertokens.LogDebugMessage("refreshSession: Started")
 
-		response, err := refreshSessionHelper(config, querier, refreshToken, antiCsrfToken, disableAntiCsrf)
+		response, err := refreshSessionHelper(config, querier, refreshToken, antiCsrfToken, disableAntiCsrf, antiCsrfMode)
 		if err != nil {
 			return nil, err
 		}

@@ -98,21 +98,22 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New("SessionExpiredStatusCode and InvalidClaimStatusCode cannot have the same value")
 	}
 
-	if config != nil && config.AntiCsrf != nil {
-		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
-			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
-		}
-	}
-
-	antiCsrf := AntiCSRF_NONE
-	if config == nil || config.AntiCsrf == nil {
-		if cookieSameSite == CookieSameSite_NONE {
-			antiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
+	var antiCsrfFunc = func(req *http.Request, userContext supertokens.UserContext) string {
+		var antiCsrfVal = AntiCSRF_NONE
+		if config == nil || config.AntiCsrf == nil {
+			if cookieSameSite == CookieSameSite_NONE {
+				antiCsrfVal = AntiCSRF_VIA_CUSTOM_HEADER
+			} else {
+				antiCsrfVal = AntiCSRF_NONE
+			}
 		} else {
-			antiCsrf = AntiCSRF_NONE
+			if config.AntiCsrf.Function != nil {
+				antiCsrfVal = (*config.AntiCsrf.Function)(req, userContext)
+			} else {
+				antiCsrfVal = *config.AntiCsrf.String
+			}
 		}
-	} else {
-		antiCsrf = *config.AntiCsrf
+		return antiCsrfVal
 	}
 
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
@@ -184,7 +185,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		InvalidClaimStatusCode:   invalidClaimStatusCode,
-		AntiCsrf:                 antiCsrf,
+		AntiCsrf:                 antiCsrfFunc,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: config.ExposeAccessTokenToFrontendInCookieBasedAuth,
 		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
 		ErrorHandlers:                                errorHandlers,
@@ -344,4 +345,14 @@ func defaultGetTokenTransferMethod(req *http.Request, forCreateNewSession bool, 
 	default:
 		return sessmodels.AnyTransferMethod
 	}
+}
+
+func CheckAntiCsrfOrThrowError(antiCsrfMode *string, info supertokens.NormalisedAppinfo, ctx supertokens.UserContext) (*string, error) {
+	// TODO - iresh:	check for initial_origin_type in later PR
+	if antiCsrfMode == nil {
+		return nil, supertokens.BadInputError{
+			Msg: "AntiCsrfMode is required if origin in supertokens init is not string",
+		}
+	}
+	return antiCsrfMode, nil
 }

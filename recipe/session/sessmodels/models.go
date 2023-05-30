@@ -69,7 +69,8 @@ func GetJWKS() []GetJWKSFunction {
 	return result
 }
 
-/**
+/*
+*
 This function fetches all JWKs from the first available core instance. This combines the other JWKS functions to become
 error resistant.
 
@@ -145,12 +146,17 @@ type TypeInput struct {
 	SessionExpiredStatusCode                     *int
 	InvalidClaimStatusCode                       *int
 	CookieDomain                                 *string
-	AntiCsrf                                     *string
+	AntiCsrf                                     *AntiCsrfType
 	Override                                     *OverrideStruct
 	ErrorHandlers                                *ErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 	UseDynamicAccessTokenSigningKey              *bool
+}
+
+type AntiCsrfType struct {
+	String   *string
+	Function *func(req *http.Request, userContext supertokens.UserContext) string
 }
 
 type OverrideStruct struct {
@@ -172,7 +178,7 @@ type TypeNormalisedInput struct {
 	CookieSecure                                 bool
 	SessionExpiredStatusCode                     int
 	InvalidClaimStatusCode                       int
-	AntiCsrf                                     string
+	AntiCsrf                                     func(req *http.Request, userContext supertokens.UserContext) string
 	Override                                     OverrideStruct
 	ErrorHandlers                                NormalisedErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod

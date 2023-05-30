@@ -82,7 +82,9 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 
 	disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
 
-	sessionResponse, err := (*recipeImpl.CreateNewSession)(userID, finalAccessTokenPayload, sessionDataInDatabase, &disableAntiCSRF, userContext)
+	var antiCsrfMode = config.AntiCsrf(req, userContext)
+
+	sessionResponse, err := (*recipeImpl.CreateNewSession)(userID, finalAccessTokenPayload, sessionDataInDatabase, &disableAntiCSRF, &antiCsrfMode, userContext)
 
 	if err != nil {
 		return nil, err
@@ -184,8 +186,10 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		doAntiCsrfCheck = &False
 	}
 
-	if *doAntiCsrfCheck && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
-		if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+	var antiCsrfMode = config.AntiCsrf(req, userContext)
+
+	if *doAntiCsrfCheck && antiCsrfMode == AntiCSRF_VIA_CUSTOM_HEADER {
+		if antiCsrfMode == AntiCSRF_VIA_CUSTOM_HEADER {
 			if GetRidFromHeader(req) == nil {
 				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because custom header (rid) was not passed")
 				return nil, errors.TryRefreshTokenError{
@@ -220,7 +224,7 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		rawTokenString = &accessToken.RawTokenString
 	}
 
-	result, err := (*recipeImpl.GetSession)(rawTokenString, antiCsrfToken, &_verifySessionOptionsToPass, userContext)
+	result, err := (*recipeImpl.GetSession)(rawTokenString, antiCsrfToken, &_verifySessionOptionsToPass, &antiCsrfMode, userContext)
 
 	if err != nil {
 		return nil, err
@@ -321,7 +325,8 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 
 	antiCsrfToken := GetAntiCsrfTokenFromHeaders(req)
 	disableAntiCSRF := requestTokenTransferMethod == sessmodels.HeaderTransferMethod
-	if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCSRF {
+	var antiCsrfMode = config.AntiCsrf(req, userContext)
+	if antiCsrfMode == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCSRF {
 		ridFromHeader := GetRidFromHeader(req)
 
 		if ridFromHeader == nil {
@@ -336,7 +341,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 		disableAntiCSRF = true
 	}
 
-	result, err := (*recipeImpl.RefreshSession)(*refreshToken, antiCsrfToken, disableAntiCSRF, userContext)
+	result, err := (*recipeImpl.RefreshSession)(*refreshToken, antiCsrfToken, disableAntiCSRF, &antiCsrfMode, userContext)
 
 	if err != nil {
 		unauthorisedErr := errors.UnauthorizedError{}

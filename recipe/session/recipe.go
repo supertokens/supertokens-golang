@@ -56,7 +56,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, configError
 	}
 
-	supertokens.LogDebugMessage("session init: AntiCsrf: " + verifiedConfig.AntiCsrf)
+	//supertokens.LogDebugMessage("session init: AntiCsrf: " + verifiedConfig.AntiCsrf)
 	if verifiedConfig.CookieDomain != nil {
 		supertokens.LogDebugMessage("session init: CookieDomain: " + *verifiedConfig.CookieDomain)
 	} else {
