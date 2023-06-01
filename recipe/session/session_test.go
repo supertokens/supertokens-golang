@@ -17,10 +17,14 @@
 package session
 
 import (
+	"bufio"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -1213,6 +1217,145 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+type InfoLogData struct {
+	LastLine string
+	Output   []string
+}
+
+func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
+	logFilePath := "../../../supertokens-root/logs/info.log"
+	file, err := os.Open(logFilePath)
+	if err != nil {
+		t.Fatalf("failed opening file: %s", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var lastLine string
+	var output []string
+
+	shouldRecordOutput := false
+
+	if startWith == "" {
+		shouldRecordOutput = true
+	}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.TrimSpace(line) != "" {
+			if startWith != "" && strings.Contains(line, startWith) {
+				shouldRecordOutput = true
+				continue
+			}
+
+			if shouldRecordOutput {
+				output = append(output, line)
+			}
+
+			lastLine = line
+		}
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		t.Fatalf("scanner error: %s", err)
+	}
+
+	return InfoLogData{
+		LastLine: lastLine,
+		Output:   output,
+	}
+}
+
+func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	lastLineBeforeTest := GetInfoLogData(t, "").LastLine
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/getSession", func(rw http.ResponseWriter, r *http.Request) {
+		_, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{})
+		assert.NoError(t, err)
+	})
+
+	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
+		CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
+
+	logInfoAfter := GetInfoLogData(t, lastLineBeforeTest)
+	var wellKnownCallLogs []string
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 1)
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
+
+	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Cookie", "sAccessToken="+cookieData["accessTokenFromAny"])
+	_, err = http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	time.Sleep(time.Duration(JWKCacheMaxAgeInMs) * time.Millisecond)
+
+	logInfoAfterWaiting := GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfterWaiting.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 2)
+
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 type MockResponseWriter struct{}
