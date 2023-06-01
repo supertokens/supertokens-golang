@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.12.6] - 2023-06-01
+
+### Fixes
+
+- Fixes a bug in the session recipe where the SDK would try to fetch the JWKs from the core multiple times per minute
+
 ## [0.12.5] - 2023-05-26
 
 ### Fixes
