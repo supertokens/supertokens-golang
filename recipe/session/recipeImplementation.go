@@ -41,7 +41,7 @@ var protectedProps = []string{
 
 var JWKCacheMaxAgeInMs = 60000
 var JWKRefreshRateLimit = 500
-var jwksFunctions []sessmodels.GetJWKSResult
+var jwksResults []sessmodels.GetJWKSResult
 
 func getJWKS() []sessmodels.GetJWKSResult {
 	result := []sessmodels.GetJWKSResult{}
@@ -76,11 +76,11 @@ token verification. Otherwise, the result of session verification would depend o
 func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 	var lastError error
 
-	if len(jwksFunctions) == 0 {
+	if len(jwksResults) == 0 {
 		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
 	}
 
-	for _, jwk := range jwksFunctions {
+	for _, jwk := range jwksResults {
 		jwksResult := jwk.JWKS
 		err := jwk.Error
 
@@ -96,7 +96,7 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
-	jwksFunctions = getJWKS()
+	jwksResults = getJWKS()
 
 	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")

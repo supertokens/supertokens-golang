@@ -17,11 +17,9 @@
 package session
 
 import (
-	"bufio"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 	"time"
@@ -1219,57 +1217,6 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 	}
 }
 
-type InfoLogData struct {
-	LastLine string
-	Output   []string
-}
-
-func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
-	logFilePath := "../../../supertokens-root/logs/info.log"
-	file, err := os.Open(logFilePath)
-	if err != nil {
-		t.Fatalf("failed opening file: %s", err)
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-	var lastLine string
-	var output []string
-
-	shouldRecordOutput := false
-
-	if startWith == "" {
-		shouldRecordOutput = true
-	}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.TrimSpace(line) != "" {
-			if startWith != "" && strings.Contains(line, startWith) {
-				shouldRecordOutput = true
-				continue
-			}
-
-			if shouldRecordOutput {
-				output = append(output, line)
-			}
-
-			lastLine = line
-		}
-	}
-
-	err = scanner.Err()
-	if err != nil {
-		t.Fatalf("scanner error: %s", err)
-	}
-
-	return InfoLogData{
-		LastLine: lastLine,
-		Output:   output,
-	}
-}
-
 func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
 	originalCacheAge := JWKCacheMaxAgeInMs
@@ -1277,7 +1224,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	JWKCacheMaxAgeInMs = 2000
 
-	lastLineBeforeTest := GetInfoLogData(t, "").LastLine
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1300,22 +1247,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	mux := http.NewServeMux()
-	mux.HandleFunc("/getSession", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{})
-		assert.NoError(t, err)
-	})
-
-	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
-	})
-
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
-	defer func() {
-		testServer.Close()
-	}()
-
-	logInfoAfter := GetInfoLogData(t, lastLineBeforeTest)
+	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	var wellKnownCallLogs []string
 
 	for _, line := range logInfoAfter.Output {
@@ -1326,16 +1258,14 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 
 	assert.Equal(t, len(wellKnownCallLogs), 1)
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
-	assert.NoError(t, err)
-	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	cookieData := unittesting.ExtractInfoFromResponse(res)
+	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
-	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/getSession", nil)
-	assert.NoError(t, err)
-	req.Header.Add("Cookie", "sAccessToken="+cookieData["accessTokenFromAny"])
-	_, err = http.DefaultClient.Do(req)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokens := session.GetAllSessionTokensDangerously()
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1343,7 +1273,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 
 	time.Sleep(time.Duration(JWKCacheMaxAgeInMs) * time.Millisecond)
 
-	logInfoAfterWaiting := GetInfoLogData(t, lastLineBeforeTest)
+	logInfoAfterWaiting := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfterWaiting.Output {
@@ -1354,6 +1284,55 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 
 	assert.Equal(t, len(wellKnownCallLogs), 2)
 
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
+}
+
+func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	// 0.004 = 2 seconds roughly
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0004")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	jwksAfterStart := jwksResults
+	beforeKids := jwksAfterStart[0].JWKS.KIDs()
+
+	time.Sleep(3 * time.Second)
+
+	afterKids := jwksAfterStart[0].JWKS.KIDs()
+	var newKeys []string
+
+	for _, key := range afterKids {
+		if !supertokens.DoesSliceContainString(key, beforeKids) {
+			newKeys = append(newKeys, key)
+		}
+	}
+
+	assert.True(t, len(newKeys) != 0)
 	JWKRefreshRateLimit = originalRefreshlimit
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
