@@ -20,7 +20,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -1213,6 +1215,226 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	var wellKnownCallLogs []string
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 1)
+
+	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokens := session.GetAllSessionTokensDangerously()
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	time.Sleep(time.Duration(JWKCacheMaxAgeInMs) * time.Millisecond)
+
+	logInfoAfterWaiting := unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfterWaiting.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 2)
+
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
+}
+
+func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	// 0.004 = 2 seconds roughly
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0004")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	jwksAfterStart := jwksResults
+	beforeKids := jwksAfterStart[0].JWKS.KIDs()
+
+	time.Sleep(3 * time.Second)
+
+	afterKids := jwksAfterStart[0].JWKS.KIDs()
+	var newKeys []string
+
+	for _, key := range afterKids {
+		if !supertokens.DoesSliceContainString(key, beforeKids) {
+			newKeys = append(newKeys, key)
+		}
+	}
+
+	assert.True(t, len(newKeys) != 0)
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
+}
+
+func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	var wellKnownCallLogs []string
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 1)
+
+	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokens := session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 1)
+
+	time.Sleep(10 * time.Second)
+
+	session, err = CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokens = session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 2)
+
+	tokens = session.GetAllSessionTokensDangerously()
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 2)
 }
 
 type MockResponseWriter struct{}

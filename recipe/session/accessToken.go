@@ -37,7 +37,7 @@ type AccessTokenInfoStruct struct {
 	TimeCreated             uint64
 }
 
-func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks keyfunc.JWKS, doAntiCsrfCheck bool) (*AccessTokenInfoStruct, error) {
+func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks *keyfunc.JWKS, doAntiCsrfCheck bool) (*AccessTokenInfoStruct, error) {
 	var payload map[string]interface{}
 
 	if jwtInfo.Version >= 3 {

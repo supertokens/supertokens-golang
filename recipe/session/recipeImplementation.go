@@ -20,11 +20,13 @@ import (
 	"encoding/json"
 	defaultErrors "errors"
 	"fmt"
+	"github.com/MicahParks/keyfunc"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"reflect"
+	"time"
 )
 
 var protectedProps = []string{
@@ -37,8 +39,64 @@ var protectedProps = []string{
 	"antiCsrfToken",
 }
 
+var JWKCacheMaxAgeInMs = 60000
+var JWKRefreshRateLimit = 500
+var jwksResults []sessmodels.GetJWKSResult
+
+func getJWKS() []sessmodels.GetJWKSResult {
+	result := []sessmodels.GetJWKSResult{}
+	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
+
+	for _, path := range corePaths {
+		// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
+		// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
+		// RefreshInterval - Refreshes should occur every 600 seconds
+		jwks, err := keyfunc.Get(path, keyfunc.Options{
+			RefreshUnknownKID: true,
+			RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
+			RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
+		})
+
+		result = append(result, sessmodels.GetJWKSResult{
+			JWKS:  jwks,
+			Error: err,
+		})
+	}
+
+	return result
+}
+
+/**
+This function fetches all JWKs from the first available core instance. This combines the other JWKS functions to become
+error resistant.
+
+Every core instance a backend is connected to is expected to connect to the same database and use the same key set for
+token verification. Otherwise, the result of session verification would depend on which core is currently available.
+*/
+func GetCombinedJWKS() (*keyfunc.JWKS, error) {
+	var lastError error
+
+	if len(jwksResults) == 0 {
+		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
+	}
+
+	for _, jwk := range jwksResults {
+		jwksResult := jwk.JWKS
+		err := jwk.Error
+
+		if err != nil {
+			lastError = err
+		} else {
+			return jwksResult, nil
+		}
+	}
+
+	return nil, lastError
+}
+
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
+	jwksResults = getJWKS()
 
 	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")

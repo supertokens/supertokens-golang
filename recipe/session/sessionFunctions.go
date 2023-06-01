@@ -62,7 +62,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken sessmodels.ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, alwaysCheckCore bool) (sessmodels.GetSessionResponse, error) {
 	var accessTokenInfo *AccessTokenInfoStruct = nil
 	var err error = nil
-	combinedJwks, jwksError := sessmodels.GetCombinedJWKS()
+	combinedJwks, jwksError := GetCombinedJWKS()
 	if jwksError != nil {
 		supertokens.LogDebugMessage(fmt.Sprintf("getSessionHelper: Returning TryRefreshTokenError because there was an error fetching JWKs - %s", jwksError))
 		if !defaultErrors.As(jwksError, &errors.TryRefreshTokenError{}) {
@@ -70,7 +70,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		}
 	}
 
-	accessTokenInfo, err = GetInfoFromAccessToken(parsedAccessToken, *combinedJwks, config.AntiCsrf == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+	accessTokenInfo, err = GetInfoFromAccessToken(parsedAccessToken, combinedJwks, config.AntiCsrf == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 	if err != nil {
 		if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 			supertokens.LogDebugMessage("getSessionHelper: Returning TryRefreshTokenError because GetInfoFromAccessToken returned an error")
@@ -95,7 +95,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 
 			// We check if the token was created since the last time we refreshed the keys from the core
 			// Since we do not know the exact timing of the last refresh, we check against the max age
-			if timeCreated <= (GetCurrTimeInMS() - uint64(sessmodels.JWKCacheMaxAgeInMs)) {
+			if timeCreated <= (GetCurrTimeInMS() - uint64(JWKCacheMaxAgeInMs)) {
 				return sessmodels.GetSessionResponse{}, err
 			}
 		} else {
