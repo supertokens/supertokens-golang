@@ -29,6 +29,9 @@ func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
 	didGetSessionCallCore = false
+	for _, jwks := range jwksResults {
+		jwks.JWKS.EndBackground()
+	}
 }
 
 func BeforeEach() {
