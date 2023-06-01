@@ -41,24 +41,25 @@ var protectedProps = []string{
 
 var JWKCacheMaxAgeInMs = 60000
 var JWKRefreshRateLimit = 500
-var jwksFunctions []sessmodels.GetJWKSFunction
+var jwksFunctions []sessmodels.GetJWKSResult
 
-func getJWKS() []sessmodels.GetJWKSFunction {
-	result := []sessmodels.GetJWKSFunction{}
+func getJWKS() []sessmodels.GetJWKSResult {
+	result := []sessmodels.GetJWKSResult{}
 	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
 
 	for _, path := range corePaths {
-		result = append(result, func() (*keyfunc.JWKS, error) {
-			// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
-			// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
-			// RefreshInterval - Refreshes should occur every 600 seconds
-			jwks, err := keyfunc.Get(path, keyfunc.Options{
-				RefreshUnknownKID: true,
-				RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
-				RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
-			})
+		// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
+		// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
+		// RefreshInterval - Refreshes should occur every 600 seconds
+		jwks, err := keyfunc.Get(path, keyfunc.Options{
+			RefreshUnknownKID: true,
+			RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
+			RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
+		})
 
-			return jwks, err
+		result = append(result, sessmodels.GetJWKSResult{
+			JWKS:  jwks,
+			Error: err,
 		})
 	}
 
@@ -80,7 +81,8 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 	}
 
 	for _, jwk := range jwksFunctions {
-		jwksResult, err := jwk()
+		jwksResult := jwk.JWKS
+		err := jwk.Error
 
 		if err != nil {
 			lastError = err

@@ -41,7 +41,10 @@ const (
 	AnyTransferMethod    TokenTransferMethod = "any"
 )
 
-type GetJWKSFunction = func() (*keyfunc.JWKS, error)
+type GetJWKSResult struct {
+	JWKS  *keyfunc.JWKS
+	Error error
+}
 
 func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
