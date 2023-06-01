@@ -16,7 +16,6 @@
 package sessmodels
 
 import (
-	"errors"
 	"github.com/MicahParks/keyfunc"
 	"net/http"
 	"time"
@@ -27,9 +26,6 @@ import (
 )
 
 type TokenType string
-
-var JWKCacheMaxAgeInMs = 60000
-var JWKRefreshRateLimit = 500
 
 const (
 	AccessToken  TokenType = "access"
@@ -46,56 +42,6 @@ const (
 )
 
 type GetJWKSFunction = func() (*keyfunc.JWKS, error)
-
-func GetJWKS() []GetJWKSFunction {
-	result := []GetJWKSFunction{}
-	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
-
-	for _, path := range corePaths {
-		result = append(result, func() (*keyfunc.JWKS, error) {
-			// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
-			// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
-			// RefreshInterval - Refreshes should occur every 600 seconds
-			jwks, err := keyfunc.Get(path, keyfunc.Options{
-				RefreshUnknownKID: true,
-				RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
-				RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
-			})
-
-			return jwks, err
-		})
-	}
-
-	return result
-}
-
-/**
-This function fetches all JWKs from the first available core instance. This combines the other JWKS functions to become
-error resistant.
-
-Every core instance a backend is connected to is expected to connect to the same database and use the same key set for
-token verification. Otherwise, the result of session verification would depend on which core is currently available.
-*/
-func GetCombinedJWKS() (*keyfunc.JWKS, error) {
-	var lastError error
-	jwks := GetJWKS()
-
-	if len(jwks) == 0 {
-		return nil, errors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
-	}
-
-	for _, jwk := range jwks {
-		jwksResult, err := jwk()
-
-		if err != nil {
-			lastError = err
-		} else {
-			return jwksResult, nil
-		}
-	}
-
-	return nil, lastError
-}
 
 func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
