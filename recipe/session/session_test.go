@@ -1437,6 +1437,30 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	assert.Equal(t, len(wellKnownCallLogs), 2)
 }
 
+func TestThatInvalidConnectionUriDoesNotThrowDuringInitForJWKS(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "https://try.supertokens.io:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+}
+
 type MockResponseWriter struct{}
 
 func (mw MockResponseWriter) Header() http.Header {
