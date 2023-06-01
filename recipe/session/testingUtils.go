@@ -30,7 +30,9 @@ func resetAll() {
 	ResetForTest()
 	didGetSessionCallCore = false
 	for _, jwks := range jwksResults {
-		jwks.JWKS.EndBackground()
+		if jwks.JWKS != nil {
+			jwks.JWKS.EndBackground()
+		}
 	}
 }
 
