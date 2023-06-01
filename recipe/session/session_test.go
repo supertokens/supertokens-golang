@@ -1337,6 +1337,106 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
+func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	var wellKnownCallLogs []string
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 1)
+
+	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokens := session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 1)
+
+	time.Sleep(10 * time.Second)
+
+	session, err = CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	tokens = session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 2)
+
+	tokens = session.GetAllSessionTokensDangerously()
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
+	wellKnownCallLogs = []string{}
+
+	for _, line := range logInfoAfter.Output {
+		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+			wellKnownCallLogs = append(wellKnownCallLogs, line)
+		}
+	}
+
+	assert.Equal(t, len(wellKnownCallLogs), 2)
+}
+
 type MockResponseWriter struct{}
 
 func (mw MockResponseWriter) Header() http.Header {
