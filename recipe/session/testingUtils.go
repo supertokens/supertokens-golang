@@ -24,11 +24,17 @@ import (
 
 // Testing constants
 var didGetSessionCallCore = false
+var deleteFromCacheCount = 0
+var returnedFromCache = false
+var urlsAttemptedForJWKSFetch []string
 
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
 	didGetSessionCallCore = false
+	deleteFromCacheCount = 0
+	returnedFromCache = false
+	urlsAttemptedForJWKSFetch = []string{}
 }
 
 func BeforeEach() {

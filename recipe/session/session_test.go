@@ -1217,6 +1217,14 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 	}
 }
 
+/**
+This test verifies that the SDK calls the well known API properly in the normal flow
+
+- Initialise the SDK and verify that the well known API was not called
+- Wait for cache age to expire
+- Create and verify a session
+- Verify that the well known API was called to fetch the keys
+*/
 func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
 	originalCacheAge := JWKCacheMaxAgeInMs
@@ -1288,6 +1296,18 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
+/**
+This test verifies that the variable used to store the pointer to the JWKS result is updated properly when the
+cache expired and the keys need to be refetched. Note that here the thing we are actually checking for is that the
+GetJWKSResult.JWKS property is updated correctly since that is the pointer
+
+- Init
+- Call getJWKS to get the functions
+- Fetch the keys
+- Wait for cache to expire
+- Fetch the keys again
+- Verify that the KIDs inside the pointer have changed
+*/
 func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
 	originalCacheAge := JWKCacheMaxAgeInMs
@@ -1318,11 +1338,13 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	beforeKids := getJWKS()[0]().JWKS.KIDs()
+	jwksBefore := getJWKS()[0]
+	beforeKids := jwksBefore.Fn(jwksBefore.Path).JWKS.KIDs()
 
 	time.Sleep(3 * time.Second)
 
-	afterKids := getJWKS()[0]().JWKS.KIDs()
+	jwksAfter := getJWKS()[0]
+	afterKids := jwksAfter.Fn(jwksAfter.Path).JWKS.KIDs()
 	var newKeys []string
 
 	for _, key := range afterKids {
@@ -1336,6 +1358,19 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
+/**
+This test verifies that the SDK tried to re-fetch the keys from the core if the KID for the access token does not
+exist in the keyfunc library's cache
+
+- Init and verify no calls have been made
+- Create and verify a session
+- Verify that a call to the well known API was made
+- Wait for access_token_dynamic_signing_key_update_interval so that the core uses a new key
+- Create and verify another session
+- Verify that the call to the well known API was made
+- Create and verify another session
+- Verify that no call is made
+*/
 func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
 
@@ -1436,6 +1471,10 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	assert.Equal(t, len(wellKnownCallLogs), 2)
 }
 
+/**
+This test makes sure that initialising SuperTokens and Session with an invalid connection uri does not
+result in an error during startup
+*/
 func TestThatInvalidConnectionUriDoesNotThrowDuringInitForJWKS(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1458,6 +1497,445 @@ func TestThatInvalidConnectionUriDoesNotThrowDuringInitForJWKS(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+}
+
+/**
+This test verifies the behaviour of the JWKS cache maintained by the SDK
+
+- Init
+- Make sure the cache is empty
+- Create and verify a session
+- Make sure the cache has one entry now
+- Wait for cache to expire
+- Verify the session again
+- Verify that an entry from the cache was deleted (because the SDK should try to re-fetch)
+- Verify that the cache has an entry
+*/
+func TestJWKSCacheLogic(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(jwksCache), 0)
+
+	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(jwksCache), 0)
+
+	tokens := session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(jwksCache), 1)
+
+	time.Sleep(3 * time.Second)
+
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, deleteFromCacheCount, 1)
+	assert.Equal(t, len(jwksCache), 1)
+
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
+}
+
+/**
+This test ensures that calling get combines JWKS results in an error if the connection uri is invalid. Note that
+in this test we specifically expect a timeout but that does not mean that this is the only error the function can
+throw
+*/
+func TestThatCombinedJWKSThrowsForInvalidConnectionUri(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "https://try.supertokens.io:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	combinedJwks, err := GetCombinedJWKS()
+
+	assert.NotNil(t, err)
+	assert.True(t, strings.Contains(err.Error(), "timeout"))
+	assert.Nil(t, combinedJwks)
+}
+
+/**
+This test makes sure that when multiple core urls are provided, the get combined JWKS function does not throw an
+error as long as one of the provided urls return a valid response
+
+- Init with multiple core urls
+- Call get combines jwks
+- verify that there is a response and that there are no errors
+*/
+func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080;try.supertokens.io;try.supertokens.io:8080;localhost:90",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	combinedJwks, err := GetCombinedJWKS()
+
+	assert.Nil(t, err)
+	assert.NotNil(t, combinedJwks)
+}
+
+/**
+This function tests the behaviour of the getJWKS (not get combined) function
+
+- Init with multiple cores
+- Call get jwks
+- Make sure that the result count is the same as the number of hosts for core instances
+- Fetch JWKS from each of the core URLS
+- Verify all the responses
+
+Note in this test we expect only one valid response, all other cores should return errors
+*/
+func TestThatGetJWKSReturnsAResultForEachConnectionUriProvidedAndThatItIsValid(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080;try.supertokens.io:8080;localhost:90",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	hosts := supertokens.QuerierHosts
+	jwksObjects := getJWKS()
+
+	assert.Equal(t, len(hosts), len(jwksObjects))
+
+	for i, object := range jwksObjects {
+		currentHost := hosts[i].Domain.GetAsStringDangerous()
+
+		assert.True(t, strings.HasPrefix(object.Path, currentHost))
+
+		jwkResult := object.Fn(object.Path)
+
+		if strings.Contains(currentHost, "localhost:8080") {
+			assert.Nil(t, jwkResult.Error)
+			assert.NotNil(t, jwkResult.JWKS)
+			assert.NotEqual(t, len(jwkResult.JWKS.KIDs()), 0)
+		} else {
+			assert.NotNil(t, jwkResult.Error)
+			assert.Nil(t, jwkResult.JWKS)
+		}
+	}
+}
+
+/**
+This test ensures that the SDK's caching logic for fetching JWKs works fine
+
+- Init
+- Create and verify a session
+- Verify that the SDK did not use any cached values
+- Verify the session again
+- Verify that this time the SDK did return a cached value
+- Wait for cache to expire
+- Verify the session again
+- This time the SDK should try to re-fetch and not return a cached value
+*/
+func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(jwksCache), 0)
+
+	tokens := session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, returnedFromCache, false)
+
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, returnedFromCache, true)
+
+	time.Sleep(3 * time.Second)
+
+	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, returnedFromCache, false)
+
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
+}
+
+/**
+This test makes sure that the SDK tries to fetch for all core URLS if needed.
+This test uses multiple hosts with only the last one being valid to make sure all URLs are used
+
+- init with multiple core urls where only the last one is valid
+- Call get combined jwks
+- Make sure that the SDK tried fetching for all URLs (since only the last one would return a valid keyset)
+*/
+func TestThatTheSDKTriesFetchingJWKSForAllCoreHosts(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "try.supertokens.io:8080;localhost:90;http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 0)
+
+	_, err = GetCombinedJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 3)
+}
+
+/**
+This test makes sure that the SDK stop fetching JWKS from multiple cores as soon as it gets a valid response
+
+- init with multiple cores with the second one being valid (1st and 3rd invalid)
+- call get combines jwks
+- Verify that two urls were used to fetch and that the 3rd one was never used
+*/
+func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "try.supertokens.io:8080;http://localhost:8080;localhost:90",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 0)
+
+	_, err = GetCombinedJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "try.supertokens.io:8080"))
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
+}
+
+/**
+This test makes sure that get combines jwks
+1. Uses all urls to fetch the JWKS until it finds a valid one
+2. Does not try fetching at all if there is a cached value present
+3. Uses all urls after the cache expires
+
+The context here is that in golang there was a bug where even though the SDK tried fetching multiple times it would
+always use the same URL. So this test makes sure that individual hosts were actually used
+
+- init with multiple cores, last one being valid
+- call get combined jwks and verify that all urls were used
+- Call get combines JWKs again and make sure no URLs were used
+- Wait for cache to expire
+- call get combines jwks and make sure all urls were used
+*/
+func TestThatSDKDoesNotFetchJWKSIsAValidCacheExistsButFetchesAfterItExpiresAndItFetchesFromURLSCorrectly(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "try.supertokens.io:8080;http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	_, err = GetCombinedJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "try.supertokens.io:8080"))
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
+
+	_, err = GetCombinedJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 0)
+
+	time.Sleep(3 * time.Second)
+
+	_, err = GetCombinedJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "try.supertokens.io:8080"))
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
+
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 type MockResponseWriter struct{}

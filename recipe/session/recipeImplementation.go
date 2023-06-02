@@ -45,52 +45,96 @@ var JWKRefreshRateLimit = 500
 // Maintains a map of the core path to the result
 var jwksCache map[string]sessmodels.GetJWKSResult = map[string]sessmodels.GetJWKSResult{}
 
-func getJWKS() []sessmodels.GetJWKSFunction {
-	result := []sessmodels.GetJWKSFunction{}
+func getJWKS() []sessmodels.GetJWKSFunctionObject {
+	result := []sessmodels.GetJWKSFunctionObject{}
 	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
 
 	for _, path := range corePaths {
 		cachedResult, ok := jwksCache[path]
 
+		// Here we dont need to check if cached result had an error because we only add to cache
+		// if the JWKS result was successful
 		if ok {
 			// This means that we have valid JWKs for the given core path
 			// We check if we need to refresh before returning
 			currentTime := time.Now().UnixNano() / int64(time.Millisecond)
 
-			// This means that the value in cache is not expired
+			// This means that the value in cache is not expired, in this case we return a function that simply
+			// returns the cached keys
+			//
+			// Note that this also means that the SDK will not try to query any other Core (if there are multiple)
+			// if it has even a single valid cache entry from one of the core URLs. It will only attempt to fetch
+			// from the cores again after the entry in the cache is expired
 			if (currentTime - cachedResult.LastFetched) < JWKCacheMaxAgeInMs {
-				finalResult := []sessmodels.GetJWKSFunction{
-					func() sessmodels.GetJWKSResult {
+				finalResult := []sessmodels.GetJWKSFunctionObject{}
+
+				finalResult = append(finalResult, sessmodels.GetJWKSFunctionObject{
+					Fn: func(_ string) sessmodels.GetJWKSResult {
+						if supertokens.IsRunningInTestMode() {
+							returnedFromCache = true
+						}
+
 						return cachedResult
 					},
-				}
+					Path: path,
+				})
 
 				return finalResult
 			}
 
 			// This means that the value in cache is expired, we clear from cache and proceed
 			// as if it was never cached because that would be the equivalent of refreshing
+			//
+			// This has the added benefit where if there are multiple cores [Core1, Core2] and initially
+			// Core1 was down (so the cache only has a result for Core2). When Core2's cache expires the SDK
+			// will try to re-fetch for Core1 and will return that result (and save to cache) if Core1 is now up
 			delete(jwksCache, path)
+			if supertokens.IsRunningInTestMode() {
+				deleteFromCacheCount++
+			}
 		}
 
-		result = append(result, func() sessmodels.GetJWKSResult {
-			// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
-			jwks, err := keyfunc.Get(path, keyfunc.Options{
-				RefreshUnknownKID: true,
-			})
+		// We need to also save the path of the JWKS request and pass it to the function this way because
+		// golang only saves a reference to the last value set to path when this function actually is called
+		// so all the functions in the slice would end up calling the last core host
+		//
+		// Doing it this way makes sure that all individual hosts are called
+		result = append(result, sessmodels.GetJWKSFunctionObject{
+			Fn: func(inputPath string) sessmodels.GetJWKSResult {
+				if supertokens.IsRunningInTestMode() {
+					urlsAttemptedForJWKSFetch = append(urlsAttemptedForJWKSFetch, inputPath)
+				}
 
-			jwksResult := sessmodels.GetJWKSResult{
-				JWKS:        jwks,
-				Error:       err,
-				LastFetched: time.Now().UnixNano() / int64(time.Millisecond),
-			}
+				// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in
+				// the keyfunc library's cache
+				jwks, err := keyfunc.Get(inputPath, keyfunc.Options{
+					RefreshUnknownKID: true,
+				})
 
-			// Dont add to cache if there is an error
-			if err == nil {
-				jwksCache[path] = jwksResult
-			}
+				jwksResult := sessmodels.GetJWKSResult{
+					JWKS:        jwks,
+					Error:       err,
+					LastFetched: time.Now().UnixNano() / int64(time.Millisecond),
+				}
 
-			return jwksResult
+				// Dont add to cache if there is an error to keep the logic of checking cache simple
+				// This means that for multiple cores, the only item we add to cache would be the first
+				// core that returned keys without an error
+				//
+				// This also has the added benefit where if initially the request failed because the core
+				// was down and then it comes back up, the next time it will try to request that core again
+				// after the cache has expired
+				if err == nil {
+					jwksCache[inputPath] = jwksResult
+				}
+
+				if supertokens.IsRunningInTestMode() {
+					returnedFromCache = false
+				}
+
+				return jwksResult
+			},
+			Path: path,
 		})
 	}
 
@@ -106,14 +150,18 @@ token verification. Otherwise, the result of session verification would depend o
 */
 func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 	var lastError error
-	jwksResults := getJWKS()
+	jwksObjects := getJWKS()
 
-	if len(jwksResults) == 0 {
+	if supertokens.IsRunningInTestMode() {
+		urlsAttemptedForJWKSFetch = []string{}
+	}
+
+	if len(jwksObjects) == 0 {
 		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
 	}
 
-	for _, jwk := range jwksResults {
-		jwksResult := jwk()
+	for _, jwkObject := range jwksObjects {
+		jwksResult := jwkObject.Fn(jwkObject.Path)
 		err := jwksResult.Error
 
 		if err != nil {
