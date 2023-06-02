@@ -16,6 +16,7 @@
 package session
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -35,6 +36,7 @@ func resetAll() {
 	deleteFromCacheCount = 0
 	returnedFromCache = false
 	urlsAttemptedForJWKSFetch = []string{}
+	jwksCache = map[string]sessmodels.GetJWKSResult{}
 }
 
 func BeforeEach() {
