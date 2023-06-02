@@ -42,9 +42,17 @@ const (
 )
 
 type GetJWKSResult struct {
-	JWKS  *keyfunc.JWKS
-	Error error
+	JWKS        *keyfunc.JWKS
+	Error       error
+	LastFetched int64
 }
+
+type GetJWKSFunctionObject struct {
+	Fn   GetJWKSFunction
+	Path string
+}
+
+type GetJWKSFunction = func(string) GetJWKSResult
 
 func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)

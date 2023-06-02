@@ -26,6 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -39,31 +40,90 @@ var protectedProps = []string{
 	"antiCsrfToken",
 }
 
-var JWKCacheMaxAgeInMs = 60000
+var JWKCacheMaxAgeInMs int64 = 60000
 var JWKRefreshRateLimit = 500
-var jwksResults []sessmodels.GetJWKSResult
+var jwksCache *sessmodels.GetJWKSResult = nil
+var mutex sync.RWMutex
 
-func getJWKS() []sessmodels.GetJWKSResult {
-	result := []sessmodels.GetJWKSResult{}
-	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
+func getJWKSFromCacheIfPresent() *sessmodels.GetJWKSResult {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	if jwksCache != nil {
+		// This means that we have valid JWKs for the given core path
+		// We check if we need to refresh before returning
+		currentTime := time.Now().UnixNano() / int64(time.Millisecond)
 
-	for _, path := range corePaths {
-		// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
-		// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
-		// RefreshInterval - Refreshes should occur every 600 seconds
-		jwks, err := keyfunc.Get(path, keyfunc.Options{
-			RefreshUnknownKID: true,
-			RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
-			RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
-		})
+		// This means that the value in cache is not expired, in this case we return the cached value
+		//
+		// Note that this also means that the SDK will not try to query any other Core (if there are multiple)
+		// if it has a valid cache entry from one of the core URLs. It will only attempt to fetch
+		// from the cores again after the entry in the cache is expired
+		if (currentTime - jwksCache.LastFetched) < JWKCacheMaxAgeInMs {
+			if supertokens.IsRunningInTestMode() {
+				returnedFromCache = true
+			}
 
-		result = append(result, sessmodels.GetJWKSResult{
-			JWKS:  jwks,
-			Error: err,
-		})
+			return jwksCache
+		}
 	}
 
-	return result
+	return nil
+}
+
+func getJWKS() (*keyfunc.JWKS, error) {
+	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
+
+	if len(corePaths) == 0 {
+		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
+	}
+
+	resultFromCache := getJWKSFromCacheIfPresent()
+
+	if resultFromCache != nil {
+		return resultFromCache.JWKS, nil
+	}
+
+	var lastError error
+
+	mutex.Lock()
+	defer mutex.Unlock()
+	for _, path := range corePaths {
+		if supertokens.IsRunningInTestMode() {
+			urlsAttemptedForJWKSFetch = append(urlsAttemptedForJWKSFetch, path)
+		}
+
+		// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in
+		// the keyfunc library's cache
+		jwks, jwksError := keyfunc.Get(path, keyfunc.Options{
+			RefreshUnknownKID: true,
+		})
+
+		if jwksError == nil {
+			jwksResult := sessmodels.GetJWKSResult{
+				JWKS:        jwks,
+				Error:       jwksError,
+				LastFetched: time.Now().UnixNano() / int64(time.Millisecond),
+			}
+
+			// Dont add to cache if there is an error to keep the logic of checking cache simple
+			//
+			// This also has the added benefit where if initially the request failed because the core
+			// was down and then it comes back up, the next time it will try to request that core again
+			// after the cache has expired
+			jwksCache = &jwksResult
+
+			if supertokens.IsRunningInTestMode() {
+				returnedFromCache = false
+			}
+
+			return jwksResult.JWKS, nil
+		}
+
+		lastError = jwksError
+	}
+
+	// This means that fetching from all cores failed
+	return nil, lastError
 }
 
 /**
@@ -74,29 +134,21 @@ Every core instance a backend is connected to is expected to connect to the same
 token verification. Otherwise, the result of session verification would depend on which core is currently available.
 */
 func GetCombinedJWKS() (*keyfunc.JWKS, error) {
-	var lastError error
-
-	if len(jwksResults) == 0 {
-		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
+	if supertokens.IsRunningInTestMode() {
+		urlsAttemptedForJWKSFetch = []string{}
 	}
 
-	for _, jwk := range jwksResults {
-		jwksResult := jwk.JWKS
-		err := jwk.Error
+	jwksResult, err := getJWKS()
 
-		if err != nil {
-			lastError = err
-		} else {
-			return jwksResult, nil
-		}
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, lastError
+	return jwksResult, nil
 }
 
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
-	jwksResults = getJWKS()
 
 	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")

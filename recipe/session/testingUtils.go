@@ -24,16 +24,16 @@ import (
 
 // Testing constants
 var didGetSessionCallCore = false
+var returnedFromCache = false
+var urlsAttemptedForJWKSFetch []string
 
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
 	didGetSessionCallCore = false
-	for _, jwks := range jwksResults {
-		if jwks.JWKS != nil {
-			jwks.JWKS.EndBackground()
-		}
-	}
+	returnedFromCache = false
+	urlsAttemptedForJWKSFetch = []string{}
+	jwksCache = nil
 }
 
 func BeforeEach() {
