@@ -39,27 +39,58 @@ var protectedProps = []string{
 	"antiCsrfToken",
 }
 
-var JWKCacheMaxAgeInMs = 60000
+var JWKCacheMaxAgeInMs int64 = 60000
 var JWKRefreshRateLimit = 500
-var jwksResults []sessmodels.GetJWKSResult
 
-func getJWKS() []sessmodels.GetJWKSResult {
-	result := []sessmodels.GetJWKSResult{}
+// Maintains a map of the core path to the result
+var jwksCache map[string]sessmodels.GetJWKSResult = map[string]sessmodels.GetJWKSResult{}
+
+func getJWKS() []sessmodels.GetJWKSFunction {
+	result := []sessmodels.GetJWKSFunction{}
 	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
 
 	for _, path := range corePaths {
-		// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
-		// RefreshRateLimit - Only allow one re-fetch every 500 milliseconds
-		// RefreshInterval - Refreshes should occur every 600 seconds
-		jwks, err := keyfunc.Get(path, keyfunc.Options{
-			RefreshUnknownKID: true,
-			RefreshRateLimit:  time.Millisecond * time.Duration(JWKRefreshRateLimit),
-			RefreshInterval:   time.Millisecond * time.Duration(JWKCacheMaxAgeInMs),
-		})
+		cachedResult, ok := jwksCache[path]
 
-		result = append(result, sessmodels.GetJWKSResult{
-			JWKS:  jwks,
-			Error: err,
+		if ok {
+			// This means that we have valid JWKs for the given core path
+			// We check if we need to refresh before returning
+			currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+
+			// This means that the value in cache is not expired
+			if (currentTime - cachedResult.LastFetched) < JWKCacheMaxAgeInMs {
+				finalResult := []sessmodels.GetJWKSFunction{
+					func() sessmodels.GetJWKSResult {
+						return cachedResult
+					},
+				}
+
+				return finalResult
+			}
+
+			// This means that the value in cache is expired, we clear from cache and proceed
+			// as if it was never cached because that would be the equivalent of refreshing
+			delete(jwksCache, path)
+		}
+
+		result = append(result, func() sessmodels.GetJWKSResult {
+			// RefreshUnknownKID - Fetch JWKS again if the kid in the header of the JWT does not match any in cache
+			jwks, err := keyfunc.Get(path, keyfunc.Options{
+				RefreshUnknownKID: true,
+			})
+
+			jwksResult := sessmodels.GetJWKSResult{
+				JWKS:        jwks,
+				Error:       err,
+				LastFetched: time.Now().UnixNano() / int64(time.Millisecond),
+			}
+
+			// Dont add to cache if there is an error
+			if err == nil {
+				jwksCache[path] = jwksResult
+			}
+
+			return jwksResult
 		})
 	}
 
@@ -75,19 +106,20 @@ token verification. Otherwise, the result of session verification would depend o
 */
 func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 	var lastError error
+	jwksResults := getJWKS()
 
 	if len(jwksResults) == 0 {
 		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
 	}
 
 	for _, jwk := range jwksResults {
-		jwksResult := jwk.JWKS
-		err := jwk.Error
+		jwksResult := jwk()
+		err := jwksResult.Error
 
 		if err != nil {
 			lastError = err
 		} else {
-			return jwksResult, nil
+			return jwksResult.JWKS, nil
 		}
 	}
 
@@ -96,7 +128,6 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
-	jwksResults = getJWKS()
 
 	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")

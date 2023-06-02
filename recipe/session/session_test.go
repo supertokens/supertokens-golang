@@ -1256,7 +1256,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, len(wellKnownCallLogs), 1)
+	assert.Equal(t, len(wellKnownCallLogs), 0)
 
 	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
@@ -1282,7 +1282,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, len(wellKnownCallLogs), 2)
+	assert.Equal(t, len(wellKnownCallLogs), 1)
 
 	JWKRefreshRateLimit = originalRefreshlimit
 	JWKCacheMaxAgeInMs = originalCacheAge
@@ -1318,12 +1318,11 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	jwksAfterStart := jwksResults
-	beforeKids := jwksAfterStart[0].JWKS.KIDs()
+	beforeKids := getJWKS()[0]().JWKS.KIDs()
 
 	time.Sleep(3 * time.Second)
 
-	afterKids := jwksAfterStart[0].JWKS.KIDs()
+	afterKids := getJWKS()[0]().JWKS.KIDs()
 	var newKeys []string
 
 	for _, key := range afterKids {
@@ -1371,7 +1370,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 		}
 	}
 
-	assert.Equal(t, len(wellKnownCallLogs), 1)
+	assert.Equal(t, len(wellKnownCallLogs), 0)
 
 	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
