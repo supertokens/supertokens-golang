@@ -1221,7 +1221,6 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 This test verifies that the SDK calls the well known API properly in the normal flow
 
 - Initialise the SDK and verify that the well known API was not called
-- Wait for cache age to expire
 - Create and verify a session
 - Verify that the well known API was called to fetch the keys
 */
@@ -1297,14 +1296,12 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 }
 
 /**
-This test verifies that the variable used to store the pointer to the JWKS result is updated properly when the
-cache expired and the keys need to be refetched. Note that here the thing we are actually checking for is that the
-GetJWKSResult.JWKS property is updated correctly since that is the pointer
+This test verifies that the cache used to store the pointer to the JWKS result is updated properly when the
+cache expired and the keys need to be refetched.
 
 - Init
-- Call getJWKS to get the functions
-- Fetch the keys
-- Wait for cache to expire
+- Call getJWKS to get the keys
+- Wait for access token signing key to change
 - Fetch the keys again
 - Verify that the KIDs inside the pointer have changed
 */
@@ -1618,7 +1615,7 @@ error as long as one of the provided urls return a valid response
 func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080;try.supertokens.io;try.supertokens.io:8080;localhost:90",
+			ConnectionURI: "http://localhost:8080;example.com:8080;localhost:90",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1641,62 +1638,6 @@ func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T)
 
 	assert.Nil(t, err)
 	assert.NotNil(t, combinedJwks)
-}
-
-/**
-This function tests the behaviour of the getJWKS (not get combined) function
-
-- Init with multiple cores
-- Call get jwks
-- Make sure that the result count is the same as the number of hosts for core instances
-- Fetch JWKS from each of the core URLS
-- Verify all the responses
-
-Note in this test we expect only one valid response, all other cores should return errors
-*/
-func TestThatGetJWKSReturnsAResultForEachConnectionUriProvidedAndThatItIsValid(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080;try.supertokens.io:8080;localhost:90",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(nil),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	hosts := supertokens.QuerierHosts
-	jwksObjects := getJWKS()
-
-	assert.Equal(t, len(hosts), len(jwksObjects))
-
-	for i, object := range jwksObjects {
-		currentHost := hosts[i].Domain.GetAsStringDangerous()
-
-		assert.True(t, strings.HasPrefix(object.Path, currentHost))
-
-		jwkResult := object.Fn(object.Path)
-
-		if strings.Contains(currentHost, "localhost:8080") {
-			assert.Nil(t, jwkResult.Error)
-			assert.NotNil(t, jwkResult.JWKS)
-			assert.NotEqual(t, len(jwkResult.JWKS.KIDs()), 0)
-		} else {
-			assert.NotNil(t, jwkResult.Error)
-			assert.Nil(t, jwkResult.JWKS)
-		}
-	}
 }
 
 /**
@@ -1789,7 +1730,7 @@ This test uses multiple hosts with only the last one being valid to make sure al
 func TestThatTheSDKTriesFetchingJWKSForAllCoreHosts(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "try.supertokens.io:8080;localhost:90;http://localhost:8080",
+			ConnectionURI: "example.com;localhost:90;http://localhost:8080",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1829,7 +1770,7 @@ This test makes sure that the SDK stop fetching JWKS from multiple cores as soon
 func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "try.supertokens.io:8080;http://localhost:8080;localhost:90",
+			ConnectionURI: "example.com;http://localhost:8080;localhost:90",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1857,85 +1798,8 @@ func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) 
 	}
 
 	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "try.supertokens.io:8080"))
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "example.com"))
 	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
-}
-
-/**
-This test makes sure that get combines jwks
-1. Uses all urls to fetch the JWKS until it finds a valid one
-2. Does not try fetching at all if there is a cached value present
-3. Uses all urls after the cache expires
-
-The context here is that in golang there was a bug where even though the SDK tried fetching multiple times it would
-always use the same URL. So this test makes sure that individual hosts were actually used
-
-- init with multiple cores, last one being valid
-- call get combined jwks and verify that all urls were used
-- Call get combines JWKs again and make sure no URLs were used
-- Wait for cache to expire
-- call get combines jwks and make sure all urls were used
-*/
-func TestThatSDKDoesNotFetchJWKSIsAValidCacheExistsButFetchesAfterItExpiresAndItFetchesFromURLSCorrectly(t *testing.T) {
-	originalRefreshlimit := JWKRefreshRateLimit
-	originalCacheAge := JWKCacheMaxAgeInMs
-
-	JWKRefreshRateLimit = 100
-	JWKCacheMaxAgeInMs = 2000
-
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "try.supertokens.io:8080;http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(nil),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	_, err = GetCombinedJWKS()
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "try.supertokens.io:8080"))
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
-
-	_, err = GetCombinedJWKS()
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 0)
-
-	time.Sleep(3 * time.Second)
-
-	_, err = GetCombinedJWKS()
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "try.supertokens.io:8080"))
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
-
-	JWKRefreshRateLimit = originalRefreshlimit
-	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 type MockResponseWriter struct{}
