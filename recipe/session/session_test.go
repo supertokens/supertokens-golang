@@ -1335,13 +1335,13 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	jwksBefore := getJWKS()[0]
-	beforeKids := jwksBefore.Fn(jwksBefore.Path).JWKS.KIDs()
+	jwksBefore := getJWKS()
+	beforeKids := jwksBefore.JWKS.KIDs()
 
 	time.Sleep(3 * time.Second)
 
-	jwksAfter := getJWKS()[0]
-	afterKids := jwksAfter.Fn(jwksAfter.Path).JWKS.KIDs()
+	jwksAfter := getJWKS()
+	afterKids := jwksAfter.JWKS.KIDs()
 	var newKeys []string
 
 	for _, key := range afterKids {
