@@ -1539,7 +1539,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, len(jwksCache), 0)
+	assert.Nil(t, jwksCache)
 
 	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
@@ -1547,7 +1547,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, len(jwksCache), 0)
+	assert.Nil(t, jwksCache)
 
 	tokens := session.GetAllSessionTokensDangerously()
 	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
@@ -1556,7 +1556,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, len(jwksCache), 1)
+	assert.NotNil(t, jwksCache)
 
 	time.Sleep(3 * time.Second)
 
@@ -1566,7 +1566,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 	}
 
 	assert.Equal(t, deleteFromCacheCount, 1)
-	assert.Equal(t, len(jwksCache), 1)
+	assert.NotNil(t, jwksCache)
 
 	JWKRefreshRateLimit = originalRefreshlimit
 	JWKCacheMaxAgeInMs = originalCacheAge
@@ -1745,7 +1745,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, len(jwksCache), 0)
+	assert.Nil(t, jwksCache)
 
 	tokens := session.GetAllSessionTokensDangerously()
 	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})

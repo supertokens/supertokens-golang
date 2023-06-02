@@ -43,18 +43,16 @@ var JWKCacheMaxAgeInMs int64 = 60000
 var JWKRefreshRateLimit = 500
 
 // Maintains a map of the core path to the result
-var jwksCache map[string]sessmodels.GetJWKSResult = map[string]sessmodels.GetJWKSResult{}
+var jwksCache *sessmodels.GetJWKSResult = nil
 
 func getJWKS() []sessmodels.GetJWKSFunctionObject {
 	result := []sessmodels.GetJWKSFunctionObject{}
 	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
 
 	for _, path := range corePaths {
-		cachedResult, ok := jwksCache[path]
-
 		// Here we dont need to check if cached result had an error because we only add to cache
 		// if the JWKS result was successful
-		if ok {
+		if jwksCache != nil {
 			// This means that we have valid JWKs for the given core path
 			// We check if we need to refresh before returning
 			currentTime := time.Now().UnixNano() / int64(time.Millisecond)
@@ -65,7 +63,7 @@ func getJWKS() []sessmodels.GetJWKSFunctionObject {
 			// Note that this also means that the SDK will not try to query any other Core (if there are multiple)
 			// if it has even a single valid cache entry from one of the core URLs. It will only attempt to fetch
 			// from the cores again after the entry in the cache is expired
-			if (currentTime - cachedResult.LastFetched) < JWKCacheMaxAgeInMs {
+			if (currentTime - jwksCache.LastFetched) < JWKCacheMaxAgeInMs {
 				finalResult := []sessmodels.GetJWKSFunctionObject{}
 
 				finalResult = append(finalResult, sessmodels.GetJWKSFunctionObject{
@@ -74,7 +72,7 @@ func getJWKS() []sessmodels.GetJWKSFunctionObject {
 							returnedFromCache = true
 						}
 
-						return cachedResult
+						return *jwksCache
 					},
 					Path: path,
 				})
@@ -88,7 +86,7 @@ func getJWKS() []sessmodels.GetJWKSFunctionObject {
 			// This has the added benefit where if there are multiple cores [Core1, Core2] and initially
 			// Core1 was down (so the cache only has a result for Core2). When Core2's cache expires the SDK
 			// will try to re-fetch for Core1 and will return that result (and save to cache) if Core1 is now up
-			delete(jwksCache, path)
+			jwksCache = nil
 			if supertokens.IsRunningInTestMode() {
 				deleteFromCacheCount++
 			}
@@ -125,7 +123,7 @@ func getJWKS() []sessmodels.GetJWKSFunctionObject {
 				// was down and then it comes back up, the next time it will try to request that core again
 				// after the cache has expired
 				if err == nil {
-					jwksCache[inputPath] = jwksResult
+					jwksCache = &jwksResult
 				}
 
 				if supertokens.IsRunningInTestMode() {
