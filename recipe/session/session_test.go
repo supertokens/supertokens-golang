@@ -1335,13 +1335,23 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	jwksBefore := getJWKS()
-	beforeKids := jwksBefore.JWKS.KIDs()
+	jwksBefore, err := getJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	beforeKids := jwksBefore.KIDs()
 
 	time.Sleep(3 * time.Second)
 
-	jwksAfter := getJWKS()
-	afterKids := jwksAfter.JWKS.KIDs()
+	jwksAfter, err := getJWKS()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	afterKids := jwksAfter.KIDs()
 	var newKeys []string
 
 	for _, key := range afterKids {
@@ -1562,7 +1572,6 @@ func TestJWKSCacheLogic(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, deleteFromCacheCount, 1)
 	assert.NotNil(t, jwksCache)
 
 	JWKRefreshRateLimit = originalRefreshlimit

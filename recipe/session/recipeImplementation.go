@@ -26,6 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"reflect"
+	"sync"
 	"time"
 )
 
@@ -41,56 +42,52 @@ var protectedProps = []string{
 
 var JWKCacheMaxAgeInMs int64 = 60000
 var JWKRefreshRateLimit = 500
-
-// Maintains a map of the core path to the result
 var jwksCache *sessmodels.GetJWKSResult = nil
+var mutex sync.RWMutex
 
-func getJWKS() sessmodels.GetJWKSResult {
+func getJWKSFromCacheIfPresent() *sessmodels.GetJWKSResult {
+	mutex.RLock()
+	defer mutex.RUnlock()
+	if jwksCache != nil {
+		// This means that we have valid JWKs for the given core path
+		// We check if we need to refresh before returning
+		currentTime := time.Now().UnixNano() / int64(time.Millisecond)
+
+		// This means that the value in cache is not expired, in this case we return the cached value
+		//
+		// Note that this also means that the SDK will not try to query any other Core (if there are multiple)
+		// if it has a valid cache entry from one of the core URLs. It will only attempt to fetch
+		// from the cores again after the entry in the cache is expired
+		if (currentTime - jwksCache.LastFetched) < JWKCacheMaxAgeInMs {
+			if supertokens.IsRunningInTestMode() {
+				returnedFromCache = true
+			}
+
+			return jwksCache
+		}
+	}
+
+	return nil
+}
+
+func getJWKS() (*keyfunc.JWKS, error) {
 	corePaths := supertokens.GetAllCoreUrlsForPath("/.well-known/jwks.json")
 
 	if len(corePaths) == 0 {
-		return sessmodels.GetJWKSResult{
-			JWKS:        nil,
-			Error:       defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using."),
-			LastFetched: 0,
-		}
+		return nil, defaultErrors.New("No SuperTokens core available to query. Please pass supertokens > connectionURI to the init function, or override all the functions of the recipe you are using.")
+	}
+
+	resultFromCache := getJWKSFromCacheIfPresent()
+
+	if resultFromCache != nil {
+		return resultFromCache.JWKS, nil
 	}
 
 	var lastError error
 
+	mutex.Lock()
+	defer mutex.Unlock()
 	for _, path := range corePaths {
-		// Here we dont need to check if cached result had an error because we only add to cache
-		// if the JWKS result was successful
-		if jwksCache != nil {
-			// This means that we have valid JWKs for the given core path
-			// We check if we need to refresh before returning
-			currentTime := time.Now().UnixNano() / int64(time.Millisecond)
-
-			// This means that the value in cache is not expired, in this case we return the cached value
-			//
-			// Note that this also means that the SDK will not try to query any other Core (if there are multiple)
-			// if it has a valid cache entry from one of the core URLs. It will only attempt to fetch
-			// from the cores again after the entry in the cache is expired
-			if (currentTime - jwksCache.LastFetched) < JWKCacheMaxAgeInMs {
-				if supertokens.IsRunningInTestMode() {
-					returnedFromCache = true
-				}
-
-				return *jwksCache
-			}
-
-			// This means that the value in cache is expired, we clear from cache and proceed
-			// as if it was never cached because that would be the equivalent of refreshing
-			//
-			// This has the added benefit where if there are multiple cores [Core1, Core2] and initially
-			// Core1 was down (so the cache only has the result from Core2). When the cache expires the SDK
-			// will try to re-fetch for Core1 and will return that result (and save to cache) if Core1 is now up
-			jwksCache = nil
-			if supertokens.IsRunningInTestMode() {
-				deleteFromCacheCount++
-			}
-		}
-
 		if supertokens.IsRunningInTestMode() {
 			urlsAttemptedForJWKSFetch = append(urlsAttemptedForJWKSFetch, path)
 		}
@@ -119,18 +116,14 @@ func getJWKS() sessmodels.GetJWKSResult {
 				returnedFromCache = false
 			}
 
-			return jwksResult
+			return jwksResult.JWKS, nil
 		}
 
 		lastError = jwksError
 	}
 
 	// This means that fetching from all cores failed
-	return sessmodels.GetJWKSResult{
-		JWKS:        nil,
-		Error:       lastError,
-		LastFetched: 0,
-	}
+	return nil, lastError
 }
 
 /**
@@ -145,13 +138,13 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 		urlsAttemptedForJWKSFetch = []string{}
 	}
 
-	jwksResult := getJWKS()
+	jwksResult, err := getJWKS()
 
-	if jwksResult.Error != nil {
-		return nil, jwksResult.Error
+	if err != nil {
+		return nil, err
 	}
 
-	return jwksResult.JWKS, nil
+	return jwksResult, nil
 }
 
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
