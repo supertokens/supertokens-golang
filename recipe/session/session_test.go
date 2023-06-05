@@ -1811,6 +1811,104 @@ func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) 
 	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
 }
 
+func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	payload := session.GetAccessTokenPayload()
+	delete(payload, "iat")
+	delete(payload, "exp")
+
+	currentTimeInSeconds := time.Now()
+	jwtExpiry := uint64((currentTimeInSeconds.Add(10 * time.Second)).Unix())
+	False := false
+	jwt, err := CreateJWT(payload, &jwtExpiry, &False)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err = GetSessionWithoutRequestResponse(jwt.OK.Jwt, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, session.GetUserID(), "testing")
+}
+
+func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	payload := session.GetAccessTokenPayload()
+	delete(payload, "iat")
+	delete(payload, "exp")
+	payload["tId"] = "public"
+
+	currentTimeInSeconds := time.Now()
+	jwtExpiry := uint64((currentTimeInSeconds.Add(10 * time.Second)).Unix())
+	False := false
+	jwt, err := CreateJWT(payload, &jwtExpiry, &False)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	True := true
+	session, err = GetSessionWithoutRequestResponse(jwt.OK.Jwt, nil, &sessmodels.VerifySessionOptions{
+		CheckDatabase: &True,
+	})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, session.GetUserID(), "testing")
+}
+
 type MockResponseWriter struct{}
 
 func (mw MockResponseWriter) Header() http.Header {
