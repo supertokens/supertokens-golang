@@ -481,6 +481,50 @@ func TestShouldAttachTokensAfterRefreshWhenDisabled(t *testing.T) {
 	checkResponse(t, res2, false)
 }
 
+func TestThatRefreshTokenIsNotSentInHeadersWhenUsingCookies(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				ExposeAccessTokenToFrontendInCookieBasedAuth: true,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	testServer := GetTestServer(t)
+	defer func() {
+		testServer.Close()
+	}()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	refreshTokenInHeader := res.Header.Get(refreshTokenHeaderKey)
+	accessTokenInHeader := res.Header.Get(accessTokenHeaderKey)
+	assert.NotEqual(t, accessTokenInHeader, "")
+	assert.Equal(t, refreshTokenInHeader, "")
+}
+
 func checkResponse(t *testing.T, res *http.Response, exposed bool) {
 	info := unittesting.ExtractInfoFromResponse(res)
 

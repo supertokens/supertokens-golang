@@ -21,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -1809,6 +1810,213 @@ func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) 
 	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
 	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "example.com"))
 	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
+}
+
+func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	payload := session.GetAccessTokenPayload()
+	delete(payload, "iat")
+	delete(payload, "exp")
+
+	currentTimeInSeconds := time.Now()
+	jwtExpiry := uint64((currentTimeInSeconds.Add(10 * time.Second)).Unix())
+	False := false
+	jwt, err := CreateJWT(payload, &jwtExpiry, &False)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err = GetSessionWithoutRequestResponse(jwt.OK.Jwt, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, session.GetUserID(), "testing")
+}
+
+func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	payload := session.GetAccessTokenPayload()
+	delete(payload, "iat")
+	delete(payload, "exp")
+	payload["tId"] = "public"
+
+	currentTimeInSeconds := time.Now()
+	jwtExpiry := uint64((currentTimeInSeconds.Add(10 * time.Second)).Unix())
+	False := false
+	jwt, err := CreateJWT(payload, &jwtExpiry, &False)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	True := true
+	session, err = GetSessionWithoutRequestResponse(jwt.OK.Jwt, nil, &sessmodels.VerifySessionOptions{
+		CheckDatabase: &True,
+	})
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, session.GetUserID(), "testing")
+}
+
+func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
+	originalRefreshlimit := JWKRefreshRateLimit
+	originalCacheAge := JWKCacheMaxAgeInMs
+
+	JWKRefreshRateLimit = 100
+	JWKCacheMaxAgeInMs = 2000
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	differentKeyFoundCount := 0
+	notReturnFromCacheCount := 0
+	keys := []string{}
+	shouldStop := false
+
+	jwks, err := GetCombinedJWKS()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	for _, k := range jwks.KIDs() {
+		keys = append(keys, k)
+	}
+
+	go func() {
+		time.Sleep(11 * time.Second)
+		shouldStop = true
+	}()
+
+	threadCount := 10
+	var wg sync.WaitGroup
+	wg.Add(threadCount)
+
+	for i := 0; i < threadCount; i++ {
+		go jwksLockTestRoutine(t, &shouldStop, i, &wg, func(_keys []string) {
+			if returnedFromCache == false {
+				notReturnFromCacheCount++
+			}
+
+			newKeys := []string{}
+
+			for _, _k2 := range _keys {
+				if !supertokens.DoesSliceContainString(_k2, keys) {
+					newKeys = append(newKeys, _k2)
+				}
+			}
+
+			if len(newKeys) != 0 {
+				differentKeyFoundCount++
+				keys = _keys
+			}
+		})
+	}
+
+	wg.Wait()
+
+	// We test for both
+	// - The keys changing
+	// - The number of times the result is not returned from cache
+	//
+	// Because even if the keys change only twice it could still mean that the SDK's cache locking
+	// does not work correctly and that it tried to query the core more times than it should have
+	//
+	// Checking for both the key change count and the cache miss count verifies the locking behaviour properly
+	//
+	// With the signing key interval as 5 seconds, and the test making requests for 11 seconds
+	// You expect the keys to change twice
+	assert.Equal(t, differentKeyFoundCount, 2)
+	// With cache lifetime as 2 seconds, you expect the cache to miss 5 times
+	assert.Equal(t, notReturnFromCacheCount, 5)
+
+	JWKRefreshRateLimit = originalRefreshlimit
+	JWKCacheMaxAgeInMs = originalCacheAge
+}
+
+func jwksLockTestRoutine(t *testing.T, shouldStop *bool, index int, group *sync.WaitGroup, doPost func([]string)) {
+	jwks, err := GetCombinedJWKS()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	doPost(jwks.KIDs())
+	time.Sleep(100 * time.Millisecond)
+	if *shouldStop == false {
+		jwksLockTestRoutine(t, shouldStop, index, group, doPost)
+	} else {
+		group.Done()
+	}
 }
 
 type MockResponseWriter struct{}
