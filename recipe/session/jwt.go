@@ -19,6 +19,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/golang-jwt/jwt/v4"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"reflect"
@@ -42,6 +43,7 @@ func checkHeader(header string) error {
 
 func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInfo, error) {
 	splittedInput := strings.Split(token, ".")
+	latestAccessTokenVersion := 3
 	var kid *string
 	if len(splittedInput) != 3 {
 		errors.New("Invalid JWT")
@@ -65,7 +67,7 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 		versionInHeader, ok := parsedHeader["version"]
 
 		if !ok {
-			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
+			versionInHeader = fmt.Sprint(latestAccessTokenVersion)
 		}
 
 		if reflect.TypeOf(versionInHeader).Kind() != reflect.String {
@@ -87,7 +89,7 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 		kidString := kidInHeader.(string)
 		kid = &kidString
 
-		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < 3 || parsedHeader["kid"] == nil {
+		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < latestAccessTokenVersion || parsedHeader["kid"] == nil {
 			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
