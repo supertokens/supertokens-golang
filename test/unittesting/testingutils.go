@@ -17,6 +17,7 @@
 package unittesting
 
 import (
+	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -29,6 +30,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"testing"
 	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -817,4 +819,56 @@ func GetRequestWithJSONResult(url string, cookies []*http.Cookie) (int, map[stri
 	}
 	res.Body.Close()
 	return res.StatusCode, respObj, nil
+}
+
+type InfoLogData struct {
+	LastLine string
+	Output   []string
+}
+
+func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
+	dir := getInstallationDir()
+	logFilePath := dir + "/logs/info.log"
+	file, err := os.Open(logFilePath)
+	if err != nil {
+		t.Fatalf("failed opening file: %s", err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file)
+	var lastLine string
+	var output []string
+
+	shouldRecordOutput := false
+
+	if startWith == "" {
+		shouldRecordOutput = true
+	}
+
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		if strings.TrimSpace(line) != "" {
+			if startWith != "" && strings.Contains(line, startWith) {
+				shouldRecordOutput = true
+				continue
+			}
+
+			if shouldRecordOutput {
+				output = append(output, line)
+			}
+
+			lastLine = line
+		}
+	}
+
+	err = scanner.Err()
+	if err != nil {
+		t.Fatalf("scanner error: %s", err)
+	}
+
+	return InfoLogData{
+		LastLine: lastLine,
+		Output:   output,
+	}
 }

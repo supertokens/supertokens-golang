@@ -20,7 +20,7 @@ var (
 )
 
 func formatMessage(message string) string {
-	_, file, line, _ := runtime.Caller(3)
+	_, file, line, _ := runtime.Caller(2)
 	return fmt.Sprintf(" {t: \"%s\", message: \"%s\", file: \"%s:%d\" sdkVer: \"%s\"}\n\n", time.Now().Format(time.RFC3339), message, file, line, VERSION)
 }
 
