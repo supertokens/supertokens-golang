@@ -34,6 +34,10 @@ const emailVerificationTemplate = `<!doctype html>
     <title>*|MC:SUBJECT|*</title>
 
     <style type="text/css">
+		body {
+			max-width: 100vw;
+			overflow: hidden;
+		}
         p {
             margin: 10px 0;
             padding: 0;
@@ -782,6 +786,11 @@ const emailVerificationTemplate = `<!doctype html>
             }
 
         }
+		@media only screen and (max-width: 480px) {
+			#meant-for {
+				padding: 20px;
+			}
+		}
     </style>
 </head>
 
@@ -901,6 +910,7 @@ const emailVerificationTemplate = `<!doctype html>
 
 
                                                             <p
+																id="meant-for"
                                                                 style="font-family: 'Helvetica', sans-serif; font-size: 16px; line-height: 26px; font-weight:400; text-align: center; color: #808080">
                                                                 This email is meant for <a
                                                                     style="font-family: 'Helvetica', sans-serif; text-align: center; word-break: break-all; font-weight: 400; font-size: 16px; line-height: 26px; color: #808080 !important;"
