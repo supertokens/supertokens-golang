@@ -7,16 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-## [0.12.8] - 2023-06-07
-
-### Changes
-
--   Update email templates to fix an issue with styling on some email clients 
-
 ## [0.12.7] - 2023-06-05
 
 ### Fixes
 
+- Update email templates to fix an issue with styling on some email clients
 - Fixes an issue where session verification would fail when using JWTs created by the JWT recipe (and not the session recipe)
 
 ## [0.12.6] - 2023-06-01
