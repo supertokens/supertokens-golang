@@ -383,7 +383,7 @@ func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayl
 		return nil, err
 	}
 	if response["status"].(string) == errors.UnauthorizedErrorStr {
-		return nil, nil
+		return nil, fmt.Errorf(errors.UnauthorizedErrorStr)
 	}
 	responseByte, err := json.Marshal(response)
 	if err != nil {
