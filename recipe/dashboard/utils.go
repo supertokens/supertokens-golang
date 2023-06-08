@@ -31,10 +31,25 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		_config = *config
 	}
 
+	if _config.ApiKey != "" && _config.Admins != nil {
+		supertokens.LogDebugMessage("User Dashboard: Providing 'Admins' has no effect when using an apiKey.")
+	}
+
 	if _config.ApiKey != "" {
 		typeNormalisedInput.ApiKey = _config.ApiKey
 		typeNormalisedInput.AuthMode = dashboardmodels.AuthModeAPIKey
 	}
+
+	_admins := []string{}
+	if _config.Admins != nil {
+		providedAdmins := *_config.Admins
+
+		for _, email := range providedAdmins {
+			_admins = append(_admins, normaliseEmail(email))
+		}
+	}
+
+	typeNormalisedInput.Admins = _admins
 
 	if _config.Override != nil {
 		if _config.Override.Functions != nil {
@@ -150,4 +165,11 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 	}
 
 	return nil, nil
+}
+
+func normaliseEmail(email string) string {
+	email = strings.TrimSpace(email)
+	email = strings.ToLower(email)
+
+	return email
 }

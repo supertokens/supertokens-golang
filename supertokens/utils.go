@@ -171,6 +171,21 @@ func Send200Response(res http.ResponseWriter, responseJson interface{}) error {
 	return nil
 }
 
+func Send403Response(res http.ResponseWriter, responseJson interface{}) error {
+	dw := MakeDoneWriter(res)
+	if !dw.IsDone() {
+		res.Header().Set("Content-Type", "application/json; charset=utf-8")
+		res.WriteHeader(403)
+		bytes, err := json.Marshal(responseJson)
+		if err != nil {
+			return err
+		} else {
+			res.Write(bytes)
+		}
+	}
+	return nil
+}
+
 func SendHTMLResponse(res http.ResponseWriter, statusCode int, htmlString string) error {
 	LogDebugMessage(fmt.Sprintf("Sending HTML response to client with status code: %d", statusCode))
 	dw := MakeDoneWriter(res)
