@@ -1047,6 +1047,6 @@ func getTestServerWithoutMiddleware() *httptest.Server {
 		w.Write(respBytes)
 	}))
 
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	testServer := httptest.NewServer(mux)
 	return testServer
 }
