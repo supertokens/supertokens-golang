@@ -892,6 +892,39 @@ func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
 	assert.True(t, didGetSessionCallCore)
 }
 
+func TestThatVerifySessionReturns401IfNoAccessTokenIsSentAndMiddlewareIsNotAdded(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	testServer := getTestServerWithoutMiddleware()
+	bodyBytes := []byte("{}")
+	res, err := http.Post(testServer.URL+"/verify", "application/json", bytes.NewBuffer(bodyBytes))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, res.StatusCode, 401)
+}
+
 type typeTestEndpoint struct {
 	path                          string
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
@@ -991,6 +1024,28 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 			w.Write(respBytes)
 		}))
 	}
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	return testServer
+}
+
+func getTestServerWithoutMiddleware() *httptest.Server {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/verify", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
+		resp := map[string]interface{}{
+			"message": sessionContainer.GetHandle(),
+		}
+		respBytes, err := json.Marshal(resp)
+		if err != nil {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", (len(respBytes))))
+		w.WriteHeader(http.StatusOK)
+		w.Write(respBytes)
+	}))
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	return testServer
