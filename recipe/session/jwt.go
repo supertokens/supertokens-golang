@@ -20,11 +20,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/golang-jwt/jwt/v4"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"reflect"
 	"strconv"
 	"strings"
+
+	"github.com/golang-jwt/jwt/v4"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 )
 
 var HEADERS = []string{
@@ -89,7 +90,7 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 		kidString := kidInHeader.(string)
 		kid = &kidString
 
-		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < latestAccessTokenVersion || parsedHeader["kid"] == nil {
+		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < 3 || parsedHeader["kid"] == nil {
 			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
