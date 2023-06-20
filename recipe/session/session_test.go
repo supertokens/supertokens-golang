@@ -1881,6 +1881,19 @@ func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testi
 		t.Error(err.Error())
 	}
 
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("session")
+	if err != nil {
+		t.Fail()
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Fail()
+	}
+
+	if supertokens.MaxVersion(cdiVersion, "2.21") != cdiVersion {
+		t.Skip()
+	}
+
 	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
 	if err != nil {
 		t.Error(err.Error())
