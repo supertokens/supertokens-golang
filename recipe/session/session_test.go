@@ -1890,7 +1890,8 @@ func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testi
 		t.Fail()
 	}
 
-	if supertokens.MaxVersion(cdiVersion, "2.21") != cdiVersion {
+	// Only run test for cdi > 2.21 (not greater than equal to)
+	if supertokens.MaxVersion(cdiVersion, "2.21") == "2.21" {
 		t.Skip()
 	}
 
