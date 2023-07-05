@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+- Adds additional tests for session verification
+
 ## [0.12.7] - 2023-06-05
 
 ### Fixes

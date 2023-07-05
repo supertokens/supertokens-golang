@@ -2018,6 +2018,63 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
+func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t *testing.T) {
+	False := false
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				UseDynamicAccessTokenSigningKey: &False,
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	session, err := CreateNewSessionWithoutRequestResponse("testing-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+
+	resetAll()
+	True := true
+	configValue = supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				UseDynamicAccessTokenSigningKey: &True,
+			}),
+		},
+	}
+	err = supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	sessionTokens := session.GetAllSessionTokensDangerously()
+	session, err = GetSessionWithoutRequestResponse(sessionTokens.AccessToken, sessionTokens.AntiCsrfToken, nil)
+	assert.Error(t, err)
+	assert.Equal(t, err.Error(), "The access token doesn't match the useDynamicAccessTokenSigningKey setting")
+}
+
 func jwksLockTestRoutine(t *testing.T, shouldStop *bool, index int, group *sync.WaitGroup, doPost func([]string)) {
 	jwks, err := GetCombinedJWKS()
 	if err != nil {

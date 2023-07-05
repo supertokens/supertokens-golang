@@ -925,6 +925,56 @@ func TestThatVerifySessionReturns401IfNoAccessTokenIsSentAndMiddlewareIsNotAdded
 	assert.Equal(t, res.StatusCode, 401)
 }
 
+func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPassed(t *testing.T) {
+	AntiCsrf := AntiCSRF_VIA_CUSTOM_HEADER
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				AntiCsrf: &AntiCsrf,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{})
+	defer app.Close()
+
+	session, err := CreateNewSessionWithoutRequestResponse("test-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+	assert.NoError(t, err)
+
+	sessionTokens := session.GetAllSessionTokensDangerously()
+
+	req, err := http.NewRequest(http.MethodGet, app.URL+"/verify", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Cookie", "sAccessToken="+*sessionTokens.RefreshToken)
+
+	res, err := http.DefaultClient.Do(req)
+	assert.Equal(t, res.StatusCode, 401)
+
+	req, err = http.NewRequest(http.MethodGet, app.URL+"/verify-optional", nil)
+	assert.NoError(t, err)
+
+	res, err = http.DefaultClient.Do(req)
+	assert.Equal(t, res.StatusCode, 200)
+}
+
 type typeTestEndpoint struct {
 	path                          string
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
@@ -970,6 +1020,19 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 		w.WriteHeader(http.StatusOK)
 		w.Write(respBytes)
 	})
+
+	False := false
+	mux.HandleFunc("/verify-optional", VerifySession(&sessmodels.VerifySessionOptions{
+		SessionRequired: &False,
+	}, func(rw http.ResponseWriter, r *http.Request) {
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
+			SessionRequired: &False,
+		})
+	}))
+
+	mux.HandleFunc("/verify", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{})
+	}))
 
 	mux.HandleFunc("/default-claims", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
 		sessionContainer := GetSessionFromRequestContext(r.Context())
