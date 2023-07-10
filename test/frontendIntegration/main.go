@@ -248,6 +248,8 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			session.VerifySession(nil, simpleGet).ServeHTTP(rw, r)
 		} else if r.URL.Path == "/check-rid" && r.Method == "GET" {
 			session.VerifySession(nil, checkRID).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/check-rid-no-session" && r.Method == "GET" {
+			checkRID(rw, r)
 		} else if r.URL.Path == "/update-jwt" && r.Method == "GET" {
 			session.VerifySession(nil, getJWT).ServeHTTP(rw, r)
 		} else if r.URL.Path == "/update-jwt" && r.Method == "POST" {
