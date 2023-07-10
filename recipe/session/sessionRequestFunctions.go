@@ -179,8 +179,12 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		doAntiCsrfCheck = &doAntiCsrfCheckBool
 	}
 
+	False := false
 	if requestTokenTransferMethod != nil && *requestTokenTransferMethod == sessmodels.HeaderTransferMethod {
-		False := false
+		doAntiCsrfCheck = &False
+	}
+
+	if accessToken == nil {
 		doAntiCsrfCheck = &False
 	}
 
