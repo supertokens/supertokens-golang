@@ -968,7 +968,7 @@ func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPas
 	res, err := http.DefaultClient.Do(req)
 	assert.Equal(t, res.StatusCode, 401)
 
-	req, err = http.NewRequest(http.MethodGet, app.URL+"/verify-optional", nil)
+	req, err = http.NewRequest(http.MethodPost, app.URL+"/verify-optional", nil)
 	assert.NoError(t, err)
 
 	res, err = http.DefaultClient.Do(req)

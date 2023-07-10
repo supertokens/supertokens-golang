@@ -7,7 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.12.8] - 2023-07-10
+
 - Adds additional tests for session verification
+
+### Fixes
+
+- Now properly ignoring missing anti-csrf tokens in optional session validation
 
 ## [0.12.7] - 2023-06-05
 
