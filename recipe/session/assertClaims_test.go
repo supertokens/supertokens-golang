@@ -126,5 +126,21 @@ func TestAssertClaimsWithPayload(t *testing.T) {
 	})
 	assert.NoError(t, err)
 	assert.Equal(t, 1, validateCallCount)
-	assert.Equal(t, accessTokenPayload, validationPayload)
+	expectedKeys := []string{
+		"exp",
+		"iat",
+		"iss",
+		"parentRefreshTokenHash1",
+		"refreshTokenHash1",
+		"sessionHandle",
+		"sub",
+		"hello",
+	}
+
+	for _, k := range expectedKeys {
+		_, ok := validationPayload[k]
+		assert.True(t, ok)
+	}
+
+	assert.True(t, validationPayload["hello"] == "world")
 }

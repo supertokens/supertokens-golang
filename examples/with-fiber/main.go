@@ -1,6 +1,7 @@
 package main
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"log"
 	"net/http"
 
@@ -150,6 +151,7 @@ func main() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 		},
 	})
 	if err != nil {
@@ -201,7 +203,7 @@ func sessioninfo(c *fiber.Ctx) error {
 	if sessionContainer == nil {
 		return c.Status(500).JSON("no session found")
 	}
-	sessionData, err := sessionContainer.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionDataInDatabase()
 	if err != nil {
 		return c.Status(500).JSON(err.Error())
 	}

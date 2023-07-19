@@ -78,8 +78,6 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			return epmodels.GeneratePasswordResetTokenPOSTResponse{}, err
 		}
 
-		passwordResetLink = passwordResetLink + "?token=" + response.OK.Token + "&rid=" + options.RecipeID
-
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending password reset email to %s", user.Email))
 		err = (*options.EmailDelivery.IngredientInterfaceImpl.SendEmail)(emaildelivery.EmailType{
 			PasswordReset: &emaildelivery.PasswordResetType{

@@ -72,11 +72,11 @@ func TestGetUsersOldesFirst(t *testing.T) {
 
 	unittesting.SigninupCustomRequest(testServer.URL, "test@gmail.com", "testPass0")
 	unittesting.SigninupCustomRequest(testServer.URL, "test1@gmail.com", "testPass1")
-	unittesting.SigninupCustomRequest(testServer.URL, "test2@gmail.com", "testPass2")
+	unittesting.SigninupCustomRequest(testServer.URL, "john@gmail.com", "testPass2")
 	unittesting.SigninupCustomRequest(testServer.URL, "test3@gmail.com", "testPass3")
 	unittesting.SigninupCustomRequest(testServer.URL, "test4@gmail.com", "testPass4")
 
-	userPaginationResult, err := supertokens.GetUsersOldestFirst(nil, nil, nil)
+	userPaginationResult, err := supertokens.GetUsersOldestFirst(nil, nil, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -84,7 +84,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 	assert.Nil(t, userPaginationResult.NextPaginationToken)
 
 	customLimit := 1
-	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -92,7 +92,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 	assert.Equal(t, "test@gmail.com", userPaginationResult.Users[0].User["email"])
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
-	userPaginationResult, err = supertokens.GetUsersOldestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -101,14 +101,14 @@ func TestGetUsersOldesFirst(t *testing.T) {
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
 	customLimit = 5
-	userPaginationResult, err = supertokens.GetUsersOldestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 3, len(userPaginationResult.Users))
 
 	customInvalidPaginationToken := "invalid-pagination-token"
-	userPaginationResult, err = supertokens.GetUsersOldestFirst(&customInvalidPaginationToken, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(&customInvalidPaginationToken, &customLimit, nil, nil)
 	if err != nil {
 		assert.Contains(t, err.Error(), "invalid pagination token")
 	} else {
@@ -116,11 +116,42 @@ func TestGetUsersOldesFirst(t *testing.T) {
 	}
 
 	customLimit = -1
-	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil, nil)
 	if err != nil {
 		assert.Contains(t, err.Error(), "limit must a positive integer with min value 1")
 	} else {
 		t.Fail()
+	}
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("thirdparty")
+	if err != nil {
+		t.Fail()
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Fail()
+	}
+
+	if supertokens.MaxVersion(cdiVersion, "2.20") != cdiVersion {
+		t.Skip()
+	}
+
+	customLimit = 10
+	query := make(map[string]string)
+	query["email"] = "doe"
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 0)
+	}
+
+	query["email"] = "john"
+	userPaginationResult, err = supertokens.GetUsersOldestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 1)
 	}
 }
 
@@ -167,11 +198,11 @@ func TestGetUsersNewestFirst(t *testing.T) {
 
 	unittesting.SigninupCustomRequest(testServer.URL, "test@gmail.com", "testPass0")
 	unittesting.SigninupCustomRequest(testServer.URL, "test1@gmail.com", "testPass1")
-	unittesting.SigninupCustomRequest(testServer.URL, "test2@gmail.com", "testPass2")
+	unittesting.SigninupCustomRequest(testServer.URL, "john@gmail.com", "testPass2")
 	unittesting.SigninupCustomRequest(testServer.URL, "test3@gmail.com", "testPass3")
 	unittesting.SigninupCustomRequest(testServer.URL, "test4@gmail.com", "testPass4")
 
-	userPaginationResult, err := supertokens.GetUsersNewestFirst(nil, nil, nil)
+	userPaginationResult, err := supertokens.GetUsersNewestFirst(nil, nil, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -179,7 +210,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	assert.Nil(t, userPaginationResult.NextPaginationToken)
 
 	customLimit := 1
-	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -187,7 +218,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	assert.Equal(t, "test4@gmail.com", userPaginationResult.Users[0].User["email"])
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
-	userPaginationResult, err = supertokens.GetUsersNewestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -196,7 +227,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
 	customLimit = 5
-	userPaginationResult, err = supertokens.GetUsersNewestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(userPaginationResult.NextPaginationToken, &customLimit, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -204,7 +235,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 
 	customInvalidPaginationToken := "invalid-pagination-token"
 	customLimit = 10
-	userPaginationResult, err = supertokens.GetUsersNewestFirst(&customInvalidPaginationToken, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(&customInvalidPaginationToken, &customLimit, nil, nil)
 	if err != nil {
 		assert.Contains(t, err.Error(), "invalid pagination token")
 	} else {
@@ -212,11 +243,42 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	}
 
 	customLimit = -1
-	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil)
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil, nil)
 	if err != nil {
 		assert.Contains(t, err.Error(), "limit must a positive integer with min value 1")
 	} else {
 		t.Fail()
+	}
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("thirdparty")
+	if err != nil {
+		t.Fail()
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Fail()
+	}
+
+	if supertokens.MaxVersion(cdiVersion, "2.20") != cdiVersion {
+		t.Skip()
+	}
+
+	customLimit = 10
+	query := make(map[string]string)
+	query["email"] = "doe"
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 0)
+	}
+
+	query["email"] = "john"
+	userPaginationResult, err = supertokens.GetUsersNewestFirst(nil, &customLimit, nil, query)
+	if err != nil {
+		t.Fail()
+	} else {
+		assert.Equal(t, len(userPaginationResult.Users), 1)
 	}
 }
 

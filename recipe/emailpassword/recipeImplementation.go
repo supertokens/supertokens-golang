@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterface {
+func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfig func() epmodels.TypeNormalisedInput) epmodels.RecipeInterface {
 	signUp := func(email, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/signup", map[string]interface{}{
 			"email":    email,
@@ -158,7 +158,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 		}
 	}
 
-	updateEmailOrPassword := func(userId string, email, password *string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+	updateEmailOrPassword := func(userId string, email, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 		requestBody := map[string]interface{}{
 			"userId": userId,
 		}
@@ -166,6 +166,20 @@ func MakeRecipeImplementation(querier supertokens.Querier) epmodels.RecipeInterf
 			requestBody["email"] = email
 		}
 		if password != nil {
+			if applyPasswordPolicy == nil || *applyPasswordPolicy {
+				formFields := getEmailPasswordConfig().SignUpFeature.FormFields
+				for i := range formFields {
+					if formFields[i].ID == "password" {
+						err := formFields[i].Validate(*password)
+						if err != nil {
+							errResponse := epmodels.PasswordPolicyViolatedError{
+								FailureReason: *err,
+							}
+							return epmodels.UpdateEmailOrPasswordResponse{PasswordPolicyViolatedError: &errResponse}, nil
+						}
+					}
+				}
+			}
 			requestBody["password"] = password
 		}
 		response, err := querier.SendPutRequest("/recipe/user", requestBody)

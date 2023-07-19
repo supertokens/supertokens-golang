@@ -823,6 +823,158 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 	assert.NotEmpty(t, res["message"].(string))
 }
 
+/**
+This test is to make sure that we dont always call the core for session verification by default.
+1. Create a session
+2. Call get session and expect to not call the core
+3. Call refresh session
+4. Call get session and expect the core to be called
+*/
+func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	createSessionResp, err := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	createdTokens := createSessionResp.GetAllSessionTokensDangerously()
+	assert.True(t, createdTokens.AccessToken != "")
+	assert.True(t, *createdTokens.RefreshToken != "")
+	assert.True(t, createdTokens.FrontToken != "")
+
+	getSessionResp, err := GetSessionWithoutRequestResponse(createdTokens.AccessToken, createdTokens.AntiCsrfToken, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.False(t, didGetSessionCallCore)
+	newTokens := getSessionResp.GetAllSessionTokensDangerously()
+	assert.True(t, newTokens.AccessToken != "")
+	assert.True(t, newTokens.RefreshToken == nil)
+	assert.True(t, newTokens.FrontToken != "")
+
+	refreshResp, err := RefreshSessionWithoutRequestResponse(*createdTokens.RefreshToken, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.False(t, didGetSessionCallCore)
+	tokensAfterRefresh := refreshResp.GetAllSessionTokensDangerously()
+	assert.True(t, tokensAfterRefresh.AccessToken != "")
+	assert.True(t, *tokensAfterRefresh.RefreshToken != "")
+	assert.True(t, tokensAfterRefresh.FrontToken != "")
+
+	getSessionResp, err = GetSessionWithoutRequestResponse(tokensAfterRefresh.AccessToken, tokensAfterRefresh.AntiCsrfToken, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.True(t, didGetSessionCallCore)
+}
+
+func TestThatVerifySessionReturns401IfNoAccessTokenIsSentAndMiddlewareIsNotAdded(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	testServer := getTestServerWithoutMiddleware()
+	bodyBytes := []byte("{}")
+	res, err := http.Post(testServer.URL+"/verify", "application/json", bytes.NewBuffer(bodyBytes))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, res.StatusCode, 401)
+}
+
+func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPassed(t *testing.T) {
+	AntiCsrf := AntiCSRF_VIA_CUSTOM_HEADER
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				AntiCsrf: &AntiCsrf,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{})
+	defer app.Close()
+
+	session, err := CreateNewSessionWithoutRequestResponse("test-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+	assert.NoError(t, err)
+
+	sessionTokens := session.GetAllSessionTokensDangerously()
+
+	req, err := http.NewRequest(http.MethodGet, app.URL+"/verify", nil)
+	assert.NoError(t, err)
+	req.Header.Add("Cookie", "sAccessToken="+*sessionTokens.RefreshToken)
+
+	res, err := http.DefaultClient.Do(req)
+	assert.Equal(t, res.StatusCode, 401)
+
+	req, err = http.NewRequest(http.MethodPost, app.URL+"/verify-optional", nil)
+	assert.NoError(t, err)
+
+	res, err = http.DefaultClient.Do(req)
+	assert.Equal(t, res.StatusCode, 200)
+}
+
 type typeTestEndpoint struct {
 	path                          string
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
@@ -869,6 +1021,19 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 		w.Write(respBytes)
 	})
 
+	False := false
+	mux.HandleFunc("/verify-optional", VerifySession(&sessmodels.VerifySessionOptions{
+		SessionRequired: &False,
+	}, func(rw http.ResponseWriter, r *http.Request) {
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{
+			SessionRequired: &False,
+		})
+	}))
+
+	mux.HandleFunc("/verify", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		GetSession(r, rw, &sessmodels.VerifySessionOptions{})
+	}))
+
 	mux.HandleFunc("/default-claims", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
 		sessionContainer := GetSessionFromRequestContext(r.Context())
 		resp := map[string]interface{}{
@@ -890,7 +1055,7 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 			w.WriteHeader(500)
 			return
 		}
-		RevokeSession(sessionContainer.GetHandle())
+		RevokeSession((*sessionContainer).GetHandle())
 		resp := map[string]interface{}{
 			"message": true,
 		}
@@ -924,5 +1089,27 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 	}
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	return testServer
+}
+
+func getTestServerWithoutMiddleware() *httptest.Server {
+	mux := http.NewServeMux()
+
+	mux.HandleFunc("/verify", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
+		sessionContainer := GetSessionFromRequestContext(r.Context())
+		resp := map[string]interface{}{
+			"message": sessionContainer.GetHandle(),
+		}
+		respBytes, err := json.Marshal(resp)
+		if err != nil {
+			return
+		}
+		w.Header().Set("Content-Type", "application/json")
+		w.Header().Set("Content-Length", fmt.Sprintf("%d", (len(respBytes))))
+		w.WriteHeader(http.StatusOK)
+		w.Write(respBytes)
+	}))
+
+	testServer := httptest.NewServer(mux)
 	return testServer
 }

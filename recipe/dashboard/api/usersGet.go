@@ -1,7 +1,9 @@
 package api
 
 import (
+	"net/url"
 	"strconv"
+	"strings"
 	"sync"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
@@ -64,10 +66,27 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 
 	var usersResponse supertokens.UserPaginationResult
 
-	if timeJoinedOrder == "ASC" {
-		usersResponse, err = supertokens.GetUsersOldestFirst(paginationTokenPtr, &limit, nil)
+	u, err := url.Parse(req.URL.String())
+	if err != nil {
+		return UsersGetResponse{}, err
+	}
+
+	queryParams, err := url.ParseQuery(u.RawQuery)
+	if err != nil {
+		return UsersGetResponse{}, err
+	}
+
+	queryParamsObject := map[string]string{}
+	for i, s := range queryParams {
+		queryParamsObject[i] = strings.Join(s, ";")
+	}
+
+	if len(queryParamsObject) != 0 {
+		usersResponse, err = supertokens.GetUsersWithSearchParams(timeJoinedOrder, paginationTokenPtr, &limit, nil, queryParamsObject)
+	} else if timeJoinedOrder == "ASC" {
+		usersResponse, err = supertokens.GetUsersOldestFirst(paginationTokenPtr, &limit, nil, nil)
 	} else {
-		usersResponse, err = supertokens.GetUsersNewestFirst(paginationTokenPtr, &limit, nil)
+		usersResponse, err = supertokens.GetUsersNewestFirst(paginationTokenPtr, &limit, nil, nil)
 	}
 	if err != nil {
 		return UsersGetResponse{}, err

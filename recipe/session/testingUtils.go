@@ -22,9 +22,18 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+// Testing constants
+var didGetSessionCallCore = false
+var returnedFromCache = false
+var urlsAttemptedForJWKSFetch []string
+
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
+	didGetSessionCallCore = false
+	returnedFromCache = false
+	urlsAttemptedForJWKSFetch = []string{}
+	jwksCache = nil
 }
 
 func BeforeEach() {

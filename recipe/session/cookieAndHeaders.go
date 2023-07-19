@@ -19,6 +19,8 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/textproto"
 	"net/url"
@@ -52,15 +54,15 @@ type TokenInfo struct {
 	Up  interface{} `json:"up"`
 }
 
-func clearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter) error {
+func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter) error {
 	// We are clearing the session in all transfermethods to be sure to override cookies in case they have been already added to the response.
 	// This is done to handle the following use-case:
 	// If the app overrides signInPOST to check the ban status of the user after the original implementation and throwing an UNAUTHORISED error
 	// In this case: the SDK has attached cookies to the response, but none was sent with the request
 	// We can't know which to clear since we can't reliably query or remove the set-cookie header added to the response (causes issues in some frameworks, i.e.: hapi)
 	// The safe solution in this case is to overwrite all the response cookies/headers with an empty value, which is what we are doing here
-	for _, transferMethod := range availableTokenTransferMethods {
-		err := clearSession(config, res, transferMethod)
+	for _, transferMethod := range AvailableTokenTransferMethods {
+		err := ClearSession(config, res, transferMethod)
 		if err != nil {
 			return err
 		}
@@ -68,7 +70,7 @@ func clearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInp
 	return nil
 }
 
-func clearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) error {
+func ClearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) error {
 	// If we can be specific about which transferMethod we want to clear, there is no reason to clear the other ones
 	tokenTypes := []sessmodels.TokenType{sessmodels.AccessToken, sessmodels.RefreshToken}
 	for _, tokenType := range tokenTypes {
@@ -85,7 +87,7 @@ func clearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter
 	return nil
 }
 
-func getAntiCsrfTokenFromHeaders(req *http.Request) *string {
+func GetAntiCsrfTokenFromHeaders(req *http.Request) *string {
 	return getHeader(req, antiCsrfHeaderKey)
 }
 
@@ -94,19 +96,25 @@ func setAntiCsrfTokenInHeaders(res http.ResponseWriter, antiCsrfToken string) {
 	setHeader(res, "Access-Control-Expose-Headers", antiCsrfHeaderKey, true)
 }
 
-func setFrontTokenInHeaders(res http.ResponseWriter, userId string, atExpiry uint64, jwtPayload interface{}) {
+func BuildFrontToken(userId string, atExpiry uint64, jwtPayload interface{}) string {
 	tokenInfo := &TokenInfo{
 		Uid: userId,
 		Ate: atExpiry,
 		Up:  jwtPayload,
 	}
+
 	parsed, _ := json.Marshal(tokenInfo)
 	data := []byte(parsed)
-	setHeader(res, frontTokenHeaderKey, base64.StdEncoding.EncodeToString(data), false)
+
+	return base64.StdEncoding.EncodeToString(data)
+}
+
+func setFrontTokenInHeaders(res http.ResponseWriter, frontToken string) {
+	setHeader(res, frontTokenHeaderKey, frontToken, false)
 	setHeader(res, "Access-Control-Expose-Headers", frontTokenHeaderKey, true)
 }
 
-func getCORSAllowedHeaders() []string {
+func GetCORSAllowedHeaders() []string {
 	return []string{
 		antiCsrfHeaderKey, ridHeaderKey, authorizationHeaderKey, authModeHeaderKey,
 	}
@@ -132,13 +140,13 @@ func getResponseHeaderNameForTokenType(tokenType sessmodels.TokenType) (string, 
 	return "", errors.New("Unknown token type, should never happen.")
 }
 
-func getToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod sessmodels.TokenTransferMethod) (*string, error) {
+func GetToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod sessmodels.TokenTransferMethod) (*string, error) {
 	if transferMethod == sessmodels.CookieTransferMethod {
 		cookieName, err := getCookieNameFromTokenType(tokenType)
 		if err != nil {
 			return nil, err
 		}
-		return getCookieValue(req, cookieName), nil
+		return GetCookieValue(req, cookieName), nil
 	} else if transferMethod == sessmodels.HeaderTransferMethod {
 		headerValue := getHeader(req, authorizationHeaderKey)
 		if headerValue == nil || !strings.HasPrefix(*headerValue, "Bearer ") {
@@ -152,6 +160,7 @@ func getToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod 
 }
 
 func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, tokenType sessmodels.TokenType, value string, expires uint64, transferMethod sessmodels.TokenTransferMethod) error {
+	supertokens.LogDebugMessage(fmt.Sprint("setToken: Setting ", tokenType, " token as ", transferMethod))
 	if transferMethod == sessmodels.CookieTransferMethod {
 		cookieName, err := getCookieNameFromTokenType(tokenType)
 		if err != nil {
@@ -225,7 +234,7 @@ func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, n
 
 }
 
-func getAuthmodeFromHeader(req *http.Request) *sessmodels.TokenTransferMethod {
+func GetAuthmodeFromHeader(req *http.Request) *sessmodels.TokenTransferMethod {
 	val := getHeader(req, authModeHeaderKey)
 	if val == nil {
 		return nil
@@ -242,7 +251,7 @@ func getHeader(request *http.Request, key string) *string {
 	return &value
 }
 
-func getCookieValue(request *http.Request, key string) *string {
+func GetCookieValue(request *http.Request, key string) *string {
 	cookies := request.Cookies()
 	if len(cookies) == 0 {
 		return nil

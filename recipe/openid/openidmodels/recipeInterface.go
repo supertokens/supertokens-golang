@@ -22,7 +22,7 @@ import (
 
 type RecipeInterface struct {
 	GetOpenIdDiscoveryConfiguration *func(userContext supertokens.UserContext) (GetOpenIdDiscoveryConfigurationResponse, error)
-	CreateJWT                       *func(payload map[string]interface{}, validitySeconds *uint64, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error)
+	CreateJWT                       *func(payload map[string]interface{}, validitySeconds *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error)
 	GetJWKS                         *func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error)
 }
 

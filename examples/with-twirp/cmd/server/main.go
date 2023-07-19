@@ -14,6 +14,7 @@
 package main
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"log"
 	"net/http"
 	"os"
@@ -168,6 +169,7 @@ func main() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 		},
 	})
 

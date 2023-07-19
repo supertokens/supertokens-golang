@@ -20,6 +20,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Init(config dashboardmodels.TypeInput) supertokens.Recipe {
+func Init(config *dashboardmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }

@@ -254,6 +254,389 @@ tpmodels.ProviderInput{
 ```
 
 
+## [0.12.8] - 2023-07-10
+
+- Adds additional tests for session verification
+
+### Fixes
+
+- Now properly ignoring missing anti-csrf tokens in optional session validation
+
+## [0.12.7] - 2023-06-05
+
+### Fixes
+
+- Update email templates to fix an issue with styling on some email clients
+- Fixes an issue where session verification would fail when using JWTs created by the JWT recipe (and not the session recipe)
+
+## [0.12.6] - 2023-06-01
+
+### Fixes
+
+- Fixes a bug in the session recipe where the SDK would try to fetch the JWKs from the core multiple times per minute
+
+## [0.12.5] - 2023-05-26
+
+### Fixes
+
+-   Fixes bug in debug logging where line number was being printed incorrectly.
+
+## [0.12.4] - 2023-05-23
+
+### Changes
+
+-   Added a new `GetRequestFromUserContext` function that can be used to read the original network request from the user context in overridden APIs and recipe functions
+
+## [0.12.3] - 2023-05-22
+
+### Added
+
+-   Adds additional debug logs whenever the SDK returns a `TryRefreshTokenError` or `UnauthorizedError` to make debugging easier
+
+## [0.12.2] - 2023-05-19
+
+-   Adds additional tests for the session recipe
+-   Fixes https://github.com/supertokens/supertokens-golang/issues/284
+
+## [0.12.1] - 2023-05-12
+
+### Changes
+
+-   Made the access token string optional in the overrideable `GetSession` function
+-   Moved checking if the access token is nil into the overrideable `GetSession` function
+
+## [0.12.0] - 2023-05-05
+
+### Added
+
+- added optional password policy check in `updateEmailOrPassword`
+
+### Breaking Changes
+
+-   Changed the interface and configuration of the Session recipe, see below for details. If you do not use the Session recipe directly and do not provide custom configuration, then no migration is necessary.
+-   Renamed `GetSessionData` to `GetSessionDataInDatabase` to clarify that it always hits the DB
+-   Renamed `GetSessionDataWithContext` to `GetSessionDataInDatabaseWithContext` to clarify that it always hits the DB
+-   Renamed `UpdateSessionData` to `UpdateSessionDataInDatabase`
+-   Renamed `UpdateSessionDataWithContext` to `UpdateSessionDataInDatabaseWithContext` to clarify that it always hits the DB
+-   Renamed `SessionData` to `SessionDataInDatabase` in `SessionInformation`
+-   Renamed `sessionData` to `sessionDataInDatabase` in the input to `CreateNewSession`
+-   Added `useStaticSigningKey` to `CreateJWT` and `CreateJWTWithContext`
+-   Added support for CDI version `2.21`
+-   Dropped support for CDI version `2.8`-`2.20`
+-   `GetAccessTokenPayload` will now return standard (`sub`, `iat`, `exp`) claims and some SuperTokens specific claims along the user defined ones in `GetAccessTokenPayload`.
+-   Some claim names are now prohibited in the root level of the access token payload
+    -   They are: `sub`, `iat`, `exp`, `sessionHandle`, `parentRefreshTokenHash1`, `refreshTokenHash1`, `antiCsrfToken`
+    -   If you used these in the root level of the access token payload, then you'll need to migrate your sessions or they will be logged out during the next refresh
+    -   These props should be renamed (e.g., by adding a prefix) or moved inside an object in the access token payload
+    -   You can migrate these sessions by updating their payload to match your new structure, by calling `MergeIntoAccessTokenPayload`
+-   New access tokens are valid JWTs now
+    -   They can be used directly (i.e.: by calling `GetAccessToken` on the session) if you need a JWT
+    -   The `jwt` prop in the access token payload is removed
+-   JWT and OpenId related configuration has been removed from the Session recipe config. If necessary, they can be added by initializing the OpenId recipe before the Session recipe.
+-   Changed the Session recipe interface - CreateNewSession, GetSession and RefreshSession overrides now do not take response and request and return status instead of throwing
+-   Renamed `AccessTokenPayload` to `CustomClaimsInAccessTokenPayload` in `SessionInformation` (the return value of `GetSessionInformation`). This reflects the fact that it doesn't contain some default claims (`sub`, `iat`, etc.)
+
+### Changed
+
+-   Refactors the URL for the JWKS endpoint exposed by SuperTokens core
+-   Added new optional `useStaticSigningKey` param to `CreateJWT`
+-   The Session recipe now always initializes the OpenID recipe if it hasn't been initialized.
+-   Refactored how access token validation is done
+-   Added support for new access token version
+-   Removed the handshake call to improve start-up times
+-   Removed `GetAccessTokenLifeTimeMS` and `GetRefreshTokenLifeTimeMS` functions
+-   Added `ExposeAccessTokenToFrontendInCookieBasedAuth` (defaults to `false`) option to the Session recipe config
+-   Added new `checkDatabase` param to `VerifySession` and `GetSession`
+-   Removed deprecated `UpdateAccessTokenPayload`, `UpdateAccessTokenPayloadWithContext`, `RegenerateAccessToken` and `RegenerateAccessTokenWithContext` from the Session recipe interface
+-   Added `CreateNewSessionWithoutRequestResponse`, `CreateNewSessionWithContextWithoutRequestResponse`, `GetSessionWithoutRequestResponse`, `GetSessionWithContextWithoutRequestResponse`, `RefreshSession`, `RefreshSessionWithContextWithoutRequestResponse` to the Session recipe.
+-   Added `GetAllSessionTokensDangerously` to session objects (`SessionContainer`)
+-   Added `AttachToRequestResponse` to session objects (`SessionContainer`)
+
+### Migration
+
+#### If self-hosting core
+
+1. You need to update the core version
+2. There are manual migration steps needed. Check out the core changelogs for more details.
+
+#### If you used the jwt feature of the session recipe
+
+1. Add `ExposeAccessTokenToFrontendInCookieBasedAuth: true` to the Session recipe config on the backend if you need to access the JWT on the frontend.
+2. Choose a prop from the following list. We'll use `sub` in the code below, but you can replace it with another from the list if you used it in a custom access token payload.
+    - `sub`
+    - `iat`
+    - `exp`
+    - `sessionHandle`
+3. On the frontend where you accessed the JWT before by: `(await Session.getAccessTokenPayloadSecurely()).jwt` update to:
+
+```tsx
+let jwt = null;
+const accessTokenPayload = await Session.getAccessTokenPayloadSecurely();
+if (accessTokenPayload.sub !== undefined) {
+    jwt = await Session.getAccessToken();
+} else {
+    // This branch is only required if there are valid access tokens created before the update
+    // It can be removed after the validity period ends
+    jwt = accessTokenPayload.jwt;
+}
+```
+
+4. On the backend if you accessed the JWT before by `session.GetAccessTokenPayload()["jwt"]` please update to:
+
+```go
+var jwt string
+accessTokenPayload := session.GetAccessTokenPayload();
+if (accessTokenPayload["sub"] != nil) {
+    jwt =  session.GetAccessToken();
+} else {
+    // This branch is only required if there are valid access tokens created before the update
+    // It can be removed after the validity period ends
+    jwt = accessTokenPayload["jwt"].(string);
+}
+```
+
+#### If you used to set an issuer in the session recipe `Jwt` configuration
+
+-   You can add an issuer claim to access tokens by overriding the `CreateNewSession` function in the session recipe init.
+    -   Check out https://supertokens.com/docs/passwordless/common-customizations/sessions/claims/access-token-payload#during-session-creation for more information
+-   You can add an issuer claim to JWTs created by the JWT recipe by passing the `iss` claim as part of the payload.
+-   You can set the OpenId discovery configuration as follows:
+
+Before:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+        RecipeList: []supertokens.Recipe{
+            session.Init(&sessmodels.TypeInput{
+                Jwt: &sessmodels.JWTInputConfig{
+                    Enable: true,
+					Issuer: "...",
+                },
+            }),
+        },
+    })
+}
+```
+
+After:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+	RecipeList: []supertokens.Recipe{
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.HeaderTransferMethod
+			},
+			Override: &sessmodels.OverrideStruct{
+				OpenIdFeature: &openidmodels.OverrideStruct{
+					Functions: func(originalImplementation openidmodels.RecipeInterface) openidmodels.RecipeInterface {
+						(*originalImplementation.GetOpenIdDiscoveryConfiguration) = func(userContext *map[string]interface{}) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+							return openidmodels.GetOpenIdDiscoveryConfigurationResponse{
+								OK: &struct{Issuer string; Jwks_uri string}{
+									Issuer:   "your issuer",
+									Jwks_uri: "https://your.api.domain/auth/jwt/jwks.json",
+								},
+							}, nil
+						}
+
+						return originalImplementation
+					},
+				},
+			},
+		}),
+	},
+})
+}
+```
+
+#### If you used `sessionData` (not `accessTokenPayload`)
+
+Related functions/prop names have changes (`sessionData` became `sessionDataFromDatabase`):
+
+-   Renamed `GetSessionData` to `GetSessionDataFromDatabase` to clarify that it always hits the DB
+-   Renamed `UpdateSessionData` to `UpdateSessionDataInDatabase`
+-   Renamed `sessionData` to `sessionDataInDatabase` in `SessionInformation` and the input to `CreateNewSession`
+
+#### If you used to set `access_token_blacklisting` in the core config
+
+-   You should now set `CheckDatabase` to true in the verifySession params.
+
+#### If you used to set `access_token_signing_key_dynamic` in the core config
+
+-   You should now set `useDynamicAccessTokenSigningKey` in the Session recipe config.
+
+#### If you used to use standard/protected props in the access token payload root:
+
+1. Update you application logic to rename those props (e.g., by adding a prefix)
+2. Update the session recipe config (in this example `sub` is the protected property we are updating by adding the `app` prefix):
+
+Before:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+	RecipeList: []supertokens.Recipe{
+		session.Init(&sessmodels.TypeInput{
+			Override: &sessmodels.OverrideStruct{
+				Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+					originalCreateNewSession := *originalImplementation.CreateNewSession
+					(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						if accessTokenPayload == nil {
+							accessTokenPayload = map[string]interface{}{}
+						}
+
+						accessTokenPayload["sub"] = userID + "!!!"
+
+						return originalCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+					}
+
+					return originalImplementation
+				},
+			},
+		}),
+	},
+})
+}
+```
+
+After:
+
+```go
+func main() {
+    supertokens.Init(supertokens.TypeInput{
+	RecipeList: []supertokens.Recipe{
+		session.Init(&sessmodels.TypeInput{
+			Override: &sessmodels.OverrideStruct{
+				Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+					originalGetSession := *originalImplementation.GetSession
+
+					(*originalImplementation.GetSession) = func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext *map[string]interface{}) (*sessmodels.TypeSessionContainer, error) {
+						result, err := originalGetSession(req, res, options, userContext)
+
+						if result != nil {
+							originalPayload := result.GetAccessTokenPayload()
+
+							if originalPayload["appSub"] == nil {
+								result.MergeIntoAccessTokenPayload(map[string]interface{}{
+									"appSub": originalPayload["sub"],
+									"sub": nil,
+								})
+							}
+						}
+
+						return result, err
+					}
+
+					originalCreateNewSession := *originalImplementation.CreateNewSession
+
+
+					(*originalImplementation.CreateNewSession) = func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext *map[string]interface{}) (*sessmodels.TypeSessionContainer, error) {
+						if accessTokenPayload == nil {
+							accessTokenPayload = map[string]interface{}{}
+						}
+
+						accessTokenPayload["sub"] = userID + "!!!"
+
+						return originalCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+					}
+
+					return originalImplementation
+				},
+			},
+		}),
+	},
+})
+}
+```
+
+#### If you added an override for `CreateNewSession`/`RefreshSession`/`GetSession`:
+
+This example uses `GetSession`, but the changes required for the other ones are very similar. Before:
+
+```go
+session.Init(&sessmodels.TypeInput{
+    Override: &sessmodels.OverrideStruct{
+        Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+            originalGetSession := *originalImplementation.GetSession
+
+            newGetSession := func(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+                response, err := originalGetSession(req, res, options, userContext)
+
+                if err != nil {
+                    return nil, err
+                }
+
+                return response, nil
+            }
+            
+            *originalImplementation.GetSession = newGetSession
+            return originalImplementation
+        },
+    },
+})
+```
+
+After:
+
+```go
+session.Init(&sessmodels.TypeInput{
+    Override: &sessmodels.OverrideStruct{
+        Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
+            originalGetSession := *originalImplementation.GetSession
+
+            newGetSession := func(accessToken string, antiCSRFToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+                defaultUserContext := (*userContext)["_default"].(map[string]interface{})
+                request := defaultUserContext["request"]
+                
+                print(request)
+                
+                response, err := originalGetSession(accessToken, antiCSRFToken, options, userContext)
+                if err != nil {
+                    return nil, err
+                }
+                
+                return response, nil
+            }
+            
+            *originalImplementation.GetSession = newGetSession
+
+            return originalImplementation
+        },
+    },
+}),
+```
+
+## [0.11.0] - 2023-04-28
+- Added missing arguments in `GetUsersNewestFirst` and `GetUsersOldestFirst`
+
+## [0.10.8] - 2023-04-18
+- Email template for verify email updated 
+
+## [0.10.7] - 2023-04-11
+- Changed email template to render correctly in outlook
+
+## [0.10.6]
+
+-   Fixes panic issue in input validation for emailpassword APIs - https://github.com/supertokens/supertokens-golang/issues/254
+
+## [0.10.5] - 2023-03-31
+
+-   Adds search APIs to the dashboard recipe
+
+## [0.10.4] - 2023-03-30
+
+-   Adds a telemetry API to the dashboard recipe
+
+## [0.10.3] - 2023-03-29
+-   Adds unit test for Apple callback form post
+-   Updates all example apps to also initialise dashboard recipe
+-   Adds login with gitlab (for single tenant only) and bitbucket
+
+## [0.10.2] - 2023-02-24
+-   Adds APIs and logic to the dashboard recipe to enable email password based login
+
 ## [0.10.1] - 2023-02-06
 
 -   Email template updates

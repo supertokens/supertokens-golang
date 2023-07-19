@@ -16,7 +16,7 @@
 package session
 
 import (
-	"net/http"
+	"fmt"
 	"reflect"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
@@ -29,23 +29,38 @@ type SessionContainerInput struct {
 	sessionHandle         string
 	userID                string
 	userDataInAccessToken map[string]interface{}
-	res                   http.ResponseWriter
 	accessToken           string
+	frontToken            string
+	refreshToken          *sessmodels.CreateOrRefreshAPIResponseToken
 	recipeImpl            sessmodels.RecipeInterface
-	req                   *http.Request
-	tokenTransferMethod   sessmodels.TokenTransferMethod
+	antiCSRFToken         *string
+	requestResponseInfo   *sessmodels.RequestResponseInfo
+	accessTokenUpdated    bool
 }
 
-func makeSessionContainerInput(accessToken string, sessionHandle string, userID string, userDataInAccessToken map[string]interface{}, res http.ResponseWriter, req *http.Request, tokenTransferMethod sessmodels.TokenTransferMethod, recipeImpl sessmodels.RecipeInterface) SessionContainerInput {
+func makeSessionContainerInput(
+	accessToken string,
+	sessionHandle string,
+	userID string,
+	userDataInAccessToken map[string]interface{},
+	recipeImpl sessmodels.RecipeInterface,
+	frontToken string,
+	antiCSRFToken *string,
+	info *sessmodels.RequestResponseInfo,
+	refreshToken *sessmodels.CreateOrRefreshAPIResponseToken,
+	accessTokenUpdated bool,
+) SessionContainerInput {
 	return SessionContainerInput{
 		sessionHandle:         sessionHandle,
 		userID:                userID,
 		userDataInAccessToken: userDataInAccessToken,
-		res:                   res,
 		accessToken:           accessToken,
+		frontToken:            frontToken,
+		refreshToken:          refreshToken,
 		recipeImpl:            recipeImpl,
-		req:                   req,
-		tokenTransferMethod:   tokenTransferMethod,
+		antiCSRFToken:         antiCSRFToken,
+		requestResponseInfo:   info,
+		accessTokenUpdated:    accessTokenUpdated,
 	}
 }
 
@@ -57,64 +72,39 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		if err != nil {
 			return err
 		}
-		clearSession(config, session.res, session.tokenTransferMethod)
+
+		if session.requestResponseInfo != nil {
+			// we do not check the output of calling revokeSession
+			// before clearing the cookies because we are revoking the
+			// current API request's session.
+			// If we instead clear the cookies only when revokeSession
+			// returns true, it can cause this kind of a bug:
+			// https://github.com/supertokens/supertokens-node/issues/343
+			ClearSession(config, session.requestResponseInfo.Res, session.requestResponseInfo.TokenTransferMethod)
+		}
 		return nil
 	}
 
-	sessionContainer.GetSessionDataWithContext = func(userContext supertokens.UserContext) (map[string]interface{}, error) {
+	sessionContainer.GetSessionDataInDatabaseWithContext = func(userContext supertokens.UserContext) (map[string]interface{}, error) {
 		sessionInformation, err := (*session.recipeImpl.GetSessionInformation)(session.sessionHandle, userContext)
 		if err != nil {
 			return nil, err
 		}
 		if sessionInformation == nil {
+			supertokens.LogDebugMessage("GetSessionDataInDatabaseWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return nil, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
-		return sessionInformation.SessionData, nil
+		return sessionInformation.SessionDataInDatabase, nil
 	}
 
-	sessionContainer.UpdateSessionDataWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
-		updated, err := (*session.recipeImpl.UpdateSessionData)(session.sessionHandle, newSessionData, userContext)
+	sessionContainer.UpdateSessionDataInDatabaseWithContext = func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error {
+		updated, err := (*session.recipeImpl.UpdateSessionDataInDatabase)(session.sessionHandle, newSessionData, userContext)
 		if err != nil {
 			return err
 		}
 		if !updated {
+			supertokens.LogDebugMessage("UpdateSessionDataInDatabaseWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
-		}
-		return nil
-	}
-
-	sessionContainer.UpdateAccessTokenPayloadWithContext = func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error {
-		if newAccessTokenPayload == nil {
-			newAccessTokenPayload = map[string]interface{}{}
-		}
-
-		resp, err := (*session.recipeImpl.RegenerateAccessToken)(session.accessToken, &newAccessTokenPayload, userContext)
-
-		if err != nil {
-			return err
-		}
-
-		if resp == nil {
-			return errors.UnauthorizedError{Msg: "session does not exist anymore"}
-		}
-
-		session.userDataInAccessToken = resp.Session.UserDataInAccessToken
-
-		if !reflect.DeepEqual(resp.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			session.accessToken = resp.AccessToken.Token
-			setFrontTokenInHeaders(session.res, resp.Session.UserID, resp.AccessToken.Expiry, resp.Session.UserDataInAccessToken)
-			setToken(
-				config,
-				session.res,
-				sessmodels.AccessToken,
-				resp.AccessToken.Token,
-				// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
-				// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
-				// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
-				// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-				getCurrTimeInMS()+3153600000000,
-				session.tokenTransferMethod,
-			)
 		}
 		return nil
 	}
@@ -125,6 +115,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
+			supertokens.LogDebugMessage("GetTimeCreatedWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.TimeCreated, nil
@@ -136,6 +127,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			return 0, err
 		}
 		if sessionInformation == nil {
+			supertokens.LogDebugMessage("GetExpiryWithContext: Returning UnauthorizedError because session does not exist anymore")
 			return 0, errors.UnauthorizedError{Msg: "session does not exist anymore"}
 		}
 		return sessionInformation.Expiry, nil
@@ -150,6 +142,13 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 	sessionContainer.MergeIntoAccessTokenPayloadWithContext = func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
 		accessTokenPayload := sessionContainer.GetAccessTokenPayloadWithContext(userContext)
+
+		for k, _ := range accessTokenPayload {
+			if supertokens.DoesSliceContainString(k, protectedProps) {
+				delete(accessTokenPayload, k)
+			}
+		}
+
 		for k, v := range accessTokenPayloadUpdate {
 			if v == nil {
 				delete(accessTokenPayload, k)
@@ -157,7 +156,66 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 				accessTokenPayload[k] = v
 			}
 		}
-		return sessionContainer.UpdateAccessTokenPayloadWithContext(accessTokenPayload, userContext)
+
+		querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+		if err != nil {
+			return err
+		}
+
+		response, err := regenerateAccessTokenHelper(*querier, &accessTokenPayload, sessionContainer.GetAccessToken())
+
+		if err != nil {
+			supertokens.LogDebugMessage(fmt.Sprintf("MergeIntoAccessTokenPayloadWithContext: Returning UnauthorizedError because we could not regenerate the session - %s", err))
+			return errors.UnauthorizedError{
+				Msg: errors.UnauthorizedErrorStr,
+			}
+		}
+
+		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+			responseToken, parseError := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
+			if parseError != nil {
+				return parseError
+			}
+
+			var payload map[string]interface{}
+			if responseToken.Version < 3 {
+				payload = response.Session.UserDataInAccessToken
+			} else {
+				payload = responseToken.Payload
+			}
+
+			session.userDataInAccessToken = payload
+			session.accessToken = response.AccessToken.Token
+			session.frontToken = BuildFrontToken(session.userID, response.AccessToken.Expiry, payload)
+			session.accessTokenUpdated = true
+
+			if session.requestResponseInfo != nil {
+				setTokenErr := SetAccessTokenInResponse(config, session.requestResponseInfo.Res, session.accessToken, session.frontToken, session.requestResponseInfo.TokenTransferMethod)
+				if setTokenErr != nil {
+					return setTokenErr
+				}
+			}
+		} else {
+			// This case means that the access token has expired between the validation and this update
+			// We can't update the access token on the FE, as it will need to call refresh anyway but we handle this as a successful update during this request.
+			// the changes will be reflected on the FE after refresh is called
+			currentAccessTokenPayload := sessionContainer.GetAccessTokenPayload()
+			userDataInJWT := response.Session.UserDataInAccessToken
+
+			userDataInAccessToken := map[string]interface{}{}
+
+			for k, v := range currentAccessTokenPayload {
+				userDataInAccessToken[k] = v
+			}
+
+			for k, v := range userDataInJWT {
+				userDataInAccessToken[k] = v
+			}
+
+			session.userDataInAccessToken = userDataInAccessToken
+		}
+
+		return nil
 	}
 
 	sessionContainer.GetHandleWithContext = func(userContext supertokens.UserContext) string {
@@ -174,6 +232,10 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 
 		if validateClaimResponse.AccessTokenPayloadUpdate != nil {
+			for _, protectedKey := range protectedProps {
+				delete(validateClaimResponse.AccessTokenPayloadUpdate, protectedKey)
+			}
+
 			err := sessionContainer.MergeIntoAccessTokenPayloadWithContext(validateClaimResponse.AccessTokenPayloadUpdate, userContext)
 			if err != nil {
 				return err
@@ -215,14 +277,11 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	sessionContainer.RevokeSession = func() error {
 		return sessionContainer.RevokeSessionWithContext(&map[string]interface{}{})
 	}
-	sessionContainer.GetSessionData = func() (map[string]interface{}, error) {
-		return sessionContainer.GetSessionDataWithContext(&map[string]interface{}{})
+	sessionContainer.GetSessionDataInDatabase = func() (map[string]interface{}, error) {
+		return sessionContainer.GetSessionDataInDatabaseWithContext(&map[string]interface{}{})
 	}
-	sessionContainer.UpdateSessionData = func(newSessionData map[string]interface{}) error {
-		return sessionContainer.UpdateSessionDataWithContext(newSessionData, &map[string]interface{}{})
-	}
-	sessionContainer.UpdateAccessTokenPayload = func(newAccessTokenPayload map[string]interface{}) error {
-		return sessionContainer.UpdateAccessTokenPayloadWithContext(newAccessTokenPayload, &map[string]interface{}{})
+	sessionContainer.UpdateSessionDataInDatabase = func(newSessionData map[string]interface{}) error {
+		return sessionContainer.UpdateSessionDataInDatabaseWithContext(newSessionData, &map[string]interface{}{})
 	}
 	sessionContainer.GetUserID = func() string {
 		return sessionContainer.GetUserIDWithContext(&map[string]interface{}{})
@@ -261,6 +320,48 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 	sessionContainer.RemoveClaim = func(claim *claims.TypeSessionClaim) error {
 		return sessionContainer.RemoveClaimWithContext(claim, &map[string]interface{}{})
+	}
+
+	sessionContainer.GetAllSessionTokensDangerously = func() sessmodels.SessionTokens {
+		var refreshToken *string = nil
+
+		if session.refreshToken != nil {
+			refreshToken = &session.refreshToken.Token
+		}
+
+		return sessmodels.SessionTokens{
+			AccessToken:                   session.accessToken,
+			RefreshToken:                  refreshToken,
+			AntiCsrfToken:                 session.antiCSRFToken,
+			FrontToken:                    session.frontToken,
+			AccessAndFrontendTokenUpdated: session.accessTokenUpdated,
+		}
+	}
+
+	sessionContainer.AttachToRequestResponse = func(info sessmodels.RequestResponseInfo) error {
+		session.requestResponseInfo = &info
+
+		if session.accessTokenUpdated {
+			err := SetAccessTokenInResponse(config, info.Res, session.accessToken, session.frontToken, info.TokenTransferMethod)
+
+			if err != nil {
+				return err
+			}
+
+			if session.refreshToken != nil {
+				err = setToken(config, info.Res, sessmodels.RefreshToken, session.refreshToken.Token, session.refreshToken.Expiry, info.TokenTransferMethod)
+
+				if err != nil {
+					return err
+				}
+			}
+
+			if session.antiCSRFToken != nil {
+				setAntiCsrfTokenInHeaders(info.Res, *session.antiCSRFToken)
+			}
+		}
+
+		return nil
 	}
 
 	return sessionContainer

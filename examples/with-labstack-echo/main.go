@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"errors"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"net/http"
 	"strings"
 
@@ -151,6 +152,7 @@ func main() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 		},
 	})
 
@@ -211,7 +213,7 @@ func sessioninfo(c echo.Context) error {
 	if sessionContainer == nil {
 		return errors.New("no session found")
 	}
-	sessionData, err := sessionContainer.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionDataInDatabase()
 	if err != nil {
 		err = supertokens.ErrorHandler(err, c.Request(), c.Response())
 		if err != nil {

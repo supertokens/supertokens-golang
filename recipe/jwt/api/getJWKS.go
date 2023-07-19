@@ -31,13 +31,13 @@ func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOpti
 		return err
 	}
 
-	if response.OK != nil {
+	if response.GeneralError != nil {
+		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
+	} else if response.OK != nil {
 		options.Res.Header().Set("Access-Control-Allow-Origin", "*")
 		return supertokens.Send200Response(options.Res, map[string]interface{}{
 			"keys": response.OK.Keys,
 		})
-	} else if response.GeneralError != nil {
-		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*response.GeneralError))
 	}
 	return supertokens.ErrorIfNoResponse(options.Res)
 }

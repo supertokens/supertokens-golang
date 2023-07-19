@@ -23,21 +23,25 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
+func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
 	typeNormalisedInput := makeTypeNormalisedInput(appInfo)
 
-	if strings.Trim(config.ApiKey, " ") == "" {
-		panic("ApiKey provided to Dashboard recipe cannot be empty")
+	_config := dashboardmodels.TypeInput{}
+	if config != nil {
+		_config = *config
 	}
 
-	typeNormalisedInput.ApiKey = config.ApiKey
+	if _config.ApiKey != "" {
+		typeNormalisedInput.ApiKey = _config.ApiKey
+		typeNormalisedInput.AuthMode = dashboardmodels.AuthModeAPIKey
+	}
 
-	if config.Override != nil {
-		if config.Override.Functions != nil {
-			typeNormalisedInput.Override.Functions = config.Override.Functions
+	if _config.Override != nil {
+		if _config.Override.Functions != nil {
+			typeNormalisedInput.Override.Functions = _config.Override.Functions
 		}
-		if config.Override.APIs != nil {
-			typeNormalisedInput.Override.APIs = config.Override.APIs
+		if _config.Override.APIs != nil {
+			typeNormalisedInput.Override.APIs = _config.Override.APIs
 		}
 	}
 
@@ -46,6 +50,7 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) dashboardmodels.TypeNormalisedInput {
 	return dashboardmodels.TypeNormalisedInput{
+		AuthMode: dashboardmodels.AuthModeEmailPassword,
 		Override: dashboardmodels.OverrideStruct{
 			Functions: func(originalImplementation dashboardmodels.RecipeInterface) dashboardmodels.RecipeInterface {
 				return originalImplementation
@@ -121,6 +126,26 @@ func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*stri
 
 	if method == http.MethodPut && strings.HasSuffix(path.GetAsStringDangerous(), userPasswordAPI) {
 		val := userPasswordAPI
+		return &val, nil
+	}
+
+	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), signInAPI) {
+		val := signInAPI
+		return &val, nil
+	}
+
+	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), signOutAPI) {
+		val := signOutAPI
+		return &val, nil
+	}
+
+	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), searchTagsAPI) {
+		val := searchTagsAPI
+		return &val, nil
+	}
+
+	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), dashboardAnalyticsAPI) {
+		val := dashboardAnalyticsAPI
 		return &val, nil
 	}
 
