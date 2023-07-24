@@ -32,7 +32,7 @@ type superTokens struct {
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 	Telemetry             *bool
 	Log                   Logger
-	RequestIDKey          any
+	RequestIDKey          interface{}
 }
 
 // this will be set to true if this is used in a test app environment

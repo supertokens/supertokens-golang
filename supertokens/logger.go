@@ -32,7 +32,7 @@ func SetLogger(logger Logger) {
 func LogNewDebugMessage(ctx UserContext, message string) {
 	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
 	if exists {
-		reqID, ok := (*ctx)["requestID"].(string)
+		reqID, ok := (*ctx)[RequestIDKey].(string)
 		if !ok {
 			loggerClt.Log(newFormatMessage(message, nil))
 		} else {

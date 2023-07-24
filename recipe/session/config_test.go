@@ -17,8 +17,11 @@
 package session
 
 import (
+	"bytes"
+	"log"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -1066,6 +1069,97 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	assert.Equal(t, sp.AppInfo.APIBasePath.GetAsStringDangerous(), "/hello")
 }
 
+func TestSuperTokensInitWithCustomLogger(t *testing.T) {
+	var buf bytes.Buffer
+	customLogger := &mockLogger{
+		log.New(&buf, "", 0),
+	}
+	apiBasePath := "/"
+	websiteBasePath := "/"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:         "SuperTokens",
+			APIDomain:       "api.supertokens.io",
+			WebsiteDomain:   "supertokens.io",
+			APIBasePath:     &apiBasePath,
+			WebsiteBasePath: &websiteBasePath,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{}),
+		},
+		Log: customLogger,
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	logMsg := "successful log\n"
+	supertokensInstance.Log.Log(logMsg)
+	assert.Equal(t, logMsg, buf.String())
+	assert.Equal(t, true, reflect.DeepEqual(customLogger, supertokensInstance.Log))
+}
+
+func TestSuperTokensInitWithRequestIDKey(t *testing.T) {
+	var buf bytes.Buffer
+	customLogger := &mockLogger{
+		log.New(&buf, "", 0),
+	}
+	apiBasePath := "/"
+	websiteBasePath := "/"
+	ridKey := "requestID"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:         "SuperTokens",
+			APIDomain:       "api.supertokens.io",
+			WebsiteDomain:   "supertokens.io",
+			APIBasePath:     &apiBasePath,
+			WebsiteBasePath: &websiteBasePath,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{}),
+		},
+		Log:          customLogger,
+		RequestIDKey: ridKey,
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "requestID", supertokensInstance.RequestIDKey)
+}
+
 func TestInvalidSameSiteNoneConfig(t *testing.T) {
 	domainCombinations := []struct {
 		WebsiteDomain string
@@ -1214,4 +1308,12 @@ func TestThatJWKSAndOpenIdEndpointsAreExposed(t *testing.T) {
 
 	assert.NotNil(t, openIdAPI)
 	assert.Equal(t, openIdAPI.PathWithoutAPIBasePath.GetAsStringDangerous(), "/.well-known/openid-configuration")
+}
+
+type mockLogger struct {
+	*log.Logger
+}
+
+func (ml *mockLogger) Log(msg string) {
+	ml.Print(msg)
 }

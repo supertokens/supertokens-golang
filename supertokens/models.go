@@ -48,7 +48,7 @@ type TypeInput struct {
 	Telemetry             *bool
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 	Log                   Logger
-	RequestIDKey          any
+	RequestIDKey          interface{}
 }
 
 type ConnectionInfo struct {

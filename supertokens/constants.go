@@ -16,8 +16,9 @@
 package supertokens
 
 const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
+	HeaderRID    = "rid"
+	HeaderFDI    = "fdi-version"
+	RequestIDKey = "requestID"
 )
 
 // VERSION current version of the lib

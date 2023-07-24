@@ -1,6 +1,8 @@
 package supertokens
 
 import (
+	"context"
+	"net/http"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -52,5 +54,46 @@ func TestGetTopLevelDomainForSameSiteResolution(t *testing.T) {
 	for _, val := range input {
 		domain, _ := GetTopLevelDomainForSameSiteResolution(val.Input)
 		assert.Equal(t, val.Output, domain, val.Input)
+	}
+}
+
+func TestMakeDefaultUserContextFromAPI(t *testing.T) {
+	var validRID = "valid-request-id"
+	superTokensInstance = &superTokens{RequestIDKey: RequestIDKey}
+
+	reqCtx, _ := http.NewRequestWithContext(context.WithValue(context.TODO(), RequestIDKey, validRID),
+		"GET", "", nil)
+
+	reqHeader, _ := http.NewRequest("", "", nil)
+	reqHeader.Header.Set("X-Request-ID", validRID)
+
+	type args struct {
+		r *http.Request
+	}
+	tests := []struct {
+		name string
+		args args
+		want interface{}
+	}{
+		{
+			"set valid requestID from header",
+			args{r: reqHeader},
+			validRID,
+		},
+		{
+			"set valid requestID from context",
+			args{r: reqCtx},
+			validRID,
+		},
+		{
+			"failure - no requestID present in context or header",
+			args{r: &http.Request{}},
+			nil,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			assert.Equalf(t, tt.want, (*MakeDefaultUserContextFromAPI(tt.args.r))[RequestIDKey], "MakeDefaultUserContextFromAPI(%v)", tt.args.r)
+		})
 	}
 }
