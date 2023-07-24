@@ -31,6 +31,8 @@ type superTokens struct {
 	RecipeModules         []RecipeModule
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 	Telemetry             *bool
+	Log                   Logger
+	RequestIDKey          any
 }
 
 // this will be set to true if this is used in a test app environment
@@ -101,7 +103,10 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	superTokens.Telemetry = config.Telemetry
+	superTokens.Log = config.Log
+	superTokens.RequestIDKey = config.RequestIDKey
 	superTokensInstance = superTokens
+	SetLogger(superTokens.Log)
 
 	return nil
 }

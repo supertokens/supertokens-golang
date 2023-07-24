@@ -5,6 +5,7 @@ go 1.15
 require (
 	github.com/gin-contrib/cors v1.3.1
 	github.com/gin-gonic/gin v1.7.4
+	github.com/go-chi/chi v1.5.4
 	github.com/go-chi/chi/v5 v5.0.4
 	github.com/go-chi/cors v1.2.0
 	github.com/gofiber/adaptor/v2 v2.1.18

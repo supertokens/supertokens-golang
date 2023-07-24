@@ -277,7 +277,12 @@ func ErrorIfNoResponse(res http.ResponseWriter) error {
 }
 
 func MakeDefaultUserContextFromAPI(r *http.Request) UserContext {
-	return SetRequestInUserContextIfNotDefined(nil, r)
+	ctx := SetRequestInUserContextIfNotDefined(nil, r)
+
+	// Adding this here, as it the requestID needs to be added to the UserContext, once in the lifecycle of the request
+	(*ctx)["requestID"] = r.Context().Value(superTokensInstance.RequestIDKey)
+
+	return ctx
 }
 
 func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r *http.Request) UserContext {
