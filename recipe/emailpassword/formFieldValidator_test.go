@@ -17,9 +17,16 @@
 package emailpassword
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestDefaultEmailValidator(t *testing.T) {
@@ -55,4 +62,191 @@ func TestDefaultPasswordValidator(t *testing.T) {
 	assert.Equal(t, "Password must contain at least one number", *defaultPasswordValidator("ascdvsdfvsIUOO"))
 
 	assert.Equal(t, "Password must contain at least one alphabet", *defaultPasswordValidator("234235234523"))
+}
+
+func TestInvalidAPIInputForFormFields(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	objToJson := func(obj interface{}) []byte {
+		jsonBytes, err := json.Marshal(obj)
+		assert.NoError(t, err)
+		return jsonBytes
+	}
+
+	testCases := []struct {
+		input      interface{}
+		expected   string
+		fieldError bool
+	}{
+		{
+			input:      map[string]interface{}{},
+			expected:   "Missing input param: formFields",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": "abcd",
+			},
+			expected:   "formFields must be an array",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []string{"hello"},
+			},
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"hello": "world",
+					},
+					{
+						"world": "hello",
+					},
+				},
+			},
+			expected:   "Field is not optional",
+			fieldError: true,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id": 1,
+					},
+				},
+			},
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id":    1,
+						"value": "world",
+					},
+				},
+			},
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id":    "hello",
+						"value": 1,
+					},
+				},
+			},
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"value": 1,
+					},
+				},
+			},
+			expected:   "formFields must be an array of objects containing id and value of type string",
+			fieldError: false,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"id": "hello",
+					},
+					{
+						"id": "world",
+					},
+				},
+			},
+			expected:   "Field is not optional",
+			fieldError: true,
+		},
+		{
+			input: map[string]interface{}{
+				"formFields": []map[string]interface{}{
+					{
+						"value": "hello",
+					},
+					{
+						"value": "world",
+					},
+				},
+			},
+			expected:   "Field is not optional",
+			fieldError: true,
+		},
+	}
+
+	APIs := []string{
+		"/auth/signup",
+		"/auth/signin",
+	}
+
+	for _, testCase := range testCases {
+		for _, api := range APIs {
+			resp, err := http.Post(testServer.URL+api, "application/json", bytes.NewBuffer(objToJson(testCase.input)))
+			assert.NoError(t, err)
+
+			if testCase.fieldError {
+				assert.Equal(t, 200, resp.StatusCode)
+			} else {
+				assert.Equal(t, 400, resp.StatusCode)
+			}
+			dataInBytes1, err := io.ReadAll(resp.Body)
+			if err != nil {
+				t.Error(err.Error())
+			}
+			resp.Body.Close()
+			var data map[string]interface{}
+			err = json.Unmarshal(dataInBytes1, &data)
+			if err != nil {
+				t.Error(err.Error())
+			}
+
+			if testCase.fieldError {
+				assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+
+				for _, formField := range data["formFields"].([]interface{}) {
+					errorMessage := formField.(map[string]interface{})["error"]
+					assert.Equal(t, testCase.expected, errorMessage)
+				}
+			} else {
+				assert.Equal(t, testCase.expected, data["message"])
+			}
+
+		}
+	}
 }

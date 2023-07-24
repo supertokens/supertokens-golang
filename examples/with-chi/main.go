@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/cors"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -149,6 +150,7 @@ func main() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 		},
 	})
 
@@ -180,7 +182,7 @@ func sessioninfo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("no session found"))
 		return
 	}
-	sessionData, err := sessionContainer.GetSessionData()
+	sessionData, err := sessionContainer.GetSessionDataInDatabase()
 	if err != nil {
 		err = supertokens.ErrorHandler(err, r, w)
 		if err != nil {

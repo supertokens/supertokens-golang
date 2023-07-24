@@ -65,13 +65,13 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -94,14 +94,14 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 
 	trueClaim, _ := TrueClaim()
 	err = sessionContainer.RemoveClaim(trueClaim)
 	assert.NoError(t, err)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 0, len(accessTokenPayload))
+	assert.Equal(t, 8, len(accessTokenPayload))
 }
 
 func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
@@ -122,13 +122,13 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionData map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
 							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(req, res, userID, accessTokenPayload, sessionData, userContext)
+							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -151,7 +151,7 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 1, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 
 	trueClaim, _ := TrueClaim()
 	ok, err := RemoveClaim(sessionContainer.GetHandle(), trueClaim)
@@ -160,8 +160,8 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 
 	sessInfo, err := GetSessionInformation(sessionContainer.GetHandle())
 	assert.NoError(t, err)
-	accessTokenPayload = sessInfo.AccessTokenPayload
-	assert.Equal(t, 0, len(accessTokenPayload))
+	accessTokenPayload = sessInfo.CustomClaimsInAccessTokenPayload
+	assert.Equal(t, 1, len(accessTokenPayload))
 }
 
 func TestShouldRemoveWorkForNonExistantHandle(t *testing.T) {

@@ -8,6 +8,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/supertokens/supertokens-golang/examples/with-chi-oso/database"
 	"github.com/supertokens/supertokens-golang/examples/with-chi-oso/service"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -148,6 +149,7 @@ func main() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 		},
 	})
 	if err != nil {

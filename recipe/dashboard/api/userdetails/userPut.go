@@ -74,7 +74,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil)
+		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -113,7 +113,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil)
+		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil)
 
 		if err != nil {
 			return updateEmailResponse{}, err

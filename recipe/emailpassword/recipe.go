@@ -53,7 +53,10 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	verifiedConfig := validateAndNormaliseUserInput(r, appInfo, config)
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
+	var getEmailPasswordConfig = func() epmodels.TypeNormalisedInput {
+		return verifiedConfig
+	}
+	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance, getEmailPasswordConfig))
 
 	if emailDeliveryIngredient != nil {
 		r.EmailDelivery = *emailDeliveryIngredient

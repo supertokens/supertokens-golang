@@ -1,6 +1,7 @@
 package config
 
 import (
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"log"
 
 	"github.com/spf13/viper"
@@ -162,6 +163,7 @@ func Init() {
 				},
 			}),
 			session.Init(nil),
+			dashboard.Init(nil),
 			// thirdparty.Init(thirdpartyConfig),
 		},
 	})

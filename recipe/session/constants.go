@@ -17,17 +17,17 @@ package session
 
 import "github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 
+var AvailableTokenTransferMethods = []sessmodels.TokenTransferMethod{sessmodels.CookieTransferMethod, sessmodels.HeaderTransferMethod}
+
 const (
-	refreshAPIPath = "/session/refresh"
-	signoutAPIPath = "/signout"
+	RefreshAPIPath = "/session/refresh"
+	SignoutAPIPath = "/signout"
 
-	antiCSRF_VIA_TOKEN         = "VIA_TOKEN"
-	antiCSRF_VIA_CUSTOM_HEADER = "VIA_CUSTOM_HEADER"
-	antiCSRF_NONE              = "NONE"
+	AntiCSRF_VIA_TOKEN         = "VIA_TOKEN"
+	AntiCSRF_VIA_CUSTOM_HEADER = "VIA_CUSTOM_HEADER"
+	AntiCSRF_NONE              = "NONE"
 
-	cookieSameSite_NONE   = "none"
-	cookieSameSite_LAX    = "lax"
-	cookieSameSite_STRICT = "strict"
+	CookieSameSite_NONE   = "none"
+	CookieSameSite_LAX    = "lax"
+	CookieSameSite_STRICT = "strict"
 )
-
-var availableTokenTransferMethods = []sessmodels.TokenTransferMethod{sessmodels.CookieTransferMethod, sessmodels.HeaderTransferMethod}

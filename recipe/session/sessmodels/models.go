@@ -16,6 +16,7 @@
 package sessmodels
 
 import (
+	"github.com/MicahParks/keyfunc"
 	"net/http"
 	"time"
 
@@ -40,27 +41,18 @@ const (
 	AnyTransferMethod    TokenTransferMethod = "any"
 )
 
-type HandshakeInfo struct {
-	rawJwtSigningPublicKeyList     []KeyInfo
-	AntiCsrf                       string
-	AccessTokenBlacklistingEnabled bool
-	AccessTokenValidity            uint64
-	RefreshTokenValidity           uint64
+type GetJWKSResult struct {
+	JWKS        *keyfunc.JWKS
+	Error       error
+	LastFetched int64
 }
 
-func (h *HandshakeInfo) GetJwtSigningPublicKeyList() []KeyInfo {
-	result := []KeyInfo{}
-	for _, key := range h.rawJwtSigningPublicKeyList {
-		if key.ExpiryTime > getCurrTimeInMS() {
-			result = append(result, key)
-		}
-	}
-	return result
+type GetJWKSFunctionObject struct {
+	Fn   GetJWKSFunction
+	Path string
 }
 
-func (h *HandshakeInfo) SetJwtSigningPublicKeyList(updatedList []KeyInfo) {
-	h.rawJwtSigningPublicKeyList = updatedList
-}
+type GetJWKSFunction = func(string) GetJWKSResult
 
 func getCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
@@ -83,6 +75,7 @@ type SessionStruct struct {
 	Handle                string                 `json:"handle"`
 	UserID                string                 `json:"userId"`
 	UserDataInAccessToken map[string]interface{} `json:"userDataInJWT"`
+	ExpiryTime            uint64                 `json:"expiryTime"`
 }
 
 type CreateOrRefreshAPIResponseToken struct {
@@ -92,6 +85,7 @@ type CreateOrRefreshAPIResponseToken struct {
 }
 
 type GetSessionResponse struct {
+	Status      string
 	Session     SessionStruct                   `json:"session"`
 	AccessToken CreateOrRefreshAPIResponseToken `json:"accessToken"`
 }
@@ -103,22 +97,17 @@ type RegenerateAccessTokenResponse struct {
 }
 
 type TypeInput struct {
-	CookieSecure             *bool
-	CookieSameSite           *string
-	SessionExpiredStatusCode *int
-	InvalidClaimStatusCode   *int
-	CookieDomain             *string
-	AntiCsrf                 *string
-	Override                 *OverrideStruct
-	ErrorHandlers            *ErrorHandlers
-	Jwt                      *JWTInputConfig
-	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
-}
-
-type JWTInputConfig struct {
-	Issuer                           *string
-	Enable                           bool
-	PropertyNameInAccessTokenPayload *string
+	CookieSecure                                 *bool
+	CookieSameSite                               *string
+	SessionExpiredStatusCode                     *int
+	InvalidClaimStatusCode                       *int
+	CookieDomain                                 *string
+	AntiCsrf                                     *string
+	Override                                     *OverrideStruct
+	ErrorHandlers                                *ErrorHandlers
+	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
+	ExposeAccessTokenToFrontendInCookieBasedAuth bool
+	UseDynamicAccessTokenSigningKey              *bool
 }
 
 type OverrideStruct struct {
@@ -134,17 +123,18 @@ type ErrorHandlers struct {
 }
 
 type TypeNormalisedInput struct {
-	RefreshTokenPath         supertokens.NormalisedURLPath
-	CookieDomain             *string
-	CookieSameSite           string
-	CookieSecure             bool
-	SessionExpiredStatusCode int
-	InvalidClaimStatusCode   int
-	AntiCsrf                 string
-	Override                 OverrideStruct
-	ErrorHandlers            NormalisedErrorHandlers
-	Jwt                      JWTNormalisedConfig
-	GetTokenTransferMethod   func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
+	RefreshTokenPath                             supertokens.NormalisedURLPath
+	CookieDomain                                 *string
+	CookieSameSite                               string
+	CookieSecure                                 bool
+	SessionExpiredStatusCode                     int
+	InvalidClaimStatusCode                       int
+	AntiCsrf                                     string
+	Override                                     OverrideStruct
+	ErrorHandlers                                NormalisedErrorHandlers
+	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
+	ExposeAccessTokenToFrontendInCookieBasedAuth bool
+	UseDynamicAccessTokenSigningKey              bool
 }
 
 type JWTNormalisedConfig struct {
@@ -156,6 +146,7 @@ type JWTNormalisedConfig struct {
 type VerifySessionOptions struct {
 	AntiCsrfCheck                 *bool
 	SessionRequired               *bool
+	CheckDatabase                 *bool
 	OverrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 }
 
@@ -177,28 +168,41 @@ type NormalisedErrorHandlers struct {
 	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
 }
 
-type TypeSessionContainer struct {
-	RevokeSession            func() error
-	GetSessionData           func() (map[string]interface{}, error)
-	UpdateSessionData        func(newSessionData map[string]interface{}) error
-	GetUserID                func() string
-	GetAccessTokenPayload    func() map[string]interface{}
-	GetHandle                func() string
-	GetAccessToken           func() string
-	UpdateAccessTokenPayload func(newAccessTokenPayload map[string]interface{}) error // Deprecated: use MergeIntoAccessTokenPayload instead
-	GetTimeCreated           func() (uint64, error)
-	GetExpiry                func() (uint64, error)
+type SessionTokens struct {
+	AccessToken                   string
+	RefreshToken                  *string
+	AntiCsrfToken                 *string
+	FrontToken                    string
+	AccessAndFrontendTokenUpdated bool
+}
 
-	RevokeSessionWithContext            func(userContext supertokens.UserContext) error
-	GetSessionDataWithContext           func(userContext supertokens.UserContext) (map[string]interface{}, error)
-	UpdateSessionDataWithContext        func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
-	GetUserIDWithContext                func(userContext supertokens.UserContext) string
-	GetAccessTokenPayloadWithContext    func(userContext supertokens.UserContext) map[string]interface{}
-	GetHandleWithContext                func(userContext supertokens.UserContext) string
-	GetAccessTokenWithContext           func(userContext supertokens.UserContext) string
-	UpdateAccessTokenPayloadWithContext func(newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) error // Deprecated: use MergeIntoAccessTokenPayloadWithContext instead
-	GetTimeCreatedWithContext           func(userContext supertokens.UserContext) (uint64, error)
-	GetExpiryWithContext                func(userContext supertokens.UserContext) (uint64, error)
+type RequestResponseInfo struct {
+	Res                 http.ResponseWriter
+	Req                 *http.Request
+	TokenTransferMethod TokenTransferMethod
+}
+
+type TypeSessionContainer struct {
+	RevokeSession                  func() error
+	GetSessionDataInDatabase       func() (map[string]interface{}, error)
+	UpdateSessionDataInDatabase    func(newSessionData map[string]interface{}) error
+	GetUserID                      func() string
+	GetAccessTokenPayload          func() map[string]interface{}
+	GetHandle                      func() string
+	GetAllSessionTokensDangerously func() SessionTokens
+	GetAccessToken                 func() string
+	GetTimeCreated                 func() (uint64, error)
+	GetExpiry                      func() (uint64, error)
+
+	RevokeSessionWithContext               func(userContext supertokens.UserContext) error
+	GetSessionDataInDatabaseWithContext    func(userContext supertokens.UserContext) (map[string]interface{}, error)
+	UpdateSessionDataInDatabaseWithContext func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
+	GetUserIDWithContext                   func(userContext supertokens.UserContext) string
+	GetAccessTokenPayloadWithContext       func(userContext supertokens.UserContext) map[string]interface{}
+	GetHandleWithContext                   func(userContext supertokens.UserContext) string
+	GetAccessTokenWithContext              func(userContext supertokens.UserContext) string
+	GetTimeCreatedWithContext              func(userContext supertokens.UserContext) (uint64, error)
+	GetExpiryWithContext                   func(userContext supertokens.UserContext) (uint64, error)
 
 	MergeIntoAccessTokenPayloadWithContext func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
 
@@ -210,22 +214,33 @@ type TypeSessionContainer struct {
 
 	MergeIntoAccessTokenPayload func(accessTokenPayloadUpdate map[string]interface{}) error
 
-	AssertClaims     func(claimValidators []claims.SessionClaimValidator) error
-	FetchAndSetClaim func(claim *claims.TypeSessionClaim) error
-	SetClaimValue    func(claim *claims.TypeSessionClaim, value interface{}) error
-	GetClaimValue    func(claim *claims.TypeSessionClaim) interface{}
-	RemoveClaim      func(claim *claims.TypeSessionClaim) error
+	AssertClaims            func(claimValidators []claims.SessionClaimValidator) error
+	FetchAndSetClaim        func(claim *claims.TypeSessionClaim) error
+	SetClaimValue           func(claim *claims.TypeSessionClaim, value interface{}) error
+	GetClaimValue           func(claim *claims.TypeSessionClaim) interface{}
+	RemoveClaim             func(claim *claims.TypeSessionClaim) error
+	AttachToRequestResponse func(info RequestResponseInfo) error
 }
 
 type SessionContainer = *TypeSessionContainer
 
 type SessionInformation struct {
-	SessionHandle      string
-	UserId             string
-	SessionData        map[string]interface{}
-	Expiry             uint64
-	AccessTokenPayload map[string]interface{}
-	TimeCreated        uint64
+	SessionHandle                    string
+	UserId                           string
+	SessionDataInDatabase            map[string]interface{}
+	Expiry                           uint64
+	CustomClaimsInAccessTokenPayload map[string]interface{}
+	TimeCreated                      uint64
+}
+
+type ParsedJWTInfo struct {
+	RawTokenString string
+	RawPayload     string
+	Header         string
+	Payload        map[string]interface{}
+	Signature      string
+	Version        int
+	KID            *string
 }
 
 const SessionContext int = iota

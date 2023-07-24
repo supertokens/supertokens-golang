@@ -144,7 +144,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 	}, len(QuerierHosts))
 }
 
-func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
+func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string) (map[string]interface{}, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -158,6 +158,13 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}) (m
 		if err != nil {
 			return nil, err
 		}
+
+		query := req.URL.Query()
+
+		for k, v := range params {
+			query.Add(k, v)
+		}
+		req.URL.RawQuery = query.Encode()
 
 		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
@@ -249,6 +256,24 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 
 type httpRequestFunction func(url string) (*http.Response, error)
 
+func GetAllCoreUrlsForPath(path string) []string {
+	if QuerierHosts == nil {
+		return []string{}
+	}
+
+	normalisedPath := NormalisedURLPath{value: path}
+	result := []string{}
+
+	for _, host := range QuerierHosts {
+		currentDomain := host.Domain.GetAsStringDangerous()
+		currentBasePath := host.BasePath.GetAsStringDangerous()
+
+		result = append(result, currentDomain+currentBasePath+normalisedPath.GetAsStringDangerous())
+	}
+
+	return result
+}
+
 func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int) (map[string]interface{}, error) {
 	if numberOfTries == 0 {
 		return nil, errors.New("no SuperTokens core available to query")
@@ -294,4 +319,8 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 
 func ResetQuerierForTest() {
 	querierInitCalled = false
+}
+
+func (q *Querier) SetApiVersionForTests(apiVersion string) {
+	querierAPIVersion = apiVersion
 }

@@ -22,10 +22,8 @@ import (
 
 	"github.com/supertokens/supertokens-golang/recipe/openid"
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
-	"github.com/supertokens/supertokens-golang/recipe/session/api"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessionwithjwt"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -34,7 +32,7 @@ type Recipe struct {
 	RecipeModule supertokens.RecipeModule
 	Config       sessmodels.TypeNormalisedInput
 	RecipeImpl   sessmodels.RecipeInterface
-	OpenIdRecipe *openid.Recipe
+	OpenIdRecipe openid.Recipe
 	APIImpl      sessmodels.APIInterface
 
 	claimsAddedByOtherRecipes          []*claims.TypeSessionClaim
@@ -53,7 +51,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	r.RecipeModule = supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 
-	verifiedConfig, configError := validateAndNormaliseUserInput(appInfo, config)
+	verifiedConfig, configError := ValidateAndNormaliseUserInput(appInfo, config)
 	if configError != nil {
 		return Recipe{}, configError
 	}
@@ -70,27 +68,24 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	supertokens.LogDebugMessage("session init: SessionExpiredStatusCode: " + strconv.Itoa(verifiedConfig.SessionExpiredStatusCode))
 
 	r.Config = verifiedConfig
-	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
+	r.APIImpl = verifiedConfig.Override.APIs(MakeAPIImplementation())
 
 	querierInstance, err := supertokens.GetNewQuerierInstanceOrThrowError(recipeId)
 	if err != nil {
 		return Recipe{}, err
 	}
-	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
+	recipeImplementation := MakeRecipeImplementation(*querierInstance, verifiedConfig, appInfo)
 
-	if verifiedConfig.Jwt.Enable {
-		openIdRecipe, err := openid.MakeRecipe(recipeId, appInfo, &openidmodels.TypeInput{
-			Issuer:   verifiedConfig.Jwt.Issuer,
-			Override: verifiedConfig.Override.OpenIdFeature,
-		}, onSuperTokensAPIError)
-		if err != nil {
-			return Recipe{}, err
-		}
-		r.RecipeImpl = verifiedConfig.Override.Functions(sessionwithjwt.MakeRecipeImplementation(recipeImplementation, openIdRecipe.RecipeImpl, verifiedConfig))
-		r.OpenIdRecipe = &openIdRecipe
-	} else {
-		r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+	openIdRecipe, err := openid.MakeRecipe(recipeId, appInfo, &openidmodels.TypeInput{
+		Override: verifiedConfig.Override.OpenIdFeature,
+	}, onSuperTokensAPIError)
+
+	if err != nil {
+		return Recipe{}, err
 	}
+
+	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
+	r.OpenIdRecipe = openIdRecipe
 
 	return *r, nil
 }
@@ -123,33 +118,31 @@ func recipeInit(config *sessmodels.TypeInput) supertokens.Recipe {
 // Implement RecipeModule
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	refreshAPIPathNormalised, err := supertokens.NewNormalisedURLPath(refreshAPIPath)
+	refreshAPIPathNormalised, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
 	if err != nil {
 		return nil, err
 	}
-	signoutAPIPathNormalised, err := supertokens.NewNormalisedURLPath(signoutAPIPath)
+	signoutAPIPathNormalised, err := supertokens.NewNormalisedURLPath(SignoutAPIPath)
 	if err != nil {
 		return nil, err
 	}
 	resp := []supertokens.APIHandled{{
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: refreshAPIPathNormalised,
-		ID:                     refreshAPIPath,
+		ID:                     RefreshAPIPath,
 		Disabled:               r.APIImpl.RefreshPOST == nil,
 	}, {
 		Method:                 http.MethodPost,
 		PathWithoutAPIBasePath: signoutAPIPathNormalised,
-		ID:                     signoutAPIPath,
+		ID:                     SignoutAPIPath,
 		Disabled:               r.APIImpl.SignOutPOST == nil,
 	}}
 
-	if r.OpenIdRecipe != nil {
-		jwtAPIs, err := r.OpenIdRecipe.RecipeModule.GetAPIsHandled()
-		if err != nil {
-			return nil, err
-		}
-		resp = append(resp, jwtAPIs...)
+	jwtAPIs, err := r.OpenIdRecipe.RecipeModule.GetAPIsHandled()
+	if err != nil {
+		return nil, err
 	}
+	resp = append(resp, jwtAPIs...)
 
 	return resp, nil
 }
@@ -165,21 +158,18 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 
 		ClaimValidatorsAddedByOtherRecipes: r.getClaimValidatorsAddedByOtherRecipes(),
 	}
-	if id == refreshAPIPath {
-		return api.HandleRefreshAPI(r.APIImpl, options)
-	} else if id == signoutAPIPath {
-		return api.SignOutAPI(r.APIImpl, options)
-	} else if r.OpenIdRecipe != nil {
+	if id == RefreshAPIPath {
+		return HandleRefreshAPI(r.APIImpl, options)
+	} else if id == SignoutAPIPath {
+		return SignOutAPI(r.APIImpl, options)
+	} else {
 		return r.OpenIdRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirhandler, path, method)
 	}
-	return nil
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {
-	resp := getCORSAllowedHeaders()
-	if r.OpenIdRecipe != nil {
-		resp = append(resp, r.OpenIdRecipe.RecipeModule.GetAllCORSHeaders()...)
-	}
+	resp := GetCORSAllowedHeaders()
+	resp = append(resp, r.OpenIdRecipe.RecipeModule.GetAllCORSHeaders()...)
 	return resp
 }
 
@@ -189,7 +179,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		unauthErr := err.(errors.UnauthorizedError)
 		if unauthErr.ClearTokens == nil || *unauthErr.ClearTokens {
 			supertokens.LogDebugMessage("errorHandler: Clearing tokens because of UNAUTHORISED response")
-			clearSessionFromAllTokenTransferMethods(r.Config, req, res)
+			ClearSessionFromAllTokenTransferMethods(r.Config, req, res)
 		}
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
@@ -197,17 +187,16 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 		supertokens.LogDebugMessage("errorHandler: clearing tokens because of TOKEN_THEFT_DETECTED response")
-		clearSessionFromAllTokenTransferMethods(r.Config, req, res)
+		ClearSessionFromAllTokenTransferMethods(r.Config, req, res)
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	} else if defaultErrors.As(err, &errors.InvalidClaimError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning INVALID_CLAIMS")
 		errs := err.(errors.InvalidClaimError)
 		return true, r.Config.ErrorHandlers.OnInvalidClaim(errs.InvalidClaims, req, res)
-	} else if r.OpenIdRecipe != nil {
+	} else {
 		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res)
 	}
-	return false, nil
 }
 
 // Claim functions
@@ -221,7 +210,7 @@ func (r *Recipe) AddClaimFromOtherRecipe(claim *claims.TypeSessionClaim) error {
 	return nil
 }
 
-func (r *Recipe) getClaimsAddedByOtherRecipes() []*claims.TypeSessionClaim {
+func (r *Recipe) GetClaimsAddedByOtherRecipes() []*claims.TypeSessionClaim {
 	return r.claimsAddedByOtherRecipes
 }
 

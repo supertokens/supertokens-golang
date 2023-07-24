@@ -188,7 +188,7 @@ func TestCreateUserIdMappingUpdateEmailPassword(t *testing.T) {
 
 	newEmail := "email@example.com"
 	newPass := "newpass123"
-	updateResp, err := UpdateEmailOrPassword(externalUserId, &newEmail, &newPass)
+	updateResp, err := UpdateEmailOrPassword(externalUserId, &newEmail, &newPass, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, updateResp.OK)
 
