@@ -145,17 +145,17 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 		}, nil
 	}
 
-	var ogGetProvider func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error)
+	var ogGetProvider func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error)
 	if thirdPartyImplementation != nil {
 		ogGetProvider = *thirdPartyImplementation.GetProvider
 	}
 
-	getProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	getProvider := func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 		if ogGetProvider == nil {
-			return tpmodels.GetProviderResponse{}, errors.New("no thirdparty provider configured")
+			return nil, errors.New("no thirdparty provider configured")
 		}
 
-		return ogGetProvider(thirdPartyID, tenantId, clientType, userContext)
+		return ogGetProvider(thirdPartyID, clientType, tenantId, userContext)
 	}
 
 	ogEPGetUserByID := *emailPasswordImplementation.GetUserByID

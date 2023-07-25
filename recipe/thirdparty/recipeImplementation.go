@@ -16,6 +16,8 @@
 package thirdparty
 
 import (
+	"errors"
+
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	tpproviders "github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -24,28 +26,24 @@ import (
 
 func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.ProviderInput) tpmodels.RecipeInterface {
 
-	getProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	getProvider := func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 
-		tenantConfig, err := multitenancy.GetTenantConfigWithContext(tenantId, userContext)
+		tenantConfig, err := multitenancy.GetTenantWithContext(tenantId, userContext)
 		if err != nil {
-			return tpmodels.GetProviderResponse{}, err
+			return nil, err
 		}
 
-		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantId, tenantConfig.OK.ThirdParty.Providers, providers)
-		provider, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, thirdPartyID, tenantId, clientType, userContext)
-		if err != nil {
-			return tpmodels.GetProviderResponse{}, err
+		if tenantConfig == nil {
+			return nil, errors.New("tenant not found")
 		}
 
-		return tpmodels.GetProviderResponse{
-			OK: &struct {
-				Provider          *tpmodels.TypeProvider
-				ThirdPartyEnabled bool
-			}{
-				Provider:          provider,
-				ThirdPartyEnabled: tenantConfig.OK.ThirdParty.Enabled,
-			},
-		}, nil
+		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantConfig.ThirdParty.Providers, providers)
+		provider, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, thirdPartyID, clientType, userContext)
+		if err != nil {
+			return nil, err
+		}
+
+		return provider, nil
 	}
 
 	signInUp := func(thirdPartyID, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {

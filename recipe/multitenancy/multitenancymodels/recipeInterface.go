@@ -21,24 +21,28 @@ import (
 )
 
 type RecipeInterface struct {
-	GetTenantId *func(tenantIdFromFrontend *string, userContext supertokens.UserContext) (*string, error)
+	GetTenantId *func(tenantIdFromFrontend string, userContext supertokens.UserContext) (string, error)
 
 	// Tenant management
-	CreateOrUpdateTenant *func(tenantId *string, config TenantConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantResponse, error)
+	CreateOrUpdateTenant *func(tenantId string, config TenantConfig, userContext supertokens.UserContext) (CreateOrUpdateTenantResponse, error)
 	DeleteTenant         *func(tenantId string, userContext supertokens.UserContext) (DeleteTenantResponse, error)
-	GetTenantConfig      *func(tenantId *string, userContext supertokens.UserContext) (TenantConfigResponse, error)
+	GetTenant            *func(tenantId string, userContext supertokens.UserContext) (*Tenant, error)
 	ListAllTenants       *func(userContext supertokens.UserContext) (ListAllTenantsResponse, error)
 
 	// Third party provider management
-	CreateOrUpdateThirdPartyConfig       *func(config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (CreateOrUpdateThirdPartyConfigResponse, error)
-	DeleteThirdPartyConfig               *func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (DeleteThirdPartyConfigResponse, error)
-	ListThirdPartyConfigsForThirdPartyId *func(thirdPartyId string, userContext supertokens.UserContext) (ListThirdPartyConfigsForThirdPartyIdResponse, error)
+	CreateOrUpdateThirdPartyConfig *func(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (CreateOrUpdateThirdPartyConfigResponse, error)
+	DeleteThirdPartyConfig         *func(tenantId string, thirdPartyId string, userContext supertokens.UserContext) (DeleteThirdPartyConfigResponse, error)
+
+	// User tenant association
+	AssociateUserToTenant      *func(tenantId string, userId string, userContext supertokens.UserContext) (AssociateUserToTenantResponse, error)
+	DisassociateUserFromTenant *func(tenantId string, userId string, userContext supertokens.UserContext) (DisassociateUserFromTenantResponse, error)
 }
 
 type TenantConfig struct {
 	EmailPasswordEnabled *bool
 	PasswordlessEnabled  *bool
 	ThirdPartyEnabled    *bool
+	CoreConfig           map[string]interface{}
 }
 
 type CreateOrUpdateTenantResponse struct {
@@ -49,28 +53,27 @@ type CreateOrUpdateTenantResponse struct {
 
 type DeleteTenantResponse struct {
 	OK *struct {
-		TenantExisted bool
+		DidExist bool
 	}
 }
 
-type TenantConfigResponse struct {
-	OK *struct {
-		EmailPassword struct {
-			Enabled bool
-		}
-		Passwordless struct {
-			Enabled bool
-		}
-		ThirdParty struct {
-			Enabled   bool
-			Providers []tpmodels.ProviderConfig
-		}
-	}
+type Tenant struct {
+	EmailPassword struct {
+		Enabled bool `json:"enabled"`
+	} `json:"emailPassword"`
+	Passwordless struct {
+		Enabled bool `json:"enabled"`
+	} `json:"passwordless"`
+	ThirdParty struct {
+		Enabled   bool                      `json:"enabled"`
+		Providers []tpmodels.ProviderConfig `json:"providers"`
+	} `json:"thirdParty"`
+	CoreConfig map[string]interface{} `json:"coreConfig"`
 }
 
 type ListAllTenantsResponse struct {
 	OK *struct {
-		Tenants []string
+		Tenants []Tenant `json:"tenants"`
 	}
 }
 
@@ -86,8 +89,18 @@ type DeleteThirdPartyConfigResponse struct {
 	}
 }
 
-type ListThirdPartyConfigsForThirdPartyIdResponse struct {
+type AssociateUserToTenantResponse struct {
 	OK *struct {
-		Providers []tpmodels.ProviderConfig
+		WasAlreadyAssociated bool
+	}
+	UnknownUserIdError               *struct{}
+	EmailAlreadyExistsError          *struct{}
+	PhoneNumberAlreadyExistsError    *struct{}
+	ThirdPartyUserAlreadyExistsError *struct{}
+}
+
+type DisassociateUserFromTenantResponse struct {
+	OK *struct {
+		WasAssociated bool
 	}
 }

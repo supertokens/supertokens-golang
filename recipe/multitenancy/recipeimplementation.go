@@ -17,6 +17,7 @@ package multitenancy
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -24,69 +25,158 @@ import (
 )
 
 func makeRecipeImplementation(querier supertokens.Querier, config multitenancymodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) multitenancymodels.RecipeInterface {
-	getTenantId := func(tenantIdFromFrontend *string, userContext supertokens.UserContext) (*string, error) {
+	getTenantId := func(tenantIdFromFrontend string, userContext supertokens.UserContext) (string, error) {
 		return tenantIdFromFrontend, nil
 	}
 
-	createOrUpdateTenant := func(tenantId *string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
-		// TODO impl
-		return multitenancymodels.CreateOrUpdateTenantResponse{}, errors.New("not implemented")
+	createOrUpdateTenant := func(tenantId string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
+		createOrUpdateResponse, err := querier.SendPutRequest("/recipe/multitenancy/tenant", map[string]interface{}{
+			"tenantId":             tenantId,
+			"emailPasswordEnabled": config.EmailPasswordEnabled,
+			"passwordlessEnabled":  config.PasswordlessEnabled,
+			"thirdPartyEnabled":    config.ThirdPartyEnabled,
+			"coreConfig":           config.CoreConfig,
+		})
+		if err != nil {
+			return multitenancymodels.CreateOrUpdateTenantResponse{}, err
+		}
+
+		_, ok := createOrUpdateResponse["status"].(string)
+		if ok {
+			return multitenancymodels.CreateOrUpdateTenantResponse{
+				OK: &struct{ CreatedNew bool }{
+					CreatedNew: createOrUpdateResponse["createdNew"].(bool),
+				},
+			}, nil
+		}
+
+		return multitenancymodels.CreateOrUpdateTenantResponse{}, errors.New("should not come here")
 	}
 
 	deleteTenant := func(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
-		// TODO impl
-		return multitenancymodels.DeleteTenantResponse{}, errors.New("not implemented")
+		deleteTenantResponse, err := querier.SendPostRequest("/recipe/multitenancy/tenant/remove", map[string]interface{}{
+			"tenantId": tenantId,
+		})
+		if err != nil {
+			return multitenancymodels.DeleteTenantResponse{}, err
+		}
+		_, ok := deleteTenantResponse["status"].(string)
+		if ok {
+			return multitenancymodels.DeleteTenantResponse{
+				OK: &struct{ DidExist bool }{
+					DidExist: deleteTenantResponse["didExist"].(bool),
+				},
+			}, nil
+		}
+
+		return multitenancymodels.DeleteTenantResponse{}, errors.New("should not come here")
 	}
 
-	getTenantConfig := func(tenantId *string, userContext supertokens.UserContext) (multitenancymodels.TenantConfigResponse, error) {
-		// TODO impl
-		// TODO may throw mterrors.TenantDoesNotExistError
-		return multitenancymodels.TenantConfigResponse{
+	getTenant := func(tenantId string, userContext supertokens.UserContext) (*multitenancymodels.Tenant, error) {
+		tenantResponse, err := querier.SendGetRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant", tenantId), map[string]string{})
+		if err != nil {
+			return nil, err
+		}
+		status, ok := tenantResponse["status"].(string)
+		if ok {
+			if status == "TENANT_NOT_FOUND_ERROR" {
+				return nil, nil
+			}
+
+			result := &multitenancymodels.Tenant{}
+			err = supertokens.MapToStruct(tenantResponse, result)
+			if err != nil {
+				return nil, err
+			}
+
+			if status == "OK" {
+				return result, nil
+			}
+		}
+
+		return nil, errors.New("should not come here")
+	}
+
+	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
+		tenantsResponse, err := querier.SendGetRequest("/recipe/multitenancy/tenants/list", map[string]string{})
+		if err != nil {
+			return multitenancymodels.ListAllTenantsResponse{}, err
+		}
+		result := multitenancymodels.ListAllTenantsResponse{
 			OK: &struct {
-				EmailPassword struct{ Enabled bool }
-				Passwordless  struct{ Enabled bool }
-				ThirdParty    struct {
-					Enabled   bool
-					Providers []tpmodels.ProviderConfig
-				}
+				Tenants []multitenancymodels.Tenant `json:"tenants"`
+			}{},
+		}
+		err = supertokens.MapToStruct(tenantsResponse, result.OK)
+		if err != nil {
+			return multitenancymodels.ListAllTenantsResponse{}, err
+		}
+		return result, nil
+	}
+
+	createOrUpdateThirdPartyConfig := func(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+		configMap, err := supertokens.StructToMap(config)
+		if err != nil {
+			return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
+		}
+
+		response, err := querier.SendPutRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty", tenantId), map[string]interface{}{
+			"config":         configMap,
+			"skipValidation": skipValidation,
+		})
+		if err != nil {
+			return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
+		}
+		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{
+			OK: &struct {
+				CreatedNew bool
 			}{
-				EmailPassword: struct{ Enabled bool }{
-					Enabled: true,
-				},
-				Passwordless: struct{ Enabled bool }{
-					Enabled: true,
-				},
-				ThirdParty: struct {
-					Enabled   bool
-					Providers []tpmodels.ProviderConfig
-				}{
-					Enabled:   true,
-					Providers: []tpmodels.ProviderConfig{},
-				},
+				CreatedNew: response["createdNew"].(bool),
 			},
 		}, nil
 	}
 
-	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
-		// TODO impl
-		return multitenancymodels.ListAllTenantsResponse{}, errors.New("not implemented")
+	deleteThirdPartyConfig := func(tenantId string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
+		response, err := querier.SendPostRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty/remove", tenantId), map[string]interface{}{
+			"thirdPartyId": thirdPartyId,
+		})
+		if err != nil {
+			return multitenancymodels.DeleteThirdPartyConfigResponse{}, err
+		}
+
+		return multitenancymodels.DeleteThirdPartyConfigResponse{
+			OK: &struct{ DidConfigExist bool }{
+				DidConfigExist: response["didConfigExist"].(bool),
+			},
+		}, nil
 	}
 
-	createOrUpdateThirdPartyConfig := func(config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
-		// TODO impl
-		// TODO may throw mterrors.TenantDoesNotExistError
-		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, errors.New("not implemented")
+	associateUserToTenant := func(tenantId string, userId string, userContext supertokens.UserContext) (multitenancymodels.AssociateUserToTenantResponse, error) {
+		response, err := querier.SendPostRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant/user", tenantId), map[string]interface{}{
+			"userId": userId,
+		})
+		if err != nil {
+			return multitenancymodels.AssociateUserToTenantResponse{}, err
+		}
+		return multitenancymodels.AssociateUserToTenantResponse{
+			OK: &struct{ WasAlreadyAssociated bool }{
+				WasAlreadyAssociated: response["wasAlreadyAssociated"].(bool),
+			},
+		}, nil
 	}
 
-	deleteThirdPartyConfig := func(tenantId *string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
-		// TODO impl
-		// TODO may throw mterrors.TenantDoesNotExistError
-		return multitenancymodels.DeleteThirdPartyConfigResponse{}, errors.New("not implemented")
-	}
-
-	listThirdPartyConfigs := func(thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse, error) {
-		// TODO impl
-		return multitenancymodels.ListThirdPartyConfigsForThirdPartyIdResponse{}, errors.New("not implemented")
+	disassociateUserFromTenant := func(tenantId string, userId string, userContext supertokens.UserContext) (multitenancymodels.DisassociateUserFromTenantResponse, error) {
+		response, err := querier.SendPostRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant/user/remove", tenantId), map[string]interface{}{
+			"userId": userId,
+		})
+		if err != nil {
+			return multitenancymodels.DisassociateUserFromTenantResponse{}, err
+		}
+		return multitenancymodels.DisassociateUserFromTenantResponse{
+			OK: &struct{ WasAssociated bool }{
+				WasAssociated: response["wasAssociated"].(bool),
+			},
+		}, nil
 	}
 
 	return multitenancymodels.RecipeInterface{
@@ -94,11 +184,13 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 
 		CreateOrUpdateTenant: &createOrUpdateTenant,
 		DeleteTenant:         &deleteTenant,
-		GetTenantConfig:      &getTenantConfig,
+		GetTenant:            &getTenant,
 		ListAllTenants:       &listAllTenants,
 
-		CreateOrUpdateThirdPartyConfig:       &createOrUpdateThirdPartyConfig,
-		DeleteThirdPartyConfig:               &deleteThirdPartyConfig,
-		ListThirdPartyConfigsForThirdPartyId: &listThirdPartyConfigs,
+		CreateOrUpdateThirdPartyConfig: &createOrUpdateThirdPartyConfig,
+		DeleteThirdPartyConfig:         &deleteThirdPartyConfig,
+
+		AssociateUserToTenant:      &associateUserToTenant,
+		DisassociateUserFromTenant: &disassociateUserFromTenant,
 	}
 }

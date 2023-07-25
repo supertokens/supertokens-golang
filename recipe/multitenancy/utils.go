@@ -16,10 +16,7 @@
 package multitenancy
 
 import (
-	"net/http"
-
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func validateAndNormaliseUserInput(config *multitenancymodels.TypeInput) multitenancymodels.TypeNormalisedInput {
@@ -43,30 +40,8 @@ func makeTypeNormalisedInput(config *multitenancymodels.TypeInput) multitenancym
 		config = &multitenancymodels.TypeInput{}
 	}
 
-	if config.ErrorHandlers == nil {
-		config.ErrorHandlers = &multitenancymodels.ErrorHandlers{}
-	}
-
-	if config.ErrorHandlers.OnTenantDoesNotExistError == nil {
-		onTenantDoesNotExistError := func(err error, req *http.Request, res http.ResponseWriter) error {
-			return supertokens.SendNon200ResponseWithMessage(res, err.Error(), 422)
-		}
-		config.ErrorHandlers.OnTenantDoesNotExistError = &onTenantDoesNotExistError
-	}
-
-	if config.ErrorHandlers.OnRecipeDisabledForTenantError == nil {
-		onRecipeDisabledForTenantError := func(err error, req *http.Request, res http.ResponseWriter) error {
-			return supertokens.SendNon200ResponseWithMessage(res, err.Error(), 403)
-		}
-		config.ErrorHandlers.OnRecipeDisabledForTenantError = &onRecipeDisabledForTenantError
-	}
-
 	return multitenancymodels.TypeNormalisedInput{
 		GetAllowedDomainsForTenantId: config.GetAllowedDomainsForTenantId,
-		ErrorHandlers: multitenancymodels.NormalisedErrorHandlers{
-			OnTenantDoesNotExistError:      *config.ErrorHandlers.OnTenantDoesNotExistError,
-			OnRecipeDisabledForTenantError: *config.ErrorHandlers.OnRecipeDisabledForTenantError,
-		},
 		Override: multitenancymodels.OverrideStruct{
 			Functions: func(originalImplementation multitenancymodels.RecipeInterface) multitenancymodels.RecipeInterface {
 				return originalImplementation

@@ -16,8 +16,6 @@
 package multitenancymodels
 
 import (
-	"net/http"
-
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -25,25 +23,12 @@ const DefaultTenantId string = "public"
 
 type TypeInput struct {
 	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
-	ErrorHandlers                *ErrorHandlers
 	Override                     *OverrideStruct
-}
-
-type ErrorHandlers struct {
-	OnTenantDoesNotExistError      *func(err error, req *http.Request, res http.ResponseWriter) error
-	OnRecipeDisabledForTenantError *func(err error, req *http.Request, res http.ResponseWriter) error
 }
 
 type TypeNormalisedInput struct {
 	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
-
-	ErrorHandlers NormalisedErrorHandlers
-	Override      OverrideStruct
-}
-
-type NormalisedErrorHandlers struct {
-	OnTenantDoesNotExistError      func(err error, req *http.Request, res http.ResponseWriter) error
-	OnRecipeDisabledForTenantError func(err error, req *http.Request, res http.ResponseWriter) error
+	Override                     OverrideStruct
 }
 
 type OverrideStruct struct {

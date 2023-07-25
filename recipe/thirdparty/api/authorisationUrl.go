@@ -16,9 +16,6 @@
 package api
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -38,43 +35,22 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		clientType = &clientTypeStr
 	}
 
-	var tenantId *string = nil
-	if tenantIdStrFromQueryParams := queryParams.Get("tenantId"); tenantIdStrFromQueryParams != "" {
-		tenantId = &tenantIdStrFromQueryParams
-	}
-
 	if len(thirdPartyId) == 0 {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
-	mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, clientType, "public", userContext) // TODO multitenancy pass tenantId
 	if err != nil {
 		return err
 	}
 
-	tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
-	if err != nil {
-		return err
-	}
+	provider := providerResponse
 
-	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, tenantId, clientType, userContext)
-	if err != nil {
-		return err
+	if provider == nil {
+		return supertokens.BadInputError{Msg: "the provider " + thirdPartyId + " could not be found in the configuration"}
 	}
-
-	if !providerResponse.OK.ThirdPartyEnabled {
-		msg := "Thirdparty recipe is disabled for the "
-		if tenantId == nil || *tenantId == multitenancymodels.DefaultTenantId {
-			msg += "default tenant"
-		} else {
-			msg += "tenant: " + *tenantId
-		}
-		return mterrors.RecipeDisabledForTenantError{Msg: msg}
-	}
-
-	provider := providerResponse.OK.Provider
 
 	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, redirectURIOnProviderDashboard, options, userContext)
 	if err != nil {

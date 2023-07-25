@@ -23,7 +23,7 @@ import (
 )
 
 type APIInterface struct {
-	LoginMethodsGET *func(tenantId *string, clientType *string, options APIOptions, userContext supertokens.UserContext) (LoginMethodsGETResponse, error)
+	LoginMethodsGET *func(tenantId string, clientType *string, options APIOptions, userContext supertokens.UserContext) (LoginMethodsGETResponse, error)
 }
 
 type LoginMethodsGETResponse struct {

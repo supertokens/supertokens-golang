@@ -95,16 +95,16 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		}, nil
 	}
 
-	var ogGetProvider func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) = nil
+	var ogGetProvider func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) = nil
 	if thirdPartyImplementation != nil {
 		ogGetProvider = *thirdPartyImplementation.GetProvider
 	}
 
-	thirdPartyGetProvider := func(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+	thirdPartyGetProvider := func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 		if ogGetProvider == nil {
-			return tpmodels.GetProviderResponse{}, errors.New("no thirdparty provider configured")
+			return nil, errors.New("no thirdparty provider configured")
 		}
-		return ogGetProvider(thirdPartyID, tenantId, clientType, userContext)
+		return ogGetProvider(thirdPartyID, clientType, tenantId, userContext)
 	}
 
 	ogPlessGetUserByID := *passwordlessImplementation.GetUserByID

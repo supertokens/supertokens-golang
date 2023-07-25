@@ -20,14 +20,15 @@ import (
 	"encoding/json"
 	defaultErrors "errors"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/MicahParks/keyfunc"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"reflect"
-	"sync"
-	"time"
 )
 
 var protectedProps = []string{
@@ -38,6 +39,7 @@ var protectedProps = []string{
 	"parentRefreshTokenHash1",
 	"refreshTokenHash1",
 	"antiCsrfToken",
+	"tId",
 }
 
 var JWKCacheMaxAgeInMs int64 = 60000
@@ -126,7 +128,8 @@ func getJWKS() (*keyfunc.JWKS, error) {
 	return nil, lastError
 }
 
-/**
+/*
+*
 This function fetches all JWKs from the first available core instance. This combines the other JWKS functions to become
 error resistant.
 
