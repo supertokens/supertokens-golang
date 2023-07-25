@@ -15,15 +15,19 @@
 
 package supertokens
 
-import "net/http"
+import (
+	"fmt"
+	"net/http"
+	"regexp"
+)
 
 type RecipeModule struct {
 	recipeID                      string
 	appInfo                       NormalisedAppinfo
-	HandleAPIRequest              func(ID string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
+	HandleAPIRequest              func(ID string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
 	GetAllCORSHeaders             func() []string
 	GetAPIsHandled                func() ([]APIHandled, error)
-	ReturnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, error)
+	ReturnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, string, error)
 	HandleError                   func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
 	OnSuperTokensAPIError         func(err error, req *http.Request, res http.ResponseWriter)
 }
@@ -31,10 +35,10 @@ type RecipeModule struct {
 func MakeRecipeModule(
 	recipeId string,
 	appInfo NormalisedAppinfo,
-	handleAPIRequest func(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
+	handleAPIRequest func(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
-	returnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, error),
+	returnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, string, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
 	onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
@@ -47,19 +51,41 @@ func MakeRecipeModule(
 	}
 
 	if returnAPIIdIfCanHandleRequest == nil {
-		returnAPIIdIfCanHandleRequest = func(path NormalisedURLPath, method string) (*string, error) {
+		returnAPIIdIfCanHandleRequest = func(path NormalisedURLPath, method string) (*string, string, error) {
 			apisHandled, err := getAPIsHandled()
 			if err != nil {
-				return nil, err
+				return nil, "", err
 			}
+
+			basePathStr := appInfo.APIBasePath.GetAsStringDangerous()
+			pathStr := path.GetAsStringDangerous()
+			regexStr := fmt.Sprintf(`^%s(?:/([a-zA-Z0-9-]+))?(/.*)$`, regexp.QuoteMeta(basePathStr))
+			regex := regexp.MustCompile(regexStr)
+			var remainingPath *NormalisedURLPath
+			var tenantId string = DefaultTenantId
+
+			if regex.MatchString(pathStr) {
+				matches := regex.FindStringSubmatch(pathStr)
+				tenantId = matches[1]
+				remainingPath2, err := NewNormalisedURLPath(matches[2])
+				if err != nil {
+					return nil, "", err
+				}
+				remainingPath = &remainingPath2
+			}
+
 			for _, APIshandled := range apisHandled {
 				pathAppend := appInfo.APIBasePath.AppendPath(APIshandled.PathWithoutAPIBasePath)
-				if !APIshandled.Disabled && APIshandled.Method == method && pathAppend.Equals(path) {
-					return &APIshandled.ID, nil
+				if !APIshandled.Disabled && APIshandled.Method == method {
+					if pathAppend.Equals(path) {
+						return &APIshandled.ID, DefaultTenantId, nil
+					} else if remainingPath != nil && appInfo.APIBasePath.AppendPath(APIshandled.PathWithoutAPIBasePath).Equals(appInfo.APIBasePath.AppendPath(*remainingPath)) {
+						return &APIshandled.ID, tenantId, nil
+					}
 				}
 			}
 
-			return nil, nil
+			return nil, "", nil
 		}
 	}
 	return RecipeModule{
