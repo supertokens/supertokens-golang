@@ -158,6 +158,85 @@ func TestSignInAPIworksWithValidInput(t *testing.T) {
 	assert.Equal(t, signupUserInfo["timejoined"], signInUserInfo["timejoined"])
 }
 
+func TestSignInAPIworksWithValidInputAndTenantIdInPath(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	res, err := unittesting.SignupRequestWithTenantId("public", "random@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	dataInBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	res.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 200, res.StatusCode)
+	assert.Equal(t, "OK", data["status"])
+
+	signupUserInfo := data["user"].(map[string]interface{})
+
+	res1, err := unittesting.SignInRequestWithTenantId("public", "random@gmail.com", "validpass123", testServer.URL)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+	dataInBytes1, err := io.ReadAll(res1.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	res1.Body.Close()
+
+	var data1 map[string]interface{}
+	err = json.Unmarshal(dataInBytes1, &data1)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 200, res1.StatusCode)
+	assert.Equal(t, "OK", data1["status"])
+
+	signInUserInfo := data1["user"].(map[string]interface{})
+
+	assert.Equal(t, signupUserInfo["id"], signInUserInfo["id"])
+	assert.Equal(t, signupUserInfo["email"], signInUserInfo["email"])
+	assert.Equal(t, signupUserInfo["timejoined"], signInUserInfo["timejoined"])
+}
+
 func TestSigninAPIthrowsAnErrorWhenEmailDoesNotMatch(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{

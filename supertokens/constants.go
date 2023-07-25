@@ -28,3 +28,5 @@ var (
 )
 
 const DashboardVersion = "0.6"
+
+const DefaultTenantId string = "public"

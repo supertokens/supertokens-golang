@@ -22,6 +22,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/search"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/constants"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -52,7 +53,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
-	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, r.getAPIIdIfCanHandleRequest, r.handleError, onSuperTokensAPIError)
+	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 	r.RecipeModule = recipeModuleInstance
 
 	return *r, nil
@@ -73,33 +74,198 @@ func recipeInit(config *dashboardmodels.TypeInput) supertokens.Recipe {
 }
 
 func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
-	return []supertokens.APIHandled{}, nil
-}
-
-func (r *Recipe) getAPIIdIfCanHandleRequest(path supertokens.NormalisedURLPath, method string) (*string, error) {
-	ok, err := isApiPath(path, r.RecipeModule.GetAppInfo())
+	dashboardAPI, err := supertokens.NewNormalisedURLPath(constants.DashboardAPI)
 	if err != nil {
 		return nil, err
 	}
-	if ok {
-		return getApiIdIfMatched(path, method)
-	}
-
-	dashboardAPIPath, err := supertokens.NewNormalisedURLPath(dashboardAPI)
+	signInAPI, err := supertokens.NewNormalisedURLPath(constants.SignInAPI)
 	if err != nil {
 		return nil, err
 	}
-	dashboardBundlePath := r.RecipeModule.GetAppInfo().APIBasePath.AppendPath(dashboardAPIPath)
-
-	if path.StartsWith(dashboardBundlePath) {
-		val := dashboardAPI
-		return &val, nil
+	signOutAPI, err := supertokens.NewNormalisedURLPath(constants.SignOutAPI)
+	if err != nil {
+		return nil, err
+	}
+	validateKeyAPI, err := supertokens.NewNormalisedURLPath(constants.ValidateKeyAPI)
+	if err != nil {
+		return nil, err
+	}
+	usersListGetAPI, err := supertokens.NewNormalisedURLPath(constants.UsersListGetAPI)
+	if err != nil {
+		return nil, err
+	}
+	usersCountAPI, err := supertokens.NewNormalisedURLPath(constants.UsersCountAPI)
+	if err != nil {
+		return nil, err
+	}
+	userAPI, err := supertokens.NewNormalisedURLPath(constants.UserAPI)
+	if err != nil {
+		return nil, err
+	}
+	userEmailVerifyAPI, err := supertokens.NewNormalisedURLPath(constants.UserEmailVerifyAPI)
+	if err != nil {
+		return nil, err
+	}
+	userMetaDataAPI, err := supertokens.NewNormalisedURLPath(constants.UserMetadataAPI)
+	if err != nil {
+		return nil, err
+	}
+	userSessionsAPI, err := supertokens.NewNormalisedURLPath(constants.UserSessionsAPI)
+	if err != nil {
+		return nil, err
+	}
+	userPasswordAPI, err := supertokens.NewNormalisedURLPath(constants.UserPasswordAPI)
+	if err != nil {
+		return nil, err
+	}
+	userEmailVerifyTokenAPI, err := supertokens.NewNormalisedURLPath(constants.UserEmailVerifyTokenAPI)
+	if err != nil {
+		return nil, err
+	}
+	searchTagsAPI, err := supertokens.NewNormalisedURLPath(constants.SearchTagsAPI)
+	if err != nil {
+		return nil, err
+	}
+	dashboardAnalyticsAPI, err := supertokens.NewNormalisedURLPath(constants.DashboardAnalyticsAPI)
+	if err != nil {
+		return nil, err
+	}
+	tenantsListAPI, err := supertokens.NewNormalisedURLPath(constants.TenantsListAPI)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
+	return []supertokens.APIHandled{
+		{
+			ID:                     constants.DashboardAPI,
+			PathWithoutAPIBasePath: dashboardAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.SignInAPI,
+			PathWithoutAPIBasePath: signInAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.SignOutAPI,
+			PathWithoutAPIBasePath: signOutAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.ValidateKeyAPI,
+			PathWithoutAPIBasePath: validateKeyAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UsersListGetAPI,
+			PathWithoutAPIBasePath: usersListGetAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UsersCountAPI,
+			PathWithoutAPIBasePath: usersCountAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserAPI,
+			PathWithoutAPIBasePath: userAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserAPI,
+			PathWithoutAPIBasePath: userAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserAPI,
+			PathWithoutAPIBasePath: userAPI,
+			Method:                 http.MethodPut,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserAPI,
+			PathWithoutAPIBasePath: userAPI,
+			Method:                 http.MethodDelete,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserEmailVerifyAPI,
+			PathWithoutAPIBasePath: userEmailVerifyAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserEmailVerifyAPI,
+			PathWithoutAPIBasePath: userEmailVerifyAPI,
+			Method:                 http.MethodPut,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserMetadataAPI,
+			PathWithoutAPIBasePath: userMetaDataAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserMetadataAPI,
+			PathWithoutAPIBasePath: userMetaDataAPI,
+			Method:                 http.MethodPut,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserSessionsAPI,
+			PathWithoutAPIBasePath: userSessionsAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserSessionsAPI,
+			PathWithoutAPIBasePath: userSessionsAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserPasswordAPI,
+			PathWithoutAPIBasePath: userPasswordAPI,
+			Method:                 http.MethodPut,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.UserEmailVerifyTokenAPI,
+			PathWithoutAPIBasePath: userEmailVerifyTokenAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.SearchTagsAPI,
+			PathWithoutAPIBasePath: searchTagsAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.DashboardAnalyticsAPI,
+			PathWithoutAPIBasePath: dashboardAnalyticsAPI,
+			Method:                 http.MethodPost,
+			Disabled:               false,
+		},
+		{
+			ID:                     constants.TenantsListAPI,
+			PathWithoutAPIBasePath: tenantsListAPI,
+			Method:                 http.MethodGet,
+			Disabled:               false,
+		},
+	}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
 	options := dashboardmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),

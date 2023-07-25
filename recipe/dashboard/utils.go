@@ -16,9 +16,6 @@
 package dashboard
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -60,94 +57,4 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) dashboardmod
 			},
 		},
 	}
-}
-
-func isApiPath(path supertokens.NormalisedURLPath, appInfo supertokens.NormalisedAppinfo) (bool, error) {
-	normalizedDashboardAPI, err := supertokens.NewNormalisedURLPath(dashboardAPI)
-	if err != nil {
-		return false, err
-	}
-	dashboardRecipeBasePath := appInfo.APIBasePath.AppendPath(normalizedDashboardAPI)
-	if !path.StartsWith(dashboardRecipeBasePath) {
-		return false, nil
-	}
-
-	pathWithoutDashboardPath := strings.Split(path.GetAsStringDangerous(), dashboardAPI)[1]
-	if len(pathWithoutDashboardPath) > 0 && pathWithoutDashboardPath[0] == '/' {
-		pathWithoutDashboardPath = pathWithoutDashboardPath[1:]
-	}
-
-	if strings.Split(pathWithoutDashboardPath, "/")[0] == "api" {
-		return true, nil
-	}
-	return false, nil
-}
-
-func getApiIdIfMatched(path supertokens.NormalisedURLPath, method string) (*string, error) {
-	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), validateKeyAPI) {
-		val := validateKeyAPI
-		return &val, nil
-	}
-
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), usersListGetAPI) {
-		val := usersListGetAPI
-		return &val, nil
-	}
-
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), usersCountAPI) {
-		val := usersCountAPI
-		return &val, nil
-	}
-
-	if (method == http.MethodGet || method == http.MethodPut || method == http.MethodDelete) && strings.HasSuffix(path.GetAsStringDangerous(), userAPI) {
-		val := userAPI
-		return &val, nil
-	}
-
-	if (method == http.MethodGet || method == http.MethodPut) && strings.HasSuffix(path.GetAsStringDangerous(), userEmailVerifyAPI) {
-		val := userEmailVerifyAPI
-		return &val, nil
-	}
-
-	if (method == http.MethodGet || method == http.MethodPost) && strings.HasSuffix(path.GetAsStringDangerous(), userSessionsAPI) {
-		val := userSessionsAPI
-		return &val, nil
-	}
-
-	if (method == http.MethodGet || method == http.MethodPut) && strings.HasSuffix(path.GetAsStringDangerous(), userMetaDataAPI) {
-		val := userMetaDataAPI
-		return &val, nil
-	}
-
-	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), userEmailVerifyTokenAPI) {
-		val := userEmailVerifyTokenAPI
-		return &val, nil
-	}
-
-	if method == http.MethodPut && strings.HasSuffix(path.GetAsStringDangerous(), userPasswordAPI) {
-		val := userPasswordAPI
-		return &val, nil
-	}
-
-	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), signInAPI) {
-		val := signInAPI
-		return &val, nil
-	}
-
-	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), signOutAPI) {
-		val := signOutAPI
-		return &val, nil
-	}
-
-	if method == http.MethodGet && strings.HasSuffix(path.GetAsStringDangerous(), searchTagsAPI) {
-		val := searchTagsAPI
-		return &val, nil
-	}
-
-	if method == http.MethodPost && strings.HasSuffix(path.GetAsStringDangerous(), dashboardAnalyticsAPI) {
-		val := dashboardAnalyticsAPI
-		return &val, nil
-	}
-
-	return nil, nil
 }

@@ -21,7 +21,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const DefaultTenantId string = "defaultTenantId"
+const DefaultTenantId string = "public"
 
 type TypeInput struct {
 	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)

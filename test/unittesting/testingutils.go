@@ -466,6 +466,36 @@ func SignupRequest(email string, password string, testUrl string) (*http.Respons
 	return resp, nil
 }
 
+func SignupRequestWithTenantId(tenantId string, email string, password string, testUrl string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+			{
+				"id":    "password",
+				"value": password,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+fmt.Sprintf("/auth/%s/signup", tenantId), "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func SignInRequest(email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {
@@ -487,6 +517,36 @@ func SignInRequest(email string, password string, testUrl string) (*http.Respons
 	}
 
 	resp, err := http.Post(testUrl+"/auth/signin", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
+func SignInRequestWithTenantId(tenantId string, email string, password string, testUrl string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+			{
+				"id":    "password",
+				"value": password,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	resp, err := http.Post(testUrl+fmt.Sprintf("/auth/%s/signin", tenantId), "application/json", bytes.NewBuffer(postBody))
 
 	if err != nil {
 		fmt.Println(err.Error())

@@ -169,21 +169,21 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	return apisHandled, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
-	ok, err := r.emailPasswordRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+	ok, _, err := r.emailPasswordRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 	if err != nil {
 		return err
 	}
 	if ok != nil {
-		return r.emailPasswordRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+		return r.emailPasswordRecipe.RecipeModule.HandleAPIRequest(id, tenantId, req, res, theirHandler, path, method)
 	}
 	if r.thirdPartyRecipe != nil {
-		ok, err := r.thirdPartyRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+		ok, _, err := r.thirdPartyRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
 		if err != nil {
 			return err
 		}
 		if ok != nil {
-			return r.thirdPartyRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+			return r.thirdPartyRecipe.RecipeModule.HandleAPIRequest(id, tenantId, req, res, theirHandler, path, method)
 		}
 	}
 	return errors.New("should not come here")
