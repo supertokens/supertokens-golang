@@ -30,6 +30,10 @@ func SetLogger(logger Logger) {
 }
 
 func LogNewDebugMessage(ctx UserContext, message string) {
+	if loggerClt == nil {
+		LogDebugMessage(message)
+		return
+	}
 	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
 	if exists {
 		reqID, ok := (*ctx)[RequestIDKey].(string)

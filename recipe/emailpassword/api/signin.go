@@ -42,7 +42,6 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 	userCtx := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-	supertokens.LogNewDebugMessage(userCtx, "test message from new logger")
 
 	result, err := (*apiImplementation.SignInPOST)(formFields, options, userCtx)
 	if err != nil {

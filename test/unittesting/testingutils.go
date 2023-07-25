@@ -495,6 +495,40 @@ func SignInRequest(email string, password string, testUrl string) (*http.Respons
 	return resp, nil
 }
 
+func SignInRequestWithRequestIDHeader(email string, password string, testUrl string, requestID string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+			{
+				"id":    "password",
+				"value": password,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", testUrl+"/auth/signin", bytes.NewBuffer(postBody))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("X-Request-ID", requestID)
+	resp, err := client.Do(req)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/user/email/verify/token", bytes.NewBuffer([]byte(userId)))
 	if err != nil {
