@@ -661,7 +661,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				if err != nil {
 					return
 				}
-				_, err = userroles.AddRoleToUser(sessionContainer.GetUserID(), role, &map[string]interface{}{})
+				_, err = userroles.AddRoleToUser("public", sessionContainer.GetUserID(), role, &map[string]interface{}{})
 				if err != nil {
 					return
 				}

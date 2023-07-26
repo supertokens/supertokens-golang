@@ -150,7 +150,7 @@ func TestShouldAddClaimsToSessionWithValues(t *testing.T) {
 	}
 
 	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	AddRoleToUser("public", "userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -205,7 +205,7 @@ func TestShouldValidateRoles(t *testing.T) {
 	}
 
 	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	AddRoleToUser("public", "userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -268,7 +268,7 @@ func TestShouldValidateRolesAfterRefetching(t *testing.T) {
 	}
 
 	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	AddRoleToUser("public", "userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -329,7 +329,7 @@ func TestShouldValidatePermissions(t *testing.T) {
 	}
 
 	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	AddRoleToUser("public", "userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
@@ -393,7 +393,7 @@ func TestShouldValidatePermissionsAfterRefetching(t *testing.T) {
 	}
 
 	CreateNewRoleOrAddPermissions("test", []string{"a", "b"}, &map[string]interface{}{})
-	AddRoleToUser("userId", "test", &map[string]interface{}{})
+	AddRoleToUser("public", "userId", "test", &map[string]interface{}{})
 
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
