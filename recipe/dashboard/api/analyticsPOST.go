@@ -3,9 +3,10 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"net/http"
 )
 
 type analyticsPostResponse struct {
@@ -17,7 +18,7 @@ type analyticsPostRequestBody struct {
 	DashboardVersion *string `json:"dashboardVersion"`
 }
 
-func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (analyticsPostResponse, error) {
+func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (analyticsPostResponse, error) {
 	supertokensInstance, instanceError := supertokens.GetInstanceOrThrowError()
 
 	if supertokens.IsRunningInTestMode() {

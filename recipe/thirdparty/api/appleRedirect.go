@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.AppleRedirectHandlerPOST == nil || (*apiImplementation.AppleRedirectHandlerPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -37,5 +37,5 @@ func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmod
 		formPostInfoFromProvider[key] = value[0]
 	}
 
-	return (*apiImplementation.AppleRedirectHandlerPOST)(formPostInfoFromProvider, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	return (*apiImplementation.AppleRedirectHandlerPOST)(formPostInfoFromProvider, options, userContext)
 }

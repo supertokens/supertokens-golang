@@ -138,6 +138,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dw := MakeDoneWriter(w)
+		userContext := MakeDefaultUserContextFromAPI(r)
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
 			err = s.errorHandler(err, r, dw)
@@ -177,7 +178,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			LogDebugMessage("middleware: Matched with recipe ID: " + matchedRecipe.GetRecipeID())
 
-			id, tenantId, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
+			id, tenantId, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 
 			if err != nil {
 				err = s.errorHandler(err, r, dw)
@@ -195,7 +196,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 
-			apiErr := matchedRecipe.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method)
+			apiErr := matchedRecipe.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 			if apiErr != nil {
 				apiErr = s.errorHandler(apiErr, r, dw)
 				if apiErr != nil && !dw.IsDone() {
@@ -206,7 +207,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			LogDebugMessage("middleware: Ended")
 		} else {
 			for _, recipeModule := range s.RecipeModules {
-				id, tenantId, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+				id, tenantId, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 				LogDebugMessage("middleware: Checking recipe ID for match: " + recipeModule.GetRecipeID())
 				if err != nil {
 					err = s.errorHandler(err, r, dw)
@@ -218,7 +219,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 				if id != nil {
 					LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
-					err := recipeModule.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method)
+					err := recipeModule.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 					if err != nil {
 						err = s.errorHandler(err, r, dw)
 						if err != nil && !dw.IsDone() {

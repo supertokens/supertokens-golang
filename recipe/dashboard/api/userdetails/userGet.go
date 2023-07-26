@@ -28,7 +28,7 @@ type userGetResponse struct {
 	User     dashboardmodels.UserType `json:"user,omitempty"`
 }
 
-func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userGetResponse, error) {
+func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 	recipeId := req.URL.Query().Get("recipeId")
@@ -57,7 +57,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}, nil
 	}
 
-	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId)
+	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId, userContext)
 
 	if userForRecipeId == (dashboardmodels.UserType{}) {
 		return userGetResponse{
@@ -79,7 +79,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}, nil
 	}
 
-	metadata, metadataerr := usermetadata.GetUserMetadata(userId)
+	metadata, metadataerr := usermetadata.GetUserMetadataWithContext(userId, userContext)
 
 	if metadataerr != nil {
 		return userGetResponse{}, metadataerr

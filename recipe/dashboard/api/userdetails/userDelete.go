@@ -24,7 +24,7 @@ type userDeleteResponse struct {
 	Status string `json:"status"`
 }
 
-func UserDelete(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userDeleteResponse, error) {
+func UserDelete(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userDeleteResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 

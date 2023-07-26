@@ -25,7 +25,7 @@ type searchTagsResponse struct {
 	Tags   []interface{} `json:"tags"`
 }
 
-func SearchTagsGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (searchTagsResponse, error) {
+func SearchTagsGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (searchTagsResponse, error) {
 	querier, querierErr := supertokens.GetNewQuerierInstanceOrThrowError("dashboard")
 
 	if querierErr != nil {

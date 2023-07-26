@@ -98,7 +98,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	return []supertokens.APIHandled{}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	return errors.New("should never come here")
 }
 

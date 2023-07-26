@@ -265,7 +265,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	options := dashboardmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -276,66 +276,65 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		OtherHandler:         theirHandler,
 	}
 	if id == dashboardAPI {
-		return api.Dashboard(r.APIImpl, options)
+		return api.Dashboard(r.APIImpl, options, userContext)
 	} else if id == validateKeyAPI {
-		return api.ValidateKey(r.APIImpl, options)
+		return api.ValidateKey(r.APIImpl, options, userContext)
 	} else if id == signInAPI {
-		return api.SignInPost(r.APIImpl, options)
+		return api.SignInPost(r.APIImpl, options, userContext)
 	}
 
 	// Do API key validation for the remaining APIs
-	userContext := supertokens.MakeDefaultUserContextFromAPI(req)
 	return apiKeyProtector(r.APIImpl, options, userContext, func() (interface{}, error) {
 		if id == usersListGetAPI {
-			return api.UsersGet(r.APIImpl, options)
+			return api.UsersGet(r.APIImpl, options, userContext)
 		} else if id == usersCountAPI {
-			return api.UsersCountGet(r.APIImpl, options)
+			return api.UsersCountGet(r.APIImpl, options, userContext)
 		} else if id == userAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserGet(r.APIImpl, options)
+				return userdetails.UserGet(r.APIImpl, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserPut(r.APIImpl, options)
+				return userdetails.UserPut(r.APIImpl, options, userContext)
 			}
 
 			if req.Method == http.MethodDelete {
-				return userdetails.UserDelete(r.APIImpl, options)
+				return userdetails.UserDelete(r.APIImpl, options, userContext)
 			}
 		} else if id == userEmailVerifyAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserEmailVerifyGet(r.APIImpl, options)
+				return userdetails.UserEmailVerifyGet(r.APIImpl, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserEmailVerifyPut(r.APIImpl, options)
+				return userdetails.UserEmailVerifyPut(r.APIImpl, options, userContext)
 			}
 		} else if id == userSessionsAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserSessionsGet(r.APIImpl, options)
+				return userdetails.UserSessionsGet(r.APIImpl, options, userContext)
 			}
 
 			if req.Method == http.MethodPost {
-				return userdetails.UserSessionsRevoke(r.APIImpl, options)
+				return userdetails.UserSessionsRevoke(r.APIImpl, options, userContext)
 			}
 		} else if id == userMetaDataAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserMetaDataGet(r.APIImpl, options)
+				return userdetails.UserMetaDataGet(r.APIImpl, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserMetaDataPut(r.APIImpl, options)
+				return userdetails.UserMetaDataPut(r.APIImpl, options, userContext)
 			}
 		} else if id == userEmailVerifyTokenAPI {
-			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options)
+			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options, userContext)
 		} else if id == userPasswordAPI {
-			return userdetails.UserPasswordPut(r.APIImpl, options)
+			return userdetails.UserPasswordPut(r.APIImpl, options, userContext)
 		} else if id == searchTagsAPI {
-			return search.SearchTagsGet(r.APIImpl, options)
+			return search.SearchTagsGet(r.APIImpl, options, userContext)
 		} else if id == signOutAPI {
-			return api.SignOutPost(r.APIImpl, options)
+			return api.SignOutPost(r.APIImpl, options, userContext)
 		} else if id == dashboardAnalyticsAPI {
-			return api.AnalyticsPost(r.APIImpl, options)
+			return api.AnalyticsPost(r.APIImpl, options, userContext)
 		}
 		return nil, errors.New("should never come here")
 	})

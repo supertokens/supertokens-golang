@@ -20,13 +20,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface, options openidmodels.APIOptions) error {
+func GetOpenIdDiscoveryConfiguration(apiImplementation openidmodels.APIInterface, options openidmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.GetOpenIdDiscoveryConfigurationGET == nil || (*apiImplementation.GetOpenIdDiscoveryConfigurationGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
 
-	response, err := (*apiImplementation.GetOpenIdDiscoveryConfigurationGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.GetOpenIdDiscoveryConfigurationGET)(options, userContext)
 	if err != nil {
 		return err
 	}

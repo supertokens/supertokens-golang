@@ -23,14 +23,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
+func GenerateEmailVerifyToken(apiImplementation evmodels.APIInterface, options evmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.GenerateEmailVerifyTokenPOST == nil ||
 		(*apiImplementation.GenerateEmailVerifyTokenPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
-
-	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	sessionContainer, err := session.GetSessionWithContext(
 		options.Req, options.Res,

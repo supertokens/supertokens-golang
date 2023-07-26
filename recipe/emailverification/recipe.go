@@ -176,7 +176,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	options := evmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -189,9 +189,9 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		GetEmailForUserID:    r.GetEmailForUserID,
 	}
 	if id == generateEmailVerifyTokenAPI {
-		return api.GenerateEmailVerifyToken(r.APIImpl, options)
+		return api.GenerateEmailVerifyToken(r.APIImpl, options, userContext)
 	} else {
-		return api.EmailVerify(r.APIImpl, options)
+		return api.EmailVerify(r.APIImpl, options, userContext)
 	}
 }
 

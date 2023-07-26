@@ -7,6 +7,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func IsValidRecipeId(recipeId string) bool {
@@ -25,12 +26,12 @@ recipe so we need to check for both.
 
 If this function returns an empty user struct, it should be treated as if the user does not exist
 */
-func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.UserType, recipe string) {
+func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.UserContext) (user dashboardmodels.UserType, recipe string) {
 	var userToReturn dashboardmodels.UserType
 	var recipeToReturn string
 
 	if recipeId == emailpassword.RECIPE_ID {
-		response, error := emailpassword.GetUserByID(userId)
+		response, error := emailpassword.GetUserByIDWithContext(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -43,7 +44,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId)
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserByIdWithContext(userId, userContext)
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -56,7 +57,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			}
 		}
 	} else if recipeId == thirdparty.RECIPE_ID {
-		response, error := thirdparty.GetUserByID(userId)
+		response, error := thirdparty.GetUserByIDWithContext(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -71,7 +72,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId)
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserByIdWithContext(userId, userContext)
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -86,7 +87,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			}
 		}
 	} else if recipeId == passwordless.RECIPE_ID {
-		response, error := passwordless.GetUserByID(userId)
+		response, error := passwordless.GetUserByIDWithContext(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -104,7 +105,7 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId)
+			tppResponse, tppError := thirdpartypasswordless.GetUserByIDWithContext(userId, userContext)
 
 			if tppError == nil {
 				userToReturn.Id = tppResponse.ID

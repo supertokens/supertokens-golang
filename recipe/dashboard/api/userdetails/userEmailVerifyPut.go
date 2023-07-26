@@ -33,7 +33,7 @@ type userEmailVerifyPutRequestBody struct {
 	Verified *bool   `json:"verified"`
 }
 
-func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyPutResponse, error) {
+func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -59,7 +59,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 	}
 
 	if *readBody.Verified {
-		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(*readBody.UserID, nil)
+		tokenResponse, tokenErr := emailverification.CreateEmailVerificationTokenWithContext(*readBody.UserID, nil, userContext)
 
 		if tokenErr != nil {
 			return userEmailVerifyPutResponse{}, tokenErr
@@ -71,7 +71,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			}, nil
 		}
 
-		verifyResponse, verifyErr := emailverification.VerifyEmailUsingToken(tokenResponse.OK.Token)
+		verifyResponse, verifyErr := emailverification.VerifyEmailUsingTokenWithContext(tokenResponse.OK.Token, userContext)
 
 		if verifyErr != nil {
 			return userEmailVerifyPutResponse{}, verifyErr
@@ -82,7 +82,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			return userEmailVerifyPutResponse{}, errors.New("Should never come here")
 		}
 	} else {
-		_, unverifyErr := emailverification.UnverifyEmail(*readBody.UserID, nil)
+		_, unverifyErr := emailverification.UnverifyEmailWithContext(*readBody.UserID, nil, userContext)
 
 		if unverifyErr != nil {
 			return userEmailVerifyPutResponse{}, unverifyErr

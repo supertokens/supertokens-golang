@@ -30,7 +30,7 @@ type bodyParams struct {
 	OAuthTokens     *tpmodels.TypeOAuthTokens     `json:"oAuthTokens"`
 }
 
-func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.SignInUpPOST == nil || (*apiImplementation.SignInUpPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -67,8 +67,6 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 	} else {
 		return supertokens.BadInputError{Msg: "Please provide one of redirectURIInfo or oAuthTokens in the request body"}
 	}
-
-	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, clientType, "public", userContext) // TODO multitenancy pass tenantId
 	if err != nil {

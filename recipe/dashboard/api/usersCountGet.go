@@ -10,7 +10,7 @@ type usersCountGetResponse struct {
 	Count  float64 `json:"count"`
 }
 
-func UsersCountGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (usersCountGetResponse, error) {
+func UsersCountGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (usersCountGetResponse, error) {
 	count, err := supertokens.GetUserCount(nil)
 	if err != nil {
 		return usersCountGetResponse{}, err

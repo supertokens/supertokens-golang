@@ -55,7 +55,7 @@ type userPutRequestBody struct {
 	Phone     *string `json:"phone"`
 }
 
-func updateEmailForRecipeId(recipeId string, userId string, email string) (updateEmailResponse, error) {
+func updateEmailForRecipeId(recipeId string, userId string, email string, userContext supertokens.UserContext) (updateEmailResponse, error) {
 	if recipeId == "emailpassword" {
 		var emailField epmodels.NormalisedFormField
 
@@ -74,7 +74,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil)
+		updateResponse, err := emailpassword.UpdateEmailOrPasswordWithContext(userId, &email, nil, nil, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -113,7 +113,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil)
+		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPasswordWithContext(userId, &email, nil, nil, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -170,7 +170,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := passwordless.UpdateUser(userId, &email, nil)
+		updateResponse, updateErr := passwordless.UpdateUserWithContext(userId, &email, nil, userContext)
 
 		if updateErr != nil {
 			return updateEmailResponse{}, updateErr
@@ -227,7 +227,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, &email, nil)
+		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUserWithContext(userId, &email, nil, userContext)
 
 		if updateErr != nil {
 			return updateEmailResponse{}, updateErr
@@ -251,7 +251,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 	return updateEmailResponse{}, errors.New("Should never come here")
 }
 
-func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updatePhoneResponse, error) {
+func updatePhoneForRecipeId(recipeId string, userId string, phone string, userContext supertokens.UserContext) (updatePhoneResponse, error) {
 	if recipeId == "passwordless" {
 		isValidPhone := true
 		validationError := ""
@@ -288,7 +288,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := passwordless.UpdateUser(userId, nil, &phone)
+		updateResponse, updateErr := passwordless.UpdateUserWithContext(userId, nil, &phone, userContext)
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr
@@ -345,7 +345,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updat
 			}, nil
 		}
 
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, nil, &phone)
+		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUserWithContext(userId, nil, &phone, userContext)
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr
@@ -372,7 +372,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string) (updat
 	return updatePhoneResponse{}, errors.New("Should never come here")
 }
 
-func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userPutResponse, error) {
+func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -421,7 +421,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 		}
 	}
 
-	_, recipeId := api.GetUserForRecipeId(*readBody.UserId, *readBody.RecipeId)
+	_, recipeId := api.GetUserForRecipeId(*readBody.UserId, *readBody.RecipeId, userContext)
 
 	if *readBody.FirstName != "" || *readBody.LastName != "" {
 		isRecipeInitialised := false
@@ -444,12 +444,12 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 				metadataupdate["last_name"] = strings.TrimSpace(*readBody.LastName)
 			}
 
-			usermetadata.UpdateUserMetadata(*readBody.UserId, metadataupdate)
+			usermetadata.UpdateUserMetadataWithContext(*readBody.UserId, metadataupdate, userContext)
 		}
 	}
 
 	if strings.TrimSpace(*readBody.Email) != "" {
-		updateResponse, updateError := updateEmailForRecipeId(recipeId, *readBody.UserId, strings.TrimSpace(*readBody.Email))
+		updateResponse, updateError := updateEmailForRecipeId(recipeId, *readBody.UserId, strings.TrimSpace(*readBody.Email), userContext)
 
 		if updateError != nil {
 			return userPutResponse{}, updateError
@@ -464,7 +464,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 	}
 
 	if strings.TrimSpace(*readBody.Phone) != "" {
-		updateResponse, updateError := updatePhoneForRecipeId(recipeId, *readBody.UserId, *readBody.Phone)
+		updateResponse, updateError := updatePhoneForRecipeId(recipeId, *readBody.UserId, *readBody.Phone, userContext)
 
 		if updateError != nil {
 			return userPutResponse{}, updateError

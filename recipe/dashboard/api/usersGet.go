@@ -32,7 +32,7 @@ type User struct {
 	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
 }
 
-func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (UsersGetResponse, error) {
+func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (UsersGetResponse, error) {
 	req := options.Req
 	limitStr := req.URL.Query().Get("limit")
 
@@ -120,7 +120,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 			User     map[string]interface{} `json:"user"`
 		}) {
 			defer processingGroup.Done()
-			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string))
+			userMetadataResponse, err := usermetadata.GetUserMetadataWithContext(userObj.User["id"].(string), userContext)
 			<-sem
 			if err != nil {
 				errInBackground = err
