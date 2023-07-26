@@ -52,7 +52,7 @@ func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, options dashb
 		}
 	}
 
-	session.RevokeMultipleSessionsWithContext(*sessionHandles, userContext)
+	session.RevokeMultipleSessions(*sessionHandles, userContext)
 
 	return userSessionsPostResponse{
 		Status: "OK",

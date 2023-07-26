@@ -44,7 +44,7 @@ func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}, nil
 	}
 
-	metadata, err := usermetadata.GetUserMetadataWithContext(userId, userContext)
+	metadata, err := usermetadata.GetUserMetadata(userId, userContext)
 
 	if err != nil {
 		return userMetaDataGetResponse{}, err

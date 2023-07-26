@@ -79,7 +79,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}, nil
 	}
 
-	metadata, metadataerr := usermetadata.GetUserMetadataWithContext(userId, userContext)
+	metadata, metadataerr := usermetadata.GetUserMetadata(userId, userContext)
 
 	if metadataerr != nil {
 		return userGetResponse{}, metadataerr

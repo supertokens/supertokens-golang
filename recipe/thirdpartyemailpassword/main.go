@@ -28,136 +28,125 @@ func Init(config *tpepmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
+func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string, userContext ...supertokens.UserContext) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ThirdPartyManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext[0])
 }
 
-func ThirdPartyGetProviderWithContext(tenantId string, thirdPartyID string, clientType *string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
+func ThirdPartyGetProvider(tenantId string, thirdPartyID string, clientType *string, userContext ...supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, clientType, tenantId, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ThirdPartyGetProvider)(thirdPartyID, clientType, tenantId, userContext[0])
 }
 
-func GetUserByThirdPartyInfoWithContext(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string, userContext ...supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext[0])
 }
 
-func EmailPasswordSignUpWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
+func EmailPasswordSignUp(email, password string, userContext ...supertokens.UserContext) (tpepmodels.SignUpResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignUpResponse{}, err
 	}
-	return (*instance.RecipeImpl.EmailPasswordSignUp)(email, password, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.EmailPasswordSignUp)(email, password, userContext[0])
 }
 
-func EmailPasswordSignInWithContext(email, password string, userContext supertokens.UserContext) (tpepmodels.SignInResponse, error) {
+func EmailPasswordSignIn(email, password string, userContext ...supertokens.UserContext) (tpepmodels.SignInResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpepmodels.SignInResponse{}, err
 	}
-	return (*instance.RecipeImpl.EmailPasswordSignIn)(email, password, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.EmailPasswordSignIn)(email, password, userContext[0])
 }
 
-func GetUserByIdWithContext(userID string, userContext supertokens.UserContext) (*tpepmodels.User, error) {
+func GetUserById(userID string, userContext ...supertokens.UserContext) (*tpepmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByID)(userID, userContext[0])
 }
 
-func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpepmodels.User, error) {
+func GetUsersByEmail(email string, userContext ...supertokens.UserContext) ([]tpepmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext[0])
 }
 
-func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+func CreateResetPasswordToken(userID string, userContext ...supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, userContext[0])
 }
 
-func ResetPasswordUsingTokenWithContext(token, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+func ResetPasswordUsingToken(token, newPassword string, userContext ...supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, err
 	}
-	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext[0])
 }
 
-func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool, userContext ...supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, err
 	}
-	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, userContext[0])
 }
 
-func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+func SendEmail(input emaildelivery.EmailType, userContext ...supertokens.UserContext) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
-}
-
-func ThirdPartyManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpepmodels.ManuallyCreateOrUpdateUserResponse, error) {
-	return ThirdPartyManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
-}
-
-func ThirdPartyGetProvider(tenantId string, thirdPartyID string, clientType *string) (*tpmodels.TypeProvider, error) {
-	return ThirdPartyGetProviderWithContext(tenantId, thirdPartyID, clientType, &map[string]interface{}{})
-}
-
-func GetUserByThirdPartyInfo(thirdPartyID string, thirdPartyUserID string) (*tpepmodels.User, error) {
-	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
-}
-
-func EmailPasswordSignUp(email, password string) (tpepmodels.SignUpResponse, error) {
-	return EmailPasswordSignUpWithContext(email, password, &map[string]interface{}{})
-}
-
-func EmailPasswordSignIn(email, password string) (tpepmodels.SignInResponse, error) {
-	return EmailPasswordSignInWithContext(email, password, &map[string]interface{}{})
-}
-
-func GetUserById(userID string) (*tpepmodels.User, error) {
-	return GetUserByIdWithContext(userID, &map[string]interface{}{})
-}
-
-func GetUsersByEmail(email string) ([]tpepmodels.User, error) {
-	return GetUsersByEmailWithContext(email, &map[string]interface{}{})
-}
-
-func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
-	return CreateResetPasswordTokenWithContext(userID, &map[string]interface{}{})
-}
-
-func ResetPasswordUsingToken(token, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
-	return ResetPasswordUsingTokenWithContext(token, newPassword, &map[string]interface{}{})
-}
-
-func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool) (epmodels.UpdateEmailOrPasswordResponse, error) {
-	return UpdateEmailOrPasswordWithContext(userId, email, password, applyPasswordPolicy, &map[string]interface{}{})
-}
-
-func SendEmail(input emaildelivery.EmailType) error {
-	return SendEmailWithContext(input, &map[string]interface{}{})
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext[0])
 }
 
 func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {

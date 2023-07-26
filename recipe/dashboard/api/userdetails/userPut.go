@@ -74,7 +74,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}, nil
 		}
 
-		updateResponse, err := emailpassword.UpdateEmailOrPasswordWithContext(userId, &email, nil, nil, userContext)
+		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -113,7 +113,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}, nil
 		}
 
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPasswordWithContext(userId, &email, nil, nil, userContext)
+		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -170,7 +170,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}, nil
 		}
 
-		updateResponse, updateErr := passwordless.UpdateUserWithContext(userId, &email, nil, userContext)
+		updateResponse, updateErr := passwordless.UpdateUser(userId, &email, nil, userContext)
 
 		if updateErr != nil {
 			return updateEmailResponse{}, updateErr
@@ -227,7 +227,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}, nil
 		}
 
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUserWithContext(userId, &email, nil, userContext)
+		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, &email, nil, userContext)
 
 		if updateErr != nil {
 			return updateEmailResponse{}, updateErr
@@ -288,7 +288,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, userCo
 			}, nil
 		}
 
-		updateResponse, updateErr := passwordless.UpdateUserWithContext(userId, nil, &phone, userContext)
+		updateResponse, updateErr := passwordless.UpdateUser(userId, nil, &phone, userContext)
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr
@@ -345,7 +345,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, userCo
 			}, nil
 		}
 
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUserWithContext(userId, nil, &phone, userContext)
+		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, nil, &phone, userContext)
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr
@@ -444,7 +444,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.
 				metadataupdate["last_name"] = strings.TrimSpace(*readBody.LastName)
 			}
 
-			usermetadata.UpdateUserMetadataWithContext(*readBody.UserId, metadataupdate, userContext)
+			usermetadata.UpdateUserMetadata(*readBody.UserId, metadataupdate, userContext)
 		}
 	}
 

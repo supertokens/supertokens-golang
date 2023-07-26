@@ -24,82 +24,109 @@ func Init(config *userrolesmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func AddRoleToUser(userID string, role string, userContext supertokens.UserContext) (userrolesmodels.AddRoleToUserResponse, error) {
+func AddRoleToUser(userID string, role string, userContext ...supertokens.UserContext) (userrolesmodels.AddRoleToUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.AddRoleToUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.AddRoleToUser)(userID, role, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.AddRoleToUser)(userID, role, userContext[0])
 }
 
-func RemoveUserRole(userID string, role string, userContext supertokens.UserContext) (userrolesmodels.RemoveUserRoleResponse, error) {
+func RemoveUserRole(userID string, role string, userContext ...supertokens.UserContext) (userrolesmodels.RemoveUserRoleResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.RemoveUserRoleResponse{}, err
 	}
-	return (*instance.RecipeImpl.RemoveUserRole)(userID, role, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.RemoveUserRole)(userID, role, userContext[0])
 }
 
-func GetRolesForUser(userID string, userContext supertokens.UserContext) (userrolesmodels.GetRolesForUserResponse, error) {
+func GetRolesForUser(userID string, userContext ...supertokens.UserContext) (userrolesmodels.GetRolesForUserResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.GetRolesForUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetRolesForUser)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetRolesForUser)(userID, userContext[0])
 }
 
-func GetUsersThatHaveRole(role string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
+func GetUsersThatHaveRole(role string, userContext ...supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.GetUsersThatHaveRoleResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetUsersThatHaveRole)(role, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUsersThatHaveRole)(role, userContext[0])
 }
 
-func CreateNewRoleOrAddPermissions(role string, permissions []string, userContext supertokens.UserContext) (userrolesmodels.CreateNewRoleOrAddPermissionsResponse, error) {
+func CreateNewRoleOrAddPermissions(role string, permissions []string, userContext ...supertokens.UserContext) (userrolesmodels.CreateNewRoleOrAddPermissionsResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.CreateNewRoleOrAddPermissionsResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateNewRoleOrAddPermissions)(role, permissions, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateNewRoleOrAddPermissions)(role, permissions, userContext[0])
 }
 
-func GetPermissionsForRole(role string, userContext supertokens.UserContext) (userrolesmodels.GetPermissionsForRoleResponse, error) {
+func GetPermissionsForRole(role string, userContext ...supertokens.UserContext) (userrolesmodels.GetPermissionsForRoleResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.GetPermissionsForRoleResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetPermissionsForRole)(role, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetPermissionsForRole)(role, userContext[0])
 }
 
-func RemovePermissionsFromRole(role string, permissions []string, userContext supertokens.UserContext) (userrolesmodels.RemovePermissionsFromRoleResponse, error) {
+func RemovePermissionsFromRole(role string, permissions []string, userContext ...supertokens.UserContext) (userrolesmodels.RemovePermissionsFromRoleResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.RemovePermissionsFromRoleResponse{}, err
 	}
-	return (*instance.RecipeImpl.RemovePermissionsFromRole)(role, permissions, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.RemovePermissionsFromRole)(role, permissions, userContext[0])
 }
 
-func GetRolesThatHavePermission(permission string, userContext supertokens.UserContext) (userrolesmodels.GetRolesThatHavePermissionResponse, error) {
+func GetRolesThatHavePermission(permission string, userContext ...supertokens.UserContext) (userrolesmodels.GetRolesThatHavePermissionResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.GetRolesThatHavePermissionResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetRolesThatHavePermission)(permission, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetRolesThatHavePermission)(permission, userContext[0])
 }
 
-func DeleteRole(role string, userContext supertokens.UserContext) (userrolesmodels.DeleteRoleResponse, error) {
+func DeleteRole(role string, userContext ...supertokens.UserContext) (userrolesmodels.DeleteRoleResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.DeleteRoleResponse{}, err
 	}
-	return (*instance.RecipeImpl.DeleteRole)(role, userContext)
+	return (*instance.RecipeImpl.DeleteRole)(role, userContext[0])
 }
 
-func GetAllRoles(userContext supertokens.UserContext) (userrolesmodels.GetAllRolesResponse, error) {
+func GetAllRoles(userContext ...supertokens.UserContext) (userrolesmodels.GetAllRolesResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return userrolesmodels.GetAllRolesResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetAllRoles)(userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetAllRoles)(userContext[0])
 }

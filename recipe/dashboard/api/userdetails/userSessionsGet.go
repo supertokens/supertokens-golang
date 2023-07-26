@@ -47,7 +47,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 	}
 
-	response, err := session.GetAllSessionHandlesForUserWithContext(userId, userContext)
+	response, err := session.GetAllSessionHandlesForUser(userId, userContext)
 
 	if err != nil {
 		return userSessionsGetResponse{}, err
@@ -65,7 +65,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 
 		go func(i int, handle string) {
-			sessionResponse, sessionError := session.GetSessionInformationWithContext(handle, userContext)
+			sessionResponse, sessionError := session.GetSessionInformation(handle, userContext)
 
 			if sessionError != nil {
 				errInBackground = sessionError

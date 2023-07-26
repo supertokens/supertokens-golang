@@ -100,7 +100,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			}, nil
 		}
 
-		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordTokenWithContext(*readBody.UserId, userContext)
+		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(*readBody.UserId, userContext)
 
 		if resetTokenErr != nil {
 			return userPasswordPutResponse{}, resetTokenErr
@@ -111,7 +111,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			return userPasswordPutResponse{}, errors.New("Should never come here")
 		}
 
-		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingTokenWithContext(passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
+		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
 
 		if passwordResetErr != nil {
 			return userPasswordPutResponse{}, passwordResetErr
@@ -143,7 +143,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		}, nil
 	}
 
-	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordTokenWithContext(*readBody.UserId, userContext)
+	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordToken(*readBody.UserId, userContext)
 
 	if resetTokenErr != nil {
 		return userPasswordPutResponse{}, resetTokenErr
@@ -154,7 +154,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 
-	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingTokenWithContext(passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
+	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
 
 	if passwordResetErr != nil {
 		return userPasswordPutResponse{}, passwordResetErr

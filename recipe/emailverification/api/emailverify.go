@@ -37,7 +37,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 		}
 
 		sessionRequired := false
-		sessionContainer, err := session.GetSessionWithContext(
+		sessionContainer, err := session.GetSession(
 			options.Req, options.Res,
 			&sessmodels.VerifySessionOptions{
 				SessionRequired: &sessionRequired,
@@ -94,7 +94,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		sessionContainer, err := session.GetSessionWithContext(
+		sessionContainer, err := session.GetSession(
 			options.Req,
 			options.Res,
 			&sessmodels.VerifySessionOptions{

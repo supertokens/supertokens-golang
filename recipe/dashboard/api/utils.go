@@ -31,7 +31,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 	var recipeToReturn string
 
 	if recipeId == emailpassword.RECIPE_ID {
-		response, error := emailpassword.GetUserByIDWithContext(userId, userContext)
+		response, error := emailpassword.GetUserByID(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -44,7 +44,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserByIdWithContext(userId, userContext)
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -57,7 +57,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 			}
 		}
 	} else if recipeId == thirdparty.RECIPE_ID {
-		response, error := thirdparty.GetUserByIDWithContext(userId, userContext)
+		response, error := thirdparty.GetUserByID(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -72,7 +72,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserByIdWithContext(userId, userContext)
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -87,7 +87,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 			}
 		}
 	} else if recipeId == passwordless.RECIPE_ID {
-		response, error := passwordless.GetUserByIDWithContext(userId, userContext)
+		response, error := passwordless.GetUserByID(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -105,7 +105,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 		}
 
 		if userToReturn == (dashboardmodels.UserType{}) {
-			tppResponse, tppError := thirdpartypasswordless.GetUserByIDWithContext(userId, userContext)
+			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId, userContext)
 
 			if tppError == nil {
 				userToReturn.Id = tppResponse.ID
