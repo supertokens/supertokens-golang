@@ -101,6 +101,10 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.emailPasswordRecipe = emailPasswordInstance
 	}
 
+	r.GetEmailPasswordRecipe = func() *emailpassword.Recipe {
+		return r.emailPasswordRecipe
+	}
+
 	if len(verifiedConfig.Providers) > 0 {
 		if thirdPartyInstance == nil {
 			thirdPartyConfig := &tpmodels.TypeInput{
@@ -216,8 +220,4 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 
 func ResetForTest() {
 	singletonInstance = nil
-}
-
-func GetEmailPasswordRecipe(r *Recipe) *emailpassword.Recipe {
-	return r.emailPasswordRecipe
 }
