@@ -22,7 +22,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
+func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options epmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.GeneratePasswordResetTokenPOST == nil ||
 		(*apiImplementation.GeneratePasswordResetTokenPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
@@ -44,7 +44,7 @@ func GeneratePasswordResetToken(apiImplementation epmodels.APIInterface, options
 		return err
 	}
 
-	resp, err := (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	resp, err := (*apiImplementation.GeneratePasswordResetTokenPOST)(formFields, options, userContext)
 	if err != nil {
 		return err
 	}

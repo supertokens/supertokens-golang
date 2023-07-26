@@ -2,6 +2,7 @@ package api
 
 import (
 	"encoding/json"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -17,7 +18,7 @@ type signInRequestBody struct {
 	Password *string `json:"password"`
 }
 
-func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
+func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) error {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {

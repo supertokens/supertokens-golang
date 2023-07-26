@@ -24,10 +24,10 @@ import (
 type RecipeModule struct {
 	recipeID                      string
 	appInfo                       NormalisedAppinfo
-	HandleAPIRequest              func(ID string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error
+	HandleAPIRequest              func(ID string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string, userContext UserContext) error
 	GetAllCORSHeaders             func() []string
 	GetAPIsHandled                func() ([]APIHandled, error)
-	ReturnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, string, error)
+	ReturnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string, userContext UserContext) (*string, string, error)
 	HandleError                   func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
 	OnSuperTokensAPIError         func(err error, req *http.Request, res http.ResponseWriter)
 }
@@ -35,10 +35,10 @@ type RecipeModule struct {
 func MakeRecipeModule(
 	recipeId string,
 	appInfo NormalisedAppinfo,
-	handleAPIRequest func(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string) error,
+	handleAPIRequest func(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path NormalisedURLPath, method string, userContext UserContext) error,
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
-	returnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string) (*string, string, error),
+	returnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string, userContext UserContext) (*string, string, error),
 	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
 	onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
@@ -51,7 +51,7 @@ func MakeRecipeModule(
 	}
 
 	if returnAPIIdIfCanHandleRequest == nil {
-		returnAPIIdIfCanHandleRequest = func(path NormalisedURLPath, method string) (*string, string, error) {
+		returnAPIIdIfCanHandleRequest = func(path NormalisedURLPath, method string, userContext UserContext) (*string, string, error) {
 			apisHandled, err := getAPIsHandled()
 			if err != nil {
 				return nil, "", err

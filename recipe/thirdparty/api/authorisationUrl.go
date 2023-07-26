@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.AuthorisationUrlGET == nil || (*apiImplementation.AuthorisationUrlGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -38,8 +38,6 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 	if len(thirdPartyId) == 0 {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
-
-	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, clientType, "public", userContext) // TODO multitenancy pass tenantId
 	if err != nil {

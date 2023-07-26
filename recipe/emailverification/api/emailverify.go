@@ -27,7 +27,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions) error {
+func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions, userContext supertokens.UserContext) error {
 	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
 		if apiImplementation.VerifyEmailPOST == nil ||
@@ -36,9 +36,8 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 		sessionRequired := false
-		sessionContainer, err := session.GetSessionWithContext(
+		sessionContainer, err := session.GetSession(
 			options.Req, options.Res,
 			&sessmodels.VerifySessionOptions{
 				SessionRequired: &sessionRequired,
@@ -95,8 +94,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
-		sessionContainer, err := session.GetSessionWithContext(
+		sessionContainer, err := session.GetSession(
 			options.Req,
 			options.Res,
 			&sessmodels.VerifySessionOptions{

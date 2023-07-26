@@ -130,7 +130,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}), nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string, userContext supertokens.UserContext) error {
 	options := tpmodels.APIOptions{
 		Config:               r.Config,
 		OtherHandler:         theirHandler,
@@ -142,11 +142,11 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		AppInfo:              r.RecipeModule.GetAppInfo(),
 	}
 	if id == SignInUpAPI {
-		return api.SignInUpAPI(r.APIImpl, options)
+		return api.SignInUpAPI(r.APIImpl, options, userContext)
 	} else if id == AuthorisationAPI {
-		return api.AuthorisationUrlAPI(r.APIImpl, options)
+		return api.AuthorisationUrlAPI(r.APIImpl, options, userContext)
 	} else if id == AppleRedirectHandlerAPI {
-		return api.AppleRedirectHandler(r.APIImpl, options)
+		return api.AppleRedirectHandler(r.APIImpl, options, userContext)
 	}
 	return errors.New("should never come here")
 }

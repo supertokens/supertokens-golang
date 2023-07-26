@@ -16,9 +16,10 @@
 package sessmodels
 
 import (
-	"github.com/MicahParks/keyfunc"
 	"net/http"
 	"time"
+
+	"github.com/MicahParks/keyfunc"
 
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"

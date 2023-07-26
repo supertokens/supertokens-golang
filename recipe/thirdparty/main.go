@@ -24,62 +24,57 @@ func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func ManuallyCreateOrUpdateUserWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
+func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string, userContext ...supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.ManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, userContext[0])
 }
 
-func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+func GetUserByID(userID string, userContext ...supertokens.UserContext) (*tpmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByID)(userID, userContext[0])
 }
 
-func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
+func GetUsersByEmail(email string, userContext ...supertokens.UserContext) ([]tpmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return []tpmodels.User{}, err
 	}
-	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext[0])
 }
 
-func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string, userContext ...supertokens.UserContext) (*tpmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext[0])
 }
 
-func GetProviderWithContext(tenantId string, thirdPartyID string, clientType *string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
+func GetProvider(tenantId string, thirdPartyID string, clientType *string, userContext ...supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, clientType, tenantId, userContext)
-}
-
-func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
-	return ManuallyCreateOrUpdateUserWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
-}
-
-func GetUserByID(userID string) (*tpmodels.User, error) {
-	return GetUserByIDWithContext(userID, &map[string]interface{}{})
-}
-
-func GetUsersByEmail(email string) ([]tpmodels.User, error) {
-	return GetUsersByEmailWithContext(email, &map[string]interface{}{})
-}
-
-func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
-	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
-}
-
-func GetProvider(tenantId string, thirdPartyID string, clientType *string) (*tpmodels.TypeProvider, error) {
-	return GetProviderWithContext(tenantId, thirdPartyID, clientType, &map[string]interface{}{})
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, clientType, tenantId, userContext[0])
 }

@@ -25,38 +25,35 @@ func Init(config *openidmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer *uint64, userContext supertokens.UserContext, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext ...supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext[0])
 }
 
-func GetJWKSWithContext(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+func GetJWKS(userContext ...supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetJWKS)(userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetJWKS)(userContext[0])
 }
 
-func GetOpenIdDiscoveryConfigurationWithContext(userContext supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
+func GetOpenIdDiscoveryConfiguration(userContext ...supertokens.UserContext) (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return openidmodels.GetOpenIdDiscoveryConfigurationResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext)
-}
-
-func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
-	return CreateJWTWithContext(payload, validitySecondsPointer, &map[string]interface{}{}, useStaticSigningKey)
-}
-
-func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
-	return GetJWKSWithContext(&map[string]interface{}{})
-}
-
-func GetOpenIdDiscoveryConfiguration() (openidmodels.GetOpenIdDiscoveryConfigurationResponse, error) {
-	return GetOpenIdDiscoveryConfigurationWithContext(&map[string]interface{}{})
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetOpenIdDiscoveryConfiguration)(userContext[0])
 }

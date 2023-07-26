@@ -122,7 +122,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	options := multitenancymodels.APIOptions{
 		RecipeImplementation:      r.RecipeImpl,
 		Config:                    r.Config,
@@ -133,7 +133,7 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		StaticThirdPartyProviders: r.staticThirdPartyProviders,
 	}
 	if id == LoginMethodsAPI {
-		return api.LoginMethodsAPI(r.APIImpl, options)
+		return api.LoginMethodsAPI(r.APIImpl, options, userContext)
 	}
 	return errors.New("should never come here")
 }
@@ -166,4 +166,9 @@ func init() {
 
 	// Create multitenancy claims when the module is imported
 	multitenancyclaims.AllowedDomainsClaim, multitenancyclaims.AllowedDomainsClaimValidators = NewAllowedDomainsClaim()
+
+	supertokens.GetTenantIdFuncFromUsingMultitenancyRecipe = func(tenantIdFromFrontend string, userContext supertokens.UserContext) (string, error) {
+		mtRecipe := GetRecipeInstance()
+		return (*mtRecipe.RecipeImpl.GetTenantId)(tenantIdFromFrontend, userContext)
+	}
 }

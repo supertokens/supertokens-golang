@@ -28,7 +28,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 
 	getProvider := func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 
-		tenantConfig, err := multitenancy.GetTenantWithContext(tenantId, userContext)
+		tenantConfig, err := multitenancy.GetTenant(tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}

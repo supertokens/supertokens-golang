@@ -160,7 +160,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	options := plessmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -173,15 +173,15 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		SmsDelivery:          r.SmsDelivery,
 	}
 	if id == consumeCodeAPI {
-		return api.ConsumeCode(r.APIImpl, options)
+		return api.ConsumeCode(r.APIImpl, options, userContext)
 	} else if id == createCodeAPI {
-		return api.CreateCode(r.APIImpl, options)
+		return api.CreateCode(r.APIImpl, options, userContext)
 	} else if id == doesEmailExistAPI {
-		return api.DoesEmailExist(r.APIImpl, options)
+		return api.DoesEmailExist(r.APIImpl, options, userContext)
 	} else if id == doesPhoneNumberExistAPI {
-		return api.DoesPhoneNumberExist(r.APIImpl, options)
+		return api.DoesPhoneNumberExist(r.APIImpl, options, userContext)
 	} else {
-		return api.ResendCode(r.APIImpl, options)
+		return api.ResendCode(r.APIImpl, options, userContext)
 	}
 }
 

@@ -21,13 +21,11 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions) error {
+func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.SignOutPOST == nil || (*apiImplementation.SignOutPOST == nil) {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-
-	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
 	False := false
 	sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{

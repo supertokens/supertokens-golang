@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
+func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.EmailExistsGET == nil || (*apiImplementation.EmailExistsGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -29,7 +29,7 @@ func EmailExists(apiImplementation epmodels.APIInterface, options epmodels.APIOp
 	if email == "" {
 		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
 	}
-	result, err := (*apiImplementation.EmailExistsGET)(email, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.EmailExistsGET)(email, options, userContext)
 	if err != nil {
 		return err
 	}

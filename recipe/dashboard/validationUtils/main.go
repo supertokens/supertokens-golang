@@ -1,13 +1,14 @@
 package validationUtils
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"strings"
+
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ValidateApiKey(req *http.Request, config dashboardmodels.TypeNormalisedInput, usercontext supertokens.UserContext) (bool, error) {
+func ValidateApiKey(req *http.Request, config dashboardmodels.TypeNormalisedInput, userContext ...supertokens.UserContext) (bool, error) {
 	apiKeyHeaderValue := req.Header.Get("authorization")
 
 	// We receive the api key as `Bearer API_KEY`, this retrieves just the key

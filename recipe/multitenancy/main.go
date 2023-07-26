@@ -25,80 +25,69 @@ func Init(config *multitenancymodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateOrUpdateTenantWithContext(tenantId string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
+func CreateOrUpdateTenant(tenantId string, config multitenancymodels.TenantConfig, userContext ...supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.CreateOrUpdateTenantResponse{}, err
 	}
-
-	return (*instance.RecipeImpl.CreateOrUpdateTenant)(tenantId, config, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateOrUpdateTenant)(tenantId, config, userContext[0])
 }
 
-func DeleteTenantWithContext(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
+func DeleteTenant(tenantId string, userContext ...supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.DeleteTenantResponse{}, err
 	}
-
-	return (*instance.RecipeImpl.DeleteTenant)(tenantId, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.DeleteTenant)(tenantId, userContext[0])
 }
 
-func GetTenantWithContext(tenantId string, userContext supertokens.UserContext) (*multitenancymodels.Tenant, error) {
+func GetTenant(tenantId string, userContext ...supertokens.UserContext) (*multitenancymodels.Tenant, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-
-	return (*instance.RecipeImpl.GetTenant)(tenantId, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetTenant)(tenantId, userContext[0])
 }
 
-func ListAllTenantsWithContext(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
+func ListAllTenants(userContext ...supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.ListAllTenantsResponse{}, err
 	}
-
-	return (*instance.RecipeImpl.ListAllTenants)(userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ListAllTenants)(userContext[0])
 }
 
 // Third party provider management
-func CreateOrUpdateThirdPartyConfigWithContext(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+func CreateOrUpdateThirdPartyConfig(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext ...supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateOrUpdateThirdPartyConfig)(tenantId, config, skipValidation, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateOrUpdateThirdPartyConfig)(tenantId, config, skipValidation, userContext[0])
 }
 
-func DeleteThirdPartyConfigWithContext(tenantId string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
+func DeleteThirdPartyConfig(tenantId string, thirdPartyId string, userContext ...supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.DeleteThirdPartyConfigResponse{}, err
 	}
-	return (*instance.RecipeImpl.DeleteThirdPartyConfig)(tenantId, thirdPartyId, userContext)
-}
-
-func CreateOrUpdateTenant(tenantId string, config multitenancymodels.TenantConfig) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
-	return CreateOrUpdateTenantWithContext(tenantId, config, &map[string]interface{}{})
-}
-
-func DeleteTenant(tenantId string) (multitenancymodels.DeleteTenantResponse, error) {
-	return DeleteTenantWithContext(tenantId, &map[string]interface{}{})
-}
-
-func GetTenant(tenantId string) (*multitenancymodels.Tenant, error) {
-	return GetTenantWithContext(tenantId, &map[string]interface{}{})
-}
-
-func ListAllTenants() (multitenancymodels.ListAllTenantsResponse, error) {
-	return ListAllTenantsWithContext(&map[string]interface{}{})
-}
-
-// Third party provider management
-func CreateOrUpdateThirdPartyConfig(tenantId string, config tpmodels.ProviderConfig, skipValidation bool) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
-	return CreateOrUpdateThirdPartyConfigWithContext(tenantId, config, skipValidation, &map[string]interface{}{})
-}
-
-func DeleteThirdPartyConfig(tenantId string, thirdPartyId string) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
-	return DeleteThirdPartyConfigWithContext(tenantId, thirdPartyId, &map[string]interface{}{})
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.DeleteThirdPartyConfig)(tenantId, thirdPartyId, userContext[0])
 }

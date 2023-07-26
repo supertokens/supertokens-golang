@@ -20,12 +20,12 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func HandleRefreshAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions) error {
+func HandleRefreshAPI(apiImplementation sessmodels.APIInterface, options sessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.RefreshPOST == nil || (*apiImplementation.RefreshPOST) == nil {
 		options.OtherHandler.ServeHTTP(options.Res, options.Req)
 		return nil
 	}
-	_, err := (*apiImplementation.RefreshPOST)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	_, err := (*apiImplementation.RefreshPOST)(options, userContext)
 	if err != nil {
 		return err
 	}
