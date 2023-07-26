@@ -56,12 +56,12 @@ func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, u
 	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
 }
 
-func GetProviderWithContext(thirdPartyID string, tenantId *string, clientType *string, userContext supertokens.UserContext) (tpmodels.GetProviderResponse, error) {
+func GetProviderWithContext(tenantId string, thirdPartyID string, clientType *string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpmodels.GetProviderResponse{}, err
+		return nil, err
 	}
-	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, tenantId, clientType, userContext)
+	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, clientType, tenantId, userContext)
 }
 
 func ManuallyCreateOrUpdateUser(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
@@ -80,6 +80,6 @@ func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.U
 	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
 }
 
-func GetProvider(thirdPartyID string, tenantId *string, clientType *string) (tpmodels.GetProviderResponse, error) {
-	return GetProviderWithContext(thirdPartyID, tenantId, clientType, &map[string]interface{}{})
+func GetProvider(tenantId string, thirdPartyID string, clientType *string) (*tpmodels.TypeProvider, error) {
+	return GetProviderWithContext(tenantId, thirdPartyID, clientType, &map[string]interface{}{})
 }

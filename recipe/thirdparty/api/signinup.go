@@ -18,9 +18,6 @@ package api
 import (
 	"encoding/json"
 
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -54,11 +51,6 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		clientType = &bodyParams.ClientType
 	}
 
-	var tenantId *string = nil
-	if bodyParams.TenantId != "" {
-		tenantId = &bodyParams.TenantId
-	}
-
 	if bodyParams.ThirdPartyId == "" {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId in request body"}
 	}
@@ -78,32 +70,16 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 
 	userContext := supertokens.MakeDefaultUserContextFromAPI(options.Req)
 
-	mtRecipe, err := multitenancy.GetRecipeInstanceOrThrowError()
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, clientType, "public", userContext) // TODO multitenancy pass tenantId
 	if err != nil {
 		return err
 	}
 
-	tenantId, err = (*mtRecipe.RecipeImpl.GetTenantId)(tenantId, userContext)
-	if err != nil {
-		return err
-	}
+	provider := providerResponse
 
-	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, tenantId, clientType, userContext)
-	if err != nil {
-		return err
+	if provider == nil {
+		return supertokens.BadInputError{Msg: "the provider " + bodyParams.ThirdPartyId + " could not be found in the configuration"}
 	}
-
-	if !providerResponse.OK.ThirdPartyEnabled {
-		msg := "Thirdparty recipe is disabled for the "
-		if tenantId == nil || *tenantId == multitenancymodels.DefaultTenantId {
-			msg += "default tenant"
-		} else {
-			msg += "tenant: " + *tenantId
-		}
-		return mterrors.RecipeDisabledForTenantError{Msg: msg}
-	}
-
-	provider := providerResponse.OK.Provider
 
 	result, err := (*apiImplementation.SignInUpPOST)(provider, input, options, userContext)
 

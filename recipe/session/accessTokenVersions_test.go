@@ -5,10 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
-	"github.com/supertokens/supertokens-golang/test/unittesting"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,6 +12,11 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestShouldCreateAV3Token(t *testing.T) {

@@ -11,22 +11,26 @@ import (
 
 func MakeAPIImplementation() multitenancymodels.APIInterface {
 
-	loginMethodsAPI := func(tenantId *string, clientType *string, options multitenancymodels.APIOptions, userContext supertokens.UserContext) (multitenancymodels.LoginMethodsGETResponse, error) {
+	loginMethodsAPI := func(tenantId string, clientType *string, options multitenancymodels.APIOptions, userContext supertokens.UserContext) (multitenancymodels.LoginMethodsGETResponse, error) {
 
-		tenantConfigResponse, err := (*options.RecipeImplementation.GetTenantConfig)(tenantId, userContext)
+		tenantConfigResponse, err := (*options.RecipeImplementation.GetTenant)(tenantId, userContext)
 		if err != nil {
 			return multitenancymodels.LoginMethodsGETResponse{}, err
 		}
 
-		providerInputsFromStatic := options.StaticThirdPartyProviders
-		providerConfigsFromCore := tenantConfigResponse.OK.ThirdParty.Providers
+		if tenantConfigResponse == nil {
+			return multitenancymodels.LoginMethodsGETResponse{}, errors.New("tenant not found")
+		}
 
-		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantId, providerConfigsFromCore, providerInputsFromStatic)
+		providerInputsFromStatic := options.StaticThirdPartyProviders
+		providerConfigsFromCore := tenantConfigResponse.ThirdParty.Providers
+
+		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(providerConfigsFromCore, providerInputsFromStatic)
 
 		var finalProviderList []multitenancymodels.TypeThirdPartyProvider
 
 		for _, providerInput := range mergedProviders {
-			providerInstance, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, providerInput.Config.ThirdPartyId, tenantId, clientType, userContext)
+			providerInstance, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, providerInput.Config.ThirdPartyId, clientType, userContext)
 			if err != nil {
 				if errors.As(err, &tperrors.ClientTypeNotFoundError{}) {
 					continue // Skip as the clientType is missing for the particular provider
@@ -42,13 +46,13 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 		result := multitenancymodels.LoginMethodsGETResponse{
 			OK: &multitenancymodels.TypeLoginMethods{
 				EmailPassword: multitenancymodels.TypeEmailPassword{
-					Enabled: tenantConfigResponse.OK.EmailPassword.Enabled,
+					Enabled: tenantConfigResponse.EmailPassword.Enabled,
 				},
 				Passwordless: multitenancymodels.TypePasswordless{
-					Enabled: tenantConfigResponse.OK.Passwordless.Enabled,
+					Enabled: tenantConfigResponse.Passwordless.Enabled,
 				},
 				ThirdParty: multitenancymodels.TypeThirdParty{
-					Enabled:   tenantConfigResponse.OK.ThirdParty.Enabled,
+					Enabled:   tenantConfigResponse.ThirdParty.Enabled,
 					Providers: finalProviderList,
 				},
 			},

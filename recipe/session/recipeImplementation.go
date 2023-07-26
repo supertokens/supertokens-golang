@@ -20,14 +20,16 @@ import (
 	"encoding/json"
 	defaultErrors "errors"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/MicahParks/keyfunc"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"reflect"
-	"sync"
-	"time"
 )
 
 var protectedProps = []string{
@@ -38,6 +40,7 @@ var protectedProps = []string{
 	"parentRefreshTokenHash1",
 	"refreshTokenHash1",
 	"antiCsrfToken",
+	"tId",
 }
 
 var JWKCacheMaxAgeInMs int64 = 60000
@@ -126,7 +129,8 @@ func getJWKS() (*keyfunc.JWKS, error) {
 	return nil, lastError
 }
 
-/**
+/*
+*
 This function fetches all JWKs from the first available core instance. This combines the other JWKS functions to become
 error resistant.
 
@@ -382,7 +386,11 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			if claim != nil && validator.ShouldRefetch != nil {
 				if validator.ShouldRefetch(accessTokenPayload, userContext) {
 					supertokens.LogDebugMessage("updateClaimsInPayloadIfNeeded refetching " + validator.ID)
-					value, err := claim.FetchValue(userId, userContext)
+					tenantId, ok := accessTokenPayload["tId"].(string)
+					if !ok {
+						tenantId = multitenancymodels.DefaultTenantId
+					}
+					value, err := claim.FetchValue(userId, tenantId, userContext)
 					if err != nil {
 						return sessmodels.ValidateClaimsResult{}, err
 					}
@@ -427,7 +435,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if sessionInfo == nil {
 			return false, nil
 		}
-		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, nil, userContext)
+		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, "public", nil, userContext) // TODO multitenancy update tenantId from session
 		if err != nil {
 			return false, err
 		}

@@ -333,3 +333,24 @@ func DoesSliceContainString(a string, list []string) bool {
 	}
 	return false
 }
+
+func MapToStruct(val map[string]interface{}, v interface{}) error {
+	b, err := json.Marshal(val)
+	if err != nil {
+		return err
+	}
+	return json.Unmarshal(b, v)
+}
+
+func StructToMap(val interface{}) (map[string]interface{}, error) {
+	b, err := json.Marshal(val)
+	if err != nil {
+		return nil, err
+	}
+	var i map[string]interface{}
+	err = json.Unmarshal(b, &i)
+	if err != nil {
+		return nil, err
+	}
+	return i, nil
+}

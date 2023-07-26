@@ -20,7 +20,6 @@ import (
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/api"
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy/mterrors"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancyclaims"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -37,7 +36,7 @@ type Recipe struct {
 	APIImpl                   multitenancymodels.APIInterface
 	staticThirdPartyProviders []tpmodels.ProviderInput
 
-	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 }
 
 var singletonInstance *Recipe
@@ -144,11 +143,6 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	if errors.As(err, &mterrors.TenantDoesNotExistError{}) {
-		return true, r.Config.ErrorHandlers.OnTenantDoesNotExistError(err, req, res)
-	} else if errors.As(err, &mterrors.RecipeDisabledForTenantError{}) {
-		return true, r.Config.ErrorHandlers.OnRecipeDisabledForTenantError(err, req, res)
-	}
 	return false, nil
 }
 

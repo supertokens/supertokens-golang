@@ -71,10 +71,10 @@ func TestMinimumConfigForGoogleAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("google", nil, nil)
+	providerRes, err := GetProvider("public", "google", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "google", providerInfo.ID)
 
@@ -180,10 +180,10 @@ func TestPassingAdditionalParamsInAuthUrlForGoogleAndCheckItsPresense(t *testing
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("google", nil, nil)
+	providerRes, err := GetProvider("public", "google", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 	assert.Equal(t, "google", providerInfo.ID)
 
 	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfo.Config.TokenEndpoint)
@@ -253,10 +253,10 @@ func TestPassingScopesInConfigForGoogle(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("google", nil, nil)
+	providerRes, err := GetProvider("public", "google", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "google", providerInfo.ID)
 
@@ -324,10 +324,10 @@ func TestMinimumConfigForFacebookAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("facebook", nil, nil)
+	providerRes, err := GetProvider("public", "facebook", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
@@ -427,10 +427,10 @@ func TestPassingScopesInConfigForFacebook(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("facebook", nil, nil)
+	providerRes, err := GetProvider("public", "facebook", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
@@ -495,10 +495,10 @@ func TestMinimumConfigForGithubAsThirdPartyProvider(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("github", nil, nil)
+	providerRes, err := GetProvider("public", "github", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "github", providerInfo.ID)
 
@@ -601,10 +601,10 @@ func TestPassingAdditionalParamsInAuthUrlForGithubAndCheckItsPresense(t *testing
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("github", nil, nil)
+	providerRes, err := GetProvider("public", "github", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "github", providerInfo.ID)
 
@@ -672,10 +672,10 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	providerRes, err := GetProvider("github", nil, nil)
+	providerRes, err := GetProvider("public", "github", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "github", providerInfo.ID)
 

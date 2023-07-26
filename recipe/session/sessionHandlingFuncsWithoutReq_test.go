@@ -2,13 +2,14 @@ package session
 
 import (
 	"errors"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	sessionError "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
-	"testing"
 )
 
 func TestShouldCreateNewSession(t *testing.T) {
@@ -33,7 +34,7 @@ func TestShouldCreateNewSession(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	res, err2 := CreateNewSessionWithoutRequestResponse("test-user-id", map[string]interface{}{
+	res, err2 := CreateNewSessionWithoutRequestResponse("public", "test-user-id", map[string]interface{}{
 		"tokenProp": true,
 	}, map[string]interface{}{
 		"dbProp": true,
@@ -86,7 +87,7 @@ func TestShouldCreateSessionWithAntiCSRF(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	res, err2 := CreateNewSessionWithoutRequestResponse("test-user-id", map[string]interface{}{
+	res, err2 := CreateNewSessionWithoutRequestResponse("public", "test-user-id", map[string]interface{}{
 		"tokenProp": true,
 	}, map[string]interface{}{
 		"dbProp": true,
@@ -136,7 +137,7 @@ func TestShouldValidateBasicAccessToken(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	res, err2 := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	res, err2 := CreateNewSessionWithoutRequestResponse("public", "test-user-id", nil, nil, nil)
 	if err2 != nil {
 		t.Error(err2.Error())
 	}
@@ -183,7 +184,7 @@ func TestShouldValidateBasicAccessTokenWithAntiCSRF(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	res, err2 := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	res, err2 := CreateNewSessionWithoutRequestResponse("public", "test-user-id", nil, nil, nil)
 	if err2 != nil {
 		t.Error(err2.Error())
 	}
@@ -302,7 +303,7 @@ func TestShouldReturnErrorForClaimValidationFailures(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	res, err2 := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	res, err2 := CreateNewSessionWithoutRequestResponse("public", "test-user-id", nil, nil, nil)
 	if err2 != nil {
 		t.Error(err2.Error())
 	}
@@ -351,7 +352,7 @@ func TestShouldRefreshSession(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	res, err2 := CreateNewSessionWithoutRequestResponse("test-user-id", map[string]interface{}{
+	res, err2 := CreateNewSessionWithoutRequestResponse("public", "test-user-id", map[string]interface{}{
 		"tokenProp": true,
 	}, map[string]interface{}{
 		"dbProp": true,
@@ -413,7 +414,7 @@ func TestShouldWorkWithAntiCSRF(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	createRes, createErr := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	createRes, createErr := CreateNewSessionWithoutRequestResponse("public", "test-user-id", nil, nil, nil)
 	if createErr != nil {
 		t.Error(createErr.Error())
 	}

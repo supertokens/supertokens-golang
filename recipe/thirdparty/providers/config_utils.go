@@ -31,11 +31,10 @@ func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpm
 		ValidateIdTokenPayload:           config.ValidateIdTokenPayload,
 		RequireEmail:                     config.RequireEmail,
 		GenerateFakeEmail:                config.GenerateFakeEmail,
-		TenantId:                         config.TenantId,
 	}
 }
 
-func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPartyId string, tenantId *string, clientType *string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
+func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPartyId string, clientType *string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {
 	for _, provider := range providers {
 		if provider.Config.ThirdPartyId == thirdPartyId {
 			providerInstance := createProvider(provider)
@@ -95,13 +94,11 @@ func fetchAndSetConfig(provider *tpmodels.TypeProvider, clientType *string, user
 	return nil
 }
 
-func MergeProvidersFromCoreAndStatic(tenantId *string, providerConfigsFromCore []tpmodels.ProviderConfig, providerInputsFromStatic []tpmodels.ProviderInput) []tpmodels.ProviderInput {
+func MergeProvidersFromCoreAndStatic(providerConfigsFromCore []tpmodels.ProviderConfig, providerInputsFromStatic []tpmodels.ProviderInput) []tpmodels.ProviderInput {
 	mergedProviders := []tpmodels.ProviderInput{}
 
 	if len(providerConfigsFromCore) == 0 {
 		for _, config := range providerInputsFromStatic {
-			config.Config.TenantId = tenantId
-
 			mergedProviders = append(mergedProviders, config)
 		}
 	} else {

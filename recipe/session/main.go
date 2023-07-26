@@ -41,7 +41,7 @@ func CreateNewSessionWithContext(req *http.Request, res http.ResponseWriter, use
 	return CreateNewSessionInRequest(req, res, config, appInfo, *instance, instance.RecipeImpl, userID, accessTokenPayload, sessionDataInDatabase, userContext)
 }
 
-func CreateNewSessionWithContextWithoutRequestResponse(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func CreateNewSessionWithContextWithoutRequestResponse(tenantId string, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -59,7 +59,7 @@ func CreateNewSessionWithContextWithoutRequestResponse(userID string, accessToke
 	finalAccessTokenPayload["iss"] = issuer
 
 	for _, claim := range claimsAddedByOtherRecipes {
-		finalAccessTokenPayload, err = claim.Build(userID, finalAccessTokenPayload, userContext)
+		finalAccessTokenPayload, err = claim.Build(userID, tenantId, finalAccessTokenPayload, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -373,8 +373,8 @@ func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string,
 	return CreateNewSessionWithContext(req, res, userID, accessTokenPayload, sessionDataInDatabase, &map[string]interface{}{})
 }
 
-func CreateNewSessionWithoutRequestResponse(userId string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool) (sessmodels.SessionContainer, error) {
-	return CreateNewSessionWithContextWithoutRequestResponse(userId, accessTokenPayload, sessionDataInDatabase, disableAntiCSRF, nil)
+func CreateNewSessionWithoutRequestResponse(tenantId string, userId string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool) (sessmodels.SessionContainer, error) {
+	return CreateNewSessionWithContextWithoutRequestResponse(tenantId, userId, accessTokenPayload, sessionDataInDatabase, disableAntiCSRF, nil)
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions) (sessmodels.SessionContainer, error) {

@@ -96,10 +96,10 @@ func TestForThirdPartyPasswordlessTheMinimumConfigForThirdPartyProviderGoogle(t 
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("google", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "google", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "google", providerInfo.ID)
 
@@ -224,10 +224,10 @@ func TestWithThirdPartyPasswordlessPassingAdditionalParamsCheckTheyArePresentInA
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("google", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "google", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 	assert.Equal(t, "google", providerInfo.ID)
 
 	assert.Equal(t, "https://oauth2.googleapis.com/token", providerInfo.Config.TokenEndpoint)
@@ -316,10 +316,10 @@ func TestForThirdpartyPasswordlessPassingScopesInConfigForThirdpartyProviderGoog
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("google", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "google", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "google", providerInfo.ID)
 
@@ -406,10 +406,10 @@ func TestForThirdPartyPasswordlessMinimumConfigForThirdPartyProviderFacebook(t *
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("facebook", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "facebook", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
@@ -528,10 +528,10 @@ func TestWithThirdPartyPasswordlessPassingScopesInConfigForThirdPartyProviderFac
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("facebook", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "facebook", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "facebook", providerInfo.ID)
 
@@ -615,10 +615,10 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyProviderGithub(t *t
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("github", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "github", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "github", providerInfo.ID)
 
@@ -740,10 +740,10 @@ func TestWithThirdPartyPasswordlessParamCheckTheyArePresentInAuthorizationURLFor
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("github", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "github", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "github", providerInfo.ID)
 
@@ -830,10 +830,10 @@ func TestWithThirdPartyPasswordlessPassingScopesInConfigForThirdPartyProviderGit
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("github", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "github", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "github", providerInfo.ID)
 
@@ -923,10 +923,10 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyProviderApple(t *te
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("apple", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "apple", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "apple", providerInfo.ID)
 
@@ -1057,10 +1057,10 @@ func TestWithThirdPartyPasswordlessPassingAdditionalParamsCheckTheyArePresentInA
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("apple", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "apple", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "apple", providerInfo.ID)
 
@@ -1154,10 +1154,10 @@ func TestWithThirdPartyProviderPasswordlessPassingScopesInConfigForThirdPartyPro
 		return
 	}
 
-	providerRes, err := ThirdPartyGetProvider("apple", nil, nil)
+	providerRes, err := ThirdPartyGetProvider("public", "apple", nil)
 	assert.NoError(t, err)
 
-	providerInfo := providerRes.OK.Provider
+	providerInfo := providerRes
 
 	assert.Equal(t, "apple", providerInfo.ID)
 

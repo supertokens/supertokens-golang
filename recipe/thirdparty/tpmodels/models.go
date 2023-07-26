@@ -109,9 +109,8 @@ type ProviderInput struct {
 }
 
 type ProviderConfig struct {
-	TenantId     *string `json:"tenantId,omitempty"`
-	ThirdPartyId string  `json:"thirdPartyId"`
-	Name         string  `json:"name"`
+	ThirdPartyId string `json:"thirdPartyId"`
+	Name         string `json:"name"`
 
 	Clients []ProviderClientConfig `json:"clients"`
 
@@ -164,7 +163,6 @@ type ProviderConfigForClientType struct {
 
 	RequireEmail      *bool
 	GenerateFakeEmail func(thirdPartyUserId string, userContext supertokens.UserContext) string
-	TenantId          *string
 }
 
 type TypeProvider struct {

@@ -44,7 +44,7 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 	finalAccessTokenPayload["iss"] = issuer
 
 	for _, claim := range claimsAddedByOtherRecipes {
-		_finalAccessTokenPayload, err := claim.Build(userID, finalAccessTokenPayload, userContext)
+		_finalAccessTokenPayload, err := claim.Build(userID, "public", finalAccessTokenPayload, userContext) // TODO multitenancy add tenantId
 		if err != nil {
 			return nil, err
 		}
