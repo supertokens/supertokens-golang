@@ -166,4 +166,9 @@ func init() {
 
 	// Create multitenancy claims when the module is imported
 	multitenancyclaims.AllowedDomainsClaim, multitenancyclaims.AllowedDomainsClaimValidators = NewAllowedDomainsClaim()
+
+	supertokens.GetTenantIdFuncFromUsingMultitenancyRecipe = func(tenantIdFromFrontend string, userContext supertokens.UserContext) (string, error) {
+		mtRecipe := GetRecipeInstance()
+		return (*mtRecipe.RecipeImpl.GetTenantId)(tenantIdFromFrontend, userContext)
+	}
 }

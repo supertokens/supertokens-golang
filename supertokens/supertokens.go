@@ -25,6 +25,10 @@ import (
 	"strings"
 )
 
+// This function is required to be here because calling multitenancy recipe from this module causes cyclic dependency
+// this function is initialized by the init function in multitenancy recipe
+var GetTenantIdFuncFromUsingMultitenancyRecipe func(tenantIdFromFrontend string, userContext UserContext) (string, error)
+
 type superTokens struct {
 	AppInfo               NormalisedAppinfo
 	SuperTokens           ConnectionInfo
@@ -195,6 +199,15 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			}
 
 			LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
+
+			tenantId, err = GetTenantIdFuncFromUsingMultitenancyRecipe(tenantId, userContext)
+			if err != nil {
+				err = s.errorHandler(err, r, dw)
+				if err != nil && !dw.IsDone() {
+					s.OnSuperTokensAPIError(err, r, dw)
+				}
+				return
+			}
 
 			apiErr := matchedRecipe.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 			if apiErr != nil {
