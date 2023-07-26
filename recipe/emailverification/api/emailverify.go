@@ -94,7 +94,6 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return nil
 		}
 
-		userContext := userContext
 		sessionContainer, err := session.GetSessionWithContext(
 			options.Req,
 			options.Res,
