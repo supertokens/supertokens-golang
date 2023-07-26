@@ -126,9 +126,9 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 		}, nil
 	}
 
-	var passwordField epmodels.TypeInputFormField
+	var passwordField epmodels.NormalisedFormField
 
-	for _, value := range thirdpartyemailpassword.GetRecipeInstance().Config.SignUpFeature.FormFields {
+	for _, value := range thirdpartyemailpassword.GetRecipeInstance().GetEmailPasswordRecipe().Config.SignUpFeature.FormFields {
 		if value.ID == "password" {
 			passwordField = value
 		}

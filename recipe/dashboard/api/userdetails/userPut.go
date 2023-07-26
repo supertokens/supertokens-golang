@@ -96,9 +96,9 @@ func updateEmailForRecipeId(recipeId string, userId string, email string) (updat
 	}
 
 	if recipeId == "thirdpartyemailpassword" {
-		var emailField epmodels.TypeInputFormField
+		var emailField epmodels.NormalisedFormField
 
-		for _, value := range thirdpartyemailpassword.GetRecipeInstance().Config.SignUpFeature.FormFields {
+		for _, value := range thirdpartyemailpassword.GetRecipeInstance().GetEmailPasswordRecipe().Config.SignUpFeature.FormFields {
 			if value.ID == "email" {
 				emailField = value
 			}
