@@ -54,7 +54,7 @@ func TestCreateAssignAndDeleteRole(t *testing.T) {
 		assert.NotNil(t, createResult.OK)
 		assert.True(t, createResult.OK.CreatedNewRole)
 
-		addResult, err := AddRoleToUser("userId", role, &map[string]interface{}{})
+		addResult, err := AddRoleToUser("public", "userId", role, &map[string]interface{}{})
 		assert.NoError(t, err)
 		assert.NotNil(t, addResult.OK)
 		assert.False(t, addResult.OK.DidUserAlreadyHaveRole)
@@ -81,7 +81,7 @@ func TestCreateAssignAndDeleteRole(t *testing.T) {
 	assert.Contains(t, listResult.OK.Roles, "role3")
 	assert.Equal(t, 2, len(listResult.OK.Roles))
 
-	userRolesResult, err := GetRolesForUser("userId", &map[string]interface{}{})
+	userRolesResult, err := GetRolesForUser("public", "userId", &map[string]interface{}{})
 	assert.NoError(t, err)
 	assert.NotNil(t, userRolesResult.OK)
 	assert.Contains(t, userRolesResult.OK.Roles, "role1")
