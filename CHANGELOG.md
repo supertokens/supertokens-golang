@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.12.9] - 2023-07-26
+
+- Fixes an issue where updating the user's password from the user management dashboard would result in a crash when using the thirdpartyemailpassword recipe (https://github.com/supertokens/supertokens-golang/issues/311)
+
 ## [0.12.8] - 2023-07-10
 
 - Adds additional tests for session verification
