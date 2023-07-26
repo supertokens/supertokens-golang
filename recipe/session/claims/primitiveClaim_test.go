@@ -14,13 +14,13 @@ func TestPrimitiveClaimFetchAndSetClaim(t *testing.T) {
 	}
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return val, nil
 		},
 		nil,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, val, payload["test"].(map[string]interface{})["v"])
@@ -32,7 +32,7 @@ func TestPrimitiveClaimAddToPayloadInternal(t *testing.T) {
 	}
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		nil,
@@ -48,12 +48,12 @@ func TestPrimitiveClaimFetchValue(t *testing.T) {
 	}
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return val, nil
 		},
 		nil,
 	)
-	fval, err := primClaim.FetchValue("userId", nil)
+	fval, err := primClaim.FetchValue("userId", "public", nil)
 	assert.NoError(t, err)
 	assert.Equal(t, val, fval)
 }
@@ -61,13 +61,13 @@ func TestPrimitiveClaimFetchValue(t *testing.T) {
 func TestPrimitiveClaimFetchValueReturningEmpty(t *testing.T) {
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return nil, nil
 		},
 		nil,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, map[string]interface{}{}, payload)
 }
@@ -78,7 +78,7 @@ func TestPrimitiveClaimGetValueFromPayloadEmptyPayload(t *testing.T) {
 	}
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return val, nil
 		},
 		nil,
@@ -93,13 +93,13 @@ func TestPrimitiveClaimGetValueFromPayloadUsingBuild(t *testing.T) {
 	}
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return val, nil
 		},
 		nil,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 	assert.Equal(t, val, primClaim.GetValueFromPayload(payload, nil))
 }
@@ -110,7 +110,7 @@ func TestPrimitiveClaimGetValueFromPayloadUsingAddToPayloadInternal(t *testing.T
 	}
 	primClaim, _ := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		nil,
@@ -123,7 +123,7 @@ func TestPrimitiveClaimGetValueFromPayloadUsingAddToPayloadInternal(t *testing.T
 func TestPrimitiveClaimValidateWithEmptyPayload(t *testing.T) {
 	_, validator := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		nil,
@@ -141,13 +141,13 @@ func TestPrimitiveClaimValidateWithEmptyPayload(t *testing.T) {
 func TestPrimitiveClaimValidateWithMismatchingPayload(t *testing.T) {
 	primClaim, validator := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		nil,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 
 	validationResult := validator.HasValue("world", nil, nil).Validate(payload, nil)
@@ -162,13 +162,13 @@ func TestPrimitiveClaimValidateWithMismatchingPayload(t *testing.T) {
 func TestPrimitiveClaimValidateWithMatchingPayload(t *testing.T) {
 	primClaim, validator := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		nil,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 
 	validationResult := validator.HasValue("hello", nil, nil).Validate(payload, nil)
@@ -179,13 +179,13 @@ func TestPrimitiveClaimValidateWithMatchingPayload(t *testing.T) {
 func TestPrimitiveClaimValidateExpiry(t *testing.T) {
 	primClaim, validator := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		nil,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 
 	maxAgeInSec := int64(1)
@@ -206,13 +206,13 @@ func TestPrimitiveClaimValidateDefaultAgeExpiry(t *testing.T) {
 
 	primClaim, validator := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		&maxAgeInSec,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -231,13 +231,13 @@ func TestPrimitiveClaimValidateMaxAgeOverride(t *testing.T) {
 
 	primClaim, validator := PrimitiveClaim(
 		"test",
-		func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+		func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 			return "hello", nil
 		},
 		&maxAgeInSec,
 	)
 
-	payload, err := primClaim.Build("userId", nil, nil)
+	payload, err := primClaim.Build("userId", "public", nil, nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)

@@ -32,7 +32,7 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, "public", accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
@@ -102,7 +102,7 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							nilClaim, _ := NilClaim()
-							accessTokenPayload, err := nilClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := nilClaim.Build(userID, "public", accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
@@ -185,7 +185,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 								nAccessTokenPayload[k] = v
 							}
 							trueClaim, _ := TrueClaim()
-							nAccessTokenPayload, err := trueClaim.Build(userID, nAccessTokenPayload, userContext)
+							nAccessTokenPayload, err := trueClaim.Build(userID, "public", nAccessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}

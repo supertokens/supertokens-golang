@@ -823,7 +823,8 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 	assert.NotEmpty(t, res["message"].(string))
 }
 
-/**
+/*
+*
 This test is to make sure that we dont always call the core for session verification by default.
 1. Create a session
 2. Call get session and expect to not call the core
@@ -852,7 +853,7 @@ func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	createSessionResp, err := CreateNewSessionWithoutRequestResponse("test-user-id", nil, nil, nil)
+	createSessionResp, err := CreateNewSessionWithoutRequestResponse("public", "test-user-id", nil, nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -956,7 +957,7 @@ func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPas
 	app := getTestApp([]typeTestEndpoint{})
 	defer app.Close()
 
-	session, err := CreateNewSessionWithoutRequestResponse("test-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "test-user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	assert.NoError(t, err)
 
 	sessionTokens := session.GetAllSessionTokensDangerously()

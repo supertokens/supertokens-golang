@@ -67,7 +67,7 @@ func TestShouldClearPreviouslySetClaim(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, "public", accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
@@ -124,7 +124,7 @@ func TestShouldClearPreviouslySetClaimUsingHandle(t *testing.T) {
 						oCreateNewSession := *originalImplementation.CreateNewSession
 						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, "public", accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}

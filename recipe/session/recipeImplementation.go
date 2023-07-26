@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/MicahParks/keyfunc"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -385,7 +386,11 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			if claim != nil && validator.ShouldRefetch != nil {
 				if validator.ShouldRefetch(accessTokenPayload, userContext) {
 					supertokens.LogDebugMessage("updateClaimsInPayloadIfNeeded refetching " + validator.ID)
-					value, err := claim.FetchValue(userId, userContext)
+					tenantId, ok := accessTokenPayload["tId"].(string)
+					if !ok {
+						tenantId = multitenancymodels.DefaultTenantId
+					}
+					value, err := claim.FetchValue(userId, tenantId, userContext)
 					if err != nil {
 						return sessmodels.ValidateClaimsResult{}, err
 					}
@@ -430,7 +435,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if sessionInfo == nil {
 			return false, nil
 		}
-		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, nil, userContext)
+		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, "public", nil, userContext) // TODO multitenancy update tenantId from session
 		if err != nil {
 			return false, err
 		}

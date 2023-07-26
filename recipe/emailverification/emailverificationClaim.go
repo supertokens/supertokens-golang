@@ -11,7 +11,7 @@ import (
 
 // key string, fetchValue claims.FetchValueFunc
 func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVerificationClaimValidators) {
-	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+	fetchValue := func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := getRecipeInstanceOrThrowError()
 		if err != nil {
 			return nil, err

@@ -36,7 +36,7 @@ type Recipe struct {
 	APIImpl                   multitenancymodels.APIInterface
 	staticThirdPartyProviders []tpmodels.ProviderInput
 
-	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 }
 
 var singletonInstance *Recipe

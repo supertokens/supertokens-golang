@@ -1218,7 +1218,8 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 	}
 }
 
-/**
+/*
+*
 This test verifies that the SDK calls the well known API properly in the normal flow
 
 - Initialise the SDK and verify that the well known API was not called
@@ -1266,7 +1267,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 
 	assert.Equal(t, len(wellKnownCallLogs), 0)
 
-	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1296,7 +1297,8 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
-/**
+/*
+*
 This test verifies that the cache used to store the pointer to the JWKS result is updated properly when the
 cache expired and the keys need to be refetched.
 
@@ -1366,7 +1368,8 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
-/**
+/*
+*
 This test verifies that the SDK tried to re-fetch the keys from the core if the KID for the access token does not
 exist in the keyfunc library's cache
 
@@ -1415,7 +1418,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 
 	assert.Equal(t, len(wellKnownCallLogs), 0)
 
-	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1441,7 +1444,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 
 	time.Sleep(10 * time.Second)
 
-	session, err = CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err = CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1479,7 +1482,8 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	assert.Equal(t, len(wellKnownCallLogs), 2)
 }
 
-/**
+/*
+*
 This test makes sure that initialising SuperTokens and Session with an invalid connection uri does not
 result in an error during startup
 */
@@ -1507,7 +1511,8 @@ func TestThatInvalidConnectionUriDoesNotThrowDuringInitForJWKS(t *testing.T) {
 	}
 }
 
-/**
+/*
+*
 This test verifies the behaviour of the JWKS cache maintained by the SDK
 
 - Init
@@ -1549,7 +1554,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 
 	assert.Nil(t, jwksCache)
 
-	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1579,7 +1584,8 @@ func TestJWKSCacheLogic(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
-/**
+/*
+*
 This test ensures that calling get combines JWKS results in an error if the connection uri is invalid. Note that
 in this test we specifically expect a timeout but that does not mean that this is the only error the function can
 throw
@@ -1614,7 +1620,8 @@ func TestThatCombinedJWKSThrowsForInvalidConnectionUri(t *testing.T) {
 	assert.Nil(t, combinedJwks)
 }
 
-/**
+/*
+*
 This test makes sure that when multiple core urls are provided, the get combined JWKS function does not throw an
 error as long as one of the provided urls return a valid response
 
@@ -1650,7 +1657,8 @@ func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T)
 	assert.NotNil(t, combinedJwks)
 }
 
-/**
+/*
+*
 This test ensures that the SDK's caching logic for fetching JWKs works fine
 
 - Init
@@ -1690,7 +1698,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	session, err := CreateNewSessionWithoutRequestResponse("rope", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1729,7 +1737,8 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
-/**
+/*
+*
 This test makes sure that the SDK tries to fetch for all core URLS if needed.
 This test uses multiple hosts with only the last one being valid to make sure all URLs are used
 
@@ -1770,7 +1779,8 @@ func TestThatTheSDKTriesFetchingJWKSForAllCoreHosts(t *testing.T) {
 	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 3)
 }
 
-/**
+/*
+*
 This test makes sure that the SDK stop fetching JWKS from multiple cores as soon as it gets a valid response
 
 - init with multiple cores with the second one being valid (1st and 3rd invalid)
@@ -1834,7 +1844,7 @@ func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "testing", map[string]interface{}{}, map[string]interface{}{}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1895,7 +1905,7 @@ func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testi
 		t.Skip()
 	}
 
-	session, err := CreateNewSessionWithoutRequestResponse("testing", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "testing", map[string]interface{}{}, map[string]interface{}{}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -2045,7 +2055,7 @@ func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t 
 		t.Error(err.Error())
 	}
 
-	session, err := CreateNewSessionWithoutRequestResponse("testing-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+	session, err := CreateNewSessionWithoutRequestResponse("public", "testing-user", map[string]interface{}{}, map[string]interface{}{}, nil)
 
 	resetAll()
 	True := true

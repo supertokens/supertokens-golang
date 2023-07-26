@@ -253,7 +253,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.FetchAndSetClaimWithContext = func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), nil, userContext)
+		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), "public", nil, userContext)
 		if err != nil {
 			return err
 		}

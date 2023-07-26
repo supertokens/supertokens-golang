@@ -8,13 +8,11 @@ import (
 )
 
 func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimValidators) {
-	fetchDomains := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+	fetchDomains := func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 		instance, err := GetRecipeInstanceOrThrowError()
 		if err != nil {
 			return nil, err
 		}
-
-		var tenantId *string // TODO this will be passed to the fetchValue function
 
 		if instance.GetAllowedDomainsForTenantId == nil {
 			return []interface{}{}, nil // User did not provide a function to get allowed domains, but is using a validator. So we don't allow any domains by default
@@ -35,7 +33,7 @@ func NewAllowedDomainsClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayCl
 	}
 
 	var defaultMaxAge int64 = 3600
-	allowedDomainsClaim, allowedDomainsClaimValidators := claims.PrimitiveArrayClaim("st-tenant-domains", fetchDomains, &defaultMaxAge)
+	allowedDomainsClaim, allowedDomainsClaimValidators := claims.PrimitiveArrayClaim("st-t-dmns", fetchDomains, &defaultMaxAge)
 
 	oGetValueFromPayload := allowedDomainsClaim.GetValueFromPayload
 	allowedDomainsClaim.GetValueFromPayload = func(payload map[string]interface{}, userContext supertokens.UserContext) interface{} {

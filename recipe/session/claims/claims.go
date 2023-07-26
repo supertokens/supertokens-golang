@@ -10,11 +10,11 @@ func SessionClaim(key string, fetchValue FetchValueFunc) *TypeSessionClaim {
 		FetchValue: fetchValue,
 	}
 
-	sessionClaim.Build = func(userId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
+	sessionClaim.Build = func(userId string, tenantId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error) {
 		if payloadToUpdate == nil {
 			payloadToUpdate = map[string]interface{}{}
 		}
-		value, err := sessionClaim.FetchValue(userId, userContext)
+		value, err := sessionClaim.FetchValue(userId, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -31,7 +31,7 @@ func SessionClaim(key string, fetchValue FetchValueFunc) *TypeSessionClaim {
 	return sessionClaim
 }
 
-type FetchValueFunc func(userId string, userContext supertokens.UserContext) (interface{}, error)
+type FetchValueFunc func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error)
 
 type TypeSessionClaim struct {
 	Key                               string
@@ -41,7 +41,7 @@ type TypeSessionClaim struct {
 	RemoveFromPayload                 func(payload map[string]interface{}, userContext supertokens.UserContext) map[string]interface{}
 	GetValueFromPayload               func(payload map[string]interface{}, userContext supertokens.UserContext) interface{}
 	GetLastRefetchTime                func(payload map[string]interface{}, userContext supertokens.UserContext) *int64
-	Build                             func(userId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error)
+	Build                             func(userId string, tenantId string, payloadToUpdate map[string]interface{}, userContext supertokens.UserContext) (map[string]interface{}, error)
 }
 
 type SessionClaimValidator struct {
