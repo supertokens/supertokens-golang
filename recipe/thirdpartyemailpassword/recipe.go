@@ -34,13 +34,14 @@ import (
 const RECIPE_ID = "thirdpartyemailpassword"
 
 type Recipe struct {
-	RecipeModule        supertokens.RecipeModule
-	Config              tpepmodels.TypeNormalisedInput
-	emailPasswordRecipe *emailpassword.Recipe
-	thirdPartyRecipe    *thirdparty.Recipe
-	RecipeImpl          tpepmodels.RecipeInterface
-	APIImpl             tpepmodels.APIInterface
-	EmailDelivery       emaildelivery.Ingredient
+	RecipeModule           supertokens.RecipeModule
+	Config                 tpepmodels.TypeNormalisedInput
+	emailPasswordRecipe    *emailpassword.Recipe
+	thirdPartyRecipe       *thirdparty.Recipe
+	RecipeImpl             tpepmodels.RecipeInterface
+	APIImpl                tpepmodels.APIInterface
+	EmailDelivery          emaildelivery.Ingredient
+	GetEmailPasswordRecipe func() *emailpassword.Recipe
 }
 
 var singletonInstance *Recipe
@@ -215,4 +216,8 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 
 func ResetForTest() {
 	singletonInstance = nil
+}
+
+func GetEmailPasswordRecipe(r *Recipe) *emailpassword.Recipe {
+	return r.emailPasswordRecipe
 }
