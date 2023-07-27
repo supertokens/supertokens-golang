@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func DoesPhoneNumberExist(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
+func DoesPhoneNumberExist(apiImplementation plessmodels.APIInterface, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.PhoneNumberExistsGET == nil || (*apiImplementation.PhoneNumberExistsGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -29,7 +29,7 @@ func DoesPhoneNumberExist(apiImplementation plessmodels.APIInterface, options pl
 	if phoneNumber == "" {
 		return supertokens.BadInputError{Msg: "Please provide the phoneNumber as a GET param"}
 	}
-	result, err := (*apiImplementation.PhoneNumberExistsGET)(phoneNumber, options, userContext)
+	result, err := (*apiImplementation.PhoneNumberExistsGET)(phoneNumber, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

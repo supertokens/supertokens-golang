@@ -37,11 +37,11 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	CreateCodePOST       *func(email *string, phoneNumber *string, options APIOptions, userContext supertokens.UserContext) (CreateCodePOSTResponse, error)
-	ResendCodePOST       *func(deviceID string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ResendCodePOSTResponse, error)
-	ConsumeCodePOST      *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options APIOptions, userContext supertokens.UserContext) (ConsumeCodePOSTResponse, error)
-	EmailExistsGET       *func(email string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
-	PhoneNumberExistsGET *func(phoneNumber string, options APIOptions, userContext supertokens.UserContext) (PhoneNumberExistsGETResponse, error)
+	CreateCodePOST       *func(email *string, phoneNumber *string, tenantId string, options APIOptions, userContext supertokens.UserContext) (CreateCodePOSTResponse, error)
+	ResendCodePOST       *func(deviceID string, preAuthSessionID string, tenantId string, options APIOptions, userContext supertokens.UserContext) (ResendCodePOSTResponse, error)
+	ConsumeCodePOST      *func(userInput *UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, options APIOptions, userContext supertokens.UserContext) (ConsumeCodePOSTResponse, error)
+	EmailExistsGET       *func(email string, tenantId string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
+	PhoneNumberExistsGET *func(phoneNumber string, tenantId string, options APIOptions, userContext supertokens.UserContext) (PhoneNumberExistsGETResponse, error)
 }
 
 type ConsumeCodePOSTResponse struct {

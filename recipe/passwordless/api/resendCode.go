@@ -23,7 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
+func ResendCode(apiImplementation plessmodels.APIInterface, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.ResendCodePOST == nil || (*apiImplementation.ResendCodePOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -58,7 +58,7 @@ func ResendCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		return supertokens.BadInputError{Msg: "Please make sure that deviceId is a string"}
 	}
 
-	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), options, userContext)
+	response, err := (*apiImplementation.ResendCodePOST)(deviceID.(string), preAuthSessionID.(string), tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

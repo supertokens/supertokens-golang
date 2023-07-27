@@ -49,7 +49,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignInUpByEmail("test@example.com")
+	signUpResponse, err := SignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -71,17 +71,17 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using email
-		userResp, err := GetUserByEmail("test@example.com")
+		userResp, err := GetUserByEmail("public", "test@example.com")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using sign in
-		codeResp, err := CreateCodeWithEmail("test@example.com", nil)
+		codeResp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, codeResp.OK)
 
-		resp, err := ConsumeCodeWithUserInputCode(codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
+		resp, err := ConsumeCodeWithUserInputCode("public", codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.OK)
 
@@ -106,7 +106,7 @@ func TestCreateUserIdMappingUsingPhone(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignInUpByPhoneNumber("+919876543210")
+	signUpResponse, err := SignInUpByPhoneNumber("public", "+919876543210")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -128,17 +128,17 @@ func TestCreateUserIdMappingUsingPhone(t *testing.T) {
 	}
 
 	{ // Using email
-		userResp, err := GetUserByPhoneNumber("+919876543210")
+		userResp, err := GetUserByPhoneNumber("public", "+919876543210")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using sign in
-		codeResp, err := CreateCodeWithPhoneNumber("+919876543210", nil)
+		codeResp, err := CreateCodeWithPhoneNumber("public", "+919876543210", nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, codeResp.OK)
 
-		resp, err := ConsumeCodeWithUserInputCode(codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
+		resp, err := ConsumeCodeWithUserInputCode("public", codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.OK)
 
