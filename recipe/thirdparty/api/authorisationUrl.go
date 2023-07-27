@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.AuthorisationUrlGET == nil || (*apiImplementation.AuthorisationUrlGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -39,7 +39,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
 
-	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, clientType, "public", userContext) // TODO multitenancy pass tenantId
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, clientType, tenantId, userContext)
 	if err != nil {
 		return err
 	}
@@ -50,7 +50,7 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 		return supertokens.BadInputError{Msg: "the provider " + thirdPartyId + " could not be found in the configuration"}
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, redirectURIOnProviderDashboard, options, userContext)
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

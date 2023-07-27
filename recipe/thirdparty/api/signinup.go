@@ -30,7 +30,7 @@ type bodyParams struct {
 	OAuthTokens     *tpmodels.TypeOAuthTokens     `json:"oAuthTokens"`
 }
 
-func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+func SignInUpAPI(apiImplementation tpmodels.APIInterface, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.SignInUpPOST == nil || (*apiImplementation.SignInUpPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -68,7 +68,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "Please provide one of redirectURIInfo or oAuthTokens in the request body"}
 	}
 
-	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, clientType, "public", userContext) // TODO multitenancy pass tenantId
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, clientType, tenantId, userContext)
 	if err != nil {
 		return err
 	}
@@ -79,7 +79,7 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return supertokens.BadInputError{Msg: "the provider " + bodyParams.ThirdPartyId + " could not be found in the configuration"}
 	}
 
-	result, err := (*apiImplementation.SignInUpPOST)(provider, input, options, userContext)
+	result, err := (*apiImplementation.SignInUpPOST)(provider, input, tenantId, options, userContext)
 
 	if err != nil {
 		return err

@@ -58,8 +58,8 @@ func TestOverrideFunctions(t *testing.T) {
 						Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
 							originalSignInUp := *originalImplementation.SignInUp
 							originalGetUserById := *originalImplementation.GetUserByID
-							*originalImplementation.SignInUp = func(thirdPartyID, thirdPartyUserID, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
-								resp, err := originalSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
+							*originalImplementation.SignInUp = func(thirdPartyID, thirdPartyUserID, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+								resp, err := originalSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
 								if err != nil {
 									return tpmodels.SignInUpResponse{}, err
 								}
@@ -212,8 +212,8 @@ func TestOverrideAPIs(t *testing.T) {
 					Override: &tpmodels.OverrideStruct{
 						APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
 							originalSigniupPost := *originalImplementation.SignInUpPOST
-							*originalImplementation.SignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
-								res, err := originalSigniupPost(provider, input, options, userContext)
+							*originalImplementation.SignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+								res, err := originalSigniupPost(provider, input, tenantId, options, userContext)
 								if err != nil {
 									t.Error(err.Error())
 								}
