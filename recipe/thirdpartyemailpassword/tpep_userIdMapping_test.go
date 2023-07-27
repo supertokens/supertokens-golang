@@ -59,7 +59,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
+	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("public", "google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -81,7 +81,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		userResp, err := GetUserByThirdPartyInfo("public", "google", "googleID")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -104,7 +104,7 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123")
+	signUpResponse, err := EmailPasswordSignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -145,7 +145,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123")
+	signUpResponse, err := EmailPasswordSignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -156,7 +156,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	userResp, err := GetUsersByEmail("test@example.com")
+	userResp, err := GetUsersByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 	assert.NotNil(t, userResp)
 	assert.Equal(t, 1, len(userResp))

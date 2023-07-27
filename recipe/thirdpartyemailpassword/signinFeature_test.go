@@ -161,8 +161,8 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 				Override: &tpepmodels.OverrideStruct{
 					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
 						originalSignInUpPost := *originalImplementation.ThirdPartySignInUpPOST
-						*originalImplementation.ThirdPartySignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
-							resp, err := originalSignInUpPost(provider, input, options, userContext)
+						*originalImplementation.ThirdPartySignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
+							resp, err := originalSignInUpPost(provider, input, tenantId, options, userContext)
 							if err != nil {
 								t.Error(err.Error())
 							}
