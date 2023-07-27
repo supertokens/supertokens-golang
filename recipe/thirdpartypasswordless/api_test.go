@@ -705,7 +705,7 @@ func TestWithThirdPartyPasswordlessConsumeCodeAPIWithMagicLink(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	consumeCodePostData := map[string]interface{}{
@@ -802,7 +802,7 @@ func TestWithThirdPartyPasswordlessConsumeCodeAPIWithCode(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	consumeCodePostData := map[string]interface{}{
@@ -922,7 +922,7 @@ func TestWithThirdPartyPasswordLessConsumeCodeAPIWithExpiredCode(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -1273,10 +1273,10 @@ func TestWithThirdPartyPasswordlessEmailExistAPI(t *testing.T) {
 	assert.Equal(t, "OK", emailDoesNotExistResponse["status"])
 	assert.False(t, emailDoesNotExistResponse["exists"].(bool))
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
+	ConsumeCodeWithLinkCode("public", codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
 
 	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
 	query = req.URL.Query()
@@ -1359,10 +1359,10 @@ func TestWithThirdPartyPasswordlessPhoneNumberExistsAPI(t *testing.T) {
 	assert.Equal(t, "OK", phoneNumberDoesNotExistResponse["status"])
 	assert.False(t, phoneNumberDoesNotExistResponse["exists"].(bool))
 
-	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo, err := CreateCodeWithPhoneNumber("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
-	ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
+	ConsumeCodeWithLinkCode("public", codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
 
 	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/phonenumber/exists", nil)
 	query = req.URL.Query()
@@ -1431,7 +1431,7 @@ func TestWithThirdPartyPasswordlessResendCodeAPI(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo, err := CreateCodeWithPhoneNumber("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
 	codeResendPostData := map[string]interface{}{

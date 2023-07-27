@@ -75,7 +75,7 @@ func TestDeletePhoneNumber(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := PasswordlessSignInUpByEmail("test@example.com")
+		res, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -144,7 +144,7 @@ func TestDeleteEmail(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := PasswordlessSignInUpByEmail("test@example.com")
+		res, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -213,7 +213,7 @@ func TestDeleteEmailAndPhoneShouldThrowError(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := PasswordlessSignInUpByEmail("test@example.com")
+		res, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}

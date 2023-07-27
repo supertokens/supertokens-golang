@@ -64,7 +64,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("google", "googleID", "test@example.com")
+	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("public", "google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -86,7 +86,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		userResp, err := GetUserByThirdPartyInfo("public", "google", "googleID")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -109,7 +109,7 @@ func TestPlessCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := PasswordlessSignInUpByEmail("test@example.com")
+	signUpResponse, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -131,7 +131,7 @@ func TestPlessCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using email
-		userResp, err := GetUsersByEmail("test@example.com")
+		userResp, err := GetUsersByEmail("public", "test@example.com")
 		assert.NoError(t, err)
 		assert.NotNil(t, userResp)
 		assert.Equal(t, 1, len(userResp))
@@ -141,11 +141,11 @@ func TestPlessCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using sign in
-		codeResp, err := CreateCodeWithEmail("test@example.com", nil)
+		codeResp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, codeResp.OK)
 
-		resp, err := ConsumeCodeWithUserInputCode(codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
+		resp, err := ConsumeCodeWithUserInputCode("public", codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.OK)
 
@@ -170,7 +170,7 @@ func TestPlessCreateUserIdMappingUsingPhone(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := PasswordlessSignInUpByPhoneNumber("+919876543210")
+	signUpResponse, err := PasswordlessSignInUpByPhoneNumber("public", "+919876543210")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -192,17 +192,17 @@ func TestPlessCreateUserIdMappingUsingPhone(t *testing.T) {
 	}
 
 	{ // Using email
-		userResp, err := GetUserByPhoneNumber("+919876543210")
+		userResp, err := GetUserByPhoneNumber("public", "+919876543210")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
 
 	{ // Using sign in
-		codeResp, err := CreateCodeWithPhoneNumber("+919876543210", nil)
+		codeResp, err := CreateCodeWithPhoneNumber("public", "+919876543210", nil)
 		assert.NoError(t, err)
 		assert.NotNil(t, codeResp.OK)
 
-		resp, err := ConsumeCodeWithUserInputCode(codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
+		resp, err := ConsumeCodeWithUserInputCode("public", codeResp.OK.DeviceID, codeResp.OK.UserInputCode, codeResp.OK.PreAuthSessionID)
 		assert.NoError(t, err)
 		assert.NotNil(t, resp.OK)
 
