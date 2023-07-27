@@ -48,7 +48,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUser(t *testin
 	)
 	defer testServer.Close()
 
-	SignUp("test@example.com", "1234abcd")
+	SignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -85,7 +85,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUserWithSendEm
 	)
 	defer testServer.Close()
 
-	SignUp("test@example.com", "1234abcd")
+	SignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -147,7 +147,7 @@ func TestBackwardCompatibilityResetPasswordForEmailPasswordUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	SignUp("test@example.com", "1234abcd")
+	SignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -242,7 +242,7 @@ func TestCustomOverrideResetPasswordForEmailPasswordUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	SignUp("test@example.com", "1234abcd")
+	SignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -362,7 +362,7 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	SignUp("test@example.com", "1234abcd")
+	SignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)

@@ -177,54 +177,54 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 						ogSignUpPOST := *originalImplementation.SignUpPOST
 						ogSignInPOST := *originalImplementation.SignInPOST
 
-						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password consume", false)
 							if gr != nil {
 								return epmodels.ResetPasswordPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogPasswordResetPOST(formFields, token, options, userContext)
+							return ogPasswordResetPOST(formFields, token, tenantId, options, userContext)
 						}
 
-						(*originalImplementation.GeneratePasswordResetTokenPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+						(*originalImplementation.GeneratePasswordResetTokenPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password", false)
 							if gr != nil {
 								return epmodels.GeneratePasswordResetTokenPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
+							return ogGeneratePasswordResetTokenPOST(formFields, tenantId, options, userContext)
 						}
 
-						(*originalImplementation.EmailExistsGET) = func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+						(*originalImplementation.EmailExistsGET) = func(email string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email exists", true)
 							if gr != nil {
 								return epmodels.EmailExistsGETResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogEmailExistsGET(email, options, userContext)
+							return ogEmailExistsGET(email, tenantId, options, userContext)
 						}
 
-						(*originalImplementation.SignUpPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+						(*originalImplementation.SignUpPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign up", false)
 							if gr != nil {
 								return epmodels.SignUpPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignUpPOST(formFields, options, userContext)
+							return ogSignUpPOST(formFields, tenantId, options, userContext)
 						}
 
-						(*originalImplementation.SignInPOST) = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+						(*originalImplementation.SignInPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in", false)
 							if gr != nil {
 								return epmodels.SignInPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogSignInPOST(formFields, options, userContext)
+							return ogSignInPOST(formFields, tenantId, options, userContext)
 						}
 						return originalImplementation
 					},

@@ -100,7 +100,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			}, nil
 		}
 
-		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(*readBody.UserId, userContext)
+		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(*readBody.UserId, "public", userContext) // TODO multitenancy pass tenantId
 
 		if resetTokenErr != nil {
 			return userPasswordPutResponse{}, resetTokenErr
@@ -111,7 +111,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, options dashboar
 			return userPasswordPutResponse{}, errors.New("Should never come here")
 		}
 
-		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
+		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(passwordResetToken.OK.Token, *readBody.NewPassword, "public", userContext) // TODO multitenancy pass tenantId
 
 		if passwordResetErr != nil {
 			return userPasswordPutResponse{}, passwordResetErr

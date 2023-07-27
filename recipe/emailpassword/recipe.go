@@ -164,15 +164,15 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		EmailDelivery:        r.EmailDelivery,
 	}
 	if id == constants.SignUpAPI {
-		return api.SignUpAPI(r.APIImpl, options, userContext)
+		return api.SignUpAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.SignInAPI {
-		return api.SignInAPI(r.APIImpl, options, userContext)
+		return api.SignInAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.GeneratePasswordResetTokenAPI {
-		return api.GeneratePasswordResetToken(r.APIImpl, options, userContext)
+		return api.GeneratePasswordResetToken(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.PasswordResetAPI {
-		return api.PasswordReset(r.APIImpl, options, userContext)
+		return api.PasswordReset(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.SignupEmailExistsAPI {
-		return api.EmailExists(r.APIImpl, options, userContext)
+		return api.EmailExists(r.APIImpl, tenantId, options, userContext)
 	}
 	return defaultErrors.New("should never come here")
 }
