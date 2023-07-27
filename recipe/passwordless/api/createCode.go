@@ -25,7 +25,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
+func CreateCode(apiImplementation plessmodels.APIInterface, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.CreateCodePOST == nil || (*apiImplementation.CreateCodePOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -114,7 +114,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		phoneNumberStrPointer = &t
 	}
 
-	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, options, userContext)
+	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

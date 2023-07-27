@@ -142,9 +142,9 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		AppInfo:              r.RecipeModule.GetAppInfo(),
 	}
 	if id == SignInUpAPI {
-		return api.SignInUpAPI(r.APIImpl, options, userContext)
+		return api.SignInUpAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == AuthorisationAPI {
-		return api.AuthorisationUrlAPI(r.APIImpl, options, userContext)
+		return api.AuthorisationUrlAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == AppleRedirectHandlerAPI {
 		return api.AppleRedirectHandler(r.APIImpl, options, userContext)
 	}

@@ -91,7 +91,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 		return
 	}
 
-	resp, err := ThirdPartyManuallyCreateOrUpdateUser("custom", "verifiedUser", "test@example.com")
+	resp, err := ThirdPartyManuallyCreateOrUpdateUser("public", "custom", "verifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
 	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
@@ -103,7 +103,7 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	assert.NoError(t, err)
 	assert.True(t, isVerfied)
 
-	resp1, err := ThirdPartyManuallyCreateOrUpdateUser("custom2", "NotVerifiedUser", "test@example.com")
+	resp1, err := ThirdPartyManuallyCreateOrUpdateUser("public", "custom2", "NotVerifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
 	isVerfied1, err := emailverification.IsEmailVerified(resp1.OK.User.ID, nil)
@@ -167,7 +167,7 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 		return
 	}
 
-	response, err := PasswordlessSignInUpByEmail("test@example.com")
+	response, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	isVerified, err := emailverification.IsEmailVerified(response.User.ID, nil)
@@ -179,7 +179,7 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	assert.Nil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.NotNil(t, emailVerificationResp.OK)
 
-	response, err = PasswordlessSignInUpByPhoneNumber("+123456789012")
+	response, err = PasswordlessSignInUpByPhoneNumber("public", "+123456789012")
 	assert.NoError(t, err)
 
 	isVerified, err = emailverification.IsEmailVerified(response.User.ID, nil)
@@ -247,7 +247,7 @@ func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, user)
 
-	resp, err := PasswordlessSignInUpByEmail("test@example.com")
+	resp, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 	userId := resp.User.ID
 
@@ -259,11 +259,11 @@ func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
 	assert.Equal(t, resp.User.Email, user.Email)
 	assert.Nil(t, user.PhoneNumber)
 
-	users, err := GetUsersByEmail("random")
+	users, err := GetUsersByEmail("public", "random")
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(users))
 
-	users, err = GetUsersByEmail("test@example.com")
+	users, err = GetUsersByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 	assert.Equal(t, 1, len(users))
 
@@ -276,14 +276,14 @@ func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
 	assert.Nil(t, userInfo.ThirdParty)
 	assert.Equal(t, user.TimeJoined, userInfo.TimeJoined)
 
-	user, err = GetUserByPhoneNumber("random")
+	user, err = GetUserByPhoneNumber("public", "random")
 	assert.NoError(t, err)
 	assert.Nil(t, user)
 
-	resp, err = PasswordlessSignInUpByPhoneNumber("+1234567890")
+	resp, err = PasswordlessSignInUpByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
 
-	user, err = GetUserByPhoneNumber(*resp.User.PhoneNumber)
+	user, err = GetUserByPhoneNumber("public", *resp.User.PhoneNumber)
 	assert.NoError(t, err)
 	assert.NotNil(t, user)
 
@@ -344,7 +344,7 @@ func TestWithThirdPartyPasswordlessCreateCodeTest(t *testing.T) {
 		return
 	}
 
-	resp, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp.OK)
 	assert.NotNil(t, resp.OK.CodeID)
@@ -356,7 +356,7 @@ func TestWithThirdPartyPasswordlessCreateCodeTest(t *testing.T) {
 	assert.NotNil(t, resp.OK.UserInputCode)
 
 	userInputCode := "23123"
-	resp1, err := CreateCodeWithEmail("test@example.com", &userInputCode)
+	resp1, err := CreateCodeWithEmail("public", "test@example.com", &userInputCode)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp1.OK)
 	assert.NotNil(t, resp1.OK.CodeID)
@@ -416,11 +416,11 @@ func TestThirdPartyPasswordlessCreateNewCodeFromDevice(t *testing.T) {
 		return
 	}
 
-	resp, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 
 	assert.NoError(t, err)
 
-	resp1, err := CreateNewCodeForDevice(resp.OK.DeviceID, nil)
+	resp1, err := CreateNewCodeForDevice("public", resp.OK.DeviceID, nil)
 	assert.NoError(t, err)
 
 	assert.NoError(t, err)
@@ -433,11 +433,11 @@ func TestThirdPartyPasswordlessCreateNewCodeFromDevice(t *testing.T) {
 	assert.NotNil(t, resp1.OK.TimeCreated)
 	assert.NotNil(t, resp1.OK.UserInputCode)
 
-	resp, err = CreateCodeWithEmail("test@example.com", nil)
+	resp, err = CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	userInputCode := "2314"
-	resp1, err = CreateNewCodeForDevice(resp.OK.DeviceID, &userInputCode)
+	resp1, err = CreateNewCodeForDevice("public", resp.OK.DeviceID, &userInputCode)
 	assert.NoError(t, err)
 
 	assert.NoError(t, err)
@@ -450,18 +450,18 @@ func TestThirdPartyPasswordlessCreateNewCodeFromDevice(t *testing.T) {
 	assert.NotNil(t, resp1.OK.TimeCreated)
 	assert.NotNil(t, resp1.OK.UserInputCode)
 
-	resp, err = CreateCodeWithEmail("test@example.com", nil)
+	resp, err = CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	resp1, err = CreateNewCodeForDevice("random", nil)
+	resp1, err = CreateNewCodeForDevice("public", "random", nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp1.RestartFlowError)
 	assert.Nil(t, resp1.OK)
 
-	resp, err = CreateCodeWithEmail("test@example.com", &userInputCode)
+	resp, err = CreateCodeWithEmail("public", "test@example.com", &userInputCode)
 	assert.NoError(t, err)
 
-	resp1, err = CreateNewCodeForDevice(resp.OK.DeviceID, &userInputCode)
+	resp1, err = CreateNewCodeForDevice("public", resp.OK.DeviceID, &userInputCode)
 	assert.NoError(t, err)
 	assert.NotNil(t, resp1.UserInputCodeAlreadyUsedError)
 	assert.Nil(t, resp1.OK)
@@ -515,10 +515,10 @@ func TestThirdPartyPasswordlessConsumeCoed(t *testing.T) {
 		return
 	}
 
-	resp, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	result, err := ConsumeCodeWithUserInputCode(resp.OK.DeviceID, resp.OK.UserInputCode, resp.OK.PreAuthSessionID)
+	result, err := ConsumeCodeWithUserInputCode("public", resp.OK.DeviceID, resp.OK.UserInputCode, resp.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, result.OK)
@@ -531,19 +531,19 @@ func TestThirdPartyPasswordlessConsumeCoed(t *testing.T) {
 	assert.Nil(t, result.OK.User.PhoneNumber)
 	assert.Nil(t, result.OK.User.ThirdParty)
 
-	resp, err = CreateCodeWithEmail("test@example.com", nil)
+	resp, err = CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	result, err = ConsumeCodeWithUserInputCode(resp.OK.DeviceID, "random", resp.OK.PreAuthSessionID)
+	result, err = ConsumeCodeWithUserInputCode("public", resp.OK.DeviceID, "random", resp.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result.IncorrectUserInputCodeError)
 	assert.Equal(t, 1, result.IncorrectUserInputCodeError.FailedCodeInputAttemptCount)
 	assert.Equal(t, 5, result.IncorrectUserInputCodeError.MaximumCodeInputAttempts)
 
-	resp, err = CreateCodeWithEmail("test@example.com", nil)
+	resp, err = CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	_, err = ConsumeCodeWithUserInputCode(resp.OK.DeviceID, resp.OK.UserInputCode, "random")
+	_, err = ConsumeCodeWithUserInputCode("public", resp.OK.DeviceID, resp.OK.UserInputCode, "random")
 	assert.Contains(t, err.Error(), "preAuthSessionId and deviceId doesn't match")
 }
 
@@ -596,12 +596,12 @@ func TestThirdPartyPasswordlessConsumeCodeTestWithExpiredUserInputCodeError(t *t
 		return
 	}
 
-	resp, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
 
-	result, err := ConsumeCodeWithUserInputCode(resp.OK.DeviceID, resp.OK.UserInputCode, resp.OK.PreAuthSessionID)
+	result, err := ConsumeCodeWithUserInputCode("public", resp.OK.DeviceID, resp.OK.UserInputCode, resp.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result.ExpiredUserInputCodeError)
 	assert.Equal(t, 1, result.ExpiredUserInputCodeError.FailedCodeInputAttemptCount)
@@ -657,7 +657,7 @@ func TestThirdPartyPasswordlessUpdateUserContactMethodEmailTest(t *testing.T) {
 		return
 	}
 
-	userInfo, err := PasswordlessSignInUpByEmail("test@example.com")
+	userInfo, err := PasswordlessSignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	updatedEmail := "test2@example.com"
@@ -674,7 +674,7 @@ func TestThirdPartyPasswordlessUpdateUserContactMethodEmailTest(t *testing.T) {
 	assert.Nil(t, resp.OK)
 	assert.NotNil(t, resp.UnknownUserIdError)
 
-	userInfo2, err := PasswordlessSignInUpByEmail("test3@example.com")
+	userInfo2, err := PasswordlessSignInUpByEmail("public", "test3@example.com")
 	assert.NoError(t, err)
 
 	resp, err = UpdatePasswordlessUser(userInfo2.User.ID, &updatedEmail, nil)
@@ -735,7 +735,7 @@ func TestThirdPartyPasswordlessUpdateUserContactPhone(t *testing.T) {
 	phoneNumber_2 := "+1234567892"
 	phoneNumber_3 := "+1234567893"
 
-	userInfo, err := PasswordlessSignInUpByPhoneNumber(phoneNumber_1)
+	userInfo, err := PasswordlessSignInUpByPhoneNumber("public", phoneNumber_1)
 	assert.NoError(t, err)
 
 	res1, err := UpdatePasswordlessUser(userInfo.User.ID, nil, &phoneNumber_2)
@@ -748,7 +748,7 @@ func TestThirdPartyPasswordlessUpdateUserContactPhone(t *testing.T) {
 
 	assert.Equal(t, phoneNumber_2, *result.PhoneNumber)
 
-	userInfo1, err := PasswordlessSignInUpByPhoneNumber(phoneNumber_3)
+	userInfo1, err := PasswordlessSignInUpByPhoneNumber("public", phoneNumber_3)
 	assert.NoError(t, err)
 
 	res1, err = UpdatePasswordlessUser(userInfo1.User.ID, nil, &phoneNumber_2)
@@ -806,21 +806,21 @@ func TestThirdPartyPasswordlessRevokeAllCodesTest(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo2, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	err = RevokeAllCodesByEmail("test@example.com")
+	err = RevokeAllCodesByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
-	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
+	result1, err := ConsumeCodeWithUserInputCode("public", codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result1.RestartFlowError)
 	assert.Nil(t, result1.OK)
 
-	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
+	result2, err := ConsumeCodeWithUserInputCode("public", codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result2.RestartFlowError)
 	assert.Nil(t, result2.OK)
@@ -874,21 +874,21 @@ func TestThirdPartyPasswordlessRevokeCode(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo2, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	err = RevokeCode(codeInfo1.OK.CodeID)
+	err = RevokeCode("public", codeInfo1.OK.CodeID)
 	assert.NoError(t, err)
 
-	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
+	result1, err := ConsumeCodeWithUserInputCode("public", codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result1.RestartFlowError)
 	assert.Nil(t, result1.OK)
 
-	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
+	result2, err := ConsumeCodeWithUserInputCode("public", codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.Nil(t, result2.RestartFlowError)
 	assert.NotNil(t, result2.OK)
@@ -942,13 +942,13 @@ func TestThirdPartyPasswordlessListCodesByEmail(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo2, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	result, err := ListCodesByEmail("test@example.com")
+	result, err := ListCodesByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(result))
@@ -1009,13 +1009,13 @@ func TestListCodesByPhoneNumber(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("+1234567890", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
-	codeInfo2, err := CreateCodeWithEmail("+1234567890", nil)
+	codeInfo2, err := CreateCodeWithEmail("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
-	result, err := ListCodesByEmail("+1234567890")
+	result, err := ListCodesByEmail("public", "+1234567890")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(result))
@@ -1076,15 +1076,15 @@ func TestThirdPartyPasswordlessListCodesByDeviceIdAndListCodesByPreAuthSessionId
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("+1234567890", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
-	result, err := ListCodesByDeviceID(codeInfo1.OK.DeviceID)
+	result, err := ListCodesByDeviceID("public", codeInfo1.OK.DeviceID)
 	assert.NoError(t, err)
 
 	assert.Equal(t, codeInfo1.OK.CodeID, result.Codes[0].CodeID)
 
-	result, err = ListCodesByPreAuthSessionID(codeInfo1.OK.PreAuthSessionID)
+	result, err = ListCodesByPreAuthSessionID("public", codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.Equal(t, codeInfo1.OK.CodeID, result.Codes[0].CodeID)
@@ -1138,7 +1138,7 @@ func TestCreateMagicLinkTest(t *testing.T) {
 		return
 	}
 
-	result, err := CreateMagicLinkByPhoneNumber("+1234567890")
+	result, err := CreateMagicLinkByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
 
 	magicLinkURL, err := url.Parse(result)
@@ -1198,7 +1198,7 @@ func TestThirdPartyPasswordlessSignInUp(t *testing.T) {
 		return
 	}
 
-	result, err := PasswordlessSignInUpByPhoneNumber("+12345678901")
+	result, err := PasswordlessSignInUpByPhoneNumber("public", "+12345678901")
 	assert.NoError(t, err)
 	assert.NotNil(t, result.User)
 	assert.True(t, result.CreatedNewUser)

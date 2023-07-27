@@ -23,7 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.APIOptions, userContext supertokens.UserContext) error {
+func PasswordReset(apiImplementation epmodels.APIInterface, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.PasswordResetPOST == nil || (*apiImplementation.PasswordResetPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -52,7 +52,7 @@ func PasswordReset(apiImplementation epmodels.APIInterface, options epmodels.API
 		return supertokens.BadInputError{Msg: "The password reset token must be a string"}
 	}
 
-	result, err := (*apiImplementation.PasswordResetPOST)(formFields, token.(string), options, userContext)
+	result, err := (*apiImplementation.PasswordResetPOST)(formFields, token.(string), tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

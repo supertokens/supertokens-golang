@@ -173,15 +173,15 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		SmsDelivery:          r.SmsDelivery,
 	}
 	if id == consumeCodeAPI {
-		return api.ConsumeCode(r.APIImpl, options, userContext)
+		return api.ConsumeCode(r.APIImpl, tenantId, options, userContext)
 	} else if id == createCodeAPI {
-		return api.CreateCode(r.APIImpl, options, userContext)
+		return api.CreateCode(r.APIImpl, tenantId, options, userContext)
 	} else if id == doesEmailExistAPI {
-		return api.DoesEmailExist(r.APIImpl, options, userContext)
+		return api.DoesEmailExist(r.APIImpl, tenantId, options, userContext)
 	} else if id == doesPhoneNumberExistAPI {
-		return api.DoesPhoneNumberExist(r.APIImpl, options, userContext)
+		return api.DoesPhoneNumberExist(r.APIImpl, tenantId, options, userContext)
 	} else {
-		return api.ResendCode(r.APIImpl, options, userContext)
+		return api.ResendCode(r.APIImpl, tenantId, options, userContext)
 	}
 }
 
@@ -193,7 +193,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (string, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		return "", err
@@ -207,7 +207,7 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext
 		userInputCodeInput = &c
 	}
 
-	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, userContext)
+	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, tenantId, userContext)
 	if err != nil {
 		return "", err
 	}
@@ -223,12 +223,12 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext
 	return link, nil
 }
 
-func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supertokens.UserContext) (struct {
+func (r *Recipe) SignInUp(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
 }, error) {
-	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, userContext)
+	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, tenantId, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string
@@ -247,7 +247,7 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 			DeviceID: codeInfo.OK.DeviceID,
 		}
 	}
-	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, userContext)
+	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, tenantId, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string

@@ -35,11 +35,11 @@ type APIOptions struct {
 }
 
 type APIInterface struct {
-	EmailExistsGET                 *func(email string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
-	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (GeneratePasswordResetTokenPOSTResponse, error)
-	PasswordResetPOST              *func(formFields []TypeFormField, token string, options APIOptions, userContext supertokens.UserContext) (ResetPasswordPOSTResponse, error)
-	SignInPOST                     *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (SignInPOSTResponse, error)
-	SignUpPOST                     *func(formFields []TypeFormField, options APIOptions, userContext supertokens.UserContext) (SignUpPOSTResponse, error)
+	EmailExistsGET                 *func(email string, tenantId string, options APIOptions, userContext supertokens.UserContext) (EmailExistsGETResponse, error)
+	GeneratePasswordResetTokenPOST *func(formFields []TypeFormField, tenantId string, options APIOptions, userContext supertokens.UserContext) (GeneratePasswordResetTokenPOSTResponse, error)
+	PasswordResetPOST              *func(formFields []TypeFormField, token string, tenantId string, options APIOptions, userContext supertokens.UserContext) (ResetPasswordPOSTResponse, error)
+	SignInPOST                     *func(formFields []TypeFormField, tenantId string, options APIOptions, userContext supertokens.UserContext) (SignInPOSTResponse, error)
+	SignUpPOST                     *func(formFields []TypeFormField, tenantId string, options APIOptions, userContext supertokens.UserContext) (SignUpPOSTResponse, error)
 }
 
 type ResetPasswordPOSTResponse struct {

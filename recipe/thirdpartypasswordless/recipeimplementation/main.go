@@ -36,15 +36,15 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		thirdPartyImplementation = &thirdPartyImplementationTemp
 	}
 
-	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
+	var ogSignInUp func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogSignInUp = *thirdPartyImplementation.SignInUp
 	}
-	thirPartySignInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+	thirPartySignInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
 		if ogSignInUp == nil {
 			return tplmodels.ThirdPartySignInUp{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
+		result, err := ogSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
 		if err != nil {
 			return tplmodels.ThirdPartySignInUp{}, err
 		}
@@ -66,16 +66,16 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		}, nil
 	}
 
-	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
+	var ogManuallyCreateOrUpdateUser func(thirdPartyID string, thirdPartyUserID string, email string, tenantId string, userContext supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) = nil
 	if thirdPartyImplementation != nil {
 		ogManuallyCreateOrUpdateUser = *thirdPartyImplementation.ManuallyCreateOrUpdateUser
 	}
 
-	thirdPartyManuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
+	thirdPartyManuallyCreateOrUpdateUser := func(thirdPartyID string, thirdPartyUserID string, email string, tenantId string, userContext supertokens.UserContext) (tplmodels.ManuallyCreateOrUpdateUserResponse, error) {
 		if ogManuallyCreateOrUpdateUser == nil {
 			return tplmodels.ManuallyCreateOrUpdateUserResponse{}, errors.New("no thirdparty provider configured")
 		}
-		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, userContext)
+		result, err := ogManuallyCreateOrUpdateUser(thirdPartyID, thirdPartyUserID, email, tenantId, userContext)
 		if err != nil {
 			return tplmodels.ManuallyCreateOrUpdateUserResponse{}, err
 		}
@@ -141,7 +141,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 				Email:       &userinfo.Email,
 				PhoneNumber: nil,
 				TimeJoined:  userinfo.TimeJoined,
-				TenantId:    userinfo.TenantId,
+				TenantIds:   userinfo.TenantIds,
 				ThirdParty:  &userinfo.ThirdParty,
 			}, nil
 		}
@@ -149,19 +149,19 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	}
 
 	ogPlessGetUserByEmail := *passwordlessImplementation.GetUserByEmail
-	var ogTPGetUsersByEmail func(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) = nil
+	var ogTPGetUsersByEmail func(email string, tenantId string, userContext supertokens.UserContext) ([]tpmodels.User, error) = nil
 	if thirdPartyImplementation != nil {
 		ogTPGetUsersByEmail = *thirdPartyImplementation.GetUsersByEmail
 	}
-	getUsersByEmail := func(email string, userContext supertokens.UserContext) ([]tplmodels.User, error) {
-		fromPless, err := ogPlessGetUserByEmail(email, userContext)
+	getUsersByEmail := func(email string, tenantId string, userContext supertokens.UserContext) ([]tplmodels.User, error) {
+		fromPless, err := ogPlessGetUserByEmail(email, tenantId, userContext)
 		if err != nil {
 			return []tplmodels.User{}, err
 		}
 
 		fromTP := []tpmodels.User{}
 		if ogTPGetUsersByEmail != nil {
-			fromTP, err = ogTPGetUsersByEmail(email, userContext)
+			fromTP, err = ogTPGetUsersByEmail(email, tenantId, userContext)
 			if err != nil {
 				return []tplmodels.User{}, err
 			}
@@ -191,16 +191,16 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 		return finalResult, nil
 	}
 
-	var ogGetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
+	var ogGetUserByThirdPartyInfo func(thirdPartyID string, thirdPartyUserID string, tenantId string, userContext supertokens.UserContext) (*tpmodels.User, error) = nil
 	if thirdPartyImplementation != nil {
 		ogGetUserByThirdPartyInfo = *thirdPartyImplementation.GetUserByThirdPartyInfo
 	}
-	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+	getUserByThirdPartyInfo := func(thirdPartyID string, thirdPartyUserID string, tenantId string, userContext supertokens.UserContext) (*tplmodels.User, error) {
 		if ogGetUserByThirdPartyInfo == nil {
 			return nil, nil
 		}
 
-		userinfo, err := ogGetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID, userContext)
+		userinfo, err := ogGetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -211,7 +211,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 				Email:       &userinfo.Email,
 				PhoneNumber: nil,
 				TimeJoined:  userinfo.TimeJoined,
-				TenantId:    userinfo.TenantId,
+				TenantIds:   userinfo.TenantIds,
 				ThirdParty:  &userinfo.ThirdParty,
 			}, nil
 		}
@@ -219,13 +219,13 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	}
 
 	ogCreateCode := *passwordlessImplementation.CreateCode
-	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
-		return ogCreateCode(email, phoneNumber, userInputCode, userContext)
+	createCode := func(email *string, phoneNumber *string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+		return ogCreateCode(email, phoneNumber, userInputCode, tenantId, userContext)
 	}
 
 	ogConsumeCode := *passwordlessImplementation.ConsumeCode
-	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (tplmodels.ConsumeCodeResponse, error) {
-		response, err := ogConsumeCode(userInput, linkCode, preAuthSessionID, userContext)
+	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (tplmodels.ConsumeCodeResponse, error) {
+		response, err := ogConsumeCode(userInput, linkCode, preAuthSessionID, tenantId, userContext)
 		if err != nil {
 			return tplmodels.ConsumeCodeResponse{}, err
 		}
@@ -262,13 +262,13 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	}
 
 	ogCreateNewCodeForDevice := *passwordlessImplementation.CreateNewCodeForDevice
-	createNewCodeForDevice := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
-		return ogCreateNewCodeForDevice(deviceID, userInputCode, userContext)
+	createNewCodeForDevice := func(deviceID string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+		return ogCreateNewCodeForDevice(deviceID, userInputCode, tenantId, userContext)
 	}
 
 	ogGetUserByPhoneNumber := *passwordlessImplementation.GetUserByPhoneNumber
-	getUserByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) (*tplmodels.User, error) {
-		resp, err := ogGetUserByPhoneNumber(phoneNumber, userContext)
+	getUserByPhoneNumber := func(phoneNumber string, tenantId string, userContext supertokens.UserContext) (*tplmodels.User, error) {
+		resp, err := ogGetUserByPhoneNumber(phoneNumber, tenantId, userContext)
 		if err != nil {
 			return &tplmodels.User{}, err
 		}
@@ -287,33 +287,33 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 	}
 
 	ogListCodesByDeviceID := *passwordlessImplementation.ListCodesByDeviceID
-	listCodesByDeviceID := func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
-		return ogListCodesByDeviceID(deviceID, userContext)
+	listCodesByDeviceID := func(deviceID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		return ogListCodesByDeviceID(deviceID, tenantId, userContext)
 	}
 
 	ogListCodesByEmail := *passwordlessImplementation.ListCodesByEmail
-	listCodesByEmail := func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
-		return ogListCodesByEmail(email, userContext)
+	listCodesByEmail := func(email string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		return ogListCodesByEmail(email, tenantId, userContext)
 	}
 
 	ogListCodesByPhoneNumber := *passwordlessImplementation.ListCodesByPhoneNumber
-	listCodesByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
-		return ogListCodesByPhoneNumber(phoneNumber, userContext)
+	listCodesByPhoneNumber := func(phoneNumber string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		return ogListCodesByPhoneNumber(phoneNumber, tenantId, userContext)
 	}
 
 	ogListCodesByPreAuthSessionID := *passwordlessImplementation.ListCodesByPreAuthSessionID
-	listCodesByPreAuthSessionID := func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
-		return ogListCodesByPreAuthSessionID(preAuthSessionID, userContext)
+	listCodesByPreAuthSessionID := func(preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		return ogListCodesByPreAuthSessionID(preAuthSessionID, tenantId, userContext)
 	}
 
 	ogRevokeAllCodes := *passwordlessImplementation.RevokeAllCodes
-	revokeAllCodes := func(email *string, phoneNumber *string, userContext supertokens.UserContext) error {
-		return ogRevokeAllCodes(email, phoneNumber, userContext)
+	revokeAllCodes := func(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) error {
+		return ogRevokeAllCodes(email, phoneNumber, tenantId, userContext)
 	}
 
 	ogRevokeCode := *passwordlessImplementation.RevokeCode
-	revokeCode := func(codeID string, userContext supertokens.UserContext) error {
-		return ogRevokeCode(codeID, userContext)
+	revokeCode := func(codeID string, tenantId string, userContext supertokens.UserContext) error {
+		return ogRevokeCode(codeID, tenantId, userContext)
 	}
 
 	ogUpdateUser := *passwordlessImplementation.UpdateUser

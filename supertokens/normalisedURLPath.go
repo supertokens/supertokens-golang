@@ -51,7 +51,18 @@ func (n NormalisedURLPath) Equals(other NormalisedURLPath) bool {
 }
 
 func (n NormalisedURLPath) IsARecipePath() bool {
-	return n.value == "/recipe" || strings.HasPrefix(n.value, "/recipe/")
+	parts := strings.Split(n.value, "/")
+	if len(parts) > 2 {
+		if parts[2] == "recipe" {
+			return true
+		}
+	}
+	if len(parts) > 1 {
+		if parts[1] == "recipe" {
+			return true
+		}
+	}
+	return false
 }
 
 func normaliseURLPathOrThrowError(input string) (string, error) {

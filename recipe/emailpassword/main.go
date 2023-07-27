@@ -26,7 +26,7 @@ func Init(config *epmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignUp(email string, password string, userContext ...supertokens.UserContext) (epmodels.SignUpResponse, error) {
+func SignUp(tenantId string, email string, password string, userContext ...supertokens.UserContext) (epmodels.SignUpResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignUpResponse{}, err
@@ -34,10 +34,10 @@ func SignUp(email string, password string, userContext ...supertokens.UserContex
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.SignUp)(email, password, userContext[0])
+	return (*instance.RecipeImpl.SignUp)(email, password, tenantId, userContext[0])
 }
 
-func SignIn(email string, password string, userContext ...supertokens.UserContext) (epmodels.SignInResponse, error) {
+func SignIn(tenantId string, email string, password string, userContext ...supertokens.UserContext) (epmodels.SignInResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignInResponse{}, err
@@ -45,7 +45,7 @@ func SignIn(email string, password string, userContext ...supertokens.UserContex
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.SignIn)(email, password, userContext[0])
+	return (*instance.RecipeImpl.SignIn)(email, password, tenantId, userContext[0])
 }
 
 func GetUserByID(userID string, userContext ...supertokens.UserContext) (*epmodels.User, error) {
@@ -59,7 +59,7 @@ func GetUserByID(userID string, userContext ...supertokens.UserContext) (*epmode
 	return (*instance.RecipeImpl.GetUserByID)(userID, userContext[0])
 }
 
-func GetUserByEmail(email string, userContext ...supertokens.UserContext) (*epmodels.User, error) {
+func GetUserByEmail(tenantId string, email string, userContext ...supertokens.UserContext) (*epmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -67,10 +67,10 @@ func GetUserByEmail(email string, userContext ...supertokens.UserContext) (*epmo
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.GetUserByEmail)(email, userContext[0])
+	return (*instance.RecipeImpl.GetUserByEmail)(email, tenantId, userContext[0])
 }
 
-func CreateResetPasswordToken(userID string, userContext ...supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+func CreateResetPasswordToken(tenantId string, userID string, userContext ...supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
@@ -78,10 +78,10 @@ func CreateResetPasswordToken(userID string, userContext ...supertokens.UserCont
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, userContext[0])
+	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, tenantId, userContext[0])
 }
 
-func ResetPasswordUsingToken(token string, newPassword string, userContext ...supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+func ResetPasswordUsingToken(tenantId string, token string, newPassword string, userContext ...supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, nil
@@ -89,10 +89,10 @@ func ResetPasswordUsingToken(token string, newPassword string, userContext ...su
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext[0])
+	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, tenantId, userContext[0])
 }
 
-func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool, userContext ...supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool, tenantIdForPasswordPolicy *string, userContext ...supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, nil
@@ -100,7 +100,11 @@ func UpdateEmailOrPassword(userId string, email *string, password *string, apply
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, userContext[0])
+	if tenantIdForPasswordPolicy == nil {
+		tenantId := supertokens.DefaultTenantId
+		tenantIdForPasswordPolicy = &tenantId
+	}
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, *tenantIdForPasswordPolicy, userContext[0])
 }
 
 func SendEmail(input emaildelivery.EmailType, userContext ...supertokens.UserContext) error {

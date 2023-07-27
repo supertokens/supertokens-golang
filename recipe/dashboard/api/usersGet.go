@@ -30,6 +30,7 @@ type User struct {
 	Email       string                     `json:"email,omitempty"`
 	PhoneNumber string                     `json:"phoneNumber,omitempty"`
 	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
+	TenantIds   string                     `json:"tenantIds,omitempty"`
 }
 
 func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (UsersGetResponse, error) {

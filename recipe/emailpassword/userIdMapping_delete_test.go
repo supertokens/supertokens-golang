@@ -68,7 +68,7 @@ func TestDeleteUserIdMappingOfSupertokensUserId(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -103,7 +103,7 @@ func TestDeleteUserIdMappingOfExternalUserId(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -138,7 +138,7 @@ func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 	assert.NotNil(t, signUpResponse.OK)
 
@@ -196,7 +196,7 @@ func TestDeleteUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 	assert.NotNil(t, signUpResponse.OK)
 

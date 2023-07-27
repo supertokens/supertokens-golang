@@ -31,8 +31,8 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 		}
 	}
 
-	signInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
-		result, err := (*apiImplmentation.ThirdPartySignInUpPOST)(provider, input, options, userContext)
+	signInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+		result, err := (*apiImplmentation.ThirdPartySignInUpPOST)(provider, input, tenantId, options, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}
@@ -51,7 +51,7 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 						ID:         result.OK.User.ID,
 						TimeJoined: result.OK.User.TimeJoined,
 						Email:      *result.OK.User.Email,
-						TenantId:   result.OK.User.TenantId,
+						TenantIds:  result.OK.User.TenantIds,
 						ThirdParty: *result.OK.User.ThirdParty,
 					},
 					Session:                 result.OK.Session,

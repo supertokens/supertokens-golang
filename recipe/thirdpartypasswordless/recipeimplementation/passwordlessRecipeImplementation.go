@@ -22,12 +22,12 @@ import (
 )
 
 func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeInterface) plessmodels.RecipeInterface {
-	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
-		return (*recipeImplementation.CreateCode)(email, phoneNumber, userInputCode, userContext)
+	createCode := func(email *string, phoneNumber *string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+		return (*recipeImplementation.CreateCode)(email, phoneNumber, userInputCode, tenantId, userContext)
 	}
 
-	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
-		resp, err := (*recipeImplementation.ConsumeCode)(userInput, linkCode, preAuthSessionID, userContext)
+	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+		resp, err := (*recipeImplementation.ConsumeCode)(userInput, linkCode, preAuthSessionID, tenantId, userContext)
 
 		if err != nil {
 			return plessmodels.ConsumeCodeResponse{}, err
@@ -63,12 +63,12 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		}
 	}
 
-	createNewCodeForDevice := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
-		return (*recipeImplementation.CreateNewCodeForDevice)(deviceID, userInputCode, userContext)
+	createNewCodeForDevice := func(deviceID string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+		return (*recipeImplementation.CreateNewCodeForDevice)(deviceID, userInputCode, tenantId, userContext)
 	}
 
-	getUserByEmail := func(email string, userContext supertokens.UserContext) (*plessmodels.User, error) {
-		resp, err := (*recipeImplementation.GetUsersByEmail)(email, userContext)
+	getUserByEmail := func(email string, tenantId string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		resp, err := (*recipeImplementation.GetUsersByEmail)(email, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -111,8 +111,8 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		}, nil
 	}
 
-	getUserByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) (*plessmodels.User, error) {
-		resp, err := (*recipeImplementation.GetUserByPhoneNumber)(phoneNumber, userContext)
+	getUserByPhoneNumber := func(phoneNumber string, tenantId string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		resp, err := (*recipeImplementation.GetUserByPhoneNumber)(phoneNumber, tenantId, userContext)
 
 		if err != nil {
 			return nil, err
@@ -135,28 +135,28 @@ func MakePasswordlessRecipeImplementation(recipeImplementation tplmodels.RecipeI
 		}, nil
 	}
 
-	listCodesByDeviceID := func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
-		return (*recipeImplementation.ListCodesByDeviceID)(deviceID, userContext)
+	listCodesByDeviceID := func(deviceID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		return (*recipeImplementation.ListCodesByDeviceID)(deviceID, tenantId, userContext)
 	}
 
-	listCodesByEmail := func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
-		return (*recipeImplementation.ListCodesByEmail)(email, userContext)
+	listCodesByEmail := func(email string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		return (*recipeImplementation.ListCodesByEmail)(email, tenantId, userContext)
 	}
 
-	listCodesByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
-		return (*recipeImplementation.ListCodesByPhoneNumber)(phoneNumber, userContext)
+	listCodesByPhoneNumber := func(phoneNumber string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		return (*recipeImplementation.ListCodesByPhoneNumber)(phoneNumber, tenantId, userContext)
 	}
 
-	listCodesByPreAuthSessionID := func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
-		return (*recipeImplementation.ListCodesByPreAuthSessionID)(preAuthSessionID, userContext)
+	listCodesByPreAuthSessionID := func(preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		return (*recipeImplementation.ListCodesByPreAuthSessionID)(preAuthSessionID, tenantId, userContext)
 	}
 
-	revokeAllCodes := func(email *string, phoneNumber *string, userContext supertokens.UserContext) error {
-		return (*recipeImplementation.RevokeAllCodes)(email, phoneNumber, userContext)
+	revokeAllCodes := func(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) error {
+		return (*recipeImplementation.RevokeAllCodes)(email, phoneNumber, tenantId, userContext)
 	}
 
-	revokeCode := func(codeID string, userContext supertokens.UserContext) error {
-		return (*recipeImplementation.RevokeCode)(codeID, userContext)
+	revokeCode := func(codeID string, tenantId string, userContext supertokens.UserContext) error {
+		return (*recipeImplementation.RevokeCode)(codeID, tenantId, userContext)
 	}
 
 	updateUser := func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error) {

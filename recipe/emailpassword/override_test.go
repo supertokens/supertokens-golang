@@ -50,16 +50,16 @@ func TestOverridingFunctionCalls(t *testing.T) {
 						originalSignup := *originalImplementation.SignUp
 						originalSignIn := *originalImplementation.SignIn
 						originalGetUserById := *originalImplementation.GetUserByID
-						*originalImplementation.SignUp = func(email, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
-							res, err := originalSignup(email, password, userContext)
+						*originalImplementation.SignUp = func(email, password string, tenantId string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+							res, err := originalSignup(email, password, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
 							user = &res.OK.User
 							return res, nil
 						}
-						*originalImplementation.SignIn = func(email, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
-							res, err := originalSignIn(email, password, userContext)
+						*originalImplementation.SignIn = func(email, password string, tenantId string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+							res, err := originalSignIn(email, password, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -230,8 +230,8 @@ func TestOverridingApiCalls(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignupPost := *originalImplementation.SignUpPOST
-						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
-							res, err := originalSignupPost(formFields, options, userContext)
+						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+							res, err := originalSignupPost(formFields, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -239,8 +239,8 @@ func TestOverridingApiCalls(t *testing.T) {
 							return res, err
 						}
 						originalSignInPOST := *originalImplementation.SignInPOST
-						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
-							res, err := originalSignInPOST(formFields, options, userContext)
+						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+							res, err := originalSignInPOST(formFields, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -248,8 +248,8 @@ func TestOverridingApiCalls(t *testing.T) {
 							return res, err
 						}
 						originalemailExistGet := *originalImplementation.EmailExistsGET
-						*originalImplementation.EmailExistsGET = func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
-							res, err := originalemailExistGet(email, options, userContext)
+						*originalImplementation.EmailExistsGET = func(email string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+							res, err := originalemailExistGet(email, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}

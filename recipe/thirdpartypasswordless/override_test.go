@@ -64,8 +64,8 @@ func TestOverridingFunctions(t *testing.T) {
 				Override: &tplmodels.OverrideStruct{
 					Functions: func(originalImplementation tplmodels.RecipeInterface) tplmodels.RecipeInterface {
 						originalThirdPartySignInUp := *originalImplementation.ThirdPartySignInUp
-						*originalImplementation.ThirdPartySignInUp = func(thirdPartyID, thirdPartyUserID, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
-							resp, err := originalThirdPartySignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, userContext)
+						*originalImplementation.ThirdPartySignInUp = func(thirdPartyID, thirdPartyUserID, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUp, error) {
+							resp, err := originalThirdPartySignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
 							userRef = &resp.OK.User
 							newUser = resp.OK.CreatedNewUser
 							return resp, err
@@ -248,8 +248,8 @@ func TestOverridingAPIs(t *testing.T) {
 				Override: &tplmodels.OverrideStruct{
 					APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
 						originalThirdPartySignInUpPost := *originalImplementation.ThirdPartySignInUpPOST
-						*originalImplementation.ThirdPartySignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
-							resp, err := originalThirdPartySignInUpPost(provider, input, options, userContext)
+						*originalImplementation.ThirdPartySignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
+							resp, err := originalThirdPartySignInUpPost(provider, input, tenantId, options, userContext)
 							userRef = &resp.OK.User
 							newUser = resp.OK.CreatedNewUser
 							return resp, err
