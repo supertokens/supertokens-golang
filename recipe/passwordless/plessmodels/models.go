@@ -22,10 +22,11 @@ import (
 )
 
 type User struct {
-	ID          string  `json:"id"`
-	Email       *string `json:"email"`
-	PhoneNumber *string `json:"phoneNumber"`
-	TimeJoined  uint64  `json:"timejoined"`
+	ID          string   `json:"id"`
+	Email       *string  `json:"email"`
+	PhoneNumber *string  `json:"phoneNumber"`
+	TimeJoined  uint64   `json:"timejoined"`
+	TenantIds   []string `json:"tenantIds"`
 }
 
 type TypeInput struct {

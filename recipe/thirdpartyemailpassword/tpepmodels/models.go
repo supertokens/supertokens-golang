@@ -22,14 +22,14 @@ import (
 )
 
 type User struct {
-	ID         string  `json:"id"`
-	TimeJoined uint64  `json:"timeJoined"`
-	Email      string  `json:"email"`
-	TenantId   *string `json:"tenantId,omitempty"`
+	ID         string `json:"id"`
+	TimeJoined uint64 `json:"timeJoined"`
+	Email      string `json:"email"`
 	ThirdParty *struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`
 	} `json:"thirdParty"`
+	TenantIds []string `json:"tenantIds"`
 }
 
 type TypeContext struct {

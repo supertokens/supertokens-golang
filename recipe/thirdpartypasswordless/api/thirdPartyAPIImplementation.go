@@ -51,7 +51,7 @@ func GetThirdPartyIterfaceImpl(apiImplmentation tplmodels.APIInterface) tpmodels
 						ID:         result.OK.User.ID,
 						TimeJoined: result.OK.User.TimeJoined,
 						Email:      *result.OK.User.Email,
-						TenantId:   result.OK.User.TenantId,
+						TenantIds:  result.OK.User.TenantIds,
 						ThirdParty: *result.OK.User.ThirdParty,
 					},
 					Session:                 result.OK.Session,

@@ -35,7 +35,7 @@ func MakeThirdPartyRecipeImplementation(recipeImplementation tplmodels.RecipeInt
 			ID:         user.ID,
 			Email:      *user.Email,
 			TimeJoined: user.TimeJoined,
-			TenantId:   user.TenantId,
+			TenantIds:  user.TenantIds,
 			ThirdParty: *user.ThirdParty,
 		}, nil
 	}
