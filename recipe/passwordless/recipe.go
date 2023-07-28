@@ -212,11 +212,12 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId st
 		return "", err
 	}
 	link := fmt.Sprintf(
-		"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
+		"%s%s/verify?rid=%s&preAuthSessionId=%s&tenantId=%s#%s",
 		stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 		stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 		r.RecipeModule.GetRecipeID(),
 		response.OK.PreAuthSessionID,
+		tenantId,
 		response.OK.LinkCode,
 	)
 

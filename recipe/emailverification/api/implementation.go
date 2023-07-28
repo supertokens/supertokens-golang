@@ -123,11 +123,12 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			Email: email.OK.Email,
 		}
 		emailVerificationURL := fmt.Sprintf(
-			"%s%s/verify-email?token=%s&rid=%s",
+			"%s%s/verify-email?token=%s&rid=%s&tenantId=%s",
 			options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 			response.OK.Token,
 			options.RecipeID,
+			"public", // TODO multitenancy pass tenantId from session
 		)
 
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email.OK.Email))

@@ -76,11 +76,12 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 	}
 
 	emailVerificationURL := fmt.Sprintf(
-		"%s%s/verify-email?token=%s&rid=%s",
+		"%s%s/verify-email?token=%s&rid=%s&tenantId=%s",
 		options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 		options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 		emailVerificationToken.OK.Token,
 		options.RecipeID,
+		"public", // TODO multitenancy pass tenantId
 	)
 
 	emailverification.SendEmail(emaildelivery.EmailType{
