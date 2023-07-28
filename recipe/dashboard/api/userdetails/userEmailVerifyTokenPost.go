@@ -63,7 +63,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
 	}
 
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(*readBody.UserId, &emailresponse.OK.Email)
+	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken("public", *readBody.UserId, &emailresponse.OK.Email) // TODO multitenancy pass tenantId
 
 	if tokenError != nil {
 		return userEmailVerifyTokenPost{}, tokenError

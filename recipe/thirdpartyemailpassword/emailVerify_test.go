@@ -137,11 +137,11 @@ func TestGenerateTokenAPIwithValidInputEmailVerifiedAndTestError(t *testing.T) {
 	assert.Equal(t, "OK", result["status"])
 	user := result["user"].(map[string]interface{})
 
-	verifyToken, err := emailverification.CreateEmailVerificationToken(user["id"].(string), nil)
+	verifyToken, err := emailverification.CreateEmailVerificationToken("public", user["id"].(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	emailverification.VerifyEmailUsingToken(verifyToken.OK.Token)
+	emailverification.VerifyEmailUsingToken("public", verifyToken.OK.Token)
 
 	rep1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, user["id"].(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 	if err != nil {

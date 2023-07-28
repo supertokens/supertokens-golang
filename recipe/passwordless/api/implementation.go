@@ -48,12 +48,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		if user.Email != nil {
 			evInstance := emailverification.GetRecipeInstance()
 			if evInstance != nil {
-				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, userContext)
+				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, tenantId, userContext)
 				if err != nil {
 					return plessmodels.ConsumeCodePOSTResponse{}, err
 				}
 				if tokenResponse.OK != nil {
-					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
+					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, tenantId, userContext)
 					if err != nil {
 						return plessmodels.ConsumeCodePOSTResponse{}, err
 					}

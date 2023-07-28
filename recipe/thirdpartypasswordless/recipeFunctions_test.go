@@ -94,10 +94,10 @@ func TestWithThirdPartyPasswordlessForThirdPartyUserThatIsEmailVerifiedReturnsTh
 	resp, err := ThirdPartyManuallyCreateOrUpdateUser("public", "custom", "verifiedUser", "test@example.com")
 	assert.NoError(t, err)
 
-	emailVerificationToken, err := emailverification.CreateEmailVerificationToken(resp.OK.User.ID, nil)
+	emailVerificationToken, err := emailverification.CreateEmailVerificationToken("public", resp.OK.User.ID, nil)
 	assert.NoError(t, err)
 
-	emailverification.VerifyEmailUsingToken(emailVerificationToken.OK.Token)
+	emailverification.VerifyEmailUsingToken("public", emailVerificationToken.OK.Token)
 
 	isVerfied, err := emailverification.IsEmailVerified(resp.OK.User.ID, nil)
 	assert.NoError(t, err)
@@ -174,7 +174,7 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	assert.NoError(t, err)
 	assert.False(t, isVerified) // this is a change in behavior
 
-	emailVerificationResp, err := emailverification.CreateEmailVerificationToken(response.User.ID, nil)
+	emailVerificationResp, err := emailverification.CreateEmailVerificationToken("public", response.User.ID, nil)
 	assert.NoError(t, err)
 	assert.Nil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.NotNil(t, emailVerificationResp.OK)
@@ -186,7 +186,7 @@ func TestWithThirdPartyPasswordlessForPasswordlessUserThatIsEmailVerifiedReturns
 	assert.NoError(t, err)
 	assert.True(t, isVerified)
 
-	emailVerificationResp, err = emailverification.CreateEmailVerificationToken(response.User.ID, nil)
+	emailVerificationResp, err = emailverification.CreateEmailVerificationToken("public", response.User.ID, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
 	assert.Nil(t, emailVerificationResp.OK)

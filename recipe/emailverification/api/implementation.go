@@ -28,8 +28,8 @@ import (
 )
 
 func MakeAPIImplementation() evmodels.APIInterface {
-	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
+	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, tenantId, userContext)
 		if err != nil {
 			return evmodels.VerifyEmailPOSTResponse{}, err
 		}
@@ -99,7 +99,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, "public", userContext) // TODO multitenancy pass tenantId from session
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
