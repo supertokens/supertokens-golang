@@ -20,14 +20,15 @@ import (
 	"encoding/json"
 	defaultErrors "errors"
 	"fmt"
+	"reflect"
+	"sync"
+	"time"
+
 	"github.com/MicahParks/keyfunc"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"reflect"
-	"sync"
-	"time"
 )
 
 var protectedProps = []string{
@@ -126,7 +127,8 @@ func getJWKS() (*keyfunc.JWKS, error) {
 	return nil, lastError
 }
 
-/**
+/*
+*
 This function fetches all JWKs from the first available core instance. This combines the other JWKS functions to become
 error resistant.
 
@@ -251,16 +253,21 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		supertokens.LogDebugMessage("getSession: Success!")
 		var payload map[string]interface{}
 
-		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			parsedToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
+		if accessToken.Version >= 3 {
+			if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+				parsedToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 
-			if parseErr != nil {
-				return nil, parseErr
+				if parseErr != nil {
+					return nil, parseErr
+				}
+
+				payload = parsedToken.Payload
+			} else {
+				payload = accessToken.Payload
 			}
-
-			payload = parsedToken.Payload
 		} else {
-			payload = accessToken.Payload
+			payload = response.Session.UserDataInAccessToken
+			// payload = accessToken.Payload
 		}
 
 		accessTokenStringForSession := *accessTokenString
