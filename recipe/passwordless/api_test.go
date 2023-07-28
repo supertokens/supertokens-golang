@@ -150,7 +150,7 @@ func TestSignInUpFlowWithEmailUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 	assert.Equal(t, "OK", codeResendResult["status"])
 	assert.True(t, codeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(codeResendResult))
-	assert.Equal(t, 4, len(codeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(codeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "test@example.com", codeResendResult["user"].(map[string]interface{})["email"])
 }
 
@@ -272,7 +272,7 @@ func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing
 	assert.Equal(t, "OK", codeResendResult["status"])
 	assert.True(t, codeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(codeResendResult))
-	assert.Equal(t, 4, len(codeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(codeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "+12345678901", codeResendResult["user"].(map[string]interface{})["phoneNumber"])
 }
 
@@ -995,7 +995,7 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 	assert.Equal(t, "OK", validCodeResendResult["status"])
 	assert.True(t, validCodeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(validCodeResendResult))
-	assert.Equal(t, 4, len(validCodeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(validCodeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "test@example.com", validCodeResendResult["user"].(map[string]interface{})["email"])
 }
 
@@ -1117,7 +1117,7 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 	assert.Equal(t, "OK", validCodeResendResult["status"])
 	assert.True(t, validCodeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(validCodeResendResult))
-	assert.Equal(t, 4, len(validCodeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(validCodeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "test@example.com", validCodeResendResult["user"].(map[string]interface{})["email"])
 
 	usedCodeResendPostBody := map[string]interface{}{

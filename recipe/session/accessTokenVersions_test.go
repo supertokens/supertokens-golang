@@ -19,7 +19,7 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestShouldCreateAV3Token(t *testing.T) {
+func TestShouldCreateAV4Token(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -63,7 +63,7 @@ func TestShouldCreateAV3Token(t *testing.T) {
 		t.Error(parseErr.Error())
 	}
 
-	assert.Equal(t, parsedToken.Version, 3)
+	assert.Equal(t, parsedToken.Version, 4)
 	bytes, err := base64.RawURLEncoding.DecodeString(parsedToken.Header)
 	if err != nil {
 		t.Error(err.Error())
@@ -80,7 +80,7 @@ func TestShouldCreateAV3Token(t *testing.T) {
 	assert.True(t, strings.HasPrefix(result["kid"].(string), "d-"))
 }
 
-func TestShouldCreateV3TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
+func TestShouldCreateV4TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 	useDynamicKey := false
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -127,7 +127,7 @@ func TestShouldCreateV3TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 		t.Error(parseErr.Error())
 	}
 
-	assert.Equal(t, parsedToken.Version, 3)
+	assert.Equal(t, parsedToken.Version, 4)
 	bytes, err := base64.RawURLEncoding.DecodeString(parsedToken.Header)
 	if err != nil {
 		t.Error(err.Error())
@@ -304,7 +304,7 @@ func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) 
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, parsedAtAfterRefresh.Version, 3)
+	assert.Equal(t, parsedAtAfterRefresh.Version, 4)
 	assert.Equal(t, parsedAtAfterRefresh.Payload["sub"], "test-user-id")
 	assert.Equal(t, parsedAtAfterRefresh.Payload["appSub"], "asdf")
 
@@ -410,7 +410,7 @@ func TestShouldHelpMigratingV2TokenUsingProtectedPropsWhenCalledUsingSessionHand
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, parsedAtAfterRefresh.Version, 3)
+	assert.Equal(t, parsedAtAfterRefresh.Version, 4)
 	assert.Equal(t, parsedAtAfterRefresh.Payload["sub"], "test-user-id")
 	assert.Equal(t, parsedAtAfterRefresh.Payload["appSub"], "asdf")
 
@@ -925,7 +925,7 @@ func TestShouldRefreshLegacySessionsToNewVersion(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, parsedAtAfterRefresh.Version, 3)
+	assert.Equal(t, parsedAtAfterRefresh.Version, 4)
 }
 
 func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {

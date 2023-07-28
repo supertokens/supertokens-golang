@@ -46,7 +46,7 @@ func TestShouldSetClaimValueMergeTheRightValue(t *testing.T) {
 	sessionContainer.SetClaimValue(trueClaim, true)
 
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, 10, len(accessTokenPayload))
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 }
 
@@ -97,14 +97,14 @@ func TestShouldSetClaimValueOverwriteClaimValue(t *testing.T) {
 	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, 10, len(accessTokenPayload))
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 
 	trueClaim, _ := TrueClaim()
 	sessionContainer.SetClaimValue(trueClaim, false)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, 10, len(accessTokenPayload))
 	assert.Equal(t, false, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 }
 
@@ -155,7 +155,7 @@ func TestShouldSetClaimValueOverwriteClaimValueUsingHandle(t *testing.T) {
 	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, 10, len(accessTokenPayload))
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 
 	trueClaim, _ := TrueClaim()
