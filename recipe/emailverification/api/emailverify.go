@@ -27,7 +27,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOptions, userContext supertokens.UserContext) error {
+func EmailVerify(apiImplementation evmodels.APIInterface, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) error {
 	var result map[string]interface{}
 	if options.Req.Method == http.MethodPost {
 		if apiImplementation.VerifyEmailPOST == nil ||
@@ -69,7 +69,7 @@ func EmailVerify(apiImplementation evmodels.APIInterface, options evmodels.APIOp
 			return supertokens.BadInputError{Msg: "The email verification token must be a string"}
 		}
 
-		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, options, userContext)
+		response, err := (*apiImplementation.VerifyEmailPOST)(token.(string), sessionContainer, tenantId, options, userContext)
 		if err != nil {
 			return err
 		}

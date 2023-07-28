@@ -969,8 +969,8 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1238,8 +1238,8 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1344,8 +1344,8 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 				Override: &evmodels.OverrideStruct{
 					Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 						originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-						*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-							res, err := originalVerifyUsingToken(token, userContext)
+						*originalImplementation.VerifyEmailUsingToken = func(token string, tenantId string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+							res, err := originalVerifyUsingToken(token, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1450,8 +1450,8 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1554,8 +1554,8 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 				Override: &evmodels.OverrideStruct{
 					Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 						originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-						*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-							res, err := originalVerifyUsingToken(token, userContext)
+						*originalImplementation.VerifyEmailUsingToken = func(token string, tenantId string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+							res, err := originalVerifyUsingToken(token, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1698,15 +1698,15 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 
 	userId := response["user"].(map[string]interface{})["id"]
 
-	res, err := emailverification.CreateEmailVerificationToken(userId.(string), nil)
+	res, err := emailverification.CreateEmailVerificationToken("public", userId.(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	verifyToken := res.OK.Token
 
-	emailverification.RevokeEmailVerificationTokens(userId.(string), nil)
+	emailverification.RevokeEmailVerificationTokens("public", userId.(string), nil)
 
-	res1, err := emailverification.VerifyEmailUsingToken(verifyToken)
+	res1, err := emailverification.VerifyEmailUsingToken("public", verifyToken)
 	assert.NoError(t, err)
 	assert.NotNil(t, res1.EmailVerificationInvalidTokenError)
 	assert.Nil(t, res1.OK)

@@ -63,7 +63,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
 	}
 
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(*readBody.UserId, &emailresponse.OK.Email)
+	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken("public", *readBody.UserId, &emailresponse.OK.Email) // TODO multitenancy pass tenantId
 
 	if tokenError != nil {
 		return userEmailVerifyTokenPost{}, tokenError
@@ -76,11 +76,12 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 	}
 
 	emailVerificationURL := fmt.Sprintf(
-		"%s%s/verify-email?token=%s&rid=%s",
+		"%s%s/verify-email?token=%s&rid=%s&tenantId=%s",
 		options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 		options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 		emailVerificationToken.OK.Token,
 		options.RecipeID,
+		"public", // TODO multitenancy pass tenantId
 	)
 
 	emailverification.SendEmail(emaildelivery.EmailType{

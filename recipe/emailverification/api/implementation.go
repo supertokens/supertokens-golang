@@ -28,8 +28,8 @@ import (
 )
 
 func MakeAPIImplementation() evmodels.APIInterface {
-	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
+	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, tenantId, userContext)
 		if err != nil {
 			return evmodels.VerifyEmailPOSTResponse{}, err
 		}
@@ -99,7 +99,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, "public", userContext) // TODO multitenancy pass tenantId from session
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
@@ -123,11 +123,12 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			Email: email.OK.Email,
 		}
 		emailVerificationURL := fmt.Sprintf(
-			"%s%s/verify-email?token=%s&rid=%s",
+			"%s%s/verify-email?token=%s&rid=%s&tenantId=%s",
 			options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 			response.OK.Token,
 			options.RecipeID,
+			"public", // TODO multitenancy pass tenantId from session
 		)
 
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email.OK.Email))

@@ -82,9 +82,9 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	infoFromResponse := unittesting.ExtractInfoFromResponse(resp)
 	antiCsrf := infoFromResponse["antiCsrf"]
 
-	token, err := emailverification.CreateEmailVerificationToken(userId, nil)
+	token, err := emailverification.CreateEmailVerificationToken("public", userId, nil)
 	assert.NoError(t, err)
-	_, err = emailverification.VerifyEmailUsingToken(token.OK.Token)
+	_, err = emailverification.VerifyEmailUsingToken("public", token.OK.Token)
 	assert.NoError(t, err)
 
 	resp, err = unittesting.EmailVerifyTokenRequest(

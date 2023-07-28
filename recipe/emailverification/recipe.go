@@ -191,7 +191,7 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 	if id == generateEmailVerifyTokenAPI {
 		return api.GenerateEmailVerifyToken(r.APIImpl, options, userContext)
 	} else {
-		return api.EmailVerify(r.APIImpl, options, userContext)
+		return api.EmailVerify(r.APIImpl, tenantId, options, userContext)
 	}
 }
 

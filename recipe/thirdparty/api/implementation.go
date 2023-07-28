@@ -82,12 +82,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		if emailInfo.IsVerified {
 			evInstance := emailverification.GetRecipeInstance()
 			if evInstance != nil {
-				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email, userContext) // TODO multitenancy pass tenantId
+				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(response.OK.User.ID, response.OK.User.Email, tenantId, userContext)
 				if err != nil {
 					return tpmodels.SignInUpPOSTResponse{}, err
 				}
 				if tokenResponse.OK != nil {
-					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
+					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, tenantId, userContext)
 					if err != nil {
 						return tpmodels.SignInUpPOSTResponse{}, err
 					}

@@ -48,12 +48,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		if user.Email != nil {
 			evInstance := emailverification.GetRecipeInstance()
 			if evInstance != nil {
-				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, userContext)
+				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, tenantId, userContext)
 				if err != nil {
 					return plessmodels.ConsumeCodePOSTResponse{}, err
 				}
 				if tokenResponse.OK != nil {
-					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, userContext)
+					_, err := (*evInstance.RecipeImpl.VerifyEmailUsingToken)(tokenResponse.OK.Token, tenantId, userContext)
 					if err != nil {
 						return plessmodels.ConsumeCodePOSTResponse{}, err
 					}
@@ -100,11 +100,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		flowType := options.Config.FlowType
 		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
 			link := fmt.Sprintf(
-				"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
+				"%s%s/verify?rid=%s&preAuthSessionId=%s&tenantId=%s#%s",
 				options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 				options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 				options.RecipeID,
 				response.OK.PreAuthSessionID,
+				tenantId,
 				response.OK.LinkCode,
 			)
 			magicLink = &link
@@ -274,11 +275,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			flowType := options.Config.FlowType
 			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
 				link := fmt.Sprintf(
-					"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
+					"%s%s/verify?rid=%s&preAuthSessionId=%s&tenantId=%s#%s",
 					options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
 					options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 					options.RecipeID,
 					response.OK.PreAuthSessionID,
+					tenantId,
 					response.OK.LinkCode,
 				)
 

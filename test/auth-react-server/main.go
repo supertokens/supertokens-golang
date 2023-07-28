@@ -155,14 +155,14 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 							return ogGenerateEmailVerifyTokenPOST(sessionContainer, options, userContext)
 						}
 
-						(*originalImplementation.VerifyEmailPOST) = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+						(*originalImplementation.VerifyEmailPOST) = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
 							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email verify", false)
 							if gr != nil {
 								return evmodels.VerifyEmailPOSTResponse{
 									GeneralError: gr,
 								}, nil
 							}
-							return ogVerifyEmailPOST(token, sessionContainer, options, userContext)
+							return ogVerifyEmailPOST(token, sessionContainer, tenantId, options, userContext)
 						}
 						return originalImplementation
 					},
