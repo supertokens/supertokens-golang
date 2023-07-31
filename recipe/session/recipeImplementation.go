@@ -267,7 +267,6 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			}
 		} else {
 			payload = response.Session.UserDataInAccessToken
-			// payload = accessToken.Payload
 		}
 
 		accessTokenStringForSession := *accessTokenString
