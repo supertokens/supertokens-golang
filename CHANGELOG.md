@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.12.10] - 2023-07-31
 
 - Fixes error handling with regenerate access token when the access token of the session is revoked.
+- Fixes payload in get session when the  access token version <= 2
 
 ## [0.12.9] - 2023-07-26
 
