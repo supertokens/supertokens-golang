@@ -26,6 +26,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -2073,6 +2074,44 @@ func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t 
 	session, err = GetSessionWithoutRequestResponse(sessionTokens.AccessToken, sessionTokens.AntiCsrfToken, nil)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), "The access token doesn't match the useDynamicAccessTokenSigningKey setting")
+}
+
+func TestThatRevokedAccessTokenThrowsUnauthorisedErrorWhenRegenerateTokenIsCalled(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	sessionContainer, err := CreateNewSessionWithoutRequestResponse("testing-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	_, err = RevokeSession(sessionContainer.GetHandle())
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	err = sessionContainer.MergeIntoAccessTokenPayload(map[string]interface{}{"key": "value"})
+	assert.NotNil(t, err)
+	_, ok := err.(errors.UnauthorizedError)
+	assert.True(t, ok)
 }
 
 func jwksLockTestRoutine(t *testing.T, shouldStop *bool, index int, group *sync.WaitGroup, doPost func([]string)) {
