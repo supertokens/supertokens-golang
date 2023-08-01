@@ -81,7 +81,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, tenantI
 		options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 		emailVerificationToken.OK.Token,
 		options.RecipeID,
-		"public", // TODO multitenancy pass tenantId
+		tenantId,
 	)
 
 	emailverification.SendEmail(emaildelivery.EmailType{

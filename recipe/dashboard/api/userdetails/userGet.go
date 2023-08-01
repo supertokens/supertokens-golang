@@ -16,6 +16,8 @@
 package userdetails
 
 import (
+	"reflect"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
@@ -59,7 +61,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, op
 
 	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId, userContext)
 
-	if userForRecipeId == (dashboardmodels.UserType{}) {
+	if reflect.DeepEqual(userForRecipeId, dashboardmodels.UserType{}) {
 		return userGetResponse{
 			Status: "NO_USER_FOUND_ERROR",
 		}, nil

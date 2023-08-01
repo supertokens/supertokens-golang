@@ -439,7 +439,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if sessionInfo == nil {
 			return false, nil
 		}
-		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, "public", nil, userContext) // TODO multitenancy update tenantId from session
+		accessTokenPayloadUpdate, err := claim.Build(sessionInfo.UserId, sessionInfo.TenantId, nil, userContext)
 		if err != nil {
 			return false, err
 		}

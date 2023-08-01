@@ -74,7 +74,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}, nil
 		}
 
-		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, nil, userContext) // TODO multitenancy pass tenantId
+		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, nil, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -114,7 +114,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 		}
 
 		tenantId := "public"
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, &tenantId, userContext) // TODO multitenancy pass tenantId
+		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, &tenantId, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err

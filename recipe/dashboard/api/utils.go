@@ -1,6 +1,8 @@
 package api
 
 import (
+	"reflect"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
@@ -39,11 +41,12 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 			userToReturn.FirstName = ""
 			userToReturn.LastName = ""
 			userToReturn.Email = response.Email
+			userToReturn.TenantIds = response.TenantIds
 
 			recipeToReturn = emailpassword.RECIPE_ID
 		}
 
-		if userToReturn == (dashboardmodels.UserType{}) {
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
 			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
 			if tpepError == nil {
@@ -52,6 +55,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 				userToReturn.FirstName = ""
 				userToReturn.LastName = ""
 				userToReturn.Email = tpepResponse.Email
+				userToReturn.TenantIds = tpepResponse.TenantIds
 
 				recipeToReturn = thirdpartyemailpassword.RECIPE_ID
 			}
@@ -69,9 +73,10 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 				Id:     response.ThirdParty.ID,
 				UserId: response.ThirdParty.UserID,
 			}
+			userToReturn.TenantIds = response.TenantIds
 		}
 
-		if userToReturn == (dashboardmodels.UserType{}) {
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
 			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
 			if tpepError == nil {
@@ -84,6 +89,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 					Id:     tpepResponse.ThirdParty.ID,
 					UserId: tpepResponse.ThirdParty.UserID,
 				}
+				userToReturn.TenantIds = tpepResponse.TenantIds
 			}
 		}
 	} else if recipeId == passwordless.RECIPE_ID {
@@ -102,9 +108,11 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 			if response.PhoneNumber != nil {
 				userToReturn.Phone = *response.PhoneNumber
 			}
+
+			userToReturn.TenantIds = response.TenantIds
 		}
 
-		if userToReturn == (dashboardmodels.UserType{}) {
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
 			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId, userContext)
 
 			if tppError == nil {
@@ -120,6 +128,8 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 				if tppResponse.PhoneNumber != nil {
 					userToReturn.Phone = *tppResponse.PhoneNumber
 				}
+
+				userToReturn.TenantIds = tppResponse.TenantIds
 			}
 		}
 	}

@@ -99,7 +99,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, "public", userContext) // TODO multitenancy pass tenantId from session
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, sessionContainer.GetTenantIdWithContext(userContext), userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
@@ -128,7 +128,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 			response.OK.Token,
 			options.RecipeID,
-			"public", // TODO multitenancy pass tenantId from session
+			sessionContainer.GetTenantIdWithContext(userContext),
 		)
 
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email.OK.Email))
