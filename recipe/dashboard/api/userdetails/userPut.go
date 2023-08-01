@@ -373,7 +373,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, userCo
 	return updatePhoneResponse{}, errors.New("Should never come here")
 }
 
-func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userPutResponse, error) {
+func UserPut(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {

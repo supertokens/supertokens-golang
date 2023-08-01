@@ -26,7 +26,7 @@ type userEmailVerifyGetResponse struct {
 	IsVerified *bool  `json:"isVerified,omitempty"`
 }
 
-func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyGetResponse, error) {
+func UserEmailVerifyGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 

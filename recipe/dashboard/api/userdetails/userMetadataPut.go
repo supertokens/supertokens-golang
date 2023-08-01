@@ -32,7 +32,7 @@ type userMetaDataRequestBody struct {
 	Data   *string `json:"data"`
 }
 
-func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userMetadataPutResponse, error) {
+func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userMetadataPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {

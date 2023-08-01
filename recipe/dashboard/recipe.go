@@ -284,57 +284,59 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 	}
 
 	// Do API key validation for the remaining APIs
-	return apiKeyProtector(r.APIImpl, options, userContext, func() (interface{}, error) {
+	return apiKeyProtector(r.APIImpl, tenantId, options, userContext, func() (interface{}, error) {
 		if id == usersListGetAPI {
-			return api.UsersGet(r.APIImpl, options, userContext)
+			return api.UsersGet(r.APIImpl, tenantId, options, userContext)
 		} else if id == usersCountAPI {
-			return api.UsersCountGet(r.APIImpl, options, userContext)
+			return api.UsersCountGet(r.APIImpl, tenantId, options, userContext)
 		} else if id == userAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserGet(r.APIImpl, options, userContext)
+				return userdetails.UserGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserPut(r.APIImpl, options, userContext)
+				return userdetails.UserPut(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodDelete {
-				return userdetails.UserDelete(r.APIImpl, options, userContext)
+				return userdetails.UserDelete(r.APIImpl, tenantId, options, userContext)
 			}
 		} else if id == userEmailVerifyAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserEmailVerifyGet(r.APIImpl, options, userContext)
+				return userdetails.UserEmailVerifyGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserEmailVerifyPut(r.APIImpl, options, userContext)
+				return userdetails.UserEmailVerifyPut(r.APIImpl, tenantId, options, userContext)
 			}
 		} else if id == userSessionsAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserSessionsGet(r.APIImpl, options, userContext)
+				return userdetails.UserSessionsGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPost {
-				return userdetails.UserSessionsRevoke(r.APIImpl, options, userContext)
+				return userdetails.UserSessionsRevoke(r.APIImpl, tenantId, options, userContext)
 			}
 		} else if id == userMetaDataAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserMetaDataGet(r.APIImpl, options, userContext)
+				return userdetails.UserMetaDataGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserMetaDataPut(r.APIImpl, options, userContext)
+				return userdetails.UserMetaDataPut(r.APIImpl, tenantId, options, userContext)
 			}
 		} else if id == userEmailVerifyTokenAPI {
-			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options, userContext)
+			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, tenantId, options, userContext)
 		} else if id == userPasswordAPI {
-			return userdetails.UserPasswordPut(r.APIImpl, options, userContext)
+			return userdetails.UserPasswordPut(r.APIImpl, tenantId, options, userContext)
 		} else if id == searchTagsAPI {
-			return search.SearchTagsGet(r.APIImpl, options, userContext)
+			return search.SearchTagsGet(r.APIImpl, tenantId, options, userContext)
 		} else if id == signOutAPI {
-			return api.SignOutPost(r.APIImpl, options, userContext)
+			return api.SignOutPost(r.APIImpl, tenantId, options, userContext)
 		} else if id == dashboardAnalyticsAPI {
-			return api.AnalyticsPost(r.APIImpl, options, userContext)
+			return api.AnalyticsPost(r.APIImpl, tenantId, options, userContext)
+		} else if id == tenantsListAPI {
+			return api.TenantsListGet(r.APIImpl, tenantId, options, userContext)
 		}
 		return nil, errors.New("should never come here")
 	})

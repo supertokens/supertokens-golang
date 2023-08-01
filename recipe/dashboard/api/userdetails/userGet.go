@@ -28,7 +28,7 @@ type userGetResponse struct {
 	User     dashboardmodels.UserType `json:"user,omitempty"`
 }
 
-func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userGetResponse, error) {
+func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 	recipeId := req.URL.Query().Get("recipeId")

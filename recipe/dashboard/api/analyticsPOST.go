@@ -18,7 +18,7 @@ type analyticsPostRequestBody struct {
 	DashboardVersion *string `json:"dashboardVersion"`
 }
 
-func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (analyticsPostResponse, error) {
+func AnalyticsPost(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (analyticsPostResponse, error) {
 	supertokensInstance, instanceError := supertokens.GetInstanceOrThrowError()
 
 	if supertokens.IsRunningInTestMode() {

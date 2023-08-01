@@ -26,7 +26,7 @@ type userMetaDataGetResponse struct {
 	Data   interface{} `json:"data,omitempty"`
 }
 
-func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userMetaDataGetResponse, error) {
+func UserMetaDataGet(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userMetaDataGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
