@@ -1000,3 +1000,70 @@ func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {
 	assert.True(t, cookiesAfterRefresh["refreshTokenFromAny"] == "")
 	assert.True(t, cookiesAfterRefresh["frontToken"] == "remove")
 }
+
+/**
+We want to make sure that for access token claims that can be null, the SDK does not fail access token validation if the
+core does not send them as part of the payload.
+
+For this we verify that validation passes when the keys are nil, empty or a different type
+
+For now this test checks for:
+- antiCsrfToken
+- parentRefreshTokenHash1
+
+But this test should be updated to include any keys that the core considers optional in the payload (i.e either it sends
+JSON null or skips them entirely)
+*/
+func TestValidationLogicWithKeysThatCanUseJSONNullValuesInClaims(t *testing.T) {
+	version3 := 3
+
+	payloadv3 := map[string]interface{}{
+		"sessionHandle":     "",
+		"sub":               "",
+		"refreshTokenHash1": "",
+		"exp":               float64(0),
+		"iat":               float64(0),
+	}
+
+	err := ValidateAccessTokenStructure(payloadv3, version3)
+	assert.NoError(t, err)
+
+	payloadv3 = map[string]interface{}{
+		"sessionHandle":           "",
+		"sub":                     "",
+		"refreshTokenHash1":       "",
+		"exp":                     float64(0),
+		"iat":                     float64(0),
+		"parentRefreshTokenHash1": nil,
+		"antiCsrfToken":           nil,
+	}
+
+	err = ValidateAccessTokenStructure(payloadv3, version3)
+	assert.NoError(t, err)
+
+	payloadv3 = map[string]interface{}{
+		"sessionHandle":           "",
+		"sub":                     "",
+		"refreshTokenHash1":       "",
+		"exp":                     float64(0),
+		"iat":                     float64(0),
+		"parentRefreshTokenHash1": "",
+		"antiCsrfToken":           "",
+	}
+
+	err = ValidateAccessTokenStructure(payloadv3, version3)
+	assert.NoError(t, err)
+
+	payloadv3 = map[string]interface{}{
+		"sessionHandle":           "",
+		"sub":                     "",
+		"refreshTokenHash1":       "",
+		"exp":                     float64(0),
+		"iat":                     float64(0),
+		"parentRefreshTokenHash1": 1,
+		"antiCsrfToken":           1,
+	}
+
+	err = ValidateAccessTokenStructure(payloadv3, version3)
+	assert.NoError(t, err)
+}

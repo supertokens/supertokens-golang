@@ -163,14 +163,13 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			}
 		}
 
-		querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+		response, err := (*session.recipeImpl.RegenerateAccessToken)(sessionContainer.GetAccessToken(), &accessTokenPayload, userContext)
+
 		if err != nil {
 			return err
 		}
 
-		response, err := regenerateAccessTokenHelper(*querier, &accessTokenPayload, sessionContainer.GetAccessToken())
-
-		if err != nil {
+		if response == nil {
 			supertokens.LogDebugMessage(fmt.Sprintf("MergeIntoAccessTokenPayloadWithContext: Returning UnauthorizedError because we could not regenerate the session - %s", err))
 			return errors.UnauthorizedError{
 				Msg: errors.UnauthorizedErrorStr,
