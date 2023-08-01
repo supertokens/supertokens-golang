@@ -30,6 +30,8 @@
 -   [ ] Issue this PR against the latest non released version branch.
     -   To know which one it is, run find the latest released tag (`git tag`) in the format `vX.Y.Z`, and then find the latest branch (`git branch --all`) whose `X.Y` is greater than the latest released tag.
     -   If no such branch exists, then create one from the latest released branch.
+-   [ ] If access token structure has changed
+    -   Modified test in `session/accessTokenVersions_test.go` to account for any new claims that are optional or omitted by the core 
 
 ## Remaining TODOs for this PR
 

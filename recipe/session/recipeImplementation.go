@@ -255,16 +255,20 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		supertokens.LogDebugMessage("getSession: Success!")
 		var payload map[string]interface{}
 
-		if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
-			parsedToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
+		if accessToken.Version >= 3 {
+			if !reflect.DeepEqual(response.AccessToken, sessmodels.CreateOrRefreshAPIResponseToken{}) {
+				parsedToken, parseErr := ParseJWTWithoutSignatureVerification(response.AccessToken.Token)
 
-			if parseErr != nil {
-				return nil, parseErr
+				if parseErr != nil {
+					return nil, parseErr
+				}
+
+				payload = parsedToken.Payload
+			} else {
+				payload = accessToken.Payload
 			}
-
-			payload = parsedToken.Payload
 		} else {
-			payload = accessToken.Payload
+			payload = response.Session.UserDataInAccessToken
 		}
 
 		accessTokenStringForSession := *accessTokenString
