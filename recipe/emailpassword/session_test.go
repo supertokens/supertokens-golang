@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
-	"io/ioutil"
-	"net/http"
-	"net/http/httptest"
-	"testing"
 )
 
 func TestShouldMakeSignInUpReturn500WhenUsingProtectedProp(t *testing.T) {
@@ -30,10 +31,10 @@ func TestShouldMakeSignInUpReturn500WhenUsingProtectedProp(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						originalCreateNewSession := *originalImplementation.CreateNewSession
-						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							accessTokenPayload["sub"] = "asdf"
 
-							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 
 						*originalImplementation.CreateNewSession = newCreateNewSession
@@ -118,7 +119,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			payload = result["payload"].(map[string]interface{})
 		}
 
-		_, err2 := session.CreateNewSession(r, rw, "uniqueId", payload, map[string]interface{}{})
+		_, err2 := session.CreateNewSession(r, rw, "public", "uniqueId", payload, map[string]interface{}{})
 
 		if err2 != nil {
 			http.Error(rw, fmt.Sprint(err2), 400)

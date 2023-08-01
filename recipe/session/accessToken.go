@@ -18,12 +18,13 @@ package session
 import (
 	"errors"
 	"fmt"
+	"strings"
+
 	"github.com/MicahParks/keyfunc"
 	"github.com/golang-jwt/jwt/v4"
 	sterrors "github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"strings"
 )
 
 type AccessTokenInfoStruct struct {
@@ -35,6 +36,7 @@ type AccessTokenInfoStruct struct {
 	AntiCsrfToken           *string
 	ExpiryTime              uint64
 	TimeCreated             uint64
+	TenantId                string
 }
 
 func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks *keyfunc.JWKS, doAntiCsrfCheck bool) (*AccessTokenInfoStruct, error) {
@@ -149,6 +151,11 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks *keyfunc.JWKS
 	parentRefreshTokenHash1 := sanitizeStringInput(payload["parentRefreshTokenHash1"])
 	antiCsrfToken := sanitizeStringInput(payload["antiCsrfToken"])
 
+	tenantId := supertokens.DefaultTenantId
+	if jwtInfo.Version >= 4 {
+		tenantId = *sanitizeStringInput(payload["tId"])
+	}
+
 	if antiCsrfToken == nil && doAntiCsrfCheck {
 		supertokens.LogDebugMessage("GetInfoFromAccessToken: Returning TryRefreshTokenError because access does not contain the anti-csrf token.")
 		return nil, sterrors.TryRefreshTokenError{
@@ -172,6 +179,7 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks *keyfunc.JWKS
 		AntiCsrfToken:           antiCsrfToken,
 		ExpiryTime:              expiryTime,
 		TimeCreated:             timeCreated,
+		TenantId:                tenantId,
 	}, nil
 }
 
@@ -199,6 +207,12 @@ func ValidateAccessTokenStructure(payload map[string]interface{}, version int) e
 		if _, ok := payload["iat"].(float64); !ok {
 			supertokens.LogDebugMessage("ValidateAccessTokenStructure: iat claim not found in JWT payload")
 			return err
+		}
+		if version >= 4 {
+			if _, ok := payload["tId"].(string); !ok {
+				supertokens.LogDebugMessage("ValidateAccessTokenStructure: tId claim not found in JWT payload")
+				return err
+			}
 		}
 	} else {
 		supertokens.LogDebugMessage("ValidateAccessTokenStructure: Access token is using version < 3")

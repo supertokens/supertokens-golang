@@ -62,7 +62,7 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -149,7 +149,7 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -231,7 +231,7 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -314,7 +314,7 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "user", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "user", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))

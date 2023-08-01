@@ -82,13 +82,13 @@ func TestDefaultUserContext(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						originalCreateNewSession := *originalImplementation.CreateNewSession
-						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									createNewSessionContextWorks = true
 								}
 							}
-							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = newCreateNewSession
 						return originalImplementation
@@ -179,14 +179,14 @@ func TestGetRequestFromUserContext(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						originalCreateNewSession := *originalImplementation.CreateNewSession
-						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							requestFromUserContext := supertokens.GetRequestFromUserContext(userContext)
 							if requestFromUserContext != nil {
 								assert.True(t, requestFromUserContext.Method == "POST")
 								assert.True(t, requestFromUserContext.RequestURI == "/auth/signin" || requestFromUserContext.RequestURI == "/auth/signup")
 								createNewSessionContextWorks = true
 							}
-							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = newCreateNewSession
 						return originalImplementation

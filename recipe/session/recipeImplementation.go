@@ -154,11 +154,11 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
 	var result sessmodels.RecipeInterface
 
-	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		sessionResponse, err := createNewSessionHelper(
-			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase,
+			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase, tenantId,
 		)
 		if err != nil {
 			return nil, err
@@ -173,7 +173,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		frontToken := BuildFrontToken(sessionResponse.Session.UserID, sessionResponse.AccessToken.Expiry, parsedJWT.Payload)
 		session := sessionResponse.Session
-		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, parsedJWT.Payload, result, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
+		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, session.TenantId, parsedJWT.Payload, result, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
 		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
@@ -282,7 +282,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		frontToken := BuildFrontToken(response.Session.UserID, response.Session.ExpiryTime, payload)
 		session := response.Session
 
-		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, payload, result, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
+		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, session.TenantId, payload, result, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
@@ -313,18 +313,18 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		session := response.Session
 		frontToken := BuildFrontToken(session.UserID, response.AccessToken.Expiry, responseToken.Payload)
 
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, responseToken.Payload, result, frontToken, response.AntiCsrfToken, nil, &response.RefreshToken, true)
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, session.TenantId, responseToken.Payload, result, frontToken, response.AntiCsrfToken, nil, &response.RefreshToken, true)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
 	}
 
-	revokeAllSessionsForUser := func(userID string, userContext supertokens.UserContext) ([]string, error) {
-		return revokeAllSessionsForUserHelper(querier, userID)
+	revokeAllSessionsForUser := func(userID string, tenantId string, revokeAcrossAllTenants *bool, userContext supertokens.UserContext) ([]string, error) {
+		return revokeAllSessionsForUserHelper(querier, userID, tenantId, revokeAcrossAllTenants)
 	}
 
-	getAllSessionHandlesForUser := func(userID string, userContext supertokens.UserContext) ([]string, error) {
-		return getAllSessionHandlesForUserHelper(querier, userID)
+	getAllSessionHandlesForUser := func(userID string, tenantId string, fetchAcrossAllTenants *bool, userContext supertokens.UserContext) ([]string, error) {
+		return getAllSessionHandlesForUserHelper(querier, userID, tenantId, fetchAcrossAllTenants)
 	}
 
 	revokeSession := func(sessionHandle string, userContext supertokens.UserContext) (bool, error) {
@@ -373,7 +373,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		return updateAccessTokenPayloadHelper(querier, sessionHandle, newAccessTokenPayload)
 	}
 
-	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
+	getGlobalClaimValidators := func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 		return claimValidatorsAddedByOtherRecipes, nil
 	}
 

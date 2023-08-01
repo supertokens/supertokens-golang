@@ -95,7 +95,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 		}
 
-		session, err := session.CreateNewSession(options.Req, options.Res, response.OK.User.ID, nil, nil, userContext) // TODO multitenancy pass tenantId
+		session, err := session.CreateNewSession(options.Req, options.Res, tenantId, response.OK.User.ID, nil, nil, userContext)
 		if err != nil {
 			return tpmodels.SignInUpPOSTResponse{}, err
 		}

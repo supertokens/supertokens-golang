@@ -556,7 +556,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			payload = result["payload"].(map[string]interface{})
 		}
 
-		_, err2 := CreateNewSession(r, rw, "uniqueId", payload, map[string]interface{}{})
+		_, err2 := CreateNewSession(r, rw, "public", "uniqueId", payload, map[string]interface{}{})
 
 		if err2 != nil {
 			http.Error(rw, fmt.Sprint(err2), 400)

@@ -30,7 +30,7 @@ func Init(config *sessmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext ...supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func CreateNewSession(req *http.Request, res http.ResponseWriter, tenantId string, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext ...supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -41,7 +41,7 @@ func CreateNewSession(req *http.Request, res http.ResponseWriter, userID string,
 	config := instance.Config
 	appInfo := instance.RecipeModule.GetAppInfo()
 
-	return CreateNewSessionInRequest(req, res, config, appInfo, *instance, instance.RecipeImpl, userID, accessTokenPayload, sessionDataInDatabase, userContext[0])
+	return CreateNewSessionInRequest(req, res, tenantId, config, appInfo, *instance, instance.RecipeImpl, userID, accessTokenPayload, sessionDataInDatabase, userContext[0])
 }
 
 func CreateNewSessionWithoutRequestResponse(tenantId string, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCSRF *bool, userContext ...supertokens.UserContext) (sessmodels.SessionContainer, error) {
@@ -77,7 +77,7 @@ func CreateNewSessionWithoutRequestResponse(tenantId string, userID string, acce
 		_disableAntiCSRF = *disableAntiCSRF
 	}
 
-	return (*instance.RecipeImpl.CreateNewSession)(userID, accessTokenPayload, sessionDataInDatabase, &_disableAntiCSRF, userContext[0])
+	return (*instance.RecipeImpl.CreateNewSession)(userID, accessTokenPayload, sessionDataInDatabase, &_disableAntiCSRF, tenantId, userContext[0])
 }
 
 func GetSession(req *http.Request, res http.ResponseWriter, options *sessmodels.VerifySessionOptions, userContext ...supertokens.UserContext) (sessmodels.SessionContainer, error) {
@@ -174,7 +174,7 @@ func RefreshSessionWithoutRequestResponse(refreshToken string, disableAntiCSRF *
 	return (*instance.RecipeImpl.RefreshSession)(refreshToken, antiCSRFToken, _disableAntiCSRF, userContext[0])
 }
 
-func RevokeAllSessionsForUser(userID string, userContext ...supertokens.UserContext) ([]string, error) {
+func RevokeAllSessionsForUser(userID string, tenantId *string, userContext ...supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -182,10 +182,18 @@ func RevokeAllSessionsForUser(userID string, userContext ...supertokens.UserCont
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.RevokeAllSessionsForUser)(userID, userContext[0])
+	var revokeAcrossAllTenants *bool = nil
+	if tenantId == nil {
+		tenantIdStr := supertokens.DefaultTenantId
+		tenantId = &tenantIdStr
+	} else {
+		revokeAcrossAllTenantsVal := false
+		revokeAcrossAllTenants = &revokeAcrossAllTenantsVal
+	}
+	return (*instance.RecipeImpl.RevokeAllSessionsForUser)(userID, *tenantId, revokeAcrossAllTenants, userContext[0])
 }
 
-func GetAllSessionHandlesForUser(userID string, userContext ...supertokens.UserContext) ([]string, error) {
+func GetAllSessionHandlesForUser(userID string, tenantId *string, userContext ...supertokens.UserContext) ([]string, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
@@ -193,7 +201,16 @@ func GetAllSessionHandlesForUser(userID string, userContext ...supertokens.UserC
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
-	return (*instance.RecipeImpl.GetAllSessionHandlesForUser)(userID, userContext[0])
+	var fetchAcrossAllTenants *bool = nil
+
+	if tenantId == nil {
+		tenantIdStr := supertokens.DefaultTenantId
+		tenantId = &tenantIdStr
+	} else {
+		fetchAcrossAllTenantsVal := false
+		fetchAcrossAllTenants = &fetchAcrossAllTenantsVal
+	}
+	return (*instance.RecipeImpl.GetAllSessionHandlesForUser)(userID, *tenantId, fetchAcrossAllTenants, userContext[0])
 }
 
 func RevokeSession(sessionHandle string, userContext ...supertokens.UserContext) (bool, error) {
@@ -287,7 +304,7 @@ func ValidateClaimsForSessionHandle(
 	}
 
 	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
-	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionInfo.UserId, claimValidatorsAddedByOtherRecipes, userContext[0])
+	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionInfo.UserId, claimValidatorsAddedByOtherRecipes, sessionInfo.TenantId, userContext[0])
 	if err != nil {
 		return sessmodels.ValidateClaimsResponse{}, err
 	}
@@ -322,6 +339,7 @@ func ValidateClaimsForSessionHandle(
 }
 
 func ValidateClaimsInJWTPayload(
+	tenantId string,
 	userID string,
 	jwtPayload map[string]interface{},
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, userID string, userContext ...supertokens.UserContext) []claims.SessionClaimValidator,
@@ -336,7 +354,7 @@ func ValidateClaimsInJWTPayload(
 		userContext = append(userContext, &map[string]interface{}{})
 	}
 	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
-	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(userID, claimValidatorsAddedByOtherRecipes, userContext[0])
+	claimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(userID, claimValidatorsAddedByOtherRecipes, tenantId, userContext[0])
 	if err != nil {
 		return nil, err
 	}
