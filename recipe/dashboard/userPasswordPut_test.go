@@ -79,7 +79,6 @@ func TestThatUpdatingPasswordWithNoSignUpFeatureInTPEPWorks(t *testing.T) {
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
 	signInResponse, err := thirdpartyemailpassword.EmailPasswordSignIn("public", "testing@supertokens.com", "newabcd1234")
-
 	if err != nil {
 		t.Error(err.Error())
 	}
