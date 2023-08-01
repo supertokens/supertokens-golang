@@ -305,7 +305,7 @@ type UserPaginationResult struct {
 }
 
 // TODO: Add tests
-func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
+func GetUsersWithSearchParams(tenantId string, timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
@@ -328,7 +328,7 @@ func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, l
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
 
-	resp, err := querier.SendGetRequest("/users", requestBody)
+	resp, err := querier.SendGetRequest(tenantId+"/users", requestBody)
 
 	if err != nil {
 		return UserPaginationResult{}, err

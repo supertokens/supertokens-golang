@@ -33,7 +33,7 @@ type userEmailVerifyPutRequestBody struct {
 	Verified *bool   `json:"verified"`
 }
 
-func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyPutResponse, error) {
+func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -59,7 +59,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 	}
 
 	if *readBody.Verified {
-		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken("public", *readBody.UserID, nil, userContext) // TODO multitenancy pass tenantId
+		tokenResponse, tokenErr := emailverification.CreateEmailVerificationToken(tenantId, *readBody.UserID, nil, userContext)
 
 		if tokenErr != nil {
 			return userEmailVerifyPutResponse{}, tokenErr
@@ -71,7 +71,7 @@ func UserEmailVerifyPut(apiInterface dashboardmodels.APIInterface, options dashb
 			}, nil
 		}
 
-		verifyResponse, verifyErr := emailverification.VerifyEmailUsingToken("public", tokenResponse.OK.Token, userContext) // TODO multitenancy pass tenantId
+		verifyResponse, verifyErr := emailverification.VerifyEmailUsingToken(tenantId, tokenResponse.OK.Token, userContext)
 
 		if verifyErr != nil {
 			return userEmailVerifyPutResponse{}, verifyErr

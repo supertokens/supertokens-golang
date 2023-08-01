@@ -51,4 +51,5 @@ type UserType struct {
 	Email      string      `json:"email,omitempty"`
 	ThirdParty *ThirdParty `json:"thirdParty,omitempty"`
 	Phone      string      `json:"phoneNumber,omitempty"`
+	TenantIds  []string    `json:"tenantIds,omitempty"`
 }

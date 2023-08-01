@@ -78,6 +78,10 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	dashboardApiBasePath, err := supertokens.NewNormalisedURLPath(constants.DashboardAPIBasePath)
+	if err != nil {
+		return nil, err
+	}
 	signInAPI, err := supertokens.NewNormalisedURLPath(constants.SignInAPI)
 	if err != nil {
 		return nil, err
@@ -144,121 +148,121 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		},
 		{
 			ID:                     constants.SignInAPI,
-			PathWithoutAPIBasePath: signInAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(signInAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.SignOutAPI,
-			PathWithoutAPIBasePath: signOutAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(signOutAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.ValidateKeyAPI,
-			PathWithoutAPIBasePath: validateKeyAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(validateKeyAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UsersListGetAPI,
-			PathWithoutAPIBasePath: usersListGetAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(usersListGetAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UsersCountAPI,
-			PathWithoutAPIBasePath: usersCountAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(usersCountAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodDelete,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserEmailVerifyAPI,
-			PathWithoutAPIBasePath: userEmailVerifyAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userEmailVerifyAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserEmailVerifyAPI,
-			PathWithoutAPIBasePath: userEmailVerifyAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userEmailVerifyAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserMetadataAPI,
-			PathWithoutAPIBasePath: userMetaDataAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userMetaDataAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserMetadataAPI,
-			PathWithoutAPIBasePath: userMetaDataAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userMetaDataAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserSessionsAPI,
-			PathWithoutAPIBasePath: userSessionsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userSessionsAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserSessionsAPI,
-			PathWithoutAPIBasePath: userSessionsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userSessionsAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserPasswordAPI,
-			PathWithoutAPIBasePath: userPasswordAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userPasswordAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserEmailVerifyTokenAPI,
-			PathWithoutAPIBasePath: userEmailVerifyTokenAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userEmailVerifyTokenAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.SearchTagsAPI,
-			PathWithoutAPIBasePath: searchTagsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(searchTagsAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.DashboardAnalyticsAPI,
-			PathWithoutAPIBasePath: dashboardAnalyticsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(dashboardAnalyticsAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.TenantsListAPI,
-			PathWithoutAPIBasePath: tenantsListAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(tenantsListAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
@@ -275,66 +279,68 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		Res:                  res,
 		OtherHandler:         theirHandler,
 	}
-	if id == dashboardAPI {
+	if id == constants.DashboardAPI {
 		return api.Dashboard(r.APIImpl, options, userContext)
-	} else if id == validateKeyAPI {
+	} else if id == constants.ValidateKeyAPI {
 		return api.ValidateKey(r.APIImpl, options, userContext)
-	} else if id == signInAPI {
+	} else if id == constants.SignInAPI {
 		return api.SignInPost(r.APIImpl, options, userContext)
 	}
 
 	// Do API key validation for the remaining APIs
-	return apiKeyProtector(r.APIImpl, options, userContext, func() (interface{}, error) {
-		if id == usersListGetAPI {
-			return api.UsersGet(r.APIImpl, options, userContext)
-		} else if id == usersCountAPI {
-			return api.UsersCountGet(r.APIImpl, options, userContext)
-		} else if id == userAPI {
+	return apiKeyProtector(r.APIImpl, tenantId, options, userContext, func() (interface{}, error) {
+		if id == constants.UsersListGetAPI {
+			return api.UsersGet(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.UsersCountAPI {
+			return api.UsersCountGet(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.UserAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserGet(r.APIImpl, options, userContext)
+				return userdetails.UserGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserPut(r.APIImpl, options, userContext)
+				return userdetails.UserPut(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodDelete {
-				return userdetails.UserDelete(r.APIImpl, options, userContext)
+				return userdetails.UserDelete(r.APIImpl, tenantId, options, userContext)
 			}
-		} else if id == userEmailVerifyAPI {
+		} else if id == constants.UserEmailVerifyAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserEmailVerifyGet(r.APIImpl, options, userContext)
+				return userdetails.UserEmailVerifyGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserEmailVerifyPut(r.APIImpl, options, userContext)
+				return userdetails.UserEmailVerifyPut(r.APIImpl, tenantId, options, userContext)
 			}
-		} else if id == userSessionsAPI {
+		} else if id == constants.UserSessionsAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserSessionsGet(r.APIImpl, options, userContext)
+				return userdetails.UserSessionsGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPost {
-				return userdetails.UserSessionsRevoke(r.APIImpl, options, userContext)
+				return userdetails.UserSessionsRevoke(r.APIImpl, tenantId, options, userContext)
 			}
-		} else if id == userMetaDataAPI {
+		} else if id == constants.UserMetadataAPI {
 			if req.Method == http.MethodGet {
-				return userdetails.UserMetaDataGet(r.APIImpl, options, userContext)
+				return userdetails.UserMetaDataGet(r.APIImpl, tenantId, options, userContext)
 			}
 
 			if req.Method == http.MethodPut {
-				return userdetails.UserMetaDataPut(r.APIImpl, options, userContext)
+				return userdetails.UserMetaDataPut(r.APIImpl, tenantId, options, userContext)
 			}
-		} else if id == userEmailVerifyTokenAPI {
-			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, options, userContext)
-		} else if id == userPasswordAPI {
-			return userdetails.UserPasswordPut(r.APIImpl, options, userContext)
-		} else if id == searchTagsAPI {
-			return search.SearchTagsGet(r.APIImpl, options, userContext)
-		} else if id == signOutAPI {
-			return api.SignOutPost(r.APIImpl, options, userContext)
-		} else if id == dashboardAnalyticsAPI {
-			return api.AnalyticsPost(r.APIImpl, options, userContext)
+		} else if id == constants.UserEmailVerifyTokenAPI {
+			return userdetails.UserEmailVerifyTokenPost(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.UserPasswordAPI {
+			return userdetails.UserPasswordPut(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.SearchTagsAPI {
+			return search.SearchTagsGet(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.SignOutAPI {
+			return api.SignOutPost(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.DashboardAnalyticsAPI {
+			return api.AnalyticsPost(r.APIImpl, tenantId, options, userContext)
+		} else if id == constants.TenantsListAPI {
+			return api.TenantsListGet(r.APIImpl, tenantId, options, userContext)
 		}
 		return nil, errors.New("should never come here")
 	})

@@ -11,7 +11,7 @@ type signOutPostResponse struct {
 	Status string `json:"status"`
 }
 
-func SignOutPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (signOutPostResponse, error) {
+func SignOutPost(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (signOutPostResponse, error) {
 	if options.Config.AuthMode == dashboardmodels.AuthModeAPIKey {
 		return signOutPostResponse{
 			Status: "OK",

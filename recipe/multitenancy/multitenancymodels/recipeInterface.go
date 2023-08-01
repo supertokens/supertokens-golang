@@ -58,6 +58,7 @@ type DeleteTenantResponse struct {
 }
 
 type Tenant struct {
+	TenantId      string `json:"tenantId"`
 	EmailPassword struct {
 		Enabled bool `json:"enabled"`
 	} `json:"emailPassword"`

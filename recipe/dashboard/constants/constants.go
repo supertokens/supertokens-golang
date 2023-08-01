@@ -15,6 +15,7 @@
 package constants
 
 const DashboardAPI = "/dashboard"
+const DashboardAPIBasePath = "/dashboard"
 const SignInAPI = "/api/signin"
 const SignOutAPI = "/api/signout"
 const ValidateKeyAPI = "/api/key/validate"

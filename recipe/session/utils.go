@@ -31,7 +31,7 @@ func GetRequiredClaimValidators(
 		return nil, err
 	}
 	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
-	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, sessionContainer.GetTenantId(), userContext)
+	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserIDWithContext(userContext), claimValidatorsAddedByOtherRecipes, sessionContainer.GetTenantIdWithContext(userContext), userContext)
 	if err != nil {
 		return nil, err
 	}

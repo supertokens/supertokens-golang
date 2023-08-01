@@ -34,7 +34,7 @@ type userEmailverifyTokenPostRequestBody struct {
 	UserId *string `json:"userId"`
 }
 
-func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyTokenPost, error) {
+func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyTokenPost, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -63,7 +63,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
 	}
 
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken("public", *readBody.UserId, &emailresponse.OK.Email) // TODO multitenancy pass tenantId
+	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(tenantId, *readBody.UserId, &emailresponse.OK.Email)
 
 	if tokenError != nil {
 		return userEmailVerifyTokenPost{}, tokenError
@@ -81,7 +81,7 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
 		emailVerificationToken.OK.Token,
 		options.RecipeID,
-		"public", // TODO multitenancy pass tenantId
+		tenantId,
 	)
 
 	emailverification.SendEmail(emaildelivery.EmailType{

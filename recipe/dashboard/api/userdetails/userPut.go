@@ -74,7 +74,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}, nil
 		}
 
-		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, nil, userContext) // TODO multitenancy pass tenantId
+		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, nil, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -114,7 +114,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 		}
 
 		tenantId := "public"
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, &tenantId, userContext) // TODO multitenancy pass tenantId
+		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, &tenantId, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err
@@ -373,7 +373,7 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, userCo
 	return updatePhoneResponse{}, errors.New("Should never come here")
 }
 
-func UserPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userPutResponse, error) {
+func UserPut(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {

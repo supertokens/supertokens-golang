@@ -16,9 +16,11 @@
 package dashboard
 
 import (
+	"testing"
+
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
-	"testing"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -29,6 +31,7 @@ func resetAll() {
 	ResetForTest()
 	session.ResetForTest()
 	thirdpartyemailpassword.ResetForTest()
+	multitenancy.ResetForTest()
 }
 
 func BeforeEach() {
