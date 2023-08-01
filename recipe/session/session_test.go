@@ -2109,7 +2109,7 @@ func TestThatRevokedAccessTokenThrowsUnauthorisedErrorWhenRegenerateTokenIsCalle
 	if err != nil {
 		t.Error(err.Error())
 	}
-	sessionContainer, err := CreateNewSessionWithoutRequestResponse("testing-user", map[string]interface{}{}, map[string]interface{}{}, nil)
+	sessionContainer, err := CreateNewSessionWithoutRequestResponse("public", "testing-user", map[string]interface{}{}, map[string]interface{}{}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
