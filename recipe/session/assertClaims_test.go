@@ -43,7 +43,7 @@ func TestEmptyClaimsArray(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", map[string]interface{}{}, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "public", "rope", map[string]interface{}{}, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 
@@ -95,7 +95,7 @@ func TestAssertClaimsWithPayload(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "public", "rope", accessTokenPayload, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 

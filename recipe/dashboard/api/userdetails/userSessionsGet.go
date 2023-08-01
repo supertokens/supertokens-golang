@@ -47,7 +47,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 	}
 
-	response, err := session.GetAllSessionHandlesForUser(userId, userContext)
+	response, err := session.GetAllSessionHandlesForUser(userId, nil, nil, userContext) // TODO multitenancy pass tenantId
 
 	if err != nil {
 		return userSessionsGetResponse{}, err
