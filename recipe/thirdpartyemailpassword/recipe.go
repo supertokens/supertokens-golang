@@ -124,6 +124,10 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.thirdPartyRecipe = thirdPartyInstance
 	}
 
+	r.GetEmailPasswordRecipe = func() *emailpassword.Recipe {
+		return r.emailPasswordRecipe
+	}
+
 	return *r, nil
 }
 

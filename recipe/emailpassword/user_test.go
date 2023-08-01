@@ -121,7 +121,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	limit = 10
 	users, err = supertokens.GetUsersOldestFirst("public", &customPaginationToken, &limit, nil, nil)
 	if err != nil {
-		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: invalid pagination token\n", err.Error())
+		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/public/users' with status code: 400 and message: invalid pagination token\n", err.Error())
 	} else {
 		t.Fail()
 	}
@@ -129,7 +129,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 	limit = -1
 	users, err = supertokens.GetUsersOldestFirst("public", nil, &limit, nil, nil)
 	if err != nil {
-		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
+		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/public/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
 	} else {
 		t.Fail()
 	}
@@ -227,7 +227,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	limit = 10
 	users, err = supertokens.GetUsersNewestFirst("public", &customPaginationToken, &limit, nil, nil)
 	if err != nil {
-		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: invalid pagination token\n", err.Error())
+		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/public/users' with status code: 400 and message: invalid pagination token\n", err.Error())
 	} else {
 		t.Fail()
 	}
@@ -235,7 +235,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 	limit = -1
 	users, err = supertokens.GetUsersNewestFirst("public", nil, &limit, nil, nil)
 	if err != nil {
-		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
+		assert.Equal(t, "SuperTokens core threw an error for a request to path: '/public/users' with status code: 400 and message: limit must a positive integer with min value 1\n", err.Error())
 	} else {
 		t.Fail()
 	}

@@ -78,6 +78,10 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	dashboardApiBasePath, err := supertokens.NewNormalisedURLPath(constants.DashboardAPIBasePath)
+	if err != nil {
+		return nil, err
+	}
 	signInAPI, err := supertokens.NewNormalisedURLPath(constants.SignInAPI)
 	if err != nil {
 		return nil, err
@@ -144,121 +148,121 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		},
 		{
 			ID:                     constants.SignInAPI,
-			PathWithoutAPIBasePath: signInAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(signInAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.SignOutAPI,
-			PathWithoutAPIBasePath: signOutAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(signOutAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.ValidateKeyAPI,
-			PathWithoutAPIBasePath: validateKeyAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(validateKeyAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UsersListGetAPI,
-			PathWithoutAPIBasePath: usersListGetAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(usersListGetAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UsersCountAPI,
-			PathWithoutAPIBasePath: usersCountAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(usersCountAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserAPI,
-			PathWithoutAPIBasePath: userAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userAPI),
 			Method:                 http.MethodDelete,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserEmailVerifyAPI,
-			PathWithoutAPIBasePath: userEmailVerifyAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userEmailVerifyAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserEmailVerifyAPI,
-			PathWithoutAPIBasePath: userEmailVerifyAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userEmailVerifyAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserMetadataAPI,
-			PathWithoutAPIBasePath: userMetaDataAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userMetaDataAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserMetadataAPI,
-			PathWithoutAPIBasePath: userMetaDataAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userMetaDataAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserSessionsAPI,
-			PathWithoutAPIBasePath: userSessionsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userSessionsAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserSessionsAPI,
-			PathWithoutAPIBasePath: userSessionsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userSessionsAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserPasswordAPI,
-			PathWithoutAPIBasePath: userPasswordAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userPasswordAPI),
 			Method:                 http.MethodPut,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.UserEmailVerifyTokenAPI,
-			PathWithoutAPIBasePath: userEmailVerifyTokenAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(userEmailVerifyTokenAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.SearchTagsAPI,
-			PathWithoutAPIBasePath: searchTagsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(searchTagsAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.DashboardAnalyticsAPI,
-			PathWithoutAPIBasePath: dashboardAnalyticsAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(dashboardAnalyticsAPI),
 			Method:                 http.MethodPost,
 			Disabled:               false,
 		},
 		{
 			ID:                     constants.TenantsListAPI,
-			PathWithoutAPIBasePath: tenantsListAPI,
+			PathWithoutAPIBasePath: dashboardApiBasePath.AppendPath(tenantsListAPI),
 			Method:                 http.MethodGet,
 			Disabled:               false,
 		},
