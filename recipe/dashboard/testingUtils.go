@@ -17,6 +17,7 @@ package dashboard
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"testing"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -27,6 +28,7 @@ func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
 	session.ResetForTest()
+	thirdpartyemailpassword.ResetForTest()
 }
 
 func BeforeEach() {
