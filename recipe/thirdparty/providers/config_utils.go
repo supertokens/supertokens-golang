@@ -1,7 +1,6 @@
 package providers
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -48,9 +47,7 @@ func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPart
 		}
 	}
 
-	return nil, supertokens.BadInputError{
-		Msg: fmt.Sprintf("the provider %s could not be found in the configuration", thirdPartyId),
-	}
+	return nil, nil
 }
 
 func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
