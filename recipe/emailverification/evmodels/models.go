@@ -60,3 +60,15 @@ type User struct {
 	ID    string `json:"id"`
 	Email string `json:"email"`
 }
+
+type CreateEmailVerificationLinkResponse struct {
+	OK *struct {
+		Link string
+	}
+	EmailAlreadyVerifiedError *struct{}
+}
+
+type SendEmailVerificationLinkResponse struct {
+	OK                        *struct{}
+	EmailAlreadyVerifiedError *struct{}
+}

@@ -122,10 +122,8 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			ID:    userID,
 			Email: email.OK.Email,
 		}
-		emailVerificationURL := fmt.Sprintf(
-			"%s%s/verify-email?token=%s&rid=%s&tenantId=%s",
-			options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+		emailVerificationURL := GetEmailVerifyLink(
+			options.AppInfo,
 			response.OK.Token,
 			options.RecipeID,
 			sessionContainer.GetTenantIdWithContext(userContext),
