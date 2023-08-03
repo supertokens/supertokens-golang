@@ -17,10 +17,7 @@ package userdetails
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -53,46 +50,16 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, tenantI
 		}
 	}
 
-	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(*readBody.UserId, userContext)
-
-	if emailErr != nil {
-		return userEmailVerifyTokenPost{}, emailErr
+	resp, err := emailverification.SendEmailVerificationEmail(tenantId, *readBody.UserId, nil, userContext)
+	if err != nil {
+		return userEmailVerifyTokenPost{}, err
 	}
 
-	if emailresponse.OK == nil {
-		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
-	}
-
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(tenantId, *readBody.UserId, &emailresponse.OK.Email)
-
-	if tokenError != nil {
-		return userEmailVerifyTokenPost{}, tokenError
-	}
-
-	if emailVerificationToken.EmailAlreadyVerifiedError != nil {
+	if resp.EmailAlreadyVerifiedError != nil {
 		return userEmailVerifyTokenPost{
 			Status: "EMAIL_ALREADY_VERIFIED_ERROR",
 		}, nil
 	}
-
-	emailVerificationURL := fmt.Sprintf(
-		"%s%s/verify-email?token=%s&rid=%s&tenantId=%s",
-		options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-		options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
-		emailVerificationToken.OK.Token,
-		options.RecipeID,
-		tenantId,
-	)
-
-	emailverification.SendEmail(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    *readBody.UserId,
-				Email: emailresponse.OK.Email,
-			},
-			EmailVerifyLink: emailVerificationURL,
-		},
-	})
 
 	return userEmailVerifyTokenPost{
 		Status: "OK",

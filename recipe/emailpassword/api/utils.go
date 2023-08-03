@@ -17,6 +17,7 @@ package api
 
 import (
 	"encoding/json"
+	"fmt"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
@@ -122,4 +123,15 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 		}
 	}
 	return nil
+}
+
+func GetPasswordResetLink(appInfo supertokens.NormalisedAppinfo, recipeID string, token string, tenantId string) string {
+	return fmt.Sprintf(
+		"%s%s/reset-password?token=%s&rid=%s&tenantId=%s",
+		appInfo.WebsiteDomain.GetAsStringDangerous(),
+		appInfo.WebsiteBasePath.GetAsStringDangerous(),
+		token,
+		recipeID,
+		tenantId,
+	)
 }

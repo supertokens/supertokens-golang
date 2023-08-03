@@ -17,7 +17,6 @@ package passwordless
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
@@ -211,14 +210,12 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId st
 	if err != nil {
 		return "", err
 	}
-	link := fmt.Sprintf(
-		"%s%s/verify?rid=%s&preAuthSessionId=%s&tenantId=%s#%s",
-		stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-		stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+	link := api.GetMagicLink(
+		stInstance.AppInfo,
 		r.RecipeModule.GetRecipeID(),
 		response.OK.PreAuthSessionID,
-		tenantId,
 		response.OK.LinkCode,
+		tenantId,
 	)
 
 	return link, nil
