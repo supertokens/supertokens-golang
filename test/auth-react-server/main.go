@@ -25,6 +25,8 @@ import (
 	"strings"
 
 	"github.com/joho/godotenv"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -92,11 +94,23 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	thirdpartypasswordless.ResetForTest()
 	userroles.ResetForTest()
 
+	// sendPasswordlessLoginEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+	// 	return saveCode(input.PasswordlessLogin.Email, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	// }
+
+	sendPasswordlessLoginSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		return saveCode(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+
 	if passwordlessConfig == nil {
 		passwordlessConfig = &plessmodels.TypeInput{
+			SmsDelivery: &smsdelivery.TypeInput{
+				Service: &smsdelivery.SmsDeliveryInterface{
+					SendSms: &sendPasswordlessLoginSms,
+				},
+			},
 			ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-				Enabled:                        true,
-				CreateAndSendCustomTextMessage: saveCode,
+				Enabled: true,
 			},
 			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 		}
@@ -124,6 +138,16 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			Optional: &countryOptional,
 		},
 	}
+	sendEvEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		latestURLWithToken = input.EmailVerification.EmailVerifyLink
+		return nil
+	}
+
+	sendPasswordResetEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		latestURLWithToken = input.PasswordReset.PasswordResetLink
+		return nil
+	}
+
 	err := supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:9000",
@@ -136,8 +160,10 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					latestURLWithToken = emailVerificationURLWithToken
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEvEmail,
+					},
 				},
 
 				Override: &evmodels.OverrideStruct{
@@ -232,9 +258,9 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				SignUpFeature: &epmodels.TypeInputSignUp{
 					FormFields: formFields,
 				},
-				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-						latestURLWithToken = passwordResetURLWithToken
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendPasswordResetEmail,
 					},
 				},
 			}),
@@ -906,24 +932,39 @@ func reInitST(w http.ResponseWriter, r *http.Request) {
 	body, _ := ioutil.ReadAll(r.Body)
 	var readBody map[string]interface{}
 	json.Unmarshal(body, &readBody)
+	sendPasswordlessLoginEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		return saveCode(input.PasswordlessLogin.Email, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+
+	sendPasswordlessLoginSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		return saveCode(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+
 	config := &plessmodels.TypeInput{
 		FlowType: readBody["flowType"].(string),
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &emaildelivery.EmailDeliveryInterface{
+				SendEmail: &sendPasswordlessLoginEmail,
+			},
+		},
+		SmsDelivery: &smsdelivery.TypeInput{
+			Service: &smsdelivery.SmsDeliveryInterface{
+				SendSms: &sendPasswordlessLoginSms,
+			},
+		},
 	}
+
 	if readBody["contactMethod"].(string) == "PHONE" {
 		config.ContactMethodPhone = plessmodels.ContactMethodPhoneConfig{
-			Enabled:                        true,
-			CreateAndSendCustomTextMessage: saveCode,
+			Enabled: true,
 		}
 	} else if readBody["contactMethod"].(string) == "EMAIL" {
 		config.ContactMethodEmail = plessmodels.ContactMethodEmailConfig{
-			Enabled:                  true,
-			CreateAndSendCustomEmail: saveCode,
+			Enabled: true,
 		}
 	} else {
 		config.ContactMethodEmailOrPhone = plessmodels.ContactMethodEmailOrPhoneConfig{
-			Enabled:                        true,
-			CreateAndSendCustomEmail:       saveCode,
-			CreateAndSendCustomTextMessage: saveCode,
+			Enabled: true,
 		}
 	}
 	callSTInit(config)

@@ -17,6 +17,7 @@ package thirdpartyemailpassword
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/emaildelivery/smtpService"
@@ -151,6 +152,78 @@ func SendEmail(input emaildelivery.EmailType, userContext ...supertokens.UserCon
 		userContext = append(userContext, &map[string]interface{}{})
 	}
 	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext[0])
+}
+
+func CreateResetPasswordLink(tenantId string, userID string, userContext ...supertokens.UserContext) (epmodels.CreateResetPasswordLinkResponse, error) {
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	tokenResponse, err := CreateResetPasswordToken(tenantId, userID, userContext...)
+	if err != nil {
+		return epmodels.CreateResetPasswordLinkResponse{}, err
+	}
+	if tokenResponse.UnknownUserIdError != nil {
+		return epmodels.CreateResetPasswordLinkResponse{
+			UnknownUserIdError: &struct{}{},
+		}, nil
+	}
+
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return epmodels.CreateResetPasswordLinkResponse{}, err
+	}
+
+	return epmodels.CreateResetPasswordLinkResponse{
+		OK: &struct{ Link string }{
+			Link: api.GetPasswordResetLink(
+				instance.RecipeModule.GetAppInfo(),
+				instance.RecipeModule.GetRecipeID(),
+				tokenResponse.OK.Token,
+				tenantId,
+			),
+		},
+	}, nil
+}
+
+func SendResetPasswordEmail(tenantId string, userID string, userContext ...supertokens.UserContext) (epmodels.SendResetPasswordEmailResponse, error) {
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	linkResponse, err := CreateResetPasswordLink(tenantId, userID, userContext...)
+	if err != nil {
+		return epmodels.SendResetPasswordEmailResponse{}, err
+	}
+	if linkResponse.UnknownUserIdError != nil {
+		return epmodels.SendResetPasswordEmailResponse{
+			UnknownUserIdError: &struct{}{},
+		}, nil
+	}
+
+	userInfo, err := GetUserById(userID, userContext...)
+	if err != nil {
+		return epmodels.SendResetPasswordEmailResponse{}, err
+	}
+	if userInfo == nil {
+		return epmodels.SendResetPasswordEmailResponse{
+			UnknownUserIdError: &struct{}{},
+		}, nil
+	}
+	err = SendEmail(emaildelivery.EmailType{
+		PasswordReset: &emaildelivery.PasswordResetType{
+			User: emaildelivery.User{
+				ID:    userInfo.ID,
+				Email: userInfo.Email,
+			},
+			PasswordResetLink: linkResponse.OK.Link,
+		},
+	}, userContext...)
+	if err != nil {
+		return epmodels.SendResetPasswordEmailResponse{}, err
+	}
+
+	return epmodels.SendResetPasswordEmailResponse{
+		OK: &struct{}{},
+	}, nil
 }
 
 func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {

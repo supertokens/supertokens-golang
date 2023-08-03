@@ -35,9 +35,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
-		if config.CreateAndSendCustomEmail != nil {
-			createAndSendCustomEmail = config.CreateAndSendCustomEmail
-		}
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, createAndSendCustomEmail)
 		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service

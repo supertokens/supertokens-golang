@@ -127,12 +127,17 @@ func TestBackwardCompatibilityResetPasswordForEmailPasswordUser(t *testing.T) {
 	email := ""
 	passwordResetLink := ""
 
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		email = input.PasswordReset.User.Email
+		passwordResetLink = input.PasswordReset.PasswordResetLink
+		customCalled = true
+		return nil
+	}
+
 	tpepConfig := &epmodels.TypeInput{
-		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				passwordResetLink = passwordResetURLWithToken
-				customCalled = true
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &emaildelivery.EmailDeliveryInterface{
+				SendEmail: &sendEmailFunc,
 			},
 		},
 	}
@@ -172,12 +177,17 @@ func TestBackwardCompatibilityResetPasswordForNonExistantUser(t *testing.T) {
 	email := ""
 	passwordResetLink := ""
 
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		email = input.PasswordReset.User.Email
+		passwordResetLink = input.PasswordReset.PasswordResetLink
+		customCalled = true
+		return nil
+	}
+
 	tpepConfig := &epmodels.TypeInput{
-		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				passwordResetLink = passwordResetURLWithToken
-				customCalled = true
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &emaildelivery.EmailDeliveryInterface{
+				SendEmail: &sendEmailFunc,
 			},
 		},
 	}
@@ -487,6 +497,13 @@ func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
 	email := ""
 	emailVerifyLink := ""
 
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		email = input.EmailVerification.User.Email
+		emailVerifyLink = input.EmailVerification.EmailVerifyLink
+		customCalled = true
+		return nil
+	}
+
 	tpepConfig := &epmodels.TypeInput{}
 	testServer := supertokensInitForTest(
 		t,
@@ -497,10 +514,10 @@ func TestBackwardCompatibilityEmailVerifyForEmailPasswordUser(t *testing.T) {
 		}),
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
-			CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				emailVerifyLink = emailVerificationURLWithToken
-				customCalled = true
+			EmailDelivery: &emaildelivery.TypeInput{
+				Service: &emaildelivery.EmailDeliveryInterface{
+					SendEmail: &sendEmailFunc,
+				},
 			},
 		}),
 		Init(tpepConfig),

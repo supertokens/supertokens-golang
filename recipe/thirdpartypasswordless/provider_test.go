@@ -55,9 +55,6 @@ func TestForThirdPartyPasswordlessTheMinimumConfigForThirdPartyProviderGoogle(t 
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -179,9 +176,6 @@ func TestWithThirdPartyPasswordlessPassingAdditionalParamsCheckTheyArePresentInA
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -274,9 +268,6 @@ func TestForThirdpartyPasswordlessPassingScopesInConfigForThirdpartyProviderGoog
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -365,9 +356,6 @@ func TestForThirdPartyPasswordlessMinimumConfigForThirdPartyProviderFacebook(t *
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -486,9 +474,6 @@ func TestWithThirdPartyPasswordlessPassingScopesInConfigForThirdPartyProviderFac
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -574,9 +559,6 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyProviderGithub(t *t
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -695,9 +677,6 @@ func TestWithThirdPartyPasswordlessParamCheckTheyArePresentInAuthorizationURLFor
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -788,9 +767,6 @@ func TestWithThirdPartyPasswordlessPassingScopesInConfigForThirdPartyProviderGit
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -878,9 +854,6 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyProviderApple(t *te
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -1008,9 +981,6 @@ func TestWithThirdPartyPasswordlessPassingAdditionalParamsCheckTheyArePresentInA
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -1108,9 +1078,6 @@ func TestWithThirdPartyProviderPasswordlessPassingScopesInConfigForThirdPartyPro
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{
@@ -1201,9 +1168,6 @@ func TestWithThirdPartyPasswordlessDuplicateProvider(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					{

@@ -99,14 +99,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		var userInputCode *string
 		flowType := options.Config.FlowType
 		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
-			link := fmt.Sprintf(
-				"%s%s/verify?rid=%s&preAuthSessionId=%s&tenantId=%s#%s",
-				options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-				options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+			link := GetMagicLink(
+				options.AppInfo,
 				options.RecipeID,
 				response.OK.PreAuthSessionID,
-				tenantId,
 				response.OK.LinkCode,
+				tenantId,
 			)
 			magicLink = &link
 		}
@@ -274,14 +272,12 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			var userInputCode *string
 			flowType := options.Config.FlowType
 			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
-				link := fmt.Sprintf(
-					"%s%s/verify?rid=%s&preAuthSessionId=%s&tenantId=%s#%s",
-					options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-					options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+				link := GetMagicLink(
+					options.AppInfo,
 					options.RecipeID,
 					response.OK.PreAuthSessionID,
-					tenantId,
 					response.OK.LinkCode,
+					tenantId,
 				)
 
 				magicLink = &link

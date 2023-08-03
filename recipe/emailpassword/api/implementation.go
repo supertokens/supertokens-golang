@@ -66,12 +66,10 @@ func MakeAPIImplementation() epmodels.APIInterface {
 			}, nil
 		}
 
-		passwordResetLink := fmt.Sprintf(
-			"%s%s/reset-password?token=%s&rid=%s&tenantId=%s",
-			options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
-			response.OK.Token,
+		passwordResetLink := GetPasswordResetLink(
+			options.AppInfo,
 			options.RecipeID,
+			response.OK.Token,
 			tenantId,
 		)
 

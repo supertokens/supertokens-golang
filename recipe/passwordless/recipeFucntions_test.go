@@ -49,9 +49,6 @@ func TestGetUser(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -148,9 +145,6 @@ func TestCreateCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -222,9 +216,6 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -320,9 +311,6 @@ func TestConsumeCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -395,9 +383,6 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -456,9 +441,6 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -534,9 +516,6 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -609,9 +588,6 @@ func TestRevokeAllCodes(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -678,9 +654,6 @@ func TestRevokeCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -744,9 +717,6 @@ func TestListCodesByEmail(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -810,9 +780,6 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -876,9 +843,6 @@ func TestCreatingMagicLink(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -934,9 +898,6 @@ func TestSignInUp(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -991,9 +952,6 @@ func TestListCodesByPreAuthSessionID(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},

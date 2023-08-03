@@ -57,21 +57,17 @@ type OverrideStruct struct {
 }
 
 type ContactMethodEmailConfig struct {
-	Enabled                  bool
-	ValidateEmailAddress     func(email interface{}) *string
-	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
+	Enabled              bool
+	ValidateEmailAddress func(email interface{}) *string
 }
 
 type ContactMethodEmailOrPhoneConfig struct {
-	Enabled                        bool
-	ValidateEmailAddress           func(email interface{}) *string
-	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
-	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
+	Enabled              bool
+	ValidateEmailAddress func(email interface{}) *string
+	ValidatePhoneNumber  func(phoneNumber interface{}) *string
 }
 
 type ContactMethodPhoneConfig struct {
-	Enabled                        bool
-	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
+	Enabled             bool
+	ValidatePhoneNumber func(phoneNumber interface{}) *string
 }
