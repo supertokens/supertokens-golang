@@ -55,12 +55,16 @@ func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		return ActiveDirectory(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "apple") {
 		return Apple(input)
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "bitbucket") {
+		return Bitbucket(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "discord") {
 		return Discord(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "facebook") {
 		return Facebook(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "github") {
 		return Github(input)
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "gitlab") {
+		return Gitlab(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google-workspaces") {
 		return GoogleWorkspaces(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "google") {
