@@ -128,7 +128,7 @@ type ProviderConfig struct {
 	RequireEmail                     *bool                  `json:"requireEmail,omitempty"`
 
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
-	GenerateFakeEmail      func(thirdPartyUserId string, userContext supertokens.UserContext) string
+	GenerateFakeEmail      func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string
 }
 
 type ProviderClientConfig struct {
@@ -162,7 +162,7 @@ type ProviderConfigForClientType struct {
 	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
 
 	RequireEmail      *bool
-	GenerateFakeEmail func(thirdPartyUserId string, userContext supertokens.UserContext) string
+	GenerateFakeEmail func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string
 }
 
 type TypeProvider struct {

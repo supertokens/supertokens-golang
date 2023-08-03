@@ -41,11 +41,13 @@ type EmailType struct {
 type EmailVerificationType struct {
 	User            User
 	EmailVerifyLink string
+	TenantId        string
 }
 
 type PasswordResetType struct {
 	User              User
 	PasswordResetLink string
+	TenantId          string
 }
 
 type PasswordlessLoginType struct {
@@ -54,6 +56,7 @@ type PasswordlessLoginType struct {
 	UrlWithLinkCode  *string
 	CodeLifetime     uint64
 	PreAuthSessionId string
+	TenantId         string
 }
 
 type User struct {

@@ -199,7 +199,7 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId st
 	}
 	var userInputCodeInput *string
 	if r.Config.GetCustomUserInputCode != nil {
-		c, err := r.Config.GetCustomUserInputCode(userContext)
+		c, err := r.Config.GetCustomUserInputCode(tenantId, userContext)
 		if err != nil {
 			return "", err
 		}

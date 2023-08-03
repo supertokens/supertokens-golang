@@ -137,6 +137,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 					Email: user.Email,
 				},
 				EmailVerifyLink: emailVerificationURL,
+				TenantId:        sessionContainer.GetTenantIdWithContext(userContext),
 			},
 		}, userContext)
 		if err != nil {

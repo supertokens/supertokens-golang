@@ -39,7 +39,7 @@ func SignUpAPI(apiImplementation epmodels.APIInterface, tenantId string, options
 		return err
 	}
 
-	formFields, err := validateFormFieldsOrThrowError(options.Config.SignUpFeature.FormFields, formFieldsRaw["formFields"])
+	formFields, err := validateFormFieldsOrThrowError(options.Config.SignUpFeature.FormFields, formFieldsRaw["formFields"], tenantId)
 	if err != nil {
 		return err
 	}

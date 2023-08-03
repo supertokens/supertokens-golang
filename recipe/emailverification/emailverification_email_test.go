@@ -70,6 +70,7 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 				ID:    "someId",
 				Email: "someEmail",
 			},
+			TenantId: "public",
 		},
 	})
 
@@ -125,6 +126,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 				ID:    "someId",
 				Email: "someEmail",
 			},
+			TenantId: "public",
 		},
 	})
 
@@ -200,6 +202,7 @@ func TestSMTPServiceOverride(t *testing.T) {
 				ID:    "someId",
 				Email: "",
 			},
+			TenantId: "public",
 		},
 	})
 
@@ -275,6 +278,7 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 				ID:    "someId",
 				Email: "some@email.com",
 			},
+			TenantId: "public",
 		},
 	})
 

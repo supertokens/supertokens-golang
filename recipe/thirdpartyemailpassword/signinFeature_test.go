@@ -393,7 +393,7 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "email",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								customErrorMessage := "email does not start with test"
 								if strings.HasPrefix(value.(string), "test") {
 									return nil

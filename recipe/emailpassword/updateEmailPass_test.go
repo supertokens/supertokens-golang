@@ -161,7 +161,7 @@ func TestUpdateEmailPassWithCustomValidator(t *testing.T) {
 			Init(&epmodels.TypeInput{SignUpFeature: &epmodels.TypeInputSignUp{FormFields: []epmodels.TypeInputFormField{
 				{
 					ID: "password",
-					Validate: func(value interface{}) *string {
+					Validate: func(value interface{}, tenantId string) *string {
 						if len(value.(string)) > 5 {
 							return nil
 						}

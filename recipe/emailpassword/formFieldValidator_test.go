@@ -30,38 +30,38 @@ import (
 )
 
 func TestDefaultEmailValidator(t *testing.T) {
-	assert.Nil(t, defaultEmailValidator("test@supertokens.io"))
-	assert.Nil(t, defaultEmailValidator("nsdafa@gmail.com"))
-	assert.Nil(t, defaultEmailValidator("fewf3r_fdkj@gmaildsfa.co.uk"))
-	assert.Nil(t, defaultEmailValidator("dafk.adfa@gmail.com"))
-	assert.Nil(t, defaultEmailValidator("skjlblc3f3@fnldsks.co"))
-	assert.Equal(t, "Email is invalid", *defaultEmailValidator("sdkjfnas34@gmail.com.c"))
-	assert.Equal(t, "Email is invalid", *defaultEmailValidator("d@c"))
-	assert.Equal(t, "Email is invalid", *defaultEmailValidator("fasd"))
-	assert.Equal(t, "Email is invalid", *defaultEmailValidator("dfa@@@abc.com"))
-	assert.Equal(t, "Email is invalid", *defaultEmailValidator(""))
+	assert.Nil(t, defaultEmailValidator("test@supertokens.io", "public"))
+	assert.Nil(t, defaultEmailValidator("nsdafa@gmail.com", "public"))
+	assert.Nil(t, defaultEmailValidator("fewf3r_fdkj@gmaildsfa.co.uk", "public"))
+	assert.Nil(t, defaultEmailValidator("dafk.adfa@gmail.com", "public"))
+	assert.Nil(t, defaultEmailValidator("skjlblc3f3@fnldsks.co", "public"))
+	assert.Equal(t, "Email is invalid", *defaultEmailValidator("sdkjfnas34@gmail.com.c", "public"))
+	assert.Equal(t, "Email is invalid", *defaultEmailValidator("d@c", "public"))
+	assert.Equal(t, "Email is invalid", *defaultEmailValidator("fasd", "public"))
+	assert.Equal(t, "Email is invalid", *defaultEmailValidator("dfa@@@abc.com", "public"))
+	assert.Equal(t, "Email is invalid", *defaultEmailValidator("", "public"))
 }
 
 func TestDefaultPasswordValidator(t *testing.T) {
-	assert.Nil(t, defaultPasswordValidator("dsknfkf38H"))
-	assert.Nil(t, defaultPasswordValidator("lasdkf*787~sdfskj"))
-	assert.Nil(t, defaultPasswordValidator("L0493434505"))
-	assert.Nil(t, defaultPasswordValidator("3453342422L"))
-	assert.Nil(t, defaultPasswordValidator("1sdfsdfsdfsd"))
-	assert.Nil(t, defaultPasswordValidator("dksjnlvsnl2"))
-	assert.Nil(t, defaultPasswordValidator("abcgftr8"))
-	assert.Nil(t, defaultPasswordValidator("  d3    "))
-	assert.Nil(t, defaultPasswordValidator("abc!@#$%^&*()gftr8"))
-	assert.Nil(t, defaultPasswordValidator("    dskj3"))
-	assert.Nil(t, defaultPasswordValidator("    dsk  3"))
+	assert.Nil(t, defaultPasswordValidator("dsknfkf38H", "public"))
+	assert.Nil(t, defaultPasswordValidator("lasdkf*787~sdfskj", "public"))
+	assert.Nil(t, defaultPasswordValidator("L0493434505", "public"))
+	assert.Nil(t, defaultPasswordValidator("3453342422L", "public"))
+	assert.Nil(t, defaultPasswordValidator("1sdfsdfsdfsd", "public"))
+	assert.Nil(t, defaultPasswordValidator("dksjnlvsnl2", "public"))
+	assert.Nil(t, defaultPasswordValidator("abcgftr8", "public"))
+	assert.Nil(t, defaultPasswordValidator("  d3    ", "public"))
+	assert.Nil(t, defaultPasswordValidator("abc!@#$%^&*()gftr8", "public"))
+	assert.Nil(t, defaultPasswordValidator("    dskj3", "public"))
+	assert.Nil(t, defaultPasswordValidator("    dsk  3", "public"))
 
-	assert.Equal(t, "Password must contain at least 8 characters, including a number", *defaultPasswordValidator("asd"))
+	assert.Equal(t, "Password must contain at least 8 characters, including a number", *defaultPasswordValidator("asd", "public"))
 
-	assert.Equal(t, "Password's length must be lesser than 100 characters", *defaultPasswordValidator("asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4"))
+	assert.Equal(t, "Password's length must be lesser than 100 characters", *defaultPasswordValidator("asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4asdfdefrg4", "public"))
 
-	assert.Equal(t, "Password must contain at least one number", *defaultPasswordValidator("ascdvsdfvsIUOO"))
+	assert.Equal(t, "Password must contain at least one number", *defaultPasswordValidator("ascdvsdfvsIUOO", "public"))
 
-	assert.Equal(t, "Password must contain at least one alphabet", *defaultPasswordValidator("234235234523"))
+	assert.Equal(t, "Password must contain at least one alphabet", *defaultPasswordValidator("234235234523", "public"))
 }
 
 func TestInvalidAPIInputForFormFields(t *testing.T) {

@@ -411,7 +411,7 @@ func TestWithThirdPartyPasswordlessIfValidateEmailAdressIsCalledWithContactMetho
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						isValidateEmailAddressCalled = true
 						return nil
 					},
@@ -494,7 +494,7 @@ func TestWithThirdPartyPasswordlessIfValidateEmailAdressThrowsGenericErrorInCase
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						isValidateEmailAddressCalled = true
 						message := "test error"
 						return &message

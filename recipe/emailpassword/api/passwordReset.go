@@ -39,7 +39,7 @@ func PasswordReset(apiImplementation epmodels.APIInterface, tenantId string, opt
 		return err
 	}
 
-	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm, formFieldsRaw["formFields"])
+	formFields, err := validateFormFieldsOrThrowError(options.Config.ResetPasswordUsingTokenFeature.FormFieldsForPasswordResetForm, formFieldsRaw["formFields"], tenantId)
 	if err != nil {
 		return err
 	}

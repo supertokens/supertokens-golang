@@ -94,10 +94,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	thirdpartypasswordless.ResetForTest()
 	userroles.ResetForTest()
 
-	// sendPasswordlessLoginEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
-	// 	return saveCode(input.PasswordlessLogin.Email, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
-	// }
-
 	sendPasswordlessLoginSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
 		return saveCode(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
 	}
@@ -123,7 +119,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 		},
 		{
 			ID: "age",
-			Validate: func(value interface{}) *string {
+			Validate: func(value interface{}, tenantId string) *string {
 				age, _ := strconv.Atoi(value.(string))
 				if age >= 18 {
 					// return nil to indicate success

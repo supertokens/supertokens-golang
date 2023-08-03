@@ -543,7 +543,7 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "email",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								customErrMessage := "email does not start with test"
 								if strings.HasPrefix(value.(string), "test") {
 									return nil
@@ -633,7 +633,7 @@ func TestCustomPasswordValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *te
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "password",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								customErrMessage := "password is greater than 5 characters"
 								if len(value.(string)) <= 5 {
 									passesValidatorCtr++
@@ -2753,7 +2753,7 @@ func TestCustomFieldValidationError(t *testing.T) {
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "testField",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								if len(value.(string)) <= 5 {
 									return &customErrorMessage
 								} else {
@@ -2763,7 +2763,7 @@ func TestCustomFieldValidationError(t *testing.T) {
 						},
 						{
 							ID: "testField2",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								if len(value.(string)) <= 5 {
 									return &customErrorMessage
 								} else {

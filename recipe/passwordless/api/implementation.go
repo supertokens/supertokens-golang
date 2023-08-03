@@ -82,7 +82,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 	createCodePOST := func(email *string, phoneNumber *string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
 		var userInputCodeInput *string
 		if options.Config.GetCustomUserInputCode != nil {
-			c, err := options.Config.GetCustomUserInputCode(userContext)
+			c, err := options.Config.GetCustomUserInputCode(tenantId, userContext)
 			if err != nil {
 				return plessmodels.CreateCodePOSTResponse{}, err
 			}
@@ -124,6 +124,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 							UrlWithLinkCode:  magicLink,
 							CodeLifetime:     response.OK.CodeLifetime,
 							PreAuthSessionId: response.OK.PreAuthSessionID,
+							TenantId:         tenantId,
 						},
 					},
 					userContext,
@@ -141,6 +142,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 							UrlWithLinkCode:  magicLink,
 							CodeLifetime:     response.OK.CodeLifetime,
 							PreAuthSessionId: response.OK.PreAuthSessionID,
+							TenantId:         tenantId,
 						},
 					},
 					userContext,
@@ -160,6 +162,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 							UrlWithLinkCode:  magicLink,
 							CodeLifetime:     response.OK.CodeLifetime,
 							PreAuthSessionId: response.OK.PreAuthSessionID,
+							TenantId:         tenantId,
 						},
 					},
 					userContext,
@@ -177,6 +180,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 							UrlWithLinkCode:  magicLink,
 							CodeLifetime:     response.OK.CodeLifetime,
 							PreAuthSessionId: response.OK.PreAuthSessionID,
+							TenantId:         tenantId,
 						},
 					},
 					userContext,
@@ -247,7 +251,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		for numberOfTriesToCreateNewCode := 0; numberOfTriesToCreateNewCode < 3; numberOfTriesToCreateNewCode++ {
 			var userInputCodeInput *string
 			if options.Config.GetCustomUserInputCode != nil {
-				c, err := options.Config.GetCustomUserInputCode(userContext)
+				c, err := options.Config.GetCustomUserInputCode(tenantId, userContext)
 				if err != nil {
 					return plessmodels.ResendCodePOSTResponse{}, err
 				}
@@ -298,6 +302,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 								UrlWithLinkCode:  magicLink,
 								CodeLifetime:     response.OK.CodeLifetime,
 								PreAuthSessionId: response.OK.PreAuthSessionID,
+								TenantId:         tenantId,
 							},
 						},
 						userContext,
@@ -315,6 +320,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 								UrlWithLinkCode:  magicLink,
 								CodeLifetime:     response.OK.CodeLifetime,
 								PreAuthSessionId: response.OK.PreAuthSessionID,
+								TenantId:         tenantId,
 							},
 						},
 						userContext,
@@ -334,6 +340,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 								UrlWithLinkCode:  magicLink,
 								CodeLifetime:     response.OK.CodeLifetime,
 								PreAuthSessionId: response.OK.PreAuthSessionID,
+								TenantId:         tenantId,
 							},
 						},
 						userContext,
@@ -351,6 +358,7 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 								UrlWithLinkCode:  magicLink,
 								CodeLifetime:     response.OK.CodeLifetime,
 								PreAuthSessionId: response.OK.PreAuthSessionID,
+								TenantId:         tenantId,
 							},
 						},
 						userContext,
