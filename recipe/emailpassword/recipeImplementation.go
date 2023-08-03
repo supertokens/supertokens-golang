@@ -159,7 +159,6 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 	}
 
 	updateEmailOrPassword := func(userId string, email, password *string, applyPasswordPolicy *bool, tenantIdForPasswordPolicy string, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
-		// TODO multitenancy tenantIdForPasswordPolicy
 		requestBody := map[string]interface{}{
 			"userId": userId,
 		}
@@ -171,7 +170,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 				formFields := getEmailPasswordConfig().SignUpFeature.FormFields
 				for i := range formFields {
 					if formFields[i].ID == "password" {
-						err := formFields[i].Validate(*password)
+						err := formFields[i].Validate(*password, tenantIdForPasswordPolicy)
 						if err != nil {
 							errResponse := epmodels.PasswordPolicyViolatedError{
 								FailureReason: *err,

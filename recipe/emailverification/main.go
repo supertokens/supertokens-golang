@@ -227,6 +227,7 @@ func SendEmailVerificationEmail(tenantId string, userID string, email *string, u
 				Email: *email,
 			},
 			EmailVerifyLink: emailVerificationLinkResponse.OK.Link,
+			TenantId:        tenantId,
 		},
 	}, userContext...)
 	if err != nil {

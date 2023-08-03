@@ -34,7 +34,7 @@ type TypeInput struct {
 	ContactMethodEmail        ContactMethodEmailConfig
 	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
+	GetCustomUserInputCode    func(tenantId string, userContext supertokens.UserContext) (string, error)
 	Override                  *OverrideStruct
 	EmailDelivery             *emaildelivery.TypeInput
 	SmsDelivery               *smsdelivery.TypeInput
@@ -45,7 +45,7 @@ type TypeNormalisedInput struct {
 	ContactMethodEmail        ContactMethodEmailConfig
 	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
+	GetCustomUserInputCode    func(tenantId string, userContext supertokens.UserContext) (string, error)
 	Override                  OverrideStruct
 	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
 	GetSmsDeliveryConfig      func() smsdelivery.TypeInputWithService
@@ -58,16 +58,16 @@ type OverrideStruct struct {
 
 type ContactMethodEmailConfig struct {
 	Enabled              bool
-	ValidateEmailAddress func(email interface{}) *string
+	ValidateEmailAddress func(email interface{}, tenantId string) *string
 }
 
 type ContactMethodEmailOrPhoneConfig struct {
 	Enabled              bool
-	ValidateEmailAddress func(email interface{}) *string
-	ValidatePhoneNumber  func(phoneNumber interface{}) *string
+	ValidateEmailAddress func(email interface{}, tenantId string) *string
+	ValidatePhoneNumber  func(phoneNumber interface{}, tenantId string) *string
 }
 
 type ContactMethodPhoneConfig struct {
 	Enabled             bool
-	ValidatePhoneNumber func(phoneNumber interface{}) *string
+	ValidatePhoneNumber func(phoneNumber interface{}, tenantId string) *string
 }

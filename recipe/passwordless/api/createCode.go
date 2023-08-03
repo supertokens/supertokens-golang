@@ -69,9 +69,9 @@ func CreateCode(apiImplementation plessmodels.APIInterface, tenantId string, opt
 		email = strings.TrimSpace(email.(string))
 		var validateErr *string
 		if options.Config.ContactMethodEmail.Enabled {
-			validateErr = options.Config.ContactMethodEmail.ValidateEmailAddress(email)
+			validateErr = options.Config.ContactMethodEmail.ValidateEmailAddress(email, tenantId)
 		} else {
-			validateErr = options.Config.ContactMethodEmailOrPhone.ValidateEmailAddress(email)
+			validateErr = options.Config.ContactMethodEmailOrPhone.ValidateEmailAddress(email, tenantId)
 		}
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(supertokens.GeneralErrorResponse{
@@ -83,9 +83,9 @@ func CreateCode(apiImplementation plessmodels.APIInterface, tenantId string, opt
 	if okPhoneNumber {
 		var validateErr *string
 		if options.Config.ContactMethodPhone.Enabled {
-			validateErr = options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber)
+			validateErr = options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber, tenantId)
 		} else {
-			validateErr = options.Config.ContactMethodEmailOrPhone.ValidatePhoneNumber(phoneNumber)
+			validateErr = options.Config.ContactMethodEmailOrPhone.ValidatePhoneNumber(phoneNumber, tenantId)
 		}
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(supertokens.GeneralErrorResponse{

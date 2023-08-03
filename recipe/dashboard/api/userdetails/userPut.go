@@ -55,7 +55,7 @@ type userPutRequestBody struct {
 	Phone     *string `json:"phone"`
 }
 
-func updateEmailForRecipeId(recipeId string, userId string, email string, userContext supertokens.UserContext) (updateEmailResponse, error) {
+func updateEmailForRecipeId(recipeId string, userId string, email string, tenantId string, userContext supertokens.UserContext) (updateEmailResponse, error) {
 	if recipeId == "emailpassword" {
 		var emailField epmodels.NormalisedFormField
 
@@ -65,7 +65,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}
 		}
 
-		validationError := emailField.Validate(email)
+		validationError := emailField.Validate(email, tenantId)
 
 		if validationError != nil {
 			return updateEmailResponse{
@@ -104,7 +104,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 			}
 		}
 
-		validationError := emailField.Validate(email)
+		validationError := emailField.Validate(email, tenantId)
 
 		if validationError != nil {
 			return updateEmailResponse{
@@ -142,21 +142,21 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 		passwordlessConfig := passwordless.GetRecipeInstance().Config
 
 		if passwordlessConfig.ContactMethodPhone.Enabled {
-			validationResult := passwordless.DefaultValidateEmailAddress(email)
+			validationResult := passwordless.DefaultValidateEmailAddress(email, tenantId)
 
 			if validationResult != nil {
 				isValidEmail = false
 				validationError = *validationResult
 			}
 		} else if passwordlessConfig.ContactMethodEmail.Enabled {
-			validationResult := passwordlessConfig.ContactMethodEmail.ValidateEmailAddress(email)
+			validationResult := passwordlessConfig.ContactMethodEmail.ValidateEmailAddress(email, tenantId)
 
 			if validationResult != nil {
 				isValidEmail = false
 				validationError = *validationResult
 			}
 		} else {
-			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidateEmailAddress(email)
+			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidateEmailAddress(email, tenantId)
 
 			if validationResult != nil {
 				isValidEmail = false
@@ -199,21 +199,21 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 		passwordlessConfig := thirdpartypasswordless.GetRecipeInstance().Config
 
 		if passwordlessConfig.ContactMethodPhone.Enabled {
-			validationResult := passwordless.DefaultValidateEmailAddress(email)
+			validationResult := passwordless.DefaultValidateEmailAddress(email, tenantId)
 
 			if validationResult != nil {
 				isValidEmail = false
 				validationError = *validationResult
 			}
 		} else if passwordlessConfig.ContactMethodEmail.Enabled {
-			validationResult := passwordlessConfig.ContactMethodEmail.ValidateEmailAddress(email)
+			validationResult := passwordlessConfig.ContactMethodEmail.ValidateEmailAddress(email, tenantId)
 
 			if validationResult != nil {
 				isValidEmail = false
 				validationError = *validationResult
 			}
 		} else {
-			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidateEmailAddress(email)
+			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidateEmailAddress(email, tenantId)
 
 			if validationResult != nil {
 				isValidEmail = false
@@ -252,7 +252,7 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, userCo
 	return updateEmailResponse{}, errors.New("Should never come here")
 }
 
-func updatePhoneForRecipeId(recipeId string, userId string, phone string, userContext supertokens.UserContext) (updatePhoneResponse, error) {
+func updatePhoneForRecipeId(recipeId string, userId string, phone string, tenantId string, userContext supertokens.UserContext) (updatePhoneResponse, error) {
 	if recipeId == "passwordless" {
 		isValidPhone := true
 		validationError := ""
@@ -260,21 +260,21 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, userCo
 		passwordlessConfig := passwordless.GetRecipeInstance().Config
 
 		if passwordlessConfig.ContactMethodEmail.Enabled {
-			validationResult := passwordless.DefaultValidatePhoneNumber(phone)
+			validationResult := passwordless.DefaultValidatePhoneNumber(phone, tenantId)
 
 			if validationResult != nil {
 				isValidPhone = false
 				validationError = *validationResult
 			}
 		} else if passwordlessConfig.ContactMethodPhone.Enabled {
-			validationResult := passwordlessConfig.ContactMethodPhone.ValidatePhoneNumber(phone)
+			validationResult := passwordlessConfig.ContactMethodPhone.ValidatePhoneNumber(phone, tenantId)
 
 			if validationResult != nil {
 				isValidPhone = false
 				validationError = *validationResult
 			}
 		} else {
-			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidatePhoneNumber(phone)
+			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidatePhoneNumber(phone, tenantId)
 
 			if validationResult != nil {
 				isValidPhone = false
@@ -317,21 +317,21 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, userCo
 		passwordlessConfig := thirdpartypasswordless.GetRecipeInstance().Config
 
 		if passwordlessConfig.ContactMethodEmail.Enabled {
-			validationResult := passwordless.DefaultValidatePhoneNumber(phone)
+			validationResult := passwordless.DefaultValidatePhoneNumber(phone, tenantId)
 
 			if validationResult != nil {
 				isValidPhone = false
 				validationError = *validationResult
 			}
 		} else if passwordlessConfig.ContactMethodPhone.Enabled {
-			validationResult := passwordlessConfig.ContactMethodPhone.ValidatePhoneNumber(phone)
+			validationResult := passwordlessConfig.ContactMethodPhone.ValidatePhoneNumber(phone, tenantId)
 
 			if validationResult != nil {
 				isValidPhone = false
 				validationError = *validationResult
 			}
 		} else {
-			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidatePhoneNumber(phone)
+			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidatePhoneNumber(phone, tenantId)
 
 			if validationResult != nil {
 				isValidPhone = false
@@ -450,7 +450,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, tenantId string, options
 	}
 
 	if strings.TrimSpace(*readBody.Email) != "" {
-		updateResponse, updateError := updateEmailForRecipeId(recipeId, *readBody.UserId, strings.TrimSpace(*readBody.Email), userContext)
+		updateResponse, updateError := updateEmailForRecipeId(recipeId, *readBody.UserId, strings.TrimSpace(*readBody.Email), tenantId, userContext)
 
 		if updateError != nil {
 			return userPutResponse{}, updateError
@@ -465,7 +465,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, tenantId string, options
 	}
 
 	if strings.TrimSpace(*readBody.Phone) != "" {
-		updateResponse, updateError := updatePhoneForRecipeId(recipeId, *readBody.UserId, *readBody.Phone, userContext)
+		updateResponse, updateError := updatePhoneForRecipeId(recipeId, *readBody.UserId, *readBody.Phone, tenantId, userContext)
 
 		if updateError != nil {
 			return userPutResponse{}, updateError

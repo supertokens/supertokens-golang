@@ -34,7 +34,7 @@ type OverrideStruct struct {
 
 type TypeInputFormField struct {
 	ID       string
-	Validate func(value interface{}) *string
+	Validate func(value interface{}, tenantId string) *string
 	Optional *bool
 }
 
@@ -44,7 +44,7 @@ type TypeInputSignUp struct {
 
 type NormalisedFormField struct {
 	ID       string
-	Validate func(value interface{}) *string
+	Validate func(value interface{}, tenantId string) *string
 	Optional bool
 }
 

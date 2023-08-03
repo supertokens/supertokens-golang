@@ -152,7 +152,7 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 	}
 }
 
-func DefaultValidateEmailAddress(value interface{}) *string {
+func DefaultValidateEmailAddress(value interface{}, tenantId string) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg
@@ -165,7 +165,7 @@ func DefaultValidateEmailAddress(value interface{}) *string {
 	return nil
 }
 
-func DefaultValidatePhoneNumber(value interface{}) *string {
+func DefaultValidatePhoneNumber(value interface{}, tenantId string) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg

@@ -467,6 +467,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 			UrlWithLinkCode:  &someUrl,
 			PreAuthSessionId: "someSession",
 			CodeLifetime:     60000,
+			TenantId:         "public",
 		},
 	})
 
@@ -541,6 +542,7 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 			UserInputCode:    &someCode,
 			PreAuthSessionId: "someSession",
 			CodeLifetime:     60000,
+			TenantId:         "public",
 		},
 	})
 
@@ -619,6 +621,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 			UrlWithLinkCode:  &someUrl,
 			PreAuthSessionId: "someSession",
 			CodeLifetime:     60000,
+			TenantId:         "public",
 		},
 	})
 

@@ -85,6 +85,7 @@ func MakeAPIImplementation() epmodels.APIInterface {
 					Email: user.Email,
 				},
 				PasswordResetLink: passwordResetLink,
+				TenantId:          tenantId,
 			},
 		}, userContext)
 		if err != nil {

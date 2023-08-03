@@ -42,6 +42,7 @@ type PasswordlessLoginType struct {
 	UrlWithLinkCode  *string
 	CodeLifetime     uint64
 	PreAuthSessionId string
+	TenantId         string
 }
 
 type User struct {

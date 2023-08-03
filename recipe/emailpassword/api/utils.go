@@ -25,7 +25,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormField, formFieldsRaw interface{}) ([]epmodels.TypeFormField, error) {
+func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormField, formFieldsRaw interface{}, tenantId string) ([]epmodels.TypeFormField, error) {
 	if formFieldsRaw == nil {
 		return nil, supertokens.BadInputError{
 			Msg: "Missing input param: formFields",
@@ -86,10 +86,10 @@ func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormFi
 		}
 	}
 
-	return formFields, validateFormOrThrowError(configFormFields, formFields)
+	return formFields, validateFormOrThrowError(configFormFields, formFields, tenantId)
 }
 
-func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, inputs []epmodels.TypeFormField) error {
+func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, inputs []epmodels.TypeFormField, tenantId string) error {
 	var validationErrors []errors.ErrorPayload
 	if len(configFormFields) != len(inputs) {
 		return supertokens.BadInputError{
@@ -107,7 +107,7 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 		if input.Value == "" && !field.Optional {
 			validationErrors = append(validationErrors, errors.ErrorPayload{ID: field.ID, ErrorMsg: "Field is not optional"})
 		} else {
-			err := field.Validate(input.Value)
+			err := field.Validate(input.Value, tenantId)
 			if err != nil {
 				validationErrors = append(validationErrors, errors.ErrorPayload{
 					ID:       field.ID,

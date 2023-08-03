@@ -91,7 +91,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, tenantId string,
 			}
 		}
 
-		validationError := passwordField.Validate(*readBody.NewPassword)
+		validationError := passwordField.Validate(*readBody.NewPassword, tenantId)
 
 		if validationError != nil {
 			return userPasswordPutResponse{
@@ -134,7 +134,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, tenantId string,
 		}
 	}
 
-	validationError := passwordField.Validate(*readBody.NewPassword)
+	validationError := passwordField.Validate(*readBody.NewPassword, tenantId)
 
 	if validationError != nil {
 		return userPasswordPutResponse{

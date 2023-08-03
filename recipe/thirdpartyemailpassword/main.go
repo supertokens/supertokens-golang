@@ -215,6 +215,7 @@ func SendResetPasswordEmail(tenantId string, userID string, userContext ...super
 				Email: userInfo.Email,
 			},
 			PasswordResetLink: linkResponse.OK.Link,
+			TenantId:          tenantId,
 		},
 	}, userContext...)
 	if err != nil {

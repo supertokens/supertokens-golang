@@ -106,11 +106,11 @@ func TestAddingCustomValidatorsForPhoneAndEmailWithEmailOrPhoneContactMethod(t *
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						isValidateEmailAddressCalled = true
 						return nil
 					},
-					ValidatePhoneNumber: func(phoneNumber interface{}) *string {
+					ValidatePhoneNumber: func(phoneNumber interface{}, tenantId string) *string {
 						isValidatePhoneNumberCalled = true
 						return nil
 					},
@@ -455,7 +455,7 @@ func TestIfValidatePhoneNumberIsCalledWithPhoneContactMethod(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					ValidatePhoneNumber: func(phoneNumber interface{}) *string {
+					ValidatePhoneNumber: func(phoneNumber interface{}, tenantId string) *string {
 						isValidatePhoneNumberCalled = true
 						return nil
 					},
@@ -538,7 +538,7 @@ func TestErrorMessageWithValidatePhoneNumberWithPhoneContactMethod(t *testing.T)
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					ValidatePhoneNumber: func(phoneNumber interface{}) *string {
+					ValidatePhoneNumber: func(phoneNumber interface{}, tenantId string) *string {
 						message := "test error"
 						isValidatePhoneNumberCalled = true
 						return &message
@@ -1021,7 +1021,7 @@ func TestIfValidateEmailIsCalledWithEmailContactMethod(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						isValidateEmailAddressCalled = true
 						return nil
 					},
@@ -1103,7 +1103,7 @@ func TestValidateEmailWithGeneralErrorWithContactMethodSetToEmail(t *testing.T) 
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						message := "test error"
 						isValidateEmailAddressCalled = true
 						return &message
@@ -1452,7 +1452,7 @@ func TestPassingGetCustomUserInputCodeUsingDifferentCodes(t *testing.T) {
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
 				},
-				GetCustomUserInputCode: func(userContext supertokens.UserContext) (string, error) {
+				GetCustomUserInputCode: func(tenantId string, userContext supertokens.UserContext) (string, error) {
 					customCode = unittesting.GenerateRandomCode(5)
 					return customCode, nil
 				},
