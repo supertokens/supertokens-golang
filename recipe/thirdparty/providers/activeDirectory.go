@@ -18,13 +18,6 @@ func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.Name = "Active Directory"
 	}
 
-	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "sub"
-	}
-	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {

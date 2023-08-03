@@ -14,17 +14,6 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/"
 	}
 
-	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
-	}
-	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
-	}
-
-	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
-	}
-
 	if input.Config.AuthorizationEndpointQueryParams == nil {
 		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
 	}

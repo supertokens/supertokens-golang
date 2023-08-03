@@ -28,6 +28,8 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		ID: input.Config.ThirdPartyId,
 	}
 
+	// These are safe defaults common to most providers. Each provider implementations override these
+	// as necessary
 	if input.Config.UserInfoMap.FromIdTokenPayload.UserId == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.UserId = "sub"
 	}
@@ -36,6 +38,15 @@ func NewProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	}
 	if input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified == "" {
 		input.Config.UserInfoMap.FromIdTokenPayload.EmailVerified = "email_verified"
+	}
+	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "sub"
+	}
+	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
+	}
+	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
 	}
 
 	if input.Config.GenerateFakeEmail == nil {

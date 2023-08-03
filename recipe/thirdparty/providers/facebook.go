@@ -41,14 +41,6 @@ func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
 	}
 
-	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
-	}
-
-	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {

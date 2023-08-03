@@ -17,16 +17,6 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.Name = "Okta"
 	}
 
-	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "sub"
-	}
-	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
-	}
-	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
-		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "email_verified"
-	}
-
 	oOverride := input.Override
 
 	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
