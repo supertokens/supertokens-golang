@@ -110,18 +110,24 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	var code, urlWithCode *string
 	var codeLife uint64
 
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		plessEmail = input.PasswordlessLogin.Email
+		code = input.PasswordlessLogin.UserInputCode
+		urlWithCode = input.PasswordlessLogin.UrlWithLinkCode
+		codeLife = input.PasswordlessLogin.CodeLifetime
+		customCalled = true
+		return nil
+	}
+
 	tplConfig := tplmodels.TypeInput{
 		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &emaildelivery.EmailDeliveryInterface{
+				SendEmail: &sendEmail,
+			},
+		},
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 			Enabled: true,
-			CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-				plessEmail = email
-				code = userInputCode
-				urlWithCode = urlWithLinkCode
-				codeLife = codeLifetime
-				customCalled = true
-				return nil
-			},
 		},
 	}
 	testServer := supertokensInitForTest(

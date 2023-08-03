@@ -103,18 +103,24 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	var code, urlWithCode *string
 	var codeLife uint64
 
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		plessPhone = input.PasswordlessLogin.PhoneNumber
+		code = input.PasswordlessLogin.UserInputCode
+		urlWithCode = input.PasswordlessLogin.UrlWithLinkCode
+		codeLife = input.PasswordlessLogin.CodeLifetime
+		customCalled = true
+		return nil
+	}
+
 	plessConfig := plessmodels.TypeInput{
 		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		SmsDelivery: &smsdelivery.TypeInput{
+			Service: &smsdelivery.SmsDeliveryInterface{
+				SendSms: &sendSms,
+			},
+		},
 		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 			Enabled: true,
-			CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-				plessPhone = phoneNumber
-				code = userInputCode
-				urlWithCode = urlWithLinkCode
-				codeLife = codeLifetime
-				customCalled = true
-				return nil
-			},
 		},
 	}
 	testServer := supertokensInitForTest(

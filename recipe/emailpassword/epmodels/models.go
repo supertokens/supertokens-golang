@@ -17,7 +17,6 @@ package epmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type TypeNormalisedInput struct {
@@ -57,10 +56,6 @@ type TypeNormalisedInputSignIn struct {
 	FormFields []NormalisedFormField
 }
 
-type TypeInputResetPasswordUsingTokenFeature struct {
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
-}
-
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
@@ -74,10 +69,9 @@ type User struct {
 }
 
 type TypeInput struct {
-	SignUpFeature                  *TypeInputSignUp
-	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
-	Override                       *OverrideStruct
-	EmailDelivery                  *emaildelivery.TypeInput
+	SignUpFeature *TypeInputSignUp
+	Override      *OverrideStruct
+	EmailDelivery *emaildelivery.TypeInput
 }
 
 type TypeFormField struct {

@@ -35,16 +35,8 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 		typeNormalisedInput.Providers = config.Providers
 	}
 
-	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = config.ResetPasswordUsingTokenFeature
-	}
-
 	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl tpepmodels.RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordResetEmail := emailpassword.DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
-		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
-			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
-		}
-
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, epRecipeImpl, appInfo, sendPasswordResetEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
@@ -73,9 +65,8 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 func makeTypeNormalisedInput(recipeInstance *Recipe) tpepmodels.TypeNormalisedInput {
 	return tpepmodels.TypeNormalisedInput{
-		SignUpFeature:                  nil,
-		Providers:                      nil,
-		ResetPasswordUsingTokenFeature: nil,
+		SignUpFeature: nil,
+		Providers:     nil,
 		Override: tpepmodels.OverrideStruct{
 			Functions: func(originalImplementation tpepmodels.RecipeInterface) tpepmodels.RecipeInterface {
 				return originalImplementation

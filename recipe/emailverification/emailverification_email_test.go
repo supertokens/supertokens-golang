@@ -76,55 +76,6 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 	assert.Equal(t, EmailVerificationEmailSentForTest, true)
 }
 
-func TestBackwardCompatibilityServiceWithCustomFunction(t *testing.T) {
-	funcCalled := false
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(evmodels.TypeInput{
-				Mode: "OPTIONAL",
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					funcCalled = true
-				},
-				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
-					return evmodels.TypeEmailInfo{}, nil
-				},
-			}),
-			session.Init(&sessmodels.TypeInput{
-				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-					return sessmodels.CookieTransferMethod
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	SendEmail(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    "someId",
-				Email: "someEmail",
-			},
-		},
-	})
-
-	assert.Equal(t, EmailVerificationEmailSentForTest, false)
-	assert.Equal(t, funcCalled, true)
-}
-
 func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 	funcCalled := false
 	overrideCalled := false
@@ -148,9 +99,6 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 						}
 						return originalImplementation
 					},
-				},
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					funcCalled = true
 				},
 				GetEmailForUserID: func(userID string, userContext supertokens.UserContext) (evmodels.TypeEmailInfo, error) {
 					return evmodels.TypeEmailInfo{}, nil

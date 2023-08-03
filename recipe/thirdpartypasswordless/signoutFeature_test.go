@@ -57,9 +57,6 @@ func TestTheDefaultRouteAndItShouldRevokeTheSession(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
@@ -174,9 +171,6 @@ func TestDisablingDefaultRouteAndCallingTheAPIReturns404(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Override: &tplmodels.OverrideStruct{
 					APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
@@ -250,9 +244,6 @@ func TestCallingAPIWithoutSessionShouldReturnOk(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
@@ -319,9 +310,6 @@ func TestThatSignoutAPIreturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,

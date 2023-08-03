@@ -53,9 +53,6 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdPartyModule(t *testing.T
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					customProvider1,
@@ -126,9 +123,6 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExist(t *testing.T) 
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Providers: []tpmodels.ProviderInput{
 					customProvider1,

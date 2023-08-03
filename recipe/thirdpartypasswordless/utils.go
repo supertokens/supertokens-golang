@@ -30,11 +30,6 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		sendPasswordlessLoginEmail := passwordless.DefaultCreateAndSendCustomEmail(appInfo)
-		if config.ContactMethodEmail.Enabled && config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
-			sendPasswordlessLoginEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
-		} else if config.ContactMethodEmailOrPhone.Enabled && config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
-			sendPasswordlessLoginEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
-		}
 
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, sendPasswordlessLoginEmail)
 		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
@@ -52,12 +47,6 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 
 	typeNormalisedInput.GetSmsDeliveryConfig = func() smsdelivery.TypeInputWithService {
 		sendPasswordlessLoginSms := passwordless.DefaultCreateAndSendCustomTextMessage(appInfo)
-
-		if config.ContactMethodPhone.Enabled && config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
-			sendPasswordlessLoginSms = config.ContactMethodPhone.CreateAndSendCustomTextMessage
-		} else if config.ContactMethodEmailOrPhone.Enabled && config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
-			sendPasswordlessLoginSms = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
-		}
 
 		smsService := smsBackwardCompatibilityService.MakeBackwardCompatibilityService(sendPasswordlessLoginSms)
 		if config.SmsDelivery != nil && config.SmsDelivery.Service != nil {

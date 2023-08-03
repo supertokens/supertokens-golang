@@ -38,11 +38,10 @@ type TypeEmailInfo struct {
 }
 
 type TypeInput struct {
-	Mode                     TypeMode
-	GetEmailForUserID        TypeGetEmailForUserID
-	CreateAndSendCustomEmail func(user User, emailVerificationURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
-	Override                 *OverrideStruct
-	EmailDelivery            *emaildelivery.TypeInput
+	Mode              TypeMode
+	GetEmailForUserID TypeGetEmailForUserID
+	Override          *OverrideStruct
+	EmailDelivery     *emaildelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {

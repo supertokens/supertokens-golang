@@ -38,15 +38,10 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	// we must call this after validateAndNormaliseSignupConfig
 	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)
 
-	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
-	}
+	typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordResetEmail := DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
-		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
-			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
-		}
 
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendPasswordResetEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
