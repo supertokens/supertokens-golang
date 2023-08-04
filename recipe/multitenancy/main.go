@@ -91,3 +91,25 @@ func DeleteThirdPartyConfig(tenantId string, thirdPartyId string, userContext ..
 	}
 	return (*instance.RecipeImpl.DeleteThirdPartyConfig)(tenantId, thirdPartyId, userContext[0])
 }
+
+func AssociateUserToTenant(tenantId string, userId string, userContext ...supertokens.UserContext) (multitenancymodels.AssociateUserToTenantResponse, error) {
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return multitenancymodels.AssociateUserToTenantResponse{}, err
+	}
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.AssociateUserToTenant)(tenantId, userId, userContext[0])
+}
+
+func DisassociateUserFromTenant(tenantId string, userId string, userContext ...supertokens.UserContext) (multitenancymodels.DisassociateUserFromTenantResponse, error) {
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return multitenancymodels.DisassociateUserFromTenantResponse{}, err
+	}
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.DisassociateUserFromTenant)(tenantId, userId, userContext[0])
+}

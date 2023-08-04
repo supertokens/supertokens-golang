@@ -25,6 +25,10 @@ import (
 func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput) (tpmodels.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
+	if config == nil {
+		config = &tpmodels.TypeInput{}
+	}
+
 	signInAndUpFeature, err := validateAndNormaliseSignInAndUpConfig(config.SignInAndUpFeature)
 	if err != nil {
 		return tpmodels.TypeNormalisedInput{}, err

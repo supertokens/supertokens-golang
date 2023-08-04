@@ -58,15 +58,15 @@ const (
 
 type TypeUserInfoMap struct {
 	FromIdTokenPayload struct {
-		UserId        string `json:"userId"`
-		Email         string `json:"email"`
-		EmailVerified string `json:"emailVerified"`
-	} `json:"fromIdTokenPayload"`
+		UserId        string `json:"userId,omitempty"`
+		Email         string `json:"email,omitempty"`
+		EmailVerified string `json:"emailVerified,omitempty"`
+	} `json:"fromIdTokenPayload,omitempty"`
 	FromUserInfoAPI struct {
-		UserId        string `json:"userId"`
-		Email         string `json:"email"`
-		EmailVerified string `json:"emailVerified"`
-	} `json:"fromUserInfoAPI"`
+		UserId        string `json:"userId,omitempty"`
+		Email         string `json:"email,omitempty"`
+		EmailVerified string `json:"emailVerified,omitempty"`
+	} `json:"fromUserInfoAPI,omitempty"`
 }
 
 type User struct {
@@ -110,9 +110,9 @@ type ProviderInput struct {
 
 type ProviderConfig struct {
 	ThirdPartyId string `json:"thirdPartyId"`
-	Name         string `json:"name"`
+	Name         string `json:"name,omitempty"`
 
-	Clients []ProviderClientConfig `json:"clients"`
+	Clients []ProviderClientConfig `json:"clients,omitempty"`
 
 	// Fields below are optional for built-in providers
 	AuthorizationEndpoint            string                 `json:"authorizationEndpoint,omitempty"`
@@ -127,17 +127,17 @@ type ProviderConfig struct {
 	UserInfoMap                      TypeUserInfoMap        `json:"userInfoMap,omitempty"`
 	RequireEmail                     *bool                  `json:"requireEmail,omitempty"`
 
-	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
-	GenerateFakeEmail      func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string
+	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error `json:"-"`
+	GenerateFakeEmail      func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string                                       `json:"-"`
 }
 
 type ProviderClientConfig struct {
 	ClientType       string                 `json:"clientType,omitempty"` // optional
 	ClientID         string                 `json:"clientId"`
-	ClientSecret     string                 `json:"clientSecret"`
-	Scope            []string               `json:"scope"`
+	ClientSecret     string                 `json:"clientSecret,omitempty"`
+	Scope            []string               `json:"scope,omitempty"`
 	ForcePKCE        *bool                  `json:"forcePKCE,omitempty"`
-	AdditionalConfig map[string]interface{} `json:"additionalConfig"`
+	AdditionalConfig map[string]interface{} `json:"additionalConfig,omitempty"`
 }
 
 type ProviderConfigForClientType struct {
