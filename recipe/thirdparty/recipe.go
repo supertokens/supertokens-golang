@@ -56,8 +56,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance, config.SignInAndUpFeature.Providers))
-	r.Providers = config.SignInAndUpFeature.Providers
+	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance, verifiedConfig.SignInAndUpFeature.Providers))
+	r.Providers = verifiedConfig.SignInAndUpFeature.Providers
 
 	supertokens.AddPostInitCallback(func() error {
 		evRecipe := emailverification.GetRecipeInstance()
