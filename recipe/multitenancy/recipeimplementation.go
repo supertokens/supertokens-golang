@@ -30,13 +30,22 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	}
 
 	createOrUpdateTenant := func(tenantId string, config multitenancymodels.TenantConfig, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateTenantResponse, error) {
-		createOrUpdateResponse, err := querier.SendPutRequest("/recipe/multitenancy/tenant", map[string]interface{}{
-			"tenantId":             tenantId,
-			"emailPasswordEnabled": config.EmailPasswordEnabled,
-			"passwordlessEnabled":  config.PasswordlessEnabled,
-			"thirdPartyEnabled":    config.ThirdPartyEnabled,
-			"coreConfig":           config.CoreConfig,
-		})
+		requestBody := map[string]interface{}{
+			"tenantId": tenantId,
+		}
+		if config.EmailPasswordEnabled != nil {
+			requestBody["emailPasswordEnabled"] = *config.EmailPasswordEnabled
+		}
+		if config.PasswordlessEnabled != nil {
+			requestBody["passwordlessEnabled"] = *config.PasswordlessEnabled
+		}
+		if config.ThirdPartyEnabled != nil {
+			requestBody["thirdPartyEnabled"] = *config.ThirdPartyEnabled
+		}
+		if config.CoreConfig != nil {
+			requestBody["coreConfig"] = config.CoreConfig
+		}
+		createOrUpdateResponse, err := querier.SendPutRequest("/recipe/multitenancy/tenant", requestBody)
 		if err != nil {
 			return multitenancymodels.CreateOrUpdateTenantResponse{}, err
 		}
