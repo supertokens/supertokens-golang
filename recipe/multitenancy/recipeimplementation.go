@@ -107,7 +107,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	}
 
 	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
-		tenantsResponse, err := querier.SendGetRequest("/recipe/multitenancy/tenants/list", map[string]string{})
+		tenantsResponse, err := querier.SendGetRequest("/recipe/multitenancy/tenant/list", map[string]string{})
 		if err != nil {
 			return multitenancymodels.ListAllTenantsResponse{}, err
 		}
