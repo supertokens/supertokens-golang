@@ -443,5 +443,14 @@ func getUserFromJSONResponse(userJSON map[string]interface{}) plessmodels.User {
 			user.PhoneNumber = &phoneNumberStr
 		}
 	}
+	{
+		tenantIds, ok := userJSON["tenantIds"].([]interface{})
+		if ok {
+			user.TenantIds = make([]string, len(tenantIds))
+			for i, tenantId := range tenantIds {
+				user.TenantIds[i] = tenantId.(string)
+			}
+		}
+	}
 	return user
 }
