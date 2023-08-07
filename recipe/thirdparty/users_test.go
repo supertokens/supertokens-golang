@@ -323,7 +323,7 @@ func TestGetUserCount(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	userCount, err := supertokens.GetUserCount(nil)
+	userCount, err := supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -332,7 +332,7 @@ func TestGetUserCount(t *testing.T) {
 
 	unittesting.SigninupCustomRequest(testServer.URL, "test@gmail.com", "testPass0")
 
-	userCount, err = supertokens.GetUserCount(nil)
+	userCount, err = supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -344,7 +344,7 @@ func TestGetUserCount(t *testing.T) {
 	unittesting.SigninupCustomRequest(testServer.URL, "test3@gmail.com", "testPass3")
 	unittesting.SigninupCustomRequest(testServer.URL, "test4@gmail.com", "testPass4")
 
-	userCount, err = supertokens.GetUserCount(nil)
+	userCount, err = supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

@@ -55,8 +55,15 @@ func GetAllCORSHeaders() []string {
 	return instance.getAllCORSHeaders()
 }
 
-func GetUserCount(includeRecipeIds *[]string) (float64, error) {
-	return getUserCount(includeRecipeIds)
+func GetUserCount(includeRecipeIds *[]string, tenantId *string) (float64, error) {
+	var includeAllTenants *bool
+	if tenantId == nil {
+		defaultTenantId := DefaultTenantId
+		tenantId = &defaultTenantId
+		True := true
+		includeAllTenants = &True
+	}
+	return getUserCount(includeRecipeIds, *tenantId, includeAllTenants)
 }
 
 func GetUsersOldestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {

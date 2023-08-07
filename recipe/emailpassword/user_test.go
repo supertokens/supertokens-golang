@@ -277,7 +277,7 @@ func TestGetUserCount(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	userCount, err := supertokens.GetUserCount(nil)
+	userCount, err := supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -300,7 +300,7 @@ func TestGetUserCount(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	userCount, err = supertokens.GetUserCount(nil)
+	userCount, err = supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
