@@ -135,7 +135,7 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		StaticThirdPartyProviders: r.staticThirdPartyProviders,
 	}
 	if id == LoginMethodsAPI {
-		return api.LoginMethodsAPI(r.APIImpl, options, userContext)
+		return api.LoginMethodsAPI(r.APIImpl, tenantId, options, userContext)
 	}
 	return errors.New("should never come here")
 }
