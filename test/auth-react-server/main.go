@@ -475,7 +475,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				GetAllowedDomainsForTenantId: func(tenantId string, userContext supertokens.UserContext) ([]string, error) {
 					allowedDomains := []string{
 						fmt.Sprintf("%s.example.com", tenantId),
-						"localhost:" + webPort,
+						"localhost",
 					}
 					return allowedDomains, nil
 				},
