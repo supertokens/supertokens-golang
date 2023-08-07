@@ -60,6 +60,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	r.staticThirdPartyProviders = []tpmodels.ProviderInput{}
 
+	r.GetAllowedDomainsForTenantId = verifiedConfig.GetAllowedDomainsForTenantId
+
 	return r, nil
 }
 
