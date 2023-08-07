@@ -487,6 +487,8 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+				EmailDelivery:             passwordlessConfig.EmailDelivery,
+				SmsDelivery:               passwordlessConfig.SmsDelivery,
 				Override: &plessmodels.OverrideStruct{
 					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
 						ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
