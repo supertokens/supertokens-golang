@@ -6,253 +6,495 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [unreleased]
+
+## [0.13.0] - 2023-08-07
+
 ### Added
-- Added Multitenancy Recipe & always initialized by default.
-- Added new Social login providers - LinkedIn
-- Added new Multi-tenant SSO providers - Okta, Active Directory, Boxy SAML
+
+-   Added Multitenancy Recipe & always initialized by default.
+-   Adds Multitenancy support to all the recipes
+-   Added new Social login providers - LinkedIn
+-   Added new Multi-tenant SSO providers - Okta, Active Directory, Boxy SAML
+-   All APIs handled by Supertokens middleware can have an optional `tenantId` prefixed in the path. e.g. <basePath>/<tenantId>/signinup
+-   Following recipe functions have been added:
+    -   `emailpassword.CreateResetPasswordLink`
+    -   `emailpassword.SendResetPasswordEmail`
+    -   `emailverification.CreateEmailVerificationLink`
+    -   `emailverification.SendEmailVerificationEmail`
+    -   `thirdparty.GetProvider`
+    -   `thirdpartyemailpassword.ThirdPartyGetProvider`
+    -   `thirdpartyemailpassword.CreateResetPasswordLink`
+    -   `thirdpartyemailpassword.SendResetPasswordEmail`
+    -   `thirdpartypasswordless.ThirdPartyGetProvider`
 
 ### Breaking changes
-- TypeProvider interface is re-written
-- In the thirdparty, thirdpartyemailpassword and thirdpartypasswordless, the providers array accepts `[]ProviderInput` instead of `[]TypeProvider`
-- Updated `authorisationUrlGET` API
-  - Changed: Doesn't accept `clientId` anymore and accepts `clientType` instead to determine the matching config
-  - Added: optional `tenantId` to support multi-tenancy
-  - Added: optional `pkceCodeVerifier` in the response, to support PKCE
-- Updated `signInUpPOST` API
-  - Removed: `clientId`, `redirectURI`, `authCodeResponse` and `code` from the input
-  - Instead,
-    - accepts `clientType` to determine the matching config
-    - One of redirectURIInfo (for code flow) or oAuthTokens (for token flow) is required
-  - Added: optional `tenantId` to support multi-tenancy
-- Updated `appleRedirectHandlerPOST` 
-  - to accept all the form fields instead of just the code
-  - to use redirect URI encoded in the `state` parameter instead of using the websiteDomain config.
-  - to use HTTP 303 instead of javascript based redirection.
-- Exposing `ManuallyCreateOrUpdateUserWithContext` instead of `SignInUpWithContext` recipe function in the thirdparty, thirdpartyemailpassword and thirdpartypasswordless recipes
-  - `SignInUpWithContext` is used by the SDK only to handle the sign in/up flow. It is not meant to be used by the user.
-  - `ManuallyCreateOrUpdateUserWithContext` recipe function is added to allow the user to manually create or update a user in the core.
-  - Recipe interface changes:
-    - Updated `SignInUp` in the thirdparty recipe and `ThirdPartySignInUp` in the thirdpartyemailpassword & thirdpartypasswordless recipe function accepts these new parameters:
-      - `oAuthTokens` - contains all the tokens (access_token, id_token, etc.) as returned by the provider
-      - `rawUserInfoFromProvider` - contains all the user profile info as returned by the provider
-      - `tenantId` - optional tenantId, the tenant to which the user belongs to
-    - Added `ManuallyCreateOrUpdateUser` recipe function in thirdparty recipe
-    - Added `ThirdPartyManuallyCreateOrUpdateUser` recipe function in thirdpartyemailpassword & thirdpartypasswordless recipe
+
+-   Only supporting FDI 1.17
+-   Core must be upgraded to 6.0
+-   `getUsersOldestFirst` & `getUsersNewestFirst` has mandatory parameter `tenantId`. Pass `'public'` if not using multitenancy.
+-   Added mandatory field `tenantId` to `EmailDeliveryInterface` and `SmsDeliveryInterface`. Pass `'public'` if not using multitenancy.
+-   Removed deprecated config `createAndSendCustomEmail` and `createAndSendCustomTextMessage`.
+-   EmailPassword recipe changes:
+    -   Added mandatory `tenantId` field to `TypeEmailPasswordPasswordResetEmailDeliveryInput`
+    -   Removed `resetPasswordUsingTokenFeature` from `TypeInput`
+    -   Added `tenantId` param to `validate` function in `TypeInputFormField`
+    -   Added mandatory `tenantId` as first parameter to the following recipe index functions:
+        -   `SignUp`
+        -   `SignIn`
+        -   `GetUserByEmail`
+        -   `CreateResetPasswordToken`
+        -   `ResetPasswordUsingToken`
+    -   Added mandatory `tenantId` in the input for the following recipe interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `SignUp`
+        -   `SignIn`
+        -   `GetUserByEmail`
+        -   `CreateResetPasswordToken`
+        -   `ResetPasswordUsingToken`
+        -   `UpdateEmailOrPassword`
+    -   Added mandatory `tenantId` in the input for the following API interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `EmailExistsGET`
+        -   `GeneratePasswordResetTokenPOST`
+        -   `PasswordResetPOST`
+        -   `SignInPOST`
+        -   `SignUpPOST`
+-   EmailVerification recipe changes:
+    -   Added mandatory `TenantId` field to `EmailVerificationType`
+    -   Added mandatory `tenantId` as first parameter to the following recipe index functions:
+        -   `CreateEmailVerificationToken`
+        -   `VerifyEmailUsingToken`
+        -   `RevokeEmailVerificationTokens`
+    -   Added mandatory `tenantId` in the input for the following recipe interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `CreateEmailVerificationToken`
+        -   `VerifyEmailUsingToken`
+        -   `RevokeEmailVerificationTokens`
+    -   Added mandatory `tenantId` in the input for the following API interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `VerifyEmailPOST`
+-   Passwordless recipe changes:
+    -   Added `tenantId` param to `ValidateEmailAddress`, `ValidatePhoneNumber` and `GetCustomUserInputCode` functions in `TypeInput`
+    -   Added mandatory `TenantId` field to `emaildelivery.PasswordlessLoginType` and `smsdelivery.PasswordlessLoginType`
+    -   The providers array in `TypeInput` accepts `[]ProviderInput` instead of `[]TypeProvider`. TypeProvider interface is re-written. Refer migration section for more info.
+    -   Added mandatory `tenantId` in the input to the following recipe index functions:
+        -   `CreateCodeWithEmail`
+        -   `CreateCodeWithPhoneNumber`
+        -   `CreateNewCodeForDevice`
+        -   `ConsumeCodeWithUserInputCode`
+        -   `ConsumeCodeWithLinkCode`
+        -   `GetUserByEmail`
+        -   `GetUserByPhoneNumber`
+        -   `RevokeAllCodesByEmail`
+        -   `RevokeAllCodesByPhoneNumber`
+        -   `RevokeCode`
+        -   `ListCodesByEmail`
+        -   `ListCodesByPhoneNumber`
+        -   `ListCodesByDeviceID`
+        -   `ListCodesByPreAuthSessionID`
+        -   `CreateMagicLinkByEmail`
+        -   `CreateMagicLinkByPhoneNumber`
+        -   `SignInUpByEmail`
+        -   `SignInUpByPhoneNumber`
+    -   Added mandatory `tenantId` in the input for the following recipe interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `CreateCode`
+        -   `CreateNewCodeForDevice`
+        -   `ConsumeCode`
+        -   `GetUserByEmail`
+        -   `GetUserByPhoneNumber`
+        -   `RevokeAllCodes`
+        -   `RevokeCode`
+        -   `ListCodesByEmail`
+        -   `ListCodesByPhoneNumber`
+        -   `ListCodesByDeviceID`
+        -   `ListCodesByPreAuthSessionID`
+    -   Added mandatory `tenantId` in the input for the following API interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `CreateCodePOST`
+        -   `ResendCodePOST`
+        -   `ConsumeCodePOST`
+        -   `EmailExistsGET`
+        -   `PhoneNumberExistsGET`
+-   ThirdParty recipe changes
+    -   Removed `SignInUp` and added `ManuallyCreateOrUpdateUser` instead in the recipe index functions.
+    -   Added `ManuallyCreateOrUpdateUser` to recipe interface which is being called by the function mentioned above.
+        -   `ManuallyCreateOrUpdateUser` recipe interface function should not be overridden as it is not going to be called by the SDK in the sign in/up flow.
+        -   `SignInUp` recipe interface functions is not removed and is being used by the sign in/up flow.
+    -   Added mandatory `tenantId` as first parameter to the following recipe index functions:
+        -   `GetUsersByEmail`
+        -   `GetUserByThirdPartyInfo`
+    -   Added mandatory `tenantId` in the input for the following recipe interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `GetUsersByEmail`
+        -   `GetUserByThirdPartyInfo`
+        -   `SignInUp`
+    -   Added mandatory `tenantId` in the input for the following API interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `AuthorisationUrlGET`
+        -   `SignInUpPOST`
+    -   Updated `SignInUp` recipe interface function in thirdparty with new parameters:
+        -   `oAuthTokens` - contains all the tokens (access_token, id_token, etc.) as returned by the provider
+        -   `rawUserInfoFromProvider` - contains all the user profile info as returned by the provider
+    -   Updated `AuthorisationUrlGET` API
+        -   Changed: Doesn't accept `clientId` anymore and accepts `clientType` instead to determine the matching config
+        -   Added: optional `pkceCodeVerifier` in the response, to support PKCE
+    -   Updated `SignInUpPOST` API
+        -   Removed: `clientId`, `redirectURI`, `authCodeResponse` and `code` from the input
+        -   Instead,
+            -   accepts `clientType` to determine the matching config
+            -   One of redirectURIInfo (for code flow) or oAuthTokens (for token flow) is required
+    -   Updated `AppleRedirectHandlerPOST`
+        -   to accept all the form fields instead of just the code
+        -   to use redirect URI encoded in the `state` parameter instead of using the websiteDomain config.
+        -   to use HTTP 303 instead of javascript based redirection.
+-   Session recipe changes
+    -   Added mandatory `tenantId` parameter to the following recipe index functions:
+        -   `CreateNewSession`
+        -   `CreateNewSessionWithoutRequestResponse`
+        -   `ValidateClaimsInJWTPayload`
+    -   Added mandatory `tenantId` in the input for the following recipe interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `CreateNewSession`
+        -   `GetGlobalClaimValidators`
+    -   Added `tenantId` and `revokeAcrossAllTenants` params to `RevokeAllSessionsForUser` in the recipe interface.
+    -   Added `tenantId` and `fetchAcrossAllTenants` params to `GetAllSessionHandlesForUser` in the recipe interface.
+    -   Added `GetTenantId` function to `TypeSessionContainer`
+    -   Added `tenantId` to `FetchValue` function in `PrimitiveClaim`, `PrimitiveArrayClaim`.
+-   UserRoles recipe changes
+    -   Added mandatory `tenantId` as first parameter to the following recipe index functions:
+        -   `AddRoleToUser`
+        -   `RemoveUserRole`
+        -   `GetRolesForUser`
+        -   `GetUsersThatHaveRole`
+    -   Added mandatory `tenantId` in the input for the following recipe interface functions. If any of these functions are overridden, they need to be updated accordingly:
+        -   `AddRoleToUser`
+        -   `RemoveUserRole`
+        -   `GetRolesForUser`
+        -   `GetUsersThatHaveRole`
+-   Similar changes in combination recipes (thirdpartyemailpassword and thirdpartypasswordless) have been made
+-   Even if thirdpartyemailpassword and thirdpartpasswordless recipes do not have a providers array as an input, they will still expose the third party recipe routes to the frontend.
+-   Returns 400 status code in emailpassword APIs if the input email or password are not of type string.
+
+### Changes
+
+-   Recipe function changes:
+    -   Added optional `tenantIdForPasswordPolicy` param to `emailpassword.UpdateEmailOrPassword`, `thirdpartyemailpassword.UpdateEmailOrPassword`
+    -   Added optional param `tenantId` to `session.RevokeAllSessionsForUser`. If tenantId is nil, sessions are revoked across all tenants
+    -   Added optional param `tenantId` to `session.getAllSessionHandlesForUser`. If tenantId is nil, sessions handles across all tenants are returned
+-   Adds optional param `tenantId` to `GetUserCount` which returns total count across all tenants if not passed.
+-   Adds protected prop `tId` to the accessToken payload
+-   Adds `IncludesAny` claim validator to `PrimitiveArrayClaim`
 
 ### Migration
 
-1. Input for providers for all providers is changed as below:
+-   To call any recipe function that has `tenantId` added to it, pass `'public`'
 
-Before:
+    Before:
 
-```go
-thirdparty.Google(tpmodels.GoogleConfig{
-    ClientID: "...",
-    ClientSecret: "...",
-})
-```
+    ```ts
+    emailpassword.SignUp("test@example.com", "password");
+    ```
 
-After:
+    After:
 
-```go
-tpmodels.ProviderInput{
-    ThirdPartyId: "google"
-    Config: tpmodels.ProviderConfig{
-        Clients: []tpmodels.ProviderClientConfig{
-            {
-                ClientID:     "...",
-                ClientSecret: "...",
-            },
-        },
-    },
-}
-```
+    ```ts
+    emailpassword.SignUp("public", "test@example.com", "password");
+    ```
 
-2. Single instance with multiple clients of each provider instead of multiple instances of them. Also use `clientType` to differentiate them. `clientType` passed from the frontend will be used to determine the right config.
+-   Input for provider array change as follows:
 
-Before:
+    Before:
 
-```go
-[]tpmodels.TypeProvider{
+    ```go
     thirdparty.Google(tpmodels.GoogleConfig{
-        IsDefault: true,
-        ClientID: "clientid1",
+        ClientID: "...",
         ClientSecret: "...",
-    }),
-    thirdparty.Google(tpmodels.GoogleConfig{
-        ClientID: "clientid2",
-        ClientSecret: "...",
-    }),
-}
-```
+    })
+    ```
 
-After:
+    After:
 
-```go
-[]tpmodels.ProviderInput{
-    {
-        ThirdPartyId: "google",
+    ```go
+    tpmodels.ProviderInput{
+        ThirdPartyId: "google"
         Config: tpmodels.ProviderConfig{
             Clients: []tpmodels.ProviderClientConfig{
                 {
-                    ClientType: "web",
-                    ClientID:     "clientid1",
-                    ClientSecret: "...",
-                },
-                {
-                    ClientType: "android",
-                    ClientID:     "clientid2",
+                    ClientID:     "...",
                     ClientSecret: "...",
                 },
             },
         },
-    },
-}
-```
+    }
+    ```
 
-3. Change in the implementation of the custom providers
+-   Single instance with multiple clients of each provider instead of multiple instances of them. Also use `clientType` to differentiate them. `clientType` passed from the frontend will be used to determine the right config.
 
-* All the configuration is part of the `ProviderInput`
-* To update `AuthorisationRedirect.Params` dynamically, GetAuthorisationRedirectURL must be overridden
-* To provide implementation for `GetProfileInfo`,
-  * either use `UserInfoEndpoint`, `UserInfoEndpointQueryParams` and `UserInfoMap` to fetch the user info from the provider
-  * or, specify custom implementation in an override for `GetUserInfo`
+    Before:
 
-Before:
+    ```go
+    []tpmodels.TypeProvider{
+        thirdparty.Google(tpmodels.GoogleConfig{
+            IsDefault: true,
+            ClientID: "clientid1",
+            ClientSecret: "...",
+        }),
+        thirdparty.Google(tpmodels.GoogleConfig{
+            ClientID: "clientid2",
+            ClientSecret: "...",
+        }),
+    }
+    ```
 
-```go
-tpmodels.TypeProvider{
-    ID: "custom",
-    Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-        return tpmodels.TypeProviderGetResponse{
-            AccessTokenAPI: "...",
-            AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-                URL:    "...",
-                Params: map[string]interface{}{},
-            },
-            GetClientId: func(userContext supertokens.UserContext) string {
-                return "..."
-            },
-            GetRedirectURI: func(userContext supertokens.UserContext) (string, error) {
-                return "...", nil
-            },
-            GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-                return tpmodels.UserInfo{
-                    ID: "...",
-                    Email: &tpmodels.EmailStruct{
-                        ID:         "...",
-                        IsVerified: true,
+    After:
+
+    ```go
+    []tpmodels.ProviderInput{
+        {
+            ThirdPartyId: "google",
+            Config: tpmodels.ProviderConfig{
+                Clients: []tpmodels.ProviderClientConfig{
+                    {
+                        ClientType: "web",
+                        ClientID:     "clientid1",
+                        ClientSecret: "...",
                     },
-                }, nil
+                    {
+                        ClientType: "android",
+                        ClientID:     "clientid2",
+                        ClientSecret: "...",
+                    },
+                },
             },
+        },
+    }
+    ```
+
+-   Change in the implementation of custom providers
+
+    -   All config is part of `ProviderInput`
+    -   To provide implementation for `GetProfileInfo`
+        -   either use `UserInfoEndpoint`, `UserInfoEndpointQueryParams` and `UserInfoMap` to fetch the user info from the provider
+        -   or specify custom implementation in an override for `GetUserInfo` (override example in the next section)
+
+    Before:
+
+    ```go
+    tpmodels.TypeProvider{
+        ID: "custom",
+        Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
+            return tpmodels.TypeProviderGetResponse{
+                AccessTokenAPI: "...",
+                AuthorisationRedirect: tpmodels.AuthorisationRedirect{
+                    URL:    "...",
+                    Params: map[string]interface{}{},
+                },
+                GetClientId: func(userContext supertokens.UserContext) string {
+                    return "..."
+                },
+                GetRedirectURI: func(userContext supertokens.UserContext) (string, error) {
+                    return "...", nil
+                },
+                GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
+                    return tpmodels.UserInfo{
+                        ID: "...",
+                        Email: &tpmodels.EmailStruct{
+                            ID:         "...",
+                            IsVerified: true,
+                        },
+                    }, nil
+                },
+            }
+        },
+    }
+    ```
+
+    After:
+
+    ```go
+    tpmodels.ProviderInput{
+        ThirdPartyID: "custom",
+        Config: tpmodels.ProviderConfig{
+            Clients: []tpmodels.ProviderClientConfig{
+                {
+                    ClientID:     "...",
+                    ClientSecret: "...",
+                },
+            },
+            AuthorizationEndpoint:            "...",
+            AuthorizationEndpointQueryParams: map[string]interface{}{},
+            TokenEndpoint:                    "...",
+            TokenEndpointBodyParams:          map[string]interface{}{},
+            UserInfoEndpoint:                 "...",
+            UserInfoEndpointQueryParams:      map[string]interface{}{},
+            UserInfoMap: tpmodels.TypeUserInfoMap{
+                FromUserInfoAPI: tpmodels.TypeUserInfoFields{
+                    UserId:        "id",
+                    Email:         "email",
+                    EmailVerified: "email_verified",
+                },
+            },
+        },
+    }
+    ```
+
+    Also, if the custom provider supports openid, it can automatically discover the endpoints
+
+    ```go
+    tpmodels.ProviderInput{
+        ThirdPartyID: "custom",
+        Config: tpmodels.ProviderConfig{
+            Clients: []tpmodels.ProviderClientConfig{
+                {
+                    ClientID:     "...",
+                    ClientSecret: "...",
+                },
+            },
+            OIDCDiscoveryEndpoint: "...",
+            UserInfoMap: tpmodels.TypeUserInfoMap{
+                FromUserInfoAPI: tpmodels.TypeUserInfoFields{
+                    UserId:        "id",
+                    Email:         "email",
+                    EmailVerified: "emailVerified",
+                },
+            },
+        },
+    }
+    ```
+
+    Note: The SDK will fetch the oauth2 endpoints from the provider's OIDC discovery endpoint. No need to `/.well-known/openid-configuration` to the `oidcDiscoveryEndpoint` config. For eg. if `oidcDiscoveryEndpoint` is set to `"https://accounts.google.com/"`, the SDK will fetch the endpoints from `"https://accounts.google.com/.well-known/openid-configuration"`
+
+-   Any of the functions in the TypeProvider can be overridden for custom implementation
+
+    -   Overrides can do the following:
+        -   update params, headers dynamically for the authorization redirect url or in the exchange of code to tokens
+        -   add custom logic to exchange code to tokens
+        -   add custom logic to get the user info
+
+    ```go
+    tpmodels.ProviderInput{
+        ThirdPartyID: "custom",
+        Config: tpmodels.ProviderConfig{
+            Clients: []tpmodels.ProviderClientConfig{
+                {
+                    ClientID:     "...",
+                    ClientSecret: "...",
+                },
+            },
+            OIDCDiscoveryEndpoint: "...",
+            UserInfoMap: tpmodels.TypeUserInfoMap{
+                FromUserInfoAPI: tpmodels.TypeUserInfoFields{
+                    UserId:        "id",
+                    Email:         "email",
+                    EmailVerified: "emailVerified",
+                },
+            },
+        },
+        Override: func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+            oGetAuthorisationRedirectURL := provider.GetAuthorisationRedirectURL
+            provider.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
+                resp, err := oGetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
+                // your logic here
+                return resp, err
+            }
+
+            oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens
+            provider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, code string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeOAuthResponse, error) {
+                resp, err := oExchangeAuthCodeForOAuthTokens(config, code, redirectURIOnProviderDashboard, userContext)
+                // your logic here
+                return resp, err
+            }
+
+            oGetUserInfo := provider.GetUserInfo
+            provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+                resp, err := oGetUserInfo(config, oAuthTokens, userContext)
+                // your logic here
+                return resp, err
+            }
+
+            return provider
+        },
+    }
+    ```
+
+-   To get access token and raw user info from the provider, override the signInUp function
+
+    ```go
+    thirdparty.Init(&tpmodels.TypeInput{
+        Override: &tpmodels.OverrideStruct{
+            Functions: func(originalImplementation tpmodels.RecipeInterface) tpmodels.RecipeInterface {
+                oSignInUp := *originalImplementation.SignInUp
+                nSignInUp := func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+                    resp, err := oSignInUp(thirdPartyID, thirdPartyUserID, email, oAuthTokens, rawUserInfoFromProvider, tenantId, userContext)
+                    // resp.OK.OAuthTokens["access_token"]
+                    // resp.OK.OAuthTokens["id_token"]
+                    // resp.OK.RawUserInfoFromProvider.FromUserInfoAPI
+                    // resp.OK.RawUserInfoFromProvider.FromIdTokenPayload
+
+                    return resp, err
+                }
+                *originalImplementation.SignInUp = nSignInUp
+
+                return originalImplementation
+            },
+        },
+    })
+    ```
+
+-   Request body of thirdparty signinup API has changed
+
+    -   If using auth code:
+
+        Before:
+
+        ```json
+        {
+            "thirdPartyId": "...",
+            "clientId": "...",
+            "redirectURI": "...", // optional
+            "code": "..."
         }
-    },
-}
-```
+        ```
 
-After:
+        After:
 
-```go
-tpmodels.ProviderInput{
-    ThirdPartyID: "custom",
-    Config: tpmodels.ProviderConfig{
-        Clients: []tpmodels.ProviderClientConfig{
-            {
-                ClientID:     "...",
-                ClientSecret: "...",
-            },
-        },
-        AuthorizationEndpoint:            "...",
-        AuthorizationEndpointQueryParams: map[string]interface{}{},
-        TokenEndpoint:                    "...",
-        TokenEndpointBodyParams:          map[string]interface{}{},
-        UserInfoEndpoint:                 "...",
-        UserInfoEndpointQueryParams:      map[string]interface{}{},
-        UserInfoMap: tpmodels.TypeUserInfoMap{
-            FromUserInfoAPI: tpmodels.TypeUserInfoFields{
-                UserId:        "id",
-                Email:         "email",
-                EmailVerified: "email_verified",
-            },
-        },
-    },
-}
-```
-
-Also, if the custom provider supports openid, it can automatically discover the endpoints
-
-```go
-tpmodels.ProviderInput{
-    ThirdPartyID: "custom",
-    Config: tpmodels.ProviderConfig{
-        Clients: []tpmodels.ProviderClientConfig{
-            {
-                ClientID:     "...",
-                ClientSecret: "...",
-            },
-        },
-        OIDCDiscoveryEndpoint: "...",
-        UserInfoMap: tpmodels.TypeUserInfoMap{
-            FromUserInfoAPI: tpmodels.TypeUserInfoFields{
-                UserId:        "id",
-                Email:         "email",
-                EmailVerified: "emailVerified",
-            },
-        },
-    },
-}
-```
-
-Note: the SDK will fetch the oauth2 endpints from the providered OIDC discovery endpoint url + '/.well-known/openid-configuration'
-
-4. Any of the functions in the TypeProvider  can be overridden for custom implementation
-
-```go
-tpmodels.ProviderInput{
-    ThirdPartyID: "custom",
-    Config: tpmodels.ProviderConfig{
-        Clients: []tpmodels.ProviderClientConfig{
-            {
-                ClientID:     "...",
-                ClientSecret: "...",
-            },
-        },
-        OIDCDiscoveryEndpoint: "...",
-        UserInfoMap: tpmodels.TypeUserInfoMap{
-            FromUserInfoAPI: tpmodels.TypeUserInfoFields{
-                UserId:        "id",
-                Email:         "email",
-                EmailVerified: "emailVerified",
-            },
-        },
-    },
-    Override: func(provider *tpmodels.TypeProvider) *tpmodels.TypeProvider {
-        oGetAuthorisationRedirectURL := provider.GetAuthorisationRedirectURL
-        provider.GetAuthorisationRedirectURL = func(config tpmodels.ProviderConfigForClientType, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeAuthorisationRedirect, error) {
-            resp, err := oGetAuthorisationRedirectURL(config, redirectURIOnProviderDashboard, userContext)
-            // your logic here
-            return resp, err
+        ```json
+        {
+            "thirdPartyId": "...",
+            "clientType": "...",
+            "redirectURIInfo": {
+                "redirectURIOnProviderDashboard": "...", // required
+                "redirectURIQueryParams": {
+                    "code": "...",
+                    "state": "..."
+                    // ... all callback query params
+                },
+                "pkceCodeVerifier": "..." // optional, use this if using PKCE flow
+            }
         }
+        ```
 
-        oExchangeAuthCodeForOAuthTokens := provider.ExchangeAuthCodeForOAuthTokens
-        provider.ExchangeAuthCodeForOAuthTokens = func(config tpmodels.ProviderConfigForClientType, code string, redirectURIOnProviderDashboard string, userContext supertokens.UserContext) (tpmodels.TypeOAuthResponse, error) {
-            resp, err := oExchangeAuthCodeForOAuthTokens(config, code, redirectURIOnProviderDashboard, userContext)
-            // your logic here
-            return resp, err
+    -   If using tokens:
+
+        Before:
+
+        ```json
+        {
+            "thirdPartyId": "...",
+            "clientId": "...",
+            "redirectURI": "...",
+            "authCodeResponse": {
+                "access_token": "...", // required
+                "id_token": "..."
+            }
         }
+        ```
 
-        oGetUserInfo := provider.GetUserInfo
-        provider.GetUserInfo = func(config tpmodels.ProviderConfigForClientType, oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-            resp, err := oGetUserInfo(config, oAuthTokens, userContext)
-            // your logic here
-            return resp, err
+        After:
+
+        ```json
+        {
+            "thirdPartyId": "...",
+            "clientType": "...",
+            "oAuthTokens": {
+                "access_token": "...", // now optional
+                "id_token": "..."
+                // rest of the oAuthTokens as returned by the provider
+            }
         }
-
-        return provider
-    },
-}
-```
-
+        ```
 
 ## [0.12.10] - 2023-07-31
 
