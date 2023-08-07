@@ -773,6 +773,32 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				rw.WriteHeader(200)
 				rw.Write([]byte("{\"status\": \"OK\"}"))
 			}).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/deleteUser" && r.Method == "POST" {
+			bodyBytes, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				return
+			}
+			var body map[string]interface{}
+			err = json.Unmarshal(bodyBytes, &body)
+			if err != nil {
+				return
+			}
+
+			if body["rid"].(string) != "emailpassword" {
+				rw.WriteHeader(400)
+				rw.Write([]byte(`{"message": "Not implemented"}`))
+				return
+			}
+			user, err := emailpassword.GetUserByEmail("public", body["email"].(string))
+			if err != nil {
+				return
+			}
+			err = supertokens.DeleteUser(user.ID)
+			if err != nil {
+				return
+			}
+			rw.WriteHeader(200)
+			rw.Write([]byte(`{"status": "OK"}`))
 		}
 	}))
 
