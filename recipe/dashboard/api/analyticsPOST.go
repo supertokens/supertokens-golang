@@ -90,7 +90,7 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, tenantId string, o
 		data["telemetryId"] = response["telemetryId"].(string)
 	}
 
-	numberOfUsers, err := supertokens.GetUserCount(nil)
+	numberOfUsers, err := supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		// We don't send telemetry events if this fails
 		return analyticsPostResponse{

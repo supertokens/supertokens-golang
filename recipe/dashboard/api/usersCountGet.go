@@ -11,7 +11,7 @@ type usersCountGetResponse struct {
 }
 
 func UsersCountGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (usersCountGetResponse, error) {
-	count, err := supertokens.GetUserCount(nil)
+	count, err := supertokens.GetUserCount(nil, &tenantId)
 	if err != nil {
 		return usersCountGetResponse{}, err
 	}

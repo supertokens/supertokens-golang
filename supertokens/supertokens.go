@@ -351,7 +351,7 @@ func GetUsersWithSearchParams(tenantId string, timeJoinedOrder string, paginatio
 }
 
 // TODO: Add tests
-func getUserCount(includeRecipeIds *[]string) (float64, error) {
+func getUserCount(includeRecipeIds *[]string, tenantId string, includeAllTenants *bool) (float64, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
@@ -363,8 +363,11 @@ func getUserCount(includeRecipeIds *[]string) (float64, error) {
 	if includeRecipeIds != nil {
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
+	if includeAllTenants != nil {
+		requestBody["includeAllTenants"] = strconv.FormatBool(*includeAllTenants)
+	}
 
-	resp, err := querier.SendGetRequest("/users/count", requestBody)
+	resp, err := querier.SendGetRequest(tenantId+"/users/count", requestBody)
 
 	if err != nil {
 		return -1, err
