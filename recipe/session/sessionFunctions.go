@@ -145,6 +145,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 				UserID:                accessTokenInfo.UserID,
 				UserDataInAccessToken: accessTokenInfo.UserData,
 				ExpiryTime:            accessTokenInfo.ExpiryTime,
+				TenantId:              accessTokenInfo.TenantId,
 			},
 		}, nil
 	}

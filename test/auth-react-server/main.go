@@ -18,6 +18,8 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
+	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -33,6 +35,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/jwt"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -93,6 +97,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	thirdpartyemailpassword.ResetForTest()
 	thirdpartypasswordless.ResetForTest()
 	userroles.ResetForTest()
+	multitenancy.ResetForTest()
 
 	sendPasswordlessLoginSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
 		return saveCode(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
@@ -467,12 +472,23 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					},
 				},
 			}),
+			multitenancy.Init(&multitenancymodels.TypeInput{
+				GetAllowedDomainsForTenantId: func(tenantId string, userContext supertokens.UserContext) ([]string, error) {
+					allowedDomains := []string{
+						fmt.Sprintf("%s.example.com", tenantId),
+						"localhost",
+					}
+					return allowedDomains, nil
+				},
+			}),
 			passwordless.Init(plessmodels.TypeInput{
 				ContactMethodPhone:        passwordlessConfig.ContactMethodPhone,
 				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+				EmailDelivery:             passwordlessConfig.EmailDelivery,
+				SmsDelivery:               passwordlessConfig.SmsDelivery,
 				Override: &plessmodels.OverrideStruct{
 					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
 						ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
@@ -518,6 +534,8 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+				EmailDelivery:             passwordlessConfig.EmailDelivery,
+				SmsDelivery:               passwordlessConfig.SmsDelivery,
 				Providers: []tpmodels.ProviderInput{
 					{
 						Config: tpmodels.ProviderConfig{
@@ -647,7 +665,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			rw.WriteHeader(200)
 			rw.Header().Add("content-type", "application/json")
 			bytes, _ := json.Marshal(map[string]interface{}{
-				"available": []string{"passwordless", "thirdpartypasswordless", "generalerror", "userroles"},
+				"available": []string{"passwordless", "thirdpartypasswordless", "generalerror", "userroles", "multitenancy"},
 			})
 			rw.Write(bytes)
 
@@ -683,7 +701,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				if err != nil {
 					return
 				}
-				_, err = userroles.AddRoleToUser("public", sessionContainer.GetUserID(), role, &map[string]interface{}{})
+				_, err = userroles.AddRoleToUser(sessionContainer.GetTenantId(), sessionContainer.GetUserID(), role, &map[string]interface{}{})
 				if err != nil {
 					return
 				}
@@ -760,6 +778,32 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				rw.WriteHeader(200)
 				rw.Write([]byte("{\"status\": \"OK\"}"))
 			}).ServeHTTP(rw, r)
+		} else if r.URL.Path == "/deleteUser" && r.Method == "POST" {
+			bodyBytes, err := ioutil.ReadAll(r.Body)
+			if err != nil {
+				return
+			}
+			var body map[string]interface{}
+			err = json.Unmarshal(bodyBytes, &body)
+			if err != nil {
+				return
+			}
+
+			if body["rid"].(string) != "emailpassword" {
+				rw.WriteHeader(400)
+				rw.Write([]byte(`{"message": "Not implemented"}`))
+				return
+			}
+			user, err := emailpassword.GetUserByEmail("public", body["email"].(string))
+			if err != nil {
+				return
+			}
+			err = supertokens.DeleteUser(user.ID)
+			if err != nil {
+				return
+			}
+			rw.WriteHeader(200)
+			rw.Write([]byte(`{"status": "OK"}`))
 		}
 	}))
 
@@ -799,6 +843,7 @@ func customAuth0Provider() tpmodels.ProviderInput {
 	var providerInput tpmodels.ProviderInput
 
 	providerInput.Config.ThirdPartyId = "auth0"
+	providerInput.Config.Name = "Auth0"
 	providerInput.Config.Clients = []tpmodels.ProviderClientConfig{
 		{
 			ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
@@ -810,39 +855,16 @@ func customAuth0Provider() tpmodels.ProviderInput {
 
 	providerInput.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-
-			authCodeResponseJson, err := json.Marshal(oAuthTokens)
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
+			_, ok := oAuthTokens["access_token"]
+			if !ok {
+				return tpmodels.TypeUserInfo{}, errors.New("access token is undefined")
 			}
-
-			var accessTokenAPIResponse auth0GetProfileInfoInput
-			err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
-			}
-
-			accessToken := accessTokenAPIResponse.AccessToken
-			authHeader := "Bearer " + accessToken
-
-			// TODO maybe userInfoEndpoint is enough. Verify while testing
-			response, err := getAuth0AuthRequest(authHeader)
-
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
-			}
-
-			userInfo := response.(map[string]interface{})
-
-			ID := userInfo["sub"].(string)
-			email := userInfo["name"].(string)
 
 			return tpmodels.TypeUserInfo{
-				ThirdPartyUserId: ID,
+				ThirdPartyUserId: "someId",
 				Email: &tpmodels.EmailStruct{
-					ID:         email,
-					IsVerified: true, // true if email is verified already
+					ID:         "test@example.com",
+					IsVerified: true,
 				},
 			}, nil
 		}

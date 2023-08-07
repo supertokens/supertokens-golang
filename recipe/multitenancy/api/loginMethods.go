@@ -5,7 +5,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func LoginMethodsAPI(apiImplementation multitenancymodels.APIInterface, options multitenancymodels.APIOptions, userContext supertokens.UserContext) error {
+func LoginMethodsAPI(apiImplementation multitenancymodels.APIInterface, tenantId string, options multitenancymodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.LoginMethodsGET == nil || (*apiImplementation.LoginMethodsGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -18,7 +18,7 @@ func LoginMethodsAPI(apiImplementation multitenancymodels.APIInterface, options 
 		clientType = &clientTypeStrFromQueryParams
 	}
 
-	result, err := (*apiImplementation.LoginMethodsGET)("public", clientType, options, userContext)
+	result, err := (*apiImplementation.LoginMethodsGET)(tenantId, clientType, options, userContext)
 	if err != nil {
 		return err
 	}
