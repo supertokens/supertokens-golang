@@ -838,6 +838,7 @@ func customAuth0Provider() tpmodels.ProviderInput {
 	var providerInput tpmodels.ProviderInput
 
 	providerInput.Config.ThirdPartyId = "auth0"
+	providerInput.Config.Name = "Auth0"
 	providerInput.Config.Clients = []tpmodels.ProviderClientConfig{
 		{
 			ClientID:     os.Getenv("AUTH0_CLIENT_ID"),
