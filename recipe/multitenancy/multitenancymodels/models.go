@@ -22,12 +22,12 @@ import (
 const DefaultTenantId string = "public"
 
 type TypeInput struct {
-	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 	Override                     *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
-	GetAllowedDomainsForTenantId func(tenantId *string, userContext supertokens.UserContext) ([]string, error)
+	GetAllowedDomainsForTenantId func(tenantId string, userContext supertokens.UserContext) ([]string, error)
 	Override                     OverrideStruct
 }
 
