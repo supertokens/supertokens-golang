@@ -49,9 +49,6 @@ func TestGetUser(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -83,7 +80,7 @@ func TestGetUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, user)
 
-	result, err := SignInUpByEmail("test@example.com")
+	result, err := SignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	user = &result.User
@@ -99,12 +96,12 @@ func TestGetUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, user1)
 
-	result1, err := SignInUpByEmail("test@example.com")
+	result1, err := SignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	user1 = &result1.User
 
-	userData1, err := GetUserByEmail(*user1.Email)
+	userData1, err := GetUserByEmail("public", *user1.Email)
 	assert.NoError(t, err)
 
 	assert.Equal(t, user1.ID, userData1.ID)
@@ -115,12 +112,12 @@ func TestGetUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Nil(t, user2)
 
-	result2, err := SignInUpByPhoneNumber("+1234567890")
+	result2, err := SignInUpByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
 
 	user2 = &result2.User
 
-	userData2, err := GetUserByPhoneNumber(*user2.PhoneNumber)
+	userData2, err := GetUserByPhoneNumber("public", *user2.PhoneNumber)
 	assert.NoError(t, err)
 
 	assert.Equal(t, user2.ID, userData2.ID)
@@ -148,9 +145,6 @@ func TestCreateCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -178,7 +172,7 @@ func TestCreateCode(t *testing.T) {
 		return
 	}
 
-	resp, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, resp.OK.CodeID)
@@ -190,7 +184,7 @@ func TestCreateCode(t *testing.T) {
 	assert.NotNil(t, resp.OK.UserInputCode)
 
 	userInputCode := "123"
-	resp1, err := CreateCodeWithEmail("test@example.com", &userInputCode)
+	resp1, err := CreateCodeWithEmail("public", "test@example.com", &userInputCode)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, resp1.OK.CodeID)
@@ -222,9 +216,6 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -252,10 +243,10 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 		return
 	}
 
-	resp, err := CreateCodeWithEmail("test@example.com", nil)
+	resp, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	newDeviceCodeResp, err := CreateNewCodeForDevice(resp.OK.DeviceID, nil)
+	newDeviceCodeResp, err := CreateNewCodeForDevice("public", resp.OK.DeviceID, nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, newDeviceCodeResp.OK.CodeID)
@@ -266,11 +257,11 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 	assert.NotNil(t, newDeviceCodeResp.OK.TimeCreated)
 	assert.NotNil(t, newDeviceCodeResp.OK.UserInputCode)
 
-	resp1, err := CreateCodeWithEmail("test@example.com", nil)
+	resp1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	userInputCode := "123"
-	newDeviceCodeResp1, err := CreateNewCodeForDevice(resp1.OK.DeviceID, &userInputCode)
+	newDeviceCodeResp1, err := CreateNewCodeForDevice("public", resp1.OK.DeviceID, &userInputCode)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, newDeviceCodeResp1.OK.CodeID)
@@ -281,19 +272,19 @@ func TestCreateNewCodeForDeviceTest(t *testing.T) {
 	assert.NotNil(t, newDeviceCodeResp1.OK.TimeCreated)
 	assert.NotNil(t, newDeviceCodeResp1.OK.UserInputCode)
 
-	_, err = CreateCodeWithEmail("test@example.com", nil)
+	_, err = CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	newDeviceCodeResp2, err := CreateNewCodeForDevice("asdasdasddas", nil)
+	newDeviceCodeResp2, err := CreateNewCodeForDevice("public", "asdasdasddas", nil)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, newDeviceCodeResp2.RestartFlowError)
 	assert.Nil(t, newDeviceCodeResp2.OK)
 
-	resp2, err := CreateCodeWithEmail("test@example.com", &userInputCode)
+	resp2, err := CreateCodeWithEmail("public", "test@example.com", &userInputCode)
 	assert.NoError(t, err)
 
-	newDeviceCodeResp3, err := CreateNewCodeForDevice(resp2.OK.DeviceID, &userInputCode)
+	newDeviceCodeResp3, err := CreateNewCodeForDevice("public", resp2.OK.DeviceID, &userInputCode)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, newDeviceCodeResp3.UserInputCodeAlreadyUsedError)
@@ -320,9 +311,6 @@ func TestConsumeCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -350,28 +338,28 @@ func TestConsumeCode(t *testing.T) {
 		return
 	}
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	resp, err := ConsumeCodeWithUserInputCode(codeInfo.OK.DeviceID, codeInfo.OK.UserInputCode, codeInfo.OK.PreAuthSessionID)
+	resp, err := ConsumeCodeWithUserInputCode("public", codeInfo.OK.DeviceID, codeInfo.OK.UserInputCode, codeInfo.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.True(t, resp.OK.CreatedNewUser)
 	assert.NotNil(t, resp.OK.User)
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	resp1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, "qefefikjeii", codeInfo1.OK.PreAuthSessionID)
+	resp1, err := ConsumeCodeWithUserInputCode("public", codeInfo1.OK.DeviceID, "qefefikjeii", codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, resp1.IncorrectUserInputCodeError)
 	assert.Nil(t, resp1.OK)
 
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo2, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	_, err = ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, "asdasdasdasds")
+	_, err = ConsumeCodeWithUserInputCode("public", codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, "asdasdasdasds")
 	assert.Contains(t, err.Error(), "preAuthSessionId and deviceId doesn't match")
 }
 
@@ -395,9 +383,6 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -423,12 +408,12 @@ func TestConsumeCodeWithExpiredUserInputCode(t *testing.T) {
 		return
 	}
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
 
-	resp, err := ConsumeCodeWithUserInputCode(codeInfo.OK.DeviceID, codeInfo.OK.UserInputCode, codeInfo.OK.PreAuthSessionID)
+	resp, err := ConsumeCodeWithUserInputCode("public", codeInfo.OK.DeviceID, codeInfo.OK.UserInputCode, codeInfo.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, resp.ExpiredUserInputCodeError)
@@ -456,9 +441,6 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -484,7 +466,7 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 		return
 	}
 
-	resp, err := SignInUpByEmail("test@example.com")
+	resp, err := SignInUpByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	email := "test2@example.com"
@@ -504,7 +486,7 @@ func TestUpdateUserContactMethodEmail(t *testing.T) {
 	assert.Nil(t, updatedResp.OK)
 	assert.NotNil(t, updatedResp.UnknownUserIdError)
 
-	resp1, err := SignInUpByEmail("test3@example.com")
+	resp1, err := SignInUpByEmail("public", "test3@example.com")
 	assert.NoError(t, err)
 
 	updatedResp, err = UpdateUser(resp1.User.ID, &email, nil)
@@ -534,9 +516,6 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -566,7 +545,7 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 	phoneNumber_2 := "+1234567892"
 	phoneNumber_3 := "+1234567893"
 
-	userInfo, err := SignInUpByPhoneNumber(phoneNumber_1)
+	userInfo, err := SignInUpByPhoneNumber("public", phoneNumber_1)
 	assert.NoError(t, err)
 
 	res1, err := UpdateUser(userInfo.User.ID, nil, &phoneNumber_2)
@@ -579,7 +558,7 @@ func TestUpdateUserContactMethodPhone(t *testing.T) {
 
 	assert.Equal(t, phoneNumber_2, *result.PhoneNumber)
 
-	userInfo1, err := SignInUpByPhoneNumber(phoneNumber_3)
+	userInfo1, err := SignInUpByPhoneNumber("public", phoneNumber_3)
 	assert.NoError(t, err)
 
 	res1, err = UpdateUser(userInfo1.User.ID, nil, &phoneNumber_2)
@@ -609,9 +588,6 @@ func TestRevokeAllCodes(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -637,21 +613,21 @@ func TestRevokeAllCodes(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
-	assert.NoError(t, err)
-
-	err = RevokeAllCodesByEmail("test@example.com")
+	codeInfo2, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
+	err = RevokeAllCodesByEmail("public", "test@example.com")
+	assert.NoError(t, err)
+
+	result1, err := ConsumeCodeWithUserInputCode("public", codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, result1.RestartFlowError)
 	assert.Nil(t, result1.OK)
 
-	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
+	result2, err := ConsumeCodeWithUserInputCode("public", codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	assert.NotNil(t, result2.RestartFlowError)
@@ -678,9 +654,6 @@ func TestRevokeCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -705,20 +678,20 @@ func TestRevokeCode(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("random@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "random@example.com", nil)
 	assert.NoError(t, err)
-	codeInfo2, err := CreateCodeWithEmail("random@example.com", nil)
-	assert.NoError(t, err)
-
-	err = RevokeCode(codeInfo1.OK.CodeID)
+	codeInfo2, err := CreateCodeWithEmail("public", "random@example.com", nil)
 	assert.NoError(t, err)
 
-	result1, err := ConsumeCodeWithUserInputCode(codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
+	err = RevokeCode("public", codeInfo1.OK.CodeID)
+	assert.NoError(t, err)
+
+	result1, err := ConsumeCodeWithUserInputCode("public", codeInfo1.OK.DeviceID, codeInfo1.OK.UserInputCode, codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.NotNil(t, result1.RestartFlowError)
 	assert.Nil(t, result1.OK)
 
-	result2, err := ConsumeCodeWithUserInputCode(codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
+	result2, err := ConsumeCodeWithUserInputCode("public", codeInfo2.OK.DeviceID, codeInfo2.OK.UserInputCode, codeInfo2.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 	assert.Nil(t, result2.RestartFlowError)
 	assert.NotNil(t, result2.OK)
@@ -744,9 +717,6 @@ func TestListCodesByEmail(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -771,12 +741,12 @@ func TestListCodesByEmail(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
-	codeInfo2, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo2, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	res, err := ListCodesByEmail("test@example.com")
+	res, err := ListCodesByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(res))
@@ -810,9 +780,6 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -837,12 +804,12 @@ func TestListCodeByPhoneNumber(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo1, err := CreateCodeWithPhoneNumber("public", "+1234567890", nil)
 	assert.NoError(t, err)
-	codeInfo2, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo2, err := CreateCodeWithPhoneNumber("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
-	res, err := ListCodesByPhoneNumber("+1234567890")
+	res, err := ListCodesByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
 
 	assert.Equal(t, 2, len(res))
@@ -876,9 +843,6 @@ func TestCreatingMagicLink(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -903,7 +867,7 @@ func TestCreatingMagicLink(t *testing.T) {
 		return
 	}
 
-	link, err := CreateMagicLinkByPhoneNumber("+1234567890")
+	link, err := CreateMagicLinkByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
 
 	res, err := url.Parse(link)
@@ -934,9 +898,6 @@ func TestSignInUp(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -961,7 +922,7 @@ func TestSignInUp(t *testing.T) {
 		return
 	}
 
-	result, err := SignInUpByPhoneNumber("+1234567890")
+	result, err := SignInUpByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
 
 	assert.True(t, result.CreatedNewUser)
@@ -991,9 +952,6 @@ func TestListCodesByPreAuthSessionID(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1018,15 +976,15 @@ func TestListCodesByPreAuthSessionID(t *testing.T) {
 		return
 	}
 
-	codeInfo1, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo1, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	codeInfo2, err := CreateNewCodeForDevice(codeInfo1.OK.DeviceID, nil)
+	codeInfo2, err := CreateNewCodeForDevice("public", codeInfo1.OK.DeviceID, nil)
 	assert.NoError(t, err)
 
 	assert.Equal(t, codeInfo1.OK.PreAuthSessionID, codeInfo2.OK.PreAuthSessionID)
 
-	res, err := ListCodesByPreAuthSessionID(codeInfo1.OK.PreAuthSessionID)
+	res, err := ListCodesByPreAuthSessionID("public", codeInfo1.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	for _, c := range res.Codes {

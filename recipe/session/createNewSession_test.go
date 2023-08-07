@@ -30,13 +30,13 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							trueClaim, _ := TrueClaim()
-							accessTokenPayload, err := trueClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := trueClaim.Build(userID, "public", accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -60,7 +60,7 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "public", "rope", accessTokenPayload, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 
@@ -75,7 +75,7 @@ func TestCreateAccessTokenPayloadWithSessionClaims(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, 10, len(accessTokenPayload))
 	assert.Equal(t, accessTokenPayload["iss"], "https://api.supertokens.io/auth")
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
@@ -100,13 +100,13 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							nilClaim, _ := NilClaim()
-							accessTokenPayload, err := nilClaim.Build(userID, accessTokenPayload, userContext)
+							accessTokenPayload, err := nilClaim.Build(userID, "public", accessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
-							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return oCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -130,7 +130,7 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", accessTokenPayload, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "public", "rope", accessTokenPayload, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 
@@ -145,7 +145,7 @@ func TestNotCreateAccessTokenPayloadWithNilClaim(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 
 	accessTokenPayload = sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 8, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 }
 
 func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
@@ -179,20 +179,20 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						oCreateNewSession := *originalImplementation.CreateNewSession
-						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						nCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							nAccessTokenPayload := map[string]interface{}{}
 							for k, v := range accessTokenPayload {
 								nAccessTokenPayload[k] = v
 							}
 							trueClaim, _ := TrueClaim()
-							nAccessTokenPayload, err := trueClaim.Build(userID, nAccessTokenPayload, userContext)
+							nAccessTokenPayload, err := trueClaim.Build(userID, "public", nAccessTokenPayload, userContext)
 							if err != nil {
 								return nil, err
 							}
 							for k, v := range customClaims {
 								nAccessTokenPayload[k] = v
 							}
-							return oCreateNewSession(userID, nAccessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return oCreateNewSession(userID, nAccessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = nCreateNewSession
 						return originalImplementation
@@ -226,7 +226,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
 		var err error
-		sessionContainer, err = CreateNewSession(r, rw, "rope", payloadParam, map[string]interface{}{})
+		sessionContainer, err = CreateNewSession(r, rw, "public", "rope", payloadParam, map[string]interface{}{})
 		assert.NoError(t, err)
 	})
 
@@ -241,7 +241,7 @@ func TestMergeClaimsAndPassedAccessTokenPayload(t *testing.T) {
 	assert.Equal(t, 200, res.StatusCode)
 
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 13, len(accessTokenPayload))
+	assert.Equal(t, 14, len(accessTokenPayload))
 
 	// We have the prop from the payload param
 	assert.Equal(t, true, accessTokenPayload["initial"])

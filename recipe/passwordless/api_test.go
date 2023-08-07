@@ -25,6 +25,8 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -34,6 +36,10 @@ import (
 
 func TestSignInUpFlowWithEmailUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 	var userInputCodeRef *string
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		userInputCodeRef = input.PasswordlessLogin.UserInputCode
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -51,15 +57,13 @@ func TestSignInUpFlowWithEmailUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 			}),
 			Init(plessmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						userInputCodeRef = userInputCode
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -150,12 +154,16 @@ func TestSignInUpFlowWithEmailUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 	assert.Equal(t, "OK", codeResendResult["status"])
 	assert.True(t, codeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(codeResendResult))
-	assert.Equal(t, 4, len(codeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(codeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "test@example.com", codeResendResult["user"].(map[string]interface{})["email"])
 }
 
 func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 	var userInputCodeRef *string
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		userInputCodeRef = input.PasswordlessLogin.UserInputCode
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -173,15 +181,13 @@ func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing
 			}),
 			Init(plessmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						userInputCodeRef = userInputCode
-						return nil
-					},
 				},
 			}),
 		},
@@ -272,243 +278,8 @@ func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing
 	assert.Equal(t, "OK", codeResendResult["status"])
 	assert.True(t, codeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(codeResendResult))
-	assert.Equal(t, 4, len(codeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(codeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "+12345678901", codeResendResult["user"].(map[string]interface{})["phoneNumber"])
-}
-
-func TestCreatingACodeWithEmailAndThenResendingTheCodeAndCheckThatTheTheSendingCustomEmailFunctionIsWhileUsingTheEmailOrPhoneContactMethod(t *testing.T) {
-	isCreateAndSendCustomEmailCalled := false
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-					return sessmodels.CookieTransferMethod
-				},
-			}),
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						isCreateAndSendCustomEmailCalled = true
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-				},
-			}),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	apiV, err := q.GetQuerierAPIVersion()
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-		return
-	}
-
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
-	defer testServer.Close()
-
-	email := map[string]interface{}{
-		"email": "test@example.com",
-	}
-
-	emailBody, err := json.Marshal(email)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
-
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
-
-	emailDataInBytes, err := io.ReadAll(emailResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	emailResp.Body.Close()
-
-	var emailResult map[string]interface{}
-	err = json.Unmarshal(emailDataInBytes, &emailResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "OK", emailResult["status"])
-	assert.True(t, isCreateAndSendCustomEmailCalled)
-
-	isCreateAndSendCustomEmailCalled = false
-
-	codeResendPostBody := map[string]interface{}{
-		"deviceId":         emailResult["deviceId"],
-		"preAuthSessionId": emailResult["preAuthSessionId"],
-	}
-
-	codeResendPostBodyJson, err := json.Marshal(codeResendPostBody)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	codeResendResp, err := http.Post(testServer.URL+"/auth/signinup/code/resend", "application/json", bytes.NewBuffer(codeResendPostBodyJson))
-
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, codeResendResp.StatusCode)
-
-	codeResendRespInBytes, err := io.ReadAll(codeResendResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	codeResendResp.Body.Close()
-
-	var codeResendResult map[string]interface{}
-	err = json.Unmarshal(codeResendRespInBytes, &codeResendResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "OK", codeResendResult["status"])
-	assert.True(t, isCreateAndSendCustomEmailCalled)
-}
-
-func TestCreatingACodeWithPhoneAndThenResendingTheCodeAndCheckThatTheTheSendingCustomSmsFunctionIsWhileUsingTheEmailOrPhoneContactMethod(t *testing.T) {
-	isCreateAndSendCustomTextMessageCalled := false
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			session.Init(&sessmodels.TypeInput{
-				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-					return sessmodels.CookieTransferMethod
-				},
-			}),
-			Init(plessmodels.TypeInput{
-				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
-				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						isCreateAndSendCustomTextMessageCalled = true
-						return nil
-					},
-				},
-			}),
-		},
-	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	apiV, err := q.GetQuerierAPIVersion()
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
-		return
-	}
-
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
-	defer testServer.Close()
-	phone := map[string]interface{}{
-		"phoneNumber": "+12345678901",
-	}
-
-	phoneBody, err := json.Marshal(phone)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	phoneResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(phoneBody))
-
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, phoneResp.StatusCode)
-
-	phoneDataInBytes, err := io.ReadAll(phoneResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	phoneResp.Body.Close()
-
-	var phoneResult map[string]interface{}
-	err = json.Unmarshal(phoneDataInBytes, &phoneResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "OK", phoneResult["status"])
-	assert.True(t, isCreateAndSendCustomTextMessageCalled)
-
-	isCreateAndSendCustomTextMessageCalled = false
-
-	codeResendPostBody := map[string]interface{}{
-		"deviceId":         phoneResult["deviceId"],
-		"preAuthSessionId": phoneResult["preAuthSessionId"],
-	}
-
-	codeResendPostBodyJson, err := json.Marshal(codeResendPostBody)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	codeResendResp, err := http.Post(testServer.URL+"/auth/signinup/code/resend", "application/json", bytes.NewBuffer(codeResendPostBodyJson))
-
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, codeResendResp.StatusCode)
-
-	codeResendRespInBytes, err := io.ReadAll(codeResendResp.Body)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	codeResendResp.Body.Close()
-
-	var codeResendResult map[string]interface{}
-	err = json.Unmarshal(codeResendRespInBytes, &codeResendResult)
-	if err != nil {
-		t.Error(err.Error())
-	}
-
-	assert.Equal(t, "OK", codeResendResult["status"])
-	assert.True(t, isCreateAndSendCustomTextMessageCalled)
 }
 
 func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing.T) {
@@ -531,12 +302,6 @@ func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -621,6 +386,14 @@ func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing
 
 func TestAddingPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheEmailOrPhoneContractMethod(t *testing.T) {
 	var userInputCodeRef *string
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		userInputCodeRef = input.PasswordlessLogin.UserInputCode
+		return nil
+	}
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		userInputCodeRef = input.PasswordlessLogin.UserInputCode
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -638,16 +411,18 @@ func TestAddingPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheE
 			}),
 			Init(plessmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						userInputCodeRef = userInputCode
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						userInputCodeRef = userInputCode
-						return nil
-					},
 				},
 			}),
 		},
@@ -822,9 +597,6 @@ func TestNotPassingAnyFieldsToConsumeCodeAPI(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -902,9 +674,6 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -933,7 +702,7 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	invalidCodeResendPostBody := map[string]interface{}{
@@ -995,7 +764,7 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 	assert.Equal(t, "OK", validCodeResendResult["status"])
 	assert.True(t, validCodeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(validCodeResendResult))
-	assert.Equal(t, 4, len(validCodeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(validCodeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "test@example.com", validCodeResendResult["user"].(map[string]interface{})["email"])
 }
 
@@ -1019,9 +788,6 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1050,7 +816,7 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	invalidCodeResendPostBody := map[string]interface{}{
@@ -1117,7 +883,7 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 	assert.Equal(t, "OK", validCodeResendResult["status"])
 	assert.True(t, validCodeResendResult["createdNewUser"].(bool))
 	assert.Equal(t, 3, len(validCodeResendResult))
-	assert.Equal(t, 4, len(validCodeResendResult["user"].(map[string]interface{})))
+	assert.Equal(t, 5, len(validCodeResendResult["user"].(map[string]interface{})))
 	assert.Equal(t, "test@example.com", validCodeResendResult["user"].(map[string]interface{})["email"])
 
 	usedCodeResendPostBody := map[string]interface{}{
@@ -1171,9 +937,6 @@ func TestConsumeCodeAPIWithExpiredCode(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1203,7 +966,7 @@ func TestConsumeCodeAPIWithExpiredCode(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
 	time.Sleep(2 * time.Second)
@@ -1262,9 +1025,6 @@ func TestCreateCodeAPIWithEmail(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1374,9 +1134,6 @@ func TestCreateCodeAPIWithPhoneNumber(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1486,9 +1243,6 @@ func TestEmailExistsAPI(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1542,10 +1296,10 @@ func TestEmailExistsAPI(t *testing.T) {
 	assert.Equal(t, "OK", emailResult["status"])
 	assert.Equal(t, false, emailResult["exists"])
 
-	codeInfo, err := CreateCodeWithEmail("test@example.com", nil)
+	codeInfo, err := CreateCodeWithEmail("public", "test@example.com", nil)
 	assert.NoError(t, err)
 
-	_, err = ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
+	_, err = ConsumeCodeWithLinkCode("public", codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
@@ -1593,9 +1347,6 @@ func TestPhoneNumberExistsAPI(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1649,10 +1400,10 @@ func TestPhoneNumberExistsAPI(t *testing.T) {
 	assert.Equal(t, "OK", phoneResult["status"])
 	assert.Equal(t, false, phoneResult["exists"])
 
-	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo, err := CreateCodeWithPhoneNumber("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
-	_, err = ConsumeCodeWithLinkCode(codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
+	_, err = ConsumeCodeWithLinkCode("public", codeInfo.OK.LinkCode, codeInfo.OK.PreAuthSessionID)
 	assert.NoError(t, err)
 
 	req1, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/phonenumber/exists", nil)
@@ -1700,9 +1451,6 @@ func TestResendCodeAPI(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -1732,7 +1480,7 @@ func TestResendCodeAPI(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	codeInfo, err := CreateCodeWithPhoneNumber("+1234567890", nil)
+	codeInfo, err := CreateCodeWithPhoneNumber("public", "+1234567890", nil)
 	assert.NoError(t, err)
 
 	validCodeResendPostBody := map[string]interface{}{

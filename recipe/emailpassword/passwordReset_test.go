@@ -22,10 +22,12 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -37,6 +39,16 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 	resetURL := ""
 	tokenInfo := ""
 	ridInfo := ""
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.PasswordReset.PasswordResetLink)
+		if err != nil {
+			return err
+		}
+		resetURL = u.Scheme + "://" + u.Host + u.Path
+		tokenInfo = u.Query().Get("token")
+		ridInfo = u.Query().Get("rid")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -48,11 +60,9 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
-				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-						resetURL = strings.Split(passwordResetURLWithToken, "?")[0]
-						tokenInfo = strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[0]
-						ridInfo = strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[1]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmailFunc,
 					},
 				},
 			}),
@@ -117,9 +127,8 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "https://supertokens.io/auth/reset-password", resetURL)
-	assert.True(t, strings.HasPrefix(tokenInfo, "token="))
-	assert.True(t, strings.HasPrefix(ridInfo, "rid=emailpassword"))
-
+	assert.NotEmpty(t, tokenInfo)
+	assert.True(t, strings.HasPrefix(ridInfo, "emailpassword"))
 }
 
 func TestPasswordValidation(t *testing.T) {
@@ -284,6 +293,14 @@ func TestTokenMissingFromInput(t *testing.T) {
 
 func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 	var token string
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.PasswordReset.PasswordResetLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -295,9 +312,9 @@ func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&epmodels.TypeInput{
-				ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-					CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-						token = strings.Split(strings.Split(strings.Split(passwordResetURLWithToken, "?")[1], "&")[0], "=")[1]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmailFunc,
 					},
 				},
 			}),

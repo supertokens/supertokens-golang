@@ -13,12 +13,12 @@ func init() {
 }
 
 func NewUserRoleClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimValidators) {
-	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+	fetchValue := func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
 			return nil, err
 		}
-		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, userContext)
+		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -37,12 +37,12 @@ func NewUserRoleClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimVal
 }
 
 func NewPermissionClaim() (*claims.TypeSessionClaim, claims.PrimitiveArrayClaimValidators) {
-	fetchValue := func(userId string, userContext supertokens.UserContext) (interface{}, error) {
+	fetchValue := func(userId string, tenantId string, userContext supertokens.UserContext) (interface{}, error) {
 		recipe, err := getRecipeInstanceOrThrowError()
 		if err != nil {
 			return nil, err
 		}
-		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, userContext)
+		roles, err := (*recipe.RecipeImpl.GetRolesForUser)(userId, tenantId, userContext)
 		if err != nil {
 			return nil, err
 		}

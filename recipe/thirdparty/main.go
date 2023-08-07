@@ -16,96 +16,65 @@
 package thirdparty
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
-
-type signInUpResponse struct {
-	CreatedNewUser bool
-	User           tpmodels.User
-}
 
 func Init(config *tpmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignInUpWithContext(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (tpmodels.SignInUpResponse, error) {
+func ManuallyCreateOrUpdateUser(tenantId string, thirdPartyID string, thirdPartyUserID string, email string, userContext ...supertokens.UserContext) (tpmodels.ManuallyCreateOrUpdateUserResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return tpmodels.SignInUpResponse{}, err
+		return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignInUp)(thirdPartyID, thirdPartyUserID, email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ManuallyCreateOrUpdateUser)(thirdPartyID, thirdPartyUserID, email, tenantId, userContext[0])
 }
 
-func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+func GetUserByID(userID string, userContext ...supertokens.UserContext) (*tpmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByID)(userID, userContext[0])
 }
 
-func GetUsersByEmailWithContext(email string, userContext supertokens.UserContext) ([]tpmodels.User, error) {
+func GetUsersByEmail(tenantId string, email string, userContext ...supertokens.UserContext) ([]tpmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return []tpmodels.User{}, err
 	}
-	return (*instance.RecipeImpl.GetUsersByEmail)(email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUsersByEmail)(email, tenantId, userContext[0])
 }
 
-func GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID string, userContext supertokens.UserContext) (*tpmodels.User, error) {
+func GetUserByThirdPartyInfo(tenantId string, thirdPartyID, thirdPartyUserID string, userContext ...supertokens.UserContext) (*tpmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByThirdPartyInfo)(thirdPartyID, thirdPartyUserID, tenantId, userContext[0])
 }
 
-func SignInUp(thirdPartyID string, thirdPartyUserID string, email string) (tpmodels.SignInUpResponse, error) {
-	return SignInUpWithContext(thirdPartyID, thirdPartyUserID, email, &map[string]interface{}{})
-}
-
-func GetUserByID(userID string) (*tpmodels.User, error) {
-	return GetUserByIDWithContext(userID, &map[string]interface{}{})
-}
-
-func GetUsersByEmail(email string) ([]tpmodels.User, error) {
-	return GetUsersByEmailWithContext(email, &map[string]interface{}{})
-}
-
-func GetUserByThirdPartyInfo(thirdPartyID, thirdPartyUserID string) (*tpmodels.User, error) {
-	return GetUserByThirdPartyInfoWithContext(thirdPartyID, thirdPartyUserID, &map[string]interface{}{})
-}
-
-func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
-	return providers.Apple(config)
-}
-
-func Facebook(config tpmodels.FacebookConfig) tpmodels.TypeProvider {
-	return providers.Facebook(config)
-}
-
-func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-	return providers.Github(config)
-}
-
-func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-	return providers.Discord(config)
-}
-
-func GoogleWorkspaces(config tpmodels.GoogleWorkspacesConfig) tpmodels.TypeProvider {
-	return providers.GoogleWorkspaces(config)
-}
-
-func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
-	return providers.Bitbucket(config)
-}
-
-func GitLab(config tpmodels.GitLabConfig) tpmodels.TypeProvider {
-	return providers.GitLab(config)
-}
-
-func Google(config tpmodels.GoogleConfig) tpmodels.TypeProvider {
-	return providers.Google(config)
+func GetProvider(tenantId string, thirdPartyID string, clientType *string, userContext ...supertokens.UserContext) (*tpmodels.TypeProvider, error) {
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetProvider)(thirdPartyID, clientType, tenantId, userContext[0])
 }

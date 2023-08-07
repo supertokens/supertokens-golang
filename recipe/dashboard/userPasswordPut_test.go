@@ -1,18 +1,19 @@
 package dashboard
 
 import (
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 )
 
-/**
+/*
 - Initialise with thirdpartyemailpassword and provide no custom form fields
 - Create an emailpassword user using the thirdpartyemailpassword recipe
 - Try to change the password of the user
@@ -53,7 +54,7 @@ func TestThatUpdatingPasswordWithNoSignUpFeatureInTPEPWorks(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	signupResponse, err := thirdpartyemailpassword.EmailPasswordSignUp("testing@supertokens.com", "abcd1234")
+	signupResponse, err := thirdpartyemailpassword.EmailPasswordSignUp("public", "testing@supertokens.com", "abcd1234")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -77,8 +78,7 @@ func TestThatUpdatingPasswordWithNoSignUpFeatureInTPEPWorks(t *testing.T) {
 
 	assert.Equal(t, http.StatusOK, res.StatusCode)
 
-	signInResponse, err := thirdpartyemailpassword.EmailPasswordSignIn("testing@supertokens.com", "newabcd1234")
-
+	signInResponse, err := thirdpartyemailpassword.EmailPasswordSignIn("public", "testing@supertokens.com", "newabcd1234")
 	if err != nil {
 		t.Error(err.Error())
 	}

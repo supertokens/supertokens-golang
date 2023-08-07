@@ -22,7 +22,9 @@ import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tperrors"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -34,7 +36,7 @@ type Recipe struct {
 	Config       tpmodels.TypeNormalisedInput
 	RecipeImpl   tpmodels.RecipeInterface
 	APIImpl      tpmodels.APIInterface
-	Providers    []tpmodels.TypeProvider
+	Providers    []tpmodels.ProviderInput
 }
 
 var singletonInstance *Recipe
@@ -54,14 +56,20 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	}
 	r.Config = verifiedConfig
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
-	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance))
-	r.Providers = config.SignInAndUpFeature.Providers
+	r.RecipeImpl = verifiedConfig.Override.Functions(MakeRecipeImplementation(*querierInstance, verifiedConfig.SignInAndUpFeature.Providers))
+	r.Providers = verifiedConfig.SignInAndUpFeature.Providers
 
 	supertokens.AddPostInitCallback(func() error {
 		evRecipe := emailverification.GetRecipeInstance()
 		if evRecipe != nil {
 			evRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+
+		mtRecipe := multitenancy.GetRecipeInstance()
+		if mtRecipe != nil {
+			mtRecipe.SetStaticThirdPartyProviders(verifiedConfig.SignInAndUpFeature.Providers)
+		}
+
 		return nil
 	})
 
@@ -122,7 +130,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}), nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string, userContext supertokens.UserContext) error {
 	options := tpmodels.APIOptions{
 		Config:               r.Config,
 		OtherHandler:         theirHandler,
@@ -134,11 +142,11 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		AppInfo:              r.RecipeModule.GetAppInfo(),
 	}
 	if id == SignInUpAPI {
-		return api.SignInUpAPI(r.APIImpl, options)
+		return api.SignInUpAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == AuthorisationAPI {
-		return api.AuthorisationUrlAPI(r.APIImpl, options)
+		return api.AuthorisationUrlAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == AppleRedirectHandlerAPI {
-		return api.AppleRedirectHandler(r.APIImpl, options)
+		return api.AppleRedirectHandler(r.APIImpl, options, userContext)
 	}
 	return errors.New("should never come here")
 }
@@ -148,6 +156,10 @@ func (r *Recipe) getAllCORSHeaders() []string {
 }
 
 func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+	if errors.As(err, &tperrors.ClientTypeNotFoundError{}) {
+		supertokens.SendNon200ResponseWithMessage(res, err.Error(), 400)
+		return true, nil
+	}
 	return false, nil
 }
 

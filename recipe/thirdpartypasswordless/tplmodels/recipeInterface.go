@@ -17,39 +17,32 @@ package tplmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type RecipeInterface struct {
 	GetUserByID             *func(userID string, userContext supertokens.UserContext) (*User, error)
-	GetUsersByEmail         *func(email string, userContext supertokens.UserContext) ([]User, error)
-	GetUserByPhoneNumber    *func(phoneNumber string, userContext supertokens.UserContext) (*User, error)
-	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, userContext supertokens.UserContext) (*User, error)
-	ThirdPartySignInUp      *func(thirdPartyID string, thirdPartyUserID string, email string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	GetUsersByEmail         *func(email string, tenantId string, userContext supertokens.UserContext) ([]User, error)
+	GetUserByPhoneNumber    *func(phoneNumber string, tenantId string, userContext supertokens.UserContext) (*User, error)
+	GetUserByThirdPartyInfo *func(thirdPartyID string, thirdPartyUserID string, tenantId string, userContext supertokens.UserContext) (*User, error)
 
-	CreateCode *func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
+	ThirdPartySignInUp                   *func(thirdPartyID string, thirdPartyUserID string, email string, oAuthTokens tpmodels.TypeOAuthTokens, rawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider, tenantId string, userContext supertokens.UserContext) (ThirdPartySignInUp, error)
+	ThirdPartyManuallyCreateOrUpdateUser *func(thirdPartyID string, thirdPartyUserID string, email string, tenantId string, userContext supertokens.UserContext) (ManuallyCreateOrUpdateUserResponse, error)
+	ThirdPartyGetProvider                *func(thirdPartyID string, clientType *string, tenantId string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error)
 
-	CreateNewCodeForDevice *func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
-
-	ConsumeCode *func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
-
-	UpdatePasswordlessUser *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error)
-
+	CreateCode                     *func(email *string, phoneNumber *string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error)
+	CreateNewCodeForDevice         *func(deviceID string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error)
+	ConsumeCode                    *func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (ConsumeCodeResponse, error)
+	UpdatePasswordlessUser         *func(userID string, email *string, phoneNumber *string, userContext supertokens.UserContext) (plessmodels.UpdateUserResponse, error)
 	DeleteEmailForPasswordlessUser *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
-
-	DeletePhoneNumberForUser *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
-
-	RevokeAllCodes *func(email *string, phoneNumber *string, userContext supertokens.UserContext) error
-
-	RevokeCode *func(codeID string, userContext supertokens.UserContext) error
-
-	ListCodesByEmail *func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
-
-	ListCodesByPhoneNumber *func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
-
-	ListCodesByDeviceID *func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
-
-	ListCodesByPreAuthSessionID *func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
+	DeletePhoneNumberForUser       *func(userID string, userContext supertokens.UserContext) (plessmodels.DeleteUserResponse, error)
+	RevokeAllCodes                 *func(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) error
+	RevokeCode                     *func(codeID string, tenantId string, userContext supertokens.UserContext) error
+	ListCodesByEmail               *func(email string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
+	ListCodesByPhoneNumber         *func(phoneNumber string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error)
+	ListCodesByDeviceID            *func(deviceID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
+	ListCodesByPreAuthSessionID    *func(preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error)
 }
 
 type ConsumeCodeResponse struct {
@@ -69,6 +62,15 @@ type ConsumeCodeResponse struct {
 }
 
 type ThirdPartySignInUp struct {
+	OK *struct {
+		CreatedNewUser          bool
+		User                    User
+		OAuthTokens             map[string]interface{}
+		RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
+	}
+}
+
+type ManuallyCreateOrUpdateUserResponse struct {
 	OK *struct {
 		CreatedNewUser bool
 		User           User

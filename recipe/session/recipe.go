@@ -147,7 +147,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	return resp, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirhandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string, userContext supertokens.UserContext) error {
 	options := sessmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -159,11 +159,11 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		ClaimValidatorsAddedByOtherRecipes: r.getClaimValidatorsAddedByOtherRecipes(),
 	}
 	if id == RefreshAPIPath {
-		return HandleRefreshAPI(r.APIImpl, options)
+		return HandleRefreshAPI(r.APIImpl, options, userContext)
 	} else if id == SignoutAPIPath {
-		return SignOutAPI(r.APIImpl, options)
+		return SignOutAPI(r.APIImpl, options, userContext)
 	} else {
-		return r.OpenIdRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirhandler, path, method)
+		return r.OpenIdRecipe.RecipeModule.HandleAPIRequest(id, tenantId, req, res, theirhandler, path, method, userContext)
 	}
 }
 

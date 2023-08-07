@@ -69,6 +69,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		if emailVerificationRecipe != nil {
 			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+
 		return nil
 	})
 
@@ -151,7 +152,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string, userContext supertokens.UserContext) error {
 	options := epmodels.APIOptions{
 		Config:               r.Config,
 		OtherHandler:         theirHandler,
@@ -163,15 +164,15 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		EmailDelivery:        r.EmailDelivery,
 	}
 	if id == constants.SignUpAPI {
-		return api.SignUpAPI(r.APIImpl, options)
+		return api.SignUpAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.SignInAPI {
-		return api.SignInAPI(r.APIImpl, options)
+		return api.SignInAPI(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.GeneratePasswordResetTokenAPI {
-		return api.GeneratePasswordResetToken(r.APIImpl, options)
+		return api.GeneratePasswordResetToken(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.PasswordResetAPI {
-		return api.PasswordReset(r.APIImpl, options)
+		return api.PasswordReset(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.SignupEmailExistsAPI {
-		return api.EmailExists(r.APIImpl, options)
+		return api.EmailExists(r.APIImpl, tenantId, options, userContext)
 	}
 	return defaultErrors.New("should never come here")
 }

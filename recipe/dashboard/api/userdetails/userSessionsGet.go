@@ -37,7 +37,7 @@ type userSessionsGetResponse struct {
 	Sessions []SessionType `json:"sessions"`
 }
 
-func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userSessionsGetResponse, error) {
+func UserSessionsGet(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userSessionsGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 
@@ -47,7 +47,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 	}
 
-	response, err := session.GetAllSessionHandlesForUser(userId)
+	response, err := session.GetAllSessionHandlesForUser(userId, nil, userContext)
 
 	if err != nil {
 		return userSessionsGetResponse{}, err
@@ -65,7 +65,7 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, options dashboar
 		}
 
 		go func(i int, handle string) {
-			sessionResponse, sessionError := session.GetSessionInformation(handle)
+			sessionResponse, sessionError := session.GetSessionInformation(handle, userContext)
 
 			if sessionError != nil {
 				errInBackground = sessionError

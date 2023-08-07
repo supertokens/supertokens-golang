@@ -17,7 +17,6 @@ package epmodels
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
-	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type TypeNormalisedInput struct {
@@ -35,7 +34,7 @@ type OverrideStruct struct {
 
 type TypeInputFormField struct {
 	ID       string
-	Validate func(value interface{}) *string
+	Validate func(value interface{}, tenantId string) *string
 	Optional *bool
 }
 
@@ -45,7 +44,7 @@ type TypeInputSignUp struct {
 
 type NormalisedFormField struct {
 	ID       string
-	Validate func(value interface{}) *string
+	Validate func(value interface{}, tenantId string) *string
 	Optional bool
 }
 
@@ -57,29 +56,37 @@ type TypeNormalisedInputSignIn struct {
 	FormFields []NormalisedFormField
 }
 
-type TypeInputResetPasswordUsingTokenFeature struct {
-	CreateAndSendCustomEmail func(user User, passwordResetURLWithToken string, userContext supertokens.UserContext) // Deprecated: Use EmailDelivery instead.
-}
-
 type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 	FormFieldsForGenerateTokenForm []NormalisedFormField
 	FormFieldsForPasswordResetForm []NormalisedFormField
 }
 
 type User struct {
-	ID         string `json:"id"`
-	Email      string `json:"email"`
-	TimeJoined uint64 `json:"timejoined"`
+	ID         string   `json:"id"`
+	Email      string   `json:"email"`
+	TimeJoined uint64   `json:"timejoined"`
+	TenantIds  []string `json:"tenantIds"`
 }
 
 type TypeInput struct {
-	SignUpFeature                  *TypeInputSignUp
-	ResetPasswordUsingTokenFeature *TypeInputResetPasswordUsingTokenFeature
-	Override                       *OverrideStruct
-	EmailDelivery                  *emaildelivery.TypeInput
+	SignUpFeature *TypeInputSignUp
+	Override      *OverrideStruct
+	EmailDelivery *emaildelivery.TypeInput
 }
 
 type TypeFormField struct {
 	ID    string `json:"id"`
 	Value string `json:"value"`
+}
+
+type CreateResetPasswordLinkResponse struct {
+	OK *struct {
+		Link string
+	}
+	UnknownUserIdError *struct{}
+}
+
+type SendResetPasswordEmailResponse struct {
+	OK                 *struct{}
+	UnknownUserIdError *struct{}
 }

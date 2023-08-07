@@ -26,7 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}, tenantId string) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if AccessTokenPayload == nil {
 		AccessTokenPayload = map[string]interface{}{}
 	}
@@ -41,7 +41,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 		"useDynamicSigningKey": config.UseDynamicAccessTokenSigningKey,
 	}
 
-	response, err := querier.SendPostRequest("/recipe/session", requestBody)
+	response, err := querier.SendPostRequest(tenantId+"/recipe/session", requestBody)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
@@ -145,6 +145,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 				UserID:                accessTokenInfo.UserID,
 				UserDataInAccessToken: accessTokenInfo.UserData,
 				ExpiryTime:            accessTokenInfo.ExpiryTime,
+				TenantId:              accessTokenInfo.TenantId,
 			},
 		}, nil
 	}
@@ -217,6 +218,7 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 			Expiry:                           uint64(response["expiry"].(float64)),
 			TimeCreated:                      uint64(response["timeCreated"].(float64)),
 			CustomClaimsInAccessTokenPayload: response["userDataInJWT"].(map[string]interface{}),
+			TenantId:                         response["tenantId"].(string),
 		}, nil
 	}
 	return nil, nil
@@ -268,10 +270,14 @@ func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier superto
 	}
 }
 
-func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
-	response, err := querier.SendPostRequest("/recipe/session/remove", map[string]interface{}{
+func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string, tenantId string, revokeAcrossAllTenants *bool) ([]string, error) {
+	requestBody := map[string]interface{}{
 		"userId": userID,
-	})
+	}
+	if revokeAcrossAllTenants != nil {
+		requestBody["revokeAcrossAllTenants"] = *revokeAcrossAllTenants
+	}
+	response, err := querier.SendPostRequest(tenantId+"/recipe/session/remove", requestBody)
 	if err != nil {
 		return nil, err
 	}
@@ -287,10 +293,14 @@ func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string) 
 	return result, nil
 }
 
-func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string) ([]string, error) {
-	response, err := querier.SendGetRequest("/recipe/session/user", map[string]string{
+func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string, tenantId string, fetchAcrossAllTenants *bool) ([]string, error) {
+	queryParams := map[string]string{
 		"userId": userID,
-	})
+	}
+	if fetchAcrossAllTenants != nil {
+		queryParams["fetchAcrossAllTenants"] = strings.ToLower(fmt.Sprintf("%v", *fetchAcrossAllTenants))
+	}
+	response, err := querier.SendGetRequest("/recipe/session/user", queryParams)
 	if err != nil {
 		return nil, err
 	}

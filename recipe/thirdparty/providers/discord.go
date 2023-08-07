@@ -16,100 +16,61 @@
 package providers
 
 import (
-	"net/http"
-	"strings"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const discordID = "discord"
-
-func Discord(config tpmodels.DiscordConfig) tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: discordID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://discord.com/api/oauth2/token"
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": config.ClientSecret,
-				"grant_type":    "authorization_code",
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
-			}
-
-			authorisationRedirectURL := "https://discord.com/api/oauth2/authorize"
-			scopes := []string{"email", "identify"}
-			if config.Scope != nil {
-				scopes = config.Scope
-			}
-
-			var additionalParams map[string]interface{} = nil
-			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-				additionalParams = config.AuthorisationRedirect.Params
-			}
-
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":         strings.Join(scopes, " "),
-				"client_id":     config.ClientID,
-				"response_type": "code",
-			}
-			for key, value := range additionalParams {
-				authorizationRedirectParams[key] = value
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-
-					accessToken := authCodeResponse.(map[string]interface{})["access_token"].(string)
-					authHeader := "Bearer " + accessToken
-					response, err := getAuthRequest(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					userInfo := response.(map[string]interface{})
-					_, emailOk := userInfo["email"]
-					if !emailOk {
-						return tpmodels.UserInfo{
-							ID:    userInfo["id"].(string),
-							Email: nil,
-						}, nil
-					}
-					return tpmodels.UserInfo{
-						ID: userInfo["id"].(string),
-						Email: &tpmodels.EmailStruct{
-							ID:         userInfo["email"].(string),
-							IsVerified: userInfo["verified"].(bool),
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
+func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Discord"
 	}
-}
 
-func getAuthRequest(authHeader string) (interface{}, error) {
-	url := "https://discord.com/api/users/@me"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	if input.Config.AuthorizationEndpoint == "" {
+		input.Config.AuthorizationEndpoint = "https://discord.com/oauth2/authorize"
 	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
+
+	if input.Config.TokenEndpoint == "" {
+		input.Config.TokenEndpoint = "https://discord.com/api/oauth2/token"
+	}
+
+	if input.Config.UserInfoEndpoint == "" {
+		input.Config.UserInfoEndpoint = "https://discord.com/api/users/@me"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.UserId == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.UserId = "id"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.Email == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.Email = "email"
+	}
+
+	if input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified == "" {
+		input.Config.UserInfoMap.FromUserInfoAPI.EmailVerified = "verified"
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClientType{}, err
+			}
+
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"identify", "email"}
+			}
+
+			return config, nil
+		}
+
+		if oOverride != nil {
+			originalImplementation = oOverride(originalImplementation)
+		}
+		return originalImplementation
+	}
+
+	return NewProvider(input)
 }

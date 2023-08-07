@@ -23,14 +23,14 @@ import (
 )
 
 type bodyParams struct {
-	ThirdPartyId     string                 `json:"thirdPartyId"`
-	Code             string                 `json:"code"`
-	RedirectURI      string                 `json:"redirectURI"`
-	AuthCodeResponse map[string]interface{} `json:"authCodeResponse"`
-	ClientId         string                 `json:"clientId"`
+	ThirdPartyId    string                        `json:"thirdPartyId"`
+	ClientType      string                        `json:"clientType"`
+	TenantId        string                        `json:"tenantId"`
+	RedirectURIInfo *tpmodels.TypeRedirectURIInfo `json:"redirectURIInfo"`
+	OAuthTokens     *tpmodels.TypeOAuthTokens     `json:"oAuthTokens"`
 }
 
-func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+func SignInUpAPI(apiImplementation tpmodels.APIInterface, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.SignInUpPOST == nil || (*apiImplementation.SignInUpPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -46,38 +46,40 @@ func SignInUpAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOp
 		return err
 	}
 
-	var clientId *string = nil
-	if bodyParams.ClientId != "" {
-		clientId = &bodyParams.ClientId
+	var clientType *string = nil
+	if bodyParams.ClientType != "" {
+		clientType = &bodyParams.ClientType
 	}
 
 	if bodyParams.ThirdPartyId == "" {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId in request body"}
 	}
 
-	if bodyParams.Code == "" && bodyParams.AuthCodeResponse == nil {
-		return supertokens.BadInputError{Msg: "Please provide one of code or authCodeResponse in the request body"}
+	input := tpmodels.TypeSignInUpInput{}
+	if bodyParams.RedirectURIInfo != nil {
+		input.RedirectURIInfo = bodyParams.RedirectURIInfo
+		if bodyParams.RedirectURIInfo.RedirectURIOnProviderDashboard == "" {
+			return supertokens.BadInputError{Msg: "Please provide the redirectURIOnProviderDashboard in request body"}
+		}
+
+	} else if bodyParams.OAuthTokens != nil {
+		input.OAuthTokens = bodyParams.OAuthTokens
+	} else {
+		return supertokens.BadInputError{Msg: "Please provide one of redirectURIInfo or oAuthTokens in the request body"}
 	}
 
-	if bodyParams.AuthCodeResponse != nil && bodyParams.AuthCodeResponse["access_token"] == nil {
-		return supertokens.BadInputError{Msg: "Please provide the access_token inside the authCodeResponse request param"}
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(bodyParams.ThirdPartyId, clientType, tenantId, userContext)
+	if err != nil {
+		return err
 	}
 
-	if bodyParams.RedirectURI == "" {
-		return supertokens.BadInputError{Msg: "Please provide the redirectURI in request body"}
-	}
-
-	var provider *tpmodels.TypeProvider = findRightProvider(options.Providers, bodyParams.ThirdPartyId, clientId)
+	provider := providerResponse
 
 	if provider == nil {
-		if clientId == nil {
-			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to be missing from the backend configs."}
-		} else {
-			return supertokens.BadInputError{Msg: "The third party provider " + bodyParams.ThirdPartyId + " seems to be missing from the backend configs. If it is configured, then please make sure that you are passing the correct clientId from the frontend."}
-		}
+		return supertokens.BadInputError{Msg: "the provider " + bodyParams.ThirdPartyId + " could not be found in the configuration"}
 	}
 
-	result, err := (*apiImplementation.SignInUpPOST)(*provider, bodyParams.Code, bodyParams.AuthCodeResponse, bodyParams.RedirectURI, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.SignInUpPOST)(provider, input, tenantId, options, userContext)
 
 	if err != nil {
 		return err

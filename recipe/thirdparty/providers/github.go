@@ -16,145 +16,103 @@
 package providers
 
 import (
-	"encoding/json"
+	"errors"
 	"fmt"
-	"net/http"
-	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const githubID = "github"
-
-func Github(config tpmodels.GithubConfig) tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: githubID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://github.com/login/oauth/access_token"
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": config.ClientSecret,
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
-			}
-
-			authorisationRedirectURL := "https://github.com/login/oauth/authorize"
-			scopes := []string{"read:user", "user:email"}
-			if config.Scope != nil {
-				scopes = config.Scope
-			}
-
-			var additionalParams map[string]interface{} = nil
-			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-				additionalParams = config.AuthorisationRedirect.Params
-			}
-
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":     strings.Join(scopes, " "),
-				"client_id": config.ClientID,
-			}
-			for key, value := range additionalParams {
-				authorizationRedirectParams[key] = value
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					var accessTokenAPIResponse githubGetProfileInfoInput
-					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					accessToken := accessTokenAPIResponse.AccessToken
-					authHeader := "Bearer " + accessToken
-					response, err := getGithubAuthRequest(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					userInfo := response.(map[string]interface{})
-					emailsInfoResponse, err := getGithubEmailsInfo(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					emailsInfo := emailsInfoResponse.([]interface{})
-					ID := fmt.Sprintf("%f", userInfo["id"].(float64)) // github userId will be a number
-					// if user has choosen not to show their email publicly, userInfo here will
-					// have email as null. So we instead get the info from the emails api and
-					// use the email which is maked as primary one.
-					var emailInfo map[string]interface{}
-					for _, info := range emailsInfo {
-						emailInfoMap := info.(map[string]interface{})
-						if emailInfoMap["primary"].(bool) {
-							emailInfo = emailInfoMap
-							break
-						}
-					}
-					if emailInfo == nil {
-						return tpmodels.UserInfo{
-							ID: ID,
-						}, nil
-					}
-					isVerified := false
-					if emailInfo != nil {
-						isVerified = emailInfo["verified"].(bool)
-					}
-					return tpmodels.UserInfo{
-						ID: ID,
-						Email: &tpmodels.EmailStruct{
-							ID:         emailInfo["email"].(string),
-							IsVerified: isVerified,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
+func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Github"
 	}
+
+	if input.Config.AuthorizationEndpoint == "" {
+		input.Config.AuthorizationEndpoint = "https://github.com/login/oauth/authorize"
+	}
+
+	if input.Config.TokenEndpoint == "" {
+		input.Config.TokenEndpoint = "https://github.com/login/oauth/access_token"
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClientType{}, err
+			}
+
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"read:user", "user:email"}
+			}
+
+			return config, nil
+		}
+
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			headers := map[string]string{
+				"Authorization": fmt.Sprintf("Bearer %s", oAuthTokens["access_token"]),
+				"Accept":        "application/vnd.github.v3+json",
+			}
+			rawResponse := map[string]interface{}{}
+			emailInfo, err := doGetRequest("https://api.github.com/user/emails", nil, headers)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			rawResponse["emails"] = emailInfo
+
+			userInfo, err := doGetRequest("https://api.github.com/user", nil, headers)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			rawResponse["user"] = userInfo
+
+			rawUserInfoResponseFromProvider := tpmodels.TypeRawUserInfoFromProvider{FromUserInfoAPI: rawResponse}
+			userInfoResult, err := getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponseFromProvider)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			return tpmodels.TypeUserInfo{
+				ThirdPartyUserId:        userInfoResult.ThirdPartyUserId,
+				Email:                   userInfoResult.Email,
+				RawUserInfoFromProvider: rawUserInfoResponseFromProvider,
+			}, nil
+		}
+
+		if oOverride != nil {
+			originalImplementation = oOverride(originalImplementation)
+		}
+		return originalImplementation
+	}
+
+	return NewProvider(input)
 }
 
-func getGithubAuthRequest(authHeader string) (interface{}, error) {
-	url := "https://api.github.com/user"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse tpmodels.TypeRawUserInfoFromProvider) (tpmodels.TypeUserInfo, error) {
+	if rawUserInfoResponse.FromUserInfoAPI == nil {
+		return tpmodels.TypeUserInfo{}, errors.New("rawUserInfoResponse.FromUserInfoAPI is not available")
 	}
-	req.Header.Add("Authorization", authHeader)
-	req.Header.Add("Accept", "application/vnd.github.v3+json")
-	return doGetRequest(req)
-}
 
-func getGithubEmailsInfo(authHeader string) (interface{}, error) {
-	url := "https://api.github.com/user/emails"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	result := tpmodels.TypeUserInfo{
+		ThirdPartyUserId: fmt.Sprint(rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})["id"]),
 	}
-	req.Header.Add("Authorization", authHeader)
-	req.Header.Add("Accept", "application/vnd.github.v3+json")
-	return doGetRequest(req)
-}
 
-type githubGetProfileInfoInput struct {
-	AccessToken string `json:"access_token"`
-	ExpiresIn   int    `json:"expires_in"`
-	TokenType   string `json:"token_type"`
+	emailsInfo := rawUserInfoResponse.FromUserInfoAPI["emails"].([]interface{})
+	for _, info := range emailsInfo {
+		emailInfoMap := info.(map[string]interface{})
+		if emailInfoMap["primary"].(bool) {
+			verified, verifiedOk := emailInfoMap["verified"].(bool)
+			result.Email = &tpmodels.EmailStruct{
+				ID:         emailInfoMap["email"].(string),
+				IsVerified: verified && verifiedOk,
+			}
+			break
+		}
+	}
+
+	return result, nil
 }

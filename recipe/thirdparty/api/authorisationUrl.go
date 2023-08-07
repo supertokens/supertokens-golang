@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmodels.APIOptions) error {
+func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.AuthorisationUrlGET == nil || (*apiImplementation.AuthorisationUrlGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -28,26 +28,41 @@ func AuthorisationUrlAPI(apiImplementation tpmodels.APIInterface, options tpmode
 
 	queryParams := options.Req.URL.Query()
 	thirdPartyId := queryParams.Get("thirdPartyId")
+	redirectURIOnProviderDashboard := queryParams.Get("redirectURIOnProviderDashboard")
+
+	var clientType *string
+	if clientTypeStr := queryParams.Get("clientType"); clientTypeStr != "" {
+		clientType = &clientTypeStr
+	}
 
 	if len(thirdPartyId) == 0 {
 		return supertokens.BadInputError{Msg: "Please provide the thirdPartyId as a GET param"}
 	}
 
-	var provider *tpmodels.TypeProvider = findRightProvider(options.Providers, thirdPartyId, nil)
-
-	if provider == nil {
-		return supertokens.BadInputError{Msg: "The third party provider " + thirdPartyId + " seems to be missing from the backend configs."}
+	providerResponse, err := (*options.RecipeImplementation.GetProvider)(thirdPartyId, clientType, tenantId, userContext)
+	if err != nil {
+		return err
 	}
 
-	result, err := (*apiImplementation.AuthorisationUrlGET)(*provider, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	provider := providerResponse
+
+	if provider == nil {
+		return supertokens.BadInputError{Msg: "the provider " + thirdPartyId + " could not be found in the configuration"}
+	}
+
+	result, err := (*apiImplementation.AuthorisationUrlGET)(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}
 	if result.OK != nil {
-		return supertokens.Send200Response(options.Res, map[string]interface{}{
-			"status": "OK",
-			"url":    result.OK.Url,
-		})
+		respBody := map[string]interface{}{
+			"status":             "OK",
+			"urlWithQueryParams": result.OK.URLWithQueryParams,
+		}
+		if result.OK.PKCECodeVerifier != nil {
+			respBody["pkceCodeVerifier"] = *result.OK.PKCECodeVerifier
+		}
+		return supertokens.Send200Response(options.Res, respBody)
 	} else if result.GeneralError != nil {
 		return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(*result.GeneralError))
 	}

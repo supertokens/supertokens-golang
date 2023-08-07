@@ -18,125 +18,128 @@ package providers
 import (
 	"crypto/ecdsa"
 	"crypto/x509"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v4"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/api"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const appleID = "apple"
-
-func Apple(config tpmodels.AppleConfig) tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: appleID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://appleid.apple.com/auth/token"
-			clientSecret, err := getClientSecret(config.ClientID, config.ClientSecret.KeyId, config.ClientSecret.TeamId, config.ClientSecret.PrivateKey)
-			if err != nil {
-				panic(err)
-			}
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": clientSecret,
-				"grant_type":    "authorization_code",
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
-			}
-
-			authorisationRedirectURL := "https://appleid.apple.com/auth/authorize"
-			scopes := []string{"email"}
-			if config.Scope != nil {
-				scopes = config.Scope
-			}
-
-			var additionalParams map[string]interface{} = nil
-			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-				additionalParams = config.AuthorisationRedirect.Params
-			}
-
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":         strings.Join(scopes, " "),
-				"response_mode": "form_post",
-				"response_type": "code",
-				"client_id":     config.ClientID,
-			}
-			for key, value := range additionalParams {
-				authorizationRedirectParams[key] = value
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-					claims, err := verifyAndGetClaimsAppleIdToken(authCodeResponse.(map[string]interface{})["id_token"].(string), api.GetActualClientIdFromDevelopmentClientId(config.ClientID))
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-
-					var email string
-					var isVerified bool
-					var id string
-					for key, val := range claims {
-						if key == "sub" {
-							id = val.(string)
-						} else if key == "email" {
-							email = val.(string)
-						} else if key == "email_verified" {
-							isVerified = val.(string) == "true"
-						}
-					}
-					return tpmodels.UserInfo{
-						ID: id,
-						Email: &tpmodels.EmailStruct{
-							ID:         email,
-							IsVerified: isVerified,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-				GetRedirectURI: func(userContext supertokens.UserContext) (string, error) {
-					supertokens, err := supertokens.GetInstanceOrThrowError()
-					if err != nil {
-						return "", err
-					}
-					return supertokens.AppInfo.APIDomain.GetAsStringDangerous() + supertokens.AppInfo.APIBasePath.GetAsStringDangerous() + "/callback/apple", nil
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
+func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Apple"
 	}
+
+	if input.Config.OIDCDiscoveryEndpoint == "" {
+		input.Config.OIDCDiscoveryEndpoint = "https://appleid.apple.com/"
+	}
+
+	if input.Config.AuthorizationEndpointQueryParams == nil {
+		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
+	}
+
+	if _, ok := input.Config.AuthorizationEndpointQueryParams["response_mode"]; !ok {
+		input.Config.AuthorizationEndpointQueryParams["response_mode"] = "form_post"
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClientType{}, err
+			}
+
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"openid", "email"}
+			}
+
+			if config.ClientSecret == "" {
+
+				if config.AdditionalConfig == nil || config.AdditionalConfig["teamId"] == nil || config.AdditionalConfig["keyId"] == nil || config.AdditionalConfig["privateKey"] == nil {
+					return tpmodels.ProviderConfigForClientType{}, errors.New("please ensure that keyId, teamId and privateKey are provided in the AdditionalConfig")
+				}
+
+				clientSecret, err := getClientSecret(config.ClientID, config.AdditionalConfig)
+				if err != nil {
+					return tpmodels.ProviderConfigForClientType{}, err
+				}
+				config.ClientSecret = clientSecret
+			}
+
+			return config, nil
+		}
+
+		oExchangeAuthCodeForOAuthTokens := originalImplementation.ExchangeAuthCodeForOAuthTokens
+		originalImplementation.ExchangeAuthCodeForOAuthTokens = func(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+			res, err := oExchangeAuthCodeForOAuthTokens(redirectURIInfo, userContext)
+			if err != nil {
+				return tpmodels.TypeOAuthTokens{}, err
+			}
+
+			if user, ok := redirectURIInfo.RedirectURIQueryParams["user"].(string); ok {
+				userInfo := map[string]interface{}{}
+				err := json.Unmarshal([]byte(user), &userInfo)
+				if err != nil {
+					return nil, err
+				}
+				res["user"] = userInfo
+
+			} else if userInfo, ok := redirectURIInfo.RedirectURIQueryParams["user"].(map[string]interface{}); ok {
+				res["user"] = userInfo
+			}
+
+			return res, nil
+		}
+
+		oGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			res, err := oGetUserInfo(oAuthTokens, userContext)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+
+			if user, ok := oAuthTokens["user"].(string); ok {
+				userInfo := map[string]interface{}{}
+				err := json.Unmarshal([]byte(user), &userInfo)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = userInfo
+			} else if userInfo, ok := oAuthTokens["user"].(map[string]interface{}); ok {
+				res.RawUserInfoFromProvider.FromIdTokenPayload["user"] = userInfo
+			}
+
+			return res, nil
+		}
+
+		if oOverride != nil {
+			originalImplementation = oOverride(originalImplementation)
+		}
+		return originalImplementation
+	}
+
+	return NewProvider(input)
 }
 
-func getClientSecret(clientId, keyId, teamId, privateKey string) (string, error) {
+func getClientSecret(clientId string, additionalConfig map[string]interface{}) (string, error) {
 	claims := jwt.StandardClaims{
 		ExpiresAt: time.Now().Unix() + 86400*180,
 		IssuedAt:  time.Now().Unix(),
 		Audience:  "https://appleid.apple.com",
-		Subject:   api.GetActualClientIdFromDevelopmentClientId(clientId),
-		Issuer:    teamId,
+		Subject:   getActualClientIdFromDevelopmentClientId(clientId),
+		Issuer:    additionalConfig["teamId"].(string),
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodES256, claims)
+	token.Header["kid"] = additionalConfig["keyId"].(string)
 	token.Header["alg"] = "ES256"
-	token.Header["kid"] = keyId
 
-	ecdsaPrivateKey, err := getECDSPrivateKey(privateKey)
+	ecdsaPrivateKey, err := getECDSPrivateKey(additionalConfig["privateKey"].(string))
 	if err != nil {
 		return "", err
 	}
@@ -165,42 +168,4 @@ func getECDSPrivateKey(privateKey string) (*ecdsa.PrivateKey, error) {
 		return nil, errors.New("not ecdsa private key")
 	}
 	return ecdsaPrivateKey, nil
-}
-
-func verifyAndGetClaimsAppleIdToken(idToken string, clientId string) (jwt.MapClaims, error) {
-	/*
-	   - Verify the JWS E256 signature using the server’s public key
-	   - Verify that the iss field contains https://appleid.apple.com
-	   - Verify that the aud field is the developer’s client_id
-	   - Verify that the time is earlier than the exp value of the token */
-	claims := jwt.MapClaims{}
-	// Get the JWKS URL.
-	jwksURL := "https://appleid.apple.com/auth/keys"
-
-	// Create the JWKS from the resource at the given URL.
-	jwks, err := getJWKSFromURL(jwksURL)
-	if err != nil {
-		return claims, err
-	}
-
-	// Parse the JWT.
-	token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
-	if err != nil {
-		return claims, err
-	}
-
-	// Check if the token is valid.
-	if !token.Valid {
-		return claims, errors.New("invalid id_token supplied")
-	}
-
-	if claims["iss"].(string) != "https://appleid.apple.com" {
-		return claims, errors.New("invalid iss field in apple token")
-	}
-
-	if claims["aud"].(string) != clientId {
-		return claims, errors.New("the client for whom this key is for is different than the one provided")
-	}
-
-	return claims, nil
 }

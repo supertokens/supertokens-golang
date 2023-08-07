@@ -17,6 +17,7 @@ package emailpassword
 
 import (
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/api"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -26,100 +27,169 @@ func Init(config *epmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func SignUpWithContext(email string, password string, userContext supertokens.UserContext) (epmodels.SignUpResponse, error) {
+func SignUp(tenantId string, email string, password string, userContext ...supertokens.UserContext) (epmodels.SignUpResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignUpResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignUp)(email, password, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.SignUp)(email, password, tenantId, userContext[0])
 }
 
-func SignInWithContext(email string, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+func SignIn(tenantId string, email string, password string, userContext ...supertokens.UserContext) (epmodels.SignInResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.SignInResponse{}, err
 	}
-	return (*instance.RecipeImpl.SignIn)(email, password, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.SignIn)(email, password, tenantId, userContext[0])
 }
 
-func GetUserByIDWithContext(userID string, userContext supertokens.UserContext) (*epmodels.User, error) {
+func GetUserByID(userID string, userContext ...supertokens.UserContext) (*epmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByID)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByID)(userID, userContext[0])
 }
 
-func GetUserByEmailWithContext(email string, userContext supertokens.UserContext) (*epmodels.User, error) {
+func GetUserByEmail(tenantId string, email string, userContext ...supertokens.UserContext) (*epmodels.User, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return nil, err
 	}
-	return (*instance.RecipeImpl.GetUserByEmail)(email, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetUserByEmail)(email, tenantId, userContext[0])
 }
 
-func CreateResetPasswordTokenWithContext(userID string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
+func CreateResetPasswordToken(tenantId string, userID string, userContext ...supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.CreateResetPasswordTokenResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateResetPasswordToken)(userID, tenantId, userContext[0])
 }
 
-func ResetPasswordUsingTokenWithContext(token string, newPassword string, userContext supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
+func ResetPasswordUsingToken(tenantId string, token string, newPassword string, userContext ...supertokens.UserContext) (epmodels.ResetPasswordUsingTokenResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.ResetPasswordUsingTokenResponse{}, nil
 	}
-	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.ResetPasswordUsingToken)(token, newPassword, tenantId, userContext[0])
 }
 
-func UpdateEmailOrPasswordWithContext(userId string, email *string, password *string, applyPasswordPolicy *bool, userContext supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
+func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool, tenantIdForPasswordPolicy *string, userContext ...supertokens.UserContext) (epmodels.UpdateEmailOrPasswordResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return epmodels.UpdateEmailOrPasswordResponse{}, nil
 	}
-	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	if tenantIdForPasswordPolicy == nil {
+		tenantId := supertokens.DefaultTenantId
+		tenantIdForPasswordPolicy = &tenantId
+	}
+	return (*instance.RecipeImpl.UpdateEmailOrPassword)(userId, email, password, applyPasswordPolicy, *tenantIdForPasswordPolicy, userContext[0])
 }
 
-func SendEmailWithContext(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+func SendEmail(input emaildelivery.EmailType, userContext ...supertokens.UserContext) error {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return err
 	}
-	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.EmailDelivery.IngredientInterfaceImpl.SendEmail)(input, userContext[0])
 }
 
-func SignUp(email string, password string) (epmodels.SignUpResponse, error) {
-	return SignUpWithContext(email, password, &map[string]interface{}{})
+func CreateResetPasswordLink(tenantId string, userID string, userContext ...supertokens.UserContext) (epmodels.CreateResetPasswordLinkResponse, error) {
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	tokenResponse, err := CreateResetPasswordToken(tenantId, userID, userContext...)
+	if err != nil {
+		return epmodels.CreateResetPasswordLinkResponse{}, err
+	}
+	if tokenResponse.UnknownUserIdError != nil {
+		return epmodels.CreateResetPasswordLinkResponse{
+			UnknownUserIdError: &struct{}{},
+		}, nil
+	}
+
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return epmodels.CreateResetPasswordLinkResponse{}, err
+	}
+
+	return epmodels.CreateResetPasswordLinkResponse{
+		OK: &struct{ Link string }{
+			Link: api.GetPasswordResetLink(
+				instance.RecipeModule.GetAppInfo(),
+				instance.RecipeModule.GetRecipeID(),
+				tokenResponse.OK.Token,
+				tenantId,
+			),
+		},
+	}, nil
 }
 
-func SignIn(email string, password string) (epmodels.SignInResponse, error) {
-	return SignInWithContext(email, password, &map[string]interface{}{})
-}
+func SendResetPasswordEmail(tenantId string, userID string, userContext ...supertokens.UserContext) (epmodels.SendResetPasswordEmailResponse, error) {
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	linkResponse, err := CreateResetPasswordLink(tenantId, userID, userContext...)
+	if err != nil {
+		return epmodels.SendResetPasswordEmailResponse{}, err
+	}
+	if linkResponse.UnknownUserIdError != nil {
+		return epmodels.SendResetPasswordEmailResponse{
+			UnknownUserIdError: &struct{}{},
+		}, nil
+	}
 
-func GetUserByID(userID string) (*epmodels.User, error) {
-	return GetUserByIDWithContext(userID, &map[string]interface{}{})
-}
+	userInfo, err := GetUserByID(userID, userContext...)
+	if err != nil {
+		return epmodels.SendResetPasswordEmailResponse{}, err
+	}
+	if userInfo == nil {
+		return epmodels.SendResetPasswordEmailResponse{
+			UnknownUserIdError: &struct{}{},
+		}, nil
+	}
+	err = SendEmail(emaildelivery.EmailType{
+		PasswordReset: &emaildelivery.PasswordResetType{
+			User: emaildelivery.User{
+				ID:    userInfo.ID,
+				Email: userInfo.Email,
+			},
+			PasswordResetLink: linkResponse.OK.Link,
+			TenantId:          tenantId,
+		},
+	}, userContext...)
+	if err != nil {
+		return epmodels.SendResetPasswordEmailResponse{}, err
+	}
 
-func GetUserByEmail(email string) (*epmodels.User, error) {
-	return GetUserByEmailWithContext(email, &map[string]interface{}{})
-}
-
-func CreateResetPasswordToken(userID string) (epmodels.CreateResetPasswordTokenResponse, error) {
-	return CreateResetPasswordTokenWithContext(userID, &map[string]interface{}{})
-}
-
-func ResetPasswordUsingToken(token string, newPassword string) (epmodels.ResetPasswordUsingTokenResponse, error) {
-	return ResetPasswordUsingTokenWithContext(token, newPassword, &map[string]interface{}{})
-}
-
-func UpdateEmailOrPassword(userId string, email *string, password *string, applyPasswordPolicy *bool) (epmodels.UpdateEmailOrPasswordResponse, error) {
-	return UpdateEmailOrPasswordWithContext(userId, email, password, applyPasswordPolicy, &map[string]interface{}{})
-}
-
-func SendEmail(input emaildelivery.EmailType) error {
-	return SendEmailWithContext(input, &map[string]interface{}{})
+	return epmodels.SendResetPasswordEmailResponse{
+		OK: &struct{}{},
+	}, nil
 }
 
 func MakeSMTPService(config emaildelivery.SMTPServiceConfig) *emaildelivery.EmailDeliveryInterface {

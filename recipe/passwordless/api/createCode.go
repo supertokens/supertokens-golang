@@ -25,7 +25,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
+func CreateCode(apiImplementation plessmodels.APIInterface, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.CreateCodePOST == nil || (*apiImplementation.CreateCodePOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -69,9 +69,9 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		email = strings.TrimSpace(email.(string))
 		var validateErr *string
 		if options.Config.ContactMethodEmail.Enabled {
-			validateErr = options.Config.ContactMethodEmail.ValidateEmailAddress(email)
+			validateErr = options.Config.ContactMethodEmail.ValidateEmailAddress(email, tenantId)
 		} else {
-			validateErr = options.Config.ContactMethodEmailOrPhone.ValidateEmailAddress(email)
+			validateErr = options.Config.ContactMethodEmailOrPhone.ValidateEmailAddress(email, tenantId)
 		}
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(supertokens.GeneralErrorResponse{
@@ -83,9 +83,9 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 	if okPhoneNumber {
 		var validateErr *string
 		if options.Config.ContactMethodPhone.Enabled {
-			validateErr = options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber)
+			validateErr = options.Config.ContactMethodPhone.ValidatePhoneNumber(phoneNumber, tenantId)
 		} else {
-			validateErr = options.Config.ContactMethodEmailOrPhone.ValidatePhoneNumber(phoneNumber)
+			validateErr = options.Config.ContactMethodEmailOrPhone.ValidatePhoneNumber(phoneNumber, tenantId)
 		}
 		if validateErr != nil {
 			return supertokens.Send200Response(options.Res, supertokens.ConvertGeneralErrorToJsonResponse(supertokens.GeneralErrorResponse{
@@ -114,7 +114,7 @@ func CreateCode(apiImplementation plessmodels.APIInterface, options plessmodels.
 		phoneNumberStrPointer = &t
 	}
 
-	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.CreateCodePOST)(emailStrPointer, phoneNumberStrPointer, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

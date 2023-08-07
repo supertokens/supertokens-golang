@@ -25,6 +25,10 @@ import (
 func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.NormalisedAppinfo, config *tpmodels.TypeInput) (tpmodels.TypeNormalisedInput, error) {
 	typeNormalisedInput := makeTypeNormalisedInput(recipeInstance)
 
+	if config == nil {
+		config = &tpmodels.TypeInput{}
+	}
+
 	signInAndUpFeature, err := validateAndNormaliseSignInAndUpConfig(config.SignInAndUpFeature)
 	if err != nil {
 		return tpmodels.TypeNormalisedInput{}, err
@@ -59,39 +63,15 @@ func makeTypeNormalisedInput(recipeInstance *Recipe) tpmodels.TypeNormalisedInpu
 
 func validateAndNormaliseSignInAndUpConfig(config tpmodels.TypeInputSignInAndUp) (tpmodels.TypeNormalisedInputSignInAndUp, error) {
 	providers := config.Providers
-	if len(providers) == 0 {
-		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config"}
-	}
+	// With the feature of dynamic providers from core, we need not check if the provider array is empty
 
-	isDefaultProvidersSet := map[string]bool{}
-	allProvidersSet := map[string]bool{}
+	thirdPartyIdSet := map[string]bool{}
 
-	for i := 0; i < len(providers); i++ {
-		id := providers[i].ID
-		allProvidersSet[id] = true
-		isDefault := providers[i].IsDefault
-
-		// if this is the only provider with this ID, then we mark this as default
-		var otherProvidersWithSameId []tpmodels.TypeProvider = []tpmodels.TypeProvider{}
-		for y := 0; y < len(providers); y++ {
-			if providers[y].ID == id && &providers[y] != &providers[i] {
-				otherProvidersWithSameId = append(otherProvidersWithSameId, providers[y])
-			}
+	for _, provider := range providers {
+		if thirdPartyIdSet[provider.Config.ThirdPartyId] {
+			return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "The providers array has multiple entries for the same third party provider."}
 		}
-		if len(otherProvidersWithSameId) == 0 {
-			isDefault = true
-		}
-
-		if isDefault {
-			if isDefaultProvidersSet[id] {
-				return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "You have provided multiple third party providers that have the id: " + providers[i].ID + " and are marked as 'IsDefault: true'. Please only mark one of them as isDefault"}
-			}
-			isDefaultProvidersSet[id] = true
-		}
-	}
-
-	if len(isDefaultProvidersSet) != len(allProvidersSet) {
-		return tpmodels.TypeNormalisedInputSignInAndUp{}, supertokens.BadInputError{Msg: "The providers array has multiple entries for the same third party provider. Please mark one of them as the default one by using 'IsDefault: true'"}
+		thirdPartyIdSet[provider.Config.ThirdPartyId] = true
 	}
 
 	return tpmodels.TypeNormalisedInputSignInAndUp{
@@ -117,10 +97,20 @@ func parseUsers(value interface{}) ([]tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	var user []tpmodels.User
-	err = json.Unmarshal(respJSON, &user)
+	var users []interface{}
+	err = json.Unmarshal(respJSON, &users)
+
+	usersResult := make([]tpmodels.User, len(users))
+	for i, user := range users {
+		userObj, err := parseUser(user)
+		if err != nil {
+			return nil, err
+		}
+		usersResult[i] = *userObj
+	}
+
 	if err != nil {
 		return nil, err
 	}
-	return user, nil
+	return usersResult, nil
 }

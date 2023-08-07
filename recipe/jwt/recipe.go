@@ -91,7 +91,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	options := jwtmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -100,7 +100,7 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		Res:                  res,
 		OtherHandler:         theirHandler,
 	}
-	return api.GetJWKS(r.APIImpl, options)
+	return api.GetJWKS(r.APIImpl, options, userContext)
 }
 
 func (r *Recipe) getAllCORSHeaders() []string {

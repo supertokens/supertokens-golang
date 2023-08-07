@@ -31,7 +31,7 @@ type userSessionsPostRequestBody struct {
 	SessionHandles *[]string `json:"sessionHandles"`
 }
 
-func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userSessionsPostResponse, error) {
+func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userSessionsPostResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -52,7 +52,7 @@ func UserSessionsRevoke(apiInterface dashboardmodels.APIInterface, options dashb
 		}
 	}
 
-	session.RevokeMultipleSessions(*sessionHandles)
+	session.RevokeMultipleSessions(*sessionHandles, userContext)
 
 	return userSessionsPostResponse{
 		Status: "OK",

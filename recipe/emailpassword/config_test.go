@@ -54,7 +54,7 @@ func TestDefaultConfigForEmailPasswordModule(t *testing.T) {
 	assert.Equal(t, len(signupFeature.FormFields), 2)
 	for i := 0; i < len(signupFeature.FormFields); i++ {
 		assert.Equal(t, signupFeature.FormFields[i].Optional, false)
-		assert.NotNil(t, *signupFeature.FormFields[i].Validate(""))
+		assert.NotNil(t, *signupFeature.FormFields[i].Validate("", "public"))
 	}
 
 	singInFeature := singletonEmailPasswordInstance.Config.SignInFeature
@@ -90,7 +90,7 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 						{
 							ID:       "test",
 							Optional: &customOptionalValue,
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								return &customReturnValueFromValidator
 							},
 						},
@@ -121,7 +121,7 @@ func TestChangedConfigForEmailPasswordModule(t *testing.T) {
 	}
 	assert.NotNil(t, testFormField)
 	assert.Equal(t, false, testFormField.Optional)
-	assert.Equal(t, "test", *testFormField.Validate(""))
+	assert.Equal(t, "test", *testFormField.Validate("", "public"))
 
 }
 
@@ -163,8 +163,8 @@ func TestNoEmailPasswordValidatorsGivenShouldAddThem(t *testing.T) {
 	}
 	signupFeature := singletonEmailPasswordInstance.Config.SignUpFeature
 	formFields := signupFeature.FormFields
-	assert.NotNil(t, *formFields[0].Validate(""))
-	assert.NotNil(t, *formFields[1].Validate(""))
+	assert.NotNil(t, *formFields[0].Validate("", "public"))
+	assert.NotNil(t, *formFields[1].Validate("", "public"))
 
 }
 
@@ -204,14 +204,14 @@ func TestToCheckTheDefaultEmailPasswordValidators(t *testing.T) {
 			passwordFormField = formFiled
 		}
 	}
-	assert.Equal(t, "Email is invalid", *emailFormField.Validate("aaaaa"))
-	assert.Equal(t, "Email is invalid", *emailFormField.Validate("aaaaa@aaaaa"))
-	assert.Equal(t, "Email is invalid", *emailFormField.Validate("random  User   @randomMail.com"))
-	assert.Equal(t, "Email is invalid", *emailFormField.Validate("*@*"))
-	assert.Nil(t, emailFormField.Validate("validemail@supertokens.io"))
+	assert.Equal(t, "Email is invalid", *emailFormField.Validate("aaaaa", "public"))
+	assert.Equal(t, "Email is invalid", *emailFormField.Validate("aaaaa@aaaaa", "public"))
+	assert.Equal(t, "Email is invalid", *emailFormField.Validate("random  User   @randomMail.com", "public"))
+	assert.Equal(t, "Email is invalid", *emailFormField.Validate("*@*", "public"))
+	assert.Nil(t, emailFormField.Validate("validemail@supertokens.io", "public"))
 
-	assert.Equal(t, "Password must contain at least 8 characters, including a number", *passwordFormField.Validate("aaaa"))
-	assert.Equal(t, "Password must contain at least one number", *passwordFormField.Validate("aaaaaaaaa"))
-	assert.Equal(t, "Password must contain at least one alphabet", *passwordFormField.Validate("1234*-56*789"))
-	assert.Nil(t, passwordFormField.Validate("validPass123"))
+	assert.Equal(t, "Password must contain at least 8 characters, including a number", *passwordFormField.Validate("aaaa", "public"))
+	assert.Equal(t, "Password must contain at least one number", *passwordFormField.Validate("aaaaaaaaa", "public"))
+	assert.Equal(t, "Password must contain at least one alphabet", *passwordFormField.Validate("1234*-56*789", "public"))
+	assert.Nil(t, passwordFormField.Validate("validPass123", "public"))
 }

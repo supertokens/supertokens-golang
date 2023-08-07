@@ -38,15 +38,10 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 	// we must call this after validateAndNormaliseSignupConfig
 	typeNormalisedInput.SignInFeature = validateAndNormaliseSignInConfig(typeNormalisedInput.SignUpFeature)
 
-	if config != nil && config.ResetPasswordUsingTokenFeature != nil {
-		typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
-	}
+	typeNormalisedInput.ResetPasswordUsingTokenFeature = validateAndNormaliseResetPasswordUsingTokenConfig(typeNormalisedInput.SignUpFeature)
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func(recipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService {
 		sendPasswordResetEmail := DefaultCreateAndSendCustomPasswordResetEmail(appInfo)
-		if config != nil && config.ResetPasswordUsingTokenFeature != nil && config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail != nil {
-			sendPasswordResetEmail = config.ResetPasswordUsingTokenFeature.CreateAndSendCustomEmail
-		}
 
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(recipeImpl, appInfo, sendPasswordResetEmail)
 		if config != nil && config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
@@ -129,7 +124,7 @@ func normaliseSignInFormFields(formFields []epmodels.NormalisedFormField) []epmo
 			if formField.ID != "password" && formField.ID != "email" {
 				continue
 			}
-			var validate func(value interface{}) *string
+			var validate func(value interface{}, tenantId string) *string
 			if formField.ID == "password" {
 				validate = defaultValidator
 			} else if formField.ID == "email" {
@@ -166,7 +161,7 @@ func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmod
 	if len(formFields) > 0 {
 		for _, formField := range formFields {
 			var (
-				validate func(value interface{}) *string
+				validate func(value interface{}, tenantId string) *string
 				optional bool = false
 			)
 			if formField.ID == "password" {
@@ -214,11 +209,11 @@ func NormaliseSignUpFormFields(formFields []epmodels.TypeInputFormField) []epmod
 	return normalisedFormFields
 }
 
-func defaultValidator(_ interface{}) *string {
+func defaultValidator(_ interface{}, tenantId string) *string {
 	return nil
 }
 
-func defaultPasswordValidator(value interface{}) *string {
+func defaultPasswordValidator(value interface{}, tenantId string) *string {
 	// length >= 8 && < 100
 	// must have a number and a character
 
@@ -247,7 +242,7 @@ func defaultPasswordValidator(value interface{}) *string {
 	return nil
 }
 
-func defaultEmailValidator(value interface{}) *string {
+func defaultEmailValidator(value interface{}, tenantId string) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg

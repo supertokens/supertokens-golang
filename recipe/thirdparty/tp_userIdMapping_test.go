@@ -22,8 +22,18 @@ func initForUserIdMappingTest(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{Init(&tpmodels.TypeInput{
 			SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-				Providers: []tpmodels.TypeProvider{
-					Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
+				Providers: []tpmodels.ProviderInput{
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "google",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     "clientID",
+									ClientSecret: "clientSecret",
+								},
+							},
+						},
+					},
 				},
 			},
 		})},
@@ -50,7 +60,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignInUp("google", "googleID", "test@example.com")
+	signUpResponse, err := ManuallyCreateOrUpdateUser("public", "google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -72,7 +82,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		userResp, err := GetUserByThirdPartyInfo("public", "google", "googleID")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}

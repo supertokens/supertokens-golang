@@ -24,26 +24,24 @@ func Init(config *jwtmodels.TypeInput) supertokens.Recipe {
 	return recipeInit(config)
 }
 
-func CreateJWTWithContext(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
+func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext ...supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.CreateJWTResponse{}, err
 	}
-	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.CreateJWT)(payload, validitySecondsPointer, useStaticSigningKey, userContext[0])
 }
 
-func GetJWKSWithContext(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+func GetJWKS(userContext ...supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
 	instance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		return jwtmodels.GetJWKSResponse{}, err
 	}
-	return (*instance.RecipeImpl.GetJWKS)(userContext)
-}
-
-func CreateJWT(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool) (jwtmodels.CreateJWTResponse, error) {
-	return CreateJWTWithContext(payload, validitySecondsPointer, useStaticSigningKey, &map[string]interface{}{})
-}
-
-func GetJWKS() (jwtmodels.GetJWKSResponse, error) {
-	return GetJWKSWithContext(&map[string]interface{}{})
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.GetJWKS)(userContext[0])
 }

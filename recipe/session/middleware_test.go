@@ -119,7 +119,7 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "public", "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -409,7 +409,7 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "public", "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -689,7 +689,7 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "public", "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}
@@ -982,7 +982,7 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		_, err := CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		_, err := CreateNewSession(r, rw, "public", "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 		if err != nil {
 			rw.WriteHeader(500)
 		}

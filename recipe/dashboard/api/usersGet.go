@@ -30,9 +30,10 @@ type User struct {
 	Email       string                     `json:"email,omitempty"`
 	PhoneNumber string                     `json:"phoneNumber,omitempty"`
 	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
+	TenantIds   string                     `json:"tenantIds,omitempty"`
 }
 
-func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (UsersGetResponse, error) {
+func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (UsersGetResponse, error) {
 	req := options.Req
 	limitStr := req.URL.Query().Get("limit")
 
@@ -82,11 +83,11 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 	}
 
 	if len(queryParamsObject) != 0 {
-		usersResponse, err = supertokens.GetUsersWithSearchParams(timeJoinedOrder, paginationTokenPtr, &limit, nil, queryParamsObject)
+		usersResponse, err = supertokens.GetUsersWithSearchParams(tenantId, timeJoinedOrder, paginationTokenPtr, &limit, nil, queryParamsObject)
 	} else if timeJoinedOrder == "ASC" {
-		usersResponse, err = supertokens.GetUsersOldestFirst(paginationTokenPtr, &limit, nil, nil)
+		usersResponse, err = supertokens.GetUsersOldestFirst(tenantId, paginationTokenPtr, &limit, nil, nil)
 	} else {
-		usersResponse, err = supertokens.GetUsersNewestFirst(paginationTokenPtr, &limit, nil, nil)
+		usersResponse, err = supertokens.GetUsersNewestFirst(tenantId, paginationTokenPtr, &limit, nil, nil)
 	}
 	if err != nil {
 		return UsersGetResponse{}, err
@@ -120,7 +121,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, options dashboardm
 			User     map[string]interface{} `json:"user"`
 		}) {
 			defer processingGroup.Done()
-			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string))
+			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string), userContext)
 			<-sem
 			if err != nil {
 				errInBackground = err

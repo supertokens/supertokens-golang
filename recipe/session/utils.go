@@ -3,13 +3,14 @@ package session
 import (
 	"errors"
 	"fmt"
-	"github.com/supertokens/supertokens-golang/recipe/session/claims"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/supertokens/supertokens-golang/recipe/session/claims"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func GetRidFromHeader(req *http.Request) *string {
@@ -30,7 +31,7 @@ func GetRequiredClaimValidators(
 		return nil, err
 	}
 	claimValidatorsAddedByOtherRecipes := instance.getClaimValidatorsAddedByOtherRecipes()
-	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserID(), claimValidatorsAddedByOtherRecipes, userContext)
+	globalClaimValidators, err := (*instance.RecipeImpl.GetGlobalClaimValidators)(sessionContainer.GetUserIDWithContext(userContext), claimValidatorsAddedByOtherRecipes, sessionContainer.GetTenantIdWithContext(userContext), userContext)
 	if err != nil {
 		return nil, err
 	}

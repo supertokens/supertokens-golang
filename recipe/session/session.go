@@ -28,6 +28,7 @@ import (
 type SessionContainerInput struct {
 	sessionHandle         string
 	userID                string
+	tenantId              string
 	userDataInAccessToken map[string]interface{}
 	accessToken           string
 	frontToken            string
@@ -42,6 +43,7 @@ func makeSessionContainerInput(
 	accessToken string,
 	sessionHandle string,
 	userID string,
+	tenantId string,
 	userDataInAccessToken map[string]interface{},
 	recipeImpl sessmodels.RecipeInterface,
 	frontToken string,
@@ -53,6 +55,7 @@ func makeSessionContainerInput(
 	return SessionContainerInput{
 		sessionHandle:         sessionHandle,
 		userID:                userID,
+		tenantId:              tenantId,
 		userDataInAccessToken: userDataInAccessToken,
 		accessToken:           accessToken,
 		frontToken:            frontToken,
@@ -135,6 +138,9 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 	sessionContainer.GetUserIDWithContext = func(userContext supertokens.UserContext) string {
 		return session.userID
+	}
+	sessionContainer.GetTenantIdWithContext = func(userContext supertokens.UserContext) string {
+		return session.tenantId
 	}
 	sessionContainer.GetAccessTokenPayloadWithContext = func(userContext supertokens.UserContext) map[string]interface{} {
 		return session.userDataInAccessToken
@@ -252,7 +258,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 
 	sessionContainer.FetchAndSetClaimWithContext = func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error {
-		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), nil, userContext)
+		update, err := claim.Build(sessionContainer.GetUserIDWithContext(userContext), "public", nil, userContext)
 		if err != nil {
 			return err
 		}
@@ -284,6 +290,9 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	}
 	sessionContainer.GetUserID = func() string {
 		return sessionContainer.GetUserIDWithContext(&map[string]interface{}{})
+	}
+	sessionContainer.GetTenantId = func() string {
+		return sessionContainer.GetTenantIdWithContext(&map[string]interface{}{})
 	}
 	sessionContainer.GetAccessTokenPayload = func() map[string]interface{} {
 		return sessionContainer.GetAccessTokenPayloadWithContext(&map[string]interface{}{})

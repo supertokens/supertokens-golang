@@ -29,6 +29,7 @@ type User struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`
 	} `json:"thirdParty"`
+	TenantIds []string `json:"tenantIds"`
 }
 
 type TypeContext struct {
@@ -37,19 +38,17 @@ type TypeContext struct {
 }
 
 type TypeInput struct {
-	SignUpFeature                  *epmodels.TypeInputSignUp
-	Providers                      []tpmodels.TypeProvider
-	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
-	Override                       *OverrideStruct
-	EmailDelivery                  *emaildelivery.TypeInput
+	SignUpFeature *epmodels.TypeInputSignUp
+	Providers     []tpmodels.ProviderInput
+	Override      *OverrideStruct
+	EmailDelivery *emaildelivery.TypeInput
 }
 
 type TypeNormalisedInput struct {
-	SignUpFeature                  *epmodels.TypeInputSignUp
-	Providers                      []tpmodels.TypeProvider
-	ResetPasswordUsingTokenFeature *epmodels.TypeInputResetPasswordUsingTokenFeature
-	Override                       OverrideStruct
-	GetEmailDeliveryConfig         func(recipeImpl RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService
+	SignUpFeature          *epmodels.TypeInputSignUp
+	Providers              []tpmodels.ProviderInput
+	Override               OverrideStruct
+	GetEmailDeliveryConfig func(recipeImpl RecipeInterface, epRecipeImpl epmodels.RecipeInterface) emaildelivery.TypeInputWithService
 }
 
 type OverrideStruct struct {

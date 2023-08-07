@@ -5,10 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
-	"github.com/supertokens/supertokens-golang/test/unittesting"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -16,9 +12,14 @@ import (
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestShouldCreateAV3Token(t *testing.T) {
+func TestShouldCreateAV4Token(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -62,7 +63,7 @@ func TestShouldCreateAV3Token(t *testing.T) {
 		t.Error(parseErr.Error())
 	}
 
-	assert.Equal(t, parsedToken.Version, 3)
+	assert.Equal(t, parsedToken.Version, 4)
 	bytes, err := base64.RawURLEncoding.DecodeString(parsedToken.Header)
 	if err != nil {
 		t.Error(err.Error())
@@ -79,7 +80,7 @@ func TestShouldCreateAV3Token(t *testing.T) {
 	assert.True(t, strings.HasPrefix(result["kid"].(string), "d-"))
 }
 
-func TestShouldCreateV3TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
+func TestShouldCreateV4TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 	useDynamicKey := false
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -126,7 +127,7 @@ func TestShouldCreateV3TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 		t.Error(parseErr.Error())
 	}
 
-	assert.Equal(t, parsedToken.Version, 3)
+	assert.Equal(t, parsedToken.Version, 4)
 	bytes, err := base64.RawURLEncoding.DecodeString(parsedToken.Header)
 	if err != nil {
 		t.Error(err.Error())
@@ -303,7 +304,7 @@ func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) 
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, parsedAtAfterRefresh.Version, 3)
+	assert.Equal(t, parsedAtAfterRefresh.Version, 4)
 	assert.Equal(t, parsedAtAfterRefresh.Payload["sub"], "test-user-id")
 	assert.Equal(t, parsedAtAfterRefresh.Payload["appSub"], "asdf")
 
@@ -409,7 +410,7 @@ func TestShouldHelpMigratingV2TokenUsingProtectedPropsWhenCalledUsingSessionHand
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, parsedAtAfterRefresh.Version, 3)
+	assert.Equal(t, parsedAtAfterRefresh.Version, 4)
 	assert.Equal(t, parsedAtAfterRefresh.Payload["sub"], "test-user-id")
 	assert.Equal(t, parsedAtAfterRefresh.Payload["appSub"], "asdf")
 
@@ -740,7 +741,7 @@ func TestVerifyShouldNotValidateTokenSignedByStaticKeyIfNotSetInConfig(t *testin
 			payload = result["payload"].(map[string]interface{})
 		}
 
-		_, err2 := CreateNewSession(r, rw, "uniqueId", payload, map[string]interface{}{})
+		_, err2 := CreateNewSession(r, rw, "public", "uniqueId", payload, map[string]interface{}{})
 
 		if err2 != nil {
 			http.Error(rw, fmt.Sprint(err2), 400)
@@ -818,7 +819,7 @@ func TestVerifyShouldNotValidateTokenSignedByStaticKeyIfNotSetInConfig(t *testin
 			payload = result["payload"].(map[string]interface{})
 		}
 
-		_, err2 := CreateNewSession(r, rw, "uniqueId", payload, map[string]interface{}{})
+		_, err2 := CreateNewSession(r, rw, "public", "uniqueId", payload, map[string]interface{}{})
 
 		if err2 != nil {
 			http.Error(rw, fmt.Sprint(err2), 400)
@@ -924,7 +925,7 @@ func TestShouldRefreshLegacySessionsToNewVersion(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, parsedAtAfterRefresh.Version, 3)
+	assert.Equal(t, parsedAtAfterRefresh.Version, 4)
 }
 
 func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {

@@ -16,9 +16,10 @@
 package sessmodels
 
 import (
-	"github.com/MicahParks/keyfunc"
 	"net/http"
 	"time"
+
+	"github.com/MicahParks/keyfunc"
 
 	"github.com/supertokens/supertokens-golang/recipe/openid/openidmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
@@ -76,6 +77,7 @@ type SessionStruct struct {
 	UserID                string                 `json:"userId"`
 	UserDataInAccessToken map[string]interface{} `json:"userDataInJWT"`
 	ExpiryTime            uint64                 `json:"expiryTime"`
+	TenantId              string                 `json:"tenantId"`
 }
 
 type CreateOrRefreshAPIResponseToken struct {
@@ -187,6 +189,7 @@ type TypeSessionContainer struct {
 	GetSessionDataInDatabase       func() (map[string]interface{}, error)
 	UpdateSessionDataInDatabase    func(newSessionData map[string]interface{}) error
 	GetUserID                      func() string
+	GetTenantId                    func() string
 	GetAccessTokenPayload          func() map[string]interface{}
 	GetHandle                      func() string
 	GetAllSessionTokensDangerously func() SessionTokens
@@ -198,6 +201,7 @@ type TypeSessionContainer struct {
 	GetSessionDataInDatabaseWithContext    func(userContext supertokens.UserContext) (map[string]interface{}, error)
 	UpdateSessionDataInDatabaseWithContext func(newSessionData map[string]interface{}, userContext supertokens.UserContext) error
 	GetUserIDWithContext                   func(userContext supertokens.UserContext) string
+	GetTenantIdWithContext                 func(userContext supertokens.UserContext) string
 	GetAccessTokenPayloadWithContext       func(userContext supertokens.UserContext) map[string]interface{}
 	GetHandleWithContext                   func(userContext supertokens.UserContext) string
 	GetAccessTokenWithContext              func(userContext supertokens.UserContext) string
@@ -231,6 +235,7 @@ type SessionInformation struct {
 	Expiry                           uint64
 	CustomClaimsInAccessTokenPayload map[string]interface{}
 	TimeCreated                      uint64
+	TenantId                         string
 }
 
 type ParsedJWTInfo struct {

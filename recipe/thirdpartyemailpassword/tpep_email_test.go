@@ -25,7 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
@@ -53,7 +52,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForEmailPasswordUser(t *testin
 	)
 	defer testServer.Close()
 
-	EmailPasswordSignUp("test@example.com", "1234abcd")
+	EmailPasswordSignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -78,7 +77,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForThirdpartyUser(t *testing.T
 	)
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("public", "custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -109,140 +108,6 @@ func TestDefaultBackwardCompatibilityPasswordResetForNonExistantUser(t *testing.
 	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
 	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
 	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
-}
-
-func TestBackwardCompatibilityResetPasswordForEmailPasswordUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
-	customCalled := false
-	email := ""
-	passwordResetLink := ""
-
-	tpepConfig := &tpepmodels.TypeInput{
-		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				passwordResetLink = passwordResetURLWithToken
-				customCalled = true
-			},
-		},
-	}
-	testServer := supertokensInitForTest(
-		t,
-		session.Init(&sessmodels.TypeInput{
-			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-				return sessmodels.CookieTransferMethod
-			},
-		}),
-		Init(tpepConfig),
-	)
-	defer testServer.Close()
-
-	EmailPasswordSignUp("test@example.com", "1234abcd")
-	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	// Default handler not called
-	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
-
-	// Custom handler called
-	assert.Equal(t, email, "test@example.com")
-	assert.NotEmpty(t, passwordResetLink)
-	assert.True(t, customCalled)
-}
-
-func TestBackwardCompatibilityResetPasswordForThirdpartyUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
-	customCalled := false
-	email := ""
-	passwordResetLink := ""
-
-	tpepConfig := &tpepmodels.TypeInput{
-		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				passwordResetLink = passwordResetURLWithToken
-				customCalled = true
-			},
-		},
-	}
-	testServer := supertokensInitForTest(
-		t,
-		session.Init(&sessmodels.TypeInput{
-			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-				return sessmodels.CookieTransferMethod
-			},
-		}),
-		Init(tpepConfig),
-	)
-	defer testServer.Close()
-
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
-	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	// Default handler not called
-	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
-
-	// Custom handler not called
-	assert.Empty(t, email)
-	assert.Empty(t, passwordResetLink)
-	assert.False(t, customCalled)
-}
-
-func TestBackwardCompatibilityResetPasswordForNonExistantUser(t *testing.T) {
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
-	customCalled := false
-	email := ""
-	passwordResetLink := ""
-
-	tpepConfig := &tpepmodels.TypeInput{
-		ResetPasswordUsingTokenFeature: &epmodels.TypeInputResetPasswordUsingTokenFeature{
-			CreateAndSendCustomEmail: func(user epmodels.User, passwordResetURLWithToken string, userContext supertokens.UserContext) {
-				email = user.Email
-				passwordResetLink = passwordResetURLWithToken
-				customCalled = true
-			},
-		},
-	}
-	testServer := supertokensInitForTest(
-		t,
-		session.Init(&sessmodels.TypeInput{
-			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-				return sessmodels.CookieTransferMethod
-			},
-		}),
-		Init(tpepConfig),
-	)
-	defer testServer.Close()
-
-	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-
-	// Default handler not called
-	assert.False(t, emailpassword.PasswordResetEmailSentForTest)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.User.Email)
-	assert.Empty(t, emailpassword.PasswordResetDataForTest.PasswordResetURLWithToken)
-
-	// Custom handler not called
-	assert.Empty(t, email)
-	assert.Empty(t, passwordResetLink)
-	assert.False(t, customCalled)
 }
 
 func TestCustomOverrideResetPasswordForEmailPasswordUser(t *testing.T) {
@@ -280,7 +145,7 @@ func TestCustomOverrideResetPasswordForEmailPasswordUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	EmailPasswordSignUp("test@example.com", "1234abcd")
+	EmailPasswordSignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -331,7 +196,7 @@ func TestCustomOverrideResetPasswordForThirdpartyUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("public", "custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -451,7 +316,7 @@ func TestSMTPOverridePasswordResetForEmailPasswordUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	EmailPasswordSignUp("test@example.com", "1234abcd")
+	EmailPasswordSignUp("public", "test@example.com", "1234abcd")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -521,7 +386,7 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	)
 	defer testServer.Close()
 
-	ThirdPartySignInUp("custom", "user-id", "test@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("public", "custom", "user-id", "test@example.com")
 	resp, err := unittesting.PasswordResetTokenRequest("test@example.com", testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
@@ -644,7 +509,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 	defer AfterEach()
 
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -661,10 +526,9 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -787,7 +651,7 @@ func TestCustomOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -846,7 +710,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	emailVerifyLink := ""
 
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{
+		Providers: []tpmodels.ProviderInput{
 			customProviderForEmailVerification,
 		},
 	}
@@ -879,10 +743,9 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -1019,7 +882,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		},
 	})
 	tpepConfig := &tpepmodels.TypeInput{
-		Providers: []tpmodels.TypeProvider{customProviderForEmailVerification},
+		Providers: []tpmodels.ProviderInput{customProviderForEmailVerification},
 	}
 	testServer := supertokensInitForTest(
 		t,
@@ -1040,10 +903,9 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 	signinupPostData := PostDataForCustomProvider{
 		ThirdPartyId: "custom",
-		AuthCodeResponse: map[string]string{
+		OAuthTokens: map[string]interface{}{
 			"access_token": "saodiasjodai",
 		},
-		RedirectUri: "http://127.0.0.1/callback",
 	}
 
 	postBody, err := json.Marshal(signinupPostData)

@@ -21,19 +21,19 @@ import (
 )
 
 type RecipeInterface struct {
-	CreateNewSession            *func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (SessionContainer, error)
+	CreateNewSession            *func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSession                  *func(accessToken *string, antiCSRFToken *string, options *VerifySessionOptions, userContext supertokens.UserContext) (SessionContainer, error)
 	RefreshSession              *func(refreshToken string, antiCSRFToken *string, disableAntiCSRF bool, userContext supertokens.UserContext) (SessionContainer, error)
 	GetSessionInformation       *func(sessionHandle string, userContext supertokens.UserContext) (*SessionInformation, error)
-	RevokeAllSessionsForUser    *func(userID string, userContext supertokens.UserContext) ([]string, error)
-	GetAllSessionHandlesForUser *func(userID string, userContext supertokens.UserContext) ([]string, error)
+	RevokeAllSessionsForUser    *func(userID string, tenantId string, revokeAcrossAllTenants *bool, userContext supertokens.UserContext) ([]string, error)
+	GetAllSessionHandlesForUser *func(userID string, tenantId string, fetchAcrossAllTenants *bool, userContext supertokens.UserContext) ([]string, error)
 	RevokeSession               *func(sessionHandle string, userContext supertokens.UserContext) (bool, error)
 	RevokeMultipleSessions      *func(sessionHandles []string, userContext supertokens.UserContext) ([]string, error)
 	UpdateSessionDataInDatabase *func(sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	MergeIntoAccessTokenPayload *func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error)
 	RegenerateAccessToken       *func(accessToken string, newAccessTokenPayload *map[string]interface{}, userContext supertokens.UserContext) (*RegenerateAccessTokenResponse, error)
 
-	GetGlobalClaimValidators   *func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
+	GetGlobalClaimValidators   *func(userId string, claimValidatorsAddedByOtherRecipes []claims.SessionClaimValidator, tenantId string, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
 	ValidateClaims             *func(userId string, accessTokenPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) (ValidateClaimsResult, error)
 	ValidateClaimsInJWTPayload *func(userId string, jwtPayload map[string]interface{}, claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) ([]claims.ClaimValidationError, error)
 	FetchAndSetClaim           *func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error)

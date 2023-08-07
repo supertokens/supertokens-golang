@@ -158,6 +158,85 @@ func TestSignInAPIworksWithValidInput(t *testing.T) {
 	assert.Equal(t, signupUserInfo["timejoined"], signInUserInfo["timejoined"])
 }
 
+func TestSignInAPIworksWithValidInputAndTenantIdInPath(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	res, err := unittesting.SignupRequestWithTenantId("public", "random@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	dataInBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	res.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 200, res.StatusCode)
+	assert.Equal(t, "OK", data["status"])
+
+	signupUserInfo := data["user"].(map[string]interface{})
+
+	res1, err := unittesting.SignInRequestWithTenantId("public", "random@gmail.com", "validpass123", testServer.URL)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+	dataInBytes1, err := io.ReadAll(res1.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	res1.Body.Close()
+
+	var data1 map[string]interface{}
+	err = json.Unmarshal(dataInBytes1, &data1)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 200, res1.StatusCode)
+	assert.Equal(t, "OK", data1["status"])
+
+	signInUserInfo := data1["user"].(map[string]interface{})
+
+	assert.Equal(t, signupUserInfo["id"], signInUserInfo["id"])
+	assert.Equal(t, signupUserInfo["email"], signInUserInfo["email"])
+	assert.Equal(t, signupUserInfo["timejoined"], signInUserInfo["timejoined"])
+}
+
 func TestSigninAPIthrowsAnErrorWhenEmailDoesNotMatch(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -464,7 +543,7 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "email",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								customErrMessage := "email does not start with test"
 								if strings.HasPrefix(value.(string), "test") {
 									return nil
@@ -554,7 +633,7 @@ func TestCustomPasswordValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *te
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "password",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								customErrMessage := "password is greater than 5 characters"
 								if len(value.(string)) <= 5 {
 									passesValidatorCtr++
@@ -1059,7 +1138,7 @@ func TestGetUserByEmail(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	user, err := GetUserByEmail("random@gmail.com")
+	user, err := GetUserByEmail("public", "random@gmail.com")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1081,7 +1160,7 @@ func TestGetUserByEmail(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	user1, err := GetUserByEmail("random@gmail.com")
+	user1, err := GetUserByEmail("public", "random@gmail.com")
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1178,8 +1257,8 @@ func TestHandlePostSignInFunction(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignInPost := *originalImplementation.SignInPOST
-						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
-							res, _ := originalSignInPost(formFields, options, userContext)
+						*originalImplementation.SignInPOST = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+							res, _ := originalSignInPost(formFields, tenantId, options, userContext)
 							customUser = res.OK.User
 							return res, nil
 						}
@@ -2023,8 +2102,8 @@ func TestThatCustomFieldsAreSentUsingHandlePostSignup(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignUpPost := *originalImplementation.SignUpPOST
-						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
-							res, _ := originalSignUpPost(formFields, options, userContext)
+						*originalImplementation.SignUpPOST = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
+							res, _ := originalSignUpPost(formFields, tenantId, options, userContext)
 							customFormFields = formFields
 							return res, nil
 						}
@@ -2674,7 +2753,7 @@ func TestCustomFieldValidationError(t *testing.T) {
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "testField",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								if len(value.(string)) <= 5 {
 									return &customErrorMessage
 								} else {
@@ -2684,7 +2763,7 @@ func TestCustomFieldValidationError(t *testing.T) {
 						},
 						{
 							ID: "testField2",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								if len(value.(string)) <= 5 {
 									return &customErrorMessage
 								} else {

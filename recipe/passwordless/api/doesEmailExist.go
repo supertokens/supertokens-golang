@@ -20,7 +20,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func DoesEmailExist(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
+func DoesEmailExist(apiImplementation plessmodels.APIInterface, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.EmailExistsGET == nil || (*apiImplementation.EmailExistsGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -29,7 +29,7 @@ func DoesEmailExist(apiImplementation plessmodels.APIInterface, options plessmod
 	if email == "" {
 		return supertokens.BadInputError{Msg: "Please provide the email as a GET param"}
 	}
-	result, err := (*apiImplementation.EmailExistsGET)(email, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.EmailExistsGET)(email, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

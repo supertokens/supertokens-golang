@@ -23,7 +23,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func ConsumeCode(apiImplementation plessmodels.APIInterface, options plessmodels.APIOptions) error {
+func ConsumeCode(apiImplementation plessmodels.APIInterface, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) error {
 
 	if apiImplementation.ConsumeCodePOST == nil || (*apiImplementation.ConsumeCodePOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
@@ -89,7 +89,7 @@ func ConsumeCode(apiImplementation plessmodels.APIInterface, options plessmodels
 		linkCodePointer = &t
 	}
 
-	response, err := (*apiImplementation.ConsumeCodePOST)(userInput, linkCodePointer, preAuthSessionID.(string), options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.ConsumeCodePOST)(userInput, linkCodePointer, preAuthSessionID.(string), tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

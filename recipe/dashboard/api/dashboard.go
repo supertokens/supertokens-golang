@@ -20,13 +20,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func Dashboard(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) error {
+func Dashboard(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.DashboardGET == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
 
-	htmlString, err := (*apiImplementation.DashboardGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	htmlString, err := (*apiImplementation.DashboardGET)(options, userContext)
 	if err != nil {
 		return err
 	}

@@ -30,24 +30,24 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
 	ogEmailExistsGET := *emailPasswordImplementation.EmailExistsGET
-	emailExistsGET := func(email string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
-		return ogEmailExistsGET(email, options, userContext)
+	emailExistsGET := func(email string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+		return ogEmailExistsGET(email, tenantId, options, userContext)
 
 	}
 
 	ogGeneratePasswordResetTokenPOST := *emailPasswordImplementation.GeneratePasswordResetTokenPOST
-	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-		return ogGeneratePasswordResetTokenPOST(formFields, options, userContext)
+	generatePasswordResetTokenPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+		return ogGeneratePasswordResetTokenPOST(formFields, tenantId, options, userContext)
 	}
 
 	ogPasswordResetPOST := *emailPasswordImplementation.PasswordResetPOST
-	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
-		return ogPasswordResetPOST(formFields, token, options, userContext)
+	passwordResetPOST := func(formFields []epmodels.TypeFormField, token string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+		return ogPasswordResetPOST(formFields, token, tenantId, options, userContext)
 	}
 
 	ogSignInPOST := *emailPasswordImplementation.SignInPOST
-	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
-		response, err := ogSignInPOST(formFields, options, userContext)
+	emailPasswordSignInPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
+		response, err := ogSignInPOST(formFields, tenantId, options, userContext)
 		if err != nil {
 			return tpepmodels.SignInPOSTResponse{}, err
 		}
@@ -78,8 +78,8 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignUpPOST := *emailPasswordImplementation.SignUpPOST
-	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
-		response, err := ogSignUpPOST(formFields, options, userContext)
+	emailPasswordSignUpPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
+		response, err := ogSignUpPOST(formFields, tenantId, options, userContext)
 		if err != nil {
 			return tpepmodels.SignUpPOSTResponse{}, err
 		}
@@ -110,59 +110,63 @@ func MakeAPIImplementation() tpepmodels.APIInterface {
 	}
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
-		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+	thirdPartySignInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
+		response, err := ogSignInUpPOST(provider, input, tenantId, options, userContext)
 		if err != nil {
-			return tpepmodels.ThirdPartyOutput{}, err
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{}, err
 		}
 		if response.GeneralError != nil {
-			return tpepmodels.ThirdPartyOutput{
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{
 				GeneralError: response.GeneralError,
 			}, nil
 		} else if response.NoEmailGivenByProviderError != nil {
-			return tpepmodels.ThirdPartyOutput{
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{
 				NoEmailGivenByProviderError: &struct{}{},
 			}, nil
 		} else {
-			return tpepmodels.ThirdPartyOutput{
+			return tpepmodels.ThirdPartySignInUpPOSTResponse{
 				OK: &struct {
-					CreatedNewUser   bool
-					User             tpepmodels.User
-					AuthCodeResponse interface{}
-					Session          sessmodels.SessionContainer
+					CreatedNewUser          bool
+					User                    tpepmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             map[string]interface{}
+					RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 				}{
-					CreatedNewUser:   response.OK.CreatedNewUser,
-					AuthCodeResponse: response.OK.AuthCodeResponse,
+					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tpepmodels.User{
 						ID:         response.OK.User.ID,
 						TimeJoined: response.OK.User.TimeJoined,
 						Email:      response.OK.User.Email,
 						ThirdParty: &response.OK.User.ThirdParty,
 					},
-					Session: response.OK.Session,
+					Session:                 response.OK.Session,
+					OAuthTokens:             response.OK.OAuthTokens,
+					RawUserInfoFromProvider: response.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		}
 	}
 
 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return ogAuthorisationUrlGET(provider, options, userContext)
+	authorisationUrlGET := func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
+	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(formPostInfoFromProvider, options, userContext)
 	}
+
 	result := tpepmodels.APIInterface{
-		AuthorisationUrlGET:            &authorisationUrlGET,
+		AuthorisationUrlGET:      &authorisationUrlGET,
+		ThirdPartySignInUpPOST:   &thirdPartySignInUpPOST,
+		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
+
 		EmailPasswordEmailExistsGET:    &emailExistsGET,
 		GeneratePasswordResetTokenPOST: &generatePasswordResetTokenPOST,
 		PasswordResetPOST:              &passwordResetPOST,
-		ThirdPartySignInUpPOST:         &thirdPartySignInUpPOST,
 		EmailPasswordSignInPOST:        &emailPasswordSignInPOST,
 		EmailPasswordSignUpPOST:        &emailPasswordSignUpPOST,
-		AppleRedirectHandlerPOST:       &appleRedirectHandlerPOST,
 	}
 
 	modifiedEP := GetEmailPasswordIterfaceImpl(result)

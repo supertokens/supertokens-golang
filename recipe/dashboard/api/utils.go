@@ -1,12 +1,15 @@
 package api
 
 import (
+	"reflect"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func IsValidRecipeId(recipeId string) bool {
@@ -25,12 +28,12 @@ recipe so we need to check for both.
 
 If this function returns an empty user struct, it should be treated as if the user does not exist
 */
-func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.UserType, recipe string) {
+func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.UserContext) (user dashboardmodels.UserType, recipe string) {
 	var userToReturn dashboardmodels.UserType
 	var recipeToReturn string
 
 	if recipeId == emailpassword.RECIPE_ID {
-		response, error := emailpassword.GetUserByID(userId)
+		response, error := emailpassword.GetUserByID(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -38,12 +41,13 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			userToReturn.FirstName = ""
 			userToReturn.LastName = ""
 			userToReturn.Email = response.Email
+			userToReturn.TenantIds = response.TenantIds
 
 			recipeToReturn = emailpassword.RECIPE_ID
 		}
 
-		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId)
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -51,12 +55,13 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 				userToReturn.FirstName = ""
 				userToReturn.LastName = ""
 				userToReturn.Email = tpepResponse.Email
+				userToReturn.TenantIds = tpepResponse.TenantIds
 
 				recipeToReturn = thirdpartyemailpassword.RECIPE_ID
 			}
 		}
 	} else if recipeId == thirdparty.RECIPE_ID {
-		response, error := thirdparty.GetUserByID(userId)
+		response, error := thirdparty.GetUserByID(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -68,10 +73,11 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 				Id:     response.ThirdParty.ID,
 				UserId: response.ThirdParty.UserID,
 			}
+			userToReturn.TenantIds = response.TenantIds
 		}
 
-		if userToReturn == (dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId)
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
+			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
 			if tpepError == nil {
 				userToReturn.Id = tpepResponse.ID
@@ -83,10 +89,11 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 					Id:     tpepResponse.ThirdParty.ID,
 					UserId: tpepResponse.ThirdParty.UserID,
 				}
+				userToReturn.TenantIds = tpepResponse.TenantIds
 			}
 		}
 	} else if recipeId == passwordless.RECIPE_ID {
-		response, error := passwordless.GetUserByID(userId)
+		response, error := passwordless.GetUserByID(userId, userContext)
 
 		if error == nil {
 			userToReturn.Id = response.ID
@@ -101,10 +108,12 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 			if response.PhoneNumber != nil {
 				userToReturn.Phone = *response.PhoneNumber
 			}
+
+			userToReturn.TenantIds = response.TenantIds
 		}
 
-		if userToReturn == (dashboardmodels.UserType{}) {
-			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId)
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
+			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId, userContext)
 
 			if tppError == nil {
 				userToReturn.Id = tppResponse.ID
@@ -119,6 +128,8 @@ func GetUserForRecipeId(userId string, recipeId string) (user dashboardmodels.Us
 				if tppResponse.PhoneNumber != nil {
 					userToReturn.Phone = *tppResponse.PhoneNumber
 				}
+
+				userToReturn.TenantIds = tppResponse.TenantIds
 			}
 		}
 	}

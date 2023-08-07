@@ -17,7 +17,6 @@ package passwordless
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
@@ -76,6 +75,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 		if emailVerificationRecipe != nil {
 			emailVerificationRecipe.AddGetEmailForUserIdFunc(r.getEmailForUserId)
 		}
+
 		return nil
 	})
 
@@ -159,7 +159,7 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	}}, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string) error {
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, _ supertokens.NormalisedURLPath, _ string, userContext supertokens.UserContext) error {
 	options := plessmodels.APIOptions{
 		Config:               r.Config,
 		RecipeID:             r.RecipeModule.GetRecipeID(),
@@ -172,15 +172,15 @@ func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.Respons
 		SmsDelivery:          r.SmsDelivery,
 	}
 	if id == consumeCodeAPI {
-		return api.ConsumeCode(r.APIImpl, options)
+		return api.ConsumeCode(r.APIImpl, tenantId, options, userContext)
 	} else if id == createCodeAPI {
-		return api.CreateCode(r.APIImpl, options)
+		return api.CreateCode(r.APIImpl, tenantId, options, userContext)
 	} else if id == doesEmailExistAPI {
-		return api.DoesEmailExist(r.APIImpl, options)
+		return api.DoesEmailExist(r.APIImpl, tenantId, options, userContext)
 	} else if id == doesPhoneNumberExistAPI {
-		return api.DoesPhoneNumberExist(r.APIImpl, options)
+		return api.DoesPhoneNumberExist(r.APIImpl, tenantId, options, userContext)
 	} else {
-		return api.ResendCode(r.APIImpl, options)
+		return api.ResendCode(r.APIImpl, tenantId, options, userContext)
 	}
 }
 
@@ -192,42 +192,41 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, userContext supertokens.UserContext) (string, error) {
+func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (string, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
 		return "", err
 	}
 	var userInputCodeInput *string
 	if r.Config.GetCustomUserInputCode != nil {
-		c, err := r.Config.GetCustomUserInputCode(userContext)
+		c, err := r.Config.GetCustomUserInputCode(tenantId, userContext)
 		if err != nil {
 			return "", err
 		}
 		userInputCodeInput = &c
 	}
 
-	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, userContext)
+	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, tenantId, userContext)
 	if err != nil {
 		return "", err
 	}
-	link := fmt.Sprintf(
-		"%s%s/verify?rid=%s&preAuthSessionId=%s#%s",
-		stInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-		stInstance.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+	link := api.GetMagicLink(
+		stInstance.AppInfo,
 		r.RecipeModule.GetRecipeID(),
 		response.OK.PreAuthSessionID,
 		response.OK.LinkCode,
+		tenantId,
 	)
 
 	return link, nil
 }
 
-func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supertokens.UserContext) (struct {
+func (r *Recipe) SignInUp(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (struct {
 	PreAuthSessionID string
 	CreatedNewUser   bool
 	User             plessmodels.User
 }, error) {
-	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, userContext)
+	codeInfo, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, nil, tenantId, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string
@@ -246,7 +245,7 @@ func (r *Recipe) SignInUp(email *string, phoneNumber *string, userContext supert
 			DeviceID: codeInfo.OK.DeviceID,
 		}
 	}
-	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, userContext)
+	consumeCodeResponse, err := (*r.RecipeImpl.ConsumeCode)(userInputCode, linkCode, codeInfo.OK.PreAuthSessionID, tenantId, userContext)
 	if err != nil {
 		return struct {
 			PreAuthSessionID string

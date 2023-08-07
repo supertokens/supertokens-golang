@@ -911,7 +911,7 @@ func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "ronit", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "ronit", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -975,7 +975,7 @@ func TestSuperTokensInitWithAPIGateWayPathAndAPIBasePath(t *testing.T) {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
@@ -1037,7 +1037,7 @@ func TestSuperTokensInitWithDefaultAPIGateWayPathandCustomAPIBasePath(t *testing
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
-		CreateNewSession(r, rw, "uniqueId", map[string]interface{}{}, map[string]interface{}{})
+		CreateNewSession(r, rw, "public", "uniqueId", map[string]interface{}{}, map[string]interface{}{})
 	})
 
 	testServer := httptest.NewServer(supertokens.Middleware(mux))

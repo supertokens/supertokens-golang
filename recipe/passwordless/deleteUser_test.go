@@ -43,12 +43,6 @@ func TestDeletePhoneNumber(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 			session.Init(&sessmodels.TypeInput{
@@ -74,7 +68,7 @@ func TestDeletePhoneNumber(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := SignInUpByEmail("test@example.com")
+		res, err := SignInUpByEmail("public", "test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -112,12 +106,6 @@ func TestDeleteEmail(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 			session.Init(&sessmodels.TypeInput{
@@ -143,7 +131,7 @@ func TestDeleteEmail(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := SignInUpByEmail("test@example.com")
+		res, err := SignInUpByEmail("public", "test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}
@@ -181,12 +169,6 @@ func TestDeleteEmailAndPhoneShouldThrowError(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 			session.Init(&sessmodels.TypeInput{
@@ -212,7 +194,7 @@ func TestDeleteEmailAndPhoneShouldThrowError(t *testing.T) {
 		t.Error(err.Error())
 	}
 	if unittesting.MaxVersion("2.11", cdiVersion) == cdiVersion {
-		res, err := SignInUpByEmail("test@example.com")
+		res, err := SignInUpByEmail("public", "test@example.com")
 		if err != nil {
 			t.Error(err.Error())
 		}

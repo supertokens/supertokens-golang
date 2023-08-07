@@ -16,9 +16,8 @@
 package providers
 
 import (
-	"encoding/json"
-	"net/http"
-	"strings"
+	"errors"
+	"fmt"
 
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -26,129 +25,104 @@ import (
 
 const bitbucketID = "bitbucket"
 
-func Bitbucket(config tpmodels.BitbucketConfig) tpmodels.TypeProvider {
-	return tpmodels.TypeProvider{
-		ID: bitbucketID,
-		Get: func(redirectURI, authCodeFromRequest *string, userContext supertokens.UserContext) tpmodels.TypeProviderGetResponse {
-			accessTokenAPIURL := "https://bitbucket.org/site/oauth2/access_token"
-			accessTokenAPIParams := map[string]string{
-				"client_id":     config.ClientID,
-				"client_secret": config.ClientSecret,
-				"grant_type":    "authorization_code",
-			}
-			if authCodeFromRequest != nil {
-				accessTokenAPIParams["code"] = *authCodeFromRequest
-			}
-			if redirectURI != nil {
-				accessTokenAPIParams["redirect_uri"] = *redirectURI
-			}
-
-			authorisationRedirectURL := "https://bitbucket.org/site/oauth2/authorize"
-			scopes := []string{"account", "email"}
-			if config.Scope != nil {
-				scopes = config.Scope
-			}
-
-			var additionalParams map[string]interface{} = nil
-			if config.AuthorisationRedirect != nil && config.AuthorisationRedirect.Params != nil {
-				additionalParams = config.AuthorisationRedirect.Params
-			}
-
-			authorizationRedirectParams := map[string]interface{}{
-				"scope":         strings.Join(scopes, " "),
-				"access_type":   "offline",
-				"response_type": "code",
-				"client_id":     config.ClientID,
-			}
-			for key, value := range additionalParams {
-				authorizationRedirectParams[key] = value
-			}
-
-			return tpmodels.TypeProviderGetResponse{
-				AccessTokenAPI: tpmodels.AccessTokenAPI{
-					URL:    accessTokenAPIURL,
-					Params: accessTokenAPIParams,
-				},
-				AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-					URL:    authorisationRedirectURL,
-					Params: authorizationRedirectParams,
-				},
-				GetProfileInfo: func(authCodeResponse interface{}, userContext supertokens.UserContext) (tpmodels.UserInfo, error) {
-					authCodeResponseJson, err := json.Marshal(authCodeResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					var accessTokenAPIResponse bitbucketGetProfileInfoInput
-					err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					accessToken := accessTokenAPIResponse.AccessToken
-					authHeader := "Bearer " + accessToken
-					response, err := getBitbucketAuthRequest(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					userInfo := response.(map[string]interface{})
-					ID := userInfo["uuid"].(string)
-
-					emailResponse, err := getBitbucketEmailRequest(authHeader)
-					if err != nil {
-						return tpmodels.UserInfo{}, err
-					}
-					var email string
-					var isVerified bool = false
-					emailResponseInfo := emailResponse.(map[string]interface{})
-					for _, emailInfo := range emailResponseInfo["values"].([]interface{}) {
-						emailInfoMap := emailInfo.(map[string]interface{})
-						if emailInfoMap["is_primary"].(bool) {
-							email = emailInfoMap["email"].(string)
-							isVerified = emailInfoMap["is_confirmed"].(bool)
-						}
-					}
-					if email == "" {
-						return tpmodels.UserInfo{
-							ID: ID,
-						}, nil
-					}
-
-					return tpmodels.UserInfo{
-						ID: ID,
-						Email: &tpmodels.EmailStruct{
-							ID:         email,
-							IsVerified: isVerified,
-						},
-					}, nil
-				},
-				GetClientId: func(userContext supertokens.UserContext) string {
-					return config.ClientID
-				},
-			}
-		},
-		IsDefault: config.IsDefault,
+func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
+	if input.Config.Name == "" {
+		input.Config.Name = "Bitbucket"
 	}
-}
 
-func getBitbucketAuthRequest(authHeader string) (interface{}, error) {
-	url := "https://api.bitbucket.org/2.0/user"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	if input.Config.AuthorizationEndpoint == "" {
+		input.Config.AuthorizationEndpoint = "https://bitbucket.org/site/oauth2/authorize"
 	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
-}
 
-func getBitbucketEmailRequest(authHeader string) (interface{}, error) {
-	url := "https://api.bitbucket.org/2.0/user/emails"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
+	if input.Config.TokenEndpoint == "" {
+		input.Config.TokenEndpoint = "https://bitbucket.org/site/oauth2/access_token"
 	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
-}
 
-type bitbucketGetProfileInfoInput struct {
-	AccessToken string `json:"access_token"`
+	if input.Config.AuthorizationEndpointQueryParams == nil {
+		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{
+			"audience": "api.atlassian.com",
+		}
+	}
+
+	oOverride := input.Override
+
+	input.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		oGetConfig := originalImplementation.GetConfigForClientType
+
+		originalImplementation.GetConfigForClientType = func(clientType *string, userContext supertokens.UserContext) (tpmodels.ProviderConfigForClientType, error) {
+			config, err := oGetConfig(clientType, userContext)
+			if err != nil {
+				return tpmodels.ProviderConfigForClientType{}, err
+			}
+
+			if len(config.Scope) == 0 {
+				config.Scope = []string{"account", "email"}
+			}
+
+			return config, nil
+		}
+
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			accessToken, ok := oAuthTokens["access_token"].(string)
+			if !ok {
+				return tpmodels.TypeUserInfo{}, errors.New("access token not found")
+			}
+
+			headers := map[string]string{
+				"Authorization": "Bearer " + accessToken,
+			}
+			rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{}
+			userInfoFromAccessToken, err := doGetRequest(
+				"https://api.bitbucket.org/2.0/user",
+				nil,
+				headers,
+			)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
+
+			userInfoFromEmail, err := doGetRequest(
+				"https://api.bitbucket.org/2.0/user/emails",
+				nil,
+				headers,
+			)
+			rawUserInfoFromProvider.FromUserInfoAPI["email"] = userInfoFromEmail
+
+			email := ""
+			isVerified := false
+
+			for _, emailInfo := range userInfoFromEmail.(map[string]interface{})["values"].([]interface{}) {
+				emailInfoMap := emailInfo.(map[string]interface{})
+				if emailInfoMap["is_primary"].(bool) {
+					email = emailInfoMap["email"].(string)
+					isVerified = emailInfoMap["is_confirmed"].(bool)
+					break
+				}
+			}
+
+			if email == "" {
+				return tpmodels.TypeUserInfo{
+					ThirdPartyUserId:        fmt.Sprint(rawUserInfoFromProvider.FromUserInfoAPI["uuid"]),
+					RawUserInfoFromProvider: rawUserInfoFromProvider,
+				}, nil
+			} else {
+				return tpmodels.TypeUserInfo{
+					ThirdPartyUserId: fmt.Sprint(rawUserInfoFromProvider.FromUserInfoAPI["uuid"]),
+					Email: &tpmodels.EmailStruct{
+						ID:         email,
+						IsVerified: isVerified,
+					},
+					RawUserInfoFromProvider: rawUserInfoFromProvider,
+				}, nil
+			}
+		}
+
+		if oOverride != nil {
+			originalImplementation = oOverride(originalImplementation)
+		}
+		return originalImplementation
+	}
+
+	return NewProvider(input)
 }

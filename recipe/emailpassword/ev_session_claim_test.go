@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -20,6 +21,9 @@ import (
 
 func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	antiCsrfConf := "VIA_TOKEN"
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -32,8 +36,12 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
 			emailverification.Init(evmodels.TypeInput{
-				Mode:                     evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {},
+				Mode: evmodels.ModeOptional,
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmailFunc,
+					},
+				},
 			}),
 			session.Init(&sessmodels.TypeInput{
 				AntiCsrf: &antiCsrfConf,
@@ -82,9 +90,9 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	infoFromResponse := unittesting.ExtractInfoFromResponse(resp)
 	antiCsrf := infoFromResponse["antiCsrf"]
 
-	token, err := emailverification.CreateEmailVerificationToken(userId, nil)
+	token, err := emailverification.CreateEmailVerificationToken("public", userId, nil)
 	assert.NoError(t, err)
-	_, err = emailverification.VerifyEmailUsingToken(token.OK.Token)
+	_, err = emailverification.VerifyEmailUsingToken("public", token.OK.Token)
 	assert.NoError(t, err)
 
 	resp, err = unittesting.EmailVerifyTokenRequest(

@@ -30,55 +30,56 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	thirdPartyImplementation := tpapi.MakeAPIImplementation()
 
 	ogSignInUpPOST := *thirdPartyImplementation.SignInUpPOST
-	thirdPartySignInUpPOST := func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpOutput, error) {
-		response, err := ogSignInUpPOST(provider, code, authCodeResponse, redirectURI, options, userContext)
+	thirdPartySignInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
+		response, err := ogSignInUpPOST(provider, input, tenantId, options, userContext)
 		if err != nil {
-			return tplmodels.ThirdPartySignInUpOutput{}, err
+			return tplmodels.ThirdPartySignInUpPOSTResponse{}, err
 		}
 		if response.GeneralError != nil {
-			return tplmodels.ThirdPartySignInUpOutput{
+			return tplmodels.ThirdPartySignInUpPOSTResponse{
 				GeneralError: response.GeneralError,
 			}, nil
 		} else if response.NoEmailGivenByProviderError != nil {
-			return tplmodels.ThirdPartySignInUpOutput{
+			return tplmodels.ThirdPartySignInUpPOSTResponse{
 				NoEmailGivenByProviderError: &struct{}{},
 			}, nil
 		} else {
-			return tplmodels.ThirdPartySignInUpOutput{
+			return tplmodels.ThirdPartySignInUpPOSTResponse{
 				OK: &struct {
-					CreatedNewUser   bool
-					User             tplmodels.User
-					AuthCodeResponse interface{}
-					Session          sessmodels.SessionContainer
+					CreatedNewUser          bool
+					User                    tplmodels.User
+					Session                 *sessmodels.TypeSessionContainer
+					OAuthTokens             map[string]interface{}
+					RawUserInfoFromProvider tpmodels.TypeRawUserInfoFromProvider
 				}{
-					CreatedNewUser:   response.OK.CreatedNewUser,
-					AuthCodeResponse: response.OK.AuthCodeResponse,
+					CreatedNewUser: response.OK.CreatedNewUser,
 					User: tplmodels.User{
-						ID:          response.OK.User.ID,
-						TimeJoined:  response.OK.User.TimeJoined,
-						Email:       &response.OK.User.Email,
-						PhoneNumber: nil,
-						ThirdParty:  &response.OK.User.ThirdParty,
+						ID:         response.OK.User.ID,
+						TimeJoined: response.OK.User.TimeJoined,
+						Email:      &response.OK.User.Email,
+						ThirdParty: &response.OK.User.ThirdParty,
 					},
-					Session: response.OK.Session,
+					Session:                 response.OK.Session,
+					OAuthTokens:             response.OK.OAuthTokens,
+					RawUserInfoFromProvider: response.OK.RawUserInfoFromProvider,
 				},
 			}, nil
 		}
 	}
 
 	ogAuthorisationUrlGET := *thirdPartyImplementation.AuthorisationUrlGET
-	authorisationUrlGET := func(provider tpmodels.TypeProvider, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-		return ogAuthorisationUrlGET(provider, options, userContext)
+	authorisationUrlGET := func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+		return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
 	}
 
 	ogAppleRedirectHandlerPOST := *thirdPartyImplementation.AppleRedirectHandlerPOST
-	appleRedirectHandlerPOST := func(code string, state string, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		return ogAppleRedirectHandlerPOST(code, state, options, userContext)
+	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
+		return ogAppleRedirectHandlerPOST(formPostInfoFromProvider, options, userContext)
 	}
 
 	ogConsumeCodePOST := *passwordlessImplementation.ConsumeCodePOST
-	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
-		resp, err := ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, options, userContext)
+	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
+		resp, err := ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, tenantId, options, userContext)
 		if err != nil {
 			return tplmodels.ConsumeCodePOSTResponse{}, err
 		}
@@ -120,29 +121,30 @@ func MakeAPIImplementation() tplmodels.APIInterface {
 	}
 
 	ogCreateCodePOST := *passwordlessImplementation.CreateCodePOST
-	createCodePOST := func(email *string, phoneNumber *string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
-		return ogCreateCodePOST(email, phoneNumber, options, userContext)
+	createCodePOST := func(email *string, phoneNumber *string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+		return ogCreateCodePOST(email, phoneNumber, tenantId, options, userContext)
 	}
 
 	ogEmailExistGET := *passwordlessImplementation.EmailExistsGET
-	passwordlessEmailExistsGET := func(email string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
-		return ogEmailExistGET(email, options, userContext)
+	passwordlessEmailExistsGET := func(email string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
+		return ogEmailExistGET(email, tenantId, options, userContext)
 	}
 
 	ogPhoneNumberExistsGET := *passwordlessImplementation.PhoneNumberExistsGET
-	passwordlessPhoneNumberExistsGET := func(phoneNumber string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error) {
-		return ogPhoneNumberExistsGET(phoneNumber, options, userContext)
+	passwordlessPhoneNumberExistsGET := func(phoneNumber string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.PhoneNumberExistsGETResponse, error) {
+		return ogPhoneNumberExistsGET(phoneNumber, tenantId, options, userContext)
 	}
 
 	ogResendCodePOST := *passwordlessImplementation.ResendCodePOST
-	resendCodePOST := func(deviceID string, preAuthSessionID string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
-		return ogResendCodePOST(deviceID, preAuthSessionID, options, userContext)
+	resendCodePOST := func(deviceID string, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+		return ogResendCodePOST(deviceID, preAuthSessionID, tenantId, options, userContext)
 	}
 
 	result := tplmodels.APIInterface{
-		AuthorisationUrlGET:              &authorisationUrlGET,
-		ThirdPartySignInUpPOST:           &thirdPartySignInUpPOST,
-		AppleRedirectHandlerPOST:         &appleRedirectHandlerPOST,
+		AuthorisationUrlGET:      &authorisationUrlGET,
+		ThirdPartySignInUpPOST:   &thirdPartySignInUpPOST,
+		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
+
 		CreateCodePOST:                   &createCodePOST,
 		ResendCodePOST:                   &resendCodePOST,
 		ConsumeCodePOST:                  &consumeCodePOST,

@@ -47,13 +47,13 @@ func TestDefaultUserContext(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 						originalSignIn := *originalImplementation.SignIn
-						newSignIn := func(email string, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+						newSignIn := func(email string, password string, tenantId string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									signInContextWorks = true
 								}
 							}
-							return originalSignIn(email, password, userContext)
+							return originalSignIn(email, password, tenantId, userContext)
 						}
 						*originalImplementation.SignIn = newSignIn
 						return originalImplementation
@@ -61,13 +61,13 @@ func TestDefaultUserContext(t *testing.T) {
 
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignInPOST := *originalImplementation.SignInPOST
-						newSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+						newSignInPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									signInAPIContextWorks = true
 								}
 							}
-							return originalSignInPOST(formFields, options, userContext)
+							return originalSignInPOST(formFields, tenantId, options, userContext)
 						}
 						*originalImplementation.SignInPOST = newSignInPOST
 						return originalImplementation
@@ -82,13 +82,13 @@ func TestDefaultUserContext(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						originalCreateNewSession := *originalImplementation.CreateNewSession
-						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 								if _, ok := _default["request"].(*http.Request); ok {
 									createNewSessionContextWorks = true
 								}
 							}
-							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = newCreateNewSession
 						return originalImplementation
@@ -142,14 +142,14 @@ func TestGetRequestFromUserContext(t *testing.T) {
 				Override: &epmodels.OverrideStruct{
 					Functions: func(originalImplementation epmodels.RecipeInterface) epmodels.RecipeInterface {
 						originalSignIn := *originalImplementation.SignIn
-						newSignIn := func(email string, password string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
+						newSignIn := func(email string, password string, tenantId string, userContext supertokens.UserContext) (epmodels.SignInResponse, error) {
 							requestFromUserContext := supertokens.GetRequestFromUserContext(userContext)
 							if requestFromUserContext != nil {
 								assert.True(t, requestFromUserContext.Method == "POST")
 								assert.True(t, requestFromUserContext.RequestURI == "/auth/signin")
 								signInContextWorks = true
 							}
-							return originalSignIn(email, password, userContext)
+							return originalSignIn(email, password, tenantId, userContext)
 						}
 						*originalImplementation.SignIn = newSignIn
 						return originalImplementation
@@ -157,14 +157,14 @@ func TestGetRequestFromUserContext(t *testing.T) {
 
 					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
 						originalSignInPOST := *originalImplementation.SignInPOST
-						newSignInPOST := func(formFields []epmodels.TypeFormField, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
+						newSignInPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 							requestFromUserContext := supertokens.GetRequestFromUserContext(userContext)
 							if requestFromUserContext != nil {
 								assert.True(t, requestFromUserContext.Method == "POST")
 								assert.True(t, requestFromUserContext.RequestURI == "/auth/signin")
 								signInAPIContextWorks = true
 							}
-							return originalSignInPOST(formFields, options, userContext)
+							return originalSignInPOST(formFields, tenantId, options, userContext)
 						}
 						*originalImplementation.SignInPOST = newSignInPOST
 						return originalImplementation
@@ -179,14 +179,14 @@ func TestGetRequestFromUserContext(t *testing.T) {
 				Override: &sessmodels.OverrideStruct{
 					Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 						originalCreateNewSession := *originalImplementation.CreateNewSession
-						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+						newCreateNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 							requestFromUserContext := supertokens.GetRequestFromUserContext(userContext)
 							if requestFromUserContext != nil {
 								assert.True(t, requestFromUserContext.Method == "POST")
 								assert.True(t, requestFromUserContext.RequestURI == "/auth/signin" || requestFromUserContext.RequestURI == "/auth/signup")
 								createNewSessionContextWorks = true
 							}
-							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+							return originalCreateNewSession(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 						}
 						*originalImplementation.CreateNewSession = newCreateNewSession
 						return originalImplementation

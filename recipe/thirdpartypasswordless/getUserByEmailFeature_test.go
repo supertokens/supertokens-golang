@@ -42,14 +42,8 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					mockThirdPartyProvider1,
 				},
 			}),
@@ -76,7 +70,7 @@ func TestInvalidEmailYieldsEmptyUsersArray(t *testing.T) {
 		return
 	}
 
-	users, err := GetUsersByEmail("john.doe@example.com")
+	users, err := GetUsersByEmail("public", "john.doe@example.com")
 	assert.NoError(t, err)
 	assert.Equal(t, 0, len(users))
 }
@@ -96,14 +90,8 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					mockThirdPartyProvider1,
 					mockThirdPartyProvider2,
 				},
@@ -131,10 +119,10 @@ func TestValidEmailYieldsThirdPartyUsers(t *testing.T) {
 		return
 	}
 
-	ThirdPartySignInUp("mock1", "thirdPartyJohnDoe", "john.doe@example.com")
-	ThirdPartySignInUp("mock2", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("public", "mock1", "thirdPartyJohnDoe", "john.doe@example.com")
+	ThirdPartyManuallyCreateOrUpdateUser("public", "mock2", "thirdPartyJohnDoe", "john.doe@example.com")
 
-	users, err := GetUsersByEmail("john.doe@example.com")
+	users, err := GetUsersByEmail("public", "john.doe@example.com")
 	assert.NoError(t, err)
 	assert.Equal(t, 2, len(users))
 

@@ -22,10 +22,11 @@ import (
 )
 
 type User struct {
-	ID          string  `json:"id"`
-	Email       *string `json:"email"`
-	PhoneNumber *string `json:"phoneNumber"`
-	TimeJoined  uint64  `json:"timejoined"`
+	ID          string   `json:"id"`
+	Email       *string  `json:"email"`
+	PhoneNumber *string  `json:"phoneNumber"`
+	TimeJoined  uint64   `json:"timejoined"`
+	TenantIds   []string `json:"tenantIds"`
 }
 
 type TypeInput struct {
@@ -33,7 +34,7 @@ type TypeInput struct {
 	ContactMethodEmail        ContactMethodEmailConfig
 	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
+	GetCustomUserInputCode    func(tenantId string, userContext supertokens.UserContext) (string, error)
 	Override                  *OverrideStruct
 	EmailDelivery             *emaildelivery.TypeInput
 	SmsDelivery               *smsdelivery.TypeInput
@@ -44,7 +45,7 @@ type TypeNormalisedInput struct {
 	ContactMethodEmail        ContactMethodEmailConfig
 	ContactMethodEmailOrPhone ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
+	GetCustomUserInputCode    func(tenantId string, userContext supertokens.UserContext) (string, error)
 	Override                  OverrideStruct
 	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
 	GetSmsDeliveryConfig      func() smsdelivery.TypeInputWithService
@@ -56,21 +57,17 @@ type OverrideStruct struct {
 }
 
 type ContactMethodEmailConfig struct {
-	Enabled                  bool
-	ValidateEmailAddress     func(email interface{}) *string
-	CreateAndSendCustomEmail func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
+	Enabled              bool
+	ValidateEmailAddress func(email interface{}, tenantId string) *string
 }
 
 type ContactMethodEmailOrPhoneConfig struct {
-	Enabled                        bool
-	ValidateEmailAddress           func(email interface{}) *string
-	CreateAndSendCustomEmail       func(email string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use EmailDelivery instead.
-	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
+	Enabled              bool
+	ValidateEmailAddress func(email interface{}, tenantId string) *string
+	ValidatePhoneNumber  func(phoneNumber interface{}, tenantId string) *string
 }
 
 type ContactMethodPhoneConfig struct {
-	Enabled                        bool
-	ValidatePhoneNumber            func(phoneNumber interface{}) *string
-	CreateAndSendCustomTextMessage func(phoneNumber string, userInputCode *string, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error // Deprecated: Use SmsDelivery instead.
+	Enabled             bool
+	ValidatePhoneNumber func(phoneNumber interface{}, tenantId string) *string
 }

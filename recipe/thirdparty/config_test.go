@@ -45,11 +45,8 @@ func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 
-	if err != nil {
-		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
-	} else {
-		t.Fail()
-	}
+	// It is not expected to throw this error: thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config
+	assert.NoError(t, err)
 }
 
 func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testing.T) {
@@ -66,7 +63,7 @@ func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testi
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{},
+						Providers: []tpmodels.ProviderInput{},
 					},
 				},
 			),
@@ -78,11 +75,8 @@ func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testi
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 
-	if err != nil {
-		assert.Equal(t, "thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config", err.Error())
-	} else {
-		t.Fail()
-	}
+	// It is not expected to throw this error: thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config
+	assert.NoError(t, err)
 }
 
 func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
@@ -99,27 +93,24 @@ func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							{
-								ID: "custom",
-								Get: func(redirectURI, authCodeFromRequest *string, userContext *map[string]interface{}) tpmodels.TypeProviderGetResponse {
-									return tpmodels.TypeProviderGetResponse{
-										AccessTokenAPI: tpmodels.AccessTokenAPI{
-											URL: "test.com/oauth/token",
-										},
-										AuthorisationRedirect: tpmodels.AuthorisationRedirect{
-											URL: "test.com/oauth/auth",
-										},
-										GetProfileInfo: func(authCodeResponse interface{}, userContext *map[string]interface{}) (tpmodels.UserInfo, error) {
-											return tpmodels.UserInfo{
-												ID: "user",
-												Email: &tpmodels.EmailStruct{
-													ID:         "email@test.com",
-													IsVerified: true,
-												},
-											}, nil
-										},
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId:          "custom",
+									AuthorizationEndpoint: "test.com/oauth/auth",
+									TokenEndpoint:         "test.com/oauth/token",
+								},
+								Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+									originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+										return tpmodels.TypeUserInfo{
+											ThirdPartyUserId: "user",
+											Email: &tpmodels.EmailStruct{
+												ID:         "email@test.com",
+												IsVerified: true,
+											},
+										}, nil
 									}
+									return originalImplementation
 								},
 							},
 						},

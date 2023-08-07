@@ -40,14 +40,14 @@ func TestShouldNotChangeIfFetchValueReturnsNil(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "public", "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	nilClaim, _ := NilClaim()
 	err = sessionContainer.FetchAndSetClaim(nilClaim)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 8, len(accessTokenPayload))
+	assert.Equal(t, 9, len(accessTokenPayload))
 }
 
 func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
@@ -79,14 +79,14 @@ func TestShouldUpdateIfClaimFetchValueReturnsValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "public", "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()
 	err = sessionContainer.FetchAndSetClaim(trueClaim)
 	assert.NoError(t, err)
 	accessTokenPayload := sessionContainer.GetAccessTokenPayload()
-	assert.Equal(t, 9, len(accessTokenPayload))
+	assert.Equal(t, 10, len(accessTokenPayload))
 	assert.NotNil(t, accessTokenPayload["st-true"])
 	assert.Equal(t, true, accessTokenPayload["st-true"].(map[string]interface{})["v"])
 	assert.Greater(t, accessTokenPayload["st-true"].(map[string]interface{})["t"], float64(time.Now().UnixNano()/1000000-1000))
@@ -121,7 +121,7 @@ func TestShouldUpdateUsingHandleIfClaimFetchValueReturnsValue(t *testing.T) {
 	res := fakeRes{}
 	req, err := http.NewRequest(http.MethodGet, "", nil)
 	assert.NoError(t, err)
-	sessionContainer, err := CreateNewSession(req, res, "userId", map[string]interface{}{}, map[string]interface{}{})
+	sessionContainer, err := CreateNewSession(req, res, "public", "userId", map[string]interface{}{}, map[string]interface{}{})
 	assert.NoError(t, err)
 
 	trueClaim, _ := TrueClaim()

@@ -24,12 +24,14 @@ import (
 	"log"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
@@ -678,6 +680,15 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 	var userInfo evmodels.User
 	var emailToken string
 	customAntiCsrfVal := "VIA_TOKEN"
+
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		userInfo = evmodels.User{
+			ID:    input.EmailVerification.User.ID,
+			Email: input.EmailVerification.User.Email,
+		}
+		emailToken = input.EmailVerification.EmailVerifyLink
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -690,9 +701,10 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					userInfo = user
-					emailToken = emailVerificationURLWithToken
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 			}),
 			Init(&epmodels.TypeInput{}),
@@ -753,6 +765,14 @@ func TestProvidingYourOwnEmailCallBackAndMakeSureItsCalled(t *testing.T) {
 func TestEmailVerifyApiWithValidInput(t *testing.T) {
 	var token string
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -765,8 +785,10 @@ func TestEmailVerifyApiWithValidInput(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 			}),
 			Init(&epmodels.TypeInput{}),
@@ -951,6 +973,14 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 	var userInfoFromCallback evmodels.User
 	var token string
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -963,14 +993,16 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1057,6 +1089,14 @@ func TestThatTheHandlePostEmailVerificationCallBackIsCalledOnSuccessFullVerifica
 func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 	var token string
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -1069,8 +1109,10 @@ func TestEmailVerifyWithValidInputUsingTheGetMehtod(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 			}),
 			Init(&epmodels.TypeInput{}),
@@ -1220,6 +1262,14 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 	var token string
 	var user evmodels.User
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -1232,14 +1282,16 @@ func TestTheEmailVerifyAPIwithValidInputOverridingAPIs(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1326,6 +1378,14 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 	var token string
 	var user evmodels.User
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -1338,14 +1398,16 @@ func TestTheEmailVerifyAPIwithValidInputAndOverridingFunctions(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 				Override: &evmodels.OverrideStruct{
 					Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 						originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-						*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-							res, err := originalVerifyUsingToken(token, userContext)
+						*originalImplementation.VerifyEmailUsingToken = func(token string, tenantId string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+							res, err := originalVerifyUsingToken(token, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1432,6 +1494,14 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 	var token string
 	var user evmodels.User
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -1444,14 +1514,16 @@ func TestTheEmailVerifyAPIwithValidInputThrowsErrorOnSuchOverriding(t *testing.T
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 				Override: &evmodels.OverrideStruct{
 					APIs: func(originalImplementation evmodels.APIInterface) evmodels.APIInterface {
 						originalVerifyEmailPost := *originalImplementation.VerifyEmailPOST
-						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-							res, err := originalVerifyEmailPost(token, sessionContainer, options, userContext)
+						*originalImplementation.VerifyEmailPOST = func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+							res, err := originalVerifyEmailPost(token, sessionContainer, tenantId, options, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1536,6 +1608,14 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 	var token string
 	var user evmodels.User
 	customAntiCsrfVal := "VIA_TOKEN"
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+		if err != nil {
+			return err
+		}
+		token = u.Query().Get("token")
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -1548,14 +1628,16 @@ func TestTheEmailVerifyAPIWithValidInputOverridingFunctionsThrowsError(t *testin
 		RecipeList: []supertokens.Recipe{
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeOptional,
-				CreateAndSendCustomEmail: func(user evmodels.User, emailVerificationURLWithToken string, userContext supertokens.UserContext) {
-					token = strings.Split(strings.Split(emailVerificationURLWithToken, "?token=")[1], "&rid=")[0]
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
 				},
 				Override: &evmodels.OverrideStruct{
 					Functions: func(originalImplementation evmodels.RecipeInterface) evmodels.RecipeInterface {
 						originalVerifyUsingToken := *originalImplementation.VerifyEmailUsingToken
-						*originalImplementation.VerifyEmailUsingToken = func(token string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
-							res, err := originalVerifyUsingToken(token, userContext)
+						*originalImplementation.VerifyEmailUsingToken = func(token string, tenantId string, userContext supertokens.UserContext) (evmodels.VerifyEmailUsingTokenResponse, error) {
+							res, err := originalVerifyUsingToken(token, tenantId, userContext)
 							if err != nil {
 								log.Fatal(err.Error())
 							}
@@ -1698,15 +1780,15 @@ func TestTheGenerateTokenAPIWithValidInputAndThenRemoveToken(t *testing.T) {
 
 	userId := response["user"].(map[string]interface{})["id"]
 
-	res, err := emailverification.CreateEmailVerificationToken(userId.(string), nil)
+	res, err := emailverification.CreateEmailVerificationToken("public", userId.(string), nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 	verifyToken := res.OK.Token
 
-	emailverification.RevokeEmailVerificationTokens(userId.(string), nil)
+	emailverification.RevokeEmailVerificationTokens("public", userId.(string), nil)
 
-	res1, err := emailverification.VerifyEmailUsingToken(verifyToken)
+	res1, err := emailverification.VerifyEmailUsingToken("public", verifyToken)
 	assert.NoError(t, err)
 	assert.NotNil(t, res1.EmailVerificationInvalidTokenError)
 	assert.Nil(t, res1.OK)

@@ -25,6 +25,8 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -53,12 +55,6 @@ func TestMinimumConfigForThirdPartyPasswordlessWithEmailOrPhoneContactMethod(t *
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -91,6 +87,12 @@ func TestMinimumConfigForThirdPartyPasswordlessWithEmailOrPhoneContactMethod(t *
 
 func TestForThirdPartyPasswordLessCreateAndSendCustomTextMessageWithFlowTypeMagicLinkAndPhoneContactMethod(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode == nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -108,14 +110,13 @@ func TestForThirdPartyPasswordLessCreateAndSendCustomTextMessageWithFlowTypeMagi
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						if userInputCode == nil && urlWithLinkCode != nil {
-							isUserInputCodeAndUrlWithLinkCodeValid = true
-						}
-						return nil
-					},
 				},
 			}),
 		},
@@ -176,6 +177,13 @@ func TestForThirdPartyPasswordLessCreateAndSendCustomTextMessageWithFlowTypeMagi
 
 func TestForThirdPartyPasswordlessCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndMagicLinkAndPhoneContactMethod(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode != nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
+
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -193,14 +201,13 @@ func TestForThirdPartyPasswordlessCreateAndSendCustomMessageWithFlowTypeUserInpu
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						if userInputCode != nil && urlWithLinkCode != nil {
-							isUserInputCodeAndUrlWithLinkCodeValid = true
-						}
-						return nil
-					},
 				},
 			}),
 		},
@@ -261,6 +268,10 @@ func TestForThirdPartyPasswordlessCreateAndSendCustomMessageWithFlowTypeUserInpu
 
 func TestWithThirdPartyPasswordLessCreateAndSendCustomTextMessageIfErrorIsThrownItShouldReturnA500Error(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		isUserInputCodeAndUrlWithLinkCodeValid = true
+		return errors.New("test message")
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -278,12 +289,13 @@ func TestWithThirdPartyPasswordLessCreateAndSendCustomTextMessageIfErrorIsThrown
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
 				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
 					Enabled: true,
-					CreateAndSendCustomTextMessage: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						isUserInputCodeAndUrlWithLinkCodeValid = true
-						return errors.New("test message")
-					},
 				},
 			}),
 		},
@@ -348,9 +360,6 @@ func TestWithThirdPartyPasswordLessMinimumConfigWithEmailContactMethod(t *testin
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 			}),
 		},
@@ -402,10 +411,7 @@ func TestWithThirdPartyPasswordlessIfValidateEmailAdressIsCalledWithContactMetho
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						isValidateEmailAddressCalled = true
 						return nil
 					},
@@ -488,10 +494,7 @@ func TestWithThirdPartyPasswordlessIfValidateEmailAdressThrowsGenericErrorInCase
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
-					ValidateEmailAddress: func(email interface{}) *string {
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
 						isValidateEmailAddressCalled = true
 						message := "test error"
 						return &message
@@ -557,6 +560,13 @@ func TestWithThirdPartyPasswordlessIfValidateEmailAdressThrowsGenericErrorInCase
 
 func TestForThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndEmailContactMethod(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode != nil && input.PasswordlessLogin.UrlWithLinkCode == nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -574,14 +584,13 @@ func TestForThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInputC
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						if userInputCode != nil && urlWithLinkCode == nil {
-							isUserInputCodeAndUrlWithLinkCodeValid = true
-						}
-						return nil
-					},
 				},
 			}),
 		},
@@ -642,6 +651,12 @@ func TestForThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInputC
 
 func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeMagicLinkAndEmailContactMethod(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode == nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -659,14 +674,13 @@ func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeMagicLink
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						if userInputCode == nil && urlWithLinkCode != nil {
-							isUserInputCodeAndUrlWithLinkCodeValid = true
-						}
-						return nil
-					},
 				},
 			}),
 		},
@@ -727,6 +741,12 @@ func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeMagicLink
 
 func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndMagicLinkAndEmailContactMethod(t *testing.T) {
 	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode != nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -744,14 +764,13 @@ func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInput
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						if userInputCode != nil && urlWithLinkCode != nil {
-							isUserInputCodeAndUrlWithLinkCodeValid = true
-						}
-						return nil
-					},
 				},
 			}),
 		},
@@ -812,6 +831,11 @@ func TestWithThirdPartyPasswordlessCreateAndSendCustomEmailWithFlowTypeUserInput
 
 func TestForThirdPartyPasswordLessThatForCreateAndCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeA500Error(t *testing.T) {
 	isCreateAndSendCustomEmailCalled := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		isCreateAndSendCustomEmailCalled = true
+		return errors.New("test message")
+	}
+
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -829,12 +853,13 @@ func TestForThirdPartyPasswordLessThatForCreateAndCustomEmailIfErrorIsThrownTheS
 			}),
 			Init(tplmodels.TypeInput{
 				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(phoneNumber string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						isCreateAndSendCustomEmailCalled = true
-						return errors.New("test message")
-					},
 				},
 			}),
 		},

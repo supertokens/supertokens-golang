@@ -23,7 +23,7 @@ import (
 )
 
 func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInterface {
-	createCode := func(email *string, phoneNumber *string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
+	createCode := func(email *string, phoneNumber *string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.CreateCodeResponse, error) {
 		body := map[string]interface{}{}
 		if email != nil {
 			body["email"] = *email
@@ -33,7 +33,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		if userInputCode != nil {
 			body["userInputCode"] = *userInputCode
 		}
-		response, err := querier.SendPostRequest("/recipe/signinup/code", body)
+		response, err := querier.SendPostRequest(tenantId+"/recipe/signinup/code", body)
 		if err != nil {
 			return plessmodels.CreateCodeResponse{}, err
 		}
@@ -50,7 +50,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		}, nil
 	}
 
-	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
+	consumeCode := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (plessmodels.ConsumeCodeResponse, error) {
 		body := map[string]interface{}{
 			"preAuthSessionId": preAuthSessionID,
 		}
@@ -60,7 +60,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		} else if linkCode != nil {
 			body["linkCode"] = *linkCode
 		}
-		response, err := querier.SendPostRequest("/recipe/signinup/code/consume", body)
+		response, err := querier.SendPostRequest(tenantId+"/recipe/signinup/code/consume", body)
 		if err != nil {
 			return plessmodels.ConsumeCodeResponse{}, err
 		}
@@ -103,7 +103,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		}
 	}
 
-	createNewCodeForDevice := func(deviceID string, userInputCode *string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
+	createNewCodeForDevice := func(deviceID string, userInputCode *string, tenantId string, userContext supertokens.UserContext) (plessmodels.ResendCodeResponse, error) {
 		body := map[string]interface{}{
 			"deviceId": deviceID,
 		}
@@ -112,7 +112,7 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 			body["userInputCode"] = *userInputCode
 		}
 
-		response, err := querier.SendPostRequest("/recipe/signinup/code", body)
+		response, err := querier.SendPostRequest(tenantId+"/recipe/signinup/code", body)
 		if err != nil {
 			return plessmodels.ResendCodeResponse{}, err
 		}
@@ -142,8 +142,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		}
 	}
 
-	getUserByEmail := func(email string, userContext supertokens.UserContext) (*plessmodels.User, error) {
-		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+	getUserByEmail := func(email string, tenantId string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		response, err := querier.SendGetRequest(tenantId+"/recipe/user", map[string]string{
 			"email": email,
 		})
 		if err != nil {
@@ -174,8 +174,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return nil, nil
 	}
 
-	getUserByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) (*plessmodels.User, error) {
-		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
+	getUserByPhoneNumber := func(phoneNumber string, tenantId string, userContext supertokens.UserContext) (*plessmodels.User, error) {
+		response, err := querier.SendGetRequest(tenantId+"/recipe/user", map[string]string{
 			"phoneNumber": phoneNumber,
 		})
 		if err != nil {
@@ -190,8 +190,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return nil, nil
 	}
 
-	listCodesByDeviceID := func(deviceID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
-		response, err := querier.SendGetRequest("/recipe/signinup/codes", map[string]string{
+	listCodesByDeviceID := func(deviceID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		response, err := querier.SendGetRequest(tenantId+"/recipe/signinup/codes", map[string]string{
 			"deviceId": deviceID,
 		})
 
@@ -208,8 +208,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return nil, nil
 	}
 
-	listCodesByEmail := func(email string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
-		response, err := querier.SendGetRequest("/recipe/signinup/codes", map[string]string{
+	listCodesByEmail := func(email string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		response, err := querier.SendGetRequest(tenantId+"/recipe/signinup/codes", map[string]string{
 			"email": email,
 		})
 
@@ -220,8 +220,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return getDevicesFromResponse(response["devices"].([]interface{})), nil
 	}
 
-	listCodesByPhoneNumber := func(phoneNumber string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
-		response, err := querier.SendGetRequest("/recipe/signinup/codes", map[string]string{
+	listCodesByPhoneNumber := func(phoneNumber string, tenantId string, userContext supertokens.UserContext) ([]plessmodels.DeviceType, error) {
+		response, err := querier.SendGetRequest(tenantId+"/recipe/signinup/codes", map[string]string{
 			"phoneNumber": phoneNumber,
 		})
 
@@ -232,8 +232,8 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return getDevicesFromResponse(response["devices"].([]interface{})), nil
 	}
 
-	listCodesByPreAuthSessionID := func(preAuthSessionID string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
-		response, err := querier.SendGetRequest("/recipe/signinup/codes", map[string]string{
+	listCodesByPreAuthSessionID := func(preAuthSessionID string, tenantId string, userContext supertokens.UserContext) (*plessmodels.DeviceType, error) {
+		response, err := querier.SendGetRequest(tenantId+"/recipe/signinup/codes", map[string]string{
 			"preAuthSessionId": preAuthSessionID,
 		})
 
@@ -250,25 +250,25 @@ func MakeRecipeImplementation(querier supertokens.Querier) plessmodels.RecipeInt
 		return nil, nil
 	}
 
-	revokeAllCodes := func(email *string, phoneNumber *string, userContext supertokens.UserContext) error {
+	revokeAllCodes := func(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) error {
 		body := map[string]interface{}{}
 		if email != nil {
 			body["email"] = *email
 		} else if phoneNumber != nil {
 			body["phoneNumber"] = *phoneNumber
 		}
-		_, err := querier.SendPostRequest("/recipe/signinup/codes/remove", body)
+		_, err := querier.SendPostRequest(tenantId+"/recipe/signinup/codes/remove", body)
 		if err != nil {
 			return err
 		}
 		return nil
 	}
 
-	revokeCode := func(codeID string, userContext supertokens.UserContext) error {
+	revokeCode := func(codeID string, tenantId string, userContext supertokens.UserContext) error {
 		body := map[string]interface{}{
 			"codeId": codeID,
 		}
-		_, err := querier.SendPostRequest("/recipe/signinup/code/remove", body)
+		_, err := querier.SendPostRequest(tenantId+"/recipe/signinup/code/remove", body)
 		if err != nil {
 			return err
 		}
@@ -441,6 +441,15 @@ func getUserFromJSONResponse(userJSON map[string]interface{}) plessmodels.User {
 		if ok {
 			phoneNumberStr := phoneNumber.(string)
 			user.PhoneNumber = &phoneNumberStr
+		}
+	}
+	{
+		tenantIds, ok := userJSON["tenantIds"].([]interface{})
+		if ok {
+			user.TenantIds = make([]string, len(tenantIds))
+			for i, tenantId := range tenantIds {
+				user.TenantIds[i] = tenantId.(string)
+			}
 		}
 	}
 	return user

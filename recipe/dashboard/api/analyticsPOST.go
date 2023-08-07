@@ -3,9 +3,10 @@ package api
 import (
 	"bytes"
 	"encoding/json"
+	"net/http"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"net/http"
 )
 
 type analyticsPostResponse struct {
@@ -17,7 +18,7 @@ type analyticsPostRequestBody struct {
 	DashboardVersion *string `json:"dashboardVersion"`
 }
 
-func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (analyticsPostResponse, error) {
+func AnalyticsPost(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (analyticsPostResponse, error) {
 	supertokensInstance, instanceError := supertokens.GetInstanceOrThrowError()
 
 	if supertokens.IsRunningInTestMode() {
@@ -89,7 +90,7 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, options dashboardm
 		data["telemetryId"] = response["telemetryId"].(string)
 	}
 
-	numberOfUsers, err := supertokens.GetUserCount(nil)
+	numberOfUsers, err := supertokens.GetUserCount(nil, nil)
 	if err != nil {
 		// We don't send telemetry events if this fails
 		return analyticsPostResponse{

@@ -44,13 +44,18 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
-							Google(
-								tpmodels.GoogleConfig{
-									ClientID:     "4398792-test-id",
-									ClientSecret: "test-secret",
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "4398792-test-id",
+											ClientSecret: "test-secret",
+										},
+									},
 								},
-							),
+							},
 						},
 					},
 				},
@@ -90,7 +95,7 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 
 	assert.Equal(t, "OK", data["status"])
 
-	fetchedUrl, err := url.Parse(data["url"].(string))
+	fetchedUrl, err := url.Parse(data["urlWithQueryParams"].(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -113,7 +118,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							unittesting.ReturnCustomProviderWithAuthRedirectParams(),
 						},
 					},
@@ -154,7 +159,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 
 	assert.Equal(t, "OK", data["status"])
 
-	fetchedUrl, err := url.Parse(data["url"].(string))
+	fetchedUrl, err := url.Parse(data["urlWithQueryParams"].(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -178,7 +183,7 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							unittesting.ReturnCustomProviderWithAuthRedirectParams(),
 						},
 					},
@@ -219,7 +224,7 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 
 	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 
-	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", data["message"])
+	assert.Equal(t, "the provider google could not be found in the configuration", data["message"])
 }
 
 func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
@@ -236,7 +241,7 @@ func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
 			Init(
 				&tpmodels.TypeInput{
 					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-						Providers: []tpmodels.TypeProvider{
+						Providers: []tpmodels.ProviderInput{
 							unittesting.ReturnCustomProviderWithAuthRedirectParams(),
 						},
 					},

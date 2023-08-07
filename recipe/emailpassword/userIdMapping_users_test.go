@@ -26,7 +26,7 @@ func TestCreateUserIdMappingAndDeleteUser(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -59,7 +59,7 @@ func TestCreateUserIdMappingAndGetUsers(t *testing.T) {
 	}
 
 	for i := 0; i < 4; i++ {
-		signUpResponse, err := SignUp(fmt.Sprintf("test%d@example.com", i), "testpass123")
+		signUpResponse, err := SignUp("public", fmt.Sprintf("test%d@example.com", i), "testpass123")
 		assert.NoError(t, err)
 
 		assert.NotNil(t, signUpResponse.OK)
@@ -71,7 +71,7 @@ func TestCreateUserIdMappingAndGetUsers(t *testing.T) {
 		assert.NotNil(t, createResp.OK)
 	}
 
-	userResult, err := supertokens.GetUsersOldestFirst(nil, nil, nil, nil)
+	userResult, err := supertokens.GetUsersOldestFirst("public", nil, nil, nil, nil)
 	assert.NoError(t, err)
 	assert.NotNil(t, userResult.Users)
 

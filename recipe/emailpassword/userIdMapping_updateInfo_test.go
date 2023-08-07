@@ -65,7 +65,7 @@ func TestUpdateInfoInUserIdMapping(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 	assert.NotNil(t, signUpResponse.OK)
 
@@ -147,7 +147,7 @@ func TestDeleteInfoInUserIdMapping(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := SignUp("test@example.com", "testpass123")
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 	assert.NotNil(t, signUpResponse.OK)
 

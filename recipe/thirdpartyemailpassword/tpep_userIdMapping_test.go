@@ -4,7 +4,6 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -23,8 +22,18 @@ func initForUserIdMappingTest(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{Init(&tpepmodels.TypeInput{
-			Providers: []tpmodels.TypeProvider{
-				thirdparty.Google(tpmodels.GoogleConfig{ClientID: "clientID", ClientSecret: "clientSecret"}),
+			Providers: []tpmodels.ProviderInput{
+				{
+					Config: tpmodels.ProviderConfig{
+						ThirdPartyId: "google",
+						Clients: []tpmodels.ProviderClientConfig{
+							{
+								ClientID:     "test",
+								ClientSecret: "test-secret",
+							},
+						},
+					},
+				},
 			},
 		})},
 	}
@@ -50,7 +59,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := ThirdPartySignInUp("google", "googleID", "test@example.com")
+	signUpResponse, err := ThirdPartyManuallyCreateOrUpdateUser("public", "google", "googleID", "test@example.com")
 	assert.NoError(t, err)
 
 	externalUserId := "externalId"
@@ -72,7 +81,7 @@ func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	}
 
 	{ // Using thirdparty info
-		userResp, err := GetUserByThirdPartyInfo("google", "googleID")
+		userResp, err := GetUserByThirdPartyInfo("public", "google", "googleID")
 		assert.NoError(t, err)
 		assert.Equal(t, externalUserId, userResp.ID)
 	}
@@ -95,7 +104,7 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123")
+	signUpResponse, err := EmailPasswordSignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -136,7 +145,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 		return
 	}
 
-	signUpResponse, err := EmailPasswordSignUp("test@example.com", "testpass123")
+	signUpResponse, err := EmailPasswordSignUp("public", "test@example.com", "testpass123")
 	assert.NoError(t, err)
 
 	assert.NotNil(t, signUpResponse.OK)
@@ -147,7 +156,7 @@ func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	userResp, err := GetUsersByEmail("test@example.com")
+	userResp, err := GetUsersByEmail("public", "test@example.com")
 	assert.NoError(t, err)
 	assert.NotNil(t, userResp)
 	assert.Equal(t, 1, len(userResp))

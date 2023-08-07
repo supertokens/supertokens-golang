@@ -109,13 +109,13 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 					Override: &sessmodels.OverrideStruct{
 						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 							ogCNS := *originalImplementation.CreateNewSession
-							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 								if accessTokenPayload == nil {
 									accessTokenPayload = map[string]interface{}{}
 								}
 								accessTokenPayload["customClaim"] = "customValue"
 
-								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 							}
 							return originalImplementation
 						},
@@ -163,13 +163,13 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 					Override: &sessmodels.OverrideStruct{
 						Functions: func(originalImplementation sessmodels.RecipeInterface) sessmodels.RecipeInterface {
 							ogCNS := *originalImplementation.CreateNewSession
-							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+							*originalImplementation.CreateNewSession = func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 								if accessTokenPayload == nil {
 									accessTokenPayload = map[string]interface{}{}
 								}
 								accessTokenPayload["customClaim"] = "customValue"
 
-								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, userContext)
+								return ogCNS(userID, accessTokenPayload, sessionDataInDatabase, disableAntiCsrf, tenantId, userContext)
 							}
 							return originalImplementation
 						},
@@ -388,7 +388,7 @@ func refresh(response http.ResponseWriter, request *http.Request) {
 func revokeAll(response http.ResponseWriter, request *http.Request) {
 	sessionContainer := session.GetSessionFromRequestContext(request.Context())
 	userID := sessionContainer.GetUserID()
-	session.RevokeAllSessionsForUser(userID)
+	session.RevokeAllSessionsForUser(userID, nil, nil)
 	response.Write([]byte("success"))
 }
 
@@ -511,7 +511,7 @@ func login(response http.ResponseWriter, request *http.Request) {
 	var body map[string]interface{}
 	_ = json.NewDecoder(request.Body).Decode(&body)
 	userID := body["userId"].(string)
-	sess, _ := session.CreateNewSession(request, response, userID, nil, nil)
+	sess, _ := session.CreateNewSession(request, response, "public", userID, nil, nil)
 	response.Write([]byte(sess.GetUserID()))
 }
 

@@ -16,6 +16,8 @@
 package userdetails
 
 import (
+	"reflect"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
@@ -28,7 +30,7 @@ type userGetResponse struct {
 	User     dashboardmodels.UserType `json:"user,omitempty"`
 }
 
-func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userGetResponse, error) {
+func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 	recipeId := req.URL.Query().Get("recipeId")
@@ -57,9 +59,9 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}, nil
 	}
 
-	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId)
+	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId, userContext)
 
-	if userForRecipeId == (dashboardmodels.UserType{}) {
+	if reflect.DeepEqual(userForRecipeId, dashboardmodels.UserType{}) {
 		return userGetResponse{
 			Status: "NO_USER_FOUND_ERROR",
 		}, nil
@@ -79,7 +81,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, options dashboardmo
 		}, nil
 	}
 
-	metadata, metadataerr := usermetadata.GetUserMetadata(userId)
+	metadata, metadataerr := usermetadata.GetUserMetadata(userId, userContext)
 
 	if metadataerr != nil {
 		return userGetResponse{}, metadataerr

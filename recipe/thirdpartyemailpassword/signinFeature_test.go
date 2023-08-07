@@ -28,7 +28,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -48,11 +47,18 @@ func TestAfterDisablingTheDefaultSigninupAPIdoesNotWork(t *testing.T) {
 		},
 		RecipeList: []supertokens.Recipe{
 			Init(&tpepmodels.TypeInput{
-				Providers: []tpmodels.TypeProvider{
-					thirdparty.Google(tpmodels.GoogleConfig{
-						ClientID:     "test",
-						ClientSecret: "test-secret",
-					}),
+				Providers: []tpmodels.ProviderInput{
+					{
+						Config: tpmodels.ProviderConfig{
+							ThirdPartyId: "google",
+							Clients: []tpmodels.ProviderClientConfig{
+								{
+									ClientID:     "test",
+									ClientSecret: "test-secret",
+								},
+							},
+						},
+					},
 				},
 				Override: &tpepmodels.OverrideStruct{
 					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
@@ -75,10 +81,14 @@ func TestAfterDisablingTheDefaultSigninupAPIdoesNotWork(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	signinupPostData := map[string]string{
+	signinupPostData := map[string]interface{}{
 		"thirdPartyId": "google",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(signinupPostData)
@@ -151,8 +161,8 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 				Override: &tpepmodels.OverrideStruct{
 					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
 						originalSignInUpPost := *originalImplementation.ThirdPartySignInUpPOST
-						*originalImplementation.ThirdPartySignInUpPOST = func(provider tpmodels.TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartyOutput, error) {
-							resp, err := originalSignInUpPost(provider, code, authCodeResponse, redirectURI, options, userContext)
+						*originalImplementation.ThirdPartySignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
+							resp, err := originalSignInUpPost(provider, input, tenantId, options, userContext)
 							if err != nil {
 								t.Error(err.Error())
 							}
@@ -163,7 +173,7 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 						return originalImplementation
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					customProvider2,
 				},
 			}),
@@ -192,10 +202,14 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "abcdefghj",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -379,7 +393,7 @@ func TestCustomEmailValidatorsToSignupAndMakeSureTheyAreAppliedToSignIn(t *testi
 					FormFields: []epmodels.TypeInputFormField{
 						{
 							ID: "email",
-							Validate: func(value interface{}) *string {
+							Validate: func(value interface{}, tenantId string) *string {
 								customErrorMessage := "email does not start with test"
 								if strings.HasPrefix(value.(string), "test") {
 									return nil

@@ -56,9 +56,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	if config.ContactMethodPhone.Enabled {
 		typeNormalisedInput.ContactMethodPhone.Enabled = true
-		if config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
-			typeNormalisedInput.ContactMethodPhone.CreateAndSendCustomTextMessage = config.ContactMethodPhone.CreateAndSendCustomTextMessage
-		}
 		if config.ContactMethodPhone.ValidatePhoneNumber != nil {
 			typeNormalisedInput.ContactMethodPhone.ValidatePhoneNumber = config.ContactMethodPhone.ValidatePhoneNumber
 		}
@@ -76,9 +73,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.ContactMethodEmailOrPhone.ValidateEmailAddress != nil {
 			typeNormalisedInput.ContactMethodEmailOrPhone.ValidateEmailAddress = config.ContactMethodEmailOrPhone.ValidateEmailAddress
 		}
-		if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
-			typeNormalisedInput.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
-		}
 		if config.ContactMethodEmailOrPhone.ValidatePhoneNumber != nil {
 			typeNormalisedInput.ContactMethodEmailOrPhone.ValidatePhoneNumber = config.ContactMethodEmailOrPhone.ValidatePhoneNumber
 		}
@@ -90,15 +84,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	typeNormalisedInput.GetEmailDeliveryConfig = func() emaildelivery.TypeInputWithService {
 		createAndSendCustomEmail := DefaultCreateAndSendCustomEmail(appInfo)
-		if config.ContactMethodEmail.Enabled {
-			if config.ContactMethodEmail.CreateAndSendCustomEmail != nil {
-				createAndSendCustomEmail = config.ContactMethodEmail.CreateAndSendCustomEmail
-			}
-		} else if config.ContactMethodEmailOrPhone.Enabled {
-			if config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail != nil {
-				createAndSendCustomEmail = config.ContactMethodEmailOrPhone.CreateAndSendCustomEmail
-			}
-		}
 		emailService := backwardCompatibilityService.MakeBackwardCompatibilityService(appInfo, createAndSendCustomEmail)
 		if config.EmailDelivery != nil && config.EmailDelivery.Service != nil {
 			emailService = *config.EmailDelivery.Service
@@ -114,15 +99,6 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 
 	typeNormalisedInput.GetSmsDeliveryConfig = func() smsdelivery.TypeInputWithService {
 		createAndSendCustomSms := DefaultCreateAndSendCustomTextMessage(appInfo)
-		if config.ContactMethodPhone.Enabled {
-			if config.ContactMethodPhone.CreateAndSendCustomTextMessage != nil {
-				createAndSendCustomSms = config.ContactMethodPhone.CreateAndSendCustomTextMessage
-			}
-		} else if config.ContactMethodEmailOrPhone.Enabled {
-			if config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage != nil {
-				createAndSendCustomSms = config.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage
-			}
-		}
 
 		smsService := smsBackwardCompatibilityService.MakeBackwardCompatibilityService(createAndSendCustomSms)
 		if config.SmsDelivery != nil && config.SmsDelivery.Service != nil {
@@ -152,21 +128,17 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 	return plessmodels.TypeNormalisedInput{
 		FlowType: inputConfig.FlowType,
 		ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
-			Enabled:                        false,
-			ValidateEmailAddress:           DefaultValidateEmailAddress,
-			CreateAndSendCustomEmail:       inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomEmail,
-			ValidatePhoneNumber:            DefaultValidatePhoneNumber,
-			CreateAndSendCustomTextMessage: inputConfig.ContactMethodEmailOrPhone.CreateAndSendCustomTextMessage,
+			Enabled:              false,
+			ValidateEmailAddress: DefaultValidateEmailAddress,
+			ValidatePhoneNumber:  DefaultValidatePhoneNumber,
 		},
 		ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
-			Enabled:                        false,
-			ValidatePhoneNumber:            DefaultValidatePhoneNumber,
-			CreateAndSendCustomTextMessage: inputConfig.ContactMethodPhone.CreateAndSendCustomTextMessage,
+			Enabled:             false,
+			ValidatePhoneNumber: DefaultValidatePhoneNumber,
 		},
 		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
-			Enabled:                  false,
-			ValidateEmailAddress:     DefaultValidateEmailAddress,
-			CreateAndSendCustomEmail: inputConfig.ContactMethodEmail.CreateAndSendCustomEmail,
+			Enabled:              false,
+			ValidateEmailAddress: DefaultValidateEmailAddress,
 		},
 		GetCustomUserInputCode: inputConfig.GetCustomUserInputCode,
 		Override: plessmodels.OverrideStruct{
@@ -180,7 +152,7 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 	}
 }
 
-func DefaultValidateEmailAddress(value interface{}) *string {
+func DefaultValidateEmailAddress(value interface{}, tenantId string) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg
@@ -193,7 +165,7 @@ func DefaultValidateEmailAddress(value interface{}) *string {
 	return nil
 }
 
-func DefaultValidatePhoneNumber(value interface{}) *string {
+func DefaultValidatePhoneNumber(value interface{}, tenantId string) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg

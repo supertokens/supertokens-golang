@@ -17,10 +17,7 @@ package userdetails
 
 import (
 	"encoding/json"
-	"errors"
-	"fmt"
 
-	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -34,7 +31,7 @@ type userEmailverifyTokenPostRequestBody struct {
 	UserId *string `json:"userId"`
 }
 
-func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userEmailVerifyTokenPost, error) {
+func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userEmailVerifyTokenPost, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -53,45 +50,16 @@ func UserEmailVerifyTokenPost(apiInterface dashboardmodels.APIInterface, options
 		}
 	}
 
-	emailresponse, emailErr := emailverification.GetRecipeInstance().GetEmailForUserID(*readBody.UserId, supertokens.MakeDefaultUserContextFromAPI(options.Req))
-
-	if emailErr != nil {
-		return userEmailVerifyTokenPost{}, emailErr
+	resp, err := emailverification.SendEmailVerificationEmail(tenantId, *readBody.UserId, nil, userContext)
+	if err != nil {
+		return userEmailVerifyTokenPost{}, err
 	}
 
-	if emailresponse.OK == nil {
-		return userEmailVerifyTokenPost{}, errors.New("Should never come here")
-	}
-
-	emailVerificationToken, tokenError := emailverification.CreateEmailVerificationToken(*readBody.UserId, &emailresponse.OK.Email)
-
-	if tokenError != nil {
-		return userEmailVerifyTokenPost{}, tokenError
-	}
-
-	if emailVerificationToken.EmailAlreadyVerifiedError != nil {
+	if resp.EmailAlreadyVerifiedError != nil {
 		return userEmailVerifyTokenPost{
 			Status: "EMAIL_ALREADY_VERIFIED_ERROR",
 		}, nil
 	}
-
-	emailVerificationURL := fmt.Sprintf(
-		"%s%s/verify-email?token=%s&rid=%s",
-		options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-		options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
-		emailVerificationToken.OK.Token,
-		options.RecipeID,
-	)
-
-	emailverification.SendEmail(emaildelivery.EmailType{
-		EmailVerification: &emaildelivery.EmailVerificationType{
-			User: emaildelivery.User{
-				ID:    *readBody.UserId,
-				Email: emailresponse.OK.Email,
-			},
-			EmailVerifyLink: emailVerificationURL,
-		},
-	})
 
 	return userEmailVerifyTokenPost{
 		Status: "OK",

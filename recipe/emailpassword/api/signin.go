@@ -22,7 +22,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOptions) error {
+func SignInAPI(apiImplementation epmodels.APIInterface, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.SignInPOST == nil || (*apiImplementation.SignInPOST) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
@@ -38,12 +38,12 @@ func SignInAPI(apiImplementation epmodels.APIInterface, options epmodels.APIOpti
 		return err
 	}
 
-	formFields, err := validateFormFieldsOrThrowError(options.Config.SignInFeature.FormFields, formFieldsRaw["formFields"])
+	formFields, err := validateFormFieldsOrThrowError(options.Config.SignInFeature.FormFields, formFieldsRaw["formFields"], tenantId)
 	if err != nil {
 		return err
 	}
 
-	result, err := (*apiImplementation.SignInPOST)(formFields, options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	result, err := (*apiImplementation.SignInPOST)(formFields, tenantId, options, userContext)
 	if err != nil {
 		return err
 	}

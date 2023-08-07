@@ -24,22 +24,29 @@ import (
 )
 
 type APIInterface struct {
-	AuthorisationUrlGET      *func(provider TypeProvider, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
-	SignInUpPOST             *func(provider TypeProvider, code string, authCodeResponse interface{}, redirectURI string, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
-	AppleRedirectHandlerPOST *func(code string, state string, options APIOptions, userContext supertokens.UserContext) error
+	AuthorisationUrlGET      *func(provider *TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options APIOptions, userContext supertokens.UserContext) (AuthorisationUrlGETResponse, error)
+	SignInUpPOST             *func(provider *TypeProvider, input TypeSignInUpInput, tenantId string, options APIOptions, userContext supertokens.UserContext) (SignInUpPOSTResponse, error)
+	AppleRedirectHandlerPOST *func(formPostInfoFromProvider map[string]interface{}, options APIOptions, userContext supertokens.UserContext) error
 }
 
 type AuthorisationUrlGETResponse struct {
-	OK           *struct{ Url string }
+	OK           *TypeAuthorisationRedirect
 	GeneralError *supertokens.GeneralErrorResponse
+}
+
+type TypeSignInUpInput struct {
+	// Either of the below
+	RedirectURIInfo *TypeRedirectURIInfo `json:"redirectURIInfo"`
+	OAuthTokens     *TypeOAuthTokens     `json:"oAuthTokens"`
 }
 
 type SignInUpPOSTResponse struct {
 	OK *struct {
-		CreatedNewUser   bool
-		User             User
-		Session          sessmodels.SessionContainer
-		AuthCodeResponse interface{}
+		CreatedNewUser          bool
+		User                    User
+		Session                 sessmodels.SessionContainer
+		OAuthTokens             TypeOAuthTokens
+		RawUserInfoFromProvider TypeRawUserInfoFromProvider
 	}
 	NoEmailGivenByProviderError *struct{}
 	GeneralError                *supertokens.GeneralErrorResponse
@@ -49,7 +56,7 @@ type APIOptions struct {
 	RecipeImplementation RecipeInterface
 	Config               TypeNormalisedInput
 	RecipeID             string
-	Providers            []TypeProvider
+	Providers            []ProviderInput
 	Req                  *http.Request
 	Res                  http.ResponseWriter
 	OtherHandler         http.HandlerFunc

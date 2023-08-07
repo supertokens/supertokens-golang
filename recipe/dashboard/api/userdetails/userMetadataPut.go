@@ -32,7 +32,7 @@ type userMetaDataRequestBody struct {
 	Data   *string `json:"data"`
 }
 
-func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboardmodels.APIOptions) (userMetadataPutResponse, error) {
+func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userMetadataPutResponse, error) {
 	body, err := supertokens.ReadFromRequest(options.Req)
 
 	if err != nil {
@@ -84,13 +84,13 @@ func UserMetaDataPut(apiInterface dashboardmodels.APIInterface, options dashboar
 	 *
 	 * Removing first ensures that the final data is exactly what the user wanted it to be
 	 */
-	clearErr := usermetadata.ClearUserMetadata(*readBody.UserId)
+	clearErr := usermetadata.ClearUserMetadata(*readBody.UserId, userContext)
 
 	if clearErr != nil {
 		return userMetadataPutResponse{}, clearErr
 	}
 
-	_, updateErr := usermetadata.UpdateUserMetadata(*readBody.UserId, parsedMetaData)
+	_, updateErr := usermetadata.UpdateUserMetadata(*readBody.UserId, parsedMetaData, userContext)
 
 	if updateErr != nil {
 		return userMetadataPutResponse{}, updateErr

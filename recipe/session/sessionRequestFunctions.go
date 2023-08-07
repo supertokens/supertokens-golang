@@ -31,7 +31,7 @@ import (
 // We are defining this here to reduce the scope of legacy code
 const legacyIdRefreshTokenCookieName = "sIdRefreshToken"
 
-func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo, recipeInstance Recipe, recipeImpl sessmodels.RecipeInterface, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, tenantId string, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo, recipeInstance Recipe, recipeImpl sessmodels.RecipeInterface, userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	supertokens.LogDebugMessage("createNewSession: Started")
 
 	claimsAddedByOtherRecipes := recipeInstance.GetClaimsAddedByOtherRecipes()
@@ -44,7 +44,7 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 	finalAccessTokenPayload["iss"] = issuer
 
 	for _, claim := range claimsAddedByOtherRecipes {
-		_finalAccessTokenPayload, err := claim.Build(userID, finalAccessTokenPayload, userContext)
+		_finalAccessTokenPayload, err := claim.Build(userID, tenantId, finalAccessTokenPayload, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -82,7 +82,7 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, confi
 
 	disableAntiCSRF := outputTokenTransferMethod == sessmodels.HeaderTransferMethod
 
-	sessionResponse, err := (*recipeImpl.CreateNewSession)(userID, finalAccessTokenPayload, sessionDataInDatabase, &disableAntiCSRF, userContext)
+	sessionResponse, err := (*recipeImpl.CreateNewSession)(userID, finalAccessTokenPayload, sessionDataInDatabase, &disableAntiCSRF, tenantId, userContext)
 
 	if err != nil {
 		return nil, err

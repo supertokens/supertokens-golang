@@ -25,6 +25,10 @@ import (
 	"strings"
 )
 
+// This function is required to be here because calling multitenancy recipe from this module causes cyclic dependency
+// this function is initialized by the init function in multitenancy recipe
+var GetTenantIdFuncFromUsingMultitenancyRecipe func(tenantIdFromFrontend string, userContext UserContext) (string, error)
+
 type superTokens struct {
 	AppInfo               NormalisedAppinfo
 	SuperTokens           ConnectionInfo
@@ -92,8 +96,22 @@ func supertokensInit(config TypeInput) error {
 		return errors.New("please provide at least one recipe to the supertokens.init function call")
 	}
 
+	multitenancyFound := false
+
 	for _, elem := range config.RecipeList {
 		recipeModule, err := elem(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
+		if err != nil {
+			return err
+		}
+		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
+
+		if recipeModule.GetRecipeID() == "multitenancy" {
+			multitenancyFound = true
+		}
+	}
+
+	if !multitenancyFound && DefaultMultitenancyRecipe != nil {
+		recipeModule, err := DefaultMultitenancyRecipe(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
 		if err != nil {
 			return err
 		}
@@ -124,6 +142,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 	}
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		dw := MakeDoneWriter(w)
+		userContext := MakeDefaultUserContextFromAPI(r)
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
 			err = s.errorHandler(err, r, dw)
@@ -163,7 +182,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			LogDebugMessage("middleware: Matched with recipe ID: " + matchedRecipe.GetRecipeID())
 
-			id, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method)
+			id, tenantId, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 
 			if err != nil {
 				err = s.errorHandler(err, r, dw)
@@ -181,7 +200,16 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 
-			apiErr := matchedRecipe.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
+			tenantId, err = GetTenantIdFuncFromUsingMultitenancyRecipe(tenantId, userContext)
+			if err != nil {
+				err = s.errorHandler(err, r, dw)
+				if err != nil && !dw.IsDone() {
+					s.OnSuperTokensAPIError(err, r, dw)
+				}
+				return
+			}
+
+			apiErr := matchedRecipe.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 			if apiErr != nil {
 				apiErr = s.errorHandler(apiErr, r, dw)
 				if apiErr != nil && !dw.IsDone() {
@@ -192,7 +220,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			LogDebugMessage("middleware: Ended")
 		} else {
 			for _, recipeModule := range s.RecipeModules {
-				id, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+				id, tenantId, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 				LogDebugMessage("middleware: Checking recipe ID for match: " + recipeModule.GetRecipeID())
 				if err != nil {
 					err = s.errorHandler(err, r, dw)
@@ -204,7 +232,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 				if id != nil {
 					LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
-					err := recipeModule.HandleAPIRequest(*id, r, dw, theirHandler.ServeHTTP, path, method)
+					err := recipeModule.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 					if err != nil {
 						err = s.errorHandler(err, r, dw)
 						if err != nil && !dw.IsDone() {
@@ -277,7 +305,7 @@ type UserPaginationResult struct {
 }
 
 // TODO: Add tests
-func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
+func GetUsersWithSearchParams(tenantId string, timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
@@ -300,7 +328,7 @@ func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, l
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
 
-	resp, err := querier.SendGetRequest("/users", requestBody)
+	resp, err := querier.SendGetRequest(tenantId+"/users", requestBody)
 
 	if err != nil {
 		return UserPaginationResult{}, err
@@ -323,7 +351,7 @@ func GetUsersWithSearchParams(timeJoinedOrder string, paginationToken *string, l
 }
 
 // TODO: Add tests
-func getUserCount(includeRecipeIds *[]string) (float64, error) {
+func getUserCount(includeRecipeIds *[]string, tenantId string, includeAllTenants *bool) (float64, error) {
 
 	querier, err := GetNewQuerierInstanceOrThrowError("")
 	if err != nil {
@@ -335,8 +363,11 @@ func getUserCount(includeRecipeIds *[]string) (float64, error) {
 	if includeRecipeIds != nil {
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
+	if includeAllTenants != nil {
+		requestBody["includeAllTenants"] = strconv.FormatBool(*includeAllTenants)
+	}
 
-	resp, err := querier.SendGetRequest("/users/count", requestBody)
+	resp, err := querier.SendGetRequest(tenantId+"/users/count", requestBody)
 
 	if err != nil {
 		return -1, err

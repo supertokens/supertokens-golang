@@ -20,13 +20,13 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOptions) error {
+func GetJWKS(apiImplementation jwtmodels.APIInterface, options jwtmodels.APIOptions, userContext supertokens.UserContext) error {
 	if apiImplementation.GetJWKSGET == nil || (*apiImplementation.GetJWKSGET) == nil {
 		options.OtherHandler(options.Res, options.Req)
 		return nil
 	}
 
-	response, err := (*apiImplementation.GetJWKSGET)(options, supertokens.MakeDefaultUserContextFromAPI(options.Req))
+	response, err := (*apiImplementation.GetJWKSGET)(options, userContext)
 	if err != nil {
 		return err
 	}

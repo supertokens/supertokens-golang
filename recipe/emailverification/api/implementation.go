@@ -28,8 +28,8 @@ import (
 )
 
 func MakeAPIImplementation() evmodels.APIInterface {
-	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
-		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, userContext)
+	verifyEmailPOST := func(token string, sessionContainer sessmodels.SessionContainer, tenantId string, options evmodels.APIOptions, userContext supertokens.UserContext) (evmodels.VerifyEmailPOSTResponse, error) {
+		resp, err := (*options.RecipeImplementation.VerifyEmailUsingToken)(token, tenantId, userContext)
 		if err != nil {
 			return evmodels.VerifyEmailPOSTResponse{}, err
 		}
@@ -99,7 +99,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 				EmailAlreadyVerifiedError: &struct{}{},
 			}, nil
 		}
-		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, userContext)
+		response, err := (*options.RecipeImplementation.CreateEmailVerificationToken)(userID, email.OK.Email, sessionContainer.GetTenantIdWithContext(userContext), userContext)
 		if err != nil {
 			return evmodels.GenerateEmailVerifyTokenPOSTResponse{}, err
 		}
@@ -122,12 +122,11 @@ func MakeAPIImplementation() evmodels.APIInterface {
 			ID:    userID,
 			Email: email.OK.Email,
 		}
-		emailVerificationURL := fmt.Sprintf(
-			"%s%s/verify-email?token=%s&rid=%s",
-			options.AppInfo.WebsiteDomain.GetAsStringDangerous(),
-			options.AppInfo.WebsiteBasePath.GetAsStringDangerous(),
+		emailVerificationURL := GetEmailVerifyLink(
+			options.AppInfo,
 			response.OK.Token,
 			options.RecipeID,
+			sessionContainer.GetTenantIdWithContext(userContext),
 		)
 
 		supertokens.LogDebugMessage(fmt.Sprintf("Sending email verification email to %s", email.OK.Email))
@@ -138,6 +137,7 @@ func MakeAPIImplementation() evmodels.APIInterface {
 					Email: user.Email,
 				},
 				EmailVerifyLink: emailVerificationURL,
+				TenantId:        sessionContainer.GetTenantIdWithContext(userContext),
 			},
 		}, userContext)
 		if err != nil {

@@ -4,14 +4,15 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/supertokens"
-	"github.com/supertokens/supertokens-golang/test/unittesting"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestThatShouldDefaultToFalse(t *testing.T) {
@@ -555,7 +556,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			payload = result["payload"].(map[string]interface{})
 		}
 
-		_, err2 := CreateNewSession(r, rw, "uniqueId", payload, map[string]interface{}{})
+		_, err2 := CreateNewSession(r, rw, "public", "uniqueId", payload, map[string]interface{}{})
 
 		if err2 != nil {
 			http.Error(rw, fmt.Sprint(err2), 400)
@@ -604,6 +605,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 		}
 		var result map[string]interface{}
 		err = json.Unmarshal(dataInBytes, &result)
+		assert.NoError(t, err)
 
 		err = session.MergeIntoAccessTokenPayload(result["payload"].(map[string]interface{}))
 		assert.NoError(t, err)

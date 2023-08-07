@@ -32,6 +32,7 @@ type User struct {
 		ID     string `json:"id"`
 		UserID string `json:"userId"`
 	} `json:"thirdParty"`
+	TenantIds []string `json:"tenantIds"`
 }
 
 type TypeInput struct {
@@ -39,8 +40,8 @@ type TypeInput struct {
 	ContactMethodEmail        plessmodels.ContactMethodEmailConfig
 	ContactMethodEmailOrPhone plessmodels.ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
-	Providers                 []tpmodels.TypeProvider
+	GetCustomUserInputCode    func(tenantId string, userContext supertokens.UserContext) (string, error)
+	Providers                 []tpmodels.ProviderInput
 	Override                  *OverrideStruct
 	EmailDelivery             *emaildelivery.TypeInput
 	SmsDelivery               *smsdelivery.TypeInput
@@ -51,8 +52,8 @@ type TypeNormalisedInput struct {
 	ContactMethodEmail        plessmodels.ContactMethodEmailConfig
 	ContactMethodEmailOrPhone plessmodels.ContactMethodEmailOrPhoneConfig
 	FlowType                  string
-	GetCustomUserInputCode    func(userContext supertokens.UserContext) (string, error)
-	Providers                 []tpmodels.TypeProvider
+	GetCustomUserInputCode    func(tenantId string, userContext supertokens.UserContext) (string, error)
+	Providers                 []tpmodels.ProviderInput
 	Override                  OverrideStruct
 	GetEmailDeliveryConfig    func() emaildelivery.TypeInputWithService
 	GetSmsDeliveryConfig      func() smsdelivery.TypeInputWithService

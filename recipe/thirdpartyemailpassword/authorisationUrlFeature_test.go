@@ -46,7 +46,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(
 				&tpepmodels.TypeInput{
-					Providers: []tpmodels.TypeProvider{
+					Providers: []tpmodels.ProviderInput{
 						customProvider1,
 					},
 				},
@@ -92,7 +92,7 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 
 	assert.Equal(t, "OK", data["status"])
 
-	fetchedUrl, err := url.Parse(data["url"].(string))
+	fetchedUrl, err := url.Parse(data["urlWithQueryParams"].(string))
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -114,7 +114,7 @@ func TestThirdPartyProviderDoesnotExsit(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(
 				&tpepmodels.TypeInput{
-					Providers: []tpmodels.TypeProvider{
+					Providers: []tpmodels.ProviderInput{
 						customProvider1,
 					},
 				},
@@ -160,5 +160,5 @@ func TestThirdPartyProviderDoesnotExsit(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, "The third party provider google seems to be missing from the backend configs.", data["message"].(string))
+	assert.Equal(t, "the provider google could not be found in the configuration", data["message"].(string))
 }

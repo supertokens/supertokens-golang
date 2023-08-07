@@ -57,11 +57,8 @@ func TestTheDefaultRouteAndItShouldRevokeTheSession(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -98,10 +95,14 @@ func TestTheDefaultRouteAndItShouldRevokeTheSession(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)
@@ -170,9 +171,6 @@ func TestDisablingDefaultRouteAndCallingTheAPIReturns404(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
 				Override: &tplmodels.OverrideStruct{
 					APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
@@ -180,7 +178,7 @@ func TestDisablingDefaultRouteAndCallingTheAPIReturns404(t *testing.T) {
 						return originalImplementation
 					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -246,11 +244,8 @@ func TestCallingAPIWithoutSessionShouldReturnOk(t *testing.T) {
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -315,11 +310,8 @@ func TestThatSignoutAPIreturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
 					Enabled: true,
-					CreateAndSendCustomEmail: func(email string, userInputCode, urlWithLinkCode *string, codeLifetime uint64, preAuthSessionId string, userContext supertokens.UserContext) error {
-						return nil
-					},
 				},
-				Providers: []tpmodels.TypeProvider{
+				Providers: []tpmodels.ProviderInput{
 					signinupCustomProvider1,
 				},
 			}),
@@ -357,10 +349,14 @@ func TestThatSignoutAPIreturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]string{
+	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
-		"code":         "32432432",
-		"redirectURI":  "http://127.0.0.1/callback",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "32432432",
+			},
+		},
 	}
 
 	postBody, err := json.Marshal(postData)

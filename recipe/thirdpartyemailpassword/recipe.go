@@ -67,7 +67,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		var getEmailPasswordConfig = func() epmodels.TypeNormalisedInput {
 			return r.emailPasswordRecipe.Config
 		}
-		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance, getEmailPasswordConfig))
+		r.RecipeImpl = verifiedConfig.Override.Functions(recipeimplementation.MakeRecipeImplementation(*emailpasswordquerierInstance, thirdpartyquerierInstance, getEmailPasswordConfig, verifiedConfig.Providers))
 	}
 	r.APIImpl = verifiedConfig.Override.APIs(api.MakeAPIImplementation())
 
@@ -81,8 +81,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 
 	if emailPasswordInstance == nil {
 		emailPasswordConfig := &epmodels.TypeInput{
-			SignUpFeature:                  verifiedConfig.SignUpFeature,
-			ResetPasswordUsingTokenFeature: verifiedConfig.ResetPasswordUsingTokenFeature,
+			SignUpFeature: verifiedConfig.SignUpFeature,
 			Override: &epmodels.OverrideStruct{
 				Functions: func(_ epmodels.RecipeInterface) epmodels.RecipeInterface {
 					return emailPasswordRecipeImpl
@@ -101,33 +100,31 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		r.emailPasswordRecipe = emailPasswordInstance
 	}
 
-	r.GetEmailPasswordRecipe = func() *emailpassword.Recipe {
-		return r.emailPasswordRecipe
+	if thirdPartyInstance == nil {
+		thirdPartyConfig := &tpmodels.TypeInput{
+			SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+				Providers: verifiedConfig.Providers,
+			},
+			Override: &tpmodels.OverrideStruct{
+				Functions: func(_ tpmodels.RecipeInterface) tpmodels.RecipeInterface {
+					return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
+				},
+				APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
+					return api.GetThirdPartyIterfaceImpl(r.APIImpl)
+				},
+			},
+		}
+		thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailDelivery, onSuperTokensAPIError)
+		if err != nil {
+			return Recipe{}, err
+		}
+		r.thirdPartyRecipe = &thirdPartyRecipeinstance
+	} else {
+		r.thirdPartyRecipe = thirdPartyInstance
 	}
 
-	if len(verifiedConfig.Providers) > 0 {
-		if thirdPartyInstance == nil {
-			thirdPartyConfig := &tpmodels.TypeInput{
-				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
-					Providers: verifiedConfig.Providers,
-				},
-				Override: &tpmodels.OverrideStruct{
-					Functions: func(_ tpmodels.RecipeInterface) tpmodels.RecipeInterface {
-						return recipeimplementation.MakeThirdPartyRecipeImplementation(r.RecipeImpl)
-					},
-					APIs: func(_ tpmodels.APIInterface) tpmodels.APIInterface {
-						return api.GetThirdPartyIterfaceImpl(r.APIImpl)
-					},
-				},
-			}
-			thirdPartyRecipeinstance, err := thirdparty.MakeRecipe(recipeId, appInfo, thirdPartyConfig, &r.EmailDelivery, onSuperTokensAPIError)
-			if err != nil {
-				return Recipe{}, err
-			}
-			r.thirdPartyRecipe = &thirdPartyRecipeinstance
-		} else {
-			r.thirdPartyRecipe = thirdPartyInstance
-		}
+	r.GetEmailPasswordRecipe = func() *emailpassword.Recipe {
+		return r.emailPasswordRecipe
 	}
 
 	return *r, nil
@@ -176,21 +173,21 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	return apisHandled, nil
 }
 
-func (r *Recipe) handleAPIRequest(id string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string) error {
-	ok, err := r.emailPasswordRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request, res http.ResponseWriter, theirHandler http.HandlerFunc, path supertokens.NormalisedURLPath, method string, userContext supertokens.UserContext) error {
+	ok, _, err := r.emailPasswordRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 	if err != nil {
 		return err
 	}
 	if ok != nil {
-		return r.emailPasswordRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+		return r.emailPasswordRecipe.RecipeModule.HandleAPIRequest(id, tenantId, req, res, theirHandler, path, method, userContext)
 	}
 	if r.thirdPartyRecipe != nil {
-		ok, err := r.thirdPartyRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method)
+		ok, _, err := r.thirdPartyRecipe.RecipeModule.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 		if err != nil {
 			return err
 		}
 		if ok != nil {
-			return r.thirdPartyRecipe.RecipeModule.HandleAPIRequest(id, req, res, theirHandler, path, method)
+			return r.thirdPartyRecipe.RecipeModule.HandleAPIRequest(id, tenantId, req, res, theirHandler, path, method, userContext)
 		}
 	}
 	return errors.New("should not come here")
