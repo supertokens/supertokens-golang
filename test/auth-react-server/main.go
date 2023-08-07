@@ -18,6 +18,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -850,39 +851,16 @@ func customAuth0Provider() tpmodels.ProviderInput {
 
 	providerInput.Override = func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-
-			authCodeResponseJson, err := json.Marshal(oAuthTokens)
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
+			_, ok := oAuthTokens["access_token"]
+			if !ok {
+				return tpmodels.TypeUserInfo{}, errors.New("access token is undefined")
 			}
-
-			var accessTokenAPIResponse auth0GetProfileInfoInput
-			err = json.Unmarshal(authCodeResponseJson, &accessTokenAPIResponse)
-
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
-			}
-
-			accessToken := accessTokenAPIResponse.AccessToken
-			authHeader := "Bearer " + accessToken
-
-			// TODO maybe userInfoEndpoint is enough. Verify while testing
-			response, err := getAuth0AuthRequest(authHeader)
-
-			if err != nil {
-				return tpmodels.TypeUserInfo{}, err
-			}
-
-			userInfo := response.(map[string]interface{})
-
-			ID := userInfo["sub"].(string)
-			email := userInfo["name"].(string)
 
 			return tpmodels.TypeUserInfo{
-				ThirdPartyUserId: ID,
+				ThirdPartyUserId: "someId",
 				Email: &tpmodels.EmailStruct{
-					ID:         email,
-					IsVerified: true, // true if email is verified already
+					ID:         "test@example.com",
+					IsVerified: true,
 				},
 			}, nil
 		}
