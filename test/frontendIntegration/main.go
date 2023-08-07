@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -341,6 +342,7 @@ func reinitialiseBackendConfig(w http.ResponseWriter, r *http.Request) {
 	}
 	supertokens.ResetForTest()
 	session.ResetForTest()
+	multitenancy.ResetForTest()
 	callSTInit(lastAntiCsrfSetting, lastEnableJWTSetting, jwtPropertyName)
 	w.Write([]byte(""))
 }
