@@ -534,6 +534,8 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
 				FlowType:                  passwordlessConfig.FlowType,
 				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+				EmailDelivery:             passwordlessConfig.EmailDelivery,
+				SmsDelivery:               passwordlessConfig.SmsDelivery,
 				Providers: []tpmodels.ProviderInput{
 					{
 						Config: tpmodels.ProviderConfig{
