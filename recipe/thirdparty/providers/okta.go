@@ -28,7 +28,7 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			if config.OIDCDiscoveryEndpoint == "" {
-				config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://%s.okta.com", config.AdditionalConfig["oktaDomain"])
+				config.OIDCDiscoveryEndpoint = fmt.Sprint(config.AdditionalConfig["oktaDomain"])
 			}
 
 			if len(config.Scope) == 0 {
