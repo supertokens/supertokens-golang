@@ -83,7 +83,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	}
 
 	getUsersThatHaveRole := func(role string, tenantId string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/role/users", map[string]string{
+		response, err := querier.SendGetRequest(tenantId+"/recipe/role/users", map[string]string{
 			"role": role,
 		})
 		if err != nil {

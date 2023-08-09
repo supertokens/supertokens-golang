@@ -162,29 +162,29 @@ func TestGetProvider(t *testing.T) {
 	multitenancy.CreateOrUpdateThirdPartyConfig("t1", tpmodels.ProviderConfig{
 		ThirdPartyId: "google",
 		Clients:      []tpmodels.ProviderClientConfig{{ClientID: "a"}},
-	}, false)
+	}, nil)
 	multitenancy.CreateOrUpdateThirdPartyConfig("t1", tpmodels.ProviderConfig{
 		ThirdPartyId: "facebook",
 		Clients:      []tpmodels.ProviderClientConfig{{ClientID: "a"}},
-	}, false)
+	}, nil)
 
 	multitenancy.CreateOrUpdateThirdPartyConfig("t2", tpmodels.ProviderConfig{
 		ThirdPartyId: "discord",
 		Clients:      []tpmodels.ProviderClientConfig{{ClientID: "a"}},
-	}, false)
+	}, nil)
 	multitenancy.CreateOrUpdateThirdPartyConfig("t2", tpmodels.ProviderConfig{
 		ThirdPartyId: "facebook",
 		Clients:      []tpmodels.ProviderClientConfig{{ClientID: "a"}},
-	}, false)
+	}, nil)
 
 	multitenancy.CreateOrUpdateThirdPartyConfig("t3", tpmodels.ProviderConfig{
 		ThirdPartyId: "discord",
 		Clients:      []tpmodels.ProviderClientConfig{{ClientID: "a"}},
-	}, false)
+	}, nil)
 	multitenancy.CreateOrUpdateThirdPartyConfig("t3", tpmodels.ProviderConfig{
 		ThirdPartyId: "linkedin",
 		Clients:      []tpmodels.ProviderClientConfig{{ClientID: "a"}},
-	}, false)
+	}, nil)
 
 	provider, err := GetProvider("t1", "google", nil)
 	assert.Nil(t, err)
@@ -255,7 +255,7 @@ func TestGetProviderMergesConfigFromStaticAndCore(t *testing.T) {
 		Clients: []tpmodels.ProviderClientConfig{
 			{ClientID: "coreclientid", ClientSecret: "coreclientsecret"},
 		},
-	}, false)
+	}, nil)
 
 	provider, err := GetProvider("t1", "google", nil)
 	assert.Nil(t, err)

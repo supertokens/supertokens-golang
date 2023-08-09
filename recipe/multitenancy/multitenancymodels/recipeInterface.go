@@ -30,7 +30,7 @@ type RecipeInterface struct {
 	ListAllTenants       *func(userContext supertokens.UserContext) (ListAllTenantsResponse, error)
 
 	// Third party provider management
-	CreateOrUpdateThirdPartyConfig *func(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (CreateOrUpdateThirdPartyConfigResponse, error)
+	CreateOrUpdateThirdPartyConfig *func(tenantId string, config tpmodels.ProviderConfig, skipValidation *bool, userContext supertokens.UserContext) (CreateOrUpdateThirdPartyConfigResponse, error)
 	DeleteThirdPartyConfig         *func(tenantId string, thirdPartyId string, userContext supertokens.UserContext) (DeleteThirdPartyConfigResponse, error)
 
 	// User tenant association
