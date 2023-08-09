@@ -283,7 +283,7 @@ func TestCreateThirdPartyConfig(t *testing.T) {
 				ClientID: "abcd",
 			},
 		},
-	}, false)
+	}, nil)
 	assert.Nil(t, err)
 	assert.True(t, res.OK.CreatedNew)
 
@@ -335,7 +335,7 @@ func TestDeleteThirdPartyConfig(t *testing.T) {
 				ClientID: "abcd",
 			},
 		},
-	}, false)
+	}, nil)
 	assert.Nil(t, err)
 	assert.True(t, res.OK.CreatedNew)
 
@@ -394,7 +394,7 @@ func TestUpdateThirdPartyConfig(t *testing.T) {
 				ClientID: "abcd",
 			},
 		},
-	}, false)
+	}, nil)
 	assert.Nil(t, err)
 	assert.True(t, res.OK.CreatedNew)
 
@@ -412,7 +412,7 @@ func TestUpdateThirdPartyConfig(t *testing.T) {
 				ClientID: "efgh",
 			},
 		},
-	}, false)
+	}, nil)
 	assert.Nil(t, err)
 	assert.False(t, res.OK.CreatedNew)
 

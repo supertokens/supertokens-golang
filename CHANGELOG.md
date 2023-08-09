@@ -31,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Only supporting FDI 1.17
 -   Core must be upgraded to 6.0
+-   For consistency, all `UnknownUserIDError` have been renamed to `UnknownUserIdError`
 -   `getUsersOldestFirst` & `getUsersNewestFirst` has mandatory parameter `tenantId`. Pass `'public'` if not using multitenancy.
 -   Added mandatory field `tenantId` to `EmailDeliveryInterface` and `SmsDeliveryInterface`. Pass `'public'` if not using multitenancy.
 -   Removed deprecated config `createAndSendCustomEmail` and `createAndSendCustomTextMessage`.

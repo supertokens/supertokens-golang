@@ -70,7 +70,7 @@ func ListAllTenants(userContext ...supertokens.UserContext) (multitenancymodels.
 }
 
 // Third party provider management
-func CreateOrUpdateThirdPartyConfig(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext ...supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+func CreateOrUpdateThirdPartyConfig(tenantId string, config tpmodels.ProviderConfig, skipValidation *bool, userContext ...supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err

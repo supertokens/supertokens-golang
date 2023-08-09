@@ -123,16 +123,19 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		return result, nil
 	}
 
-	createOrUpdateThirdPartyConfig := func(tenantId string, config tpmodels.ProviderConfig, skipValidation bool, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
+	createOrUpdateThirdPartyConfig := func(tenantId string, config tpmodels.ProviderConfig, skipValidation *bool, userContext supertokens.UserContext) (multitenancymodels.CreateOrUpdateThirdPartyConfigResponse, error) {
 		configMap, err := supertokens.StructToMap(config)
 		if err != nil {
 			return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
 		}
 
-		response, err := querier.SendPutRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty", tenantId), map[string]interface{}{
-			"config":         configMap,
-			"skipValidation": skipValidation,
-		})
+		requestBody := map[string]interface{}{
+			"config": configMap,
+		}
+		if skipValidation != nil {
+			requestBody["skipValidation"] = *skipValidation
+		}
+		response, err := querier.SendPutRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty", tenantId), requestBody)
 		if err != nil {
 			return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
 		}

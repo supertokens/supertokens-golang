@@ -56,17 +56,15 @@ const (
 	FromUserInfoAPI    TypeFrom = "userInfoAPI"
 )
 
+type TypeUserInfoMapFields struct {
+	UserId        string `json:"userId,omitempty"`
+	Email         string `json:"email,omitempty"`
+	EmailVerified string `json:"emailVerified,omitempty"`
+}
+
 type TypeUserInfoMap struct {
-	FromIdTokenPayload struct {
-		UserId        string `json:"userId,omitempty"`
-		Email         string `json:"email,omitempty"`
-		EmailVerified string `json:"emailVerified,omitempty"`
-	} `json:"fromIdTokenPayload,omitempty"`
-	FromUserInfoAPI struct {
-		UserId        string `json:"userId,omitempty"`
-		Email         string `json:"email,omitempty"`
-		EmailVerified string `json:"emailVerified,omitempty"`
-	} `json:"fromUserInfoAPI,omitempty"`
+	FromIdTokenPayload TypeUserInfoMapFields `json:"fromIdTokenPayload,omitempty"`
+	FromUserInfoAPI    TypeUserInfoMapFields `json:"fromUserInfoAPI,omitempty"`
 }
 
 type User struct {
