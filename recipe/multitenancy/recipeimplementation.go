@@ -133,7 +133,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 			"config": configMap,
 		}
 		if skipValidation != nil {
-			requestBody["skipApiCleanUp"] = *skipValidation
+			requestBody["skipValidation"] = *skipValidation
 		}
 		response, err := querier.SendPutRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty", tenantId), requestBody)
 		if err != nil {
