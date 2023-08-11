@@ -26,7 +26,7 @@ func AppleRedirectHandler(apiImplementation tpmodels.APIInterface, options tpmod
 		return nil
 	}
 
-	err := options.Req.ParseMultipartForm(0)
+	err := options.Req.ParseForm()
 	if err != nil {
 		return err
 	}
