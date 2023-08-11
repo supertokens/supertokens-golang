@@ -118,7 +118,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
 		state := formPostInfoFromProvider["state"].(string)
-		stateBytes, err := base64.RawStdEncoding.DecodeString(state)
+		stateBytes, err := base64.StdEncoding.DecodeString(state)
 
 		if err != nil {
 			return err
@@ -130,7 +130,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return err
 		}
 
-		redirectURL := stateObj["redirectURI"].(string)
+		redirectURL := stateObj["frontendRedirectURI"].(string)
 		parsedRedirectURL, err := url.Parse(redirectURL)
 		if err != nil {
 			return err
