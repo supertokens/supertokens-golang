@@ -130,7 +130,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return err
 		}
 
-		redirectURL := stateObj["redirectURI"].(string)
+		redirectURL := stateObj["frontendRedirectURI"].(string)
 		parsedRedirectURL, err := url.Parse(redirectURL)
 		if err != nil {
 			return err
