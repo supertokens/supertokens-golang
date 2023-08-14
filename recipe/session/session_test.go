@@ -1714,7 +1714,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, returnedFromCache, false)
+	assert.Equal(t, <-returnedFromCache, false)
 
 	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
@@ -1722,7 +1722,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, returnedFromCache, true)
+	assert.Equal(t, <-returnedFromCache, true)
 
 	time.Sleep(3 * time.Second)
 
@@ -1732,7 +1732,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, returnedFromCache, false)
+	assert.Equal(t, <-returnedFromCache, false)
 
 	JWKRefreshRateLimit = originalRefreshlimit
 	JWKCacheMaxAgeInMs = originalCacheAge
