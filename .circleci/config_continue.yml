@@ -74,21 +74,13 @@ workflows:
     tagged-build:
         jobs:
             - test-dev-tag-as-not-passed:
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        ignore: /.*/
+                filters: {}
             - test-unit:
                 requires:
                     - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        ignore: /.*/
+                filters: {}
                 matrix:
                     parameters:
                         cdi-version: placeholder
@@ -97,11 +89,7 @@ workflows:
                     - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        ignore: /.*/
+                filters: {}
             - test-authreact:
                 requires:
                     - test-dev-tag-as-not-passed
