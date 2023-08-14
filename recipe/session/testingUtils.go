@@ -24,7 +24,7 @@ import (
 
 // Testing constants
 var didGetSessionCallCore = false
-var returnedFromCache chan bool
+var returnedFromCache chan bool = make(chan bool, 1000)
 var urlsAttemptedForJWKSFetch []string
 
 func resetAll() {
