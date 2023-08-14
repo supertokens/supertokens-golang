@@ -63,7 +63,7 @@ func getJWKSFromCacheIfPresent() *sessmodels.GetJWKSResult {
 		// from the cores again after the entry in the cache is expired
 		if (currentTime - jwksCache.LastFetched) < JWKCacheMaxAgeInMs {
 			if supertokens.IsRunningInTestMode() {
-				returnedFromCache = true
+				returnedFromCache <- true
 			}
 
 			return jwksCache
@@ -116,7 +116,7 @@ func getJWKS() (*keyfunc.JWKS, error) {
 			jwksCache = &jwksResult
 
 			if supertokens.IsRunningInTestMode() {
-				returnedFromCache = false
+				returnedFromCache <- false
 			}
 
 			return jwksResult.JWKS, nil

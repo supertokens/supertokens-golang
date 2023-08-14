@@ -1973,6 +1973,7 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
+	<-returnedFromCache // this value must be ignored
 
 	for _, k := range jwks.KIDs() {
 		keys = append(keys, k)
@@ -1989,7 +1990,7 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 
 	for i := 0; i < threadCount; i++ {
 		go jwksLockTestRoutine(t, &shouldStop, i, &wg, func(_keys []string) {
-			if returnedFromCache == false {
+			if <-returnedFromCache == false {
 				notReturnFromCacheCount++
 			}
 

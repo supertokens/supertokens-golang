@@ -24,14 +24,14 @@ import (
 
 // Testing constants
 var didGetSessionCallCore = false
-var returnedFromCache = false
+var returnedFromCache chan bool
 var urlsAttemptedForJWKSFetch []string
 
 func resetAll() {
 	supertokens.ResetForTest()
 	ResetForTest()
 	didGetSessionCallCore = false
-	returnedFromCache = false
+	returnedFromCache = make(chan bool, 1000)
 	urlsAttemptedForJWKSFetch = []string{}
 	jwksCache = nil
 }
