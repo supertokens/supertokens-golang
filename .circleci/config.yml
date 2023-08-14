@@ -26,4 +26,7 @@ workflows:
     jobs:
       - setup:
           filters:
-            branches: {}
+            tags:
+              only: /dev-v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
