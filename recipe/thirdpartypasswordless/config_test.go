@@ -83,6 +83,7 @@ func TestMinimumConfigForThirdPartyPasswordlessWithEmailOrPhoneContactMethod(t *
 	thirdPartyPasswordlessRecipe, err := GetRecipeInstanceOrThrowError()
 	assert.NoError(t, err)
 	assert.Equal(t, "USER_INPUT_CODE_AND_MAGIC_LINK", thirdPartyPasswordlessRecipe.Config.FlowType)
+	assert.NotNil(t, thirdPartyPasswordlessRecipe.thirdPartyRecipe) // thirdPartyRecipe must be created always
 }
 
 func TestForThirdPartyPasswordLessCreateAndSendCustomTextMessageWithFlowTypeMagicLinkAndPhoneContactMethod(t *testing.T) {

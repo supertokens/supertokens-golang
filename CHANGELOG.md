@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.13.1] - 2023-08-24
+
+-   Fixes login methods API to return empty provider array instead of `null`
+-   Fixes thirdpartypasswordless initialization when there are no static providers configured
+
 ## [0.13.0] - 2023-08-07
 
 ### Added
