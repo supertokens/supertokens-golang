@@ -27,7 +27,7 @@ func MakeAPIImplementation() multitenancymodels.APIInterface {
 
 		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(providerConfigsFromCore, providerInputsFromStatic)
 
-		var finalProviderList []multitenancymodels.TypeThirdPartyProvider
+		var finalProviderList []multitenancymodels.TypeThirdPartyProvider = []multitenancymodels.TypeThirdPartyProvider{}
 
 		for _, providerInput := range mergedProviders {
 			providerInstance, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, providerInput.Config.ThirdPartyId, clientType, userContext)
