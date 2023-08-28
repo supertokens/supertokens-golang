@@ -17,6 +17,7 @@ func resetQuerier() {
 }
 
 func TestThatNetworkCallIsRetried(t *testing.T) {
+	resetAll()
 	mux := http.NewServeMux()
 
 	numberOfTimesCalled := 0
