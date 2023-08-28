@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.12.11] - 2023-08-28
+
+- Adds logic to retry network calls if the core returns status 429
+
 ## [0.12.10] - 2023-07-31
 
 - Fixes error handling with regenerate access token when the access token of the session is revoked.
