@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"strings"
 	"sync"
+	"time"
 )
 
 type Querier struct {
@@ -61,7 +62,7 @@ func (q *Querier) GetQuerierAPIVersion() (string, error) {
 		}
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(QuerierHosts))
+	}, len(QuerierHosts), nil)
 
 	if err != nil {
 		return "", err
@@ -141,7 +142,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(QuerierHosts))
+	}, len(QuerierHosts), nil)
 }
 
 func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string) (map[string]interface{}, error) {
@@ -182,7 +183,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(QuerierHosts))
+	}, len(QuerierHosts), nil)
 }
 
 func (q *Querier) SendGetRequest(path string, params map[string]string) (map[string]interface{}, error) {
@@ -217,7 +218,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(QuerierHosts))
+	}, len(QuerierHosts), nil)
 }
 
 func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
@@ -251,7 +252,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 
 		client := &http.Client{}
 		return client.Do(req)
-	}, len(QuerierHosts))
+	}, len(QuerierHosts), nil)
 }
 
 type httpRequestFunction func(url string) (*http.Response, error)
@@ -274,7 +275,7 @@ func GetAllCoreUrlsForPath(path string) []string {
 	return result
 }
 
-func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int) (map[string]interface{}, error) {
+func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int, retryInfoMap *map[string]int) (map[string]interface{}, error) {
 	if numberOfTries == 0 {
 		return nil, errors.New("no SuperTokens core available to query")
 	}
@@ -282,14 +283,31 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	querierHostLock.Lock()
 	currentDomain := QuerierHosts[querierLastTriedIndex].Domain.GetAsStringDangerous()
 	currentBasePath := QuerierHosts[querierLastTriedIndex].BasePath.GetAsStringDangerous()
+	url := currentDomain + currentBasePath + path.GetAsStringDangerous()
+
+	maxRetries := 5
+	var _retryInfoMap map[string]int
+
+	if retryInfoMap != nil {
+		_retryInfoMap = *retryInfoMap
+	} else {
+		_retryInfoMap = map[string]int{}
+	}
+
+	_, ok := _retryInfoMap[url]
+
+	if !ok {
+		_retryInfoMap[url] = maxRetries
+	}
+
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(QuerierHosts)
 	querierHostLock.Unlock()
 
-	resp, err := httpRequest(currentDomain + currentBasePath + path.GetAsStringDangerous())
+	resp, err := httpRequest(url)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {
-			return q.sendRequestHelper(path, httpRequest, numberOfTries-1)
+			return q.sendRequestHelper(path, httpRequest, numberOfTries-1, &_retryInfoMap)
 		}
 		if resp != nil {
 			resp.Body.Close()
@@ -304,6 +322,21 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		return nil, readErr
 	}
 	if resp.StatusCode != 200 {
+		if resp.StatusCode == RateLimitStatusCode {
+			retriesLeft := _retryInfoMap[url]
+
+			if retriesLeft > 0 {
+				_retryInfoMap[url] = retriesLeft - 1
+
+				attemptsMade := maxRetries - retriesLeft
+				delay := 10 + (250 * attemptsMade)
+
+				time.Sleep(time.Millisecond * time.Duration(delay))
+
+				return q.sendRequestHelper(path, httpRequest, numberOfTries, &_retryInfoMap)
+			}
+		}
+
 		return nil, fmt.Errorf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body)
 	}
 

@@ -30,3 +30,5 @@ var (
 const DashboardVersion = "0.7"
 
 const DefaultTenantId string = "public"
+
+const RateLimitStatusCode = 429
