@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.11.1] - 2023-08-28
+
+- Adds logic to retry network calls if the core returns status 429
+
 ## [0.11.0] - 2023-04-28
 - Added missing arguments in `GetUsersNewestFirst` and `GetUsersOldestFirst`
 
