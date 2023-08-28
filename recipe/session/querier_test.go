@@ -1,10 +1,9 @@
-package test
+package session
 
 import (
 	"encoding/json"
 	"errors"
 	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/http/httptest"
@@ -80,7 +79,7 @@ func TestThatNetworkCallIsRetried(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 
@@ -155,7 +154,7 @@ func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 
@@ -224,7 +223,7 @@ func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			session.Init(nil),
+			Init(nil),
 		},
 	}
 
