@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.13.2] - 2023-08-28
+
+-   Adds logic to retry network calls if the core returns status 429
+
 ## [0.13.1] - 2023-08-24
 
 -   Fixes login methods API to return empty provider array instead of `null`
