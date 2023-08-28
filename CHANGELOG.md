@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.9.16] - 2023-08-28
+
+-   Adds logic to retry network calls if the core returns status 429
 -   Fixes issue with go-fiber example, where updating accessTokenPayload from user defined endpoint doesn't reflect in the response cookies.
 
 ## [0.9.14] - 2022-12-26
