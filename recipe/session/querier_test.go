@@ -17,6 +17,7 @@ func resetQuerier() {
 }
 
 func TestThatNetworkCallIsRetried(t *testing.T) {
+	resetAll()
 	mux := http.NewServeMux()
 
 	numberOfTimesCalled := 0
@@ -123,6 +124,7 @@ func TestThatNetworkCallIsRetried(t *testing.T) {
 }
 
 func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
+	resetAll()
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/testing", func(rw http.ResponseWriter, r *http.Request) {
@@ -185,6 +187,7 @@ func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
 }
 
 func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
+	resetAll()
 	mux := http.NewServeMux()
 
 	numberOfTimesFirstCalled := 0
