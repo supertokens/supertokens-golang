@@ -46,6 +46,10 @@ var (
 	querierHostLock       sync.Mutex
 )
 
+func SetQuerierApiVersionForTests(version string) {
+	querierAPIVersion = version
+}
+
 func (q *Querier) GetQuerierAPIVersion() (string, error) {
 	querierLock.Lock()
 	defer querierLock.Unlock()
