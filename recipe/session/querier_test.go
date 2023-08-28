@@ -123,6 +123,7 @@ func TestThatNetworkCallIsRetried(t *testing.T) {
 }
 
 func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
+	resetAll()
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/testing", func(rw http.ResponseWriter, r *http.Request) {
@@ -177,7 +178,7 @@ func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
 		t.Error(errors.New("request should have failed but didnt").Error())
 	} else {
 		if !strings.Contains(err.Error(), "with status code: 429") {
-			t.Error(errors.New("request failed with an unexpected error").Error())
+			t.Error(errors.New("request failed with an unexpected error" + err.Error()).Error())
 		}
 
 		assert.True(t, strings.Contains(err.Error(), "message: {\"status\":\"RATE_LIMIT_ERROR\"}"))
@@ -185,6 +186,7 @@ func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
 }
 
 func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
+	resetAll()
 	mux := http.NewServeMux()
 
 	numberOfTimesFirstCalled := 0
@@ -253,7 +255,7 @@ func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
 			t.Error(errors.New("request should have failed but didnt").Error())
 		} else {
 			if !strings.Contains(err.Error(), "with status code: 429") {
-				t.Error(errors.New("request failed with an unexpected error").Error())
+				t.Error(errors.New("request failed with an unexpected error" + err.Error()).Error())
 			}
 		}
 
@@ -268,7 +270,7 @@ func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
 			t.Error(errors.New("request should have failed but didnt").Error())
 		} else {
 			if !strings.Contains(err.Error(), "with status code: 429") {
-				t.Error(errors.New("request failed with an unexpected error").Error())
+				t.Error(errors.New("request failed with an unexpected error" + err.Error()).Error())
 			}
 		}
 
