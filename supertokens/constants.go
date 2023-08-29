@@ -20,11 +20,14 @@ const (
 	HeaderFDI = "fdi-version"
 )
 
-// VERSION current version of the lib
-const VERSION = "0.12.10"
+// VERSION current version
+//of the lib
+const VERSION = "0.12.11"
 
 var (
 	cdiSupported = []string{"2.21"}
 )
 
 const DashboardVersion = "0.6"
+
+const RateLimitStatusCode = 429
