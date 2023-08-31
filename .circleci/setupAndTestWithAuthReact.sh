@@ -26,7 +26,7 @@ pluginInterfaceVersionXY=$(echo $pluginInterfaceVersionXY | jq .pluginInterface 
 pluginInterfaceInfo=`curl -s -X GET \
 "https://api.supertokens.io/0/plugin-interface/latest?password=$SUPERTOKENS_API_KEY&planType=FREE&mode=DEV&version=$pluginInterfaceVersionXY" \
 -H 'api-version: 0'`
-echo "Pluugin interface info: $pluginInterfaceInfo
+echo "Plugin interface info: $pluginInterfaceInfo"
 if [[ `echo $pluginInterfaceInfo | jq .tag` == "null" ]]
 then
     echo "fetching latest X.Y.Z version for plugin-interface, X.Y version: $pluginInterfaceVersionXY, planType: FREE gave response: $pluginInterfaceInfo"
