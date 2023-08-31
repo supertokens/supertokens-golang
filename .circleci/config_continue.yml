@@ -51,6 +51,7 @@ jobs:
             - checkout
             - run: apt-get install lsof
             - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
+            - run: curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
             - run: |
                 set +e
                 export NVM_DIR="$HOME/.nvm"
