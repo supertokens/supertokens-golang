@@ -1,6 +1,7 @@
 coreInfo=`curl -s -X GET \
 "https://api.supertokens.io/0/core/latest?password=$SUPERTOKENS_API_KEY&planType=FREE&mode=DEV&version=$1" \
 -H 'api-version: 0'`
+echo "Core info: $coreInfo"
 if [[ `echo $coreInfo | jq .tag` == "null" ]]
 then
     echo "fetching latest X.Y.Z version for core, X.Y version: $1, planType: FREE gave response: $coreInfo"
@@ -9,9 +10,12 @@ fi
 coreTag=$(echo $coreInfo | jq .tag | tr -d '"')
 coreVersion=$(echo $coreInfo | jq .version | tr -d '"')
 
+echo "Core version: $coreVersion"
+
 pluginInterfaceVersionXY=`curl -s -X GET \
 "https://api.supertokens.io/0/core/dependency/plugin-interface/latest?password=$SUPERTOKENS_API_KEY&planType=FREE&mode=DEV&version=$1" \
 -H 'api-version: 0'`
+echo "Pluugin interface response: $pluginInterfaceVersionXY "
 if [[ `echo $pluginInterfaceVersionXY | jq .pluginInterface` == "null" ]]
 then
     echo "fetching latest X.Y version for plugin-interface, given core X.Y version: $1, planType: FREE gave response: $pluginInterfaceVersionXY"
@@ -22,6 +26,7 @@ pluginInterfaceVersionXY=$(echo $pluginInterfaceVersionXY | jq .pluginInterface 
 pluginInterfaceInfo=`curl -s -X GET \
 "https://api.supertokens.io/0/plugin-interface/latest?password=$SUPERTOKENS_API_KEY&planType=FREE&mode=DEV&version=$pluginInterfaceVersionXY" \
 -H 'api-version: 0'`
+echo "Pluugin interface info: $pluginInterfaceInfo
 if [[ `echo $pluginInterfaceInfo | jq .tag` == "null" ]]
 then
     echo "fetching latest X.Y.Z version for plugin-interface, X.Y version: $pluginInterfaceVersionXY, planType: FREE gave response: $pluginInterfaceInfo"
