@@ -105,14 +105,8 @@ workflows:
                     branches:
                         ignore: /.*/
             - test-authreact:
-                requires:
-                    - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
-                filters:
-                    branches:
-                        only:
-                            - cicd-changes
             - test-success:
                 requires:
                     - test-unit
