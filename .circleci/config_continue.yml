@@ -54,14 +54,14 @@ jobs:
             - run:
               name: Swap node versions
               command: |
-                  set +e
-                  export NVM_DIR="$HOME/.nvm"
-                  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-                  nvm install 16
+                set +e
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                nvm install 16
                   
-                  echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-                  echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+                echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+                echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
