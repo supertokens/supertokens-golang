@@ -51,9 +51,7 @@ jobs:
             - checkout
             - run: apt-get install lsof
             - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
-            - run:
-              name: Swap node versions
-              command: |
+            - run: |
                 set +e
                 export NVM_DIR="$HOME/.nvm"
                 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
