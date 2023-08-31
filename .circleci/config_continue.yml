@@ -52,9 +52,7 @@ jobs:
             - run: apt-get install lsof
             - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
             - run: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
-            - run: source ~/.bashrc
-            - run: nvm install v16.19.1
-            - run: nvm use 16.19.1
+            - run: source ~/.bashrc && nvm install v16.19.1 && nvm use 16.19.1
             - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
