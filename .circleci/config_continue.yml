@@ -51,7 +51,7 @@ jobs:
             - checkout
             - run: apt-get install lsof
             - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
-            - run: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash
+            - run: curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.38.0/install.sh | bash && export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
             - run: source ~/.bashrc && nvm install v16.19.1 && nvm use 16.19.1
             - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
