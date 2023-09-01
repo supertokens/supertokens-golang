@@ -17,6 +17,7 @@
 package main
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -24,6 +25,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -170,6 +172,8 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			setEnableJWT(rw, r)
 		} else if r.URL.Path == "/login" && r.Method == "POST" {
 			login(rw, r)
+		} else if r.URL.Path == "/login-2.18" && r.Method == "POST" {
+			login218(rw, r)
 		} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
 			beforeeach(rw, r)
 		} else if r.URL.Path == "/testUserConfig" && r.Method == "POST" {
@@ -409,6 +413,69 @@ func login(response http.ResponseWriter, request *http.Request) {
 	userID := body["userId"].(string)
 	sess, _ := session.CreateNewSession(response, userID, nil, nil)
 	response.Write([]byte(sess.GetUserID()))
+}
+
+func login218(response http.ResponseWriter, request *http.Request) {
+	var body map[string]interface{}
+	_ = json.NewDecoder(request.Body).Decode(&body)
+
+	userID := body["userId"].(string)
+	payload := body["payload"].(map[string]interface{})
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("session")
+
+	if err != nil {
+		response.WriteHeader(500)
+		response.Write([]byte(""))
+		return
+	}
+
+	supertokens.SetQuerierApiVersionForTests("2.18")
+	resp, err := querier.SendPostRequest("/recipe/session", map[string]interface{}{
+		"userId":             userID,
+		"userDataInJWT":      payload,
+		"userDataInDatabase": map[string]interface{}{},
+		"enableAntiCsrf":     false,
+	})
+
+	if err != nil {
+		response.WriteHeader(500)
+		response.Write([]byte(""))
+		return
+	}
+
+	supertokens.SetQuerierApiVersionForTests("")
+
+	responseByte, err := json.Marshal(resp)
+	if err != nil {
+		response.WriteHeader(500)
+		response.Write([]byte(""))
+		return
+	}
+	var sessionResp sessmodels.CreateOrRefreshAPIResponse
+	err = json.Unmarshal(responseByte, &sessionResp)
+	if err != nil {
+		response.WriteHeader(500)
+		response.Write([]byte(""))
+		return
+	}
+
+	legacyAccessToken := sessionResp.AccessToken.Token
+	legacyRefreshToken := sessionResp.RefreshToken.Token
+
+	parsed, _ := json.Marshal(map[string]interface{}{
+		"uid": userID,
+		"ate": uint64(time.Now().UnixNano()/1000000) + 3600000,
+		"up":  payload,
+	})
+	data := []byte(parsed)
+
+	frontToken := base64.StdEncoding.EncodeToString(data)
+
+	response.Header().Set("st-access-token", legacyAccessToken)
+	response.Header().Set("st-refresh-token", legacyRefreshToken)
+	response.Header().Set("front-token", frontToken)
+	response.Write([]byte(""))
 }
 
 func fail(w http.ResponseWriter, r *http.Request) {

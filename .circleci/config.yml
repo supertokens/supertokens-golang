@@ -46,8 +46,16 @@ jobs:
             - checkout
             - run: apt-get install lsof
             - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
-            - run: curl -fsSL https://deb.nodesource.com/setup_16.x | bash
-            - run: apt install -y nodejs
+            - run: curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
+            - run: |
+                set +e
+                export NVM_DIR="$HOME/.nvm"
+                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                nvm install 16
+        
+                echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+                echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
