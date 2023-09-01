@@ -61,6 +61,7 @@ jobs:
                     
                 echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
                 echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+            - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
             - run: rm -rf /etc/alternatives/java
