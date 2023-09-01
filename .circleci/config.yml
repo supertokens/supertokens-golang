@@ -25,4 +25,8 @@ workflows:
   tagged-build:
     jobs:
       - setup:
-          filters: {}
+          filters:
+            tags:
+              only: /dev-v[0-9]+(\.[0-9]+)*/
+            branches:
+              ignore: /.*/
