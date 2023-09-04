@@ -51,7 +51,7 @@ git checkout $2
 npm run init
 cd ./test/server/
 GIT_SSH_COMMAND="ssh" npm i -d
-npm i git+https://github.com:supertokens/supertokens-node.git#$3
+GIT_SSH_COMMAND="ssh" npm i git+https://github.com:supertokens/supertokens-node.git#$3
 cd ../../
 cd ../project/test/auth-react-server
 go run main.go &
