@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.8.4] - 2022-08-31
+
+- Adds logic to retry network calls if the core returns status 429
+
 ## [0.8.3] - 2022-07-30
 ### Added
 - Adds test to verify that session container uses overridden functions
