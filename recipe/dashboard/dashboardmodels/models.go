@@ -30,7 +30,7 @@ const (
 
 type TypeNormalisedInput struct {
 	ApiKey   string
-	Admins   []string
+	Admins   *[]string
 	AuthMode TypeAuthMode
 	Override OverrideStruct
 }

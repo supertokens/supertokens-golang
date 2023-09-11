@@ -47,9 +47,9 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		supertokens.LogDebugMessage("User Dashboard: Providing 'Admins' has no effect when using an apiKey.")
 	}
 
-	admins := []string{}
+	var admins *[]string
 	if _config.Admins != nil {
-		admins = *_config.Admins
+		admins = _config.Admins
 	}
 
 	typeNormalisedInput.Admins = admins
