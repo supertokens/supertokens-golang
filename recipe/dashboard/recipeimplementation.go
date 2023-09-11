@@ -79,7 +79,7 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 					return false, nil
 				}
 
-				if supertokens.DoesSliceContainString(emailInHeaders, admins) {
+				if !supertokens.DoesSliceContainString(emailInHeaders, admins) {
 					supertokens.LogDebugMessage("User Dashboard: Throwing OPERATION_NOT_ALLOWED because user is not an admin")
 					return false, errors.ForbiddenAccessError{
 						Msg: "You are not permitted to perform this operation",
