@@ -17,7 +17,9 @@ package dashboard
 
 import (
 	"fmt"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/constants"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/errors"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/validationUtils"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
@@ -47,7 +49,45 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 
 			status, ok := verifyResponse["status"]
 
-			return ok && status.(string) == "OK", nil
+			if !ok || status != "OK" {
+				return false, nil
+			}
+
+			// For all non GET requests we also want to check if the user is allowed to perform this operation
+			if req.Method != http.MethodGet {
+				// We dont want to block the analytics API
+				if strings.HasSuffix(req.RequestURI, constants.DashboardAnalyticsAPI) {
+					return true, nil
+				}
+
+				// We do not want to block the sign out request
+				if strings.HasSuffix(req.RequestURI, constants.SignOutAPI) {
+					return true, nil
+				}
+
+				admins := config.Admins
+
+				// If the user has provided no admins, allow
+				if len(admins) == 0 {
+					return true, nil
+				}
+
+				emailInHeaders := req.Header.Get("email")
+
+				if emailInHeaders == "" {
+					supertokens.LogDebugMessage("User Dashboard: Returning Unauthorised because no email was provided in headers")
+					return false, nil
+				}
+
+				if supertokens.DoesSliceContainString(emailInHeaders, admins) {
+					supertokens.LogDebugMessage("User Dashboard: Throwing OPERATION_NOT_ALLOWED because user is not an admin")
+					return false, errors.ForbiddenAccessError{
+						Msg: "You are not permitted to perform this operation",
+					}
+				}
+			}
+
+			return true, nil
 		}
 
 		validateKeyResponse, err := validationUtils.ValidateApiKey(req, config, userContext)
