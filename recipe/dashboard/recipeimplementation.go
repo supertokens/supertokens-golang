@@ -71,9 +71,11 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 					return false, nil
 				}
 
-				// If the user has provided no admins, allow
 				if len(*admins) == 0 {
-					return true, nil
+					supertokens.LogDebugMessage("User Dashboard: Throwing OPERATION_NOT_ALLOWED because user is not an admin")
+					return false, errors.ForbiddenAccessError{
+						Msg: "You are not permitted to perform this operation",
+					}
 				}
 
 				userEmail, emailOk := verifyResponse["email"]
