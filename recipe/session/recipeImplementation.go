@@ -32,19 +32,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-var protectedProps = []string{
-	"sub",
-	"iat",
-	"exp",
-	"sessionHandle",
-	"parentRefreshTokenHash1",
-	"refreshTokenHash1",
-	"antiCsrfToken",
-	"tId",
-}
-
-var JWKCacheMaxAgeInMs int64 = 60000
-var JWKRefreshRateLimit = 500
 var jwksCache *sessmodels.GetJWKSResult = nil
 var mutex sync.RWMutex
 

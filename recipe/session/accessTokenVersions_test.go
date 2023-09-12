@@ -171,27 +171,30 @@ func TestShouldThrowErrorWhenUsingProtectedProps(t *testing.T) {
 		testServer.Close()
 	}()
 
-	appSub := "asdf"
-	body := map[string]map[string]*string{
-		"payload": {
-			"sub": &appSub,
-		},
-	}
+	sessionResponse, err := CreateNewSessionWithoutRequestResponse("public", "testing", map[string]interface{}{
+		"customProps": "custom",
+	}, map[string]interface{}{}, nil)
 
-	postBody, err := json.Marshal(body)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	res2, err2 := http.Post(testServer.URL+"/create", "application/json", bytes.NewBuffer(postBody))
-	if err2 != nil {
+
+	newSession, err := CreateNewSessionWithoutRequestResponse("public", "testing2", sessionResponse.GetAccessTokenPayload(), map[string]interface{}{}, nil)
+
+	if err != nil {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 400, res2.StatusCode)
-	cookies := unittesting.ExtractInfoFromResponse(res2)
-	assert.True(t, cookies["accessTokenFromAny"] == "")
-	assert.True(t, cookies["refreshTokenFromAny"] == "")
-	assert.True(t, cookies["frontToken"] == "")
+	accessToken := newSession.GetAccessToken()
+
+	parsedToken, err := ParseJWTWithoutSignatureVerification(accessToken)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.True(t, parsedToken.Payload["customProps"] == "custom")
+	// This makes sure it does not reuse the sub from the old payload
+	assert.True(t, parsedToken.Payload["sub"] == "testing2")
 }
 
 func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) {
