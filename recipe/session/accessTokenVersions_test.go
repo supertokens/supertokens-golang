@@ -184,14 +184,21 @@ func TestShouldThrowErrorWhenUsingProtectedProps(t *testing.T) {
 	}
 	res2, err2 := http.Post(testServer.URL+"/create", "application/json", bytes.NewBuffer(postBody))
 	if err2 != nil {
+		t.Error(err2.Error())
+	}
+
+	assert.Equal(t, 200, res2.StatusCode)
+	cookies := unittesting.ExtractInfoFromResponse(res2)
+	assert.False(t, cookies["accessTokenFromAny"] == "")
+	assert.False(t, cookies["refreshTokenFromAny"] == "")
+	assert.False(t, cookies["frontToken"] == "")
+
+	parsedToken, err := ParseJWTWithoutSignatureVerification(cookies["accessTokenFromAny"])
+	if err != nil {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 400, res2.StatusCode)
-	cookies := unittesting.ExtractInfoFromResponse(res2)
-	assert.True(t, cookies["accessTokenFromAny"] == "")
-	assert.True(t, cookies["refreshTokenFromAny"] == "")
-	assert.True(t, cookies["frontToken"] == "")
+	assert.True(t, parsedToken.Payload["sub"] != "asdf")
 }
 
 func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) {

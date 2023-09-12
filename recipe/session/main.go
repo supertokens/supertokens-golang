@@ -64,6 +64,10 @@ func CreateNewSessionWithoutRequestResponse(tenantId string, userID string, acce
 
 	finalAccessTokenPayload["iss"] = issuer
 
+	for _, protectedProp := range protectedProps {
+		delete(finalAccessTokenPayload, protectedProp)
+	}
+
 	for _, claim := range claimsAddedByOtherRecipes {
 		finalAccessTokenPayload, err = claim.Build(userID, tenantId, finalAccessTokenPayload, userContext[0])
 		if err != nil {

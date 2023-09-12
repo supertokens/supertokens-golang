@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changes
 
 -   Dashboard APIs now return a status code `403` for all non-GET requests if the currently logged in Dashboard User is not listed in the `admins` array
+-   Now ignoring protected props in the payload in `CreateNewSession` and `CreateNewSessionWithoutRequestResponse`
 
 ## [0.13.2] - 2023-08-28
 

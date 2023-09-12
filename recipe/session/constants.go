@@ -31,3 +31,17 @@ const (
 	CookieSameSite_LAX    = "lax"
 	CookieSameSite_STRICT = "strict"
 )
+
+var JWKCacheMaxAgeInMs int64 = 60000
+var JWKRefreshRateLimit = 500
+var protectedProps = []string{
+	"sub",
+	"iat",
+	"exp",
+	"sessionHandle",
+	"parentRefreshTokenHash1",
+	"refreshTokenHash1",
+	"antiCsrfToken",
+	"rsub",
+	"tId",
+}

@@ -43,6 +43,10 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, tenan
 	issuer := appInfo.APIDomain.GetAsStringDangerous() + appInfo.APIBasePath.GetAsStringDangerous()
 	finalAccessTokenPayload["iss"] = issuer
 
+	for _, protectedProp := range protectedProps {
+		delete(finalAccessTokenPayload, protectedProp)
+	}
+
 	for _, claim := range claimsAddedByOtherRecipes {
 		_finalAccessTokenPayload, err := claim.Build(userID, tenantId, finalAccessTokenPayload, userContext)
 		if err != nil {
