@@ -17,6 +17,7 @@ package dashboardmodels
 
 type TypeInput struct {
 	ApiKey   string
+	Admins   *[]string
 	Override *OverrideStruct
 }
 
@@ -29,6 +30,7 @@ const (
 
 type TypeNormalisedInput struct {
 	ApiKey   string
+	Admins   *[]string
 	AuthMode TypeAuthMode
 	Override OverrideStruct
 }

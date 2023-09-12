@@ -18,6 +18,7 @@ package dashboard
 import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"strings"
 )
 
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
@@ -42,6 +43,17 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
+	if _config.ApiKey != "" && config.Admins != nil {
+		supertokens.LogDebugMessage("User Dashboard: Providing 'Admins' has no effect when using an apiKey.")
+	}
+
+	var admins *[]string
+	if _config.Admins != nil {
+		admins = _config.Admins
+	}
+
+	typeNormalisedInput.Admins = admins
+
 	return typeNormalisedInput
 }
 
@@ -57,4 +69,10 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) dashboardmod
 			},
 		},
 	}
+}
+
+func normaliseEmail(email string) string {
+	_email := strings.TrimSpace(email)
+	_email = strings.ToLower(_email)
+	return _email
 }

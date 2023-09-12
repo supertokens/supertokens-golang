@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.14.0] - 2023-09-11
+
+### Added
+
+-   The Dashboard recipe now accepts a new `Admins` property which can be used to give Dashboard Users write privileges for the user dashboard.
+
+### Changes
+
+-   Dashboard APIs now return a status code `403` for all non-GET requests if the currently logged in Dashboard User is not listed in the `admins` array
+
 ## [0.13.2] - 2023-08-28
 
 -   Adds logic to retry network calls if the core returns status 429
