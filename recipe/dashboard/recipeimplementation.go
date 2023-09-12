@@ -68,7 +68,7 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 				admins := config.Admins
 
 				if admins == nil {
-					return false, nil
+					return true, nil
 				}
 
 				if len(*admins) == 0 {
