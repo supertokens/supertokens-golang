@@ -81,7 +81,7 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 				userEmail, emailOk := verifyResponse["email"]
 
 				if !emailOk || userEmail.(string) == "" {
-					supertokens.LogDebugMessage("User Dashboard: Returning Unauthorised because no email was provided in headers")
+					supertokens.LogDebugMessage("User Dashboard: Returning Unauthorised because no email was returned from the core. Should never come here")
 					return false, nil
 				}
 
