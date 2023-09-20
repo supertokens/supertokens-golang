@@ -318,6 +318,20 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	if strings.HasPrefix(hostname, "localhost") || strings.HasPrefix(hostname, "localhost.org") || isAnIP {
 		return "localhost", nil
 	}
+
+	/**
+	EffectiveTLDPlusOne fails if the TLD and the input domain are the same which is true in the case of some aws URLS
+	which are listedhere: https://publicsuffix.org/list/public_suffix_list.dat
+
+	Instead, we use PublicSuffix to get the parsed suffix. EffectiveTLDPlusOne internally uses PublicSuffix
+	*/
+	_publicSuffix, _ := publicsuffix.PublicSuffix(hostname)
+
+	// This check is added because of this issue: https://github.com/supertokens/supertokens-python/issues/394
+	if strings.HasSuffix(hostname, ".amazonaws.com") && strings.HasSuffix(_publicSuffix, hostname) {
+		return hostname, nil
+	}
+
 	parsedURL, err := publicsuffix.EffectiveTLDPlusOne(hostname)
 	if err != nil {
 		return "", errors.New("Please make sure that the apiDomain and websiteDomain have correct values")
