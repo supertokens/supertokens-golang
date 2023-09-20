@@ -328,7 +328,7 @@ func GetTopLevelDomainForSameSiteResolution(URL string) (string, error) {
 	_publicSuffix, _ := publicsuffix.PublicSuffix(hostname)
 
 	// This check is added because of this issue: https://github.com/supertokens/supertokens-python/issues/394
-	if strings.HasSuffix(hostname, ".amazonaws.com") && strings.HasSuffix(_publicSuffix, hostname) {
+	if strings.HasSuffix(hostname, ".amazonaws.com") && _publicSuffix == hostname {
 		return hostname, nil
 	}
 
