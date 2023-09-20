@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+-   Bumped `github.com/golang-jtw/jwt` version from v4 to v5.
+-   Bumped `github.com/MicahParks/keyfunc` version from v1 to v2.
+
 ## [0.14.0] - 2023-09-11
 
 ### Added
