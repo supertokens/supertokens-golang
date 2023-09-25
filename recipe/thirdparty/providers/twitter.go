@@ -62,9 +62,15 @@ func Twitter(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				twitterOauthParams = originalImplementation.Config.TokenEndpointBodyParams
 			}
 
+			codeVerifier := ""
+
+			if redirectURIInfo.PKCECodeVerifier != nil {
+				codeVerifier = *redirectURIInfo.PKCECodeVerifier
+			}
+
 			twitterOauthParams["grant_type"] = "authorization_code"
 			twitterOauthParams["client_id"] = originalImplementation.Config.ClientID
-			twitterOauthParams["code_verifier"] = redirectURIInfo.PKCECodeVerifier
+			twitterOauthParams["code_verifier"] = codeVerifier
 			twitterOauthParams["redirect_uri"] = redirectURIInfo.RedirectURIOnProviderDashboard
 			twitterOauthParams["code"] = redirectURIInfo.RedirectURIQueryParams["code"]
 
