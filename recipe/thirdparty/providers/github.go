@@ -16,6 +16,7 @@
 package providers
 
 import (
+	"encoding/base64"
 	"errors"
 	"fmt"
 
@@ -34,6 +35,36 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 	if input.Config.TokenEndpoint == "" {
 		input.Config.TokenEndpoint = "https://github.com/login/oauth/access_token"
+	}
+
+	if input.Config.ValidateAccessToken == nil {
+		input.Config.ValidateAccessToken = func(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, userContext supertokens.UserContext) error {
+			credentials := fmt.Sprintf("%s:%s", clientConfig.ClientID, clientConfig.ClientSecret)
+			basicAuthToken := base64.StdEncoding.EncodeToString([]byte(credentials))
+
+			resp, err := doPostRequest(
+				fmt.Sprintf("https://api.github.com/applications/%s/token", clientConfig.ClientID),
+				map[string]interface{}{
+					"access_token": accessToken,
+				},
+				map[string]interface{}{
+					"Authorization": fmt.Sprintf("Basic %s", basicAuthToken),
+				},
+			)
+			if err != nil {
+				return err
+			}
+
+			if _, ok := resp["app"]; !ok {
+				return errors.New("Access token does not belong to your application")
+			}
+
+			if resp["client_id"].(string) != clientConfig.ClientID {
+				return errors.New("Access token does not belong to your application")
+			}
+
+			return nil
+		}
 	}
 
 	oOverride := input.Override

@@ -144,6 +144,13 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		}
 	}
 
+	if accessTokenOk && config.ValidateAccessToken != nil {
+		err := config.ValidateAccessToken(accessToken, config, userContext)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
+		}
+	}
+
 	if accessTokenOk && config.UserInfoEndpoint != "" {
 		headers := map[string]string{
 			"Authorization": "Bearer " + accessToken,

@@ -126,7 +126,15 @@ type ProviderConfig struct {
 	RequireEmail                     *bool                  `json:"requireEmail,omitempty"`
 
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error `json:"-"`
-	GenerateFakeEmail      func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string                                       `json:"-"`
+
+	/**
+	 * This function is responsible for validating the access token received from the third party provider.
+	 * This check can include checking the expiry of the access token, checking the audience of the access token, etc.
+	 *
+	 * This function should return an error if the access token should be considered invalid, or return nothing if it is valid
+	 */
+	ValidateAccessToken func(accessToken string, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error `json:"-"`
+	GenerateFakeEmail   func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string                    `json:"-"`
 }
 
 type ProviderClientConfig struct {
@@ -158,6 +166,7 @@ type ProviderConfigForClientType struct {
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
 	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
+	ValidateAccessToken              func(accessToken string, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error `json:"-"`
 
 	RequireEmail      *bool
 	GenerateFakeEmail func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string
