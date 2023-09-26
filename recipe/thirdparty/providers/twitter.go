@@ -55,7 +55,20 @@ func Twitter(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		originalImplementation.ExchangeAuthCodeForOAuthTokens = func(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-			basicAuthToken := base64.StdEncoding.EncodeToString([]byte(originalImplementation.Config.ClientID + ":" + originalImplementation.Config.ClientSecret))
+			clientId := originalImplementation.Config.ClientID
+			redirectUri := redirectURIInfo.RedirectURIOnProviderDashboard
+
+			// We need to do this because we don't call the original implementation
+			/* Transformation needed for dev keys BEGIN */
+
+			if isUsingDevelopmentClientId(clientId) {
+				clientId = getActualClientIdFromDevelopmentClientId(clientId)
+				redirectUri = DevOauthRedirectUrl
+			}
+
+			/* Transformation needed for dev keys END */
+
+			basicAuthToken := base64.StdEncoding.EncodeToString([]byte(clientId + ":" + originalImplementation.Config.ClientSecret))
 			twitterOauthParams := map[string]interface{}{}
 
 			if originalImplementation.Config.TokenEndpointBodyParams != nil {
@@ -69,9 +82,9 @@ func Twitter(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			twitterOauthParams["grant_type"] = "authorization_code"
-			twitterOauthParams["client_id"] = originalImplementation.Config.ClientID
+			twitterOauthParams["client_id"] = clientId
 			twitterOauthParams["code_verifier"] = codeVerifier
-			twitterOauthParams["redirect_uri"] = redirectURIInfo.RedirectURIOnProviderDashboard
+			twitterOauthParams["redirect_uri"] = redirectUri
 			twitterOauthParams["code"] = redirectURIInfo.RedirectURIQueryParams["code"]
 
 			return doPostRequest(originalImplementation.Config.TokenEndpoint, twitterOauthParams, map[string]interface{}{
