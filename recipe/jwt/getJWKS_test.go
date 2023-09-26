@@ -127,4 +127,84 @@ func TestDefaultGetJWKSWorksFine(t *testing.T) {
 	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
 	assert.NotNil(t, result)
 	assert.Greater(t, len(result["keys"].([]interface{})), 0)
+
+	cacheControl := resp.Header.Get("Cache-Control")
+	assert.Equal(t, cacheControl, "max-age=60, must-revalidate")
+}
+
+func TestThatWeCanOverrideCacheControlThroughRecipeFunction(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&jwtmodels.TypeInput{
+				Override: &jwtmodels.OverrideStruct{
+					Functions: func(originalImplementation jwtmodels.RecipeInterface) jwtmodels.RecipeInterface {
+						originalGetJWKS := *originalImplementation.GetJWKS
+
+						getJWKs := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
+							result, err := originalGetJWKS(userContext)
+
+							if err != nil {
+								return jwtmodels.GetJWKSResponse{}, err
+							}
+
+							return jwtmodels.GetJWKSResponse{
+								OK: &struct {
+									Keys              []jwtmodels.JsonWebKeys
+									ValidityInSeconds int
+								}{Keys: result.OK.Keys, ValidityInSeconds: 1234},
+							}, nil
+						}
+
+						*originalImplementation.GetJWKS = getJWKs
+
+						return originalImplementation
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.8") == "2.8" {
+		return
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	resp, err := http.Get(testServer.URL + "/auth/jwt/jwks.json")
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
+	assert.NotNil(t, result)
+	assert.Greater(t, len(result["keys"].([]interface{})), 0)
+
+	cacheControl := resp.Header.Get("Cache-Control")
+	assert.Equal(t, cacheControl, "max-age=1234, must-revalidate")
 }

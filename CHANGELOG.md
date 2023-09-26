@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.15.0] - 2023-09-26
+
+-   Added a `Cache-Control` header to `/jwt/jwks.json` (`GetJWKSGET`)
+-   Added `ValidityInSeconds` to the return value of the overrideable `GetJWKS` function.
+    -   This can be used to control the `Cache-Control` header mentioned above.
+    -   It defaults to `60` or the value set in the cache-control header returned by the core
+    -   This is optional (so you are not required to update your overrides). Returning undefined means that the header is not set.
 -   Handle AWS Public URLs (ending with `.amazonaws.com`) separately while extracting TLDs for SameSite attribute.
 -   Return `500` status instead of panic when `supertokens.Middleware` is used without initializing the SDK.
 -   Updates fiber adaptor package in the fiber example.

@@ -56,7 +56,7 @@ func (q *Querier) GetQuerierAPIVersion() (string, error) {
 	if querierAPIVersion != "" {
 		return querierAPIVersion, nil
 	}
-	response, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
+	response, _, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
 			return nil, err
@@ -117,7 +117,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		if data == nil {
 			data = map[string]interface{}{}
 		}
@@ -147,6 +147,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 		client := &http.Client{}
 		return client.Do(req)
 	}, len(QuerierHosts), nil)
+	return resp, err
 }
 
 func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string) (map[string]interface{}, error) {
@@ -154,7 +155,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
@@ -188,6 +189,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 		client := &http.Client{}
 		return client.Do(req)
 	}, len(QuerierHosts), nil)
+	return resp, err
 }
 
 func (q *Querier) SendGetRequest(path string, params map[string]string) (map[string]interface{}, error) {
@@ -195,6 +197,43 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 	if err != nil {
 		return nil, err
 	}
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, err
+		}
+
+		query := req.URL.Query()
+
+		for k, v := range params {
+			query.Add(k, v)
+		}
+		req.URL.RawQuery = query.Encode()
+
+		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		if querierAPIVersionError != nil {
+			return nil, querierAPIVersionError
+		}
+		req.Header.Set("cdi-version", apiVerion)
+		if QuerierAPIKey != nil {
+			req.Header.Set("api-key", *QuerierAPIKey)
+		}
+		if nP.IsARecipePath() && q.RIDToCore != "" {
+			req.Header.Set("rid", q.RIDToCore)
+		}
+
+		client := &http.Client{}
+		return client.Do(req)
+	}, len(QuerierHosts), nil)
+	return resp, err
+}
+
+func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[string]string) (map[string]interface{}, http.Header, error) {
+	nP, err := NewNormalisedURLPath(path)
+	if err != nil {
+		return nil, nil, err
+	}
+
 	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
@@ -230,7 +269,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 	if err != nil {
 		return nil, err
 	}
-	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
 			return nil, err
@@ -257,6 +296,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 		client := &http.Client{}
 		return client.Do(req)
 	}, len(QuerierHosts), nil)
+	return resp, err
 }
 
 type httpRequestFunction func(url string) (*http.Response, error)
@@ -279,9 +319,9 @@ func GetAllCoreUrlsForPath(path string) []string {
 	return result
 }
 
-func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int, retryInfoMap *map[string]int) (map[string]interface{}, error) {
+func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequestFunction, numberOfTries int, retryInfoMap *map[string]int) (map[string]interface{}, http.Header, error) {
 	if numberOfTries == 0 {
-		return nil, errors.New("no SuperTokens core available to query")
+		return nil, nil, errors.New("no SuperTokens core available to query")
 	}
 
 	querierHostLock.Lock()
@@ -316,14 +356,14 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		if resp != nil {
 			resp.Body.Close()
 		}
-		return nil, err
+		return nil, nil, err
 	}
 
 	defer resp.Body.Close()
 
 	body, readErr := ioutil.ReadAll(resp.Body)
 	if readErr != nil {
-		return nil, readErr
+		return nil, nil, readErr
 	}
 	if resp.StatusCode != 200 {
 		if resp.StatusCode == RateLimitStatusCode {
@@ -341,17 +381,18 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 			}
 		}
 
-		return nil, fmt.Errorf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body)
+		return nil, nil, fmt.Errorf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body)
 	}
 
+	headers := resp.Header.Clone()
 	finalResult := make(map[string]interface{})
 	jsonError := json.Unmarshal(body, &finalResult)
 	if jsonError != nil {
 		return map[string]interface{}{
 			"result": string(body),
-		}, nil
+		}, headers, nil
 	}
-	return finalResult, nil
+	return finalResult, headers, nil
 }
 
 func ResetQuerierForTest() {
