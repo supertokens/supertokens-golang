@@ -18,7 +18,11 @@ package jwt
 import (
 	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"regexp"
+	"strconv"
 )
+
+var defaultJWKSMaxAge = 60 // This corresponds to the dynamicSigningKeyOverlapMS in the core
 
 func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) jwtmodels.RecipeInterface {
 	createJWT := func(payload map[string]interface{}, validitySecondsPointer *uint64, useStaticSigningKey *bool, userContext supertokens.UserContext) (jwtmodels.CreateJWTResponse, error) {
@@ -61,7 +65,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 		}
 	}
 	getJWKS := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
-		response, err := querier.SendGetRequest("/.well-known/jwks.json", map[string]string{})
+		response, headers, err := querier.SendGetRequestWithResponseHeaders("/.well-known/jwks.json", map[string]string{})
 		if err != nil {
 			return jwtmodels.GetJWKSResponse{}, err
 		}
@@ -79,9 +83,29 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 			})
 		}
 
+		validityInSeconds := defaultJWKSMaxAge
+		cacheControlHeader := headers.Get("Cache-Control")
+
+		if cacheControlHeader != "" {
+			regex := regexp.MustCompile(`/,?\s*max-age=(\d+)(?:,|$)/`)
+			maxAgeHeader := regex.FindAllString(cacheControlHeader, -1)
+
+			if maxAgeHeader != nil && len(maxAgeHeader) > 0 {
+				validityInSeconds, err = strconv.Atoi(maxAgeHeader[1])
+
+				if err != nil {
+					validityInSeconds = defaultJWKSMaxAge
+				}
+			}
+		}
+
 		return jwtmodels.GetJWKSResponse{
-			OK: &struct{ Keys []jwtmodels.JsonWebKeys }{
-				Keys: keys,
+			OK: &struct {
+				Keys              []jwtmodels.JsonWebKeys
+				ValidityInSeconds int
+			}{
+				Keys:              keys,
+				ValidityInSeconds: validityInSeconds,
 			},
 		}, nil
 	}

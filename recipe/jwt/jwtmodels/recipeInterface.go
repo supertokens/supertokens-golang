@@ -31,6 +31,7 @@ type CreateJWTResponse struct {
 
 type GetJWKSResponse struct {
 	OK *struct {
-		Keys []JsonWebKeys
+		Keys              []JsonWebKeys
+		ValidityInSeconds int
 	}
 }
