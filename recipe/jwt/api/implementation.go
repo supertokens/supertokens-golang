@@ -16,6 +16,7 @@
 package api
 
 import (
+	"fmt"
 	"github.com/supertokens/supertokens-golang/recipe/jwt/jwtmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -26,8 +27,13 @@ func MakeAPIImplementation() jwtmodels.APIInterface {
 		if err != nil {
 			return jwtmodels.GetJWKSAPIResponse{}, err
 		}
+		options.Res.Header().Set("Cache-Control", fmt.Sprintf("max-age=%d, must-revalidate", resp.OK.ValidityInSeconds))
 		return jwtmodels.GetJWKSAPIResponse{
-			OK: resp.OK,
+			OK: &struct {
+				Keys []jwtmodels.JsonWebKeys
+			}{
+				Keys: resp.OK.Keys,
+			},
 		}, nil
 	}
 	return jwtmodels.APIInterface{
