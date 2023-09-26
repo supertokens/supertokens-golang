@@ -75,6 +75,8 @@ func createProvider(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		return Linkedin(input)
 	} else if strings.HasPrefix(input.Config.ThirdPartyId, "boxy-saml") {
 		return BoxySaml(input)
+	} else if strings.HasPrefix(input.Config.ThirdPartyId, "twitter") {
+		return Twitter(input)
 	}
 
 	return NewProvider(input)

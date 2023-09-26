@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.15.0] - 2023-09-26
 
+-   Adds Twitter/X as a default provider to the third party recipe
 -   Added a `Cache-Control` header to `/jwt/jwks.json` (`GetJWKSGET`)
 -   Added `ValidityInSeconds` to the return value of the overrideable `GetJWKS` function.
     -   This can be used to control the `Cache-Control` header mentioned above.
