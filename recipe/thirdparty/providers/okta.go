@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -60,11 +60,11 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 }
 
 func getOktaClientAssertion(config tpmodels.ProviderConfigForClientType) (string, error) {
-	claims := jwt.StandardClaims{
-		ExpiresAt: time.Now().Unix() + 3600,
-		IssuedAt:  time.Now().Unix(),
-		NotBefore: time.Now().Unix(),
-		Audience:  fmt.Sprintf("https://%s.okta.com/oauth2/v1/token", config.AdditionalConfig["oktaDomain"]),
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Audience:  jwt.ClaimStrings{fmt.Sprintf("https://%s.okta.com/oauth2/v1/token", config.AdditionalConfig["oktaDomain"])},
 		Subject:   getActualClientIdFromDevelopmentClientId(config.ClientID),
 		Issuer:    getActualClientIdFromDevelopmentClientId(config.ClientID),
 	}

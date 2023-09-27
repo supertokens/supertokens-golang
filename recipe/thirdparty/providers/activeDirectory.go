@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"golang.org/x/crypto/pkcs12"
@@ -61,11 +61,11 @@ func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 }
 
 func getADClientAssertion(config tpmodels.ProviderConfigForClientType) (string, error) {
-	claims := jwt.StandardClaims{
-		ExpiresAt: time.Now().Unix() + 3600,
-		IssuedAt:  time.Now().Unix(),
-		NotBefore: time.Now().Unix(),
-		Audience:  fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", config.AdditionalConfig["directoryId"]),
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		NotBefore: jwt.NewNumericDate(time.Now()),
+		Audience:  jwt.ClaimStrings{fmt.Sprintf("https://login.microsoftonline.com/%s/oauth2/v2.0/token", config.AdditionalConfig["directoryId"])},
 		Subject:   getActualClientIdFromDevelopmentClientId(config.ClientID),
 		Issuer:    getActualClientIdFromDevelopmentClientId(config.ClientID),
 	}

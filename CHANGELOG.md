@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.16.0] - 2023-09-27
+
+### Fixes
+
+-   Solves issue with clock skew during third party sign-in/up - https://github.com/supertokens/supertokens-golang/issues/362
+    -   Bumped `github.com/golang-jtw/jwt` version from v4 to v5.
+    -   Bumped `github.com/MicahParks/keyfunc` version from v1 to v2.
+
+### Breaking Changes
+
+-   Minimum golang version supported is 1.18
+
 ## [0.15.0] - 2023-09-26
 
 -   Adds Twitter/X as a default provider to the third party recipe
