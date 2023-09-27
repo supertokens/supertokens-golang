@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.16.0] - 2023-09-27
+
 ### Fixes
 
 -   Solves issue with clock skew during third party sign-in/up - https://github.com/supertokens/supertokens-golang/issues/362
