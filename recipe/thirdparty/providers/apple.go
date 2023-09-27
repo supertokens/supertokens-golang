@@ -23,7 +23,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -128,10 +128,10 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 }
 
 func getClientSecret(clientId string, additionalConfig map[string]interface{}) (string, error) {
-	claims := jwt.StandardClaims{
-		ExpiresAt: time.Now().Unix() + 86400*180,
-		IssuedAt:  time.Now().Unix(),
-		Audience:  "https://appleid.apple.com",
+	claims := jwt.RegisteredClaims{
+		ExpiresAt: jwt.NewNumericDate(time.Now().Add(1 * time.Hour)),
+		IssuedAt:  jwt.NewNumericDate(time.Now()),
+		Audience:  jwt.ClaimStrings{"https://appleid.apple.com"},
 		Subject:   getActualClientIdFromDevelopmentClientId(clientId),
 		Issuer:    additionalConfig["teamId"].(string),
 	}
