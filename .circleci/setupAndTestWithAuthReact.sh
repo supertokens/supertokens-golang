@@ -54,14 +54,17 @@ npm i -d
 npm i git+https://github.com:supertokens/supertokens-node.git#$3
 cd ../../
 cd ../project/test/auth-react-server
-go run main.go &
+mkdir -p ../../test_report
+
+echo "Testing with frontend auth-react: $2, node tag: $3, FREE core: $coreVersion, plugin-interface: $pluginInterfaceVersion" >> ../../test_report/backend.log
+SUPERTOKENS_DEBUG=1 go run main.go >> ../../test_report/backend.log 2>&1 &
 cd ../../../supertokens-auth-react/
 
 # When testing with supertokens-auth-react for version >= 0.18 the SKIP_OAUTH 
 # flag will not be checked because Auth0 is used as a provider so that the Thirdparty tests can run reliably. 
 # In versions lower than 0.18 Github is used as the provider.
 
-SKIP_OAUTH=true npm run test-with-non-node
+MOCHA_FILE=test_report/report_node.xml SKIP_OAUTH=true npm run test-with-non-node
 if [[ $? -ne 0 ]]
 then
     echo "test failed... exiting!"
