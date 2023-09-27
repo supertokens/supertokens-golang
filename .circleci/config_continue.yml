@@ -9,7 +9,7 @@ jobs:
             - image: rishabhpoddar/supertokens_go_driver_testing
         steps:
             - checkout
-#            - run: (cd .circleci/ && ./markDevTagAsTestNotPassed.sh)
+            - run: (cd .circleci/ && ./markDevTagAsTestNotPassed.sh)
     test-unit:
         docker:
             - image: rishabhpoddar/supertokens_go_driver_testing
