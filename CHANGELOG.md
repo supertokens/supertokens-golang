@@ -7,8 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
--   Bumped `github.com/golang-jtw/jwt` version from v4 to v5.
--   Bumped `github.com/MicahParks/keyfunc` version from v1 to v2.
+### Fixes
+
+-   Solves issue with clock skew during third party sign-in/up - https://github.com/supertokens/supertokens-golang/issues/362
+    -   Bumped `github.com/golang-jtw/jwt` version from v4 to v5.
+    -   Bumped `github.com/MicahParks/keyfunc` version from v1 to v2.
 
 ### Breaking Changes
 
