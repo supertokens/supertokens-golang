@@ -126,6 +126,7 @@ type ProviderConfig struct {
 	RequireEmail                     *bool                  `json:"requireEmail,omitempty"`
 
 	ValidateIdTokenPayload func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error `json:"-"`
+	ValidateAccessToken    func(accessToken string, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error                    `json:"-"`
 	GenerateFakeEmail      func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string                                       `json:"-"`
 }
 
@@ -158,6 +159,7 @@ type ProviderConfigForClientType struct {
 	OIDCDiscoveryEndpoint            string
 	UserInfoMap                      TypeUserInfoMap
 	ValidateIdTokenPayload           func(idTokenPayload map[string]interface{}, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
+	ValidateAccessToken              func(accessToken string, clientConfig ProviderConfigForClientType, userContext supertokens.UserContext) error
 
 	RequireEmail      *bool
 	GenerateFakeEmail func(thirdPartyUserId string, tenantId string, userContext supertokens.UserContext) string
