@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.16.2] - 2023-10-04
+
+### Fixes
+
+-   Fixes `timeJoined` casing in emailpassword and passwordless user objects.
+
 ## [0.16.1] - 2023-10-03
 
 ### Changes

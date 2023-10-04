@@ -158,7 +158,7 @@ func TestForThirdPartyPasswordlessSignInUpFlowWithEmailUsingTheEmailOrPhoneConta
 	assert.NotNil(t, user)
 	assert.NotNil(t, user["email"])
 	assert.NotNil(t, user["id"])
-	assert.NotNil(t, user["timejoined"])
+	assert.NotNil(t, user["timeJoined"])
 	assert.Nil(t, user["phoneNumber"])
 }
 
@@ -262,7 +262,7 @@ func TestForThirdPartyPasswordlessSignUpSignInFlowWithPhoneNumberUsingEmailOrPho
 	assert.NotNil(t, user)
 	assert.Nil(t, user["email"])
 	assert.NotNil(t, user["id"])
-	assert.NotNil(t, user["timejoined"])
+	assert.NotNil(t, user["timeJoined"])
 	assert.NotNil(t, user["phoneNumber"])
 }
 
@@ -753,7 +753,7 @@ func TestWithThirdPartyPasswordlessConsumeCodeAPIWithMagicLink(t *testing.T) {
 	assert.NotNil(t, user)
 	assert.NotNil(t, user["email"])
 	assert.NotNil(t, user["id"])
-	assert.NotNil(t, user["timejoined"])
+	assert.NotNil(t, user["timeJoined"])
 	assert.Nil(t, user["phoneNumber"])
 }
 
@@ -852,7 +852,7 @@ func TestWithThirdPartyPasswordlessConsumeCodeAPIWithCode(t *testing.T) {
 	assert.NotNil(t, user)
 	assert.NotNil(t, user["email"])
 	assert.NotNil(t, user["id"])
-	assert.NotNil(t, user["timejoined"])
+	assert.NotNil(t, user["timeJoined"])
 	assert.Nil(t, user["phoneNumber"])
 
 	consumeCodePostData = map[string]interface{}{
