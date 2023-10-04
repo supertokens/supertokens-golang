@@ -13,6 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Added `ValidateAccessToken` to the configuration for social login providers, this function allows you to verify the access token returned by the social provider. If you are using Github as a provider, there is a default implementation provided for this function.
 
+### Fixes
+
+-   Fixes `timeJoined` casing in emailpassword and passwordless user objects.
+
 ## [0.16.0] - 2023-09-27
 
 ### Fixes
