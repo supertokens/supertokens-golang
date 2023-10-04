@@ -17,9 +17,13 @@
 package thirdparty
 
 import (
+	"errors"
+	"io"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -696,4 +700,82 @@ func TestPassingScopesInConfigForGithub(t *testing.T) {
 		"redirect_uri":  {"redirect"},
 		"scope":         {"test-scope-1 test-scope-2"},
 	}, authParams)
+}
+
+func TestThatSignInUpFailsIfValidateAccessTokenReturnsError(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(
+				&tpmodels.TypeInput{
+					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+									originalImplementation.ExchangeAuthCodeForOAuthTokens = func(redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
+										return map[string]interface{}{
+											"access_token": "wrongaccesstoken",
+											"id_token":     "wrongidtoken",
+										}, nil
+									}
+
+									return originalImplementation
+								},
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "custom",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "test",
+											ClientSecret: "test-secret",
+											Scope:        []string{"test-scope-1", "test-scope-2"},
+										},
+									},
+									ValidateAccessToken: func(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, userContext supertokens.UserContext) error {
+										if accessToken == "wrongaccesstoken" {
+											return errors.New("Invalid access token")
+										}
+
+										return nil
+									},
+								},
+							},
+						},
+					},
+				},
+			),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/signinup", strings.NewReader(`{"thirdPartyId": "custom", "redirectURIInfo": {"redirectURIOnProviderDashboard": "http://127.0.0.1/callback", "redirectURIQueryParams": {"code": "abcdefghj"}}}`))
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	res, err := http.DefaultClient.Do(req)
+
+	data2, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	respString := string(data2)
+	respString = strings.Replace(respString, "\n", "", -1)
+	assert.Equal(t, respString, "Invalid access token")
 }

@@ -1004,11 +1004,12 @@ func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {
 	assert.True(t, cookiesAfterRefresh["frontToken"] == "remove")
 }
 
-/**
+/*
+*
 We want to make sure that for access token claims that can be null, the SDK does not fail access token validation if the
 core does not send them as part of the payload.
 
-For this we verify that validation passes when the keys are nil, empty or a different type
+# For this we verify that validation passes when the keys are nil, empty or a different type
 
 For now this test checks for:
 - antiCsrfToken
