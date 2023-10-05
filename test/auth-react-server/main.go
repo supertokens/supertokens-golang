@@ -333,6 +333,11 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 				},
 			}),
 			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendPasswordResetEmail,
+					},
+				},
 				Override: &tpepmodels.OverrideStruct{
 					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
 						ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
