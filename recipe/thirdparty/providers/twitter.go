@@ -87,9 +87,11 @@ func Twitter(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			twitterOauthParams["redirect_uri"] = redirectUri
 			twitterOauthParams["code"] = redirectURIInfo.RedirectURIQueryParams["code"]
 
-			return doPostRequest(originalImplementation.Config.TokenEndpoint, twitterOauthParams, map[string]interface{}{
+			resp, _, err := doPostRequest(originalImplementation.Config.TokenEndpoint, twitterOauthParams, map[string]interface{}{
 				"Authorization": "Basic " + basicAuthToken,
 			})
+
+			return resp, err
 		}
 
 		if oOverride != nil {

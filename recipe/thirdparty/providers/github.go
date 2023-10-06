@@ -42,14 +42,14 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			basicAuthToken := base64.StdEncoding.EncodeToString([]byte(clientConfig.ClientID + ":" + clientConfig.ClientSecret))
 			wrongClientIdError := errors.New("Access token does not belong to your application")
 
-			resp, err := doPostRequest("https://api.github.com/applications/"+clientConfig.ClientID+"/token", map[string]interface{}{
+			resp, status, err := doPostRequest("https://api.github.com/applications/"+clientConfig.ClientID+"/token", map[string]interface{}{
 				"access_token": accessToken,
 			}, map[string]interface{}{
 				"Authorization": "Basic " + basicAuthToken,
 				"Content-Type":  "application/json",
 			})
 
-			if err != nil {
+			if err != nil || status != 200 {
 				return errors.New("Invalid access token")
 			}
 
