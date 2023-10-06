@@ -106,7 +106,7 @@ func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClie
 	}
 	/* Transformation needed for dev keys END */
 
-	oAuthTokens, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
+	oAuthTokens, _, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
 	if err != nil {
 		return nil, err
 	}
