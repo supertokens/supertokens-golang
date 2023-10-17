@@ -173,6 +173,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				ID:         user.ID,
 				Email:      user.Email,
 				TimeJoined: user.TimeJoined,
+				TenantIds:  user.TenantIds,
 				ThirdParty: nil,
 			}, nil
 		}
@@ -191,6 +192,7 @@ func MakeRecipeImplementation(emailPasswordQuerier supertokens.Querier, thirdPar
 				Email:      userinfo.Email,
 				TimeJoined: userinfo.TimeJoined,
 				ThirdParty: &userinfo.ThirdParty,
+				TenantIds:  userinfo.TenantIds,
 			}, nil
 		}
 		return nil, nil

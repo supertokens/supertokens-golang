@@ -24,37 +24,37 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type userGetResponse struct {
+type UserGetResponse struct {
 	Status   string                   `json:"status"`
 	RecipeId string                   `json:"recipeId,omitempty"`
 	User     dashboardmodels.UserType `json:"user,omitempty"`
 }
 
-func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (userGetResponse, error) {
+func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (UserGetResponse, error) {
 	req := options.Req
 	userId := req.URL.Query().Get("userId")
 	recipeId := req.URL.Query().Get("recipeId")
 
 	if userId == "" {
-		return userGetResponse{}, supertokens.BadInputError{
+		return UserGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'userId'",
 		}
 	}
 
 	if recipeId == "" {
-		return userGetResponse{}, supertokens.BadInputError{
+		return UserGetResponse{}, supertokens.BadInputError{
 			Msg: "Missing required parameter 'recipeId'",
 		}
 	}
 
 	if !api.IsValidRecipeId(recipeId) {
-		return userGetResponse{}, supertokens.BadInputError{
+		return UserGetResponse{}, supertokens.BadInputError{
 			Msg: "Invalid recipe id",
 		}
 	}
 
 	if !api.IsRecipeInitialised(recipeId) {
-		return userGetResponse{
+		return UserGetResponse{
 			Status: "RECIPE_NOT_INITIALISED",
 		}, nil
 	}
@@ -62,7 +62,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, op
 	userForRecipeId, _ := api.GetUserForRecipeId(userId, recipeId, userContext)
 
 	if reflect.DeepEqual(userForRecipeId, dashboardmodels.UserType{}) {
-		return userGetResponse{
+		return UserGetResponse{
 			Status: "NO_USER_FOUND_ERROR",
 		}, nil
 	}
@@ -74,7 +74,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, op
 		userForRecipeId.FirstName = "FEATURE_NOT_ENABLED"
 		userForRecipeId.LastName = "FEATURE_NOT_ENABLED"
 
-		return userGetResponse{
+		return UserGetResponse{
 			Status:   "OK",
 			RecipeId: recipeId,
 			User:     userForRecipeId,
@@ -84,7 +84,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, op
 	metadata, metadataerr := usermetadata.GetUserMetadata(userId, userContext)
 
 	if metadataerr != nil {
-		return userGetResponse{}, metadataerr
+		return UserGetResponse{}, metadataerr
 	}
 
 	// first and last name should be an empty string if they dont exist in metadata
@@ -99,7 +99,7 @@ func UserGet(apiImplementation dashboardmodels.APIInterface, tenantId string, op
 		userForRecipeId.LastName = metadata["last_name"].(string)
 	}
 
-	return userGetResponse{
+	return UserGetResponse{
 		Status:   "OK",
 		RecipeId: recipeId,
 		User:     userForRecipeId,

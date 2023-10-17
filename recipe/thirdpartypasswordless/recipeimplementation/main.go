@@ -123,6 +123,7 @@ func MakeRecipeImplementation(passwordlessQuerier supertokens.Querier, thirdPart
 				Email:       user.Email,
 				PhoneNumber: user.PhoneNumber,
 				TimeJoined:  user.TimeJoined,
+				TenantIds:   user.TenantIds,
 				ThirdParty:  nil,
 			}, nil
 		}
