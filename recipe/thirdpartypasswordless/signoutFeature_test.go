@@ -59,7 +59,7 @@ func TestTheDefaultRouteAndItShouldRevokeTheSession(t *testing.T) {
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -179,7 +179,7 @@ func TestDisablingDefaultRouteAndCallingTheAPIReturns404(t *testing.T) {
 					},
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -246,7 +246,7 @@ func TestCallingAPIWithoutSessionShouldReturnOk(t *testing.T) {
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -312,7 +312,7 @@ func TestThatSignoutAPIreturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
