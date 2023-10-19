@@ -321,7 +321,7 @@ func TestWithThirdPartyPasswordlessMinimumConfigForThirdpartyModule(t *testing.T
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -540,7 +540,7 @@ func TestWithThirdPartyPasswordlessThirdPartyProviderDoesNotExistInConfig(t *tes
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -788,7 +788,7 @@ func TestWithThirdPartyPasswordlessInvalidPostParamsForThirdPartyModule(t *testi
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -888,7 +888,7 @@ func TestWithThirdPartyPasswordlessGetUserByIdWhenUserDoesNotExist(t *testing.T)
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
@@ -992,7 +992,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 					Enabled: true,
 				},
 				Providers: []tpmodels.ProviderInput{
-					signinupCustomProvider1,
+					SigninupCustomProvider1,
 				},
 			}),
 		},
