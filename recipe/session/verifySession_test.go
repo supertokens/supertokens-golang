@@ -1112,14 +1112,20 @@ func TestThatResponseHeadersAreCorrectWhenUsingHeaders(t *testing.T) {
 
 	accessAllowHeaderValues := strings.Split(res.Header.Get("Access-Control-Expose-Headers"), ",")
 	frontTokenCount := 0
+	stAccessTokenCount := 0
 
 	for _, value := range accessAllowHeaderValues {
 		if strings.Contains(value, "front-token") {
 			frontTokenCount += 1
 		}
+
+		if strings.Contains(value, "st-access-token") {
+			stAccessTokenCount += 1
+		}
 	}
 
 	assert.Equal(t, frontTokenCount, 1)
+	assert.Equal(t, stAccessTokenCount, 1)
 }
 
 type typeTestEndpoint struct {
