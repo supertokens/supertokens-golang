@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -976,6 +977,151 @@ func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPas
 	assert.Equal(t, res.StatusCode, 200)
 }
 
+func TestThatResponseHeadersAreCorrectWhenUsingCookies(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{})
+	defer app.Close()
+
+	sessionCookies := createSessionWithCookies(app, map[string]interface{}{})
+	print(sessionCookies)
+
+	var accessToken string
+
+	for _, cookie := range sessionCookies {
+		if cookie.Name == "sAccessToken" {
+			accessToken = cookie.Value
+		}
+	}
+
+	assert.NotNil(t, accessToken)
+
+	req, err := http.NewRequest(http.MethodGet, app.URL+"/merge-payload", nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	req.Header.Add("Cookie", "sAccessToken="+accessToken)
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	cookiesHeaderValues := res.Header.Values("Set-Cookie")
+	accessTokenCount := 0
+
+	for _, cookieValue := range cookiesHeaderValues {
+		if strings.Contains(cookieValue, "sAccessToken") {
+			accessTokenCount += 1
+		}
+	}
+
+	assert.Equal(t, accessTokenCount, 1)
+
+	accessAllowHeaderValues := strings.Split(res.Header.Get("Access-Control-Expose-Headers"), ",")
+	frontTokenCount := 0
+
+	for _, value := range accessAllowHeaderValues {
+		if strings.Contains(value, "front-token") {
+			frontTokenCount += 1
+		}
+	}
+
+	assert.Equal(t, frontTokenCount, 1)
+	/**
+	Goland does not realise that the test passed because the start and end prints happen in the same line
+
+	This extra print adds a break line with the "--- PASS:" line being added in a new line making it clear
+	to the IDE that the test passed.
+
+	Leaving this in to avoid future confusion. Weirdly this happens intermittently for all tests.
+	*/
+	fmt.Println("")
+}
+
+func TestThatResponseHeadersAreCorrectWhenUsingHeaders(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	app := getTestApp([]typeTestEndpoint{})
+	defer app.Close()
+
+	headers := createSessionWithHeaders(app, map[string]interface{}{})
+	accessToken := headers.Get("st-access-token")
+
+	assert.NotNil(t, accessToken)
+
+	req, err := http.NewRequest(http.MethodGet, app.URL+"/merge-payload", nil)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	req.Header.Add("Authorization", "Bearer "+accessToken)
+
+	res, err := http.DefaultClient.Do(req)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	accessTokenHeaderValues := res.Header.Values("st-access-token")
+	accessTokenCount := len(accessTokenHeaderValues)
+
+	assert.Equal(t, accessTokenCount, 1)
+
+	accessAllowHeaderValues := strings.Split(res.Header.Get("Access-Control-Expose-Headers"), ",")
+	frontTokenCount := 0
+
+	for _, value := range accessAllowHeaderValues {
+		if strings.Contains(value, "front-token") {
+			frontTokenCount += 1
+		}
+	}
+
+	assert.Equal(t, frontTokenCount, 1)
+}
+
 type typeTestEndpoint struct {
 	path                          string
 	overrideGlobalClaimValidators func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error)
@@ -991,6 +1137,46 @@ func createSession(app *httptest.Server, body map[string]interface{}) []*http.Co
 		return nil
 	}
 	return res.Cookies()
+}
+
+func createSessionWithCookies(app *httptest.Server, body map[string]interface{}) []*http.Cookie {
+	bodyBytes := []byte("{}")
+	if body != nil {
+		bodyBytes, _ = json.Marshal(body)
+	}
+	req, err := http.NewRequest(http.MethodPost, app.URL+"/create", bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil
+	}
+
+	req.Header.Set("st-auth-mode", "cookie")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil
+	}
+
+	return res.Cookies()
+}
+
+func createSessionWithHeaders(app *httptest.Server, body map[string]interface{}) http.Header {
+	bodyBytes := []byte("{}")
+	if body != nil {
+		bodyBytes, _ = json.Marshal(body)
+	}
+	req, err := http.NewRequest(http.MethodPost, app.URL+"/create", bytes.NewBuffer(bodyBytes))
+	if err != nil {
+		return nil
+	}
+
+	req.Header.Set("st-auth-mode", "header")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return nil
+	}
+
+	return res.Header
 }
 
 func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
@@ -1033,6 +1219,37 @@ func getTestApp(endpoints []typeTestEndpoint) *httptest.Server {
 
 	mux.HandleFunc("/verify", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
 		GetSession(r, rw, &sessmodels.VerifySessionOptions{})
+	}))
+
+	mux.HandleFunc("/merge-payload", VerifySession(&sessmodels.VerifySessionOptions{}, func(rw http.ResponseWriter, r *http.Request) {
+		session, err := GetSession(r, rw, &sessmodels.VerifySessionOptions{})
+
+		if err != nil {
+			rw.WriteHeader(500)
+			return
+		}
+
+		session.MergeIntoAccessTokenPayload(map[string]interface{}{
+			"lastUpdate": "123",
+		})
+		session.MergeIntoAccessTokenPayload(map[string]interface{}{
+			"lastUpdate": "456",
+		})
+		session.MergeIntoAccessTokenPayload(map[string]interface{}{
+			"lastUpdate": "789",
+		})
+
+		resp := map[string]interface{}{
+			"status": "OK",
+		}
+		respBytes, err := json.Marshal(resp)
+		if err != nil {
+			return
+		}
+		rw.Header().Set("Content-Type", "application/json")
+		rw.Header().Set("Content-Length", fmt.Sprintf("%d", (len(respBytes))))
+		rw.WriteHeader(http.StatusOK)
+		rw.Write(respBytes)
 	}))
 
 	mux.HandleFunc("/default-claims", VerifySession(nil, func(w http.ResponseWriter, r *http.Request) {
