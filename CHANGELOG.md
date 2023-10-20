@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.16.4] - 2023-10-20
+
+-   Fixes an issue where sometimes the `Access-Control-Expose-Headers` header value would contain duplicates
+
 ## [0.16.3] - 2023-10-19
 
 -   Fixes an issue where trying to view details of a third party user would show an error for the user not being found when using the thirdpartypasswordless recipe
