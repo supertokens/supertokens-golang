@@ -28,6 +28,5 @@ func LogDebugMessage(message string) {
 	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
 	if exists {
 		logger.Printf(formatMessage(message))
-
 	}
 }

@@ -46,6 +46,7 @@ type TypeInput struct {
 	AppInfo               AppInfo
 	RecipeList            []Recipe
 	Telemetry             *bool
+	Debug                 *bool
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 }
 
