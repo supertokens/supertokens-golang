@@ -26,7 +26,7 @@ func formatMessage(message string) string {
 
 func LogDebugMessage(message string) {
 	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
-	if exists {
+	if exists || superTokensInstance.Debug == true {
 		Logger.Printf(formatMessage(message))
 	}
 }

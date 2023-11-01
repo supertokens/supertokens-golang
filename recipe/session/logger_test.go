@@ -11,12 +11,13 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+// Added the logger tests here because supertokens/logger_test.go causes cyclic import errors due to imports in test/unittesting/testingUtils.go
+
 func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 	var logMessage = "test log message"
 	var buf bytes.Buffer
 
-	debug := true
-	supertokens.Logger = log.New(&buf, "", 0)
+	supertokens.Logger = log.New(&buf, "test", 0)
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -30,13 +31,14 @@ func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
 		},
-		Debug: &debug,
+		Debug: true,
 	}
 	BeforeEach()
 
 	unittesting.StartUpST("localhost", "8080")
 
 	defer AfterEach()
+	defer resetLogger()
 
 	err := supertokens.Init(configValue)
 
@@ -51,7 +53,7 @@ func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 	}
 
 	supertokens.LogDebugMessage(logMessage)
-	assert.Equal(t, &debug, supertokensInstance.Debug)
+	assert.Equal(t, true, supertokensInstance.Debug)
 	assert.Contains(t, buf.String(), logMessage, "checking log message in logs")
 }
 
@@ -59,8 +61,7 @@ func TestLogDebugMessageWhenDebugFalse(t *testing.T) {
 	var logMessage = "test log message"
 	var buf bytes.Buffer
 
-	debug := false
-	supertokens.Logger = log.New(&buf, "", 0)
+	supertokens.Logger = log.New(&buf, "test", 0)
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -74,13 +75,14 @@ func TestLogDebugMessageWhenDebugFalse(t *testing.T) {
 		RecipeList: []supertokens.Recipe{
 			Init(nil),
 		},
-		Debug: &debug,
+		Debug: false,
 	}
 	BeforeEach()
 
 	unittesting.StartUpST("localhost", "8080")
 
 	defer AfterEach()
+	defer resetLogger()
 
 	err := supertokens.Init(configValue)
 
@@ -95,7 +97,50 @@ func TestLogDebugMessageWhenDebugFalse(t *testing.T) {
 	}
 
 	supertokens.LogDebugMessage(logMessage)
-	assert.Equal(t, &debug, supertokensInstance.Debug)
+	assert.Equal(t, false, supertokensInstance.Debug)
+	assert.NotContains(t, buf.String(), logMessage, "checking log message in logs")
+}
+
+func TestLogDebugMessageWhenDebugNotSet(t *testing.T) {
+	var logMessage = "test log message"
+	var buf bytes.Buffer
+
+	supertokens.Logger = log.New(&buf, "test", 0)
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+
+	unittesting.StartUpST("localhost", "8080")
+
+	defer AfterEach()
+	defer resetLogger()
+
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	supertokens.LogDebugMessage(logMessage)
+	assert.Equal(t, false, supertokensInstance.Debug)
 	assert.NotContains(t, buf.String(), logMessage, "checking log message in logs")
 }
 
@@ -103,7 +148,7 @@ func TestLogDebugMessageWithEnvVar(t *testing.T) {
 	var logMessage = "test log message"
 	var buf bytes.Buffer
 
-	supertokens.Logger = log.New(&buf, "", 0)
+	supertokens.Logger = log.New(&buf, "test", 0)
 	os.Setenv("SUPERTOKENS_DEBUG", "1")
 
 	configValue := supertokens.TypeInput{
@@ -124,6 +169,7 @@ func TestLogDebugMessageWithEnvVar(t *testing.T) {
 	unittesting.StartUpST("localhost", "8080")
 
 	defer AfterEach()
+	defer resetLogger()
 
 	err := supertokens.Init(configValue)
 

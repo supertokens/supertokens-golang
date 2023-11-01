@@ -20,7 +20,6 @@ import (
 	"errors"
 	"flag"
 	"net/http"
-	"os"
 	"reflect"
 	"strconv"
 	"strings"
@@ -36,7 +35,7 @@ type superTokens struct {
 	RecipeModules         []RecipeModule
 	OnSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)
 	Telemetry             *bool
-	Debug                 *bool
+	Debug                 bool
 }
 
 // this will be set to true if this is used in a test app environment
@@ -57,12 +56,7 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	superTokens.Debug = config.Debug
-	if superTokens.Debug != nil && *superTokens.Debug == true {
-		err := os.Setenv("SUPERTOKENS_DEBUG", "1")
-		if err != nil {
-			return err
-		}
-	}
+	superTokensInstance = superTokens
 
 	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
 

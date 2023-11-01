@@ -16,7 +16,9 @@
 package session
 
 import (
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -46,6 +48,11 @@ func AfterEach() {
 	unittesting.KillAllST()
 	resetAll()
 	unittesting.CleanST()
+}
+
+func resetLogger() {
+	supertokens.Logger = log.New(os.Stdout, "com.supertokens", 0)
+	os.Unsetenv("SUPERTOKENS_DEBUG")
 }
 
 type fakeRes struct{}
