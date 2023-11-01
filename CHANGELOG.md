@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+
+## [0.14.1] - 2023-11-1
+
+-   Adds `debug` flag to the `TypeInput`. If set to `true`, debug logs will be printed.
+
 ## [0.14.0] - 2023-09-11
 
 ### Added
