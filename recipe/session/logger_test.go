@@ -51,14 +51,7 @@ func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
 	supertokens.LogDebugMessage(logMessage)
-	assert.Equal(t, true, supertokensInstance.Debug)
 	assert.Contains(t, buf.String(), logMessage, "checking log message in logs")
 }
 
@@ -95,14 +88,7 @@ func TestLogDebugMessageWhenDebugFalse(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
 	supertokens.LogDebugMessage(logMessage)
-	assert.Equal(t, false, supertokensInstance.Debug)
 	assert.NotContains(t, buf.String(), logMessage, "checking log message in logs")
 }
 
@@ -138,14 +124,7 @@ func TestLogDebugMessageWhenDebugNotSet(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	supertokensInstance, err := supertokens.GetInstanceOrThrowError()
-
-	if err != nil {
-		t.Error(err.Error())
-	}
-
 	supertokens.LogDebugMessage(logMessage)
-	assert.Equal(t, false, supertokensInstance.Debug)
 	assert.NotContains(t, buf.String(), logMessage, "checking log message in logs")
 }
 

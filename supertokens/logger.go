@@ -16,7 +16,8 @@ const supertokens_namespace = "com.supertokens"
 */
 
 var (
-	Logger = log.New(os.Stdout, supertokens_namespace, 0)
+	Logger       = log.New(os.Stdout, supertokens_namespace, 0)
+	debugEnabled = false
 )
 
 func formatMessage(message string) string {
@@ -26,7 +27,7 @@ func formatMessage(message string) string {
 
 func LogDebugMessage(message string) {
 	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
-	if exists || superTokensInstance.Debug == true {
+	if exists || debugEnabled == true {
 		Logger.Printf(formatMessage(message))
 	}
 }
