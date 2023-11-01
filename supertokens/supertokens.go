@@ -57,7 +57,7 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	superTokens.Debug = config.Debug
-	if superTokens.Debug != nil && *superTokens.Debug {
+	if superTokens.Debug != nil && *superTokens.Debug == true {
 		err := os.Setenv("SUPERTOKENS_DEBUG", "1")
 		if err != nil {
 			return err
