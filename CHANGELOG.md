@@ -56,6 +56,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     -   This is optional (so you are not required to update your overrides). Returning undefined means that the header is not set.
 -   Handle AWS Public URLs (ending with `.amazonaws.com`) separately while extracting TLDs for SameSite attribute.
 -   Return `500` status instead of panic when `supertokens.Middleware` is used without initializing the SDK.
+## [0.14.1] - 2023-11-1
+
+-   Handle AWS Public URLs (ending with `.amazonaws.com`) separately while extracting TLDs for SameSite attribute.
 -   Updates fiber adaptor package in the fiber example.
 
 ## [0.14.0] - 2023-09-11
