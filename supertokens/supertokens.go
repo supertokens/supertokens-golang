@@ -54,6 +54,8 @@ func supertokensInit(config TypeInput) error {
 		superTokens.OnSuperTokensAPIError = config.OnSuperTokensAPIError
 	}
 
+	DebugEnabled = config.Debug
+
 	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
 
 	appInfoJsonString, _ := json.Marshal(config.AppInfo)

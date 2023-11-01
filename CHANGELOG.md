@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+
+## [0.16.5] - 2023-11-1
+
+-   Adds `debug` flag to the `TypeInput`. If set to `true`, debug logs will be printed.
+
 ## [0.16.4] - 2023-10-20
 
 -   Fixes an issue where sometimes the `Access-Control-Expose-Headers` header value would contain duplicates
