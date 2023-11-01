@@ -64,7 +64,7 @@ type TypeNormalisedInputResetPasswordUsingTokenFeature struct {
 type User struct {
 	ID         string   `json:"id"`
 	Email      string   `json:"email"`
-	TimeJoined uint64   `json:"timejoined"`
+	TimeJoined uint64   `json:"timeJoined"`
 	TenantIds  []string `json:"tenantIds"`
 }
 

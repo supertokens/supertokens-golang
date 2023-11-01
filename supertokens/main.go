@@ -34,7 +34,9 @@ func Init(config TypeInput) error {
 func Middleware(theirHandler http.Handler) http.Handler {
 	instance, err := GetInstanceOrThrowError()
 	if err != nil {
-		panic("Please call supertokens.Init function before using the Middleware")
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+		})
 	}
 	return instance.middleware(theirHandler)
 }

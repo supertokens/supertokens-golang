@@ -31,7 +31,7 @@ import (
 
 	urllib "net/url"
 
-	"github.com/MicahParks/keyfunc"
+	"github.com/MicahParks/keyfunc/v2"
 	"github.com/derekstavis/go-qs"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -90,16 +90,16 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 	return result, nil
 }
 
-func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, error) {
+func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, int, error) {
 	supertokens.LogDebugMessage(fmt.Sprintf("POST request to %s, with form fields %v and headers %v", url, params, headers))
 
 	postBody, err := qs.Marshal(params)
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer([]byte(postBody)))
 	if err != nil {
-		return nil, err
+		return nil, -1, err
 	}
 	for key, value := range headers {
 		req.Header.Set(key, value.(string))
@@ -110,13 +110,13 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 	defer resp.Body.Close()
 
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 
 	supertokens.LogDebugMessage(fmt.Sprintf("Received response with status %d and body %s", resp.StatusCode, string(body)))
@@ -124,14 +124,14 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	var result map[string]interface{}
 	err = json.Unmarshal(body, &result)
 	if err != nil {
-		return nil, err
+		return nil, resp.StatusCode, err
 	}
 
 	if resp.StatusCode >= 300 {
-		return nil, fmt.Errorf("POST request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
+		return nil, resp.StatusCode, fmt.Errorf("POST request to %s resulted in %d status with body %s", url, resp.StatusCode, string(body))
 	}
 
-	return result, nil
+	return result, resp.StatusCode, nil
 }
 
 // JWKS utils

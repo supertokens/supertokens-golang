@@ -35,7 +35,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 	if recipeId == emailpassword.RECIPE_ID {
 		response, error := emailpassword.GetUserByID(userId, userContext)
 
-		if error == nil {
+		if error == nil && response != nil {
 			userToReturn.Id = response.ID
 			userToReturn.TimeJoined = response.TimeJoined
 			userToReturn.FirstName = ""
@@ -49,7 +49,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
 			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
-			if tpepError == nil {
+			if tpepError == nil && tpepResponse != nil {
 				userToReturn.Id = tpepResponse.ID
 				userToReturn.TimeJoined = tpepResponse.TimeJoined
 				userToReturn.FirstName = ""
@@ -63,7 +63,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 	} else if recipeId == thirdparty.RECIPE_ID {
 		response, error := thirdparty.GetUserByID(userId, userContext)
 
-		if error == nil {
+		if error == nil && response != nil {
 			userToReturn.Id = response.ID
 			userToReturn.TimeJoined = response.TimeJoined
 			userToReturn.FirstName = ""
@@ -79,7 +79,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
 			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
 
-			if tpepError == nil {
+			if tpepError == nil && tpepResponse != nil {
 				userToReturn.Id = tpepResponse.ID
 				userToReturn.TimeJoined = tpepResponse.TimeJoined
 				userToReturn.FirstName = ""
@@ -92,10 +92,35 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 				userToReturn.TenantIds = tpepResponse.TenantIds
 			}
 		}
+
+		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
+			tpplessResponse, tpplessError := thirdpartypasswordless.GetUserById(userId, userContext)
+
+			if tpplessError == nil && tpplessResponse != nil {
+				userToReturn.Id = tpplessResponse.ID
+				userToReturn.TimeJoined = tpplessResponse.TimeJoined
+				userToReturn.FirstName = ""
+				userToReturn.LastName = ""
+
+				if tpplessResponse.Email != nil {
+					userToReturn.Email = *tpplessResponse.Email
+				}
+
+				if tpplessResponse.PhoneNumber != nil {
+					userToReturn.Phone = *tpplessResponse.PhoneNumber
+				}
+
+				userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
+					Id:     tpplessResponse.ThirdParty.ID,
+					UserId: tpplessResponse.ThirdParty.UserID,
+				}
+				userToReturn.TenantIds = tpplessResponse.TenantIds
+			}
+		}
 	} else if recipeId == passwordless.RECIPE_ID {
 		response, error := passwordless.GetUserByID(userId, userContext)
 
-		if error == nil {
+		if error == nil && response != nil {
 			userToReturn.Id = response.ID
 			userToReturn.TimeJoined = response.TimeJoined
 			userToReturn.FirstName = ""
@@ -115,7 +140,7 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
 			tppResponse, tppError := thirdpartypasswordless.GetUserByID(userId, userContext)
 
-			if tppError == nil {
+			if tppError == nil && tppResponse != nil {
 				userToReturn.Id = tppResponse.ID
 				userToReturn.TimeJoined = tppResponse.TimeJoined
 				userToReturn.FirstName = ""

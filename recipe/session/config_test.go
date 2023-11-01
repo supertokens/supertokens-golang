@@ -1215,3 +1215,84 @@ func TestThatJWKSAndOpenIdEndpointsAreExposed(t *testing.T) {
 	assert.NotNil(t, openIdAPI)
 	assert.Equal(t, openIdAPI.PathWithoutAPIBasePath.GetAsStringDangerous(), "/.well-known/openid-configuration")
 }
+
+func TestCookieSameSiteWithEC2PublicURL(t *testing.T) {
+	apiBasePath := "/"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "https://ec2-xx-yyy-zzz-0.compute-1.amazonaws.com:3001",
+			WebsiteDomain: "https://blog.supertokens.com",
+			APIBasePath:   &apiBasePath,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+
+	unittesting.StartUpST("localhost", "8080")
+
+	defer AfterEach()
+
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	recipe, err := getRecipeInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.True(t, recipe.Config.CookieDomain == nil)
+	assert.Equal(t, recipe.Config.CookieSameSite, "none")
+	assert.True(t, recipe.Config.CookieSecure)
+
+	resetAll()
+
+	configValue = supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "http://ec2-xx-yyy-zzz-0.compute-1.amazonaws.com:3001",
+			WebsiteDomain: "http://ec2-xx-yyy-zzz-0.compute-1.amazonaws.com:3000",
+			APIBasePath:   &apiBasePath,
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	err = supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	recipe, err = getRecipeInstanceOrThrowError()
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.True(t, recipe.Config.CookieDomain == nil)
+	assert.Equal(t, recipe.Config.CookieSameSite, "lax")
+	assert.False(t, recipe.Config.CookieSecure)
+}

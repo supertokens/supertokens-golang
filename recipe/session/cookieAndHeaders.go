@@ -190,7 +190,15 @@ func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey boo
 	if existingValue == "" {
 		res.Header().Set(key, value)
 	} else if allowDuplicateKey {
-		res.Header().Set(key, existingValue+", "+value)
+		/**
+		We only want to append if it does not already exist
+
+		For example if the caller is trying to add front token to the access control exposed headers property
+		we do not want to append if something else had already added it
+		*/
+		if !strings.Contains(existingValue, value) {
+			res.Header().Set(key, existingValue+", "+value)
+		}
 	} else {
 		res.Header().Set(key, value)
 	}

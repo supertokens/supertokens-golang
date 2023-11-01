@@ -25,6 +25,7 @@ jobs:
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
+            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./doUnitTests.sh << parameters.cdi-version >>)
             - slack/status
@@ -32,6 +33,7 @@ jobs:
         docker:
             - image: rishabhpoddar/supertokens_go_driver_testing
         resource_class: large
+        parallelism: 4
         steps:
             - checkout
             - run: apt-get install lsof
@@ -40,6 +42,7 @@ jobs:
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
+            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./website.sh)
             - slack/status
@@ -47,6 +50,7 @@ jobs:
         docker:
             - image: rishabhpoddar/supertokens_go_driver_testing
         resource_class: large
+        parallelism: 4
         steps:
             - checkout
             - run: apt-get install lsof
@@ -66,8 +70,12 @@ jobs:
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
+            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./authReact.sh)
+            - store_artifacts:
+                  path: test_report/backend.log
+                  destination: logs
             - slack/status
     test-success:
         docker:
@@ -86,7 +94,7 @@ workflows:
                     tags:
                         only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: /test-cicd\/.*/
             - test-unit:
                 requires:
                     - test-dev-tag-as-not-passed
@@ -96,7 +104,7 @@ workflows:
                     tags:
                         only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: /test-cicd\/.*/
                 matrix:
                     parameters:
                         cdi-version: placeholder
@@ -109,7 +117,7 @@ workflows:
                     tags:
                         only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: /test-cicd\/.*/
             - test-authreact:
                 requires:
                     - test-dev-tag-as-not-passed
@@ -119,7 +127,7 @@ workflows:
                     tags:
                         only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
-                        ignore: /.*/
+                        only: /test-cicd\/.*/
             - test-success:
                 requires:
                     - test-unit
@@ -132,3 +140,4 @@ workflows:
                         only: /dev-v[0-9]+(\.[0-9]+)*/
                     branches:
                         ignore: /.*/
+

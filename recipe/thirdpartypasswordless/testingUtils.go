@@ -96,7 +96,7 @@ var mockThirdPartyProvider2 = tpmodels.ProviderInput{
 	},
 }
 
-var signinupCustomProvider1 = tpmodels.ProviderInput{
+var SigninupCustomProvider1 = tpmodels.ProviderInput{
 	Config: tpmodels.ProviderConfig{
 		ThirdPartyId: "custom",
 		Clients: []tpmodels.ProviderClientConfig{

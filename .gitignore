@@ -22,3 +22,4 @@ apiPassword
 releasePassword
 .vscode/
 .idea/
+/test_report

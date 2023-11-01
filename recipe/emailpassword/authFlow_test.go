@@ -155,7 +155,7 @@ func TestSignInAPIworksWithValidInput(t *testing.T) {
 
 	assert.Equal(t, signupUserInfo["id"], signInUserInfo["id"])
 	assert.Equal(t, signupUserInfo["email"], signInUserInfo["email"])
-	assert.Equal(t, signupUserInfo["timejoined"], signInUserInfo["timejoined"])
+	assert.Equal(t, signupUserInfo["timeJoined"], signInUserInfo["timeJoined"])
 }
 
 func TestSignInAPIworksWithValidInputAndTenantIdInPath(t *testing.T) {

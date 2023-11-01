@@ -6,7 +6,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -106,7 +106,7 @@ func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClie
 	}
 	/* Transformation needed for dev keys END */
 
-	oAuthTokens, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
+	oAuthTokens, _, err := doPostRequest(tokenAPIURL, accessTokenAPIParams, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -141,6 +141,13 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
+		}
+	}
+
+	if config.ValidateAccessToken != nil && accessTokenOk {
+		err := config.ValidateAccessToken(accessToken, config, userContext)
+		if err != nil {
+			return tpmodels.TypeUserInfo{}, err
 		}
 	}
 

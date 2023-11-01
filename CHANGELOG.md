@@ -8,9 +8,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [unreleased]
 
 
-## [0.14.1] - 2023-11-1
+## [0.16.5] - 2023-11-1
 
 -   Adds `debug` flag to the `TypeInput`. If set to `true`, debug logs will be printed.
+
+## [0.16.4] - 2023-10-20
+
+-   Fixes an issue where sometimes the `Access-Control-Expose-Headers` header value would contain duplicates
+
+## [0.16.3] - 2023-10-19
+
+-   Fixes an issue where trying to view details of a third party user would show an error for the user not being found when using the thirdpartypasswordless recipe
+
+## [0.16.2] - 2023-10-17
+
+-   Fixes an issue where tenant ids returned for a user from the user get API of the dashboard recipe would always be nil for thirdpartyemailpassword and thirdpartypasswordless recipes
+
+## [0.16.1] - 2023-10-03
+
+### Changes
+
+-   Added `ValidateAccessToken` to the configuration for social login providers, this function allows you to verify the access token returned by the social provider. If you are using Github as a provider, there is a default implementation provided for this function.
+
+### Fixes
+
+-   Fixes `timeJoined` casing in emailpassword and passwordless user objects.
+
+## [0.16.0] - 2023-09-27
+
+### Fixes
+
+-   Solves issue with clock skew during third party sign-in/up - https://github.com/supertokens/supertokens-golang/issues/362
+    -   Bumped `github.com/golang-jtw/jwt` version from v4 to v5.
+    -   Bumped `github.com/MicahParks/keyfunc` version from v1 to v2.
+
+### Breaking Changes
+
+-   Minimum golang version supported is 1.18
+
+## [0.15.0] - 2023-09-26
+
+-   Adds Twitter/X as a default provider to the third party recipe
+-   Added a `Cache-Control` header to `/jwt/jwks.json` (`GetJWKSGET`)
+-   Added `ValidityInSeconds` to the return value of the overrideable `GetJWKS` function.
+    -   This can be used to control the `Cache-Control` header mentioned above.
+    -   It defaults to `60` or the value set in the cache-control header returned by the core
+    -   This is optional (so you are not required to update your overrides). Returning undefined means that the header is not set.
+-   Handle AWS Public URLs (ending with `.amazonaws.com`) separately while extracting TLDs for SameSite attribute.
+-   Return `500` status instead of panic when `supertokens.Middleware` is used without initializing the SDK.
+-   Updates fiber adaptor package in the fiber example.
 
 ## [0.14.0] - 2023-09-11
 
