@@ -16,6 +16,7 @@ import (
 func resetLogger() {
 	supertokens.Logger = log.New(os.Stdout, "com.supertokens", 0)
 	os.Unsetenv("SUPERTOKENS_DEBUG")
+	supertokens.DebugEnabled = false
 }
 
 func TestLogDebugMessageWhenDebugTrue(t *testing.T) {

@@ -54,7 +54,7 @@ func supertokensInit(config TypeInput) error {
 		superTokens.OnSuperTokensAPIError = config.OnSuperTokensAPIError
 	}
 
-	debugEnabled = config.Debug
+	DebugEnabled = config.Debug
 
 	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
 
