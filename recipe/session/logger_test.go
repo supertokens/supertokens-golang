@@ -13,6 +13,11 @@ import (
 
 // Added the logger tests here because supertokens/logger_test.go causes cyclic import errors due to imports in test/unittesting/testingUtils.go
 
+func resetLogger() {
+	supertokens.Logger = log.New(os.Stdout, "com.supertokens", 0)
+	os.Unsetenv("SUPERTOKENS_DEBUG")
+}
+
 func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 	var logMessage = "test log message"
 	var buf bytes.Buffer
