@@ -44,6 +44,7 @@ var (
 	querierLastTriedIndex int
 	querierLock           sync.Mutex
 	querierHostLock       sync.Mutex
+	querierInterceptor    func(*http.Request, UserContext) *http.Request
 )
 
 func SetQuerierApiVersionForTests(version string) {
@@ -100,7 +101,7 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func initQuerier(hosts []QuerierHost, APIKey string) {
+func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Request, UserContext) *http.Request) {
 	if !querierInitCalled {
 		querierInitCalled = true
 		QuerierHosts = hosts
@@ -109,6 +110,7 @@ func initQuerier(hosts []QuerierHost, APIKey string) {
 		}
 		querierAPIVersion = ""
 		querierLastTriedIndex = 0
+		querierInterceptor = interceptor
 	}
 }
 
@@ -129,6 +131,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 		if err != nil {
 			return nil, err
 		}
+		req = querierInterceptor(req, nil)
 
 		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {

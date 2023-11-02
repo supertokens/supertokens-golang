@@ -85,7 +85,7 @@ func supertokensInit(config TypeInput) error {
 					BasePath: basePath,
 				})
 			}
-			initQuerier(hosts, config.Supertokens.APIKey)
+			initQuerier(hosts, config.Supertokens.APIKey, config.Supertokens.NetworkInterceptor)
 			superTokens.SuperTokens = *config.Supertokens
 		} else {
 			return errors.New("please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
