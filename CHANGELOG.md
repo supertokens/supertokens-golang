@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.16.6] - 2023-11-3
+
+-   Added `NetworkInterceptor` to the `ConnectionInfo` config.
+  - This can be used to capture/modify all the HTTP requests sent to the core.
+  - Solves the issue - https://github.com/supertokens/supertokens-core/issues/865
 
 ## [0.16.5] - 2023-11-1
 
