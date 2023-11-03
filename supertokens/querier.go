@@ -131,7 +131,6 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 		if err != nil {
 			return nil, err
 		}
-		req = querierInterceptor(req, nil)
 
 		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
@@ -145,6 +144,10 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
+		}
+
+		if querierInterceptor != nil {
+			req = querierInterceptor(req, nil)
 		}
 
 		client := &http.Client{}
@@ -189,6 +192,10 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 			req.Header.Set("rid", q.RIDToCore)
 		}
 
+		if querierInterceptor != nil {
+			req = querierInterceptor(req, nil)
+		}
+
 		client := &http.Client{}
 		return client.Do(req)
 	}, len(QuerierHosts), nil)
@@ -223,6 +230,10 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
+		}
+
+		if querierInterceptor != nil {
+			req = querierInterceptor(req, nil)
 		}
 
 		client := &http.Client{}
@@ -262,6 +273,10 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 			req.Header.Set("rid", q.RIDToCore)
 		}
 
+		if querierInterceptor != nil {
+			req = querierInterceptor(req, nil)
+		}
+
 		client := &http.Client{}
 		return client.Do(req)
 	}, len(QuerierHosts), nil)
@@ -294,6 +309,10 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 		}
 		if nP.IsARecipePath() && q.RIDToCore != "" {
 			req.Header.Set("rid", q.RIDToCore)
+		}
+
+		if querierInterceptor != nil {
+			req = querierInterceptor(req, nil)
 		}
 
 		client := &http.Client{}
