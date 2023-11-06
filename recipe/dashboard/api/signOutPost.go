@@ -32,7 +32,7 @@ func SignOutPost(apiInterface dashboardmodels.APIInterface, tenantId string, opt
 
 	_, apiError := querier.SendDeleteRequest("/recipe/dashboard/session", map[string]interface{}{}, map[string]string{
 		"sessionId": sessionIdFromHeader,
-	})
+	}, userContext)
 
 	if apiError != nil {
 		return signOutPostResponse{}, apiError

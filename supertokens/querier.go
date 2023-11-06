@@ -114,7 +114,7 @@ func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Requ
 	}
 }
 
-func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
+func (q *Querier) SendPostRequest(path string, data map[string]interface{}, userContext UserContext) (map[string]interface{}, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -147,7 +147,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 		}
 
 		if querierInterceptor != nil {
-			req = querierInterceptor(req, nil)
+			req = querierInterceptor(req, userContext)
 		}
 
 		client := &http.Client{}
@@ -156,7 +156,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}) (map
 	return resp, err
 }
 
-func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string) (map[string]interface{}, error) {
+func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string, userContext UserContext) (map[string]interface{}, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -193,7 +193,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 		}
 
 		if querierInterceptor != nil {
-			req = querierInterceptor(req, nil)
+			req = querierInterceptor(req, userContext)
 		}
 
 		client := &http.Client{}
@@ -202,7 +202,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 	return resp, err
 }
 
-func (q *Querier) SendGetRequest(path string, params map[string]string) (map[string]interface{}, error) {
+func (q *Querier) SendGetRequest(path string, params map[string]string, userContext UserContext) (map[string]interface{}, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -233,7 +233,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 		}
 
 		if querierInterceptor != nil {
-			req = querierInterceptor(req, nil)
+			req = querierInterceptor(req, userContext)
 		}
 
 		client := &http.Client{}
@@ -242,7 +242,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string) (map[str
 	return resp, err
 }
 
-func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[string]string) (map[string]interface{}, http.Header, error) {
+func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[string]string, userContext UserContext) (map[string]interface{}, http.Header, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, nil, err
@@ -274,7 +274,7 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 		}
 
 		if querierInterceptor != nil {
-			req = querierInterceptor(req, nil)
+			req = querierInterceptor(req, userContext)
 		}
 
 		client := &http.Client{}
@@ -282,7 +282,7 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 	}, len(QuerierHosts), nil)
 }
 
-func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[string]interface{}, error) {
+func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userContext UserContext) (map[string]interface{}, error) {
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -312,7 +312,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}) (map[
 		}
 
 		if querierInterceptor != nil {
-			req = querierInterceptor(req, nil)
+			req = querierInterceptor(req, userContext)
 		}
 
 		client := &http.Client{}

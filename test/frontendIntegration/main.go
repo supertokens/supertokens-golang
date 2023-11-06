@@ -540,7 +540,7 @@ func login218(response http.ResponseWriter, request *http.Request) {
 		"userDataInJWT":      payload,
 		"userDataInDatabase": map[string]interface{}{},
 		"enableAntiCsrf":     false,
-	})
+	}, nil)
 
 	if err != nil {
 		response.WriteHeader(500)

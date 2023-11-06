@@ -98,7 +98,7 @@ func TestThatNetworkCallIsRetried(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	_, err = q.SendGetRequest("/testing", map[string]string{})
+	_, err = q.SendGetRequest("/testing", map[string]string{}, nil)
 	if err == nil {
 		t.Error(errors.New("request should have failed but didnt").Error())
 	} else {
@@ -107,12 +107,12 @@ func TestThatNetworkCallIsRetried(t *testing.T) {
 		}
 	}
 
-	_, err = q.SendGetRequest("/testing2", map[string]string{})
+	_, err = q.SendGetRequest("/testing2", map[string]string{}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	_, err = q.SendGetRequest("/testing3", map[string]string{})
+	_, err = q.SendGetRequest("/testing3", map[string]string{}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -174,7 +174,7 @@ func TestThatRateLimitErrorsAreThrownBackToTheUser(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	_, err = q.SendGetRequest("/testing", map[string]string{})
+	_, err = q.SendGetRequest("/testing", map[string]string{}, nil)
 	if err == nil {
 		t.Error(errors.New("request should have failed but didnt").Error())
 	} else {
@@ -251,7 +251,7 @@ func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
 	go func() {
 		_, err = q.SendGetRequest("/testing", map[string]string{
 			"id": "1",
-		})
+		}, nil)
 		if err == nil {
 			t.Error(errors.New("request should have failed but didnt").Error())
 		} else {
@@ -266,7 +266,7 @@ func TestThatParallelCallsHaveIndependentRetryCounters(t *testing.T) {
 	go func() {
 		_, err = q.SendGetRequest("/testing", map[string]string{
 			"id": "2",
-		})
+		}, nil)
 		if err == nil {
 			t.Error(errors.New("request should have failed but didnt").Error())
 		} else {

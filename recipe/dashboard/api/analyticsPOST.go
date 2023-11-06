@@ -76,7 +76,7 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, tenantId string, o
 		return analyticsPostResponse{}, err
 	}
 
-	response, err := querier.SendGetRequest("/telemetry", nil)
+	response, err := querier.SendGetRequest("/telemetry", nil, userContext)
 	if err != nil {
 		// We don't send telemetry events if this fails
 		return analyticsPostResponse{

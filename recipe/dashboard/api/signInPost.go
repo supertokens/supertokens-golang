@@ -52,7 +52,7 @@ func SignInPost(apiInterface dashboardmodels.APIInterface, options dashboardmode
 	apiResponse, apiErr := querier.SendPostRequest("/recipe/dashboard/signin", map[string]interface{}{
 		"email":    *readBody.Email,
 		"password": *readBody.Password,
-	})
+	}, userContext)
 
 	if apiErr != nil {
 		return apiErr
