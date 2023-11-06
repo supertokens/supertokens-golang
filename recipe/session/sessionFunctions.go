@@ -26,7 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}, tenantId string) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, userID string, disableAntiCsrf bool, AccessTokenPayload, sessionDataInDatabase map[string]interface{}, tenantId string, userContext supertokens.UserContext) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	if AccessTokenPayload == nil {
 		AccessTokenPayload = map[string]interface{}{}
 	}
@@ -41,7 +41,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 		"useDynamicSigningKey": config.UseDynamicAccessTokenSigningKey,
 	}
 
-	response, err := querier.SendPostRequest(tenantId+"/recipe/session", requestBody)
+	response, err := querier.SendPostRequest(tenantId+"/recipe/session", requestBody, userContext)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
@@ -59,7 +59,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 	return resp, nil
 }
 
-func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken sessmodels.ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, alwaysCheckCore bool) (sessmodels.GetSessionResponse, error) {
+func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken sessmodels.ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, alwaysCheckCore bool, userContext supertokens.UserContext) (sessmodels.GetSessionResponse, error) {
 	var accessTokenInfo *AccessTokenInfoStruct = nil
 	var err error = nil
 	combinedJwks, jwksError := GetCombinedJWKS()
@@ -162,7 +162,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	if supertokens.IsRunningInTestMode() {
 		didGetSessionCallCore = true
 	}
-	response, err := querier.SendPostRequest("/recipe/session/verify", requestBody)
+	response, err := querier.SendPostRequest("/recipe/session/verify", requestBody, userContext)
 	if err != nil {
 		return sessmodels.GetSessionResponse{}, err
 	}
@@ -202,11 +202,11 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	}
 }
 
-func getSessionInformationHelper(querier supertokens.Querier, sessionHandle string) (*sessmodels.SessionInformation, error) {
+func getSessionInformationHelper(querier supertokens.Querier, sessionHandle string, userContext supertokens.UserContext) (*sessmodels.SessionInformation, error) {
 	response, err := querier.SendGetRequest("/recipe/session",
 		map[string]string{
 			"sessionHandle": sessionHandle,
-		})
+		}, userContext)
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	return nil, nil
 }
 
-func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, disableAntiCsrf bool) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
 		"enableAntiCsrf": !disableAntiCsrf && config.AntiCsrf == AntiCSRF_VIA_TOKEN,
@@ -237,7 +237,7 @@ func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier superto
 		return sessmodels.CreateOrRefreshAPIResponse{}, defaultErrors.New("Please either use VIA_TOKEN, NONE or call with doAntiCsrfCheck false")
 	}
 
-	response, err := querier.SendPostRequest("/recipe/session/refresh", requestBody)
+	response, err := querier.SendPostRequest("/recipe/session/refresh", requestBody, userContext)
 	if err != nil {
 		return sessmodels.CreateOrRefreshAPIResponse{}, err
 	}
@@ -270,14 +270,14 @@ func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier superto
 	}
 }
 
-func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string, tenantId string, revokeAcrossAllTenants *bool) ([]string, error) {
+func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string, tenantId string, revokeAcrossAllTenants *bool, userContext supertokens.UserContext) ([]string, error) {
 	requestBody := map[string]interface{}{
 		"userId": userID,
 	}
 	if revokeAcrossAllTenants != nil {
 		requestBody["revokeAcrossAllTenants"] = *revokeAcrossAllTenants
 	}
-	response, err := querier.SendPostRequest(tenantId+"/recipe/session/remove", requestBody)
+	response, err := querier.SendPostRequest(tenantId+"/recipe/session/remove", requestBody, userContext)
 	if err != nil {
 		return nil, err
 	}
@@ -293,14 +293,14 @@ func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string, 
 	return result, nil
 }
 
-func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string, tenantId string, fetchAcrossAllTenants *bool) ([]string, error) {
+func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID string, tenantId string, fetchAcrossAllTenants *bool, userContext supertokens.UserContext) ([]string, error) {
 	queryParams := map[string]string{
 		"userId": userID,
 	}
 	if fetchAcrossAllTenants != nil {
 		queryParams["fetchAcrossAllTenants"] = strings.ToLower(fmt.Sprintf("%v", *fetchAcrossAllTenants))
 	}
-	response, err := querier.SendGetRequest("/recipe/session/user", queryParams)
+	response, err := querier.SendGetRequest("/recipe/session/user", queryParams, userContext)
 	if err != nil {
 		return nil, err
 	}
@@ -316,22 +316,22 @@ func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID strin
 	return result, nil
 }
 
-func revokeSessionHelper(querier supertokens.Querier, sessionHandle string) (bool, error) {
+func revokeSessionHelper(querier supertokens.Querier, sessionHandle string, userContext supertokens.UserContext) (bool, error) {
 	response, err := querier.SendPostRequest("/recipe/session/remove",
 		map[string]interface{}{
 			"sessionHandles": [1]string{sessionHandle},
-		})
+		}, userContext)
 	if err != nil {
 		return false, err
 	}
 	return len(response["sessionHandlesRevoked"].([]interface{})) == 1, nil
 }
 
-func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []string) ([]string, error) {
+func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []string, userContext supertokens.UserContext) ([]string, error) {
 	response, err := querier.SendPostRequest("/recipe/session/remove",
 		map[string]interface{}{
 			"sessionHandles": sessionHandles,
-		})
+		}, userContext)
 	if err != nil {
 		return nil, err
 	}
@@ -346,7 +346,7 @@ func revokeMultipleSessionsHelper(querier supertokens.Querier, sessionHandles []
 	return result, nil
 }
 
-func updateSessionDataInDatabaseHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}) (bool, error) {
+func updateSessionDataInDatabaseHelper(querier supertokens.Querier, sessionHandle string, newSessionData map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 	if newSessionData == nil {
 		newSessionData = map[string]interface{}{}
 	}
@@ -354,7 +354,7 @@ func updateSessionDataInDatabaseHelper(querier supertokens.Querier, sessionHandl
 		map[string]interface{}{
 			"sessionHandle":      sessionHandle,
 			"userDataInDatabase": newSessionData,
-		})
+		}, userContext)
 	if err != nil {
 		return false, err
 	}
@@ -364,14 +364,14 @@ func updateSessionDataInDatabaseHelper(querier supertokens.Querier, sessionHandl
 	return true, nil
 }
 
-func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle string, newAccessTokenPayload map[string]interface{}) (bool, error) {
+func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle string, newAccessTokenPayload map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
 	if newAccessTokenPayload == nil {
 		newAccessTokenPayload = map[string]interface{}{}
 	}
 	response, err := querier.SendPutRequest("/recipe/jwt/data", map[string]interface{}{
 		"sessionHandle": sessionHandle,
 		"userDataInJWT": newAccessTokenPayload,
-	})
+	}, userContext)
 	if err != nil {
 		return false, err
 	}
@@ -381,14 +381,14 @@ func updateAccessTokenPayloadHelper(querier supertokens.Querier, sessionHandle s
 	return true, nil
 }
 
-func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayload *map[string]interface{}, accessToken string) (*sessmodels.RegenerateAccessTokenResponse, error) {
+func regenerateAccessTokenHelper(querier supertokens.Querier, newAccessTokenPayload *map[string]interface{}, accessToken string, userContext supertokens.UserContext) (*sessmodels.RegenerateAccessTokenResponse, error) {
 	if newAccessTokenPayload == nil {
 		newAccessTokenPayload = &map[string]interface{}{}
 	}
 	response, err := querier.SendPostRequest("/recipe/session/regenerate", map[string]interface{}{
 		"accessToken":   accessToken,
 		"userDataInJWT": newAccessTokenPayload,
-	})
+	}, userContext)
 	if err != nil {
 		return nil, err
 	}

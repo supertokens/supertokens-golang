@@ -41,7 +41,7 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 
 			verifyResponse, err := querier.SendPostRequest("/recipe/dashboard/session/verify", map[string]interface{}{
 				"sessionId": authHeaderValue,
-			})
+			}, userContext)
 
 			if err != nil {
 				return false, err

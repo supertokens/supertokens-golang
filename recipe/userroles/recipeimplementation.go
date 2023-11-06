@@ -26,7 +26,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		response, err := querier.SendPutRequest(tenantId+"/recipe/user/role", map[string]interface{}{
 			"userId": userID,
 			"role":   role,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.AddRoleToUserResponse{}, err
 		}
@@ -48,7 +48,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		response, err := querier.SendPostRequest(tenantId+"/recipe/user/role/remove", map[string]interface{}{
 			"userId": userID,
 			"role":   role,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.RemoveUserRoleResponse{}, err
 		}
@@ -69,7 +69,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	getRolesForUser := func(userID string, tenantId string, userContext supertokens.UserContext) (userrolesmodels.GetRolesForUserResponse, error) {
 		response, err := querier.SendGetRequest(tenantId+"/recipe/user/roles", map[string]string{
 			"userId": userID,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.GetRolesForUserResponse{}, err
 		}
@@ -85,7 +85,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	getUsersThatHaveRole := func(role string, tenantId string, userContext supertokens.UserContext) (userrolesmodels.GetUsersThatHaveRoleResponse, error) {
 		response, err := querier.SendGetRequest(tenantId+"/recipe/role/users", map[string]string{
 			"role": role,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.GetUsersThatHaveRoleResponse{}, err
 		}
@@ -107,7 +107,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		response, err := querier.SendPutRequest("/recipe/role", map[string]interface{}{
 			"role":        role,
 			"permissions": permissions,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.CreateNewRoleOrAddPermissionsResponse{}, err
 		}
@@ -122,7 +122,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	getPermissionsForRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.GetPermissionsForRoleResponse, error) {
 		response, err := querier.SendGetRequest("/recipe/role/permissions", map[string]string{
 			"role": role,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.GetPermissionsForRoleResponse{}, err
 		}
@@ -144,7 +144,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 		response, err := querier.SendPostRequest("/recipe/role/permissions/remove", map[string]interface{}{
 			"role":        role,
 			"permissions": permissions,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.RemovePermissionsFromRoleResponse{}, err
 		}
@@ -163,7 +163,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	getRolesThatHavePermission := func(permission string, userContext supertokens.UserContext) (userrolesmodels.GetRolesThatHavePermissionResponse, error) {
 		response, err := querier.SendGetRequest("/recipe/permission/roles", map[string]string{
 			"permission": permission,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.GetRolesThatHavePermissionResponse{}, err
 		}
@@ -178,7 +178,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	deleteRole := func(role string, userContext supertokens.UserContext) (userrolesmodels.DeleteRoleResponse, error) {
 		response, err := querier.SendPostRequest("/recipe/role/remove", map[string]interface{}{
 			"role": role,
-		})
+		}, userContext)
 		if err != nil {
 			return userrolesmodels.DeleteRoleResponse{}, err
 		}
@@ -191,7 +191,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config userrolesmodel
 	}
 
 	getAllRoles := func(userContext supertokens.UserContext) (userrolesmodels.GetAllRolesResponse, error) {
-		response, err := querier.SendGetRequest("/recipe/roles", map[string]string{})
+		response, err := querier.SendGetRequest("/recipe/roles", map[string]string{}, userContext)
 		if err != nil {
 			return userrolesmodels.GetAllRolesResponse{}, err
 		}

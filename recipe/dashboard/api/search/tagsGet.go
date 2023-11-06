@@ -32,7 +32,7 @@ func SearchTagsGet(apiImplementation dashboardmodels.APIInterface, tenantId stri
 		return searchTagsResponse{}, querierErr
 	}
 
-	apiResponse, apiErr := querier.SendGetRequest("/user/search/tags", nil)
+	apiResponse, apiErr := querier.SendGetRequest("/user/search/tags", nil, userContext)
 	if apiErr != nil {
 		return searchTagsResponse{}, apiErr
 	}

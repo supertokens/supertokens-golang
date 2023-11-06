@@ -24,7 +24,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config usermetadatamo
 	getUserMetadata := func(userID string, userContext supertokens.UserContext) (map[string]interface{}, error) {
 		response, err := querier.SendGetRequest("/recipe/user/metadata", map[string]string{
 			"userId": userID,
-		})
+		}, userContext)
 		if err != nil {
 			return map[string]interface{}{}, err
 		}
@@ -36,7 +36,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config usermetadatamo
 		response, err := querier.SendPutRequest("/recipe/user/metadata", map[string]interface{}{
 			"userId":         userID,
 			"metadataUpdate": metadataUpdate,
-		})
+		}, userContext)
 		if err != nil {
 			return map[string]interface{}{}, err
 		}
@@ -47,7 +47,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config usermetadatamo
 	clearUserMetadata := func(userID string, userContext supertokens.UserContext) error {
 		_, err := querier.SendPostRequest("/recipe/user/metadata/remove", map[string]interface{}{
 			"userId": userID,
-		})
+		}, userContext)
 		return err
 	}
 

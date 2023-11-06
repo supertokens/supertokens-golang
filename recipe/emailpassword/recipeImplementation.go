@@ -25,7 +25,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 		response, err := querier.SendPostRequest(tenantId+"/recipe/signup", map[string]interface{}{
 			"email":    email,
 			"password": password,
-		})
+		}, userContext)
 		if err != nil {
 			return epmodels.SignUpResponse{}, err
 		}
@@ -48,7 +48,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 		response, err := querier.SendPostRequest(tenantId+"/recipe/signin", map[string]interface{}{
 			"email":    email,
 			"password": password,
-		})
+		}, userContext)
 		if err != nil {
 			return epmodels.SignInResponse{}, err
 		}
@@ -70,7 +70,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 	getUserByID := func(userID string, userContext supertokens.UserContext) (*epmodels.User, error) {
 		response, err := querier.SendGetRequest("/recipe/user", map[string]string{
 			"userId": userID,
-		})
+		}, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -88,7 +88,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 	getUserByEmail := func(email string, tenantId string, userContext supertokens.UserContext) (*epmodels.User, error) {
 		response, err := querier.SendGetRequest(tenantId+"/recipe/user", map[string]string{
 			"email": email,
-		})
+		}, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -106,7 +106,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 	createResetPasswordToken := func(userID string, tenantId string, userContext supertokens.UserContext) (epmodels.CreateResetPasswordTokenResponse, error) {
 		response, err := querier.SendPostRequest(tenantId+"/recipe/user/password/reset/token", map[string]interface{}{
 			"userId": userID,
-		})
+		}, userContext)
 		if err != nil {
 			return epmodels.CreateResetPasswordTokenResponse{}, err
 		}
@@ -126,7 +126,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 			"method":      "token",
 			"token":       token,
 			"newPassword": newPassword,
-		})
+		}, userContext)
 		if err != nil {
 			return epmodels.ResetPasswordUsingTokenResponse{}, nil
 		}
@@ -182,7 +182,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, getEmailPasswordConfi
 			}
 			requestBody["password"] = password
 		}
-		response, err := querier.SendPutRequest("/recipe/user", requestBody)
+		response, err := querier.SendPutRequest("/recipe/user", requestBody, userContext)
 		if err != nil {
 			return epmodels.UpdateEmailOrPasswordResponse{}, nil
 		}

@@ -46,7 +46,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 			"algorithm":           "RS256",
 			"jwksDomain":          appInfo.APIDomain.GetAsStringDangerous(),
 			"useStaticSigningKey": shouldUseStaticSigningKey,
-		})
+		}, userContext)
 		if err != nil {
 			return jwtmodels.CreateJWTResponse{}, err
 		}
@@ -65,7 +65,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 		}
 	}
 	getJWKS := func(userContext supertokens.UserContext) (jwtmodels.GetJWKSResponse, error) {
-		response, headers, err := querier.SendGetRequestWithResponseHeaders("/.well-known/jwks.json", map[string]string{})
+		response, headers, err := querier.SendGetRequestWithResponseHeaders("/.well-known/jwks.json", map[string]string{}, userContext)
 		if err != nil {
 			return jwtmodels.GetJWKSResponse{}, err
 		}

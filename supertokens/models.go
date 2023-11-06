@@ -51,8 +51,9 @@ type TypeInput struct {
 }
 
 type ConnectionInfo struct {
-	ConnectionURI string
-	APIKey        string
+	ConnectionURI      string
+	APIKey             string
+	NetworkInterceptor func(*http.Request, UserContext) *http.Request
 }
 
 type APIHandled struct {

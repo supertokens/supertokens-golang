@@ -44,7 +44,7 @@ func CreateUserIdMapping(supertokensUserId string, externalUserId string, extern
 	if externalUserIdInfo != nil {
 		data["externalUserIdInfo"] = *externalUserIdInfo
 	}
-	resp, err := querier.SendPostRequest("/recipe/userid/map", data)
+	resp, err := querier.SendPostRequest("/recipe/userid/map", data, nil)
 	if err != nil {
 		return CreateUserIdMappingResult{}, err
 	}
@@ -98,7 +98,7 @@ func GetUserIdMapping(userId string, userIdType *UserIdType) (GetUserIdMappingRe
 	if userIdType != nil {
 		data["userIdType"] = string(*userIdType)
 	}
-	resp, err := querier.SendGetRequest("/recipe/userid/map", data)
+	resp, err := querier.SendGetRequest("/recipe/userid/map", data, nil)
 	if err != nil {
 		return GetUserIdMappingResult{}, err
 	}
@@ -153,7 +153,7 @@ func DeleteUserIdMapping(userId string, userIdType *UserIdType, force *bool) (De
 	if force != nil {
 		data["force"] = *force
 	}
-	resp, err := querier.SendPostRequest("/recipe/userid/map/remove", data)
+	resp, err := querier.SendPostRequest("/recipe/userid/map/remove", data, nil)
 	if err != nil {
 		return DeleteUserIdMappingResult{}, err
 	}
@@ -190,7 +190,7 @@ func UpdateOrDeleteUserIdMappingInfo(userId string, userIdType *UserIdType, exte
 		data["userIdType"] = string(*userIdType)
 	}
 
-	resp, err := querier.SendPutRequest("/recipe/userid/external-user-id-info", data)
+	resp, err := querier.SendPutRequest("/recipe/userid/external-user-id-info", data, nil)
 	if err != nil {
 		return UpdateOrDeleteUserIdMappingInfoResult{}, err
 	}

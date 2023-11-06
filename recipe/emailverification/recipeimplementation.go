@@ -25,7 +25,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		response, err := querier.SendPostRequest(tenantId+"/recipe/user/email/verify/token", map[string]interface{}{
 			"userId": userID,
 			"email":  email,
-		})
+		}, userContext)
 		if err != nil {
 			return evmodels.CreateEmailVerificationTokenResponse{}, err
 		}
@@ -45,7 +45,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		response, err := querier.SendPostRequest(tenantId+"/recipe/user/email/verify", map[string]interface{}{
 			"method": "token",
 			"token":  token,
-		})
+		}, userContext)
 		if err != nil {
 			return evmodels.VerifyEmailUsingTokenResponse{}, err
 		}
@@ -67,7 +67,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		response, err := querier.SendGetRequest("/recipe/user/email/verify", map[string]string{
 			"userId": userID,
 			"email":  email,
-		})
+		}, userContext)
 		if err != nil {
 			return false, err
 		}
@@ -78,7 +78,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		_, err := querier.SendPostRequest(tenantId+"/recipe/user/email/verify/token/remove", map[string]interface{}{
 			"userId": userId,
 			"email":  email,
-		})
+		}, userContext)
 		if err != nil {
 			return evmodels.RevokeEmailVerificationTokensResponse{}, err
 		}
@@ -91,7 +91,7 @@ func makeRecipeImplementation(querier supertokens.Querier) evmodels.RecipeInterf
 		_, err := querier.SendPostRequest("/recipe/user/email/verify/remove", map[string]interface{}{
 			"userId": userId,
 			"email":  email,
-		})
+		}, userContext)
 		if err != nil {
 			return evmodels.UnverifyEmailResponse{}, err
 		}

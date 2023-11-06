@@ -236,7 +236,7 @@ func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) 
 			"sub": "asdf",
 		},
 		"userDataInDatabase": map[string]interface{}{},
-	})
+	}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -366,7 +366,7 @@ func TestShouldHelpMigratingV2TokenUsingProtectedPropsWhenCalledUsingSessionHand
 			"sub": "asdf",
 		},
 		"userDataInDatabase": map[string]interface{}{},
-	})
+	}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -472,7 +472,7 @@ func TestVerifyShouldValidateV2Tokens(t *testing.T) {
 			"sub": "asdf",
 		},
 		"userDataInDatabase": map[string]interface{}{},
-	})
+	}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -559,7 +559,7 @@ func TestVerifyShouldValidateV2TokensWithCheckDatabaseEnabled(t *testing.T) {
 			"sub": "asdf",
 		},
 		"userDataInDatabase": map[string]interface{}{},
-	})
+	}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -890,7 +890,7 @@ func TestShouldRefreshLegacySessionsToNewVersion(t *testing.T) {
 		"enableAntiCsrf":     false,
 		"userDataInJWT":      map[string]interface{}{},
 		"userDataInDatabase": map[string]interface{}{},
-	})
+	}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -970,7 +970,7 @@ func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {
 			"sub": "asdf",
 		},
 		"userDataInDatabase": map[string]interface{}{},
-	})
+	}, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

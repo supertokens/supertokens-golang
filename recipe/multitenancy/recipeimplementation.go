@@ -45,7 +45,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		if config.CoreConfig != nil {
 			requestBody["coreConfig"] = config.CoreConfig
 		}
-		createOrUpdateResponse, err := querier.SendPutRequest("/recipe/multitenancy/tenant", requestBody)
+		createOrUpdateResponse, err := querier.SendPutRequest("/recipe/multitenancy/tenant", requestBody, userContext)
 		if err != nil {
 			return multitenancymodels.CreateOrUpdateTenantResponse{}, err
 		}
@@ -65,7 +65,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	deleteTenant := func(tenantId string, userContext supertokens.UserContext) (multitenancymodels.DeleteTenantResponse, error) {
 		deleteTenantResponse, err := querier.SendPostRequest("/recipe/multitenancy/tenant/remove", map[string]interface{}{
 			"tenantId": tenantId,
-		})
+		}, userContext)
 		if err != nil {
 			return multitenancymodels.DeleteTenantResponse{}, err
 		}
@@ -82,7 +82,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	}
 
 	getTenant := func(tenantId string, userContext supertokens.UserContext) (*multitenancymodels.Tenant, error) {
-		tenantResponse, err := querier.SendGetRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant", tenantId), map[string]string{})
+		tenantResponse, err := querier.SendGetRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant", tenantId), map[string]string{}, userContext)
 		if err != nil {
 			return nil, err
 		}
@@ -107,7 +107,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	}
 
 	listAllTenants := func(userContext supertokens.UserContext) (multitenancymodels.ListAllTenantsResponse, error) {
-		tenantsResponse, err := querier.SendGetRequest("/recipe/multitenancy/tenant/list", map[string]string{})
+		tenantsResponse, err := querier.SendGetRequest("/recipe/multitenancy/tenant/list", map[string]string{}, userContext)
 		if err != nil {
 			return multitenancymodels.ListAllTenantsResponse{}, err
 		}
@@ -135,7 +135,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 		if skipValidation != nil {
 			requestBody["skipValidation"] = *skipValidation
 		}
-		response, err := querier.SendPutRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty", tenantId), requestBody)
+		response, err := querier.SendPutRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty", tenantId), requestBody, userContext)
 		if err != nil {
 			return multitenancymodels.CreateOrUpdateThirdPartyConfigResponse{}, err
 		}
@@ -151,7 +151,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	deleteThirdPartyConfig := func(tenantId string, thirdPartyId string, userContext supertokens.UserContext) (multitenancymodels.DeleteThirdPartyConfigResponse, error) {
 		response, err := querier.SendPostRequest(fmt.Sprintf("/%s/recipe/multitenancy/config/thirdparty/remove", tenantId), map[string]interface{}{
 			"thirdPartyId": thirdPartyId,
-		})
+		}, userContext)
 		if err != nil {
 			return multitenancymodels.DeleteThirdPartyConfigResponse{}, err
 		}
@@ -166,7 +166,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	associateUserToTenant := func(tenantId string, userId string, userContext supertokens.UserContext) (multitenancymodels.AssociateUserToTenantResponse, error) {
 		response, err := querier.SendPostRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant/user", tenantId), map[string]interface{}{
 			"userId": userId,
-		})
+		}, userContext)
 		if err != nil {
 			return multitenancymodels.AssociateUserToTenantResponse{}, err
 		}
@@ -180,7 +180,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config multitenancymo
 	disassociateUserFromTenant := func(tenantId string, userId string, userContext supertokens.UserContext) (multitenancymodels.DisassociateUserFromTenantResponse, error) {
 		response, err := querier.SendPostRequest(fmt.Sprintf("/%s/recipe/multitenancy/tenant/user/remove", tenantId), map[string]interface{}{
 			"userId": userId,
-		})
+		}, userContext)
 		if err != nil {
 			return multitenancymodels.DisassociateUserFromTenantResponse{}, err
 		}

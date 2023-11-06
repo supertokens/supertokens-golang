@@ -85,7 +85,7 @@ func supertokensInit(config TypeInput) error {
 					BasePath: basePath,
 				})
 			}
-			initQuerier(hosts, config.Supertokens.APIKey)
+			initQuerier(hosts, config.Supertokens.APIKey, config.Supertokens.NetworkInterceptor)
 			superTokens.SuperTokens = *config.Supertokens
 		} else {
 			return errors.New("please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
@@ -330,7 +330,7 @@ func GetUsersWithSearchParams(tenantId string, timeJoinedOrder string, paginatio
 		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
 	}
 
-	resp, err := querier.SendGetRequest(tenantId+"/users", requestBody)
+	resp, err := querier.SendGetRequest(tenantId+"/users", requestBody, nil)
 
 	if err != nil {
 		return UserPaginationResult{}, err
@@ -369,7 +369,7 @@ func getUserCount(includeRecipeIds *[]string, tenantId string, includeAllTenants
 		requestBody["includeAllTenants"] = strconv.FormatBool(*includeAllTenants)
 	}
 
-	resp, err := querier.SendGetRequest(tenantId+"/users/count", requestBody)
+	resp, err := querier.SendGetRequest(tenantId+"/users/count", requestBody, nil)
 
 	if err != nil {
 		return -1, err
@@ -392,7 +392,7 @@ func deleteUser(userId string) error {
 	if MaxVersion(cdiVersion, "2.10") == cdiVersion {
 		_, err = querier.SendPostRequest("/user/remove", map[string]interface{}{
 			"userId": userId,
-		})
+		}, nil)
 
 		if err != nil {
 			return err
