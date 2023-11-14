@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.16.7] - 2023-11-14
+
+-   Fixes issue with github user id conversion
+
 ## [0.16.6] - 2023-11-3
 
 -   Added `NetworkInterceptor` to the `ConnectionInfo` config.
