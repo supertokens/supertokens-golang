@@ -135,7 +135,7 @@ func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse 
 	}
 
 	result := tpmodels.TypeUserInfo{
-		ThirdPartyUserId: fmt.Sprint(rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})["id"]),
+		ThirdPartyUserId: fmt.Sprint(int64(rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})["id"].(float64))),
 	}
 
 	emailsInfo := rawUserInfoResponse.FromUserInfoAPI["emails"].([]interface{})
