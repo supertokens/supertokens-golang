@@ -7,9 +7,69 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-## [0.16.7] - 2023-11-14
+## [0.17.0] - 2023-11-14
 
--   Fixes issue with github user id conversion
+### Breaking change
+
+-   Fixes github user id conversion to be consistent with other SDKs.
+
+### Migration
+
+If you were using the SDK Versions >= `0.13.0` and < `0.17.0`, use the following override function for github:
+
+```go
+{
+	Config: tpmodels.ProviderConfig{
+		ThirdPartyId: "github",
+		// other config
+	},
+	Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		originalGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			userInfo, err := originalGetUserInfo(oAuthTokens, userContext)
+			if err != nil {
+				return userInfo, err
+			}
+			number, err := strconv.ParseFloat(userInfo.ThirdPartyUserId, 64)
+			if err != nil {
+				return userInfo, err
+			}
+			userInfo.ThirdPartyUserId = fmt.Sprint(number)
+			return userInfo, nil
+		}
+
+		return originalImplementation
+	},
+},
+```
+
+If you were using the SDK Versions < `0.13.0`, use the following override function for github:
+
+```go
+{
+	Config: tpmodels.ProviderConfig{
+		ThirdPartyId: "github",
+		// other config
+	},
+	Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		originalGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			userInfo, err := originalGetUserInfo(oAuthTokens, userContext)
+			if err != nil {
+				return userInfo, err
+			}
+			number, err := strconv.ParseFloat(userInfo.ThirdPartyUserId, 64)
+			if err != nil {
+				return userInfo, err
+			}
+			userInfo.ThirdPartyUserId = fmt.Sprintf("%f", number)
+			return userInfo, nil
+		}
+
+		return originalImplementation
+	},
+},
+```
 
 ## [0.16.6] - 2023-11-3
 
