@@ -99,13 +99,18 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		var userInputCode *string
 		flowType := options.Config.FlowType
 		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
-			link := GetMagicLink(
+			link, err := GetMagicLink(
 				options.AppInfo,
 				options.RecipeID,
 				response.OK.PreAuthSessionID,
 				response.OK.LinkCode,
 				tenantId,
+				options.Req,
+				userContext,
 			)
+			if err != nil {
+				return plessmodels.CreateCodePOSTResponse{}, err
+			}
 			magicLink = &link
 		}
 
@@ -276,13 +281,18 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			var userInputCode *string
 			flowType := options.Config.FlowType
 			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
-				link := GetMagicLink(
+				link, err := GetMagicLink(
 					options.AppInfo,
 					options.RecipeID,
 					response.OK.PreAuthSessionID,
 					response.OK.LinkCode,
 					tenantId,
+					options.Req,
+					userContext,
 				)
+				if err != nil {
+					return plessmodels.ResendCodePOSTResponse{}, err
+				}
 
 				magicLink = &link
 			}
