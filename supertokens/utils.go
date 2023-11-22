@@ -47,9 +47,6 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	if appInfo.AppName == "" {
 		return NormalisedAppinfo{}, errors.New("Please provide your appName inside the appInfo object when calling supertokens.init")
 	}
-	if appInfo.WebsiteDomain == "" {
-		return NormalisedAppinfo{}, errors.New("Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
-	}
 	apiGatewayPath, err := NewNormalisedURLPath("")
 	if err != nil {
 		return NormalisedAppinfo{}, err
@@ -60,10 +57,30 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 			return NormalisedAppinfo{}, err
 		}
 	}
-	websiteDomain, err := NewNormalisedURLDomain(appInfo.WebsiteDomain)
-	if err != nil {
-		return NormalisedAppinfo{}, err
+
+	if appInfo.Origin == "" && appInfo.WebsiteDomain == "" && appInfo.GetOrigin == nil {
+		return NormalisedAppinfo{}, errors.New("Please provide either Origin, GetOrigin or WebsiteDomain inside the appInfo object when calling supertokens.init")
 	}
+
+	websiteDomainFunction := func(request *http.Request, userContext UserContext) (NormalisedURLDomain, error) {
+		origin := appInfo.Origin
+		if origin == "" {
+			origin = appInfo.WebsiteDomain
+		}
+
+		if appInfo.GetOrigin != nil {
+			originResult, err := appInfo.GetOrigin(request, userContext)
+			if err != nil {
+				return NormalisedURLDomain{}, err
+			}
+			origin = originResult
+		}
+
+		return NormalisedURLDomain{
+			value: origin,
+		}, nil
+	}
+
 	apiDomain, err := NewNormalisedURLDomain(appInfo.APIDomain)
 	if err != nil {
 		return NormalisedAppinfo{}, err
@@ -73,9 +90,13 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 	if err != nil {
 		return NormalisedAppinfo{}, err
 	}
-	topLevelWebsiteDomain, err := GetTopLevelDomainForSameSiteResolution(websiteDomain.GetAsStringDangerous())
-	if err != nil {
-		return NormalisedAppinfo{}, err
+
+	getTopLevelWebsiteDomain := func(request *http.Request, userContext UserContext) (string, error) {
+		origin, err := websiteDomainFunction(request, userContext)
+		if err != nil {
+			return "", err
+		}
+		return GetTopLevelDomainForSameSiteResolution(origin.GetAsStringDangerous())
 	}
 
 	APIBasePathStr := "/auth"
@@ -97,14 +118,14 @@ func NormaliseInputAppInfoOrThrowError(appInfo AppInfo) (NormalisedAppinfo, erro
 		return NormalisedAppinfo{}, err
 	}
 	return NormalisedAppinfo{
-		AppName:               appInfo.AppName,
-		APIGatewayPath:        apiGatewayPath,
-		WebsiteDomain:         websiteDomain,
-		APIDomain:             apiDomain,
-		APIBasePath:           apiBasePath,
-		TopLevelAPIDomain:     topLevelAPIDomain,
-		TopLevelWebsiteDomain: topLevelWebsiteDomain,
-		WebsiteBasePath:       websiteBasePath,
+		AppName:                  appInfo.AppName,
+		APIGatewayPath:           apiGatewayPath,
+		GetOrigin:                websiteDomainFunction,
+		APIDomain:                apiDomain,
+		APIBasePath:              apiBasePath,
+		TopLevelAPIDomain:        topLevelAPIDomain,
+		GetTopLevelWebsiteDomain: getTopLevelWebsiteDomain,
+		WebsiteBasePath:          websiteBasePath,
 	}, nil
 }
 
