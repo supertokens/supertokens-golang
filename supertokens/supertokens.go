@@ -58,7 +58,20 @@ func supertokensInit(config TypeInput) error {
 
 	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
 
-	appInfoJsonString, _ := json.Marshal(config.AppInfo)
+	// we do this below because we cannot marshal a function.
+	jsonableStruct := map[string]interface{}{
+		"AppName":         config.AppInfo.AppName,
+		"Origin":          config.AppInfo.Origin,
+		"WebsiteDomain":   config.AppInfo.WebsiteDomain,
+		"APIDomain":       config.AppInfo.APIDomain,
+		"WebsiteBasePath": config.AppInfo.WebsiteBasePath,
+		"APIBasePath":     config.AppInfo.APIBasePath,
+		"APIGatewayPath":  config.AppInfo.APIGatewayPath,
+	}
+	if config.AppInfo.GetOrigin != nil {
+		jsonableStruct["Origin"] = "function"
+	}
+	appInfoJsonString, _ := json.Marshal(jsonableStruct)
 	LogDebugMessage("AppInfo: " + string(appInfoJsonString))
 
 	var err error
