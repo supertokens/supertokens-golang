@@ -56,16 +56,18 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, configError
 	}
 
-	if config.AntiCsrf == nil {
+	if verifiedConfig.AntiCsrfFunctionOrString.FunctionValue != nil {
 		supertokens.LogDebugMessage("session init: AntiCsrf: function")
 	} else {
-		supertokens.LogDebugMessage("session init: AntiCsrf: " + *config.AntiCsrf)
+		supertokens.LogDebugMessage("session init: AntiCsrf: " + *&verifiedConfig.AntiCsrfFunctionOrString.StrValue)
 	}
 	if verifiedConfig.CookieDomain != nil {
 		supertokens.LogDebugMessage("session init: CookieDomain: " + *verifiedConfig.CookieDomain)
 	} else {
 		supertokens.LogDebugMessage("session init: CookieDomain: nil")
 	}
+	// we intentionally use config here instead of verifiedConfig will always
+	// be a function for getting cookieSameSite.
 	if config.CookieSameSite == nil {
 		supertokens.LogDebugMessage("session init: CookieSameSite: default function")
 	} else {
