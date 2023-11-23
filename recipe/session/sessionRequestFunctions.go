@@ -112,18 +112,18 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, tenan
 				return nil, err
 			}
 			if token != nil {
-				ClearSession(config, res, tokenTransferMethod)
+				ClearSession(config, res, tokenTransferMethod, req, userContext)
 			}
 		}
 	}
 
 	supertokens.LogDebugMessage("createNewSession: Cleared old tokens")
 
-	sessionResponse.AttachToRequestResponse(sessmodels.RequestResponseInfo{
+	sessionResponse.AttachToRequestResponseWithContext(sessmodels.RequestResponseInfo{
 		Res:                 res,
 		Req:                 req,
 		TokenTransferMethod: outputTokenTransferMethod,
-	})
+	}, userContext)
 	supertokens.LogDebugMessage("createNewSession: Attached new tokens to res")
 
 	return sessionResponse, nil
@@ -288,11 +288,11 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 			transferMethod = allowedTokenTransferMethod
 		}
 
-		err = (*sessionResult).AttachToRequestResponse(sessmodels.RequestResponseInfo{
+		err = (*sessionResult).AttachToRequestResponseWithContext(sessmodels.RequestResponseInfo{
 			Res:                 res,
 			Req:                 req,
 			TokenTransferMethod: transferMethod,
-		})
+		}, userContext)
 
 		if err != nil {
 			return nil, err
@@ -336,7 +336,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 	} else {
 		if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
 			supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh token was not found")
-			setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
+			setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath", req, userContext)
 		}
 
 		supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token in request is undefined")
@@ -384,7 +384,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 		if (isTokenTheftDetectedErr) || (isUnauthorisedErr && unauthorisedErr.ClearTokens != nil && *unauthorisedErr.ClearTokens) {
 			if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
 				supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token because refresh is clearing other tokens")
-				setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
+				setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath", req, userContext)
 			}
 		}
 
@@ -399,21 +399,21 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 
 	for _, tokenTransferMethod := range AvailableTokenTransferMethods {
 		if tokenTransferMethod != requestTokenTransferMethod && refreshTokens[tokenTransferMethod] != nil {
-			ClearSession(config, res, tokenTransferMethod)
+			ClearSession(config, res, tokenTransferMethod, req, userContext)
 		}
 	}
 
-	(*result).AttachToRequestResponse(sessmodels.RequestResponseInfo{
+	(*result).AttachToRequestResponseWithContext(sessmodels.RequestResponseInfo{
 		Res:                 res,
 		Req:                 req,
 		TokenTransferMethod: requestTokenTransferMethod,
-	})
+	}, userContext)
 
 	supertokens.LogDebugMessage("refreshSession: Success!")
 
 	if GetCookieValue(req, legacyIdRefreshTokenCookieName) != nil {
 		supertokens.LogDebugMessage("refreshSession: cleared legacy id refresh token after successful refresh")
-		setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath")
+		setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath", req, userContext)
 	}
 
 	return result, nil
