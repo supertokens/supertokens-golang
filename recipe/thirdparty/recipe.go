@@ -155,7 +155,7 @@ func (r *Recipe) getAllCORSHeaders() []string {
 	return []string{}
 }
 
-func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (bool, error) {
 	if errors.As(err, &tperrors.ClientTypeNotFoundError{}) {
 		supertokens.SendNon200ResponseWithMessage(res, err.Error(), 400)
 		return true, nil

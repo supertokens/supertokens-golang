@@ -41,12 +41,15 @@ func Middleware(theirHandler http.Handler) http.Handler {
 	return instance.middleware(theirHandler)
 }
 
-func ErrorHandler(err error, req *http.Request, res http.ResponseWriter) error {
+func ErrorHandler(err error, req *http.Request, res http.ResponseWriter, userContext ...UserContext) error {
 	instance, instanceErr := GetInstanceOrThrowError()
 	if instanceErr != nil {
 		return instanceErr
 	}
-	return instance.errorHandler(err, req, res)
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return instance.errorHandler(err, req, res, userContext[0])
 }
 
 func GetAllCORSHeaders() []string {

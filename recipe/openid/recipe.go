@@ -127,8 +127,8 @@ func (r *Recipe) getAllCORSHeaders() []string {
 	return r.JwtRecipe.RecipeModule.GetAllCORSHeaders()
 }
 
-func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	return r.JwtRecipe.RecipeModule.HandleError(err, req, res)
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (bool, error) {
+	return r.JwtRecipe.RecipeModule.HandleError(err, req, res, userContext)
 }
 
 func ResetForTest() {

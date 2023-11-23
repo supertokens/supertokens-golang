@@ -201,13 +201,13 @@ func (r *Recipe) getAllCORSHeaders() []string {
 	return corsHeaders
 }
 
-func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
-	handleError, err := r.emailPasswordRecipe.RecipeModule.HandleError(err, req, res)
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (bool, error) {
+	handleError, err := r.emailPasswordRecipe.RecipeModule.HandleError(err, req, res, userContext)
 	if err != nil || handleError {
 		return handleError, err
 	}
 	if r.thirdPartyRecipe != nil {
-		handleError, err = r.thirdPartyRecipe.RecipeModule.HandleError(err, req, res)
+		handleError, err = r.thirdPartyRecipe.RecipeModule.HandleError(err, req, res, userContext)
 		if err != nil || handleError {
 			return handleError, err
 		}
