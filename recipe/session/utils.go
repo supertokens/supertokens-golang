@@ -57,25 +57,33 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	apiDomainScheme, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-	websiteDomainScheme, err := GetURLScheme(appInfo.WebsiteDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-
-	cookieSameSite := CookieSameSite_LAX
-	if apiDomainScheme != websiteDomainScheme || appInfo.TopLevelAPIDomain != appInfo.TopLevelWebsiteDomain {
-		cookieSameSite = CookieSameSite_NONE
-	}
-
-	if config != nil && config.CookieSameSite != nil {
-		cookieSameSite, err = normaliseSameSiteOrThrowError(*config.CookieSameSite)
-		if err != nil {
-			return sessmodels.TypeNormalisedInput{}, err
+	cookieSameSite := func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+		if config.CookieSameSite != nil {
+			return normaliseSameSiteOrThrowError(*config.CookieSameSite)
 		}
+		origin, err := appInfo.GetOrigin(request, userContext)
+		if err != nil {
+			return "", err
+		}
+		protocolOfWebsiteDomain, err := GetURLScheme(origin.GetAsStringDangerous())
+		if err != nil {
+			return "", err
+		}
+
+		protocolOfAPIDomain, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
+		if err != nil {
+			return "", err
+		}
+
+		topLevelWebsiteDomain, err := appInfo.GetTopLevelWebsiteDomain(request, userContext)
+		if err != nil {
+			return "", err
+		}
+
+		if protocolOfAPIDomain != protocolOfWebsiteDomain || appInfo.TopLevelAPIDomain != topLevelWebsiteDomain {
+			return CookieSameSite_NONE, nil
+		}
+		return CookieSameSite_LAX, nil
 	}
 
 	cookieSecure := false
@@ -105,15 +113,18 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	antiCsrf := AntiCSRF_NONE
-	if config == nil || config.AntiCsrf == nil {
-		if cookieSameSite == CookieSameSite_NONE {
-			antiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
-		} else {
-			antiCsrf = AntiCSRF_NONE
-		}
-	} else {
-		antiCsrf = *config.AntiCsrf
+	AntiCsrfFunctionOrString := sessmodels.AntiCsrfFunctionOrString{
+		FunctionValue: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+			sameSite, err := cookieSameSite(request, userContext)
+			if err != nil {
+				return "", err
+			}
+			if sameSite == CookieSameSite_NONE {
+				return AntiCSRF_VIA_CUSTOM_HEADER, nil
+			}
+			return AntiCSRF_NONE, nil
+		},
+		StrValue: config.AntiCsrf,
 	}
 
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
@@ -181,11 +192,11 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
-		CookieSameSite:           cookieSameSite,
+		GetCookieSameSite:        cookieSameSite,
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		InvalidClaimStatusCode:   invalidClaimStatusCode,
-		AntiCsrf:                 antiCsrf,
+		AntiCsrfFunctionOrString: AntiCsrfFunctionOrString,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: config.ExposeAccessTokenToFrontendInCookieBasedAuth,
 		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
 		ErrorHandlers:                                errorHandlers,
