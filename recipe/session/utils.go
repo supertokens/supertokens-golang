@@ -107,12 +107,6 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New("SessionExpiredStatusCode and InvalidClaimStatusCode cannot have the same value")
 	}
 
-	if config != nil && config.AntiCsrf != nil {
-		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
-			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
-		}
-	}
-
 	AntiCsrfFunctionOrString := sessmodels.AntiCsrfFunctionOrString{
 		FunctionValue: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
 			sameSite, err := cookieSameSite(request, userContext)
@@ -126,6 +120,9 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		},
 	}
 	if config != nil && config.AntiCsrf != nil {
+		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
+			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
+		}
 		AntiCsrfFunctionOrString = sessmodels.AntiCsrfFunctionOrString{
 			StrValue: *config.AntiCsrf,
 		}
