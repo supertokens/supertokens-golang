@@ -107,7 +107,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New("SessionExpiredStatusCode and InvalidClaimStatusCode cannot have the same value")
 	}
 
-	AntiCsrfFunctionOrString := sessmodels.AntiCsrfFunctionOrString{
+	antiCsrfFunctionOrString := sessmodels.AntiCsrfFunctionOrString{
 		FunctionValue: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
 			sameSite, err := cookieSameSite(request, userContext)
 			if err != nil {
@@ -123,9 +123,16 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
 			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
 		}
-		AntiCsrfFunctionOrString = sessmodels.AntiCsrfFunctionOrString{
+		antiCsrfFunctionOrString = sessmodels.AntiCsrfFunctionOrString{
 			StrValue: *config.AntiCsrf,
 		}
+	}
+
+	if antiCsrfFunctionOrString.FunctionValue != nil && antiCsrfFunctionOrString.StrValue != "" {
+		return sessmodels.TypeNormalisedInput{}, errors.New("should never come here")
+	}
+	if antiCsrfFunctionOrString.FunctionValue == nil && antiCsrfFunctionOrString.StrValue == "" {
+		return sessmodels.TypeNormalisedInput{}, errors.New("should never come here")
 	}
 
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
@@ -197,7 +204,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		InvalidClaimStatusCode:   invalidClaimStatusCode,
-		AntiCsrfFunctionOrString: AntiCsrfFunctionOrString,
+		AntiCsrfFunctionOrString: antiCsrfFunctionOrString,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: config.ExposeAccessTokenToFrontendInCookieBasedAuth,
 		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
 		ErrorHandlers:                                errorHandlers,

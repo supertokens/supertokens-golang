@@ -133,7 +133,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 					}
 				}
 			}
-		} else if config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
+		} else if config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
 			return sessmodels.GetSessionResponse{}, defaultErrors.New("Please either use VIA_TOKEN, NONE or call with doAntiCsrfCheck false")
 		}
 	}
@@ -233,7 +233,7 @@ func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier superto
 		requestBody["antiCsrfToken"] = *antiCsrfToken
 	}
 
-	if config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCsrf {
+	if config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCsrf {
 		return sessmodels.CreateOrRefreshAPIResponse{}, defaultErrors.New("Please either use VIA_TOKEN, NONE or call with doAntiCsrfCheck false")
 	}
 
