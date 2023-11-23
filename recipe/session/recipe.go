@@ -56,13 +56,21 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, configError
 	}
 
-	supertokens.LogDebugMessage("session init: AntiCsrf: " + verifiedConfig.AntiCsrf)
+	if config.AntiCsrf == nil {
+		supertokens.LogDebugMessage("session init: AntiCsrf: function")
+	} else {
+		supertokens.LogDebugMessage("session init: AntiCsrf: " + *config.AntiCsrf)
+	}
 	if verifiedConfig.CookieDomain != nil {
 		supertokens.LogDebugMessage("session init: CookieDomain: " + *verifiedConfig.CookieDomain)
 	} else {
 		supertokens.LogDebugMessage("session init: CookieDomain: nil")
 	}
-	supertokens.LogDebugMessage("session init: CookieSameSite: " + verifiedConfig.CookieSameSite)
+	if config.CookieSameSite == nil {
+		supertokens.LogDebugMessage("session init: CookieSameSite: default function")
+	} else {
+		supertokens.LogDebugMessage("session init: CookieSameSite: " + *config.CookieSameSite)
+	}
 	supertokens.LogDebugMessage("session init: CookieSecure: " + strconv.FormatBool(verifiedConfig.CookieSecure))
 	supertokens.LogDebugMessage("session init: RefreshTokenPath: " + verifiedConfig.RefreshTokenPath.GetAsStringDangerous())
 	supertokens.LogDebugMessage("session init: SessionExpiredStatusCode: " + strconv.Itoa(verifiedConfig.SessionExpiredStatusCode))
