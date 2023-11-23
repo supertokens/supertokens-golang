@@ -20,12 +20,13 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/textproto"
 	"net/url"
 	"strings"
 	"time"
+
+	"github.com/supertokens/supertokens-golang/supertokens"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 )
@@ -54,7 +55,7 @@ type TokenInfo struct {
 	Up  interface{} `json:"up"`
 }
 
-func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter) error {
+func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter, request *http.Request, userContext supertokens.UserContext) error {
 	// We are clearing the session in all transfermethods to be sure to override cookies in case they have been already added to the response.
 	// This is done to handle the following use-case:
 	// If the app overrides signInPOST to check the ban status of the user after the original implementation and throwing an UNAUTHORISED error
@@ -62,7 +63,7 @@ func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInp
 	// We can't know which to clear since we can't reliably query or remove the set-cookie header added to the response (causes issues in some frameworks, i.e.: hapi)
 	// The safe solution in this case is to overwrite all the response cookies/headers with an empty value, which is what we are doing here
 	for _, transferMethod := range AvailableTokenTransferMethods {
-		err := ClearSession(config, res, transferMethod)
+		err := ClearSession(config, res, transferMethod, request, userContext)
 		if err != nil {
 			return err
 		}
@@ -70,11 +71,11 @@ func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInp
 	return nil
 }
 
-func ClearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod) error {
+func ClearSession(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, transferMethod sessmodels.TokenTransferMethod, request *http.Request, userContext supertokens.UserContext) error {
 	// If we can be specific about which transferMethod we want to clear, there is no reason to clear the other ones
 	tokenTypes := []sessmodels.TokenType{sessmodels.AccessToken, sessmodels.RefreshToken}
 	for _, tokenType := range tokenTypes {
-		err := setToken(config, res, tokenType, "", 0, transferMethod)
+		err := setToken(config, res, tokenType, "", 0, transferMethod, request, userContext)
 		if err != nil {
 			return err
 		}
@@ -159,7 +160,7 @@ func GetToken(req *http.Request, tokenType sessmodels.TokenType, transferMethod 
 	return nil, errors.New("Should never happen")
 }
 
-func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, tokenType sessmodels.TokenType, value string, expires uint64, transferMethod sessmodels.TokenTransferMethod) error {
+func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, tokenType sessmodels.TokenType, value string, expires uint64, transferMethod sessmodels.TokenTransferMethod, request *http.Request, userContext supertokens.UserContext) error {
 	supertokens.LogDebugMessage(fmt.Sprint("setToken: Setting ", tokenType, " token as ", transferMethod))
 	if transferMethod == sessmodels.CookieTransferMethod {
 		cookieName, err := getCookieNameFromTokenType(tokenType)
@@ -172,7 +173,7 @@ func setToken(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, to
 		} else if tokenType == sessmodels.RefreshToken {
 			pathType = "refreshTokenPath"
 		}
-		setCookie(config, res, cookieName, value, expires, pathType)
+		setCookie(config, res, cookieName, value, expires, pathType, request, userContext)
 	} else if transferMethod == sessmodels.HeaderTransferMethod {
 		headerName, err := getResponseHeaderNameForTokenType(tokenType)
 		if err != nil {
@@ -204,13 +205,17 @@ func setHeader(res http.ResponseWriter, key, value string, allowDuplicateKey boo
 	}
 }
 
-func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string) {
+func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, name string, value string, expires uint64, pathType string, request *http.Request, userContext supertokens.UserContext) error {
 	var domain string
 	if config.CookieDomain != nil {
 		domain = *config.CookieDomain
 	}
 	secure := config.CookieSecure
-	sameSite := config.CookieSameSite
+	sameSite, err := config.GetCookieSameSite(request, userContext)
+
+	if err != nil {
+		return err
+	}
 
 	path := ""
 	if pathType == "refreshTokenPath" {
@@ -239,7 +244,7 @@ func setCookie(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, n
 		SameSite: sameSiteField,
 	}
 	setCookieValue(res, cookie)
-
+	return nil
 }
 
 func GetAuthmodeFromHeader(req *http.Request) *sessmodels.TokenTransferMethod {
