@@ -372,7 +372,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 	}
 
-	sessionContainer.AttachToRequestResponseWithContext = func(info sessmodels.RequestResponseInfo, userContext supertokens.UserContext) error {
+	sessionContainer.AttachToRequestResponse = func(info sessmodels.RequestResponseInfo) error {
 		return sessionContainer.AttachToRequestResponseWithContext(info, &map[string]interface{}{})
 	}
 
