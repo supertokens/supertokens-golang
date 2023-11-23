@@ -69,16 +69,27 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, tenan
 	if err != nil {
 		return nil, err
 	}
-	isTopLevelWebsiteDomainIPAddress, err := supertokens.IsAnIPAddress(appInfo.TopLevelWebsiteDomain)
+
+	topLevelWebsiteDomain, err := appInfo.GetTopLevelWebsiteDomain(req, userContext)
+	if err != nil {
+		return nil, err
+	}
+
+	isTopLevelWebsiteDomainIPAddress, err := supertokens.IsAnIPAddress(topLevelWebsiteDomain)
+	if err != nil {
+		return nil, err
+	}
+
+	cookieSameSite, err := config.GetCookieSameSite(req, userContext)
 	if err != nil {
 		return nil, err
 	}
 
 	if outputTokenTransferMethod == sessmodels.CookieTransferMethod &&
-		config.CookieSameSite == "none" &&
+		cookieSameSite == "none" &&
 		!config.CookieSecure &&
 		!((appInfo.TopLevelAPIDomain == "localhost" || isTopLevelAPIDomainIPAddress) &&
-			(appInfo.TopLevelWebsiteDomain == "localhost" || isTopLevelWebsiteDomainIPAddress)) {
+			(topLevelWebsiteDomain == "localhost" || isTopLevelWebsiteDomainIPAddress)) {
 		// We can allow insecure cookie when both website & API domain are localhost or an IP
 		// When either of them is a different domain, API domain needs to have https and a secure cookie to work
 		return nil, defaultErrors.New("Since your API and website domain are different, for sessions to work, please use https on your apiDomain and dont set cookieSecure to false.")
@@ -192,8 +203,17 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		doAntiCsrfCheck = &False
 	}
 
-	if *doAntiCsrfCheck && config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
-		if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+	antiCsrf := config.AntiCsrfFunctionOrString.StrValue
+	if antiCsrf == "" {
+		antiCsrfTemp, err := config.AntiCsrfFunctionOrString.FunctionValue(req, userContext)
+		if err != nil {
+			return nil, err
+		}
+		antiCsrf = antiCsrfTemp
+	}
+
+	if *doAntiCsrfCheck && antiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+		if antiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
 			if GetRidFromHeader(req) == nil {
 				supertokens.LogDebugMessage("getSession: Returning TRY_REFRESH_TOKEN because custom header (rid) was not passed")
 				return nil, errors.TryRefreshTokenError{
@@ -329,7 +349,16 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 
 	antiCsrfToken := GetAntiCsrfTokenFromHeaders(req)
 	disableAntiCSRF := requestTokenTransferMethod == sessmodels.HeaderTransferMethod
-	if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCSRF {
+	antiCsrf := config.AntiCsrfFunctionOrString.StrValue
+	if antiCsrf == "" {
+		antiCsrfTemp, err := config.AntiCsrfFunctionOrString.FunctionValue(req, userContext)
+		if err != nil {
+			return nil, err
+		}
+		antiCsrf = antiCsrfTemp
+	}
+
+	if antiCsrf == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCSRF {
 		ridFromHeader := GetRidFromHeader(req)
 
 		if ridFromHeader == nil {

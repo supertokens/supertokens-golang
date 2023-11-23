@@ -58,7 +58,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	}
 
 	cookieSameSite := func(request *http.Request, userContext supertokens.UserContext) (string, error) {
-		if config.CookieSameSite != nil {
+		if config != nil && config.CookieSameSite != nil {
 			return normaliseSameSiteOrThrowError(*config.CookieSameSite)
 		}
 		origin, err := appInfo.GetOrigin(request, userContext)
@@ -124,7 +124,11 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}
 			return AntiCSRF_NONE, nil
 		},
-		StrValue: config.AntiCsrf,
+	}
+	if config != nil && config.AntiCsrf != nil {
+		AntiCsrfFunctionOrString = sessmodels.AntiCsrfFunctionOrString{
+			StrValue: *config.AntiCsrf,
+		}
 	}
 
 	errorHandlers := sessmodels.NormalisedErrorHandlers{

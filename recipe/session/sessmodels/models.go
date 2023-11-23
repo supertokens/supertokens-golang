@@ -140,7 +140,7 @@ type TypeNormalisedInput struct {
 }
 
 type AntiCsrfFunctionOrString struct {
-	StrValue      *string
+	StrValue      string
 	FunctionValue func(request *http.Request, userContext supertokens.UserContext) (string, error)
 }
 
