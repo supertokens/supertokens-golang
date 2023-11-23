@@ -83,7 +83,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			// If we instead clear the cookies only when revokeSession
 			// returns true, it can cause this kind of a bug:
 			// https://github.com/supertokens/supertokens-node/issues/343
-			ClearSession(config, session.requestResponseInfo.Res, session.requestResponseInfo.TokenTransferMethod)
+			ClearSession(config, session.requestResponseInfo.Res, session.requestResponseInfo.TokenTransferMethod, session.requestResponseInfo.Req, supertokens.SetRequestInUserContextIfNotDefined(userContext, session.requestResponseInfo.Req))
 		}
 		return nil
 	}
@@ -195,7 +195,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 			session.accessTokenUpdated = true
 
 			if session.requestResponseInfo != nil {
-				setTokenErr := SetAccessTokenInResponse(config, session.requestResponseInfo.Res, session.accessToken, session.frontToken, session.requestResponseInfo.TokenTransferMethod)
+				setTokenErr := SetAccessTokenInResponse(config, session.requestResponseInfo.Res, session.accessToken, session.frontToken, session.requestResponseInfo.TokenTransferMethod, session.requestResponseInfo.Req, supertokens.SetRequestInUserContextIfNotDefined(userContext, session.requestResponseInfo.Req))
 				if setTokenErr != nil {
 					return setTokenErr
 				}
@@ -279,6 +279,32 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		return sessionContainer.MergeIntoAccessTokenPayloadWithContext(update, userContext)
 	}
 
+	sessionContainer.AttachToRequestResponseWithContext = func(info sessmodels.RequestResponseInfo, userContext supertokens.UserContext) error {
+		session.requestResponseInfo = &info
+
+		if session.accessTokenUpdated {
+			err := SetAccessTokenInResponse(config, info.Res, session.accessToken, session.frontToken, info.TokenTransferMethod, session.requestResponseInfo.Req, supertokens.SetRequestInUserContextIfNotDefined(userContext, session.requestResponseInfo.Req))
+
+			if err != nil {
+				return err
+			}
+
+			if session.refreshToken != nil {
+				err = setToken(config, info.Res, sessmodels.RefreshToken, session.refreshToken.Token, session.refreshToken.Expiry, info.TokenTransferMethod, session.requestResponseInfo.Req, supertokens.SetRequestInUserContextIfNotDefined(userContext, session.requestResponseInfo.Req))
+
+				if err != nil {
+					return err
+				}
+			}
+
+			if session.antiCSRFToken != nil {
+				setAntiCsrfTokenInHeaders(info.Res, *session.antiCSRFToken)
+			}
+		}
+
+		return nil
+	}
+
 	sessionContainer.RevokeSession = func() error {
 		return sessionContainer.RevokeSessionWithContext(&map[string]interface{}{})
 	}
@@ -346,30 +372,8 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 		}
 	}
 
-	sessionContainer.AttachToRequestResponse = func(info sessmodels.RequestResponseInfo) error {
-		session.requestResponseInfo = &info
-
-		if session.accessTokenUpdated {
-			err := SetAccessTokenInResponse(config, info.Res, session.accessToken, session.frontToken, info.TokenTransferMethod)
-
-			if err != nil {
-				return err
-			}
-
-			if session.refreshToken != nil {
-				err = setToken(config, info.Res, sessmodels.RefreshToken, session.refreshToken.Token, session.refreshToken.Expiry, info.TokenTransferMethod)
-
-				if err != nil {
-					return err
-				}
-			}
-
-			if session.antiCSRFToken != nil {
-				setAntiCsrfTokenInHeaders(info.Res, *session.antiCSRFToken)
-			}
-		}
-
-		return nil
+	sessionContainer.AttachToRequestResponseWithContext = func(info sessmodels.RequestResponseInfo, userContext supertokens.UserContext) error {
+		return sessionContainer.AttachToRequestResponseWithContext(info, &map[string]interface{}{})
 	}
 
 	return sessionContainer

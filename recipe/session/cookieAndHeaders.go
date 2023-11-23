@@ -55,7 +55,7 @@ type TokenInfo struct {
 	Up  interface{} `json:"up"`
 }
 
-func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter, request *http.Request, userContext supertokens.UserContext) error {
+func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInput, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) error {
 	// We are clearing the session in all transfermethods to be sure to override cookies in case they have been already added to the response.
 	// This is done to handle the following use-case:
 	// If the app overrides signInPOST to check the ban status of the user after the original implementation and throwing an UNAUTHORISED error
@@ -63,7 +63,7 @@ func ClearSessionFromAllTokenTransferMethods(config sessmodels.TypeNormalisedInp
 	// We can't know which to clear since we can't reliably query or remove the set-cookie header added to the response (causes issues in some frameworks, i.e.: hapi)
 	// The safe solution in this case is to overwrite all the response cookies/headers with an empty value, which is what we are doing here
 	for _, transferMethod := range AvailableTokenTransferMethods {
-		err := ClearSession(config, res, transferMethod, request, userContext)
+		err := ClearSession(config, res, transferMethod, req, userContext)
 		if err != nil {
 			return err
 		}
