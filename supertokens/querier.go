@@ -132,13 +132,13 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}, user
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
-		req.Header.Set("cdi-version", apiVerion)
+		req.Header.Set("cdi-version", apiVersion)
 		if QuerierAPIKey != nil {
 			req.Header.Set("api-key", *QuerierAPIKey)
 		}
@@ -178,13 +178,13 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
-		req.Header.Set("cdi-version", apiVerion)
+		req.Header.Set("cdi-version", apiVersion)
 		if QuerierAPIKey != nil {
 			req.Header.Set("api-key", *QuerierAPIKey)
 		}
@@ -220,11 +220,11 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
-		req.Header.Set("cdi-version", apiVerion)
+		req.Header.Set("cdi-version", apiVersion)
 		if QuerierAPIKey != nil {
 			req.Header.Set("api-key", *QuerierAPIKey)
 		}
@@ -261,11 +261,11 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
-		req.Header.Set("cdi-version", apiVerion)
+		req.Header.Set("cdi-version", apiVersion)
 		if QuerierAPIKey != nil {
 			req.Header.Set("api-key", *QuerierAPIKey)
 		}
@@ -297,13 +297,13 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userC
 			return nil, err
 		}
 
-		apiVerion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
-		req.Header.Set("cdi-version", apiVerion)
+		req.Header.Set("cdi-version", apiVersion)
 		if QuerierAPIKey != nil {
 			req.Header.Set("api-key", *QuerierAPIKey)
 		}
