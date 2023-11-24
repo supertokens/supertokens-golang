@@ -57,6 +57,14 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
+	if config != nil && config.CookieSameSite != nil {
+		// we have this block just to check if the user input is correct
+		_, err = normaliseSameSiteOrThrowError(*config.CookieSameSite)
+		if err != nil {
+			return sessmodels.TypeNormalisedInput{}, err
+		}
+	}
+
 	cookieSameSite := func(request *http.Request, userContext supertokens.UserContext) (string, error) {
 		if config != nil && config.CookieSameSite != nil {
 			return normaliseSameSiteOrThrowError(*config.CookieSameSite)

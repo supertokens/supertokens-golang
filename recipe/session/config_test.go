@@ -144,7 +144,7 @@ func TestSuperTokensInitWithoutWebsiteDomain(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		assert.Equal(t, err.Error(), "Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
+		assert.Equal(t, err.Error(), "Please provide either Origin, GetOrigin or WebsiteDomain inside the appInfo object when calling supertokens.init")
 	} else {
 		t.Fail()
 	}
@@ -437,9 +437,16 @@ func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "NONE")
+	antiCsrf, err := sessionSingletonInstance.Config.AntiCsrfFunctionOrString.FunctionValue(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, antiCsrf, "NONE")
+	assert.True(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue == "")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
 }
@@ -479,7 +486,9 @@ func TestSuperTokensInitWithCustomHeaderLaxTrueSessionConfigResults(t *testing.T
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
@@ -520,7 +529,9 @@ func TestSuperTokensInitWithCustomHeaderLaxFalseSessionConfigResults(t *testing.
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
 }
@@ -556,7 +567,9 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithNormalWe
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "none")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
@@ -592,7 +605,9 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithLocalWeb
 	}
 	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "none")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
@@ -753,7 +768,9 @@ func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
 	}
 	assert.Equal(t, singletonSessionRecipeInstance.Config.CookieSecure, true)
 	cookieSameSite, err := singletonSessionRecipeInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "none")
 }
 
@@ -885,7 +902,9 @@ func TestSuperTokensDefaultCookieConfig(t *testing.T) {
 	}
 	assert.Nil(t, singletonSessionRecipeInstance.Config.CookieDomain)
 	cookieSameSite, err := singletonSessionRecipeInstance.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, singletonSessionRecipeInstance.Config.CookieSecure, true)
 	assert.Equal(t, singletonSessionRecipeInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
@@ -1271,7 +1290,9 @@ func TestCookieSameSiteWithEC2PublicURL(t *testing.T) {
 
 	assert.True(t, recipe.Config.CookieDomain == nil)
 	cookieSameSiteValue, err := recipe.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSiteValue, "none")
 	assert.True(t, recipe.Config.CookieSecure)
 
@@ -1310,7 +1331,9 @@ func TestCookieSameSiteWithEC2PublicURL(t *testing.T) {
 
 	assert.True(t, recipe.Config.CookieDomain == nil)
 	cookieSameSiteValue, err = recipe.Config.GetCookieSameSite(nil, nil)
-	assert.True(t, err != nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
 	assert.Equal(t, cookieSameSiteValue, "lax")
 	assert.False(t, recipe.Config.CookieSecure)
 }
