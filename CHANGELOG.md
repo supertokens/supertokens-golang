@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+
+## [0.17.1] - 2023-11-24
+
+### Added
+
+-   Adds support for configuring multiple frontend domains to be used with the same backend
+-   Added new `Origin` and `GetOrigin` properties to `AppInfo`, this can be configured to allow you to conditionally return the value of the frontend domain. This property will replace `WebsiteDomain` in a future release of `supertokens-golang`
+-   `WebsiteDomain` inside `AppInfo` is now optional. Using `Origin` or `GetOrigin` is recommended over using `WebsiteDomain`. This is not a breaking change and using `WebsiteDomain` will continue to work.
+
 ## [0.17.0] - 2023-11-14
 
 ### Breaking change
