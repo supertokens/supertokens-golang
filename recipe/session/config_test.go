@@ -1345,3 +1345,170 @@ func TestCookieSameSiteWithEC2PublicURL(t *testing.T) {
 	assert.Equal(t, cookieSameSiteValue, "lax")
 	assert.False(t, recipe.Config.CookieSecure)
 }
+
+func TestInitWorksFineIfOriginIsPresent(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "SuperTokens",
+			APIDomain: "api.supertokens.io",
+			Origin:    "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://supertokens.io", origin.GetAsStringDangerous())
+}
+
+func TestWebsiteDomainWorks(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://supertokens.io", origin.GetAsStringDangerous())
+}
+
+func TestOriginFunctionWorks(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "SuperTokens",
+			APIDomain: "api.supertokens.io",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				return "https://test.io", nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://test.io", origin.GetAsStringDangerous())
+}
+
+func TestOriginIsUsedOverWebsiteDomain(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			Origin:        "supertokens.io",
+			WebsiteDomain: "shouldnotbeused.com",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://supertokens.io", origin.GetAsStringDangerous())
+}
+
+func TestOriginFunctionIsUsedOverOrigin(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			Origin:        "supertokens.io",
+			WebsiteDomain: "shouldnotbeused.com",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				return "test.io", nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://test.io", origin.GetAsStringDangerous())
+}
