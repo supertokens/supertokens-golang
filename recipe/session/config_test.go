@@ -565,7 +565,11 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithNormalWe
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
+	anticsrf, err := sessionSingletonInstance.Config.AntiCsrfFunctionOrString.FunctionValue(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, anticsrf, "VIA_CUSTOM_HEADER")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
@@ -603,7 +607,11 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithLocalWeb
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
+	anticsrf, err := sessionSingletonInstance.Config.AntiCsrfFunctionOrString.FunctionValue(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, anticsrf, "VIA_CUSTOM_HEADER")
 	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
 	if err != nil {
 		t.Error(err.Error())
