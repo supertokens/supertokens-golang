@@ -28,7 +28,7 @@ type RecipeModule struct {
 	GetAllCORSHeaders             func() []string
 	GetAPIsHandled                func() ([]APIHandled, error)
 	ReturnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string, userContext UserContext) (*string, string, error)
-	HandleError                   func(err error, req *http.Request, res http.ResponseWriter) (bool, error)
+	HandleError                   func(err error, req *http.Request, res http.ResponseWriter, userContext UserContext) (bool, error)
 	OnSuperTokensAPIError         func(err error, req *http.Request, res http.ResponseWriter)
 }
 
@@ -39,7 +39,7 @@ func MakeRecipeModule(
 	getAllCORSHeaders func() []string,
 	getAPIsHandled func() ([]APIHandled, error),
 	returnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string, userContext UserContext) (*string, string, error),
-	handleError func(err error, req *http.Request, res http.ResponseWriter) (bool, error),
+	handleError func(err error, req *http.Request, res http.ResponseWriter, userContext UserContext) (bool, error),
 	onSuperTokensAPIError func(err error, req *http.Request, res http.ResponseWriter)) RecipeModule {
 	if handleError == nil {
 		// Execution will come here only if there is a bug in the code

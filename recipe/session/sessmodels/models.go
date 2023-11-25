@@ -127,16 +127,21 @@ type ErrorHandlers struct {
 type TypeNormalisedInput struct {
 	RefreshTokenPath                             supertokens.NormalisedURLPath
 	CookieDomain                                 *string
-	CookieSameSite                               string
+	GetCookieSameSite                            func(request *http.Request, userContext supertokens.UserContext) (string, error)
 	CookieSecure                                 bool
 	SessionExpiredStatusCode                     int
 	InvalidClaimStatusCode                       int
-	AntiCsrf                                     string
+	AntiCsrfFunctionOrString                     AntiCsrfFunctionOrString
 	Override                                     OverrideStruct
 	ErrorHandlers                                NormalisedErrorHandlers
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 	UseDynamicAccessTokenSigningKey              bool
+}
+
+type AntiCsrfFunctionOrString struct {
+	StrValue      string
+	FunctionValue func(request *http.Request, userContext supertokens.UserContext) (string, error)
 }
 
 type JWTNormalisedConfig struct {
@@ -210,11 +215,12 @@ type TypeSessionContainer struct {
 
 	MergeIntoAccessTokenPayloadWithContext func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error
 
-	AssertClaimsWithContext     func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error
-	FetchAndSetClaimWithContext func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
-	SetClaimValueWithContext    func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error
-	GetClaimValueWithContext    func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) interface{}
-	RemoveClaimWithContext      func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
+	AssertClaimsWithContext            func(claimValidators []claims.SessionClaimValidator, userContext supertokens.UserContext) error
+	FetchAndSetClaimWithContext        func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
+	SetClaimValueWithContext           func(claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) error
+	GetClaimValueWithContext           func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) interface{}
+	RemoveClaimWithContext             func(claim *claims.TypeSessionClaim, userContext supertokens.UserContext) error
+	AttachToRequestResponseWithContext func(info RequestResponseInfo, userContext supertokens.UserContext) error
 
 	MergeIntoAccessTokenPayload func(accessTokenPayloadUpdate map[string]interface{}) error
 

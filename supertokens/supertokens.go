@@ -58,7 +58,20 @@ func supertokensInit(config TypeInput) error {
 
 	LogDebugMessage("Started SuperTokens with debug logging (supertokens.Init called)")
 
-	appInfoJsonString, _ := json.Marshal(config.AppInfo)
+	// we do this below because we cannot marshal a function.
+	jsonableStruct := map[string]interface{}{
+		"AppName":         config.AppInfo.AppName,
+		"Origin":          config.AppInfo.Origin,
+		"WebsiteDomain":   config.AppInfo.WebsiteDomain,
+		"APIDomain":       config.AppInfo.APIDomain,
+		"WebsiteBasePath": config.AppInfo.WebsiteBasePath,
+		"APIBasePath":     config.AppInfo.APIBasePath,
+		"APIGatewayPath":  config.AppInfo.APIGatewayPath,
+	}
+	if config.AppInfo.GetOrigin != nil {
+		jsonableStruct["Origin"] = "function"
+	}
+	appInfoJsonString, _ := json.Marshal(jsonableStruct)
 	LogDebugMessage("AppInfo: " + string(appInfoJsonString))
 
 	var err error
@@ -147,7 +160,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 		userContext := MakeDefaultUserContextFromAPI(r)
 		reqURL, err := NewNormalisedURLPath(r.URL.Path)
 		if err != nil {
-			err = s.errorHandler(err, r, dw)
+			err = s.errorHandler(err, r, dw, userContext)
 			if err != nil && !dw.IsDone() {
 				s.OnSuperTokensAPIError(err, r, dw)
 			}
@@ -187,7 +200,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 			id, tenantId, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 
 			if err != nil {
-				err = s.errorHandler(err, r, dw)
+				err = s.errorHandler(err, r, dw, userContext)
 				if err != nil && !dw.IsDone() {
 					s.OnSuperTokensAPIError(err, r, dw)
 				}
@@ -204,7 +217,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			tenantId, err = GetTenantIdFuncFromUsingMultitenancyRecipe(tenantId, userContext)
 			if err != nil {
-				err = s.errorHandler(err, r, dw)
+				err = s.errorHandler(err, r, dw, userContext)
 				if err != nil && !dw.IsDone() {
 					s.OnSuperTokensAPIError(err, r, dw)
 				}
@@ -213,7 +226,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			apiErr := matchedRecipe.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 			if apiErr != nil {
-				apiErr = s.errorHandler(apiErr, r, dw)
+				apiErr = s.errorHandler(apiErr, r, dw, userContext)
 				if apiErr != nil && !dw.IsDone() {
 					s.OnSuperTokensAPIError(apiErr, r, dw)
 				}
@@ -225,7 +238,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 				id, tenantId, err := recipeModule.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
 				LogDebugMessage("middleware: Checking recipe ID for match: " + recipeModule.GetRecipeID())
 				if err != nil {
-					err = s.errorHandler(err, r, dw)
+					err = s.errorHandler(err, r, dw, userContext)
 					if err != nil && !dw.IsDone() {
 						s.OnSuperTokensAPIError(err, r, dw)
 					}
@@ -236,7 +249,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 					LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 					err := recipeModule.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)
 					if err != nil {
-						err = s.errorHandler(err, r, dw)
+						err = s.errorHandler(err, r, dw, userContext)
 						if err != nil && !dw.IsDone() {
 							s.OnSuperTokensAPIError(err, r, dw)
 						}
@@ -268,7 +281,7 @@ func (s *superTokens) getAllCORSHeaders() []string {
 	return headers
 }
 
-func (s *superTokens) errorHandler(originalError error, req *http.Request, res http.ResponseWriter) error {
+func (s *superTokens) errorHandler(originalError error, req *http.Request, res http.ResponseWriter, userContext UserContext) error {
 	LogDebugMessage("errorHandler: Started")
 	if errors.As(originalError, &BadInputError{}) {
 		LogDebugMessage("errorHandler: Sending 400 status code response")
@@ -286,7 +299,7 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 		LogDebugMessage("errorHandler: Checking recipe for match: " + recipe.recipeID)
 		if recipe.HandleError != nil {
 			LogDebugMessage("errorHandler: Matched with recipeId: " + recipe.recipeID)
-			handled, err := recipe.HandleError(originalError, req, res)
+			handled, err := recipe.HandleError(originalError, req, res, userContext)
 			if err != nil {
 				return err
 			}

@@ -61,8 +61,13 @@ func AnalyticsPost(apiInterface dashboardmodels.APIInterface, tenantId string, o
 		}
 	}
 
+	websiteDomain, err := supertokensInstance.AppInfo.GetOrigin(nil, &map[string]interface{}{})
+	if err != nil {
+		return analyticsPostResponse{}, err
+	}
+
 	data := map[string]interface{}{
-		"websiteDomain":    supertokensInstance.AppInfo.WebsiteDomain.GetAsStringDangerous(),
+		"websiteDomain":    websiteDomain.GetAsStringDangerous(),
 		"apiDomain":        supertokensInstance.AppInfo.APIDomain.GetAsStringDangerous(),
 		"appName":          supertokensInstance.AppInfo.AppName,
 		"sdk":              "golang",

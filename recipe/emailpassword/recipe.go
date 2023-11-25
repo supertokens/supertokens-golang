@@ -181,7 +181,7 @@ func (r *Recipe) getAllCORSHeaders() []string {
 	return []string{}
 }
 
-func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (bool, error) {
 	if defaultErrors.As(err, &errors.FieldError{}) {
 		errs := err.(errors.FieldError)
 		return true, supertokens.Send200Response(res, map[string]interface{}{

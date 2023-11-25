@@ -144,7 +144,7 @@ func TestSuperTokensInitWithoutWebsiteDomain(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
-		assert.Equal(t, err.Error(), "Please provide your websiteDomain inside the appInfo object when calling supertokens.init")
+		assert.Equal(t, err.Error(), "Please provide either Origin, GetOrigin or WebsiteDomain inside the appInfo object when calling supertokens.init")
 	} else {
 		t.Fail()
 	}
@@ -437,8 +437,17 @@ func TestSuperTokensInitWithNoneLaxFalseSessionConfigResults(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "NONE")
-	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+	antiCsrf, err := sessionSingletonInstance.Config.AntiCsrfFunctionOrString.FunctionValue(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, antiCsrf, "NONE")
+	assert.True(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue == "")
+	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
 }
 
@@ -475,8 +484,12 @@ func TestSuperTokensInitWithCustomHeaderLaxTrueSessionConfigResults(t *testing.T
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
+	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
 
@@ -514,8 +527,12 @@ func TestSuperTokensInitWithCustomHeaderLaxFalseSessionConfigResults(t *testing.
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "lax")
+	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrfFunctionOrString.StrValue, "VIA_CUSTOM_HEADER")
+	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "lax")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, false)
 }
 
@@ -548,8 +565,16 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithNormalWe
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
+	anticsrf, err := sessionSingletonInstance.Config.AntiCsrfFunctionOrString.FunctionValue(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, anticsrf, "VIA_CUSTOM_HEADER")
+	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "none")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
 
@@ -582,8 +607,16 @@ func TestSuperTokensInitWithCustomHeaderNoneTrueSessionConfigResultsWithLocalWeb
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, sessionSingletonInstance.Config.AntiCsrf, "VIA_CUSTOM_HEADER")
-	assert.Equal(t, sessionSingletonInstance.Config.CookieSameSite, "none")
+	anticsrf, err := sessionSingletonInstance.Config.AntiCsrfFunctionOrString.FunctionValue(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, anticsrf, "VIA_CUSTOM_HEADER")
+	cookieSameSite, err := sessionSingletonInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "none")
 	assert.Equal(t, sessionSingletonInstance.Config.CookieSecure, true)
 }
 
@@ -619,11 +652,11 @@ func TestSuperTokensWithAntiCSRFNone(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
+	singletonSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.AntiCsrf, "NONE")
+	assert.Equal(t, singletonSessionRecipeInstance.Config.AntiCsrfFunctionOrString.StrValue, "NONE")
 }
 
 func TestSuperTokensWithAntiCSRFRandom(t *testing.T) {
@@ -737,12 +770,16 @@ func TestSuperTokensForTheDefaultCookieValues(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
+	singletonSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSecure, true)
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSameSite, "none")
+	assert.Equal(t, singletonSessionRecipeInstance.Config.CookieSecure, true)
+	cookieSameSite, err := singletonSessionRecipeInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "none")
 }
 
 func TestSuperTokensInitWithWrongConfigSchema(t *testing.T) {
@@ -867,15 +904,19 @@ func TestSuperTokensDefaultCookieConfig(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	singletoneSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
+	singletonSessionRecipeInstance, err := getRecipeInstanceOrThrowError()
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Nil(t, singletoneSessionRecipeInstance.Config.CookieDomain)
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSameSite, "lax")
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.CookieSecure, true)
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
-	assert.Equal(t, singletoneSessionRecipeInstance.Config.SessionExpiredStatusCode, 401)
+	assert.Nil(t, singletonSessionRecipeInstance.Config.CookieDomain)
+	cookieSameSite, err := singletonSessionRecipeInstance.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSite, "lax")
+	assert.Equal(t, singletonSessionRecipeInstance.Config.CookieSecure, true)
+	assert.Equal(t, singletonSessionRecipeInstance.Config.RefreshTokenPath.GetAsStringDangerous(), "/auth/session/refresh")
+	assert.Equal(t, singletonSessionRecipeInstance.Config.SessionExpiredStatusCode, 401)
 }
 
 func TestSuperTokensInitWithAPIGateWayPath(t *testing.T) {
@@ -1256,7 +1297,11 @@ func TestCookieSameSiteWithEC2PublicURL(t *testing.T) {
 	}
 
 	assert.True(t, recipe.Config.CookieDomain == nil)
-	assert.Equal(t, recipe.Config.CookieSameSite, "none")
+	cookieSameSiteValue, err := recipe.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSiteValue, "none")
 	assert.True(t, recipe.Config.CookieSecure)
 
 	resetAll()
@@ -1293,6 +1338,177 @@ func TestCookieSameSiteWithEC2PublicURL(t *testing.T) {
 	}
 
 	assert.True(t, recipe.Config.CookieDomain == nil)
-	assert.Equal(t, recipe.Config.CookieSameSite, "lax")
+	cookieSameSiteValue, err = recipe.Config.GetCookieSameSite(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, cookieSameSiteValue, "lax")
 	assert.False(t, recipe.Config.CookieSecure)
+}
+
+func TestInitWorksFineIfOriginIsPresent(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "SuperTokens",
+			APIDomain: "api.supertokens.io",
+			Origin:    "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://supertokens.io", origin.GetAsStringDangerous())
+}
+
+func TestWebsiteDomainWorks(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://supertokens.io", origin.GetAsStringDangerous())
+}
+
+func TestOriginFunctionWorks(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "SuperTokens",
+			APIDomain: "api.supertokens.io",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				return "https://test.io", nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://test.io", origin.GetAsStringDangerous())
+}
+
+func TestOriginIsUsedOverWebsiteDomain(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			Origin:        "supertokens.io",
+			WebsiteDomain: "shouldnotbeused.com",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://supertokens.io", origin.GetAsStringDangerous())
+}
+
+func TestOriginFunctionIsUsedOverOrigin(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			APIDomain:     "api.supertokens.io",
+			Origin:        "supertokens.io",
+			WebsiteDomain: "shouldnotbeused.com",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				return "test.io", nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	singletonInstance, err := supertokens.GetInstanceOrThrowError()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	origin, err := singletonInstance.AppInfo.GetOrigin(nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "https://test.io", origin.GetAsStringDangerous())
 }

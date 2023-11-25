@@ -138,14 +138,22 @@ func CreateResetPasswordLink(tenantId string, userID string, userContext ...supe
 		return epmodels.CreateResetPasswordLinkResponse{}, err
 	}
 
+	link, err := api.GetPasswordResetLink(
+		instance.RecipeModule.GetAppInfo(),
+		instance.RecipeModule.GetRecipeID(),
+		tokenResponse.OK.Token,
+		tenantId,
+		supertokens.GetRequestFromUserContext(userContext[0]),
+		userContext[0],
+	)
+
+	if err != nil {
+		return epmodels.CreateResetPasswordLinkResponse{}, err
+	}
+
 	return epmodels.CreateResetPasswordLinkResponse{
 		OK: &struct{ Link string }{
-			Link: api.GetPasswordResetLink(
-				instance.RecipeModule.GetAppInfo(),
-				instance.RecipeModule.GetRecipeID(),
-				tokenResponse.OK.Token,
-				tenantId,
-			),
+			Link: link,
 		},
 	}, nil
 }

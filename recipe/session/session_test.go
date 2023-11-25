@@ -1915,6 +1915,7 @@ func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testi
 	delete(payload, "iat")
 	delete(payload, "exp")
 	payload["tId"] = "public"
+	payload["rsub"] = session.GetUserID()
 
 	currentTimeInSeconds := time.Now()
 	jwtExpiry := uint64((currentTimeInSeconds.Add(10 * time.Second)).Unix())

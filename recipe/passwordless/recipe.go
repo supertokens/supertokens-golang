@@ -188,7 +188,7 @@ func (r *Recipe) getAllCORSHeaders() []string {
 	return []string{}
 }
 
-func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (bool, error) {
 	return false, nil
 }
 
@@ -210,15 +210,17 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId st
 	if err != nil {
 		return "", err
 	}
-	link := api.GetMagicLink(
+	link, err := api.GetMagicLink(
 		stInstance.AppInfo,
 		r.RecipeModule.GetRecipeID(),
 		response.OK.PreAuthSessionID,
 		response.OK.LinkCode,
 		tenantId,
+		supertokens.GetRequestFromUserContext(userContext),
+		userContext,
 	)
 
-	return link, nil
+	return link, err
 }
 
 func (r *Recipe) SignInUp(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (struct {

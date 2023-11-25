@@ -56,13 +56,23 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return Recipe{}, configError
 	}
 
-	supertokens.LogDebugMessage("session init: AntiCsrf: " + verifiedConfig.AntiCsrf)
+	if verifiedConfig.AntiCsrfFunctionOrString.FunctionValue != nil {
+		supertokens.LogDebugMessage("session init: AntiCsrf: function")
+	} else {
+		supertokens.LogDebugMessage("session init: AntiCsrf: " + verifiedConfig.AntiCsrfFunctionOrString.StrValue)
+	}
 	if verifiedConfig.CookieDomain != nil {
 		supertokens.LogDebugMessage("session init: CookieDomain: " + *verifiedConfig.CookieDomain)
 	} else {
 		supertokens.LogDebugMessage("session init: CookieDomain: nil")
 	}
-	supertokens.LogDebugMessage("session init: CookieSameSite: " + verifiedConfig.CookieSameSite)
+	// we intentionally use config here instead of verifiedConfig will always
+	// be a function for getting cookieSameSite.
+	if config == nil || config.CookieSameSite == nil {
+		supertokens.LogDebugMessage("session init: CookieSameSite: default function")
+	} else {
+		supertokens.LogDebugMessage("session init: CookieSameSite: " + *config.CookieSameSite)
+	}
 	supertokens.LogDebugMessage("session init: CookieSecure: " + strconv.FormatBool(verifiedConfig.CookieSecure))
 	supertokens.LogDebugMessage("session init: RefreshTokenPath: " + verifiedConfig.RefreshTokenPath.GetAsStringDangerous())
 	supertokens.LogDebugMessage("session init: SessionExpiredStatusCode: " + strconv.Itoa(verifiedConfig.SessionExpiredStatusCode))
@@ -173,13 +183,13 @@ func (r *Recipe) getAllCORSHeaders() []string {
 	return resp
 }
 
-func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter) (bool, error) {
+func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext supertokens.UserContext) (bool, error) {
 	if defaultErrors.As(err, &errors.UnauthorizedError{}) {
 		supertokens.LogDebugMessage("errorHandler: returning UNAUTHORISED")
 		unauthErr := err.(errors.UnauthorizedError)
 		if unauthErr.ClearTokens == nil || *unauthErr.ClearTokens {
 			supertokens.LogDebugMessage("errorHandler: Clearing tokens because of UNAUTHORISED response")
-			ClearSessionFromAllTokenTransferMethods(r.Config, req, res)
+			ClearSessionFromAllTokenTransferMethods(r.Config, req, res, userContext)
 		}
 		return true, r.Config.ErrorHandlers.OnUnauthorised(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
@@ -187,7 +197,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		return true, r.Config.ErrorHandlers.OnTryRefreshToken(err.Error(), req, res)
 	} else if defaultErrors.As(err, &errors.TokenTheftDetectedError{}) {
 		supertokens.LogDebugMessage("errorHandler: clearing tokens because of TOKEN_THEFT_DETECTED response")
-		ClearSessionFromAllTokenTransferMethods(r.Config, req, res)
+		ClearSessionFromAllTokenTransferMethods(r.Config, req, res, userContext)
 		errs := err.(errors.TokenTheftDetectedError)
 		return true, r.Config.ErrorHandlers.OnTokenTheftDetected(errs.Payload.SessionHandle, errs.Payload.UserID, req, res)
 	} else if defaultErrors.As(err, &errors.InvalidClaimError{}) {
@@ -195,7 +205,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		errs := err.(errors.InvalidClaimError)
 		return true, r.Config.ErrorHandlers.OnInvalidClaim(errs.InvalidClaims, req, res)
 	} else {
-		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res)
+		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res, userContext)
 	}
 }
 

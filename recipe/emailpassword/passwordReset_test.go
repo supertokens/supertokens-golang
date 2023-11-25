@@ -455,3 +455,106 @@ func TestValidTokenInputAndPasswordHasChanged(t *testing.T) {
 	assert.Equal(t, userInfo["id"], result3["user"].(map[string]interface{})["id"].(string))
 	assert.Equal(t, userInfo["email"], result3["user"].(map[string]interface{})["email"].(string))
 }
+
+func TestPasswordResetLinkUsesOriginFunctionIfProvided(t *testing.T) {
+	resetURL := ""
+	tokenInfo := ""
+	ridInfo := ""
+	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		u, err := url.Parse(input.PasswordReset.PasswordResetLink)
+		if err != nil {
+			return err
+		}
+		resetURL = u.Scheme + "://" + u.Host + u.Path
+		tokenInfo = u.Query().Get("token")
+		ridInfo = u.Query().Get("rid")
+		return nil
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain: "api.supertokens.io",
+			AppName:   "SuperTokens",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				// read request body
+				decoder := json.NewDecoder(request.Body)
+				var requestBody map[string]interface{}
+				err := decoder.Decode(&requestBody)
+				if err != nil {
+					return "https://supertokens.com", nil
+				}
+				if requestBody["origin"] == nil {
+					return "https://supertokens.com", nil
+				}
+				return requestBody["origin"].(string), nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmailFunc,
+					},
+				},
+			}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	res, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.NoError(t, err)
+	dataInBytes, err := io.ReadAll(res.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	res.Body.Close()
+	var result map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &result)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, 200, res.StatusCode)
+	assert.Equal(t, "OK", result["status"])
+
+	formFields := map[string]interface{}{
+		"origin": "localhost:2000",
+		"formFields": []map[string]interface{}{{
+			"id":    "email",
+			"value": "random@gmail.com",
+		}},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/user/password/reset/token", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NoError(t, err)
+
+	assert.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "http://localhost:2000/auth/reset-password", resetURL)
+	assert.NotEmpty(t, tokenInfo)
+	assert.True(t, strings.HasPrefix(ridInfo, "emailpassword"))
+}

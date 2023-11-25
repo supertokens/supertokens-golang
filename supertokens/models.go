@@ -20,19 +20,21 @@ import (
 )
 
 type NormalisedAppinfo struct {
-	AppName               string
-	WebsiteDomain         NormalisedURLDomain
-	APIDomain             NormalisedURLDomain
-	TopLevelAPIDomain     string
-	TopLevelWebsiteDomain string
-	APIBasePath           NormalisedURLPath
-	APIGatewayPath        NormalisedURLPath
-	WebsiteBasePath       NormalisedURLPath
+	AppName                  string
+	GetOrigin                func(request *http.Request, userContext UserContext) (NormalisedURLDomain, error)
+	APIDomain                NormalisedURLDomain
+	TopLevelAPIDomain        string
+	GetTopLevelWebsiteDomain func(request *http.Request, userContext UserContext) (string, error)
+	APIBasePath              NormalisedURLPath
+	APIGatewayPath           NormalisedURLPath
+	WebsiteBasePath          NormalisedURLPath
 }
 
 type AppInfo struct {
 	AppName         string
 	WebsiteDomain   string
+	Origin          string
+	GetOrigin       func(request *http.Request, userContext UserContext) (string, error)
 	APIDomain       string
 	WebsiteBasePath *string
 	APIBasePath     *string

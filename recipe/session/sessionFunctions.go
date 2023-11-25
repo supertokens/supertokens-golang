@@ -37,7 +37,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 		"userId":               userID,
 		"userDataInJWT":        AccessTokenPayload,
 		"userDataInDatabase":   sessionDataInDatabase,
-		"enableAntiCsrf":       !disableAntiCsrf && config.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"enableAntiCsrf":       !disableAntiCsrf && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN,
 		"useDynamicSigningKey": config.UseDynamicAccessTokenSigningKey,
 	}
 
@@ -70,7 +70,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 		}
 	}
 
-	accessTokenInfo, err = GetInfoFromAccessToken(parsedAccessToken, combinedJwks, config.AntiCsrf == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck)
+	accessTokenInfo, err = GetInfoFromAccessToken(parsedAccessToken, combinedJwks, config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN && doAntiCsrfCheck)
 	if err != nil {
 		if !defaultErrors.As(err, &errors.TryRefreshTokenError{}) {
 			supertokens.LogDebugMessage("getSessionHelper: Returning TryRefreshTokenError because GetInfoFromAccessToken returned an error")
@@ -121,7 +121,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	}
 
 	if doAntiCsrfCheck {
-		if config.AntiCsrf == AntiCSRF_VIA_TOKEN {
+		if config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN {
 			if accessTokenInfo != nil {
 				if antiCsrfToken == nil || *antiCsrfToken != *accessTokenInfo.AntiCsrfToken {
 					if antiCsrfToken == nil {
@@ -133,7 +133,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 					}
 				}
 			}
-		} else if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER {
+		} else if config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
 			return sessmodels.GetSessionResponse{}, defaultErrors.New("Please either use VIA_TOKEN, NONE or call with doAntiCsrfCheck false")
 		}
 	}
@@ -152,7 +152,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 	requestBody := map[string]interface{}{
 		"accessToken":     parsedAccessToken.RawTokenString,
 		"doAntiCsrfCheck": doAntiCsrfCheck,
-		"enableAntiCsrf":  config.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"enableAntiCsrf":  config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN,
 		"checkDatabase":   alwaysCheckCore,
 	}
 	if antiCsrfToken != nil {
@@ -227,13 +227,13 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	requestBody := map[string]interface{}{
 		"refreshToken":   refreshToken,
-		"enableAntiCsrf": !disableAntiCsrf && config.AntiCsrf == AntiCSRF_VIA_TOKEN,
+		"enableAntiCsrf": !disableAntiCsrf && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken
 	}
 
-	if config.AntiCsrf == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCsrf {
+	if config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER && !disableAntiCsrf {
 		return sessmodels.CreateOrRefreshAPIResponse{}, defaultErrors.New("Please either use VIA_TOKEN, NONE or call with doAntiCsrfCheck false")
 	}
 

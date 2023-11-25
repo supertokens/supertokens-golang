@@ -17,9 +17,11 @@
 package passwordless
 
 import (
+	"bytes"
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -628,4 +630,117 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 	assert.Nil(t, err)
 	assert.Equal(t, customCalled, false)
 	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestThatMagicLinkUsesRightValueFromOriginFunction(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	plessEmail := ""
+	var code, urlWithCode *string
+	var codeLife uint64
+
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		plessEmail = input.PasswordlessLogin.Email
+		code = input.PasswordlessLogin.UserInputCode
+		urlWithCode = input.PasswordlessLogin.UrlWithLinkCode
+		codeLife = input.PasswordlessLogin.CodeLifetime
+		customCalled = true
+		return nil
+	}
+
+	tplConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: &emaildelivery.EmailDeliveryInterface{
+				SendEmail: &sendEmail,
+			},
+		},
+		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+			Enabled: true,
+		},
+	}
+
+	config := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain: "api.supertokens.io",
+			AppName:   "SuperTokens",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				// read request body
+				decoder := json.NewDecoder(request.Body)
+				var requestBody map[string]interface{}
+				err := decoder.Decode(&requestBody)
+				if err != nil {
+					return "https://supertokens.com", nil
+				}
+				if requestBody["origin"] == nil {
+					return "https://supertokens.com", nil
+				}
+				return requestBody["origin"].(string), nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(tplConfig),
+		},
+	}
+
+	err := supertokens.Init(config)
+	assert.NoError(t, err)
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
+	body := map[string]string{
+		"email":  "test@example.com",
+		"origin": "localhost:2000",
+	}
+
+	postBody, err := json.Marshal(body)
+	if err != nil {
+		t.Error(err.Error())
+		return
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+	body = map[string]string{}
+
+	err = json.Unmarshal(bodyBytes, &body)
+	assert.NoError(t, err)
+
+	// Default handler not called
+	assert.False(t, PasswordlessLoginEmailSentForTest)
+	assert.Empty(t, PasswordlessLoginEmailDataForTest.Email)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UserInputCode)
+	assert.Nil(t, PasswordlessLoginEmailDataForTest.UrlWithLinkCode)
+
+	// Custom handler called
+	assert.Equal(t, plessEmail, "test@example.com")
+	assert.NotNil(t, code)
+	assert.Equal(t, (*urlWithCode)[:21], "http://localhost:2000")
+	assert.NotZero(t, codeLife)
+	assert.True(t, customCalled)
 }

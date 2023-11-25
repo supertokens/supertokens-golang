@@ -26,6 +26,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
@@ -284,6 +285,60 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 
 	assert.Nil(t, err)
 	assert.Equal(t, sendRawEmailCalled, true)
+}
+
+func TestThatLinkUsesResultFromOriginFunction(t *testing.T) {
+	link := ""
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain: "api.supertokens.io",
+			AppName:   "SuperTokens",
+			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				return (*userContext)["link"].(string), nil
+			},
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(evmodels.TypeInput{
+				Mode: "OPTIONAL",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+						(*originalImplementation.SendEmail) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+							link = input.EmailVerification.EmailVerifyLink
+							return nil
+						}
+						return originalImplementation
+					},
+				},
+			}),
+			session.Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	email := "test@exmaple.com"
+	resp, err := SendEmailVerificationEmail("public", "userId", &email, &map[string]interface{}{
+		"link": "localhost:8080",
+	})
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.True(t, resp.OK != nil)
+
+	assert.Equal(t, EmailVerificationEmailSentForTest, false)
+	// assert that link starts with http://localhost:8080. We use starts with because the link
+	// can continue a path and random query params too
+	assert.Equal(t, link[:21], "http://localhost:8080")
+
 }
 
 // func TestSMTPServiceManually(t *testing.T) {

@@ -57,25 +57,41 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
-	apiDomainScheme, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-	websiteDomainScheme, err := GetURLScheme(appInfo.WebsiteDomain.GetAsStringDangerous())
-	if err != nil {
-		return sessmodels.TypeNormalisedInput{}, err
-	}
-
-	cookieSameSite := CookieSameSite_LAX
-	if apiDomainScheme != websiteDomainScheme || appInfo.TopLevelAPIDomain != appInfo.TopLevelWebsiteDomain {
-		cookieSameSite = CookieSameSite_NONE
-	}
-
 	if config != nil && config.CookieSameSite != nil {
-		cookieSameSite, err = normaliseSameSiteOrThrowError(*config.CookieSameSite)
+		// we have this block just to check if the user input is correct
+		_, err = normaliseSameSiteOrThrowError(*config.CookieSameSite)
 		if err != nil {
 			return sessmodels.TypeNormalisedInput{}, err
 		}
+	}
+
+	cookieSameSite := func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+		if config != nil && config.CookieSameSite != nil {
+			return normaliseSameSiteOrThrowError(*config.CookieSameSite)
+		}
+		origin, err := appInfo.GetOrigin(request, userContext)
+		if err != nil {
+			return "", err
+		}
+		protocolOfWebsiteDomain, err := GetURLScheme(origin.GetAsStringDangerous())
+		if err != nil {
+			return "", err
+		}
+
+		protocolOfAPIDomain, err := GetURLScheme(appInfo.APIDomain.GetAsStringDangerous())
+		if err != nil {
+			return "", err
+		}
+
+		topLevelWebsiteDomain, err := appInfo.GetTopLevelWebsiteDomain(request, userContext)
+		if err != nil {
+			return "", err
+		}
+
+		if protocolOfAPIDomain != protocolOfWebsiteDomain || appInfo.TopLevelAPIDomain != topLevelWebsiteDomain {
+			return CookieSameSite_NONE, nil
+		}
+		return CookieSameSite_LAX, nil
 	}
 
 	cookieSecure := false
@@ -99,21 +115,32 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		return sessmodels.TypeNormalisedInput{}, errors.New("SessionExpiredStatusCode and InvalidClaimStatusCode cannot have the same value")
 	}
 
+	antiCsrfFunctionOrString := sessmodels.AntiCsrfFunctionOrString{
+		FunctionValue: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+			sameSite, err := cookieSameSite(request, userContext)
+			if err != nil {
+				return "", err
+			}
+			if sameSite == CookieSameSite_NONE {
+				return AntiCSRF_VIA_CUSTOM_HEADER, nil
+			}
+			return AntiCSRF_NONE, nil
+		},
+	}
 	if config != nil && config.AntiCsrf != nil {
 		if *config.AntiCsrf != AntiCSRF_NONE && *config.AntiCsrf != AntiCSRF_VIA_CUSTOM_HEADER && *config.AntiCsrf != AntiCSRF_VIA_TOKEN {
 			return sessmodels.TypeNormalisedInput{}, errors.New("antiCsrf config must be one of 'NONE' or 'VIA_CUSTOM_HEADER' or 'VIA_TOKEN'")
 		}
+		antiCsrfFunctionOrString = sessmodels.AntiCsrfFunctionOrString{
+			StrValue: *config.AntiCsrf,
+		}
 	}
 
-	antiCsrf := AntiCSRF_NONE
-	if config == nil || config.AntiCsrf == nil {
-		if cookieSameSite == CookieSameSite_NONE {
-			antiCsrf = AntiCSRF_VIA_CUSTOM_HEADER
-		} else {
-			antiCsrf = AntiCSRF_NONE
-		}
-	} else {
-		antiCsrf = *config.AntiCsrf
+	if antiCsrfFunctionOrString.FunctionValue != nil && antiCsrfFunctionOrString.StrValue != "" {
+		return sessmodels.TypeNormalisedInput{}, errors.New("should never come here")
+	}
+	if antiCsrfFunctionOrString.FunctionValue == nil && antiCsrfFunctionOrString.StrValue == "" {
+		return sessmodels.TypeNormalisedInput{}, errors.New("should never come here")
 	}
 
 	errorHandlers := sessmodels.NormalisedErrorHandlers{
@@ -181,11 +208,11 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
-		CookieSameSite:           cookieSameSite,
+		GetCookieSameSite:        cookieSameSite,
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
 		InvalidClaimStatusCode:   invalidClaimStatusCode,
-		AntiCsrf:                 antiCsrf,
+		AntiCsrfFunctionOrString: antiCsrfFunctionOrString,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: config.ExposeAccessTokenToFrontendInCookieBasedAuth,
 		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
 		ErrorHandlers:                                errorHandlers,
@@ -268,20 +295,20 @@ func GetCurrTimeInMS() uint64 {
 	return uint64(time.Now().UnixNano() / 1000000)
 }
 
-func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, accessToken string, frontToken string, tokenTransferMethod sessmodels.TokenTransferMethod) error {
+func SetAccessTokenInResponse(config sessmodels.TypeNormalisedInput, res http.ResponseWriter, accessToken string, frontToken string, tokenTransferMethod sessmodels.TokenTransferMethod, request *http.Request, userContext supertokens.UserContext) error {
 	setFrontTokenInHeaders(res, frontToken)
 	// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
 	// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 	// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
 	// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-	setToken(config, res, sessmodels.AccessToken, accessToken, GetCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), tokenTransferMethod)
+	setToken(config, res, sessmodels.AccessToken, accessToken, GetCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), tokenTransferMethod, request, userContext)
 
 	if config.ExposeAccessTokenToFrontendInCookieBasedAuth && tokenTransferMethod == sessmodels.CookieTransferMethod {
 		// We set the expiration to 100 years, because we can't really access the expiration of the refresh token everywhere we are setting it.
 		// This should be safe to do, since this is only the validity of the cookie (set here or on the frontend) but we check the expiration of the JWT anyway.
 		// Even if the token is expired the presence of the token indicates that the user could have a valid refresh
 		// Setting them to infinity would require special case handling on the frontend and just adding 100 years seems enough.
-		setToken(config, res, sessmodels.AccessToken, accessToken, GetCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), sessmodels.HeaderTransferMethod)
+		setToken(config, res, sessmodels.AccessToken, accessToken, GetCurrTimeInMS()+uint64(accessTokenCookiesExpiryDurationMillis), sessmodels.HeaderTransferMethod, request, userContext)
 	}
 	return nil
 }
