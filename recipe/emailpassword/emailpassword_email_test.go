@@ -668,3 +668,42 @@ func TestSMTPOverrideEmailVerifyForEmailPasswordUser(t *testing.T) {
 	assert.Equal(t, getContentCalled, true)
 	assert.Equal(t, sendRawEmailCalled, true)
 }
+
+func TestSendResetPassworEmailFunction(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	resetLink := ""
+
+	testServer := supertokensInitForTest(t,
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(&epmodels.TypeInput{
+			EmailDelivery: &emaildelivery.TypeInput{
+				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+					*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+						resetLink = input.PasswordReset.PasswordResetLink
+						return nil
+					}
+					return originalImplementation
+				},
+			},
+		}),
+	)
+	defer testServer.Close()
+
+	user, err := SignUp("public", "test@example.com", "pass1234")
+	assert.NoError(t, err)
+
+	resp, err := SendResetPasswordEmail("public", user.OK.User.ID)
+	assert.NoError(t, err)
+	assert.True(t, resp.OK != nil)
+
+	assert.Contains(t, resetLink, "rid=emailpassword")
+	assert.Contains(t, resetLink, "tenantId=public")
+	assert.Contains(t, resetLink, "token=")
+}
