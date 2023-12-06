@@ -184,7 +184,7 @@ If you were using the SDK Versions < `0.13.0`, use the following override functi
 -   Only supporting FDI 1.17
 -   Core must be upgraded to 6.0
 -   For consistency, all `UnknownUserIDError` have been renamed to `UnknownUserIdError`
--   `getUsersOldestFirs't` & `getUsersNewestFirst` has mandatory parameter `tenantId`. Pass `'public'` if not using multitenancy.
+-   `getUsersOldestFirst` & `getUsersNewestFirst` has mandatory parameter `tenantId`. Pass `'public'` if not using multitenancy.
 -   Added mandatory field `tenantId` to `EmailDeliveryInterface` and `SmsDeliveryInterface`. Pass `'public'` if not using multitenancy.
 -   Removed deprecated config `createAndSendCustomEmail` and `createAndSendCustomTextMessage`.
 -   EmailPassword recipe changes:
