@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.17.2] - 2023-12-06
+
+- Updates LinkedIn OAuth implementation as per the latest [changes](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2?context=linkedin%2Fconsumer%2Fcontext#authenticating-members).
 
 ## [0.17.1] - 2023-11-24
 
