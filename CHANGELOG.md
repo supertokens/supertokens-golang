@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.17.2] - 2023-12-06
+
+- Updates LinkedIn OAuth implementation as per the latest [changes](https://learn.microsoft.com/en-us/linkedin/consumer/integrations/self-serve/sign-in-with-linkedin-v2?context=linkedin%2Fconsumer%2Fcontext#authenticating-members).
 
 ## [0.17.1] - 2023-11-24
 
@@ -181,7 +184,7 @@ If you were using the SDK Versions < `0.13.0`, use the following override functi
 -   Only supporting FDI 1.17
 -   Core must be upgraded to 6.0
 -   For consistency, all `UnknownUserIDError` have been renamed to `UnknownUserIdError`
--   `getUsersOldestFirst` & `getUsersNewestFirst` has mandatory parameter `tenantId`. Pass `'public'` if not using multitenancy.
+-   `getUsersOldestFirs't` & `getUsersNewestFirst` has mandatory parameter `tenantId`. Pass `'public'` if not using multitenancy.
 -   Added mandatory field `tenantId` to `EmailDeliveryInterface` and `SmsDeliveryInterface`. Pass `'public'` if not using multitenancy.
 -   Removed deprecated config `createAndSendCustomEmail` and `createAndSendCustomTextMessage`.
 -   EmailPassword recipe changes:
