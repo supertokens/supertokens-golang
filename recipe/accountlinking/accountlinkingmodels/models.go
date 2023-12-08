@@ -22,20 +22,20 @@ type AccountInfo struct {
 	supertokens.AccountInfoWithRecipeID
 }
 
-type ShouldDoAutomaticAccountLinkingResult struct {
+type ShouldDoAutomaticAccountLinkingResponse struct {
 	ShouldAutomaticallyLink   bool
 	ShouldRequireVerification bool
 }
 
 type TypeInput struct {
 	OnAccountLinked                 func(user supertokens.User, newAccountUser supertokens.RecipeLevelUser, userContext supertokens.UserContext) error
-	ShouldDoAutomaticAccountLinking func(newAccountInfo AccountInfo, user *supertokens.User, tenantID string, userContext supertokens.UserContext) (ShouldDoAutomaticAccountLinkingResult, error)
+	ShouldDoAutomaticAccountLinking func(newAccountInfo AccountInfo, user *supertokens.User, tenantID string, userContext supertokens.UserContext) (ShouldDoAutomaticAccountLinkingResponse, error)
 	Override                        *OverrideStruct
 }
 
 type TypeNormalisedInput struct {
 	OnAccountLinked                 func(user supertokens.User, newAccountUser supertokens.RecipeLevelUser, userContext supertokens.UserContext) error
-	ShouldDoAutomaticAccountLinking func(newAccountInfo AccountInfo, user *supertokens.User, tenantID string, userContext supertokens.UserContext) (ShouldDoAutomaticAccountLinkingResult, error)
+	ShouldDoAutomaticAccountLinking func(newAccountInfo AccountInfo, user *supertokens.User, tenantID string, userContext supertokens.UserContext) (ShouldDoAutomaticAccountLinkingResponse, error)
 	Override                        OverrideStruct
 }
 

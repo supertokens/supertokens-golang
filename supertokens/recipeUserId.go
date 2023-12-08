@@ -6,11 +6,11 @@ type RecipeUserID struct {
 	recipeUserID string
 }
 
-func NewRecipeUserID(recipeUserID string) (*RecipeUserID, error) {
+func NewRecipeUserID(recipeUserID string) (RecipeUserID, error) {
 	if recipeUserID == "" {
-		return nil, errors.New("recipeUserID cannot be empty")
+		return RecipeUserID{}, errors.New("recipeUserID cannot be empty")
 	}
-	return &RecipeUserID{recipeUserID: recipeUserID}, nil
+	return RecipeUserID{recipeUserID: recipeUserID}, nil
 }
 
 func (r *RecipeUserID) GetAsString() string {
