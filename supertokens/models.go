@@ -70,3 +70,52 @@ type UserContext = *map[string]interface{}
 type GeneralErrorResponse struct {
 	Message string
 }
+type ThirdParty struct {
+	ID     string
+	UserID string
+}
+
+type RecipeID string
+
+const (
+	EmailPasswordRID RecipeID = "emailpassword"
+	ThirdPartyRID    RecipeID = "thirdparty"
+	PasswordlessRID  RecipeID = "passwordless"
+)
+
+type LoginMethods struct {
+	RecipeLevelUser
+	Verified                bool
+	HasSameEmailAs          func(email string) bool
+	HasSamePhoneNumberAs    func(phoneNumber string) bool
+	HasSameThirdPartyInfoAs func(thirdParty *ThirdParty) bool
+}
+
+type User struct {
+	ID            string
+	TimeJoined    int64
+	IsPrimaryUser bool
+	TenantIDs     []string
+	Emails        []string
+	PhoneNumbers  []string
+	ThirdParty    []ThirdParty
+	LoginMethods  []LoginMethods
+}
+
+type AccountInfo struct {
+	Email       *string
+	PhoneNumber *string
+	ThirdParty  *ThirdParty
+}
+
+type AccountInfoWithRecipeID struct {
+	RecipeID RecipeID
+	AccountInfo
+}
+
+type RecipeLevelUser struct {
+	TenantIDs    []string
+	TimeJoined   int64
+	RecipeUserID RecipeUserID
+	AccountInfoWithRecipeID
+}

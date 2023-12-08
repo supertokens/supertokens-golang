@@ -13,22 +13,7 @@
  * under the License.
  */
 
-package supertokens
+package accountlinkingmodels
 
-const (
-	HeaderRID = "rid"
-	HeaderFDI = "fdi-version"
-)
-
-// VERSION current version of the lib
-const VERSION = "0.18.0"
-
-var (
-	cdiSupported = []string{"4.0"}
-)
-
-const DashboardVersion = "0.7"
-
-const DefaultTenantId string = "public"
-
-const RateLimitStatusCode = 429
+type RecipeInterface struct {
+}
