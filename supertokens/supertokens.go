@@ -112,6 +112,7 @@ func supertokensInit(config TypeInput) error {
 	}
 
 	multitenancyFound := false
+	accountLinkingFound := false
 
 	for _, elem := range config.RecipeList {
 		recipeModule, err := elem(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
@@ -123,10 +124,21 @@ func supertokensInit(config TypeInput) error {
 		if recipeModule.GetRecipeID() == "multitenancy" {
 			multitenancyFound = true
 		}
+		if recipeModule.GetRecipeID() == "accountlinking" {
+			accountLinkingFound = true
+		}
 	}
 
 	if !multitenancyFound && DefaultMultitenancyRecipe != nil {
 		recipeModule, err := DefaultMultitenancyRecipe(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
+		if err != nil {
+			return err
+		}
+		superTokens.RecipeModules = append(superTokens.RecipeModules, *recipeModule)
+	}
+
+	if !accountLinkingFound {
+		recipeModule, err := accountLinkingRecipeInit(nil)(superTokens.AppInfo, superTokens.OnSuperTokensAPIError)
 		if err != nil {
 			return err
 		}
@@ -311,60 +323,6 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 	return originalError
 }
 
-type UserPaginationResult struct {
-	Users []struct {
-		RecipeId string                 `json:"recipeId"`
-		User     map[string]interface{} `json:"user"`
-	}
-	NextPaginationToken *string
-}
-
-// TODO: Add tests
-func GetUsersWithSearchParams(tenantId string, timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string) (UserPaginationResult, error) {
-
-	querier, err := GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		return UserPaginationResult{}, err
-	}
-
-	requestBody := map[string]string{}
-	if searchParams != nil {
-		requestBody = searchParams
-	}
-	requestBody["timeJoinedOrder"] = timeJoinedOrder
-
-	if limit != nil {
-		requestBody["limit"] = strconv.Itoa(*limit)
-	}
-	if paginationToken != nil {
-		requestBody["paginationToken"] = *paginationToken
-	}
-	if includeRecipeIds != nil {
-		requestBody["includeRecipeIds"] = strings.Join((*includeRecipeIds)[:], ",")
-	}
-
-	resp, err := querier.SendGetRequest(tenantId+"/users", requestBody, nil)
-
-	if err != nil {
-		return UserPaginationResult{}, err
-	}
-
-	temporaryVariable, err := json.Marshal(resp)
-	if err != nil {
-		return UserPaginationResult{}, err
-	}
-
-	var result = UserPaginationResult{}
-
-	err = json.Unmarshal(temporaryVariable, &result)
-
-	if err != nil {
-		return UserPaginationResult{}, err
-	}
-
-	return result, nil
-}
-
 // TODO: Add tests
 func getUserCount(includeRecipeIds *[]string, tenantId string, includeAllTenants *bool) (float64, error) {
 
@@ -420,6 +378,7 @@ func deleteUser(userId string) error {
 func ResetForTest() {
 	ResetQuerierForTest()
 	superTokensInstance = nil
+	singletonInstance = nil
 }
 
 func IsRunningInTestMode() bool {

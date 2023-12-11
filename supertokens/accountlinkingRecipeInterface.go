@@ -13,12 +13,10 @@
  * under the License.
  */
 
-package accountlinkingmodels
-
-import "github.com/supertokens/supertokens-golang/supertokens"
+package supertokens
 
 type UserPaginationResult struct {
-	Users               []supertokens.User
+	Users               []User
 	NextPaginationToken *string
 }
 
@@ -38,7 +36,7 @@ type CanCreatePrimaryUserResponse struct {
 
 type CreatePrimaryUserResponse struct {
 	OK *struct {
-		User                   supertokens.User
+		User                   User
 		WasAlreadyAPrimaryUser bool
 	}
 	RecipeUserIdAlreadyLinkedWithPrimaryUserIdError *struct {
@@ -69,11 +67,11 @@ type CanLinkAccountResponse struct {
 type LinkAccountResponse struct {
 	OK *struct {
 		AccountsAlreadyLinked bool
-		User                  supertokens.User
+		User                  User
 	}
 	RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError *struct {
 		PrimaryUserId string
-		User          supertokens.User
+		User          User
 	}
 	AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError *struct {
 		PrimaryUserId string
@@ -87,22 +85,22 @@ type UnlinkAccountsResponse struct {
 	WasLinked            bool
 }
 
-type RecipeInterface struct {
-	GetUsersWithSearchParams *func(tenantID string, timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string, userContext supertokens.UserContext) (UserPaginationResult, error)
+type AccountLinkingRecipeInterface struct {
+	GetUsersWithSearchParams *func(tenantID string, timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string, userContext UserContext) (UserPaginationResult, error)
 
-	CanCreatePrimaryUser *func(recipeUserId supertokens.RecipeUserID, userContext supertokens.UserContext) (CanCreatePrimaryUserResponse, error)
+	CanCreatePrimaryUser *func(recipeUserId RecipeUserID, userContext UserContext) (CanCreatePrimaryUserResponse, error)
 
-	CreatePrimaryUser *func(recipeUserId supertokens.RecipeUserID, userContext supertokens.UserContext) (CreatePrimaryUserResponse, error)
+	CreatePrimaryUser *func(recipeUserId RecipeUserID, userContext UserContext) (CreatePrimaryUserResponse, error)
 
-	CanLinkAccounts *func(recipeUserId supertokens.RecipeUserID, primaryUserId string, userContext supertokens.UserContext) (CanLinkAccountResponse, error)
+	CanLinkAccounts *func(recipeUserId RecipeUserID, primaryUserId string, userContext UserContext) (CanLinkAccountResponse, error)
 
-	LinkAccounts *func(recipeUserId supertokens.RecipeUserID, primaryUserId string, userContext supertokens.UserContext) (LinkAccountResponse, error)
+	LinkAccounts *func(recipeUserId RecipeUserID, primaryUserId string, userContext UserContext) (LinkAccountResponse, error)
 
-	UnlinkAccounts *func(recipeUserId supertokens.RecipeUserID, userContext supertokens.UserContext) (UnlinkAccountsResponse, error)
+	UnlinkAccounts *func(recipeUserId RecipeUserID, userContext UserContext) (UnlinkAccountsResponse, error)
 
-	GetUser *func(userId string, userContext supertokens.UserContext) (*supertokens.User, error)
+	GetUser *func(userId string, userContext UserContext) (*User, error)
 
-	ListUsersByAccountInfo *func(tenantID string, accountInfo supertokens.AccountInfo, doUnionOfAccountInfo bool, userContext supertokens.UserContext) ([]supertokens.User, error)
+	ListUsersByAccountInfo *func(tenantID string, accountInfo AccountInfo, doUnionOfAccountInfo bool, userContext UserContext) ([]User, error)
 
-	DeleteUser *func(userId string, removeAllLinkedAccounts bool, userContext supertokens.UserContext) error
+	DeleteUser *func(userId string, removeAllLinkedAccounts bool, userContext UserContext) error
 }

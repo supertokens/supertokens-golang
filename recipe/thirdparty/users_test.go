@@ -89,7 +89,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 1, len(userPaginationResult.Users))
-	assert.Equal(t, "test@gmail.com", userPaginationResult.Users[0].User["email"])
+	assert.Equal(t, "test@gmail.com", userPaginationResult.Users[0].Emails[0])
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
 	userPaginationResult, err = supertokens.GetUsersOldestFirst("public", userPaginationResult.NextPaginationToken, &customLimit, nil, nil)
@@ -97,7 +97,7 @@ func TestGetUsersOldesFirst(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 1, len(userPaginationResult.Users))
-	assert.Equal(t, "test1@gmail.com", userPaginationResult.Users[0].User["email"])
+	assert.Equal(t, "test1@gmail.com", userPaginationResult.Users[0].Emails[0])
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
 	customLimit = 5
@@ -215,7 +215,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 1, len(userPaginationResult.Users))
-	assert.Equal(t, "test4@gmail.com", userPaginationResult.Users[0].User["email"])
+	assert.Equal(t, "test4@gmail.com", userPaginationResult.Users[0].Emails[0])
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
 	userPaginationResult, err = supertokens.GetUsersNewestFirst("public", userPaginationResult.NextPaginationToken, &customLimit, nil, nil)
@@ -223,7 +223,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 1, len(userPaginationResult.Users))
-	assert.Equal(t, "test3@gmail.com", userPaginationResult.Users[0].User["email"])
+	assert.Equal(t, "test3@gmail.com", userPaginationResult.Users[0].Emails[0])
 	assert.Equal(t, "*string", reflect.TypeOf(userPaginationResult.NextPaginationToken).String())
 
 	customLimit = 5

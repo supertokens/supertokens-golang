@@ -71,12 +71,30 @@ func GetUserCount(includeRecipeIds *[]string, tenantId *string) (float64, error)
 	return getUserCount(includeRecipeIds, *tenantId, includeAllTenants)
 }
 
-func GetUsersOldestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {
-	return GetUsersWithSearchParams(tenantId, "ASC", paginationToken, limit, includeRecipeIds, query)
+func GetUsersOldestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string, userContext ...UserContext) (UserPaginationResult, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.GetUsersWithSearchParams)(tenantId, "ASC", paginationToken, limit, includeRecipeIds, query, userContext[0])
 }
 
-func GetUsersNewestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {
-	return GetUsersWithSearchParams(tenantId, "DESC", paginationToken, limit, includeRecipeIds, query)
+func GetUsersNewestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string, userContext ...UserContext) (UserPaginationResult, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.GetUsersWithSearchParams)(tenantId, "DESC", paginationToken, limit, includeRecipeIds, query, userContext[0])
 }
 
 func DeleteUser(userId string) error {

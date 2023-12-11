@@ -76,6 +76,6 @@ func TestCreateUserIdMappingAndGetUsers(t *testing.T) {
 	assert.NotNil(t, userResult.Users)
 
 	for i, user := range userResult.Users {
-		assert.Equal(t, user.User["id"], fmt.Sprintf("externalId%d", i))
+		assert.Equal(t, user.ID, fmt.Sprintf("externalId%d", i))
 	}
 }

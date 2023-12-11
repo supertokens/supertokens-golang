@@ -71,8 +71,8 @@ type GeneralErrorResponse struct {
 	Message string
 }
 type ThirdParty struct {
-	ID     string
-	UserID string
+	ID     string `json:"id"`
+	UserID string `json:"userId"`
 }
 
 type RecipeID string
@@ -85,37 +85,63 @@ const (
 
 type LoginMethods struct {
 	RecipeLevelUser
-	Verified                bool
-	HasSameEmailAs          func(email string) bool
-	HasSamePhoneNumberAs    func(phoneNumber string) bool
-	HasSameThirdPartyInfoAs func(thirdParty *ThirdParty) bool
+	Verified                bool                              `json:"verified"`
+	HasSameEmailAs          func(email string) bool           `json:"-"`
+	HasSamePhoneNumberAs    func(phoneNumber string) bool     `json:"-"`
+	HasSameThirdPartyInfoAs func(thirdParty *ThirdParty) bool `json:"-"`
 }
 
 type User struct {
-	ID            string
-	TimeJoined    int64
-	IsPrimaryUser bool
-	TenantIDs     []string
-	Emails        []string
-	PhoneNumbers  []string
-	ThirdParty    []ThirdParty
-	LoginMethods  []LoginMethods
+	ID            string         `json:"id"`
+	TimeJoined    int64          `json:"timeJoined"`
+	IsPrimaryUser bool           `json:"isPrimaryUser"`
+	TenantIDs     []string       `json:"tenantIds"`
+	Emails        []string       `json:"emails"`
+	PhoneNumbers  []string       `json:"phoneNumbers"`
+	ThirdParty    []ThirdParty   `json:"thirdParty"`
+	LoginMethods  []LoginMethods `json:"loginMethods"`
 }
 
 type AccountInfo struct {
-	Email       *string
-	PhoneNumber *string
-	ThirdParty  *ThirdParty
+	Email       *string     `json:"email,omitempty"`
+	PhoneNumber *string     `json:"phoneNumber,omitempty"`
+	ThirdParty  *ThirdParty `json:"thirdParty,omitempty"`
 }
 
 type AccountInfoWithRecipeID struct {
-	RecipeID RecipeID
+	RecipeID RecipeID `json:"recipeId"`
 	AccountInfo
 }
 
 type RecipeLevelUser struct {
-	TenantIDs    []string
-	TimeJoined   int64
-	RecipeUserID RecipeUserID
+	TenantIDs    []string     `json:"tenantIds"`
+	TimeJoined   int64        `json:"timeJoined"`
+	RecipeUserID RecipeUserID `json:"recipeUserId"`
 	AccountInfoWithRecipeID
+}
+
+type AccountInfoWithRecipeIdAndWithRecipeUserId struct {
+	RecipeUserId *RecipeUserID
+	AccountInfoWithRecipeID
+}
+
+type ShouldDoAutomaticAccountLinkingResponse struct {
+	ShouldAutomaticallyLink   bool
+	ShouldRequireVerification bool
+}
+
+type AccountLinkingTypeInput struct {
+	OnAccountLinked                 func(user User, newAccountUser RecipeLevelUser, userContext UserContext) error
+	ShouldDoAutomaticAccountLinking func(newAccountInfo AccountInfoWithRecipeIdAndWithRecipeUserId, user *User, tenantID string, userContext UserContext) (ShouldDoAutomaticAccountLinkingResponse, error)
+	Override                        *AccountLinkingOverrideStruct
+}
+
+type AccountLinkingTypeNormalisedInput struct {
+	OnAccountLinked                 func(user User, newAccountUser RecipeLevelUser, userContext UserContext) error
+	ShouldDoAutomaticAccountLinking func(newAccountInfo AccountInfoWithRecipeIdAndWithRecipeUserId, user *User, tenantID string, userContext UserContext) (ShouldDoAutomaticAccountLinkingResponse, error)
+	Override                        AccountLinkingOverrideStruct
+}
+
+type AccountLinkingOverrideStruct struct {
+	Functions func(originalImplementation AccountLinkingRecipeInterface) AccountLinkingRecipeInterface
 }

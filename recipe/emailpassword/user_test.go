@@ -97,7 +97,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 
 	assert.Equal(t, len(users.Users), 1)
 	assert.NotNil(t, users.NextPaginationToken)
-	assert.Equal(t, "test@gmail.com", users.Users[0].User["email"])
+	assert.Equal(t, "test@gmail.com", users.Users[0].Emails[0])
 
 	users, err = supertokens.GetUsersOldestFirst("public", users.NextPaginationToken, &limit, nil, nil)
 	if err != nil {
@@ -106,7 +106,7 @@ func TestGetUsersOldestFirst(t *testing.T) {
 
 	assert.Equal(t, len(users.Users), 1)
 	assert.NotNil(t, users.NextPaginationToken)
-	assert.Equal(t, "test1@gmail.com", users.Users[0].User["email"])
+	assert.Equal(t, "test1@gmail.com", users.Users[0].Emails[0])
 
 	limit = 5
 	users, err = supertokens.GetUsersOldestFirst("public", users.NextPaginationToken, &limit, nil, nil)
@@ -203,7 +203,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 
 	assert.Equal(t, len(users.Users), 1)
 	assert.NotNil(t, users.NextPaginationToken)
-	assert.Equal(t, "test4@gmail.com", users.Users[0].User["email"])
+	assert.Equal(t, "test4@gmail.com", users.Users[0].Emails[0])
 
 	users, err = supertokens.GetUsersNewestFirst("public", users.NextPaginationToken, &limit, nil, nil)
 	if err != nil {
@@ -212,7 +212,7 @@ func TestGetUsersNewestFirst(t *testing.T) {
 
 	assert.Equal(t, len(users.Users), 1)
 	assert.NotNil(t, users.NextPaginationToken)
-	assert.Equal(t, "test3@gmail.com", users.Users[0].User["email"])
+	assert.Equal(t, "test3@gmail.com", users.Users[0].Emails[0])
 
 	limit = 5
 	users, err = supertokens.GetUsersNewestFirst("public", users.NextPaginationToken, &limit, nil, nil)

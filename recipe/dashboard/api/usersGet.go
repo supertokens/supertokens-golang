@@ -12,25 +12,20 @@ import (
 )
 
 type UsersGetResponse struct {
-	Status              string  `json:"status"`
-	NextPaginationToken *string `json:"nextPaginationToken,omitempty"`
-	Users               []Users `json:"users"`
+	Status              string                     `json:"status"`
+	NextPaginationToken *string                    `json:"nextPaginationToken,omitempty"`
+	Users               []UserWithFirstAndLastName `json:"users"`
 }
 
-type Users struct {
-	RecipeId string `json:"recipeId"`
-	User     User   `json:"user"`
+type UserWithFirstAndLastName struct {
+	supertokens.User
+	firstName string
+	lastName  string
 }
 
-type User struct {
-	Id          string                     `json:"id"`
-	TimeJoined  float64                    `json:"timeJoined"`
-	FirstName   string                     `json:"firstName,omitempty"`
-	LastName    string                     `json:"lastName,omitempty"`
-	Email       string                     `json:"email,omitempty"`
-	PhoneNumber string                     `json:"phoneNumber,omitempty"`
-	ThirdParty  dashboardmodels.ThirdParty `json:"thirdParty,omitempty"`
-	TenantIds   string                     `json:"tenantIds,omitempty"`
+type UserPaginationResultWithFirstAndLastName struct {
+	Users               []UserWithFirstAndLastName
+	NextPaginationToken *string
 }
 
 func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, options dashboardmodels.APIOptions, userContext supertokens.UserContext) (UsersGetResponse, error) {
@@ -83,7 +78,8 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, o
 	}
 
 	if len(queryParamsObject) != 0 {
-		usersResponse, err = supertokens.GetUsersWithSearchParams(tenantId, timeJoinedOrder, paginationTokenPtr, &limit, nil, queryParamsObject)
+		// the oder here doesn't matter cause in search, we return all users anyway.
+		usersResponse, err = supertokens.GetUsersNewestFirst(tenantId, paginationTokenPtr, &limit, nil, queryParamsObject)
 	} else if timeJoinedOrder == "ASC" {
 		usersResponse, err = supertokens.GetUsersOldestFirst(tenantId, paginationTokenPtr, &limit, nil, nil)
 	} else {
@@ -93,12 +89,28 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, o
 		return UsersGetResponse{}, err
 	}
 
+	var userResponseWithFirstAndLastName UserPaginationResultWithFirstAndLastName = UserPaginationResultWithFirstAndLastName{}
+
+	// copy userResponse into userResponseWithFirstAndLastName
+	userResponseWithFirstAndLastName.NextPaginationToken = usersResponse.NextPaginationToken
+	for _, userObj := range usersResponse.Users {
+		userResponseWithFirstAndLastName.Users = append(userResponseWithFirstAndLastName.Users, struct {
+			supertokens.User
+			firstName string
+			lastName  string
+		}{
+			User:      userObj,
+			firstName: "",
+			lastName:  "",
+		})
+	}
+
 	_, err = usermetadata.GetRecipeInstanceOrThrowError()
 	if err != nil {
 		return UsersGetResponse{
 			Status:              "OK",
 			NextPaginationToken: usersResponse.NextPaginationToken,
-			Users:               getUsersTypeFromPaginationResult(usersResponse),
+			Users:               userResponseWithFirstAndLastName.Users,
 		}, nil
 	}
 
@@ -109,7 +121,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, o
 	var sem = make(chan int, batchSize)
 	var errInBackground error
 
-	for i, userObj := range usersResponse.Users {
+	for i, userObj := range userResponseWithFirstAndLastName.Users {
 		sem <- 1
 
 		if errInBackground != nil {
@@ -117,18 +129,25 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, o
 		}
 
 		go func(i int, userObj struct {
-			RecipeId string                 `json:"recipeId"`
-			User     map[string]interface{} `json:"user"`
+			supertokens.User
+			firstName string
+			lastName  string
 		}) {
 			defer processingGroup.Done()
-			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string), userContext)
+			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.ID, userContext)
 			<-sem
 			if err != nil {
 				errInBackground = err
 				return
 			}
-			usersResponse.Users[i].User["firstName"] = userMetadataResponse["first_name"]
-			usersResponse.Users[i].User["lastName"] = userMetadataResponse["last_name"]
+			firstName, ok := userMetadataResponse["first_name"]
+			lastName, ok2 := userMetadataResponse["last_name"]
+			if ok {
+				userResponseWithFirstAndLastName.Users[i].firstName = firstName.(string)
+			}
+			if ok2 {
+				userResponseWithFirstAndLastName.Users[i].lastName = lastName.(string)
+			}
 		}(i, userObj)
 	}
 
@@ -140,50 +159,7 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, o
 
 	return UsersGetResponse{
 		Status:              "OK",
-		NextPaginationToken: usersResponse.NextPaginationToken,
-		Users:               getUsersTypeFromPaginationResult(usersResponse),
+		NextPaginationToken: userResponseWithFirstAndLastName.NextPaginationToken,
+		Users:               userResponseWithFirstAndLastName.Users,
 	}, nil
-}
-
-func getUsersTypeFromPaginationResult(usersResponse supertokens.UserPaginationResult) []Users {
-	users := []Users{}
-	for _, v := range usersResponse.Users {
-		user := User{
-			Id:         v.User["id"].(string),
-			TimeJoined: v.User["timeJoined"].(float64),
-		}
-		firstName := v.User["firstName"]
-		if firstName != nil {
-			user.FirstName = firstName.(string)
-		}
-		lastName := v.User["lastName"]
-		if lastName != nil {
-			user.LastName = lastName.(string)
-		}
-
-		if v.RecipeId == "emailpassword" {
-			user.Email = v.User["email"].(string)
-		} else if v.RecipeId == "thirdparty" {
-			user.Email = v.User["email"].(string)
-			user.ThirdParty = dashboardmodels.ThirdParty{
-				Id:     v.User["thirdParty"].(map[string]interface{})["id"].(string),
-				UserId: v.User["thirdParty"].(map[string]interface{})["userId"].(string),
-			}
-		} else {
-			email := v.User["email"]
-			if email != nil {
-				user.Email = email.(string)
-			}
-			phoneNumber := v.User["phoneNumber"]
-			if phoneNumber != nil {
-				user.PhoneNumber = phoneNumber.(string)
-			}
-		}
-
-		users = append(users, Users{
-			RecipeId: v.RecipeId,
-			User:     user,
-		})
-	}
-	return users
 }

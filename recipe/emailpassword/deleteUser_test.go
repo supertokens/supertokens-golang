@@ -75,10 +75,10 @@ func TestDeleteUser(t *testing.T) {
 		if err != nil {
 			t.Error(err.Error())
 		}
-		reponseAfterDeletingUser, err := supertokens.GetUsersOldestFirst("public", nil, nil, nil, nil)
+		responseAfterDeletingUser, err := supertokens.GetUsersOldestFirst("public", nil, nil, nil, nil)
 		if err != nil {
 			t.Error(err.Error())
 		}
-		assert.Equal(t, 0, len(reponseAfterDeletingUser.Users))
+		assert.Equal(t, 0, len(responseAfterDeletingUser.Users))
 	}
 }
