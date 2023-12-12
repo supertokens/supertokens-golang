@@ -62,8 +62,38 @@ func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
 		return result, nil
 	}
 
+	getUser := func(userId string, userContext UserContext) (*User, error) {
+		requestBody := map[string]string{
+			"userId": userId,
+		}
+		resp, err := querier.SendGetRequest("/user/id", requestBody, userContext)
+
+		if err != nil {
+			return nil, err
+		}
+
+		if resp["status"].(string) != "OK" {
+			return nil, nil
+		}
+
+		var result = User{}
+
+		temporaryVariable, err := json.Marshal(resp["user"])
+		if err != nil {
+			return nil, err
+		}
+
+		err = json.Unmarshal(temporaryVariable, &result)
+		if err != nil {
+			return nil, err
+		}
+
+		return &result, nil
+	}
+
 	// TODO:...
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
+		GetUser:                  &getUser,
 	}
 }

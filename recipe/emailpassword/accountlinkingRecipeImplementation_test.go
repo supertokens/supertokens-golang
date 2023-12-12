@@ -393,3 +393,55 @@ func TestGetNewestUsersFirstWithSearchParams(t *testing.T) {
 		assert.Len(t, paginationResult.Users[0].ThirdParty, 0)
 	}
 }
+
+func TestGetUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	ogUser, err := SignUp("public", "test@gmail.com", "testPass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user, err := supertokens.GetUser(ogUser.OK.User.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Equal(t, user.ID, ogUser.OK.User.ID)
+	assert.Equal(t, user.Emails[0], "test@gmail.com")
+	assert.Len(t, user.LoginMethods, 1)
+	assert.Len(t, user.Emails, 1)
+	assert.Len(t, user.PhoneNumbers, 0)
+	assert.Len(t, user.ThirdParty, 0)
+	email := "test@gmail.com"
+	assert.True(t, user.LoginMethods[0].HasSameEmailAs(&email))
+	assert.Equal(t, user.ID, user.LoginMethods[0].RecipeUserID.GetAsString())
+	assert.Equal(t, supertokens.EmailPasswordRID, user.LoginMethods[0].RecipeID)
+
+	user, err = supertokens.GetUser("random")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.Nil(t, user)
+}

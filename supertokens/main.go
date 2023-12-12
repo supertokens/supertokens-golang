@@ -101,6 +101,19 @@ func GetUsersNewestFirst(tenantId string, paginationToken *string, limit *int, i
 	return (*accountLinkingInstance.RecipeImpl.GetUsersWithSearchParams)(tenantId, "DESC", paginationToken, limit, includeRecipeIds, query, userContext[0])
 }
 
+func GetUser(userId string, userContext ...UserContext) (*User, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.GetUser)(userId, userContext[0])
+}
+
 func DeleteUser(userId string) error {
 	return deleteUser(userId)
 }
