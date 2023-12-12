@@ -127,7 +127,7 @@ func (r *LoginMethods) HasSameThirdPartyInfoAs(thirdParty *ThirdParty) bool {
 
 type User struct {
 	ID            string         `json:"id"`
-	TimeJoined    int64          `json:"timeJoined"`
+	TimeJoined    uint64         `json:"timeJoined"`
 	IsPrimaryUser bool           `json:"isPrimaryUser"`
 	TenantIDs     []string       `json:"tenantIds"`
 	Emails        []string       `json:"emails"`
@@ -149,7 +149,7 @@ type AccountInfoWithRecipeID struct {
 
 type RecipeLevelUser struct {
 	TenantIDs    []string     `json:"tenantIds"`
-	TimeJoined   int64        `json:"timeJoined"`
+	TimeJoined   uint64       `json:"timeJoined"`
 	RecipeUserID RecipeUserID `json:"recipeUserId"`
 	AccountInfoWithRecipeID
 }

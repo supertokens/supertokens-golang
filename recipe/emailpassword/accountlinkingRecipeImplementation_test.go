@@ -19,6 +19,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -444,4 +445,86 @@ func TestGetUser(t *testing.T) {
 	}
 
 	assert.Nil(t, user)
+}
+
+func TestMakePrimaryUserSuccess(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+
+	assert.False(t, user1.IsPrimaryUser)
+
+	response, err := supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.True(t, response.OK.User.IsPrimaryUser)
+	assert.False(t, response.OK.WasAlreadyAPrimaryUser)
+
+	assert.Equal(t, user1.ID, response.OK.User.ID)
+	assert.Equal(t, user1.Emails[0], response.OK.User.Emails[0])
+	assert.Len(t, response.OK.User.LoginMethods, 1)
+
+	refetchedUser, err := supertokens.GetUser(user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Equal(t, *refetchedUser, response.OK.User)
+}
+
+// TODO: remove this function
+func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
+	rUId, err := supertokens.NewRecipeUserID(epuser.ID)
+	if err != nil {
+		panic(err.Error())
+	}
+	return supertokens.User{
+		ID:            epuser.ID,
+		TimeJoined:    epuser.TimeJoined,
+		IsPrimaryUser: false,
+		TenantIDs:     epuser.TenantIds,
+		Emails:        []string{epuser.Email},
+		PhoneNumbers:  []string{},
+		ThirdParty:    []supertokens.ThirdParty{},
+		LoginMethods: []supertokens.LoginMethods{
+			{
+				Verified: false,
+				RecipeLevelUser: supertokens.RecipeLevelUser{
+					TenantIDs:    epuser.TenantIds,
+					TimeJoined:   epuser.TimeJoined,
+					RecipeUserID: rUId,
+					AccountInfoWithRecipeID: supertokens.AccountInfoWithRecipeID{
+						RecipeID: supertokens.EmailPasswordRID,
+						AccountInfo: supertokens.AccountInfo{
+							Email: &epuser.Email,
+						},
+					},
+				},
+			},
+		},
+	}
 }
