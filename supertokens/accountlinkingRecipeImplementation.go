@@ -92,8 +92,94 @@ func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
 	}
 
 	canCreatePrimaryUser := func(recipeUserId RecipeUserID, userContext UserContext) (CanCreatePrimaryUserResponse, error) {
-		// TODO:..
-		return CanCreatePrimaryUserResponse{}, nil
+		requestBody := map[string]string{
+			"recipeUserId": recipeUserId.GetAsString(),
+		}
+		resp, err := querier.SendGetRequest("/recipe/accountlinking/user/primary/check", requestBody, userContext)
+
+		if err != nil {
+			return CanCreatePrimaryUserResponse{}, err
+		}
+
+		if resp["status"].(string) == "OK" {
+			return CanCreatePrimaryUserResponse{
+				OK: &struct{ WasAlreadyAPrimaryUser bool }{
+					WasAlreadyAPrimaryUser: resp["wasAlreadyAPrimaryUser"].(bool),
+				},
+			}, nil
+		} else if resp["status"].(string) == "RECIPE_USER_ID_ALREADY_LINKED_WITH_PRIMARY_USER_ID_ERROR" {
+			return CanCreatePrimaryUserResponse{
+				RecipeUserIdAlreadyLinkedWithPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					Description   string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					Description:   resp["description"].(string),
+				},
+			}, nil
+		} else {
+			return CanCreatePrimaryUserResponse{
+				AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					Description   string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					Description:   resp["description"].(string),
+				},
+			}, nil
+		}
+	}
+
+	createPrimaryUser := func(recipeUserId RecipeUserID, userContext UserContext) (CreatePrimaryUserResponse, error) {
+		requestBody := map[string]interface{}{
+			"recipeUserId": recipeUserId.GetAsString(),
+		}
+		resp, err := querier.SendPostRequest("/recipe/accountlinking/user/primary", requestBody, userContext)
+
+		if err != nil {
+			return CreatePrimaryUserResponse{}, err
+		}
+
+		if resp["status"].(string) == "OK" {
+			var user = User{}
+
+			temporaryVariable, err := json.Marshal(resp["user"])
+			if err != nil {
+				return CreatePrimaryUserResponse{}, err
+			}
+
+			err = json.Unmarshal(temporaryVariable, &user)
+			if err != nil {
+				return CreatePrimaryUserResponse{}, err
+			}
+			return CreatePrimaryUserResponse{
+				OK: &struct {
+					User                   User
+					WasAlreadyAPrimaryUser bool
+				}{
+					WasAlreadyAPrimaryUser: resp["wasAlreadyAPrimaryUser"].(bool),
+					User:                   user,
+				},
+			}, nil
+		} else if resp["status"].(string) == "RECIPE_USER_ID_ALREADY_LINKED_WITH_PRIMARY_USER_ID_ERROR" {
+			return CreatePrimaryUserResponse{
+				RecipeUserIdAlreadyLinkedWithPrimaryUserIdError: &struct {
+					PrimaryUserId string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+				},
+			}, nil
+		} else {
+			return CreatePrimaryUserResponse{
+				AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					Description   string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					Description:   resp["description"].(string),
+				},
+			}, nil
+		}
 	}
 
 	// TODO:...
@@ -101,5 +187,6 @@ func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
 		GetUsersWithSearchParams: &getUsers,
 		GetUser:                  &getUser,
 		CanCreatePrimaryUser:     &canCreatePrimaryUser,
+		CreatePrimaryUser:        &createPrimaryUser,
 	}
 }

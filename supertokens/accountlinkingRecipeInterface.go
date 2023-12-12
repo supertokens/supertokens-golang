@@ -41,7 +41,6 @@ type CreatePrimaryUserResponse struct {
 	}
 	RecipeUserIdAlreadyLinkedWithPrimaryUserIdError *struct {
 		PrimaryUserId string
-		Description   string
 	}
 	AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError *struct {
 		PrimaryUserId string
