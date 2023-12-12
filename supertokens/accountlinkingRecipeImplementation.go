@@ -91,9 +91,15 @@ func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
 		return &result, nil
 	}
 
+	canCreatePrimaryUser := func(recipeUserId RecipeUserID, userContext UserContext) (CanCreatePrimaryUserResponse, error) {
+		// TODO:..
+		return CanCreatePrimaryUserResponse{}, nil
+	}
+
 	// TODO:...
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
 		GetUser:                  &getUser,
+		CanCreatePrimaryUser:     &canCreatePrimaryUser,
 	}
 }
