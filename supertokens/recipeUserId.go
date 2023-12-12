@@ -1,6 +1,9 @@
 package supertokens
 
-import "errors"
+import (
+	"encoding/json"
+	"errors"
+)
 
 type RecipeUserID struct {
 	recipeUserID string
@@ -15,4 +18,9 @@ func NewRecipeUserID(recipeUserID string) (RecipeUserID, error) {
 
 func (r *RecipeUserID) GetAsString() string {
 	return r.recipeUserID
+}
+
+func (r *RecipeUserID) MarshalJSON() ([]byte, error) {
+	// convert r.recipeUserId to string and return that
+	return json.Marshal(r.recipeUserID)
 }
