@@ -121,3 +121,29 @@ func DeleteUser(userId string) error {
 func GetRequestFromUserContext(userContext UserContext) *http.Request {
 	return getRequestFromUserContext(userContext)
 }
+
+func CanCreatePrimaryUser(recipeUserId RecipeUserID, userContext ...UserContext) (CanCreatePrimaryUserResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return CanCreatePrimaryUserResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.CanCreatePrimaryUser)(recipeUserId, userContext[0])
+}
+
+func CreatePrimaryUser(recipeUserId RecipeUserID, userContext ...UserContext) (CreatePrimaryUserResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return CreatePrimaryUserResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.CreatePrimaryUser)(recipeUserId, userContext[0])
+}
