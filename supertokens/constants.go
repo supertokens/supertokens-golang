@@ -27,7 +27,7 @@ var (
 	cdiSupported = []string{"4.0"}
 )
 
-const DashboardVersion = "0.7"
+const DashboardVersion = "0.8"
 
 const DefaultTenantId string = "public"
 
