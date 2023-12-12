@@ -24,3 +24,19 @@ func (r *RecipeUserID) MarshalJSON() ([]byte, error) {
 	// convert r.recipeUserId to string and return that
 	return json.Marshal(r.recipeUserID)
 }
+
+// add custom unmarshal function
+func (r *RecipeUserID) UnmarshalJSON(data []byte) error {
+
+	// unmarshal to a string
+	var recipeUserID string
+	err := json.Unmarshal(data, &recipeUserID)
+	if err != nil {
+		return err
+	}
+
+	// set r.recipeUserId to the string
+	r.recipeUserID = recipeUserID
+
+	return nil
+}

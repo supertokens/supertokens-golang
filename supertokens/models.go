@@ -17,6 +17,9 @@ package supertokens
 
 import (
 	"net/http"
+	"strings"
+
+	"github.com/nyaruka/phonenumbers"
 )
 
 type NormalisedAppinfo struct {
@@ -85,10 +88,41 @@ const (
 
 type LoginMethods struct {
 	RecipeLevelUser
-	Verified                bool                              `json:"verified"`
-	HasSameEmailAs          func(email string) bool           `json:"-"`
-	HasSamePhoneNumberAs    func(phoneNumber string) bool     `json:"-"`
-	HasSameThirdPartyInfoAs func(thirdParty *ThirdParty) bool `json:"-"`
+	Verified bool `json:"verified"`
+}
+
+func (r *LoginMethods) HasSameEmailAs(email *string) bool {
+	if email == nil {
+		return false
+	}
+	trimmedEmail := strings.ToLower(strings.TrimSpace(*email))
+	return r.Email != nil && *r.Email == trimmedEmail
+}
+
+func (r *LoginMethods) HasSamePhoneNumberAs(phoneNumber *string) bool {
+	if phoneNumber == nil {
+		return false
+	}
+	trimmedPhoneNumber := strings.TrimSpace(*phoneNumber)
+	parsedPhoneNumber, err := phonenumbers.Parse(trimmedPhoneNumber, "")
+	formattedPhoneNumber := strings.TrimSpace(trimmedPhoneNumber)
+
+	if err == nil {
+		// we do not have an else statement cause in that case, we just want to trim,
+		// which is already happening above.
+		formattedPhoneNumber = phonenumbers.Format(parsedPhoneNumber, phonenumbers.E164)
+	}
+
+	return r.PhoneNumber != nil && *r.PhoneNumber == formattedPhoneNumber
+}
+
+func (r *LoginMethods) HasSameThirdPartyInfoAs(thirdParty *ThirdParty) bool {
+	if thirdParty == nil {
+		return false
+	}
+	thirdPartyId := strings.TrimSpace(thirdParty.ID)
+	thirdPartyUserID := strings.TrimSpace(thirdParty.UserID)
+	return r.ThirdParty != nil && r.ThirdParty.ID == thirdPartyId && r.ThirdParty.UserID == thirdPartyUserID
 }
 
 type User struct {

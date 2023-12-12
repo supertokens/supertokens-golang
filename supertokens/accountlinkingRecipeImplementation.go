@@ -55,8 +55,6 @@ func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
 
 		err = json.Unmarshal(temporaryVariable, &result)
 
-		// TODO: add helper functions to the user object.
-
 		if err != nil {
 			return UserPaginationResult{}, err
 		}
