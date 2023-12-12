@@ -31,6 +31,10 @@ func Init(config TypeInput) error {
 	return nil
 }
 
+func InitAccountLinking(config *AccountLinkingTypeInput) Recipe {
+	return accountLinkingRecipeInit(config)
+}
+
 func Middleware(theirHandler http.Handler) http.Handler {
 	instance, err := GetInstanceOrThrowError()
 	if err != nil {
