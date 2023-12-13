@@ -50,7 +50,10 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 		response, err := querier.SendPostRequest(tenantId+"/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
-			"email":            map[string]interface{}{"id": email},
+			"email": map[string]interface{}{
+				"id":         email,
+				"isVerified": false, // TODO: properly implement this
+			},
 		}, userContext)
 		if err != nil {
 			return tpmodels.SignInUpResponse{}, err
@@ -78,7 +81,10 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 		response, err := querier.SendPostRequest(tenantId+"/recipe/signinup", map[string]interface{}{
 			"thirdPartyId":     thirdPartyID,
 			"thirdPartyUserId": thirdPartyUserID,
-			"email":            map[string]interface{}{"id": email},
+			"email": map[string]interface{}{
+				"id":         email,
+				"isVerified": false, // TODO: properly implement this
+			},
 		}, userContext)
 		if err != nil {
 			return tpmodels.ManuallyCreateOrUpdateUserResponse{}, err

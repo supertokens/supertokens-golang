@@ -84,12 +84,28 @@ func parseUser(value interface{}) (*tpmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	var user tpmodels.User
-	err = json.Unmarshal(respJSON, &user)
+	var supertokensUser supertokens.User
+	err = json.Unmarshal(respJSON, &supertokensUser)
+
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+
+	tpUser := tpmodels.User{
+		ID:         supertokensUser.ID,
+		Email:      supertokensUser.Emails[0],
+		TimeJoined: supertokensUser.TimeJoined,
+		TenantIds:  supertokensUser.TenantIDs,
+		ThirdParty: struct {
+			ID     string `json:"id"`
+			UserID string `json:"userId"`
+		}{
+			ID:     supertokensUser.ThirdParty[0].ID,
+			UserID: supertokensUser.ThirdParty[0].UserID,
+		},
+	}
+
+	return &tpUser, nil
 }
 
 func parseUsers(value interface{}) ([]tpmodels.User, error) {

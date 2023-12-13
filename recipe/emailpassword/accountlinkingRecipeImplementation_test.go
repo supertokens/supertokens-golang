@@ -20,6 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -646,6 +648,14 @@ func TestMakePrimaryFailCauseAlreadyLinkedToAnotherAccount(t *testing.T) {
 		return
 	}
 
+	canCreatePrimaryUserResponse, err := supertokens.CanCreatePrimaryUser(user2.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Nil(t, canCreatePrimaryUserResponse.OK)
+	assert.Equal(t, canCreatePrimaryUserResponse.RecipeUserIdAlreadyLinkedWithPrimaryUserIdError.PrimaryUserId, user1.ID)
+
 	createPrimaryUserResponse, err := supertokens.CreatePrimaryUser(user2.LoginMethods[0].RecipeUserID)
 	if err != nil {
 		t.Error(err)
@@ -653,6 +663,83 @@ func TestMakePrimaryFailCauseAlreadyLinkedToAnotherAccount(t *testing.T) {
 	}
 	assert.Nil(t, createPrimaryUserResponse.OK)
 	assert.Equal(t, createPrimaryUserResponse.RecipeUserIdAlreadyLinkedWithPrimaryUserIdError.PrimaryUserId, user1.ID)
+}
+
+func TestMakePrimaryFailCauseAccountInfoAlreadyAssociatedWithAnotherPrimaryUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, epuser1.IsPrimaryUser)
+
+	tpuser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tpUser1 := convertTpUserToSuperTokensUser(tpuser.OK.User)
+
+	_, err = supertokens.CreatePrimaryUser(tpUser1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	canCreatePrimaryUserResult, err := supertokens.CanCreatePrimaryUser(epuser1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Nil(t, canCreatePrimaryUserResult.OK)
+	assert.Equal(t, canCreatePrimaryUserResult.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError.PrimaryUserId, tpUser1.ID)
+
+	createPrimaryUserResponse, err := supertokens.CreatePrimaryUser(epuser1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Nil(t, createPrimaryUserResponse.OK)
+	assert.Equal(t, createPrimaryUserResponse.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError.PrimaryUserId, tpUser1.ID)
 }
 
 // TODO: remove this function
@@ -680,6 +767,48 @@ func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 						RecipeID: supertokens.EmailPasswordRID,
 						AccountInfo: supertokens.AccountInfo{
 							Email: &epuser.Email,
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
+// TODO: remove this function
+func convertTpUserToSuperTokensUser(tpuser tpmodels.User) supertokens.User {
+	rUId, err := supertokens.NewRecipeUserID(tpuser.ID)
+	if err != nil {
+		panic(err.Error())
+	}
+	return supertokens.User{
+		ID:            tpuser.ID,
+		TimeJoined:    tpuser.TimeJoined,
+		IsPrimaryUser: false,
+		TenantIDs:     tpuser.TenantIds,
+		Emails:        []string{tpuser.Email},
+		PhoneNumbers:  []string{},
+		ThirdParty: []supertokens.ThirdParty{
+			{
+				ID:     tpuser.ThirdParty.ID,
+				UserID: tpuser.ThirdParty.UserID,
+			},
+		},
+		LoginMethods: []supertokens.LoginMethods{
+			{
+				Verified: false,
+				RecipeLevelUser: supertokens.RecipeLevelUser{
+					TenantIDs:    tpuser.TenantIds,
+					TimeJoined:   tpuser.TimeJoined,
+					RecipeUserID: rUId,
+					AccountInfoWithRecipeID: supertokens.AccountInfoWithRecipeID{
+						RecipeID: supertokens.EmailPasswordRID,
+						AccountInfo: supertokens.AccountInfo{
+							Email: &tpuser.Email,
+							ThirdParty: &supertokens.ThirdParty{
+								ID:     tpuser.ThirdParty.ID,
+								UserID: tpuser.ThirdParty.UserID,
+							},
 						},
 					},
 				},
