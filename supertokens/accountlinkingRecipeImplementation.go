@@ -323,6 +323,20 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		}
 	}
 
+	unlinkAccounts := func(recipeUserId RecipeUserID, userContext UserContext) (UnlinkAccountsResponse, error) {
+		requestBody := map[string]interface{}{
+			"recipeUserId": recipeUserId.GetAsString(),
+		}
+		resp, err := querier.SendPostRequest("/recipe/accountlinking/user/unlink", requestBody, userContext)
+		if err != nil {
+			return UnlinkAccountsResponse{}, err
+		}
+		return UnlinkAccountsResponse{
+			WasRecipeUserDeleted: resp["wasRecipeUserDeleted"].(bool),
+			WasLinked:            resp["wasLinked"].(bool),
+		}, nil
+	}
+
 	// TODO:...
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
@@ -331,5 +345,6 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		CreatePrimaryUser:        &createPrimaryUser,
 		LinkAccounts:             &linkAccounts,
 		CanLinkAccounts:          &canLinkAccounts,
+		UnlinkAccounts:           &unlinkAccounts,
 	}
 }
