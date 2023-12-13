@@ -496,6 +496,106 @@ func TestMakePrimaryUserSuccess(t *testing.T) {
 	assert.Equal(t, *refetchedUser, response.OK.User)
 }
 
+func TestMakePrimaryUserSuccessAlreadyPrimaryUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+
+	assert.False(t, user1.IsPrimaryUser)
+
+	response, err := supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.True(t, response.OK.User.IsPrimaryUser)
+	assert.False(t, response.OK.WasAlreadyAPrimaryUser)
+
+	response2, err := supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.True(t, response2.OK.User.IsPrimaryUser)
+	assert.True(t, response2.OK.WasAlreadyAPrimaryUser)
+	assert.Equal(t, response2.OK.User.ID, response.OK.User.ID)
+}
+
+func TestCanMakePrimaryUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+
+	assert.False(t, user1.IsPrimaryUser)
+
+	response, err := supertokens.CanCreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.False(t, response.OK.WasAlreadyAPrimaryUser)
+
+	_, err = supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	response, err = supertokens.CanCreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	assert.True(t, response.OK.WasAlreadyAPrimaryUser)
+}
+
 // TODO: remove this function
 func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 	rUId, err := supertokens.NewRecipeUserID(epuser.ID)
