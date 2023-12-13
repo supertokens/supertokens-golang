@@ -101,6 +101,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		getEmailForUserIdFuncsFromOtherRecipes = append(getEmailForUserIdFuncsFromOtherRecipes, function)
 	}
 
+	assignToSuperTokensPackage(r)
+
 	return *r, nil
 }
 
@@ -211,4 +213,60 @@ func ResetForTest() {
 		EmailVerifyURLWithToken string
 		UserContext             supertokens.UserContext
 	}{}
+}
+
+func assignToSuperTokensPackage(r *Recipe) {
+	// This is there so that the supertokens package can use the email verification
+	// recipe since account linking requires it. We cannot directly use the recipe from there
+	// cause of cyclic dependencies.
+	supertokens.InternalUseEmailVerificationRecipeProxyInstance = &supertokens.InternalUseEmailVerificationRecipeProxy{
+		CreateEmailVerificationToken: func(userID supertokens.RecipeUserID, email, tenantId string, userContext supertokens.UserContext) (supertokens.InternalUseCreateEmailVerificationTokenResponse, error) {
+			resp, err := (*r.RecipeImpl.CreateEmailVerificationToken)(userID.GetAsString(), email, tenantId, userContext)
+			if err != nil {
+				return supertokens.InternalUseCreateEmailVerificationTokenResponse{}, err
+			}
+			return supertokens.InternalUseCreateEmailVerificationTokenResponse{
+				OK:                        resp.OK,
+				EmailAlreadyVerifiedError: resp.EmailAlreadyVerifiedError,
+			}, nil
+		},
+		VerifyEmailUsingToken: func(token, tenantId string, attemptAccountLinking bool, userContext supertokens.UserContext) (supertokens.InternalUseVerifyEmailUsingTokenResponse, error) {
+			resp, err := (*r.RecipeImpl.VerifyEmailUsingToken)(token, tenantId, userContext)
+			if err != nil {
+				return supertokens.InternalUseVerifyEmailUsingTokenResponse{}, err
+			}
+			return supertokens.InternalUseVerifyEmailUsingTokenResponse{
+				OK: &struct {
+					User supertokens.InternalUseEmailVerificationUser
+				}{
+					User: supertokens.InternalUseEmailVerificationUser{
+						ID:    resp.OK.User.ID,
+						Email: resp.OK.User.Email,
+					},
+				},
+				EmailVerificationInvalidTokenError: resp.EmailVerificationInvalidTokenError,
+			}, nil
+		},
+		IsEmailVerified: func(userID, email string, userContext supertokens.UserContext) (bool, error) {
+			return (*r.RecipeImpl.IsEmailVerified)(userID, email, userContext)
+		},
+		RevokeEmailVerificationTokens: func(userId, email, tenantId string, userContext supertokens.UserContext) (supertokens.InternalUseRevokeEmailVerificationTokensResponse, error) {
+			resp, err := (*r.RecipeImpl.RevokeEmailVerificationTokens)(userId, email, tenantId, userContext)
+			if err != nil {
+				return supertokens.InternalUseRevokeEmailVerificationTokensResponse{}, err
+			}
+			return supertokens.InternalUseRevokeEmailVerificationTokensResponse{
+				OK: resp.OK,
+			}, nil
+		},
+		UnverifyEmail: func(userId, email string, userContext supertokens.UserContext) (supertokens.InternalUseUnverifyEmailResponse, error) {
+			resp, err := (*r.RecipeImpl.UnverifyEmail)(userId, email, userContext)
+			if err != nil {
+				return supertokens.InternalUseUnverifyEmailResponse{}, err
+			}
+			return supertokens.InternalUseUnverifyEmailResponse{
+				OK: resp.OK,
+			}, nil
+		},
+	}
 }

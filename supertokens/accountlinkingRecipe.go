@@ -87,3 +87,64 @@ func (r *AccountLinkingRecipe) getAllCORSHeaders() []string {
 func (r *AccountLinkingRecipe) handleError(err error, req *http.Request, res http.ResponseWriter, userContext UserContext) (bool, error) {
 	return false, nil
 }
+
+func verifyEmailForRecipeUserIfLinkedAccountsAreVerified(user User, recipeUserId RecipeUserID, userContext UserContext) error {
+	if InternalUseEmailVerificationRecipeProxyInstance == nil {
+		// if email verification recipe is not initialised, then no op
+		return nil
+	}
+
+	// This is just a helper function cause it's called in many places
+	// like during sign up, sign in and post linking accounts.
+	// This is not exposed to the developer as it's called in the relevant
+	// recipe functions.
+	// We do not do this in the core cause email verification is a different
+	// recipe.
+	// Finally, we only mark the email of this recipe user as verified and not
+	// the other recipe users in the primary user (if this user's email is verified),
+	// cause when those other users sign in, this function will be called for them anyway.
+
+	if user.IsPrimaryUser {
+		var recipeUserEmail *string = nil
+		isAlreadyVerified := false
+		for _, method := range user.LoginMethods {
+			if method.RecipeUserID.GetAsString() == recipeUserId.GetAsString() {
+				recipeUserEmail = method.Email
+				isAlreadyVerified = method.Verified
+			}
+		}
+
+		if recipeUserEmail != nil {
+			if isAlreadyVerified {
+				return nil
+			}
+
+			shouldVerifyEmail := false
+			for _, method := range user.LoginMethods {
+				if method.HasSameEmailAs(recipeUserEmail) && method.Verified {
+					shouldVerifyEmail = true
+				}
+			}
+
+			if shouldVerifyEmail {
+				// While the token we create here is tenant specific, the verification status is not
+				// So we can use any tenantId the user is associated with here as long as we use the
+				// same in the verifyEmailUsingToken call
+				token, err := InternalUseEmailVerificationRecipeProxyInstance.CreateEmailVerificationToken(recipeUserId, *recipeUserEmail, user.TenantIDs[0], userContext)
+				if err != nil {
+					return err
+				}
+				if token.OK != nil {
+					// we purposely pass in false below cause we don't want account
+					// linking to happen
+					_, err := InternalUseEmailVerificationRecipeProxyInstance.VerifyEmailUsingToken(token.OK.Token, user.TenantIDs[0], false, userContext)
+					if err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
+	return nil
+}

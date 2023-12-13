@@ -214,7 +214,7 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 				},
 			}
 
-			// TODO: call verifyEmailForRecipeUserIfLinkedAccountsAreVerified
+			verifyEmailForRecipeUserIfLinkedAccountsAreVerified(user, recipeUserId, userContext)
 
 			updatedUser, err := GetUser(user.ID, userContext)
 			if err != nil {

@@ -164,7 +164,7 @@ func (r *Recipe) SetStaticThirdPartyProviders(providers []tpmodels.ProviderInput
 // the supertokens Init can create an instance of the multitenancy recipe automatically
 // if the user has not explicitly created one.
 func init() {
-	supertokens.DefaultMultitenancyRecipe = recipeInit(nil)
+	supertokens.InternalUseDefaultMultitenancyRecipe = recipeInit(nil)
 
 	// Create multitenancy claims when the module is imported
 	multitenancyclaims.AllowedDomainsClaim, multitenancyclaims.AllowedDomainsClaimValidators = NewAllowedDomainsClaim()
