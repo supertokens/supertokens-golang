@@ -147,3 +147,16 @@ func CreatePrimaryUser(recipeUserId RecipeUserID, userContext ...UserContext) (C
 
 	return (*accountLinkingInstance.RecipeImpl.CreatePrimaryUser)(recipeUserId, userContext[0])
 }
+
+func LinkAccounts(recipeUserId RecipeUserID, primaryUserId string, userContext ...UserContext) (LinkAccountResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return LinkAccountResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.LinkAccounts)(recipeUserId, primaryUserId, userContext[0])
+}

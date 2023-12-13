@@ -39,7 +39,7 @@ func makeAccountLinkingRecipe(recipeId string, appInfo NormalisedAppinfo, config
 	if err != nil {
 		return AccountLinkingRecipe{}, err
 	}
-	recipeImplementation := makeRecipeImplementation(*querierInstance)
+	recipeImplementation := makeRecipeImplementation(*querierInstance, verifiedConfig)
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 
 	recipeModuleInstance := MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)

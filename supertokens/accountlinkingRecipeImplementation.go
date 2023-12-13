@@ -17,11 +17,12 @@ package supertokens
 
 import (
 	"encoding/json"
+	"errors"
 	"strconv"
 	"strings"
 )
 
-func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
+func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalisedInput) AccountLinkingRecipeInterface {
 
 	getUsers := func(tenantID string, timeJoinedOrder string, paginationToken *string, limit *int, includeRecipeIds *[]string, searchParams map[string]string, userContext UserContext) (UserPaginationResult, error) {
 		requestBody := map[string]string{}
@@ -182,11 +183,108 @@ func makeRecipeImplementation(querier Querier) AccountLinkingRecipeInterface {
 		}
 	}
 
+	linkAccounts := func(recipeUserId RecipeUserID, primaryUserId string, userContext UserContext) (LinkAccountResponse, error) {
+		requestBody := map[string]interface{}{
+			"recipeUserId":  recipeUserId.GetAsString(),
+			"primaryUserId": primaryUserId,
+		}
+		resp, err := querier.SendPostRequest("/recipe/accountlinking/user/link", requestBody, userContext)
+
+		if err != nil {
+			return LinkAccountResponse{}, err
+		}
+
+		if resp["status"].(string) == "OK" {
+			var user = User{}
+			temporaryVariable, err := json.Marshal(resp["user"])
+			if err != nil {
+				return LinkAccountResponse{}, err
+			}
+			err = json.Unmarshal(temporaryVariable, &user)
+			if err != nil {
+				return LinkAccountResponse{}, err
+			}
+			response := LinkAccountResponse{
+				OK: &struct {
+					AccountsAlreadyLinked bool
+					User                  User
+				}{
+					AccountsAlreadyLinked: resp["accountsAlreadyLinked"].(bool),
+					User:                  user,
+				},
+			}
+
+			// TODO: call verifyEmailForRecipeUserIfLinkedAccountsAreVerified
+
+			updatedUser, err := GetUser(user.ID, userContext)
+			if err != nil {
+				return LinkAccountResponse{}, err
+			}
+			if updatedUser == nil {
+				return LinkAccountResponse{}, errors.New("this should never be thrown")
+			}
+			response.OK.User = *updatedUser
+			var loginMethod *LoginMethods = nil
+			for _, method := range response.OK.User.LoginMethods {
+				if method.RecipeUserID.GetAsString() == recipeUserId.GetAsString() {
+					loginMethod = &method
+					break
+				}
+			}
+
+			if loginMethod == nil {
+				return LinkAccountResponse{}, errors.New("this should never be thrown")
+			}
+
+			err = config.OnAccountLinked(response.OK.User, loginMethod.RecipeLevelUser, userContext)
+			if err != nil {
+				return LinkAccountResponse{}, err
+			}
+
+			return response, nil
+		} else if resp["status"].(string) == "RECIPE_USER_ID_ALREADY_LINKED_WITH_ANOTHER_PRIMARY_USER_ID_ERROR" {
+			var user = User{}
+			temporaryVariable, err := json.Marshal(resp["user"])
+			if err != nil {
+				return LinkAccountResponse{}, err
+			}
+			err = json.Unmarshal(temporaryVariable, &user)
+			if err != nil {
+				return LinkAccountResponse{}, err
+			}
+
+			return LinkAccountResponse{
+				RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					User          User
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					User:          user,
+				},
+			}, nil
+		} else if resp["status"].(string) == "ACCOUNT_INFO_ALREADY_ASSOCIATED_WITH_ANOTHER_PRIMARY_USER_ID_ERROR" {
+			return LinkAccountResponse{
+				AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					Description   string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					Description:   resp["description"].(string),
+				},
+			}, nil
+		} else {
+			return LinkAccountResponse{
+				InputUserIsNotAPrimaryUserError: &struct{}{},
+			}, nil
+		}
+	}
+
 	// TODO:...
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
 		GetUser:                  &getUser,
 		CanCreatePrimaryUser:     &canCreatePrimaryUser,
 		CreatePrimaryUser:        &createPrimaryUser,
+		LinkAccounts:             &linkAccounts,
 	}
 }

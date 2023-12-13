@@ -596,6 +596,65 @@ func TestCanMakePrimaryUser(t *testing.T) {
 	assert.True(t, response.OK.WasAlreadyAPrimaryUser)
 }
 
+func TestMakePrimaryFailCauseAlreadyLinkedToAnotherAccount(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+
+	epuser2, err := SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
+
+	assert.False(t, user2.IsPrimaryUser)
+
+	_, err = supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	createPrimaryUserResponse, err := supertokens.CreatePrimaryUser(user2.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Nil(t, createPrimaryUserResponse.OK)
+	assert.Equal(t, createPrimaryUserResponse.RecipeUserIdAlreadyLinkedWithPrimaryUserIdError.PrimaryUserId, user1.ID)
+}
+
 // TODO: remove this function
 func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 	rUId, err := supertokens.NewRecipeUserID(epuser.ID)
