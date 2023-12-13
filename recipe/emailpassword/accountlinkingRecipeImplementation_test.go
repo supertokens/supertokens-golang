@@ -20,6 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -740,6 +741,90 @@ func TestMakePrimaryFailCauseAccountInfoAlreadyAssociatedWithAnotherPrimaryUser(
 	}
 	assert.Nil(t, createPrimaryUserResponse.OK)
 	assert.Equal(t, createPrimaryUserResponse.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError.PrimaryUserId, tpUser1.ID)
+}
+
+func TestLinkAccountsSuccess(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	var primaryUserInCallback supertokens.User
+	var newAccountInfoInCallback supertokens.RecipeLevelUser
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			supertokens.InitAccountLinking(&supertokens.AccountLinkingTypeInput{
+				OnAccountLinked: func(user supertokens.User, newAccountUser supertokens.RecipeLevelUser, userContext supertokens.UserContext) error {
+					primaryUserInCallback = user
+					newAccountInfoInCallback = newAccountUser
+					return nil
+				},
+			}),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	epuser2, err := SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
+	assert.False(t, user2.IsPrimaryUser)
+
+	// we create a new session to check that the session has not been revoked
+	// when we link accounts, cause these users are already linked.
+	session.CreateNewSessionWithoutRequestResponse("public", user2.ID, nil, nil, nil)
+	sessions, err := session.GetAllSessionHandlesForUser(user2.ID, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, sessions, 1)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	linkedUser, err := supertokens.GetUser(user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Equal(t, *linkedUser, primaryUserInCallback)
+	assert.Equal(t, *linkedUser, linkAccountResponse.OK.User)
+
+	assert.Equal(t, newAccountInfoInCallback.RecipeID, supertokens.EmailPasswordRID)
+	assert.Equal(t, *newAccountInfoInCallback.Email, "test2@gmail.com")
+	sessions, err = session.GetAllSessionHandlesForUser(user2.LoginMethods[0].RecipeUserID.GetAsString(), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, sessions, 0)
 }
 
 // TODO: remove this function
