@@ -160,3 +160,16 @@ func LinkAccounts(recipeUserId RecipeUserID, primaryUserId string, userContext .
 
 	return (*accountLinkingInstance.RecipeImpl.LinkAccounts)(recipeUserId, primaryUserId, userContext[0])
 }
+
+func CanLinkAccounts(recipeUserId RecipeUserID, primaryUserId string, userContext ...UserContext) (CanLinkAccountResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return CanLinkAccountResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.CanLinkAccounts)(recipeUserId, primaryUserId, userContext[0])
+}

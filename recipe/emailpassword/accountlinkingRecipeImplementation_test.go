@@ -802,6 +802,15 @@ func TestLinkAccountsSuccess(t *testing.T) {
 	}
 	assert.Len(t, sessions, 1)
 
+	{
+		linkAccountResponse, err := supertokens.CanLinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+	}
+
 	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
 	if err != nil {
 		t.Error(err)
@@ -874,6 +883,15 @@ func TestLinkAccountsSuccessAlreadyLinked(t *testing.T) {
 		return
 	}
 	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	{
+		canLinkAccountResponse, err := supertokens.CanLinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		assert.True(t, canLinkAccountResponse.OK.AccountsAlreadyLinked)
+	}
 
 	linkAccountResponse, err = supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
 	if err != nil {
@@ -950,6 +968,17 @@ func TestLinkAccountsFailureAlreadyLinkedWithAnotherPrimaryUser(t *testing.T) {
 	assert.False(t, user3.IsPrimaryUser)
 	supertokens.CreatePrimaryUser(user3.LoginMethods[0].RecipeUserID)
 
+	{
+		canLinkAccountResponse, err := supertokens.CanLinkAccounts(user2.LoginMethods[0].RecipeUserID, user3.ID)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		assert.Nil(t, canLinkAccountResponse.OK)
+		assert.NotNil(t, canLinkAccountResponse.RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError)
+		assert.Equal(t, canLinkAccountResponse.RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError.PrimaryUserId, user1.ID)
+	}
+
 	linkAccountResponse, err = supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user3.ID)
 	if err != nil {
 		t.Error(err)
@@ -1001,6 +1030,16 @@ func TestLinkAccountsFailureInputUserIdNotAPrimaryUser(t *testing.T) {
 
 	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
 	assert.False(t, user2.IsPrimaryUser)
+
+	{
+		linkAccountResponse, err := supertokens.CanLinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		assert.Nil(t, linkAccountResponse.OK)
+		assert.NotNil(t, linkAccountResponse.InputUserIsNotAPrimaryUserError)
+	}
 
 	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
 	if err != nil {
@@ -1074,6 +1113,16 @@ func TestLinkAccountFailureAccountInfoAlreadyAssociatedWithAnotherPrimaryUser(t 
 
 	epuser2 := convertEpUserToSuperTokensUser(epuser.OK.User)
 	supertokens.CreatePrimaryUser(epuser2.LoginMethods[0].RecipeUserID)
+
+	{
+		linkAccountResponse, err := supertokens.CanLinkAccounts(tpUser1.LoginMethods[0].RecipeUserID, epuser2.ID)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+		assert.NotNil(t, linkAccountResponse.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError)
+		assert.Equal(t, linkAccountResponse.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError.PrimaryUserId, epuser1.ID)
+	}
 
 	linkAccountResponse, err := supertokens.LinkAccounts(tpUser1.LoginMethods[0].RecipeUserID, epuser2.ID)
 	if err != nil {

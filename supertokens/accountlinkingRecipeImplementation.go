@@ -279,6 +279,50 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		}
 	}
 
+	canLinkAccounts := func(recipeUserId RecipeUserID, primaryUserId string, userContext UserContext) (CanLinkAccountResponse, error) {
+		requestBody := map[string]string{
+			"recipeUserId":  recipeUserId.GetAsString(),
+			"primaryUserId": primaryUserId,
+		}
+		resp, err := querier.SendGetRequest("/recipe/accountlinking/user/link/check", requestBody, userContext)
+
+		if err != nil {
+			return CanLinkAccountResponse{}, err
+		}
+
+		if resp["status"].(string) == "OK" {
+			return CanLinkAccountResponse{
+				OK: &struct{ AccountsAlreadyLinked bool }{
+					AccountsAlreadyLinked: resp["accountsAlreadyLinked"].(bool),
+				},
+			}, nil
+		} else if resp["status"].(string) == "RECIPE_USER_ID_ALREADY_LINKED_WITH_ANOTHER_PRIMARY_USER_ID_ERROR" {
+			return CanLinkAccountResponse{
+				RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					Description   string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					Description:   resp["description"].(string),
+				},
+			}, nil
+		} else if resp["status"].(string) == "ACCOUNT_INFO_ALREADY_ASSOCIATED_WITH_ANOTHER_PRIMARY_USER_ID_ERROR" {
+			return CanLinkAccountResponse{
+				AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError: &struct {
+					PrimaryUserId string
+					Description   string
+				}{
+					PrimaryUserId: resp["primaryUserId"].(string),
+					Description:   resp["description"].(string),
+				},
+			}, nil
+		} else {
+			return CanLinkAccountResponse{
+				InputUserIsNotAPrimaryUserError: &struct{}{},
+			}, nil
+		}
+	}
+
 	// TODO:...
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
@@ -286,5 +330,6 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		CanCreatePrimaryUser:     &canCreatePrimaryUser,
 		CreatePrimaryUser:        &createPrimaryUser,
 		LinkAccounts:             &linkAccounts,
+		CanLinkAccounts:          &canLinkAccounts,
 	}
 }
