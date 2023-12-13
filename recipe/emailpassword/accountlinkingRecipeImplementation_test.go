@@ -827,6 +827,264 @@ func TestLinkAccountsSuccess(t *testing.T) {
 	assert.Len(t, sessions, 0)
 }
 
+func TestLinkAccountsSuccessAlreadyLinked(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			supertokens.InitAccountLinking(&supertokens.AccountLinkingTypeInput{}),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	epuser2, err := SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
+	assert.False(t, user2.IsPrimaryUser)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	linkAccountResponse, err = supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.True(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+}
+
+func TestLinkAccountsFailureAlreadyLinkedWithAnotherPrimaryUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	callbackCalled := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			supertokens.InitAccountLinking(&supertokens.AccountLinkingTypeInput{
+				OnAccountLinked: func(user supertokens.User, newAccountUser supertokens.RecipeLevelUser, userContext supertokens.UserContext) error {
+					callbackCalled = true
+					return nil
+				},
+			}),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	epuser2, err := SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
+	assert.False(t, user2.IsPrimaryUser)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+	assert.True(t, callbackCalled)
+
+	callbackCalled = false
+
+	epuser3, err := SignUp("public", "test3@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user3 := convertEpUserToSuperTokensUser(epuser3.OK.User)
+	assert.False(t, user3.IsPrimaryUser)
+	supertokens.CreatePrimaryUser(user3.LoginMethods[0].RecipeUserID)
+
+	linkAccountResponse, err = supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user3.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Nil(t, linkAccountResponse.OK)
+	assert.NotNil(t, linkAccountResponse.RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError)
+	assert.Equal(t, linkAccountResponse.RecipeUserIdAlreadyLinkedWithAnotherPrimaryUserIdError.PrimaryUserId, user1.ID)
+
+	assert.False(t, callbackCalled)
+}
+
+func TestLinkAccountsFailureInputUserIdNotAPrimaryUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			supertokens.InitAccountLinking(nil),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+
+	epuser2, err := SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
+	assert.False(t, user2.IsPrimaryUser)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Nil(t, linkAccountResponse.OK)
+	assert.NotNil(t, linkAccountResponse.InputUserIsNotAPrimaryUserError)
+}
+
+func TestLinkAccountFailureAccountInfoAlreadyAssociatedWithAnotherPrimaryUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, epuser1.IsPrimaryUser)
+	supertokens.CreatePrimaryUser(epuser1.LoginMethods[0].RecipeUserID)
+
+	tpuser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	tpUser1 := convertTpUserToSuperTokensUser(tpuser.OK.User)
+
+	epuser, err = SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser2 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	supertokens.CreatePrimaryUser(epuser2.LoginMethods[0].RecipeUserID)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(tpUser1.LoginMethods[0].RecipeUserID, epuser2.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.NotNil(t, linkAccountResponse.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError)
+	assert.Equal(t, linkAccountResponse.AccountInfoAlreadyAssociatedWithAnotherPrimaryUserIdError.PrimaryUserId, epuser1.ID)
+
+}
+
 // TODO: remove this function
 func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 	rUId, err := supertokens.NewRecipeUserID(epuser.ID)
