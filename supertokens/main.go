@@ -114,8 +114,17 @@ func GetUser(userId string, userContext ...UserContext) (*User, error) {
 	return (*accountLinkingInstance.RecipeImpl.GetUser)(userId, userContext[0])
 }
 
-func DeleteUser(userId string) error {
-	return deleteUser(userId)
+func DeleteUser(userId string, removeAllLinkedAccounts bool, userContext ...UserContext) error {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.DeleteUser)(userId, removeAllLinkedAccounts, userContext[0])
 }
 
 func GetRequestFromUserContext(userContext UserContext) *http.Request {

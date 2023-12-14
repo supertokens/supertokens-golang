@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.18.0] - TODO
+
+### Added
+- Account linking feature
+
+### Breaking changes
+- The SDK now supports CDI 4.0 and removed support for older CDIs.
+- `supertokens.DeleteUser` function now takes an extra boolean called `removeAllLinkedAccounts`. You can pass in `true` here for most cases.
+- Added `supertokens.GetUser` function which can be used instead of recipe level getUser functions.
+- Output type of `supertokens.GetUsersNewestFirst` and `supertokens.GetUsersOldestFirst` now return `supertokens.User` object instead of a generic string to interface{} map.
+- Third party sign in up recipe function now also marks email as verified directly via a core call instead of relying on the email verification recipe.
+
 ## [0.17.3] - 2023-12-12
 
 - CI/CD changes

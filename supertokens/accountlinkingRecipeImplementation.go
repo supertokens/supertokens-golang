@@ -337,6 +337,15 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		}, nil
 	}
 
+	deleteUser := func(userId string, removeAllLinkedAccounts bool, userContext UserContext) error {
+		requestBody := map[string]interface{}{
+			"userId":                  userId,
+			"removeAllLinkedAccounts": removeAllLinkedAccounts,
+		}
+		_, err := querier.SendPostRequest("/user/remove", requestBody, userContext)
+		return err
+	}
+
 	// TODO:...
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
@@ -346,5 +355,6 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		LinkAccounts:             &linkAccounts,
 		CanLinkAccounts:          &canLinkAccounts,
 		UnlinkAccounts:           &unlinkAccounts,
+		DeleteUser:               &deleteUser,
 	}
 }

@@ -349,32 +349,6 @@ func getUserCount(includeRecipeIds *[]string, tenantId string, includeAllTenants
 	return resp["count"].(float64), nil
 }
 
-func deleteUser(userId string) error {
-	querier, err := GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		return err
-	}
-
-	cdiVersion, err := querier.GetQuerierAPIVersion()
-	if err != nil {
-		return err
-	}
-
-	if MaxVersion(cdiVersion, "2.10") == cdiVersion {
-		_, err = querier.SendPostRequest("/user/remove", map[string]interface{}{
-			"userId": userId,
-		}, nil)
-
-		if err != nil {
-			return err
-		}
-
-		return nil
-	} else {
-		return errors.New("please upgrade the SuperTokens core to >= 3.7.0")
-	}
-}
-
 func ResetForTest() {
 	ResetQuerierForTest()
 	superTokensInstance = nil
