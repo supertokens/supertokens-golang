@@ -1134,6 +1134,94 @@ func TestLinkAccountFailureAccountInfoAlreadyAssociatedWithAnotherPrimaryUser(t 
 
 }
 
+func TestUnLinkAccountsSuccess(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			supertokens.InitAccountLinking(nil),
+		},
+	})
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user1 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	epuser2, err := SignUp("public", "test2@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser2.OK.User)
+	assert.False(t, user2.IsPrimaryUser)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	session.CreateNewSessionWithoutRequestResponse("public", user2.ID, nil, nil, nil)
+	sessions, err := session.GetAllSessionHandlesForUser(user2.ID, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, sessions, 1)
+
+	unlinkResponse, err := supertokens.UnlinkAccounts(user2.LoginMethods[0].RecipeUserID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, unlinkResponse.WasRecipeUserDeleted)
+	assert.True(t, unlinkResponse.WasLinked)
+
+	primaryUser, err := supertokens.GetUser(user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, primaryUser.LoginMethods, 1)
+	assert.True(t, primaryUser.IsPrimaryUser)
+
+	recipeUser, err := supertokens.GetUser(user2.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, recipeUser.LoginMethods, 1)
+	assert.False(t, recipeUser.IsPrimaryUser)
+
+	sessions, err = session.GetAllSessionHandlesForUser(user2.LoginMethods[0].RecipeUserID.GetAsString(), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, sessions, 0)
+}
+
 // TODO: remove this function
 func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 	rUId, err := supertokens.NewRecipeUserID(epuser.ID)
