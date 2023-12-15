@@ -1279,6 +1279,50 @@ func TestUnlinkAccountsWithDeleteUserSuccess(t *testing.T) {
 	assert.True(t, unlinkResponse.WasLinked)
 }
 
+func TestDeleteUser(t *testing.T) {
+	telemetry := false
+	configValue := supertokens.TypeInput{
+		Telemetry: &telemetry,
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	res, err := SignUp("public", "test@example.com", "1234abcd")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	reponseBeforeDeletingUser, err := supertokens.GetUsersOldestFirst("public", nil, nil, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, 1, len(reponseBeforeDeletingUser.Users))
+	err = supertokens.DeleteUser(res.OK.User.ID, true)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	responseAfterDeletingUser, err := supertokens.GetUsersOldestFirst("public", nil, nil, nil, nil)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, 0, len(responseAfterDeletingUser.Users))
+}
+
 // TODO: remove this function
 func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 	rUId, err := supertokens.NewRecipeUserID(epuser.ID)

@@ -37,7 +37,7 @@ func TestCreateUserIdMappingAndDeleteUser(t *testing.T) {
 	assert.NoError(t, err)
 	assert.NotNil(t, createResp.OK)
 
-	err = supertokens.DeleteUser(externalUserId)
+	err = supertokens.DeleteUser(externalUserId, true)
 	assert.NoError(t, err)
 }
 

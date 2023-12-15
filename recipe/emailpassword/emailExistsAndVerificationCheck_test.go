@@ -1854,7 +1854,7 @@ func TestEmailVerifyWithDeletedUser(t *testing.T) {
 
 	userId := response["user"].(map[string]interface{})["id"]
 	cookieData := unittesting.ExtractInfoFromResponse(resp)
-	supertokens.DeleteUser(userId.(string))
+	supertokens.DeleteUser(userId.(string), true)
 
 	resp1, err := unittesting.EmailVerifyTokenRequest(testServer.URL, userId.(string), cookieData["sAccessToken"], cookieData["antiCsrf"])
 
