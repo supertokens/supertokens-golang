@@ -195,3 +195,16 @@ func UnlinkAccounts(recipeUserId RecipeUserID, userContext ...UserContext) (Unli
 
 	return (*accountLinkingInstance.RecipeImpl.UnlinkAccounts)(recipeUserId, userContext[0])
 }
+
+func ListUsersByAccountInfo(tenantID string, accountInfo AccountInfo, doUnionOfAccountInfo bool, userContext ...UserContext) ([]User, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return []User{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.ListUsersByAccountInfo)(tenantID, accountInfo, doUnionOfAccountInfo, userContext[0])
+}

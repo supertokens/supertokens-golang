@@ -346,7 +346,43 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		return err
 	}
 
-	// TODO:...
+	listUserByAccountInfo := func(tenantID string, accountInfo AccountInfo, doUnionOfAccountInfo bool, userContext UserContext) ([]User, error) {
+		requestBody := map[string]string{
+			"doUnionOfAccountInfo": strconv.FormatBool(doUnionOfAccountInfo),
+		}
+
+		if accountInfo.Email != nil {
+			requestBody["email"] = *accountInfo.Email
+		}
+		if accountInfo.PhoneNumber != nil {
+			requestBody["phoneNumber"] = *accountInfo.PhoneNumber
+		}
+		if accountInfo.ThirdParty != nil {
+			requestBody["thirdPartyId"] = accountInfo.ThirdParty.ID
+			requestBody["thirdPartyUserId"] = accountInfo.ThirdParty.UserID
+		}
+
+		resp, err := querier.SendGetRequest(tenantID+"/users/by-accountinfo", requestBody, userContext)
+		if err != nil {
+			return []User{}, err
+		}
+
+		temporaryVariable, err := json.Marshal(resp)
+		if err != nil {
+			return []User{}, err
+		}
+
+		var result = []User{}
+
+		err = json.Unmarshal(temporaryVariable, &result)
+
+		if err != nil {
+			return []User{}, err
+		}
+
+		return result, nil
+	}
+
 	return AccountLinkingRecipeInterface{
 		GetUsersWithSearchParams: &getUsers,
 		GetUser:                  &getUser,
@@ -356,5 +392,6 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 		CanLinkAccounts:          &canLinkAccounts,
 		UnlinkAccounts:           &unlinkAccounts,
 		DeleteUser:               &deleteUser,
+		ListUsersByAccountInfo:   &listUserByAccountInfo,
 	}
 }
