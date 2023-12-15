@@ -22,6 +22,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -135,6 +137,72 @@ func TestGetOldestUsersFirst(t *testing.T) {
 		} else {
 			assert.Fail(t, "pagination token invalid should fail")
 		}
+	}
+}
+
+func TestGetOldestUsersFirstTakesIntoAccountTenantId(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	enabled := true
+
+	multitenancy.CreateOrUpdateTenant("t1", multitenancymodels.TenantConfig{
+		EmailPasswordEnabled: &enabled,
+	})
+
+	user1, err := SignUp("t1", "test@gmail.com", "testPass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	_, err = SignUp("public", "test1@gmail.com", "testPass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	{
+		paginationResult, err := supertokens.GetUsersOldestFirst("t1", nil, nil, nil, nil)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		email := "test@gmail.com"
+		assert.Nil(t, paginationResult.NextPaginationToken)
+		assert.Len(t, paginationResult.Users, 1)
+		assert.True(t, paginationResult.Users[0].LoginMethods[0].HasSameEmailAs(&email))
+		assert.Equal(t, paginationResult.Users[0].ID, user1.OK.User.ID)
+		assert.Equal(t, paginationResult.Users[0].ID, paginationResult.Users[0].LoginMethods[0].RecipeUserID.GetAsString())
+	}
+
+	{
+		paginationResult, err := supertokens.GetUsersOldestFirst("public", nil, nil, nil, nil)
+		if err != nil {
+			t.Error(err)
+			return
+		}
+
+		email := "test1@gmail.com"
+		assert.Nil(t, paginationResult.NextPaginationToken)
+		assert.Len(t, paginationResult.Users, 1)
+		assert.True(t, paginationResult.Users[0].LoginMethods[0].HasSameEmailAs(&email))
 	}
 }
 
@@ -1655,6 +1723,229 @@ func TestLinkAccountDoesNotCauseNewAccountsEmailToBeVerifiedIfSameEmailButPrimar
 		return
 	}
 	assert.False(t, isEmailVerified)
+}
+
+func TestListUsersByAccountInfo(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	tpuser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	email := "test@gmail.com"
+	users, err := supertokens.ListUsersByAccountInfo("public", supertokens.AccountInfo{
+		Email: &email,
+	}, false)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, users, 2)
+
+	assert.Equal(t, users[0].ID, tpuser.OK.User.ID)
+	assert.Equal(t, users[1].ID, epuser.OK.User.ID)
+}
+
+func TestListUsersByAccountInfoWithDoUnion(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	tpuser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test1@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	email := "test@gmail.com"
+	users, err := supertokens.ListUsersByAccountInfo("public", supertokens.AccountInfo{
+		Email: &email,
+		ThirdParty: &supertokens.ThirdParty{
+			ID:     "google",
+			UserID: "abc",
+		},
+	}, false)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, users, 0)
+
+	users, err = supertokens.ListUsersByAccountInfo("public", supertokens.AccountInfo{
+		Email: &email,
+		ThirdParty: &supertokens.ThirdParty{
+			ID:     "google",
+			UserID: "abc",
+		},
+	}, true)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, users, 2)
+
+	assert.Equal(t, users[0].ID, tpuser.OK.User.ID)
+	assert.Equal(t, users[1].ID, epuser.OK.User.ID)
+}
+
+func TestListUsersByAccountInfoTakesIntoAccountTenantId(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	enabled := true
+
+	multitenancy.CreateOrUpdateTenant("t1", multitenancymodels.TenantConfig{
+		ThirdPartyEnabled: &enabled,
+	})
+
+	tpuser, err := thirdparty.ManuallyCreateOrUpdateUser("t1", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	email := "test@gmail.com"
+	users, err := supertokens.ListUsersByAccountInfo("t1", supertokens.AccountInfo{
+		Email: &email,
+	}, false)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.Len(t, users, 1)
+
+	assert.Equal(t, users[0].ID, tpuser.OK.User.ID)
 }
 
 // TODO: remove this function

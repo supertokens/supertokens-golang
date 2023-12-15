@@ -367,7 +367,7 @@ func makeRecipeImplementation(querier Querier, config AccountLinkingTypeNormalis
 			return []User{}, err
 		}
 
-		temporaryVariable, err := json.Marshal(resp)
+		temporaryVariable, err := json.Marshal(resp["users"])
 		if err != nil {
 			return []User{}, err
 		}
