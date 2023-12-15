@@ -20,6 +20,8 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -1321,6 +1323,338 @@ func TestDeleteUser(t *testing.T) {
 		t.Error(err.Error())
 	}
 	assert.Equal(t, 0, len(responseAfterDeletingUser.Users))
+}
+
+func TestLinkAccountCausesNewAccountsEmailToBeVerifiedIfSameEmail(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	tpUser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	user1 := convertTpUserToSuperTokensUser(tpUser.OK.User)
+
+	token, err := emailverification.CreateEmailVerificationToken("public", user1.ID, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = emailverification.VerifyEmailUsingToken("public", token.OK.Token)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	isEmailVerified, err := emailverification.IsEmailVerified(user2.LoginMethods[0].RecipeUserID.GetAsString(), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.True(t, isEmailVerified)
+}
+
+func TestLinkAccountDoesNotCausePrimaryAccountsEmailToBeVerifiedIfSameEmail(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	tpUser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	user1 := convertTpUserToSuperTokensUser(tpUser.OK.User)
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+
+	token, err := emailverification.CreateEmailVerificationToken("public", user2.ID, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = emailverification.VerifyEmailUsingToken("public", token.OK.Token)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	isEmailVerified, err := emailverification.IsEmailVerified(user1.LoginMethods[0].RecipeUserID.GetAsString(), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, isEmailVerified)
+}
+
+func TestLinkAccountDoesNotCauseNewAccountsEmailToBeVerifiedIfDifferentEmail(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	tpUser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test1@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	user1 := convertTpUserToSuperTokensUser(tpUser.OK.User)
+
+	token, err := emailverification.CreateEmailVerificationToken("public", user1.ID, nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	_, err = emailverification.VerifyEmailUsingToken("public", token.OK.Token)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	isEmailVerified, err := emailverification.IsEmailVerified(user2.LoginMethods[0].RecipeUserID.GetAsString(), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, isEmailVerified)
+}
+
+func TestLinkAccountDoesNotCauseNewAccountsEmailToBeVerifiedIfSameEmailButPrimaryIsNotVerified(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			session.Init(nil),
+			Init(nil),
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeRequired,
+			}),
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						{
+							Config: tpmodels.ProviderConfig{
+								ThirdPartyId: "google",
+								Clients: []tpmodels.ProviderClientConfig{
+									{
+										ClientID:     "",
+										ClientSecret: "",
+									},
+								},
+							},
+						},
+					},
+				},
+			}),
+		},
+	})
+
+	tpUser, err := thirdparty.ManuallyCreateOrUpdateUser("public", "google", "abc", "test@gmail.com")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	user1 := convertTpUserToSuperTokensUser(tpUser.OK.User)
+
+	epuser, err := SignUp("public", "test@gmail.com", "pass123")
+	if err != nil {
+		t.Error(err)
+		return
+	}
+
+	user2 := convertEpUserToSuperTokensUser(epuser.OK.User)
+	assert.False(t, user1.IsPrimaryUser)
+
+	supertokens.CreatePrimaryUser(user1.LoginMethods[0].RecipeUserID)
+
+	linkAccountResponse, err := supertokens.LinkAccounts(user2.LoginMethods[0].RecipeUserID, user1.ID)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, linkAccountResponse.OK.AccountsAlreadyLinked)
+
+	isEmailVerified, err := emailverification.IsEmailVerified(user2.LoginMethods[0].RecipeUserID.GetAsString(), nil)
+	if err != nil {
+		t.Error(err)
+		return
+	}
+	assert.False(t, isEmailVerified)
 }
 
 // TODO: remove this function
