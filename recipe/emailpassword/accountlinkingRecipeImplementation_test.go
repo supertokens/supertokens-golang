@@ -1948,6 +1948,26 @@ func TestListUsersByAccountInfoTakesIntoAccountTenantId(t *testing.T) {
 	assert.Equal(t, users[0].ID, tpuser.OK.User.ID)
 }
 
+func TestThatEmailProxyNotSetIfEmailVerificationNotInit(t *testing.T) {
+	telemetry := false
+	supertokens.Init(supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:   "Testing",
+			Origin:    "http://localhost:3000",
+			APIDomain: "http://localhost:3001",
+		},
+		Telemetry: &telemetry,
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	})
+
+	assert.Nil(t, supertokens.InternalUseEmailVerificationRecipeProxyInstance)
+}
+
 // TODO: remove this function
 func convertEpUserToSuperTokensUser(epuser epmodels.User) supertokens.User {
 	rUId, err := supertokens.NewRecipeUserID(epuser.ID)
