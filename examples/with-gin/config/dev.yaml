@@ -1,7 +1,7 @@
 AppInfo:
   AppName: SuperTokens Demo App
   APIDomain: http://localhost:3001
-  WebsiteDomain: http://localhost:8080
+  WebsiteDomain: http://localhost:3000
 
 Server:
   Address: localhost:3001
