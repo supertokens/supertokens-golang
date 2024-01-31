@@ -21,8 +21,8 @@ func Init() {
 
 	// CORS
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowMethods:     []string{"GET", "POST", "DELETE", "PUT", "OPTIONS"},
+		AllowOrigins:     config.GetStringSlice("CORS.AllowOrigins"),
+		AllowMethods:     config.GetStringSlice("CORS.AllowMethods"),
 		AllowHeaders:     append([]string{"content-type"}, supertokens.GetAllCORSHeaders()...),
 		MaxAge:           1 * time.Minute,
 		AllowCredentials: true,
@@ -41,7 +41,7 @@ func Init() {
 	router.GET("/sessioninfo", verifySession(nil), sessioninfo)
 
 	// starting the server
-	err := router.Run(config.GetString("server.apiPort"))
+	err := router.Run(config.GetString("Server.Address"))
 	if err != nil {
 		panic(err.Error())
 	}
