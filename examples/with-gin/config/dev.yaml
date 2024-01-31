@@ -4,7 +4,7 @@ AppInfo:
   WebsiteDomain: http://localhost:8080
 
 Server:
-  Address: localhost:3000
+  Address: localhost:3001
 
 CORS:
   AllowOrigins:
