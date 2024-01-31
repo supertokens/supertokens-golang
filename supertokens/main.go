@@ -31,6 +31,10 @@ func Init(config TypeInput) error {
 	return nil
 }
 
+func InitAccountLinking(config *AccountLinkingTypeInput) Recipe {
+	return accountLinkingRecipeInit(config)
+}
+
 func Middleware(theirHandler http.Handler) http.Handler {
 	instance, err := GetInstanceOrThrowError()
 	if err != nil {
@@ -71,18 +75,136 @@ func GetUserCount(includeRecipeIds *[]string, tenantId *string) (float64, error)
 	return getUserCount(includeRecipeIds, *tenantId, includeAllTenants)
 }
 
-func GetUsersOldestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {
-	return GetUsersWithSearchParams(tenantId, "ASC", paginationToken, limit, includeRecipeIds, query)
+func GetUsersOldestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string, userContext ...UserContext) (UserPaginationResult, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.GetUsersWithSearchParams)(tenantId, "ASC", paginationToken, limit, includeRecipeIds, query, userContext[0])
 }
 
-func GetUsersNewestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string) (UserPaginationResult, error) {
-	return GetUsersWithSearchParams(tenantId, "DESC", paginationToken, limit, includeRecipeIds, query)
+func GetUsersNewestFirst(tenantId string, paginationToken *string, limit *int, includeRecipeIds *[]string, query map[string]string, userContext ...UserContext) (UserPaginationResult, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return UserPaginationResult{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.GetUsersWithSearchParams)(tenantId, "DESC", paginationToken, limit, includeRecipeIds, query, userContext[0])
 }
 
-func DeleteUser(userId string) error {
-	return deleteUser(userId)
+func GetUser(userId string, userContext ...UserContext) (*User, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.GetUser)(userId, userContext[0])
+}
+
+func DeleteUser(userId string, removeAllLinkedAccounts bool, userContext ...UserContext) error {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.DeleteUser)(userId, removeAllLinkedAccounts, userContext[0])
 }
 
 func GetRequestFromUserContext(userContext UserContext) *http.Request {
 	return getRequestFromUserContext(userContext)
+}
+
+func CanCreatePrimaryUser(recipeUserId RecipeUserID, userContext ...UserContext) (CanCreatePrimaryUserResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return CanCreatePrimaryUserResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.CanCreatePrimaryUser)(recipeUserId, userContext[0])
+}
+
+func CreatePrimaryUser(recipeUserId RecipeUserID, userContext ...UserContext) (CreatePrimaryUserResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return CreatePrimaryUserResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.CreatePrimaryUser)(recipeUserId, userContext[0])
+}
+
+func LinkAccounts(recipeUserId RecipeUserID, primaryUserId string, userContext ...UserContext) (LinkAccountResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return LinkAccountResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.LinkAccounts)(recipeUserId, primaryUserId, userContext[0])
+}
+
+func CanLinkAccounts(recipeUserId RecipeUserID, primaryUserId string, userContext ...UserContext) (CanLinkAccountResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return CanLinkAccountResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.CanLinkAccounts)(recipeUserId, primaryUserId, userContext[0])
+}
+
+func UnlinkAccounts(recipeUserId RecipeUserID, userContext ...UserContext) (UnlinkAccountsResponse, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return UnlinkAccountsResponse{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.UnlinkAccounts)(recipeUserId, userContext[0])
+}
+
+func ListUsersByAccountInfo(tenantID string, accountInfo AccountInfo, doUnionOfAccountInfo bool, userContext ...UserContext) ([]User, error) {
+	accountLinkingInstance, err := getAccountLinkingRecipeInstanceOrThrowError()
+	if err != nil {
+		return []User{}, err
+	}
+
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+
+	return (*accountLinkingInstance.RecipeImpl.ListUsersByAccountInfo)(tenantID, accountInfo, doUnionOfAccountInfo, userContext[0])
 }

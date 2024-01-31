@@ -260,10 +260,19 @@ func parseUser(value interface{}) (*epmodels.User, error) {
 	if err != nil {
 		return nil, err
 	}
-	var user epmodels.User
-	err = json.Unmarshal(respJSON, &user)
+	var supertokensUser supertokens.User
+	err = json.Unmarshal(respJSON, &supertokensUser)
+
 	if err != nil {
 		return nil, err
 	}
-	return &user, nil
+
+	epUser := epmodels.User{
+		ID:         supertokensUser.ID,
+		Email:      supertokensUser.Emails[0],
+		TimeJoined: supertokensUser.TimeJoined,
+		TenantIds:  supertokensUser.TenantIDs,
+	}
+
+	return &epUser, nil
 }

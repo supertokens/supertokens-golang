@@ -34,7 +34,8 @@ func UserDelete(apiInterface dashboardmodels.APIInterface, tenantId string, opti
 		}
 	}
 
-	deleteError := supertokens.DeleteUser(userId)
+	// TODO: pass in removeAllLinkedAccounts from the input to the API.
+	deleteError := supertokens.DeleteUser(userId, true)
 
 	if deleteError != nil {
 		return userDeleteResponse{}, deleteError

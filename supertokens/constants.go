@@ -21,13 +21,13 @@ const (
 )
 
 // VERSION current version of the lib
-const VERSION = "0.17.3"
+const VERSION = "0.18.0"
 
 var (
-	cdiSupported = []string{"3.0"}
+	cdiSupported = []string{"4.0"}
 )
 
-const DashboardVersion = "0.7"
+const DashboardVersion = "0.8"
 
 const DefaultTenantId string = "public"
 

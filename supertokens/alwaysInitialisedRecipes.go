@@ -1,3 +1,3 @@
 package supertokens
 
-var DefaultMultitenancyRecipe Recipe
+var InternalUseDefaultMultitenancyRecipe Recipe

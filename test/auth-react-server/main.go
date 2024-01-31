@@ -803,7 +803,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			if err != nil {
 				return
 			}
-			err = supertokens.DeleteUser(user.ID)
+			err = supertokens.DeleteUser(user.ID, true)
 			if err != nil {
 				return
 			}

@@ -2,6 +2,12 @@ package dashboard
 
 import (
 	"encoding/json"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"strings"
+	"testing"
+
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
@@ -9,11 +15,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
-	"io"
-	"net/http"
-	"net/http/httptest"
-	"strings"
-	"testing"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
@@ -145,7 +146,7 @@ func TestThatUserGetReturnsValidUserForThirdPartyUserWhenUsingThirdPartyPassword
 
 	user := listResponse.Users[0].User
 
-	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+user.Id+"&recipeId=thirdparty", strings.NewReader(`{}`))
+	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+user.ID+"&recipeId=thirdparty", strings.NewReader(`{}`))
 	req.Header.Set("Authorization", "Bearer testapikey")
 	res, err = http.DefaultClient.Do(req)
 
