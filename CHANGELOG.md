@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.17.4] - 2024-02-08
 
 - Adds `TLSConfig` to SMTP settings.
-- `TLSConfig` is always passed to gomail so that it can be used when gomail uses `STARTTLS` to upgrade the connection to TLS.
+- `TLSConfig` is always passed to gomail so that it can be used when gomail uses `STARTTLS` to upgrade the connection to TLS. - https://github.com/supertokens/supertokens-golang/issues/392
 
 ## [0.17.3] - 2023-12-12
 
