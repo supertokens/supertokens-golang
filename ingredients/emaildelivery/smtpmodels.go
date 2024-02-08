@@ -17,16 +17,19 @@
 package emaildelivery
 
 import (
+	"crypto/tls"
+
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 type SMTPSettings struct {
-	Host     string
-	From     SMTPFrom
-	Port     int
-	Username *string
-	Password string
-	Secure   bool
+	Host      string
+	From      SMTPFrom
+	Port      int
+	Username  *string
+	Password  string
+	Secure    bool
+	TLSConfig *tls.Config
 }
 
 type SMTPFrom struct {
