@@ -239,7 +239,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	return typeNormalisedInput, nil
 }
 
-var accessTokenCookiesExpiryDurationMillis = 3153600000000
+var accessTokenCookiesExpiryDurationMillis uint64 = 3153600000000
 
 func normaliseSameSiteOrThrowError(sameSite string) (string, error) {
 	sameSite = strings.TrimSpace(sameSite)
