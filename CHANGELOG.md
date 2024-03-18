@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.17.6] - 2024-03-18
+
+- Fixes the passing of `tenantId` in `getAllSessionHandlesForUser` and `revokeAllSessionsForUser` based on `fetchAcrossAllTenants` and `revokeAcrossAllTenants` inputs respectively.
+
 ## [0.17.5] - 2024-03-14
 - Adds a type uint64 to the `accessTokenCookiesExpiryDurationMillis` local variable in `recipe/session/utils.go`. It also removes the redundant `uint64` type forcing needed because of the untyped variable.
 

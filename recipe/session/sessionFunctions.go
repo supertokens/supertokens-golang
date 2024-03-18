@@ -276,6 +276,10 @@ func revokeAllSessionsForUserHelper(querier supertokens.Querier, userID string, 
 	}
 	if revokeAcrossAllTenants != nil {
 		requestBody["revokeAcrossAllTenants"] = *revokeAcrossAllTenants
+
+		if *revokeAcrossAllTenants {
+			tenantId = "" // so that we don't pass the tenantId in the url
+		}
 	}
 	response, err := querier.SendPostRequest(tenantId+"/recipe/session/remove", requestBody, userContext)
 	if err != nil {
@@ -299,8 +303,12 @@ func getAllSessionHandlesForUserHelper(querier supertokens.Querier, userID strin
 	}
 	if fetchAcrossAllTenants != nil {
 		queryParams["fetchAcrossAllTenants"] = strings.ToLower(fmt.Sprintf("%v", *fetchAcrossAllTenants))
+
+		if *fetchAcrossAllTenants {
+			tenantId = "" // so that we don't pass the tenantId in the url
+		}
 	}
-	response, err := querier.SendGetRequest("/recipe/session/user", queryParams, userContext)
+	response, err := querier.SendGetRequest(tenantId+"/recipe/session/user", queryParams, userContext)
 	if err != nil {
 		return nil, err
 	}
