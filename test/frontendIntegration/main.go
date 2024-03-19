@@ -567,11 +567,11 @@ func login218(response http.ResponseWriter, request *http.Request) {
 	legacyAccessToken := sessionResp.AccessToken.Token
 	legacyRefreshToken := sessionResp.RefreshToken.Token
 
-	frontTokenJson := json.NewEncoder(response).Encode(map[string]interface{}{
+	frontTokenJson := map[string]interface{}{
 		"uid": userID,
 		"ate": session.GetCurrTimeInMS() + 3600000,
 		"up":  payload,
-	})
+	}
 
 	parsed, _ := json.Marshal(frontTokenJson)
 	data := []byte(parsed)
