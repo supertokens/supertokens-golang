@@ -7,8 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.17.6] - 2024-04-04
+
+- Enable smooth switching between `useDynamicAccessTokenSigningKey` settings by allowing refresh calls to change the signing key type of a session
 
 ## [0.17.5] - 2024-03-14
+
 - Adds a type uint64 to the `accessTokenCookiesExpiryDurationMillis` local variable in `recipe/session/utils.go`. It also removes the redundant `uint64` type forcing needed because of the untyped variable.
 - Fixes the passing of `tenantId` in `getAllSessionHandlesForUser` and `revokeAllSessionsForUser` based on `fetchAcrossAllTenants` and `revokeAcrossAllTenants` inputs respectively.
 - Updated fake email generation
