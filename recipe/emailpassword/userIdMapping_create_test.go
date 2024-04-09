@@ -213,3 +213,78 @@ func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 		assert.NotNil(t, createResp.OK)
 	}
 }
+
+func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	initForUserIdMappingTest(t)
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	assert.NoError(t, err)
+
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	assert.NoError(t, err)
+
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
+		return
+	}
+
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
+	assert.NoError(t, err)
+
+	assert.NotNil(t, signUpResponse.OK)
+
+	externalUserId := "externalId"
+	externalUserIdInfo := "externalIdInfo"
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, createResp.OK)
+
+	{ // Using supertokens ID
+		userResp, err := GetUserByID(signUpResponse.OK.User.ID)
+		assert.NoError(t, err)
+		assert.Equal(t, externalUserId, userResp.ID)
+	}
+
+	{ // Using external ID
+		userResp, err := GetUserByID(externalUserId)
+		assert.NoError(t, err)
+		assert.Equal(t, externalUserId, userResp.ID)
+	}
+}
+
+func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	initForUserIdMappingTest(t)
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	assert.NoError(t, err)
+
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	assert.NoError(t, err)
+
+	if unittesting.MaxVersion(cdiVersion, "2.14") == "2.14" {
+		return
+	}
+
+	signUpResponse, err := SignUp("public", "test@example.com", "testpass123")
+	assert.NoError(t, err)
+
+	assert.NotNil(t, signUpResponse.OK)
+
+	externalUserId := "externalId"
+	externalUserIdInfo := "externalIdInfo"
+	createResp, err := supertokens.CreateUserIdMapping(signUpResponse.OK.User.ID, externalUserId, &externalUserIdInfo, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, createResp.OK)
+
+	userResp, err := GetUserByEmail("public", "test@example.com")
+	assert.NoError(t, err)
+	assert.NotNil(t, userResp)
+	assert.Equal(t, externalUserId, userResp.ID)
+}

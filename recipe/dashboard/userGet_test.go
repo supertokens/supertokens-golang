@@ -2,29 +2,28 @@ package dashboard
 
 import (
 	"encoding/json"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
-	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
-	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"io"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
+	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
+	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
+
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 /*
-- Initialise with thirdpartyemailpassword and provide no custom form fields
-- Create an emailpassword user using the thirdpartyemailpassword recipe
 - Get user from the user get API
 - Check that user has public tenant
 */
@@ -42,7 +41,7 @@ func TestThatUserGetReturnsTenantIDsCorrectly(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdpartyemailpassword.Init(nil),
+			emailpassword.Init(nil),
 			Init(&dashboardmodels.TypeInput{
 				ApiKey: "testapikey",
 			}),
@@ -61,7 +60,7 @@ func TestThatUserGetReturnsTenantIDsCorrectly(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	signupResponse, err := thirdpartyemailpassword.EmailPasswordSignUp("public", "testing@supertokens.com", "abcd1234")
+	signupResponse, err := emailpassword.SignUp("public", "testing@supertokens.com", "abcd1234")
 	if err != nil {
 		t.Error(err.Error())
 	}

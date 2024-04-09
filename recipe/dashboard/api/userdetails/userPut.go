@@ -25,7 +25,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -75,46 +74,6 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, tenant
 		}
 
 		updateResponse, err := emailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, nil, userContext)
-
-		if err != nil {
-			return updateEmailResponse{}, err
-		}
-
-		if updateResponse.EmailAlreadyExistsError != nil {
-			return updateEmailResponse{
-				Status: "EMAIL_ALREADY_EXISTS_ERROR",
-			}, nil
-		}
-
-		if updateResponse.UnknownUserIdError != nil {
-			return updateEmailResponse{}, errors.New("Should never come here")
-		}
-
-		return updateEmailResponse{
-			Status: "OK",
-		}, nil
-	}
-
-	if recipeId == "thirdpartyemailpassword" {
-		var emailField epmodels.NormalisedFormField
-
-		for _, value := range thirdpartyemailpassword.GetRecipeInstance().GetEmailPasswordRecipe().Config.SignUpFeature.FormFields {
-			if value.ID == "email" {
-				emailField = value
-			}
-		}
-
-		validationError := emailField.Validate(email, tenantId)
-
-		if validationError != nil {
-			return updateEmailResponse{
-				Status: "INVALID_EMAIL_ERROR",
-				Error:  *validationError,
-			}, nil
-		}
-
-		tenantId := "public"
-		updateResponse, err := thirdpartyemailpassword.UpdateEmailOrPassword(userId, &email, nil, nil, &tenantId, userContext)
 
 		if err != nil {
 			return updateEmailResponse{}, err

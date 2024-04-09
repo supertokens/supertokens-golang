@@ -179,7 +179,7 @@ var customProvider2 = tpmodels.ProviderInput{
 	Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 			return tpmodels.TypeUserInfo{
-				ThirdPartyUserId: oAuthTokens["id"].(string),
+				ThirdPartyUserId: oAuthTokens["access_token"].(string),
 				Email: &tpmodels.EmailStruct{
 					ID:         oAuthTokens["email"].(string),
 					IsVerified: true,

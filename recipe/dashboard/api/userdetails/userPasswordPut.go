@@ -22,7 +22,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -70,65 +69,13 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, tenantId string,
 	}
 
 	if recipeToUse == "none" {
-		tpepInstance := thirdpartyemailpassword.GetRecipeInstance()
-
-		if tpepInstance != nil {
-			recipeToUse = "thirdpartyemailpassword"
-		}
-	}
-
-	if recipeToUse == "none" {
 		// This means that neither emailpassword or thirdpartyemailpassword is initialised
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 
-	if recipeToUse == "emailpassword" {
-		var passwordField epmodels.NormalisedFormField
-
-		for _, value := range emailPasswordInstance.Config.SignUpFeature.FormFields {
-			if value.ID == "password" {
-				passwordField = value
-			}
-		}
-
-		validationError := passwordField.Validate(*readBody.NewPassword, tenantId)
-
-		if validationError != nil {
-			return userPasswordPutResponse{
-				Status: "INVALID_PASSWORD_ERROR",
-				Error:  *validationError,
-			}, nil
-		}
-
-		passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(tenantId, *readBody.UserId, userContext)
-
-		if resetTokenErr != nil {
-			return userPasswordPutResponse{}, resetTokenErr
-		}
-
-		if passwordResetToken.UnknownUserIdError != nil {
-			// Techincally it can but its an edge case so we assume that it wont
-			return userPasswordPutResponse{}, errors.New("Should never come here")
-		}
-
-		passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(tenantId, passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
-
-		if passwordResetErr != nil {
-			return userPasswordPutResponse{}, passwordResetErr
-		}
-
-		if passwordResetResponse.ResetPasswordInvalidTokenError != nil {
-			return userPasswordPutResponse{}, errors.New("Should never come here")
-		}
-
-		return userPasswordPutResponse{
-			Status: "OK",
-		}, nil
-	}
-
 	var passwordField epmodels.NormalisedFormField
 
-	for _, value := range thirdpartyemailpassword.GetRecipeInstance().GetEmailPasswordRecipe().Config.SignUpFeature.FormFields {
+	for _, value := range emailPasswordInstance.Config.SignUpFeature.FormFields {
 		if value.ID == "password" {
 			passwordField = value
 		}
@@ -143,7 +90,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, tenantId string,
 		}, nil
 	}
 
-	passwordResetToken, resetTokenErr := thirdpartyemailpassword.CreateResetPasswordToken(tenantId, *readBody.UserId, userContext)
+	passwordResetToken, resetTokenErr := emailpassword.CreateResetPasswordToken(tenantId, *readBody.UserId, userContext)
 
 	if resetTokenErr != nil {
 		return userPasswordPutResponse{}, resetTokenErr
@@ -154,7 +101,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, tenantId string,
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 
-	passwordResetResponse, passwordResetErr := thirdpartyemailpassword.ResetPasswordUsingToken(tenantId, passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
+	passwordResetResponse, passwordResetErr := emailpassword.ResetPasswordUsingToken(tenantId, passwordResetToken.OK.Token, *readBody.NewPassword, userContext)
 
 	if passwordResetErr != nil {
 		return userPasswordPutResponse{}, passwordResetErr

@@ -969,3 +969,106 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	assert.Equal(t, userInfoAfterSignup.ID, user["id"].(string))
 	assert.Equal(t, userInfoAfterSignup.Email, user["email"].(string))
 }
+
+func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
+	userId := ""
+	loginType := ""
+	customAntiCsrfVal := "VIA_TOKEN"
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&tpmodels.TypeInput{
+				Override: &tpmodels.OverrideStruct{
+					APIs: func(originalImplementation tpmodels.APIInterface) tpmodels.APIInterface {
+						originalSignInUpPost := *originalImplementation.SignInUpPOST
+						*originalImplementation.SignInUpPOST = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
+							resp, err := originalSignInUpPost(provider, input, tenantId, options, userContext)
+							if err != nil {
+								t.Error(err.Error())
+							}
+							userId = resp.OK.User.ID
+							loginType = "thirdparty"
+							return resp, err
+						}
+						return originalImplementation
+					},
+				},
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						customProvider2,
+					},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				AntiCsrf: &customAntiCsrfVal,
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	defer gock.OffAll()
+	gock.New("https://test.com/").
+		Post("oauth/token").
+		Reply(200).
+		JSON(map[string]string{"access_token": "abcdefghj", "email": "test@example.com"})
+
+	postData := map[string]interface{}{
+		"thirdPartyId": "custom",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(postData)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	gock.New(testServer.URL).EnableNetworking().Persist()
+	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var result map[string]interface{}
+
+	err = json.Unmarshal(dataInBytes, &result)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	user := result["user"].(map[string]interface{})
+
+	assert.Equal(t, userId, user["id"])
+	assert.Equal(t, "thirdparty", loginType)
+}

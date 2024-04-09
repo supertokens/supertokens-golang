@@ -44,8 +44,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/recipe/userroles"
@@ -94,7 +92,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	passwordless.ResetForTest()
 	session.ResetForTest()
 	thirdparty.ResetForTest()
-	thirdpartyemailpassword.ResetForTest()
 	thirdpartypasswordless.ResetForTest()
 	userroles.ResetForTest()
 	multitenancy.ResetForTest()
@@ -332,134 +329,134 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					},
 				},
 			}),
-			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
-				EmailDelivery: &emaildelivery.TypeInput{
-					Service: &emaildelivery.EmailDeliveryInterface{
-						SendEmail: &sendPasswordResetEmail,
-					},
-				},
-				Override: &tpepmodels.OverrideStruct{
-					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
-						ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
-						ogGeneratePasswordResetTokenPOST := *originalImplementation.GeneratePasswordResetTokenPOST
-						ogEmailExistsGET := *originalImplementation.EmailPasswordEmailExistsGET
-						ogSignUpPOST := *originalImplementation.EmailPasswordSignUpPOST
-						ogSignInPOST := *originalImplementation.EmailPasswordSignInPOST
-						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
-						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
+			// thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
+			// 	EmailDelivery: &emaildelivery.TypeInput{
+			// 		Service: &emaildelivery.EmailDeliveryInterface{
+			// 			SendEmail: &sendPasswordResetEmail,
+			// 		},
+			// 	},
+			// 	Override: &tpepmodels.OverrideStruct{
+			// 		APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
+			// 			ogPasswordResetPOST := *originalImplementation.PasswordResetPOST
+			// 			ogGeneratePasswordResetTokenPOST := *originalImplementation.GeneratePasswordResetTokenPOST
+			// 			ogEmailExistsGET := *originalImplementation.EmailPasswordEmailExistsGET
+			// 			ogSignUpPOST := *originalImplementation.EmailPasswordSignUpPOST
+			// 			ogSignInPOST := *originalImplementation.EmailPasswordSignInPOST
+			// 			ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+			// 			ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
-							if gr != nil {
-								return tpmodels.AuthorisationUrlGETResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+			// 				if gr != nil {
+			// 					return tpmodels.AuthorisationUrlGETResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
-							if gr != nil {
-								return tpepmodels.ThirdPartySignInUpPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignInUpPOST(provider, input, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.ThirdPartySignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.ThirdPartySignInUpPOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+			// 				if gr != nil {
+			// 					return tpepmodels.ThirdPartySignInUpPOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogSignInUpPOST(provider, input, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password consume", false)
-							if gr != nil {
-								return epmodels.ResetPasswordPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogPasswordResetPOST(formFields, token, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.PasswordResetPOST) = func(formFields []epmodels.TypeFormField, token string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.ResetPasswordPOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password consume", false)
+			// 				if gr != nil {
+			// 					return epmodels.ResetPasswordPOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogPasswordResetPOST(formFields, token, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.GeneratePasswordResetTokenPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password", false)
-							if gr != nil {
-								return epmodels.GeneratePasswordResetTokenPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogGeneratePasswordResetTokenPOST(formFields, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.GeneratePasswordResetTokenPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.GeneratePasswordResetTokenPOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API reset password", false)
+			// 				if gr != nil {
+			// 					return epmodels.GeneratePasswordResetTokenPOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogGeneratePasswordResetTokenPOST(formFields, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.EmailPasswordEmailExistsGET) = func(email string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email exists", true)
-							if gr != nil {
-								return epmodels.EmailExistsGETResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogEmailExistsGET(email, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.EmailPasswordEmailExistsGET) = func(email string, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API email exists", true)
+			// 				if gr != nil {
+			// 					return epmodels.EmailExistsGETResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogEmailExistsGET(email, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.EmailPasswordSignUpPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign up", false)
-							if gr != nil {
-								return tpepmodels.SignUpPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignUpPOST(formFields, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.EmailPasswordSignUpPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignUpPOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign up", false)
+			// 				if gr != nil {
+			// 					return tpepmodels.SignUpPOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogSignUpPOST(formFields, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.EmailPasswordSignInPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in", false)
-							if gr != nil {
-								return tpepmodels.SignInPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignInPOST(formFields, tenantId, options, userContext)
-						}
-						return originalImplementation
-					},
-				},
-				SignUpFeature: &epmodels.TypeInputSignUp{
-					FormFields: formFields,
-				},
-				Providers: []tpmodels.ProviderInput{
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "google",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-									ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "github",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-									ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "facebook",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-									ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-								},
-							},
-						},
-					},
-					customAuth0Provider(),
-				},
-			}),
+			// 			(*originalImplementation.EmailPasswordSignInPOST) = func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (tpepmodels.SignInPOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in", false)
+			// 				if gr != nil {
+			// 					return tpepmodels.SignInPOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogSignInPOST(formFields, tenantId, options, userContext)
+			// 			}
+			// 			return originalImplementation
+			// 		},
+			// 	},
+			// 	SignUpFeature: &epmodels.TypeInputSignUp{
+			// 		FormFields: formFields,
+			// 	},
+			// 	Providers: []tpmodels.ProviderInput{
+			// 		{
+			// 			Config: tpmodels.ProviderConfig{
+			// 				ThirdPartyId: "google",
+			// 				Clients: []tpmodels.ProviderClientConfig{
+			// 					{
+			// 						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+			// 						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		{
+			// 			Config: tpmodels.ProviderConfig{
+			// 				ThirdPartyId: "github",
+			// 				Clients: []tpmodels.ProviderClientConfig{
+			// 					{
+			// 						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+			// 						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		{
+			// 			Config: tpmodels.ProviderConfig{
+			// 				ThirdPartyId: "facebook",
+			// 				Clients: []tpmodels.ProviderClientConfig{
+			// 					{
+			// 						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+			// 						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		customAuth0Provider(),
+			// 	},
+			// }),
 			session.Init(&sessmodels.TypeInput{
 				Override: &sessmodels.OverrideStruct{
 					APIs: func(originalImplementation sessmodels.APIInterface) sessmodels.APIInterface {

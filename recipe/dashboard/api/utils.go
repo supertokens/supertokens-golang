@@ -7,7 +7,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -45,21 +44,6 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 
 			recipeToReturn = emailpassword.RECIPE_ID
 		}
-
-		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
-
-			if tpepError == nil && tpepResponse != nil {
-				userToReturn.Id = tpepResponse.ID
-				userToReturn.TimeJoined = tpepResponse.TimeJoined
-				userToReturn.FirstName = ""
-				userToReturn.LastName = ""
-				userToReturn.Email = tpepResponse.Email
-				userToReturn.TenantIds = tpepResponse.TenantIds
-
-				recipeToReturn = thirdpartyemailpassword.RECIPE_ID
-			}
-		}
 	} else if recipeId == thirdparty.RECIPE_ID {
 		response, error := thirdparty.GetUserByID(userId, userContext)
 
@@ -74,23 +58,6 @@ func GetUserForRecipeId(userId string, recipeId string, userContext supertokens.
 				UserId: response.ThirdParty.UserID,
 			}
 			userToReturn.TenantIds = response.TenantIds
-		}
-
-		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
-			tpepResponse, tpepError := thirdpartyemailpassword.GetUserById(userId, userContext)
-
-			if tpepError == nil && tpepResponse != nil {
-				userToReturn.Id = tpepResponse.ID
-				userToReturn.TimeJoined = tpepResponse.TimeJoined
-				userToReturn.FirstName = ""
-				userToReturn.LastName = ""
-				userToReturn.Email = tpepResponse.Email
-				userToReturn.ThirdParty = &dashboardmodels.ThirdParty{
-					Id:     tpepResponse.ThirdParty.ID,
-					UserId: tpepResponse.ThirdParty.UserID,
-				}
-				userToReturn.TenantIds = tpepResponse.TenantIds
-			}
 		}
 
 		if reflect.DeepEqual(userToReturn, dashboardmodels.UserType{}) {
@@ -171,14 +138,6 @@ func IsRecipeInitialised(recipeId string) bool {
 		if err == nil {
 			isRecipeInitialised = true
 		}
-
-		if !isRecipeInitialised {
-			_, err := thirdpartyemailpassword.GetRecipeInstanceOrThrowError()
-
-			if err == nil {
-				isRecipeInitialised = true
-			}
-		}
 	} else if recipeId == passwordless.RECIPE_ID {
 		_, err := passwordless.GetRecipeInstanceOrThrowError()
 
@@ -198,14 +157,6 @@ func IsRecipeInitialised(recipeId string) bool {
 
 		if err == nil {
 			isRecipeInitialised = true
-		}
-
-		if !isRecipeInitialised {
-			_, err := thirdpartyemailpassword.GetRecipeInstanceOrThrowError()
-
-			if err == nil {
-				isRecipeInitialised = true
-			}
 		}
 
 		if !isRecipeInitialised {
