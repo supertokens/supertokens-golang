@@ -69,7 +69,7 @@ func UserPasswordPut(apiInterface dashboardmodels.APIInterface, tenantId string,
 	}
 
 	if recipeToUse == "none" {
-		// This means that neither emailpassword or thirdpartyemailpassword is initialised
+		// This means that emailpassword is not init
 		return userPasswordPutResponse{}, errors.New("Should never come here")
 	}
 

@@ -18,12 +18,10 @@ func IsValidRecipeId(recipeId string) bool {
 /*
 This function tries to fetch a user for the given user id and recipe id. The input recipe id
 should be one of the primary recipes (emailpassword, thirdparty, passwordless) but the returned
-recipe will be the exact recipe that matched for the user (including thirdpartyemailpassword and
-thirdpartypasswordless).
+recipe will be the exact recipe that matched for the user
 
 When fetching a user we need to check for multiple recipes per input recipe id, for example a user
-created using email and password could be present for the EmailPassword recipe and the ThirdPartyEmailPassword
-recipe so we need to check for both.
+created using email and password could be present for the EmailPassword recipe so we need to check for both.
 
 If this function returns an empty user struct, it should be treated as if the user does not exist
 */
