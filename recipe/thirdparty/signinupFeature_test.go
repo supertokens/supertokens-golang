@@ -740,6 +740,87 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 	assert.Equal(t, "Please provide one of redirectURIInfo or oAuthTokens in the request body", response2["message"])
 }
 
+func TestErrorThrownFromGetProfileInfoFunction(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						signinupCustomProvider4,
+					},
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	defer gock.OffAll()
+	gock.New("https://test.com/").
+		Post("oauth/token").
+		Reply(200).
+		JSON(map[string]string{"access_token": "abcdefghj"})
+
+	postData := map[string]interface{}{
+		"thirdPartyId": "custom",
+		"redirectURIInfo": map[string]interface{}{
+			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
+			"redirectURIQueryParams": map[string]interface{}{
+				"code": "abcdefghj",
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(postData)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	gock.New(testServer.URL).EnableNetworking().Persist()
+	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+
+	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, 500, resp.StatusCode)
+}
+
 func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
 	configValue := supertokens.TypeInput{
