@@ -11,11 +11,11 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/api/userdetails"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
@@ -85,6 +85,33 @@ func TestThatUserGetReturnsTenantIDsCorrectly(t *testing.T) {
 	assert.Equal(t, response.User.TenantIds[0], "public")
 }
 
+var customProvider1 = tpmodels.ProviderInput{
+	Config: tpmodels.ProviderConfig{
+		ThirdPartyId:          "custom",
+		AuthorizationEndpoint: "https://test.com/oauth/auth",
+		TokenEndpoint:         "https://test.com/oauth/token",
+
+		Clients: []tpmodels.ProviderClientConfig{
+			{
+				ClientID: "supertokens",
+			},
+		},
+	},
+
+	Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return tpmodels.TypeUserInfo{
+				ThirdPartyUserId: "user",
+				Email: &tpmodels.EmailStruct{
+					ID:         "email@test.com",
+					IsVerified: true,
+				},
+			}, nil
+		}
+		return originalImplementation
+	},
+}
+
 func TestThatUserGetReturnsValidUserForThirdPartyUserWhenUsingThirdPartyPasswordless(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -96,13 +123,17 @@ func TestThatUserGetReturnsValidUserForThirdPartyUserWhenUsingThirdPartyPassword
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			thirdpartypasswordless.Init(tplmodels.TypeInput{
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: []tpmodels.ProviderInput{
+						customProvider1,
+					},
+				},
+			}),
+			passwordless.Init(plessmodels.TypeInput{
 				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
 				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 					Enabled: true,
-				},
-				Providers: []tpmodels.ProviderInput{
-					thirdpartypasswordless.SigninupCustomProvider1,
 				},
 			}),
 			Init(&dashboardmodels.TypeInput{

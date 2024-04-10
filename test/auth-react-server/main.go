@@ -44,8 +44,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless/tplmodels"
 	"github.com/supertokens/supertokens-golang/recipe/userroles"
 	"github.com/supertokens/supertokens-golang/recipe/userroles/userrolesclaims"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -92,7 +90,6 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	passwordless.ResetForTest()
 	session.ResetForTest()
 	thirdparty.ResetForTest()
-	thirdpartypasswordless.ResetForTest()
 	userroles.ResetForTest()
 	multitenancy.ResetForTest()
 
@@ -530,111 +527,111 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					},
 				},
 			}),
-			thirdpartypasswordless.Init(tplmodels.TypeInput{
-				ContactMethodPhone:        passwordlessConfig.ContactMethodPhone,
-				ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
-				ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
-				FlowType:                  passwordlessConfig.FlowType,
-				GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
-				EmailDelivery:             passwordlessConfig.EmailDelivery,
-				SmsDelivery:               passwordlessConfig.SmsDelivery,
-				Providers: []tpmodels.ProviderInput{
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "google",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
-									ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "github",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
-									ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
-								},
-							},
-						},
-					},
-					{
-						Config: tpmodels.ProviderConfig{
-							ThirdPartyId: "facebook",
-							Clients: []tpmodels.ProviderClientConfig{
-								{
-									ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
-									ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
-								},
-							},
-						},
-					},
-					customAuth0Provider(),
-				},
-				Override: &tplmodels.OverrideStruct{
-					APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
-						ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
-						ogCreateCodePOST := *originalImplementation.CreateCodePOST
-						ogResendCodePOST := *originalImplementation.ResendCodePOST
-						ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
-						ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
+			// thirdpartypasswordless.Init(tplmodels.TypeInput{
+			// 	ContactMethodPhone:        passwordlessConfig.ContactMethodPhone,
+			// 	ContactMethodEmail:        passwordlessConfig.ContactMethodEmail,
+			// 	ContactMethodEmailOrPhone: passwordlessConfig.ContactMethodEmailOrPhone,
+			// 	FlowType:                  passwordlessConfig.FlowType,
+			// 	GetCustomUserInputCode:    passwordlessConfig.GetCustomUserInputCode,
+			// 	EmailDelivery:             passwordlessConfig.EmailDelivery,
+			// 	SmsDelivery:               passwordlessConfig.SmsDelivery,
+			// 	Providers: []tpmodels.ProviderInput{
+			// 		{
+			// 			Config: tpmodels.ProviderConfig{
+			// 				ThirdPartyId: "google",
+			// 				Clients: []tpmodels.ProviderClientConfig{
+			// 					{
+			// 						ClientID:     os.Getenv("GOOGLE_CLIENT_ID"),
+			// 						ClientSecret: os.Getenv("GOOGLE_CLIENT_SECRET"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		{
+			// 			Config: tpmodels.ProviderConfig{
+			// 				ThirdPartyId: "github",
+			// 				Clients: []tpmodels.ProviderClientConfig{
+			// 					{
+			// 						ClientID:     os.Getenv("GITHUB_CLIENT_ID"),
+			// 						ClientSecret: os.Getenv("GITHUB_CLIENT_SECRET"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		{
+			// 			Config: tpmodels.ProviderConfig{
+			// 				ThirdPartyId: "facebook",
+			// 				Clients: []tpmodels.ProviderClientConfig{
+			// 					{
+			// 						ClientID:     os.Getenv("FACEBOOK_CLIENT_ID"),
+			// 						ClientSecret: os.Getenv("FACEBOOK_CLIENT_SECRET"),
+			// 					},
+			// 				},
+			// 			},
+			// 		},
+			// 		customAuth0Provider(),
+			// 	},
+			// 	Override: &tplmodels.OverrideStruct{
+			// 		APIs: func(originalImplementation tplmodels.APIInterface) tplmodels.APIInterface {
+			// 			ogConsumeCodePOST := *originalImplementation.ConsumeCodePOST
+			// 			ogCreateCodePOST := *originalImplementation.CreateCodePOST
+			// 			ogResendCodePOST := *originalImplementation.ResendCodePOST
+			// 			ogAuthorisationUrlGET := *originalImplementation.AuthorisationUrlGET
+			// 			ogSignInUpPOST := *originalImplementation.ThirdPartySignInUpPOST
 
-						(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
-							if gr != nil {
-								return tpmodels.AuthorisationUrlGETResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.AuthorisationUrlGET) = func(provider *tpmodels.TypeProvider, redirectURIOnProviderDashboard string, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.AuthorisationUrlGETResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API authorisation url get", true)
+			// 				if gr != nil {
+			// 					return tpmodels.AuthorisationUrlGETResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogAuthorisationUrlGET(provider, redirectURIOnProviderDashboard, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.ThirdPartySignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
-							if gr != nil {
-								return tplmodels.ThirdPartySignInUpPOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogSignInUpPOST(provider, input, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.ThirdPartySignInUpPOST) = func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ThirdPartySignInUpPOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API sign in up", false)
+			// 				if gr != nil {
+			// 					return tplmodels.ThirdPartySignInUpPOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogSignInUpPOST(provider, input, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.ConsumeCodePOST) = func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API consume code", false)
-							if gr != nil {
-								return tplmodels.ConsumeCodePOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.ConsumeCodePOST) = func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (tplmodels.ConsumeCodePOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API consume code", false)
+			// 				if gr != nil {
+			// 					return tplmodels.ConsumeCodePOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogConsumeCodePOST(userInput, linkCode, preAuthSessionID, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.CreateCodePOST) = func(email, phoneNumber *string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API create code", false)
-							if gr != nil {
-								return plessmodels.CreateCodePOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogCreateCodePOST(email, phoneNumber, tenantId, options, userContext)
-						}
+			// 			(*originalImplementation.CreateCodePOST) = func(email, phoneNumber *string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.CreateCodePOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API create code", false)
+			// 				if gr != nil {
+			// 					return plessmodels.CreateCodePOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogCreateCodePOST(email, phoneNumber, tenantId, options, userContext)
+			// 			}
 
-						(*originalImplementation.ResendCodePOST) = func(deviceID, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
-							gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API resend code", false)
-							if gr != nil {
-								return plessmodels.ResendCodePOSTResponse{
-									GeneralError: gr,
-								}, nil
-							}
-							return ogResendCodePOST(deviceID, preAuthSessionID, tenantId, options, userContext)
-						}
-						return originalImplementation
-					},
-				},
-			}),
+			// 			(*originalImplementation.ResendCodePOST) = func(deviceID, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ResendCodePOSTResponse, error) {
+			// 				gr := returnGeneralErrorIfNeeded(*options.Req, "general error from API resend code", false)
+			// 				if gr != nil {
+			// 					return plessmodels.ResendCodePOSTResponse{
+			// 						GeneralError: gr,
+			// 					}, nil
+			// 				}
+			// 				return ogResendCodePOST(deviceID, preAuthSessionID, tenantId, options, userContext)
+			// 			}
+			// 			return originalImplementation
+			// 		},
+			// 	},
+			// }),
 			userroles.Init(nil),
 		},
 	})

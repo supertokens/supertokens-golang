@@ -25,7 +25,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartypasswordless"
 	"github.com/supertokens/supertokens-golang/recipe/usermetadata"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -151,63 +150,6 @@ func updateEmailForRecipeId(recipeId string, userId string, email string, tenant
 		}, nil
 	}
 
-	if recipeId == "thirdpartypasswordless" {
-		isValidEmail := true
-		validationError := ""
-
-		passwordlessConfig := thirdpartypasswordless.GetRecipeInstance().Config
-
-		if passwordlessConfig.ContactMethodPhone.Enabled {
-			validationResult := passwordless.DefaultValidateEmailAddress(email, tenantId)
-
-			if validationResult != nil {
-				isValidEmail = false
-				validationError = *validationResult
-			}
-		} else if passwordlessConfig.ContactMethodEmail.Enabled {
-			validationResult := passwordlessConfig.ContactMethodEmail.ValidateEmailAddress(email, tenantId)
-
-			if validationResult != nil {
-				isValidEmail = false
-				validationError = *validationResult
-			}
-		} else {
-			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidateEmailAddress(email, tenantId)
-
-			if validationResult != nil {
-				isValidEmail = false
-				validationError = *validationResult
-			}
-		}
-
-		if !isValidEmail {
-			return updateEmailResponse{
-				Status: "INVALID_EMAIL_ERROR",
-				Error:  validationError,
-			}, nil
-		}
-
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, &email, nil, userContext)
-
-		if updateErr != nil {
-			return updateEmailResponse{}, updateErr
-		}
-
-		if updateResponse.UnknownUserIdError != nil {
-			return updateEmailResponse{}, errors.New("Should never come here")
-		}
-
-		if updateResponse.EmailAlreadyExistsError != nil {
-			return updateEmailResponse{
-				Status: "EMAIL_ALREADY_EXISTS_ERROR",
-			}, nil
-		}
-
-		return updateEmailResponse{
-			Status: "OK",
-		}, nil
-	}
-
 	return updateEmailResponse{}, errors.New("Should never come here")
 }
 
@@ -249,63 +191,6 @@ func updatePhoneForRecipeId(recipeId string, userId string, phone string, tenant
 		}
 
 		updateResponse, updateErr := passwordless.UpdateUser(userId, nil, &phone, userContext)
-
-		if updateErr != nil {
-			return updatePhoneResponse{}, updateErr
-		}
-
-		if updateResponse.UnknownUserIdError != nil {
-			return updatePhoneResponse{}, errors.New("Should never come here")
-		}
-
-		if updateResponse.EmailAlreadyExistsError != nil {
-			return updatePhoneResponse{
-				Status: "PHONE_ALREADY_EXISTS_ERROR",
-			}, nil
-		}
-
-		return updatePhoneResponse{
-			Status: "OK",
-		}, nil
-	}
-
-	if recipeId == "thirdpartypasswordless" {
-		isValidPhone := true
-		validationError := ""
-
-		passwordlessConfig := thirdpartypasswordless.GetRecipeInstance().Config
-
-		if passwordlessConfig.ContactMethodEmail.Enabled {
-			validationResult := passwordless.DefaultValidatePhoneNumber(phone, tenantId)
-
-			if validationResult != nil {
-				isValidPhone = false
-				validationError = *validationResult
-			}
-		} else if passwordlessConfig.ContactMethodPhone.Enabled {
-			validationResult := passwordlessConfig.ContactMethodPhone.ValidatePhoneNumber(phone, tenantId)
-
-			if validationResult != nil {
-				isValidPhone = false
-				validationError = *validationResult
-			}
-		} else {
-			validationResult := passwordlessConfig.ContactMethodEmailOrPhone.ValidatePhoneNumber(phone, tenantId)
-
-			if validationResult != nil {
-				isValidPhone = false
-				validationError = *validationResult
-			}
-		}
-
-		if !isValidPhone {
-			return updatePhoneResponse{
-				Status: "INVALID_PHONE_ERROR",
-				Error:  validationError,
-			}, nil
-		}
-
-		updateResponse, updateErr := thirdpartypasswordless.UpdatePasswordlessUser(userId, nil, &phone, userContext)
 
 		if updateErr != nil {
 			return updatePhoneResponse{}, updateErr
