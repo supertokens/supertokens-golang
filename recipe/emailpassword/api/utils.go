@@ -126,17 +126,16 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 	return nil
 }
 
-func GetPasswordResetLink(appInfo supertokens.NormalisedAppinfo, recipeID string, token string, tenantId string, request *http.Request, userContext supertokens.UserContext) (string, error) {
+func GetPasswordResetLink(appInfo supertokens.NormalisedAppinfo, token string, tenantId string, request *http.Request, userContext supertokens.UserContext) (string, error) {
 	websiteDomain, err := appInfo.GetOrigin(request, userContext)
 	if err != nil {
 		return "", err
 	}
 	return fmt.Sprintf(
-		"%s%s/reset-password?token=%s&rid=%s&tenantId=%s",
+		"%s%s/reset-password?token=%s&tenantId=%s",
 		websiteDomain.GetAsStringDangerous(),
 		appInfo.WebsiteBasePath.GetAsStringDangerous(),
 		token,
-		recipeID,
 		tenantId,
 	), nil
 }

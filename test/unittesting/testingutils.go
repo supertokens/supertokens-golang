@@ -566,6 +566,42 @@ func SignInRequest(email string, password string, testUrl string) (*http.Respons
 	return resp, nil
 }
 
+func SignInRequestWithThirdpartyemailpasswordRid(email string, password string, testUrl string) (*http.Response, error) {
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": email,
+			},
+			{
+				"id":    "password",
+				"value": password,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("POST", testUrl+"/auth/signin", bytes.NewBuffer(postBody))
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("rid", "thirdpartyemailpassword")
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		fmt.Println(err.Error())
+		return nil, err
+	}
+
+	return resp, nil
+}
+
 func SignInRequestWithTenantId(tenantId string, email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {

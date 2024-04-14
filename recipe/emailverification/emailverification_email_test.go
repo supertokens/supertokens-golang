@@ -18,6 +18,7 @@ package emailverification
 
 import (
 	"net/http"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -81,6 +82,7 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 	funcCalled := false
 	overrideCalled := false
+	ridInfo := ""
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -96,6 +98,11 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 				EmailDelivery: &emaildelivery.TypeInput{
 					Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
 						(*originalImplementation.SendEmail) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+							u, err := url.Parse(input.EmailVerification.EmailVerifyLink)
+							if err != nil {
+								return err
+							}
+							ridInfo = u.Query().Get("rid")
 							overrideCalled = true
 							return nil
 						}
@@ -134,6 +141,7 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 	assert.Equal(t, EmailVerificationEmailSentForTest, false)
 	assert.Equal(t, funcCalled, false)
 	assert.Equal(t, overrideCalled, true)
+	assert.Equal(t, ridInfo, "")
 }
 
 func TestSMTPServiceOverride(t *testing.T) {

@@ -126,7 +126,6 @@ func MakeAPIImplementation() evmodels.APIInterface {
 		emailVerificationURL, err := GetEmailVerifyLink(
 			options.AppInfo,
 			response.OK.Token,
-			options.RecipeID,
 			sessionContainer.GetTenantIdWithContext(userContext),
 			options.Req,
 			userContext,

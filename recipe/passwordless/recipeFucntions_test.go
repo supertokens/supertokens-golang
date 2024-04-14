@@ -1044,7 +1044,7 @@ func TestCreatingMagicLink(t *testing.T) {
 
 	assert.Equal(t, "supertokens.io", res.Host)
 	assert.Equal(t, "/auth/verify", res.Path)
-	assert.Equal(t, "passwordless", res.Query().Get("rid"))
+	assert.Equal(t, "", res.Query().Get("rid"))
 }
 
 func TestSignInUp(t *testing.T) {
