@@ -20,5 +20,6 @@ const (
 	SignInAPI                     = "/signin"
 	GeneratePasswordResetTokenAPI = "/user/password/reset/token"
 	PasswordResetAPI              = "/user/password/reset"
-	SignupEmailExistsAPI          = "/signup/email/exists"
+	SignupEmailExistsAPIOld       = "/signup/email/exists"
+	SignupEmailExistsAPI          = "/emailpassword/email/exists"
 )

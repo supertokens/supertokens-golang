@@ -158,10 +158,7 @@ func CreateEmailVerificationLink(tenantId string, userID string, email *string, 
 	if err != nil {
 		return evmodels.CreateEmailVerificationLinkResponse{}, err
 	}
-	instance, err := getRecipeInstanceOrThrowError()
-	if err != nil {
-		return evmodels.CreateEmailVerificationLinkResponse{}, err
-	}
+
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
 	}
@@ -176,7 +173,7 @@ func CreateEmailVerificationLink(tenantId string, userID string, email *string, 
 		}, nil
 	}
 
-	link, err := api.GetEmailVerifyLink(st.AppInfo, emailVerificationTokenResponse.OK.Token, instance.RecipeModule.GetRecipeID(), tenantId, supertokens.GetRequestFromUserContext(userContext[0]), userContext[0])
+	link, err := api.GetEmailVerifyLink(st.AppInfo, emailVerificationTokenResponse.OK.Token, tenantId, supertokens.GetRequestFromUserContext(userContext[0]), userContext[0])
 
 	if err != nil {
 		return evmodels.CreateEmailVerificationLinkResponse{}, err

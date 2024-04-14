@@ -25,10 +25,93 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
+
+func TestReqWithThirdPartyEmailPasswordRecipe(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			emailpassword.Init(nil),
+			Init(
+				&tpmodels.TypeInput{
+					SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+						Providers: []tpmodels.ProviderInput{
+							{
+								Config: tpmodels.ProviderConfig{
+									ThirdPartyId: "google",
+									Clients: []tpmodels.ProviderClientConfig{
+										{
+											ClientID:     "4398792-test-id",
+											ClientSecret: "test-secret",
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	client := &http.Client{}
+	req, _ := http.NewRequest("GET", testServer.URL+"/auth/authorisationurl?thirdPartyId=google", nil)
+
+	req.Header.Add("Content-Type", "application/json")
+	req.Header.Add("rid", "thirdpartyemailpassword")
+
+	resp, err := client.Do(req)
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", data["status"])
+
+	fetchedUrl, err := url.Parse(data["urlWithQueryParams"].(string))
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "supertokens.io", fetchedUrl.Host)
+	assert.Equal(t, "/dev/oauth/redirect-to-provider", fetchedUrl.Path)
+}
 
 func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 	configValue := supertokens.TypeInput{

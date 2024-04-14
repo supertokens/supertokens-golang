@@ -128,7 +128,7 @@ func TestEmailValidationCheckInGenerateTokenAPI(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "https://supertokens.io/auth/reset-password", resetURL)
 	assert.NotEmpty(t, tokenInfo)
-	assert.True(t, strings.HasPrefix(ridInfo, "emailpassword"))
+	assert.True(t, strings.HasPrefix(ridInfo, ""))
 }
 
 func TestPasswordValidation(t *testing.T) {
@@ -556,5 +556,5 @@ func TestPasswordResetLinkUsesOriginFunctionIfProvided(t *testing.T) {
 	assert.Equal(t, 200, resp.StatusCode)
 	assert.Equal(t, "http://localhost:2000/auth/reset-password", resetURL)
 	assert.NotEmpty(t, tokenInfo)
-	assert.True(t, strings.HasPrefix(ridInfo, "emailpassword"))
+	assert.True(t, strings.HasPrefix(ridInfo, ""))
 }

@@ -16,9 +16,11 @@
 package passwordless
 
 const (
-	createCodeAPI           = "/signinup/code"
-	resendCodeAPI           = "/signinup/code/resend"
-	consumeCodeAPI          = "/signinup/code/consume"
-	doesEmailExistAPI       = "/signup/email/exists"
-	doesPhoneNumberExistAPI = "/signup/phonenumber/exists"
+	createCodeAPI              = "/signinup/code"
+	resendCodeAPI              = "/signinup/code/resend"
+	consumeCodeAPI             = "/signinup/code/consume"
+	doesEmailExistAPIOld       = "/signup/email/exists"
+	doesPhoneNumberExistAPIOld = "/signup/phonenumber/exists"
+	doesEmailExistAPI          = "/passwordless/email/exists"
+	doesPhoneNumberExistAPI    = "/passwordless/phonenumber/exists"
 )

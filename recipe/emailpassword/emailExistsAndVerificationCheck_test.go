@@ -35,11 +35,138 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
+
+func TestEmailExistsPicksRightRecipeDependingOnRid(t *testing.T) {
+	passwordlessEmailExists := false
+	emailpasswordEmailExists := false
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				Override: &epmodels.OverrideStruct{
+					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
+						oEmailExists := *originalImplementation.EmailExistsGET
+						(*originalImplementation.EmailExistsGET) = func(email, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.EmailExistsGETResponse, error) {
+							emailpasswordEmailExists = true
+							return oEmailExists(email, tenantId, options, userContext)
+						}
+
+						return originalImplementation
+					},
+				},
+			}),
+			passwordless.Init(plessmodels.TypeInput{
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+				},
+				FlowType: "USER_INPUT_CODE",
+				Override: &plessmodels.OverrideStruct{
+					APIs: func(originalImplementation plessmodels.APIInterface) plessmodels.APIInterface {
+						oEmailExists := *originalImplementation.EmailExistsGET
+						(*originalImplementation.EmailExistsGET) = func(email, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.EmailExistsGETResponse, error) {
+							passwordlessEmailExists = true
+							return oEmailExists(email, tenantId, options, userContext)
+						}
+
+						return originalImplementation
+					},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	{
+		req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+		q := req.URL.Query()
+		q.Add("email", "random@email.com")
+		req.Header.Add("rid", "emailpassword")
+		req.URL.RawQuery = q.Encode()
+		assert.NoError(t, err)
+		res, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+		assert.True(t, emailpasswordEmailExists)
+		assert.False(t, passwordlessEmailExists)
+	}
+
+	{
+		emailpasswordEmailExists = false
+		passwordlessEmailExists = false
+		req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+		q := req.URL.Query()
+		q.Add("email", "random@email.com")
+		req.Header.Add("rid", "passwordless")
+		req.URL.RawQuery = q.Encode()
+		assert.NoError(t, err)
+		res, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+		assert.False(t, emailpasswordEmailExists)
+		assert.True(t, passwordlessEmailExists)
+	}
+
+	{
+		emailpasswordEmailExists = false
+		passwordlessEmailExists = false
+		req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+		q := req.URL.Query()
+		q.Add("email", "random@email.com")
+		req.Header.Add("rid", "thirdpartypasswordless")
+		req.URL.RawQuery = q.Encode()
+		assert.NoError(t, err)
+		res, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+		assert.False(t, emailpasswordEmailExists)
+		assert.True(t, passwordlessEmailExists)
+	}
+
+	{
+		emailpasswordEmailExists = false
+		passwordlessEmailExists = false
+		req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+		q := req.URL.Query()
+		q.Add("email", "random@email.com")
+		req.Header.Add("rid", "thirdpartyemailpassword")
+		req.URL.RawQuery = q.Encode()
+		assert.NoError(t, err)
+		res, err := http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		assert.Equal(t, 200, res.StatusCode)
+		assert.True(t, emailpasswordEmailExists)
+		assert.False(t, passwordlessEmailExists)
+	}
+}
 
 // Email exists tests
 func TestEmailExistGetStopsWorkingWhenDisabled(t *testing.T) {
@@ -153,6 +280,91 @@ func TestGoodInputsEmailExists(t *testing.T) {
 	assert.Equal(t, "OK", response["status"])
 
 	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	q := req.URL.Query()
+	q.Add("email", "random@email.com")
+	req.URL.RawQuery = q.Encode()
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	assert.Equal(t, 200, res.StatusCode)
+
+	data2, err := io.ReadAll(res.Body)
+	assert.NoError(t, err)
+	res.Body.Close()
+	var response2 map[string]interface{}
+	_ = json.Unmarshal(data2, &response2)
+
+	assert.Equal(t, "OK", response2["status"])
+	assert.Equal(t, true, response2["exists"])
+
+}
+
+func TestGoodInputsEmailExistsNewPath(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	passwordVal := "validPass123"
+
+	emailVal := "random@email.com"
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": emailVal,
+			},
+			{
+				"id":    "password",
+				"value": passwordVal,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	assert.Equal(t, 200, resp.StatusCode)
+
+	assert.NoError(t, err)
+	data, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+	var response map[string]interface{}
+	_ = json.Unmarshal(data, &response)
+
+	assert.Equal(t, "OK", response["status"])
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/emailpassword/email/exists", nil)
 	q := req.URL.Query()
 	q.Add("email", "random@email.com")
 	req.URL.RawQuery = q.Encode()

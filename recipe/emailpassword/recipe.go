@@ -120,6 +120,10 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	signupEmailExistsAPIOld, err := supertokens.NewNormalisedURLPath(constants.SignupEmailExistsAPIOld)
+	if err != nil {
+		return nil, err
+	}
 	signupEmailExistsAPI, err := supertokens.NewNormalisedURLPath(constants.SignupEmailExistsAPI)
 	if err != nil {
 		return nil, err
@@ -144,6 +148,11 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		PathWithoutAPIBasePath: passwordResetAPI,
 		ID:                     constants.PasswordResetAPI,
 		Disabled:               r.APIImpl.PasswordResetPOST == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: signupEmailExistsAPIOld,
+		ID:                     constants.SignupEmailExistsAPIOld,
+		Disabled:               r.APIImpl.EmailExistsGET == nil,
 	}, {
 		Method:                 http.MethodGet,
 		PathWithoutAPIBasePath: signupEmailExistsAPI,
@@ -171,7 +180,7 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		return api.GeneratePasswordResetToken(r.APIImpl, tenantId, options, userContext)
 	} else if id == constants.PasswordResetAPI {
 		return api.PasswordReset(r.APIImpl, tenantId, options, userContext)
-	} else if id == constants.SignupEmailExistsAPI {
+	} else if id == constants.SignupEmailExistsAPIOld || id == constants.SignupEmailExistsAPI {
 		return api.EmailExists(r.APIImpl, tenantId, options, userContext)
 	}
 	return defaultErrors.New("should never come here")

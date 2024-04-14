@@ -68,7 +68,6 @@ func MakeAPIImplementation() epmodels.APIInterface {
 
 		passwordResetLink, err := GetPasswordResetLink(
 			options.AppInfo,
-			options.RecipeID,
 			response.OK.Token,
 			tenantId,
 			options.Req,
