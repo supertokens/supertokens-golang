@@ -1,16 +1,16 @@
 package config
 
 import (
-	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 	"log"
+
+	"github.com/supertokens/supertokens-golang/recipe/dashboard"
 
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -49,8 +49,10 @@ func Init() {
 			emailverification.Init(evmodels.TypeInput{
 				Mode: evmodels.ModeRequired,
 			}),
-			thirdpartyemailpassword.Init(&tpepmodels.TypeInput{
-				Providers: providers,
+			thirdparty.Init(&tpmodels.TypeInput{
+				SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+					Providers: providers,
+				},
 			}),
 			session.Init(nil),
 			dashboard.Init(nil),
