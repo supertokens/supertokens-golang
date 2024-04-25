@@ -224,15 +224,43 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 	defer testServer.Close()
 	setupRoutesForTest(t, mux)
 
-	resp := createNewSession(t, testServer.URL, nil, nil, nil, nil)
+	t.Run("no st-auth-mode", func(t *testing.T) {
+		resp := createNewSession(t, testServer.URL, nil, nil, nil, nil)
 
-	assert.Equal(t, resp["sAccessToken"], "-not-present-")
-	assert.Equal(t, resp["sRefreshToken"], "-not-present-")
-	assert.Equal(t, resp["antiCsrf"], "-not-present-")
-	assert.NotEmpty(t, resp["accessTokenFromHeader"])
-	assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
-	assert.NotEmpty(t, resp["refreshTokenFromHeader"])
-	assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
+		assert.Equal(t, resp["sAccessToken"], "-not-present-")
+		assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+		assert.Equal(t, resp["antiCsrf"], "-not-present-")
+		assert.NotEmpty(t, resp["accessTokenFromHeader"])
+		assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
+		assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+		assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
+	})
+
+	t.Run("st-auth-mode is cookie", func(t *testing.T) {
+		authMode := string(sessmodels.CookieTransferMethod)
+		resp := createNewSession(t, testServer.URL, &authMode, nil, nil, nil)
+
+		assert.NotEqual(t, resp["sAccessToken"], "-not-present-")
+		assert.NotEqual(t, resp["sRefreshToken"], "-not-present-")
+		assert.NotEqual(t, resp["antiCsrf"], "-not-present-")
+		assert.NotEmpty(t, resp["accessTokenFromHeader"])
+		assert.Equal(t, resp["accessTokenFromHeader"], "-not-present-")
+		assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+		assert.Equal(t, resp["refreshTokenFromHeader"], "-not-present-")
+	})
+
+	t.Run("st-auth-mode is header", func(t *testing.T) {
+		authMode := string(sessmodels.HeaderTransferMethod)
+		resp := createNewSession(t, testServer.URL, &authMode, nil, nil, nil)
+
+		assert.Equal(t, resp["sAccessToken"], "-not-present-")
+		assert.Equal(t, resp["sRefreshToken"], "-not-present-")
+		assert.Equal(t, resp["antiCsrf"], "-not-present-")
+		assert.NotEmpty(t, resp["accessTokenFromHeader"])
+		assert.NotEqual(t, resp["accessTokenFromHeader"], "-not-present-")
+		assert.NotEmpty(t, resp["refreshTokenFromHeader"])
+		assert.NotEqual(t, resp["refreshTokenFromHeader"], "-not-present-")
+	})
 }
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIfMethodReturnsHeader(t *testing.T) {
