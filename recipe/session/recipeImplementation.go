@@ -294,7 +294,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		supertokens.LogDebugMessage("refreshSession: Started")
 
-		response, err := refreshSessionHelper(config, querier, refreshToken, antiCsrfToken, disableAntiCsrf, userContext)
+		response, err := refreshSessionHelper(config, querier, refreshToken, antiCsrfToken, disableAntiCsrf, config.UseDynamicAccessTokenSigningKey, userContext)
 		if err != nil {
 			return nil, err
 		}

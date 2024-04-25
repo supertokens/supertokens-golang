@@ -224,10 +224,11 @@ func getSessionInformationHelper(querier supertokens.Querier, sessionHandle stri
 	return nil, nil
 }
 
-func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.CreateOrRefreshAPIResponse, error) {
+func refreshSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, useDynamicAccessTokenSigningKey bool, userContext supertokens.UserContext) (sessmodels.CreateOrRefreshAPIResponse, error) {
 	requestBody := map[string]interface{}{
-		"refreshToken":   refreshToken,
-		"enableAntiCsrf": !disableAntiCsrf && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN,
+		"refreshToken":         refreshToken,
+		"enableAntiCsrf":       !disableAntiCsrf && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_TOKEN,
+		"useDynamicSigningKey": useDynamicAccessTokenSigningKey,
 	}
 	if antiCsrfToken != nil {
 		requestBody["antiCsrfToken"] = *antiCsrfToken

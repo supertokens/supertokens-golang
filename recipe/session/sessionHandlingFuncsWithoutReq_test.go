@@ -2,6 +2,7 @@ package session
 
 import (
 	"errors"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -471,4 +472,88 @@ func TestRefreshShouldReturnErrorForNonTokens(t *testing.T) {
 
 	assert.NotNil(t, err2)
 	assert.True(t, errors.As(err2, &sessionError.UnauthorizedError{}))
+}
+
+func TestUseDynamicAccessTokenSigningKey(t *testing.T) {
+	useDynamicAccessTokenSigningKey := true
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+			APIDomain:     "api.supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&sessmodels.TypeInput{
+				UseDynamicAccessTokenSigningKey: &useDynamicAccessTokenSigningKey,
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	checkAccessTokenSigningKeyType := func(t *testing.T, tokens sessmodels.SessionTokens, isDynamic bool) {
+		t.Helper()
+
+		info, err := ParseJWTWithoutSignatureVerification(tokens.AccessToken)
+		assert.NoError(t, err)
+
+		if isDynamic {
+			assert.True(t, strings.HasPrefix(*info.KID, "d-"))
+		} else {
+			assert.True(t, strings.HasPrefix(*info.KID, "s-"))
+		}
+	}
+
+	err := supertokens.Init(configValue)
+	assert.NoError(t, err)
+
+	res, err := CreateNewSessionWithoutRequestResponse("public", "test-user-id", map[string]interface{}{
+		"tokenProp": true,
+	}, map[string]interface{}{
+		"dbProp": true,
+	}, nil)
+
+	assert.NoError(t, err)
+
+	tokens := res.GetAllSessionTokensDangerously()
+	checkAccessTokenSigningKeyType(t, tokens, true)
+
+	resetAll()
+
+	// here we change to false
+	useDynamicAccessTokenSigningKey = false
+	err = supertokens.Init(configValue)
+	assert.NoError(t, err)
+
+	t.Run("should throw when verifying", func(t *testing.T) {
+		_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, nil)
+		assert.Equal(t, err.Error(), "The access token doesn't match the useDynamicAccessTokenSigningKey setting")
+	})
+
+	t.Run("should work after refresh", func(t *testing.T) {
+		disableAntiCsrf := true
+		refreshedSession, err := RefreshSessionWithoutRequestResponse(*tokens.RefreshToken, &disableAntiCsrf, tokens.AntiCsrfToken)
+		assert.NoError(t, err)
+
+		tokensAfterRefresh := refreshedSession.GetAllSessionTokensDangerously()
+		assert.True(t, tokensAfterRefresh.AccessAndFrontendTokenUpdated)
+		checkAccessTokenSigningKeyType(t, tokensAfterRefresh, false)
+
+		verifiedSession, err := GetSessionWithoutRequestResponse(tokensAfterRefresh.AccessToken, tokensAfterRefresh.AntiCsrfToken, nil)
+		assert.NoError(t, err)
+
+		tokensAfterVerify := verifiedSession.GetAllSessionTokensDangerously()
+		assert.True(t, tokensAfterVerify.AccessAndFrontendTokenUpdated)
+		checkAccessTokenSigningKeyType(t, tokensAfterVerify, false)
+
+		verifiedSession2, err := GetSessionWithoutRequestResponse(tokensAfterVerify.AccessToken, tokensAfterVerify.AntiCsrfToken, nil)
+		assert.NoError(t, err)
+
+		tokensAfterVerify2 := verifiedSession2.GetAllSessionTokensDangerously()
+		assert.False(t, tokensAfterVerify2.AccessAndFrontendTokenUpdated)
+	})
 }
