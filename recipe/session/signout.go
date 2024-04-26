@@ -27,9 +27,9 @@ func SignOutAPI(apiImplementation sessmodels.APIInterface, options sessmodels.AP
 		return nil
 	}
 
-	False := false
+	sessionRequired := true
 	sessionContainer, err := GetSessionFromRequest(options.Req, options.Res, options.Config, &sessmodels.VerifySessionOptions{
-		SessionRequired: &False,
+		SessionRequired: &sessionRequired,
 		OverrideGlobalClaimValidators: func(globalClaimValidators []claims.SessionClaimValidator, sessionContainer sessmodels.SessionContainer, userContext supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 			return []claims.SessionClaimValidator{}, nil
 		},
