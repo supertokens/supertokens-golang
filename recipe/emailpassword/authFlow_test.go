@@ -1387,7 +1387,7 @@ func TestDefaultSignoutRouteRevokesSession(t *testing.T) {
 	assert.Equal(t, "", cookieData1["refreshTokenDomain"])
 }
 
-func TestCallingTheAPIwithoutSessionShouldReturnOk(t *testing.T) {
+func TestCallingTheAPIwithoutSessionShouldReturnUnauthorized(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -1442,8 +1442,8 @@ func TestCallingTheAPIwithoutSessionShouldReturnOk(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, 200, res.StatusCode)
-	assert.Equal(t, "OK", data["status"])
+	assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+	assert.Empty(t, data["status"])
 	assert.Nil(t, req.Header["Cookie"])
 }
 
