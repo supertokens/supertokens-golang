@@ -60,7 +60,12 @@ func CreateNewSessionInRequest(req *http.Request, res http.ResponseWriter, tenan
 
 	outputTokenTransferMethod := config.GetTokenTransferMethod(req, true, userContext)
 	if outputTokenTransferMethod == sessmodels.AnyTransferMethod {
-		outputTokenTransferMethod = sessmodels.HeaderTransferMethod
+		authMode := GetAuthmodeFromHeader(req)
+		if authMode != nil && *authMode == sessmodels.CookieTransferMethod {
+			outputTokenTransferMethod = *authMode
+		} else {
+			outputTokenTransferMethod = sessmodels.HeaderTransferMethod
+		}
 	}
 
 	supertokens.LogDebugMessage(fmt.Sprintf("createNewSession: using transfer method %s", outputTokenTransferMethod))

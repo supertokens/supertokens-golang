@@ -35,7 +35,7 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
-func TestThatCallingTheAPIwithoutASessionShouldReturnOk(t *testing.T) {
+func TestThatCallingTheAPIwithoutASessionShouldReturnUnauthorized(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -80,7 +80,7 @@ func TestThatCallingTheAPIwithoutASessionShouldReturnOk(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusUnauthorized, resp.StatusCode)
 
 	dataInBytes, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -94,7 +94,7 @@ func TestThatCallingTheAPIwithoutASessionShouldReturnOk(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	assert.Equal(t, "OK", response["status"])
+	assert.Empty(t, response["status"])
 
 	assert.Equal(t, 0, len(resp.Cookies()))
 }
