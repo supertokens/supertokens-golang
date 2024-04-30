@@ -46,12 +46,20 @@ func GetRequiredClaimValidators(
 
 func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
 	var (
-		cookieDomain *string = nil
-		err          error
+		cookieDomain      *string = nil
+		olderCookieDomain *string = nil
+		err               error
 	)
 
 	if config != nil && config.CookieDomain != nil {
 		cookieDomain, err = normaliseSessionScopeOrThrowError(*config.CookieDomain)
+		if err != nil {
+			return sessmodels.TypeNormalisedInput{}, err
+		}
+	}
+
+	if config != nil && config.OlderCookieDomain != nil {
+		olderCookieDomain, err = normaliseSessionScopeOrThrowError(*config.OlderCookieDomain)
 		if err != nil {
 			return sessmodels.TypeNormalisedInput{}, err
 		}
@@ -172,6 +180,9 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}
 			return sendInvalidClaimResponse(*recipeInstance, validationErrors, req, res)
 		},
+		OnClearDuplicateSessionCookies: func(message string, req *http.Request, res http.ResponseWriter) error {
+			return supertokens.Send200Response(res, message)
+		},
 	}
 
 	if config != nil && config.ErrorHandlers != nil {
@@ -208,6 +219,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
+		OlderCookieDomain:        olderCookieDomain,
 		GetCookieSameSite:        cookieSameSite,
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,

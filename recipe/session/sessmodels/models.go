@@ -104,6 +104,7 @@ type TypeInput struct {
 	SessionExpiredStatusCode                     *int
 	InvalidClaimStatusCode                       *int
 	CookieDomain                                 *string
+	OlderCookieDomain                            *string
 	AntiCsrf                                     *string
 	Override                                     *OverrideStruct
 	ErrorHandlers                                *ErrorHandlers
@@ -119,14 +120,17 @@ type OverrideStruct struct {
 }
 
 type ErrorHandlers struct {
-	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
-	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
-	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
+	OnUnauthorised                 func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTryRefreshToken              func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTokenTheftDetected           func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
+	OnInvalidClaim                 func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
+	OnClearDuplicateSessionCookies func(message string, req *http.Request, res http.ResponseWriter) error
 }
 
 type TypeNormalisedInput struct {
 	RefreshTokenPath                             supertokens.NormalisedURLPath
 	CookieDomain                                 *string
+	OlderCookieDomain                            *string
 	GetCookieSameSite                            func(request *http.Request, userContext supertokens.UserContext) (string, error)
 	CookieSecure                                 bool
 	SessionExpiredStatusCode                     int
@@ -169,10 +173,11 @@ type APIOptions struct {
 }
 
 type NormalisedErrorHandlers struct {
-	OnUnauthorised       func(message string, req *http.Request, res http.ResponseWriter) error
-	OnTryRefreshToken    func(message string, req *http.Request, res http.ResponseWriter) error
-	OnTokenTheftDetected func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
-	OnInvalidClaim       func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
+	OnUnauthorised                 func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTryRefreshToken              func(message string, req *http.Request, res http.ResponseWriter) error
+	OnTokenTheftDetected           func(sessionHandle string, userID string, req *http.Request, res http.ResponseWriter) error
+	OnInvalidClaim                 func(validationErrors []claims.ClaimValidationError, req *http.Request, res http.ResponseWriter) error
+	OnClearDuplicateSessionCookies func(message string, req *http.Request, res http.ResponseWriter) error
 }
 
 type SessionTokens struct {
