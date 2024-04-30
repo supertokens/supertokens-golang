@@ -204,6 +204,13 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 		supertokens.LogDebugMessage("errorHandler: returning INVALID_CLAIMS")
 		errs := err.(errors.InvalidClaimError)
 		return true, r.Config.ErrorHandlers.OnInvalidClaim(errs.InvalidClaims, req, res)
+	} else if defaultErrors.As(err, &errors.ClearDuplicateSessionCookiesError{}) {
+		supertokens.LogDebugMessage("errorHandler: returning CLEAR_DUPLICATE_SESSION_COOKIES")
+		// This error occurs in the `refreshPOST` API when multiple session
+		// cookies are found in the request and the user has set `olderCookieDomain`.
+		// We remove session cookies from the olderCookieDomain. The response must return `200 OK`
+		// to avoid logging out the user, allowing the session to continue with the valid cookie.
+		return true, r.Config.ErrorHandlers.OnClearDuplicateSessionCookies(err.Error(), req, res)
 	} else {
 		return r.OpenIdRecipe.RecipeModule.HandleError(err, req, res, userContext)
 	}

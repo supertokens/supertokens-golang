@@ -18,10 +18,11 @@ package errors
 import "github.com/supertokens/supertokens-golang/recipe/session/claims"
 
 const (
-	UnauthorizedErrorStr       = "UNAUTHORISED"
-	TryRefreshTokenErrorStr    = "TRY_REFRESH_TOKEN"
-	TokenTheftDetectedErrorStr = "TOKEN_THEFT_DETECTED"
-	InvalidClaimsErrorStr      = "INVALID_CLAIMS"
+	UnauthorizedErrorStr                 = "UNAUTHORISED"
+	TryRefreshTokenErrorStr              = "TRY_REFRESH_TOKEN"
+	TokenTheftDetectedErrorStr           = "TOKEN_THEFT_DETECTED"
+	InvalidClaimsErrorStr                = "INVALID_CLAIMS"
+	ClearDuplicateSessionCookiesErrorStr = "CLEAR_DUPLICATE_SESSION_COOKIES"
 )
 
 // TryRefreshTokenError used for when the refresh API needs to be called
@@ -64,5 +65,13 @@ type InvalidClaimError struct {
 }
 
 func (err InvalidClaimError) Error() string {
+	return err.Msg
+}
+
+type ClearDuplicateSessionCookiesError struct {
+	Msg string
+}
+
+func (err ClearDuplicateSessionCookiesError) Error() string {
 	return err.Msg
 }
