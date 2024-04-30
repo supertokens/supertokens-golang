@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.18.0] - 2024-04-30
+
+### Changes
 - `session.CreateNewSession` now defaults to the value of the `st-auth-mode` header (if available) if the configured `config.GetTokenTransferMethod` returns `any`.
 - Enable smooth switching between `useDynamicAccessTokenSigningKey` settings by allowing refresh calls to change the signing key type of a session.
+
+### Breaking changes
 - Make session required during signout.
 - Added `OlderCookieDomain` config option in the session recipe. This will allow users to clear cookies from the older domain when the `CookieDomain` is changed.
 - If `VerifySession` detects multiple access tokens in the request, it will return a 401 error, prompting a refresh, even if one of the tokens is valid.
