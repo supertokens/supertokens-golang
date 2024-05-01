@@ -129,6 +129,9 @@ func TestCookieBasedAuth(t *testing.T) {
 		cookieData = unittesting.ExtractInfoFromResponse(res)
 
 		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		content, err := io.ReadAll(res.Body)
+		assert.NoError(t, err)
+		assert.Equal(t, "The request contains multiple session cookies. This may happen if you've changed the 'cookieDomain' value in your configuration. To clear tokens from the previous domain, set 'olderCookieDomain' in your config.\n", string(content))
 	})
 
 	t.Run("access token cookie is cleared if refresh token api is called without the refresh token", func(t *testing.T) {

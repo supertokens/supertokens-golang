@@ -7,14 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-## [0.18.0] - 2024-04-30
+## [0.19.0] - 2024-05-01
 
-### Changes
-- `session.CreateNewSession` now defaults to the value of the `st-auth-mode` header (if available) if the configured `config.GetTokenTransferMethod` returns `any`.
-- Enable smooth switching between `useDynamicAccessTokenSigningKey` settings by allowing refresh calls to change the signing key type of a session.
-
-### Breaking changes
-- Make session required during signout.
 - Added `OlderCookieDomain` config option in the session recipe. This will allow users to clear cookies from the older domain when the `CookieDomain` is changed.
 - If `VerifySession` detects multiple access tokens in the request, it will return a 401 error, prompting a refresh, even if one of the tokens is valid.
 - `RefreshPOST` (`/auth/session/refresh` by default) API changes:
@@ -49,6 +43,15 @@ With this update, verifySession will return a 401 error if it detects multiple a
         - The user remains stuck until they clear cookies manually or `OlderCookieDomain` is set.
     - If `OlderCookieDomain` is set, the refresh clears the older cookie, returning a 200 response.
         - The frontend retries the original API call, sending only the new cookie (`domain=.example.com`), resulting in a successful request.
+
+## [0.18.0] - 2024-04-30
+
+### Changes
+- `session.CreateNewSession` now defaults to the value of the `st-auth-mode` header (if available) if the configured `config.GetTokenTransferMethod` returns `any`.
+- Enable smooth switching between `useDynamicAccessTokenSigningKey` settings by allowing refresh calls to change the signing key type of a session.
+
+### Breaking changes
+- Make session required during signout.
 
 ## [0.17.5] - 2024-03-14
 - Adds a type uint64 to the `accessTokenCookiesExpiryDurationMillis` local variable in `recipe/session/utils.go`. It also removes the redundant `uint64` type forcing needed because of the untyped variable.

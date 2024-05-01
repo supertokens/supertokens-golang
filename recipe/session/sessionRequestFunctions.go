@@ -366,7 +366,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 			return nil, err
 		}
 		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && token != nil {
-			setCookie(config, res, "sAccessToken", "", 0, "accessTokenPath", req, userContext)
+			setCookie(config, res, accessTokenCookieKey, "", 0, "accessTokenPath", req, userContext)
 			supertokens.LogDebugMessage("refreshSession: cleared access token and returning UNAUTHORISED because refresh token in request is undefined")
 		}
 

@@ -26,7 +26,7 @@ import (
 	"strings"
 	"time"
 
-	errors2 "github.com/supertokens/supertokens-golang/recipe/session/errors"
+	sessionError "github.com/supertokens/supertokens-golang/recipe/session/errors"
 
 	"github.com/supertokens/supertokens-golang/supertokens"
 
@@ -359,7 +359,7 @@ func ClearSessionCookiesFromOlderCookieDomain(req *http.Request, res http.Respon
 	}
 
 	if didClearCookies {
-		return errors2.ClearDuplicateSessionCookiesError{
+		return sessionError.ClearDuplicateSessionCookiesError{
 			Msg: "The request contains multiple session cookies. We are clearing the cookie from OlderCookieDomain. Session will be refreshed in the next refresh call.",
 		}
 	}
