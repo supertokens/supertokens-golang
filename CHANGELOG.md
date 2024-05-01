@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.18.1] - 2024-05-01
+
+- Fixed a bug in the `normaliseSessionScopeOrThrowError` util function that caused it to remove leading dots from the scope string.
+
 ## [0.18.0] - 2024-04-30
 
 ### Changes
