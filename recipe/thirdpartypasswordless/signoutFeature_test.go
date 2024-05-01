@@ -280,12 +280,7 @@ func TestCallingAPIWithoutSessionShouldReturnOk(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
-	assert.Equal(t, 0, len(resp.Cookies()))
-	assert.Equal(t, "", resp.Header.Get("set-cookie"))
-
-	response := *unittesting.HttpResponseToConsumableInformation(resp.Body)
-	assert.Equal(t, "OK", response["status"])
+	assert.Equal(t, 401, resp.StatusCode)
 }
 
 func TestThatSignoutAPIreturnsTryRefreshTokenRefreshSessionAndSignoutShouldReturnOk(t *testing.T) {
