@@ -195,6 +195,12 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		if config.ErrorHandlers.OnInvalidClaim != nil {
 			errorHandlers.OnInvalidClaim = config.ErrorHandlers.OnInvalidClaim
 		}
+		if config.ErrorHandlers.OnTryRefreshToken != nil {
+			errorHandlers.OnTryRefreshToken = config.ErrorHandlers.OnTryRefreshToken
+		}
+		if config.ErrorHandlers.OnClearDuplicateSessionCookies != nil {
+			errorHandlers.OnClearDuplicateSessionCookies = config.ErrorHandlers.OnClearDuplicateSessionCookies
+		}
 	}
 
 	refreshAPIPath, err := supertokens.NewNormalisedURLPath(RefreshAPIPath)
