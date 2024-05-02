@@ -24,11 +24,6 @@ import (
 
 func MakeAPIImplementation() sessmodels.APIInterface {
 	refreshPOST := func(options sessmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		err := ClearSessionCookiesFromOlderCookieDomain(options.Req, options.Res, options.Config, userContext)
-		if err != nil {
-			return nil, err
-		}
-
 		return RefreshSessionInRequest(options.Req, options.Res, options.Config, options.RecipeImplementation, userContext)
 	}
 

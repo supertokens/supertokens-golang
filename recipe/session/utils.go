@@ -271,35 +271,45 @@ func GetURLScheme(URL string) (string, error) {
 }
 
 func normaliseSessionScopeOrThrowError(sessionScope string) (*string, error) {
-	sessionScope = strings.TrimSpace(sessionScope)
-	sessionScope = strings.ToLower(sessionScope)
+	helper := func(scope string) (string, error) {
+		scope = strings.TrimSpace(scope)
+		scope = strings.ToLower(scope)
 
-	sessionScope = strings.TrimPrefix(sessionScope, ".")
+		scope = strings.TrimPrefix(scope, ".")
 
-	if !strings.HasPrefix(sessionScope, "http://") && !strings.HasPrefix(sessionScope, "https://") {
-		sessionScope = "http://" + sessionScope
+		if !strings.HasPrefix(scope, "http://") && !strings.HasPrefix(scope, "https://") {
+			scope = "http://" + scope
+		}
+
+		parsedURL, err := url.Parse(scope)
+		if err != nil {
+			return "", errors.New("please provide a valid sessionScope")
+		}
+
+		hostname := parsedURL.Hostname()
+
+		return hostname, nil
 	}
 
-	urlObj, err := url.Parse(sessionScope)
+	noDotNormalised, err := helper(sessionScope)
 	if err != nil {
-		return nil, errors.New("Please provide a valid sessionScope")
+		return nil, err
 	}
-
-	sessionScope = urlObj.Hostname()
-	sessionScope = strings.TrimPrefix(sessionScope, ".")
-
-	noDotNormalised := sessionScope
 
 	isAnIP, err := supertokens.IsAnIPAddress(sessionScope)
 	if err != nil {
 		return nil, err
 	}
-	if sessionScope == "localhost" || isAnIP {
-		noDotNormalised = sessionScope
+
+	if noDotNormalised == "localhost" || isAnIP {
+		return &noDotNormalised, nil
 	}
+
 	if strings.HasPrefix(sessionScope, ".") {
-		noDotNormalised = "." + sessionScope
+		noDotNormalised = "." + noDotNormalised
+		return &noDotNormalised, nil
 	}
+
 	return &noDotNormalised, nil
 }
 

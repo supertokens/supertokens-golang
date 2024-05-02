@@ -134,7 +134,7 @@ func TestCookieBasedAuth(t *testing.T) {
 		assert.Equal(t, "The request contains multiple session cookies. This may happen if you've changed the 'cookieDomain' value in your configuration. To clear tokens from the previous domain, set 'olderCookieDomain' in your config.\n", string(content))
 	})
 
-	t.Run("access token cookie is cleared if refresh token api is called without the refresh token", func(t *testing.T) {
+	t.Run("all session tokens are cleared if refresh token api is called without the refresh token but with the access token", func(t *testing.T) {
 		req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
 		assert.NoError(t, err)
 		req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
@@ -147,6 +147,7 @@ func TestCookieBasedAuth(t *testing.T) {
 		assert.Empty(t, cookieData["sAccessToken"])
 		assert.Equal(t, cookieData["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 		assert.Empty(t, cookieData["sRefreshToken"])
+		assert.Equal(t, cookieData["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	})
 
 	resetAll()

@@ -322,6 +322,11 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	supertokens.LogDebugMessage("refreshSession: Started")
 
+	err := ClearSessionCookiesFromOlderCookieDomain(req, res, config, userContext)
+	if err != nil {
+		return nil, err
+	}
+
 	refreshTokens := map[sessmodels.TokenTransferMethod]*string{}
 	// We check all token transfer methods for available refresh tokens
 	// We do this so that we can later clear all we are not overwriting
@@ -366,8 +371,16 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 			return nil, err
 		}
 		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && token != nil {
-			setCookie(config, res, accessTokenCookieKey, "", 0, "accessTokenPath", req, userContext)
-			supertokens.LogDebugMessage("refreshSession: cleared access token and returning UNAUTHORISED because refresh token in request is undefined")
+			supertokens.LogDebugMessage("refreshSession: cleared all session tokens and returning UNAUTHORISED because refresh token in request is undefined")
+
+			// We're clearing all session tokens instead of just the access token and then throwing an UNAUTHORISED
+			// error with `ClearTokens: True`. This approach avoids confusion and we don't want to retain session
+			// tokens on the client in any case if the refresh API is called without a refresh token but with an access token.
+			True := true
+			return nil, errors.UnauthorizedError{
+				Msg:         "Refresh token not found but access token is present. Clearing all tokens.",
+				ClearTokens: &True,
+			}
 		}
 
 		False := false
