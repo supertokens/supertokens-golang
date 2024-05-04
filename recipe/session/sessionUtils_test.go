@@ -23,6 +23,12 @@ import (
 )
 
 func TestNormaliseSessionScope(t *testing.T) {
+	t.Run("test with empty string", func(t *testing.T) {
+		result, err := normaliseSessionScopeOrThrowError("")
+		assert.NoError(t, err)
+		assert.Equal(t, "", *result)
+	})
+
 	t.Run("test with leading dot", func(t *testing.T) {
 		result, err := normaliseSessionScopeOrThrowError(".example.com")
 		assert.NoError(t, err)
