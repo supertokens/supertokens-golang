@@ -125,7 +125,7 @@ func TestSessionErrorHandlerOverides(t *testing.T) {
 
 		content, err := io.ReadAll(res.Body)
 		assert.NoError(t, err)
-		assert.Equal(t, `{"message":"unauthorised from errorHandler"}`, string(content))
+		assert.Equal(t, `unauthorised from errorHandler`, string(content))
 
 		req, err = http.NewRequest(http.MethodGet, testServer.URL+"/test/try-refresh", nil)
 		assert.NoError(t, err)
@@ -136,7 +136,7 @@ func TestSessionErrorHandlerOverides(t *testing.T) {
 
 		content, err = io.ReadAll(res.Body)
 		assert.NoError(t, err)
-		assert.Equal(t, `{"message":"try refresh token from errorHandler"}`, string(content))
+		assert.Equal(t, `try refresh token from errorHandler`, string(content))
 
 		req, err = http.NewRequest(http.MethodGet, testServer.URL+"/test/token-theft", nil)
 		assert.NoError(t, err)
@@ -147,7 +147,7 @@ func TestSessionErrorHandlerOverides(t *testing.T) {
 
 		content, err = io.ReadAll(res.Body)
 		assert.NoError(t, err)
-		assert.Equal(t, `{"message":"token theft detected from errorHandler"}`, string(content))
+		assert.Equal(t, `token theft detected from errorHandler`, string(content))
 
 		req, err = http.NewRequest(http.MethodGet, testServer.URL+"/test/claim-validation", nil)
 		assert.NoError(t, err)
@@ -158,7 +158,7 @@ func TestSessionErrorHandlerOverides(t *testing.T) {
 
 		content, err = io.ReadAll(res.Body)
 		assert.NoError(t, err)
-		assert.Equal(t, `{"message":"invalid claim from errorHandler"}`, string(content))
+		assert.Equal(t, `invalid claim from errorHandler`, string(content))
 
 		req, err = http.NewRequest(http.MethodGet, testServer.URL+"/test/clear-duplicate-session", nil)
 		assert.NoError(t, err)
@@ -169,6 +169,6 @@ func TestSessionErrorHandlerOverides(t *testing.T) {
 
 		content, err = io.ReadAll(res.Body)
 		assert.NoError(t, err)
-		assert.Equal(t, `{"message":"clear duplicate session cookies from errorHandler"}`, string(content))
+		assert.Equal(t, `clear duplicate session cookies from errorHandler`, string(content))
 	})
 }
