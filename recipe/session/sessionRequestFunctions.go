@@ -182,6 +182,18 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 		accessToken = accessTokens[sessmodels.HeaderTransferMethod]
 	} else if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && (accessTokens[sessmodels.CookieTransferMethod] != nil) {
 		supertokens.LogDebugMessage("getSession: using cookie transfer method")
+
+		// If multiple access tokens exist in the request cookie, throw TRY_REFRESH_TOKEN.
+		// This prompts the client to call the refresh endpoint, clearing olderCookieDomain cookies (if set).
+		// ensuring outdated token payload isn't used.
+		if hasMultipleCookiesForTokenType(req, sessmodels.AccessToken) {
+			supertokens.LogDebugMessage("getSession: Throwing TRY_REFRESH_TOKEN because multiple access tokens are present in request cookies")
+
+			return nil, errors.TryRefreshTokenError{
+				Msg: "Multiple access tokens present in the request cookies.",
+			}
+		}
+
 		cookieMethod := sessmodels.CookieTransferMethod
 		requestTokenTransferMethod = &cookieMethod
 		accessToken = accessTokens[sessmodels.CookieTransferMethod]
@@ -310,6 +322,11 @@ func GetSessionFromRequest(req *http.Request, res http.ResponseWriter, config se
 func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, recipeImpl sessmodels.RecipeInterface, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 	supertokens.LogDebugMessage("refreshSession: Started")
 
+	err := ClearSessionCookiesFromOlderCookieDomain(req, res, config, userContext)
+	if err != nil {
+		return nil, err
+	}
+
 	refreshTokens := map[sessmodels.TokenTransferMethod]*string{}
 	// We check all token transfer methods for available refresh tokens
 	// We do this so that we can later clear all we are not overwriting
@@ -344,7 +361,28 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 			setCookie(config, res, legacyIdRefreshTokenCookieName, "", 0, "accessTokenPath", req, userContext)
 		}
 
-		supertokens.LogDebugMessage("refreshSession: UNAUTHORISED because refresh token in request is undefined")
+		// We need to clear the access token cookie if
+		// - the refresh token is not found, and
+		// - the allowedTransferMethod is 'cookie' or 'any', and
+		// - an access token cookie exists (otherwise it'd be a no-op)
+		// See: https://github.com/supertokens/supertokens-node/issues/790
+		token, err := GetToken(req, sessmodels.AccessToken, sessmodels.CookieTransferMethod)
+		if err != nil {
+			return nil, err
+		}
+		if (allowedTokenTransferMethod == sessmodels.AnyTransferMethod || allowedTokenTransferMethod == sessmodels.CookieTransferMethod) && token != nil {
+			supertokens.LogDebugMessage("refreshSession: cleared all session tokens and returning UNAUTHORISED because refresh token in request is undefined")
+
+			// We're clearing all session tokens instead of just the access token and then throwing an UNAUTHORISED
+			// error with `ClearTokens: True`. This approach avoids confusion and we don't want to retain session
+			// tokens on the client in any case if the refresh API is called without a refresh token but with an access token.
+			True := true
+			return nil, errors.UnauthorizedError{
+				Msg:         "Refresh token not found but access token is present. Clearing all tokens.",
+				ClearTokens: &True,
+			}
+		}
+
 		False := false
 		return nil, errors.UnauthorizedError{
 			Msg:         "Refresh token not found. Are you sending the refresh token in the request as a cookie?",

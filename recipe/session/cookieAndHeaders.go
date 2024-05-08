@@ -26,6 +26,8 @@ import (
 	"strings"
 	"time"
 
+	sessionError "github.com/supertokens/supertokens-golang/recipe/session/errors"
+
 	"github.com/supertokens/supertokens-golang/supertokens"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
@@ -315,4 +317,69 @@ func getCookieName(cookie string) string {
 		return ""
 	}
 	return kv[0]
+}
+
+// ClearSessionCookiesFromOlderCookieDomain addresses an edge case where changing the cookieDomain config on the server can
+// lead to session integrity issues. For instance, if the API server URL is 'api.example.com'
+// with a cookie domain of '.example.com', and the server updates the cookie domain to 'api.example.com',
+// the client may retain cookies with both '.example.com' and 'api.example.com' domains.
+//
+// Consequently, if the server chooses the older cookie, session invalidation occurs, potentially
+// resulting in an infinite refresh loop. To fix this, users are asked to specify "OlderCookieDomain" in
+// the config.
+//
+// This function checks for multiple cookies with the same name and clears the cookies for the older domain.
+func ClearSessionCookiesFromOlderCookieDomain(req *http.Request, res http.ResponseWriter, config sessmodels.TypeNormalisedInput, userContext supertokens.UserContext) error {
+	allowedTransferMethod := config.GetTokenTransferMethod(req, false, userContext)
+
+	// If the transfer method is 'header', there's no need to clear cookies immediately, even if there are multiple in the request.
+	if allowedTransferMethod == sessmodels.HeaderTransferMethod {
+		return nil
+	}
+
+	didClearCookies := false
+
+	tokenTypes := []sessmodels.TokenType{sessmodels.AccessToken, sessmodels.RefreshToken}
+	for _, token := range tokenTypes {
+		if hasMultipleCookiesForTokenType(req, token) {
+			// If a request has multiple session cookies and 'olderCookieDomain' is
+			// unset, we can't identify the correct cookie for refreshing the session.
+			// Using the wrong cookie can cause an infinite refresh loop. To avoid this,
+			// we throw a 500 error asking the user to set 'olderCookieDomain'.
+			if config.OlderCookieDomain == nil {
+				return errors.New(`The request contains multiple session cookies. This may happen if you've changed the 'cookieDomain' value in your configuration. To clear tokens from the previous domain, set 'olderCookieDomain' in your config.`)
+			}
+
+			supertokens.LogDebugMessage(fmt.Sprint("ClearSessionCookiesFromOlderCookieDomain: Clearing duplicate ", token, " cookie with domain ", config.OlderCookieDomain))
+			config.CookieDomain = config.OlderCookieDomain
+			setToken(config, res, token, "", 0, sessmodels.CookieTransferMethod, req, userContext)
+
+			didClearCookies = true
+		}
+	}
+
+	if didClearCookies {
+		return sessionError.ClearDuplicateSessionCookiesError{
+			Msg: "The request contains multiple session cookies. We are clearing the cookie from OlderCookieDomain. Session will be refreshed in the next refresh call.",
+		}
+	}
+
+	return nil
+}
+
+func hasMultipleCookiesForTokenType(req *http.Request, tokenType sessmodels.TokenType) bool {
+	// Count of cookies with the specified token type
+	count := 0
+
+	// Loop through each cookie in the request
+	for _, cookie := range req.Cookies() {
+		// Check if the cookie's name matches the token type
+		cookieName, _ := getCookieNameFromTokenType(tokenType)
+		if cookie.Name == cookieName {
+			count++
+		}
+	}
+
+	// If count is greater than 1, then there are multiple cookies with the given token type
+	return count > 1
 }
