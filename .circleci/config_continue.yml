@@ -25,7 +25,7 @@ jobs:
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
-            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
+            - run: wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./doUnitTests.sh << parameters.cdi-version >>)
             - slack/status
@@ -42,7 +42,7 @@ jobs:
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
-            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
+            - run: wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./website.sh)
             - slack/status
@@ -57,20 +57,20 @@ jobs:
             - run: git config --global url."https://github.com/".insteadOf ssh://git@github.com/
             - run: curl https://raw.githubusercontent.com/creationix/nvm/master/install.sh | bash
             - run: |
-                set +e
-                export NVM_DIR="$HOME/.nvm"
-                [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
-                [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
-                nvm install 16
-                
-                echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
-                echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
+                  set +e
+                  export NVM_DIR="$HOME/.nvm"
+                  [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+                  [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"
+                  nvm install 16
+
+                  echo 'export NVM_DIR="$HOME/.nvm"' >> $BASH_ENV
+                  echo '[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"' >> $BASH_ENV
             - run: node --version
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: go version
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
-            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
+            - run: wget https://go.dev/dl/go1.22.3.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./authReact.sh)
             - store_artifacts:
@@ -90,54 +90,53 @@ workflows:
     tagged-build:
         jobs:
             - test-dev-tag-as-not-passed:
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
+                  filters:
+                      tags:
+                          only: /dev-v[0-9]+(\.[0-9]+)*/
+                      branches:
+                          only: /test-cicd\/.*/
             - test-unit:
-                requires:
-                    - test-dev-tag-as-not-passed
-                context:
-                    - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
-                matrix:
-                    parameters:
-                        cdi-version: placeholder
+                  requires:
+                      - test-dev-tag-as-not-passed
+                  context:
+                      - slack-notification
+                  filters:
+                      tags:
+                          only: /dev-v[0-9]+(\.[0-9]+)*/
+                      branches:
+                          only: /test-cicd\/.*/
+                  matrix:
+                      parameters:
+                          cdi-version: placeholder
             - test-website:
-                requires:
-                    - test-dev-tag-as-not-passed
-                context:
-                    - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
+                  requires:
+                      - test-dev-tag-as-not-passed
+                  context:
+                      - slack-notification
+                  filters:
+                      tags:
+                          only: /dev-v[0-9]+(\.[0-9]+)*/
+                      branches:
+                          only: /test-cicd\/.*/
             - test-authreact:
-                requires:
-                    - test-dev-tag-as-not-passed
-                context:
-                    - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
+                  requires:
+                      - test-dev-tag-as-not-passed
+                  context:
+                      - slack-notification
+                  filters:
+                      tags:
+                          only: /dev-v[0-9]+(\.[0-9]+)*/
+                      branches:
+                          only: /test-cicd\/.*/
             - test-success:
-                requires:
-                    - test-unit
-                    - test-website
-                    - test-authreact
-                context:
-                    - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        ignore: /.*/
-
+                  requires:
+                      - test-unit
+                      - test-website
+                      - test-authreact
+                  context:
+                      - slack-notification
+                  filters:
+                      tags:
+                          only: /dev-v[0-9]+(\.[0-9]+)*/
+                      branches:
+                          ignore: /.*/
