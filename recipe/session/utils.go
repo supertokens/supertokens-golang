@@ -46,12 +46,20 @@ func GetRequiredClaimValidators(
 
 func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *sessmodels.TypeInput) (sessmodels.TypeNormalisedInput, error) {
 	var (
-		cookieDomain *string = nil
-		err          error
+		cookieDomain      *string = nil
+		olderCookieDomain *string = nil
+		err               error
 	)
 
 	if config != nil && config.CookieDomain != nil {
 		cookieDomain, err = normaliseSessionScopeOrThrowError(*config.CookieDomain)
+		if err != nil {
+			return sessmodels.TypeNormalisedInput{}, err
+		}
+	}
+
+	if config != nil && config.OlderCookieDomain != nil {
+		olderCookieDomain, err = normaliseSessionScopeOrThrowError(*config.OlderCookieDomain)
 		if err != nil {
 			return sessmodels.TypeNormalisedInput{}, err
 		}
@@ -172,6 +180,9 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 			}
 			return sendInvalidClaimResponse(*recipeInstance, validationErrors, req, res)
 		},
+		OnClearDuplicateSessionCookies: func(message string, req *http.Request, res http.ResponseWriter) error {
+			return supertokens.Send200Response(res, message)
+		},
 	}
 
 	if config != nil && config.ErrorHandlers != nil {
@@ -183,6 +194,12 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 		if config.ErrorHandlers.OnInvalidClaim != nil {
 			errorHandlers.OnInvalidClaim = config.ErrorHandlers.OnInvalidClaim
+		}
+		if config.ErrorHandlers.OnTryRefreshToken != nil {
+			errorHandlers.OnTryRefreshToken = config.ErrorHandlers.OnTryRefreshToken
+		}
+		if config.ErrorHandlers.OnClearDuplicateSessionCookies != nil {
+			errorHandlers.OnClearDuplicateSessionCookies = config.ErrorHandlers.OnClearDuplicateSessionCookies
 		}
 	}
 
@@ -208,6 +225,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
+		OlderCookieDomain:        olderCookieDomain,
 		GetCookieSameSite:        cookieSameSite,
 		CookieSecure:             cookieSecure,
 		SessionExpiredStatusCode: sessionExpiredStatusCode,
@@ -259,35 +277,45 @@ func GetURLScheme(URL string) (string, error) {
 }
 
 func normaliseSessionScopeOrThrowError(sessionScope string) (*string, error) {
-	sessionScope = strings.TrimSpace(sessionScope)
-	sessionScope = strings.ToLower(sessionScope)
+	helper := func(scope string) (string, error) {
+		scope = strings.TrimSpace(scope)
+		scope = strings.ToLower(scope)
 
-	sessionScope = strings.TrimPrefix(sessionScope, ".")
+		scope = strings.TrimPrefix(scope, ".")
 
-	if !strings.HasPrefix(sessionScope, "http://") && !strings.HasPrefix(sessionScope, "https://") {
-		sessionScope = "http://" + sessionScope
+		if !strings.HasPrefix(scope, "http://") && !strings.HasPrefix(scope, "https://") {
+			scope = "http://" + scope
+		}
+
+		parsedURL, err := url.Parse(scope)
+		if err != nil {
+			return "", errors.New("please provide a valid sessionScope")
+		}
+
+		hostname := parsedURL.Hostname()
+
+		return hostname, nil
 	}
 
-	urlObj, err := url.Parse(sessionScope)
+	noDotNormalised, err := helper(sessionScope)
 	if err != nil {
-		return nil, errors.New("Please provide a valid sessionScope")
+		return nil, err
 	}
-
-	sessionScope = urlObj.Hostname()
-	sessionScope = strings.TrimPrefix(sessionScope, ".")
-
-	noDotNormalised := sessionScope
 
 	isAnIP, err := supertokens.IsAnIPAddress(sessionScope)
 	if err != nil {
 		return nil, err
 	}
-	if sessionScope == "localhost" || isAnIP {
-		noDotNormalised = sessionScope
+
+	if noDotNormalised == "localhost" || isAnIP {
+		return &noDotNormalised, nil
 	}
+
 	if strings.HasPrefix(sessionScope, ".") {
-		noDotNormalised = "." + sessionScope
+		noDotNormalised = "." + noDotNormalised
+		return &noDotNormalised, nil
 	}
+
 	return &noDotNormalised, nil
 }
 

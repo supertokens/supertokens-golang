@@ -252,9 +252,12 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 
 			}
 			for _, property := range strings.Split(cookie, ";") {
+				if strings.HasPrefix(property, " Domain=") {
+					refreshTokenDomain = strings.TrimPrefix(property, " Domain=")
+				}
+
 				if strings.Index(property, "HttpOnly") == 1 {
 					refreshTokenHttpOnly = "true"
-					break
 				}
 			}
 		} else if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sAccessToken" {
@@ -269,9 +272,12 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
 			}
 			for _, property := range strings.Split(cookie, ";") {
+				if strings.HasPrefix(property, " Domain=") {
+					accessTokenDomain = strings.TrimPrefix(property, " Domain=")
+				}
+
 				if strings.Index(property, "HttpOnly") == 1 {
 					accessTokenHttpOnly = "true"
-					break
 				}
 			}
 		}

@@ -202,8 +202,14 @@ func verifySession(options *sessmodels.VerifySessionOptions) echo.MiddlewareFunc
 		return func(c echo.Context) error {
 			session.VerifySession(options, func(rw http.ResponseWriter, r *http.Request) {
 				c.Set("session", session.GetSessionFromRequestContext(r.Context()))
-				hf(c)
+
+				// Call the handler
+				err := hf(c)
+				if err != nil {
+					c.Error(err)
+				}
 			})(c.Response(), c.Request())
+
 			return nil
 		}
 	}

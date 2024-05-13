@@ -87,6 +87,11 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			antiCsrf = "VIA_TOKEN"
 		}
 		err := supertokens.Init(supertokens.TypeInput{
+			OnSuperTokensAPIError: func(err error, req *http.Request, res http.ResponseWriter) {
+				res.Header().Set("Content-Type", "text/html; charset=utf-8")
+				res.WriteHeader(500)
+				res.Write([]byte(err.Error()))
+			},
 			Supertokens: &supertokens.ConnectionInfo{
 				ConnectionURI: "http://localhost:9000",
 			},
@@ -142,6 +147,11 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			antiCsrf = "VIA_TOKEN"
 		}
 		err := supertokens.Init(supertokens.TypeInput{
+			OnSuperTokensAPIError: func(err error, req *http.Request, res http.ResponseWriter) {
+				res.Header().Set("Content-Type", "text/html; charset=utf-8")
+				res.WriteHeader(500)
+				res.Write([]byte(err.Error()))
+			},
 			Supertokens: &supertokens.ConnectionInfo{
 				ConnectionURI: "http://localhost:9000",
 			},
@@ -196,6 +206,11 @@ func callSTInit(enableAntiCsrf bool, enableJWT bool, jwtPropertyName string) {
 			antiCsrf = "VIA_TOKEN"
 		}
 		err := supertokens.Init(supertokens.TypeInput{
+			OnSuperTokensAPIError: func(err error, req *http.Request, res http.ResponseWriter) {
+				res.Header().Set("Content-Type", "text/html; charset=utf-8")
+				res.WriteHeader(500)
+				res.Write([]byte(err.Error()))
+			},
 			Supertokens: &supertokens.ConnectionInfo{
 				ConnectionURI: "http://localhost:9000",
 			},
@@ -349,8 +364,9 @@ func reinitialiseBackendConfig(w http.ResponseWriter, r *http.Request) {
 
 func featureFlag(response http.ResponseWriter, request *http.Request) {
 	json.NewEncoder(response).Encode(map[string]interface{}{
-		"sessionJwt":    maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION && lastEnableJWTSetting,
-		"v3AccessToken": maxVersion(supertokens.VERSION, "0.12.0") == supertokens.VERSION,
+		"sessionJwt":              maxVersion(supertokens.VERSION, "0.3.1") == supertokens.VERSION && lastEnableJWTSetting,
+		"v3AccessToken":           maxVersion(supertokens.VERSION, "0.12.0") == supertokens.VERSION,
+		"duplicateCookieHandling": maxVersion(supertokens.VERSION, "0.19.0") == supertokens.VERSION,
 	})
 }
 
