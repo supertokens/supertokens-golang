@@ -210,7 +210,7 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			var id *string = nil
 			var finalTenantId *string = nil
-			var finalMatchedRecipe *RecipeModule = nil
+			var finalMatchedRecipe RecipeModule = RecipeModule{}
 
 			for _, matchedRecipe := range matchedRecipes {
 				currId, currTenantId, err := matchedRecipe.ReturnAPIIdIfCanHandleRequest(path, method, userContext)
@@ -231,12 +231,12 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 					} else {
 						id = currId
 						finalTenantId = &currTenantId
-						finalMatchedRecipe = &matchedRecipe
+						finalMatchedRecipe = matchedRecipe
 					}
 				}
 			}
 
-			if id == nil || finalTenantId == nil || finalMatchedRecipe == nil {
+			if id == nil || finalTenantId == nil {
 				s.middlewareHelperHandleWithoutRid(path, method, userContext, theirHandler, dw, r)
 				return
 			}
