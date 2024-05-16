@@ -4,6 +4,7 @@ import (
 	"log"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword"
 
 	"github.com/spf13/viper"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -54,6 +55,7 @@ func Init() {
 					Providers: providers,
 				},
 			}),
+			emailpassword.Init(nil),
 			session.Init(nil),
 			dashboard.Init(nil),
 			// thirdparty.Init(thirdpartyConfig),
