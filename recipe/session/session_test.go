@@ -249,7 +249,7 @@ func TestRefreshAPI(t *testing.T) {
 		req.Header.Add("anti-csrf", cookieData["antiCsrf"])
 
 		// Wait for the access token to expire
-		time.Sleep(2 * time.Second)
+		time.Sleep(3 * time.Second)
 
 		res, err = http.DefaultClient.Do(req)
 		assert.NoError(t, err)
