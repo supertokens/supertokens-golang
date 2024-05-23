@@ -33,7 +33,7 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestCookieBasedAuth(t *testing.T) {
+func TestMultipleSessionCookies(t *testing.T) {
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -134,22 +134,6 @@ func TestCookieBasedAuth(t *testing.T) {
 		assert.Equal(t, "The request contains multiple session cookies. This may happen if you've changed the 'cookieDomain' value in your configuration. To clear tokens from the previous domain, set 'olderCookieDomain' in your config.\n", string(content))
 	})
 
-	t.Run("all session tokens are cleared if refresh token api is called without the refresh token but with the access token", func(t *testing.T) {
-		req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
-		assert.NoError(t, err)
-		req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
-		req.Header.Add("anti-csrf", cookieData["antiCsrf"])
-		res, err = http.DefaultClient.Do(req)
-		assert.NoError(t, err)
-		cookieData = unittesting.ExtractInfoFromResponse(res)
-
-		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
-		assert.Empty(t, cookieData["sAccessToken"])
-		assert.Equal(t, cookieData["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-		assert.Empty(t, cookieData["sRefreshToken"])
-		assert.Equal(t, cookieData["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
-	})
-
 	resetAll()
 	olderCookieName := ".example.com"
 	err = supertokens.Init(cfgVal(sessmodels.CookieTransferMethod, &olderCookieName))
@@ -181,6 +165,101 @@ func TestCookieBasedAuth(t *testing.T) {
 		assert.Empty(t, cookieData["sRefreshToken"])
 		assert.Equal(t, "Thu, 01 Jan 1970 00:00:00 GMT", cookieData["refreshTokenExpiry"])
 		assert.Equal(t, "example.com", cookieData["refreshTokenDomain"]) // TODO: node sdk returns .example.com
+	})
+}
+
+func TestRefreshAPI(t *testing.T) {
+	BeforeEach()
+
+	unittesting.SetKeyValueInConfig("access_token_validity", "2")
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	cfgVal := func(tokenTransferMethod sessmodels.TokenTransferMethod, olderCookieDomain *string) supertokens.TypeInput {
+		customAntiCsrfVal := "VIA_TOKEN"
+		return supertokens.TypeInput{
+			Supertokens: &supertokens.ConnectionInfo{
+				ConnectionURI: "http://localhost:8080",
+			},
+			AppInfo: supertokens.AppInfo{
+				AppName:       "SuperTokens",
+				WebsiteDomain: "supertokens.io",
+				APIDomain:     "api.supertokens.io",
+			},
+			RecipeList: []supertokens.Recipe{
+				Init(&sessmodels.TypeInput{
+					OlderCookieDomain: olderCookieDomain,
+					AntiCsrf:          &customAntiCsrfVal,
+					GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+						return tokenTransferMethod
+					},
+				}),
+			},
+		}
+	}
+
+	err := supertokens.Init(cfgVal(sessmodels.CookieTransferMethod, nil))
+	assert.NoError(t, err)
+
+	mux := http.NewServeMux()
+	mux.HandleFunc("/create", func(rw http.ResponseWriter, r *http.Request) {
+		CreateNewSession(r, rw, "public", "rope", map[string]interface{}{}, map[string]interface{}{})
+	})
+
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer func() {
+		testServer.Close()
+	}()
+
+	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/create", nil)
+	assert.NoError(t, err)
+	res, err := http.DefaultClient.Do(req)
+	assert.NoError(t, err)
+	cookieData := unittesting.ExtractInfoFromResponse(res)
+
+	assert.Equal(t, []string{"front-token, anti-csrf"}, res.Header["Access-Control-Expose-Headers"])
+	assert.Equal(t, "", cookieData["refreshTokenDomain"])
+	assert.Equal(t, "", cookieData["accessTokenDomain"])
+	assert.NotNil(t, cookieData["sAccessToken"])
+	assert.NotNil(t, cookieData["sRefreshToken"])
+	assert.NotNil(t, cookieData["antiCsrf"])
+	assert.NotNil(t, cookieData["accessTokenExpiry"])
+	assert.NotNil(t, cookieData["refreshTokenExpiry"])
+
+	t.Run("all session tokens are cleared if refresh token api is called without the refresh token but with the access token", func(t *testing.T) {
+		req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
+		assert.NoError(t, err)
+		req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
+		req.Header.Add("anti-csrf", cookieData["antiCsrf"])
+		res, err = http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		cookieData = unittesting.ExtractInfoFromResponse(res)
+
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+		assert.Empty(t, cookieData["sAccessToken"])
+		assert.Equal(t, cookieData["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+		assert.Empty(t, cookieData["sRefreshToken"])
+		assert.Equal(t, cookieData["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+	})
+
+	t.Run("all session tokens are cleared if refresh token api is called without the refresh token but with an expired access token", func(t *testing.T) {
+		req, err = http.NewRequest(http.MethodPost, testServer.URL+"/auth/session/refresh", nil)
+		assert.NoError(t, err)
+		req.Header.Add("Cookie", "sAccessToken="+cookieData["sAccessToken"])
+		req.Header.Add("anti-csrf", cookieData["antiCsrf"])
+
+		// Wait for the access token to expire
+		time.Sleep(3 * time.Second)
+
+		res, err = http.DefaultClient.Do(req)
+		assert.NoError(t, err)
+		cookieData = unittesting.ExtractInfoFromResponse(res)
+
+		assert.Equal(t, http.StatusUnauthorized, res.StatusCode)
+		assert.Empty(t, cookieData["sAccessToken"])
+		assert.Equal(t, cookieData["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+		assert.Empty(t, cookieData["sRefreshToken"])
+		assert.Equal(t, cookieData["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 	})
 }
 
