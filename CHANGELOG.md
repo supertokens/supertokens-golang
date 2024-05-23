@@ -81,6 +81,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
             fmt.Println(userInfo)
         }
         ```
+    - If you are using `thirdpartypasswordless.GetUsersByEmail`:
+    
+        Before:
+        ```go
+        userInfo, err := thirdpartypasswordless.GetUsersByEmail("public", "test@example.com")
+        ```
+
+        After:
+        ```go
+        thirdPartyUserInfo, err := thirdparty.GetUsersByEmail("public", "test@example.com")
+        if err != nil {
+            return
+        }
+
+        passwordlessUserInfo, err := passwordless.GetUserByEmail("public", "test@example.com")
+        if err != nil {
+            return
+        }
+
+        if passwordlessUserInfo != nil {
+            fmt.Println(passwordlessUserInfo)
+        }
+        if len(thirdPartyUserInfo) > 0 {
+            fmt.Println(thirdPartyUserInfo)
+        }
+        ```
+
+    - If you are using `thirdpartypasswordless.GetUserById`:
+    
+        Before:
+        ```go
+        userInfo, err := thirdpartypasswordless.GetUserById(userID)
+        ```
+
+        After:
+        ```go
+        userInfo, err := thirdparty.GetUserByID(userID)
+        if err != nil {
+            // TODO: Handle error
+        }
+        if userInfo == nil {
+            passwordlessUserInfo, err := passwordless.GetUserByID(userID)
+            if err != nil {
+                // TODO: Handle error
+            }
+            fmt.Println(passwordlessUserInfo)
+        } else {
+            fmt.Println(userInfo)
+        }
+        ```
 
 ## [0.19.0] - 2024-05-01
 
