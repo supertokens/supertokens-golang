@@ -30,6 +30,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   If you were using `ThirdPartyPasswordless`, you should now init `ThirdParty` and `Passwordless` recipes separately. The config for the individual recipes are mostly the same, except the syntax may be different. Check our recipe guides for [ThirdParty](https://supertokens.com/docs/thirdparty/introduction) and [Passwordless](https://supertokens.com/docs/passwordless/introduction) for more information.
 
+- The way to get user information has changed:
+    - If you are using `thirdpartyemailpassword.GetUsersByEmail`:
+    Before:
+    ```go
+    userInfo, err := thirdpartyemailpassword.GetUsersByEmail("public", "test@example.com")
+    ```
+
+    After:
+    ```go
+    thirdPartyUserInfo, err := thirdparty.GetUsersByEmail("public", "test@example.com")
+    if err != nil {
+        // TODO: Handle error
+    }
+
+    emailPasswordUserInfo, err := emailpassword.GetUserByEmail("public", "test@example.com")
+    if err != nil {
+        // TODO: Handle error
+    }
+
+    if emailPasswordUserInfo != nil {
+        fmt.Println(emailPasswordUserInfo)
+    }
+    if len(thirdPartyUserInfo) > 0 {
+        fmt.Println(thirdPartyUserInfo)
+    }
+    ```
+
+    - If you are using `thirdpartyemailpassword.GetUserById`:
+    Before:
+    ```go
+    userInfo, err := thirdpartyemailpassword.GetUserById(userID)
+    ```
+
+    After:
+    ```go
+    userInfo, err := thirdparty.GetUserByID(userID)
+    if err != nil {
+        // TODO: Handle error
+    }
+    if userInfo == nil {
+        emailPasswordUserInfo, err := emailpassword.GetUserByID(userID)
+        if err != nil {
+            // TODO: Handle error
+        }
+        fmt.Println(emailPasswordUserInfo)
+    } else {
+        fmt.Println(userInfo)
+    }
+    ```
+
 ## [0.19.0] - 2024-05-01
 
 - Added `OlderCookieDomain` config option in the session recipe. This will allow users to clear cookies from the older domain when the `CookieDomain` is changed.
