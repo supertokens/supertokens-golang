@@ -451,7 +451,12 @@ func deleteUser(userId string) error {
 
 func ResetForTest() {
 	ResetQuerierForTest()
-	superTokensInstance = nil
+	if superTokensInstance != nil {
+		for _, recipeModule := range superTokensInstance.RecipeModules {
+			recipeModule.ResetForTest()
+		}
+		superTokensInstance = nil
+	}
 }
 
 func IsRunningInTestMode() bool {

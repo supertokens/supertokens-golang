@@ -30,6 +30,7 @@ type RecipeModule struct {
 	ReturnAPIIdIfCanHandleRequest func(path NormalisedURLPath, method string, userContext UserContext) (*string, string, error)
 	HandleError                   func(err error, req *http.Request, res http.ResponseWriter, userContext UserContext) (bool, error)
 	OnSuperTokensAPIError         func(err error, req *http.Request, res http.ResponseWriter)
+	ResetForTest                  func()
 }
 
 func MakeRecipeModule(

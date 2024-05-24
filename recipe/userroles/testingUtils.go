@@ -19,18 +19,12 @@ import (
 	"net/http"
 	"testing"
 
-	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
-	"github.com/supertokens/supertokens-golang/recipe/session"
-
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
 func resetAll() {
 	supertokens.ResetForTest()
-	ResetForTest()
-	session.ResetForTest()
-	multitenancy.ResetForTest()
 }
 
 func BeforeEach() {

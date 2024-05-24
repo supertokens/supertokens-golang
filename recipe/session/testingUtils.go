@@ -29,7 +29,6 @@ var urlsAttemptedForJWKSFetch []string
 
 func resetAll() {
 	supertokens.ResetForTest()
-	ResetForTest()
 	didGetSessionCallCore = false
 	returnedFromCache = make(chan bool, 1000)
 	urlsAttemptedForJWKSFetch = []string{}

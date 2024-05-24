@@ -34,7 +34,6 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evclaims"
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
-	"github.com/supertokens/supertokens-golang/recipe/jwt"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless"
@@ -84,14 +83,6 @@ var deviceStore map[string]CustomDevice
 
 func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 	supertokens.ResetForTest()
-	emailpassword.ResetForTest()
-	emailverification.ResetForTest()
-	jwt.ResetForTest()
-	passwordless.ResetForTest()
-	session.ResetForTest()
-	thirdparty.ResetForTest()
-	userroles.ResetForTest()
-	multitenancy.ResetForTest()
 
 	sendPasswordlessLoginSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
 		return saveCode(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)

@@ -22,7 +22,6 @@ import (
 
 func resetAll() {
 	supertokens.ResetForTest()
-	ResetForTest()
 }
 
 func BeforeEach() {

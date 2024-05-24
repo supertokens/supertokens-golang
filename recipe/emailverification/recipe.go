@@ -101,6 +101,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config e
 		getEmailForUserIdFuncsFromOtherRecipes = append(getEmailForUserIdFuncsFromOtherRecipes, function)
 	}
 
+	r.RecipeModule.ResetForTest = resetForTest
+
 	return *r, nil
 }
 
@@ -203,7 +205,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func ResetForTest() {
+func resetForTest() {
 	singletonInstance = nil
 	EmailVerificationEmailSentForTest = false
 	EmailVerificationDataForTest = struct {

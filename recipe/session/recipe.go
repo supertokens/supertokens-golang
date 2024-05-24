@@ -97,6 +97,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.RecipeImpl = verifiedConfig.Override.Functions(recipeImplementation)
 	r.OpenIdRecipe = openIdRecipe
 
+	r.RecipeModule.ResetForTest = resetForTest
+
 	return *r, nil
 }
 
@@ -240,6 +242,6 @@ func (r *Recipe) getClaimValidatorsAddedByOtherRecipes() []claims.SessionClaimVa
 	return r.claimValidatorsAddedByOtherRecipes
 }
 
-func ResetForTest() {
+func resetForTest() {
 	singletonInstance = nil
 }

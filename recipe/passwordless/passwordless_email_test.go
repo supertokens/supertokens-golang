@@ -383,7 +383,7 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	assert.NotNil(t, PasswordlessLoginEmailDataForTest.UserInputCode)
 
 	// Test resend
-	ResetForTest()
+	supertokens.ResetForTest()
 	resp, err = unittesting.PasswordlessLoginResendRequest(body["deviceId"], body["preAuthSessionId"], testServer.URL)
 	assert.NoError(t, err)
 	assert.Equal(t, resp.StatusCode, http.StatusOK)

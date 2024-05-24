@@ -73,6 +73,8 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 		return nil
 	})
 
+	r.RecipeModule.ResetForTest = resetForTest
+
 	return *r, nil
 }
 
@@ -180,6 +182,6 @@ func (r *Recipe) getEmailForUserId(userID string, userContext supertokens.UserCo
 	}, nil
 }
 
-func ResetForTest() {
+func resetForTest() {
 	singletonInstance = nil
 }
