@@ -16,3 +16,7 @@ func runPostInitCallbacks() error {
 	postInitCallbacks = []func() error{}
 	return nil
 }
+
+func resetPostInitCallbackForTest() {
+	postInitCallbacks = []func() error{}
+}
