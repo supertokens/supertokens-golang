@@ -68,6 +68,10 @@ func saveCode(_ string, userInputCode *string, urlWithLinkCode *string, codeLife
 	}
 
 	codes := device.Codes
+	// replace sub string for urlWithLinkCode
+	if urlWithLinkCode != nil {
+		*urlWithLinkCode = strings.ReplaceAll(*urlWithLinkCode, "?preAuthSessionId", "?test=fix&preAuthSessionId")
+	}
 	device.Codes = append(codes, CustomCode{
 		UrlWithLinkCode: urlWithLinkCode,
 		UserInputCode:   userInputCode,
