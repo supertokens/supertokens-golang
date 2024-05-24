@@ -703,7 +703,7 @@ func TestSendResetPassworEmailFunction(t *testing.T) {
 	assert.NoError(t, err)
 	assert.True(t, resp.OK != nil)
 
-	assert.Contains(t, resetLink, "rid=emailpassword")
+	assert.NotContains(t, resetLink, "rid=emailpassword")
 	assert.Contains(t, resetLink, "tenantId=public")
 	assert.Contains(t, resetLink, "token=")
 }

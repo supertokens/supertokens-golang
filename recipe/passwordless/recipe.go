@@ -79,7 +79,27 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config p
 		return nil
 	})
 
+	// the code below is for testing related resets
+	PasswordlessLoginEmailSentForTest = false
+	PasswordlessLoginEmailDataForTest = struct {
+		Email            string
+		UserInputCode    *string
+		UrlWithLinkCode  *string
+		CodeLifetime     uint64
+		PreAuthSessionId string
+		UserContext      supertokens.UserContext
+	}{}
+	PasswordlessLoginSmsSentForTest = false
+	PasswordlessLoginSmsDataForTest = struct {
+		Phone            string
+		UserInputCode    *string
+		UrlWithLinkCode  *string
+		CodeLifetime     uint64
+		PreAuthSessionId string
+		UserContext      supertokens.UserContext
+	}{}
 	r.RecipeModule.ResetForTest = resetForTest
+	// the code above is for testing related resets
 
 	return *r, nil
 }
