@@ -140,7 +140,6 @@ func CreateResetPasswordLink(tenantId string, userID string, userContext ...supe
 
 	link, err := api.GetPasswordResetLink(
 		instance.RecipeModule.GetAppInfo(),
-		instance.RecipeModule.GetRecipeID(),
 		tokenResponse.OK.Token,
 		tenantId,
 		supertokens.GetRequestFromUserContext(userContext[0]),

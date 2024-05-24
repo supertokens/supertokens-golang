@@ -22,12 +22,181 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
+
+func TestWithThirdPartyPasswordlessGetUserFunctionality(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	user, err := GetUserByID("random")
+	assert.NoError(t, err)
+	assert.Nil(t, user)
+
+	resp, err := SignInUpByEmail("public", "test@example.com")
+	assert.NoError(t, err)
+	userId := resp.User.ID
+
+	user, err = GetUserByID(userId)
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+
+	assert.Equal(t, userId, user.ID)
+	assert.Equal(t, resp.User.Email, user.Email)
+	assert.Nil(t, user.PhoneNumber)
+
+	users, err := GetUserByEmail("public", "random")
+	assert.NoError(t, err)
+	assert.Nil(t, users)
+
+	users, err = GetUserByEmail("public", "test@example.com")
+	assert.NoError(t, err)
+	assert.NotNil(t, users)
+
+	userInfo := users
+
+	assert.Equal(t, user.Email, userInfo.Email)
+	assert.Equal(t, user.ID, userInfo.ID)
+	assert.Equal(t, user.PhoneNumber, userInfo.PhoneNumber)
+	assert.Nil(t, userInfo.PhoneNumber)
+	assert.Equal(t, user.TimeJoined, userInfo.TimeJoined)
+
+	user, err = GetUserByPhoneNumber("public", "random")
+	assert.NoError(t, err)
+	assert.Nil(t, user)
+
+	resp, err = SignInUpByPhoneNumber("public", "+1234567890")
+	assert.NoError(t, err)
+
+	user, err = GetUserByPhoneNumber("public", *resp.User.PhoneNumber)
+	assert.NoError(t, err)
+	assert.NotNil(t, user)
+
+	assert.Equal(t, user.Email, resp.User.Email)
+	assert.Equal(t, user.ID, resp.User.ID)
+	assert.Equal(t, user.PhoneNumber, resp.User.PhoneNumber)
+	assert.Nil(t, user.Email)
+}
+
+func TestForPasswordlessUserThatIsEmailVerifiedReturnsTrueForPhoneAndFalseForEmail(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			emailverification.Init(evmodels.TypeInput{
+				Mode: evmodels.ModeOptional,
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	response, err := SignInUpByEmail("public", "test@example.com")
+	assert.NoError(t, err)
+
+	isVerified, err := emailverification.IsEmailVerified(response.User.ID, nil)
+	assert.NoError(t, err)
+	assert.False(t, isVerified) // this is a change in behavior
+
+	emailVerificationResp, err := emailverification.CreateEmailVerificationToken("public", response.User.ID, nil)
+	assert.NoError(t, err)
+	assert.Nil(t, emailVerificationResp.EmailAlreadyVerifiedError)
+	assert.NotNil(t, emailVerificationResp.OK)
+
+	response, err = SignInUpByPhoneNumber("public", "+123456789012")
+	assert.NoError(t, err)
+
+	isVerified, err = emailverification.IsEmailVerified(response.User.ID, nil)
+	assert.NoError(t, err)
+	assert.True(t, isVerified)
+
+	emailVerificationResp, err = emailverification.CreateEmailVerificationToken("public", response.User.ID, nil)
+	assert.NoError(t, err)
+	assert.NotNil(t, emailVerificationResp.EmailAlreadyVerifiedError)
+	assert.Nil(t, emailVerificationResp.OK)
+}
 
 func TestGetUser(t *testing.T) {
 	configValue := supertokens.TypeInput{
@@ -875,7 +1044,7 @@ func TestCreatingMagicLink(t *testing.T) {
 
 	assert.Equal(t, "supertokens.io", res.Host)
 	assert.Equal(t, "/auth/verify", res.Path)
-	assert.Equal(t, "passwordless", res.Query().Get("rid"))
+	assert.Equal(t, "", res.Query().Get("rid"))
 }
 
 func TestSignInUp(t *testing.T) {

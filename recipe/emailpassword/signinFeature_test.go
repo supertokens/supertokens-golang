@@ -13,22 +13,24 @@
  * under the License.
  */
 
-package thirdpartyemailpassword
+package emailpassword
 
 import (
+	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword/tpepmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func TestIfDisableAPIdefaultEmailExistDoesNotWork(t *testing.T) {
+func TestAfterDisablingTheDefaultSigninAPIdoesNotWork(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -39,10 +41,10 @@ func TestIfDisableAPIdefaultEmailExistDoesNotWork(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(&tpepmodels.TypeInput{
-				Override: &tpepmodels.OverrideStruct{
-					APIs: func(originalImplementation tpepmodels.APIInterface) tpepmodels.APIInterface {
-						*originalImplementation.EmailPasswordEmailExistsGET = nil
+			Init(&epmodels.TypeInput{
+				Override: &epmodels.OverrideStruct{
+					APIs: func(originalImplementation epmodels.APIInterface) epmodels.APIInterface {
+						*originalImplementation.SignInPOST = nil
 						return originalImplementation
 					},
 				},
@@ -61,17 +63,14 @@ func TestIfDisableAPIdefaultEmailExistDoesNotWork(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
-	q := req.URL.Query()
-	q.Add("email", "random@gmail.com")
-	req.URL.RawQuery = q.Encode()
-	assert.NoError(t, err)
-	res, err := http.DefaultClient.Do(req)
-	assert.NoError(t, err)
-	assert.Equal(t, http.StatusNotFound, res.StatusCode)
+	resp, err := unittesting.SignInRequest("random@gmail.com", "validpass123", testServer.URL)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, http.StatusNotFound, resp.StatusCode)
 }
 
-func TestGoodInputEmailExist(t *testing.T) {
+func TestSignInAPIWorksWhenInputIsFine(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -90,7 +89,6 @@ func TestGoodInputEmailExist(t *testing.T) {
 			}),
 		},
 	}
-
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -102,34 +100,47 @@ func TestGoodInputEmailExist(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	resp, err := unittesting.SignupRequest("random@gmail.com", "validPass123", testServer.URL)
+	resp, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	var result map[string]interface{}
+	json.Unmarshal(dataInBytes, &result)
+	resp.Body.Close()
 
-	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
 	assert.Equal(t, "OK", result["status"])
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
-	q := req.URL.Query()
-	q.Add("email", "random@gmail.com")
-	req.URL.RawQuery = q.Encode()
+	signupUserInfo := result["user"].(map[string]interface{})
+
+	resp1, err := unittesting.SignInRequest("random@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	res, err := http.DefaultClient.Do(req)
+
+	assert.Equal(t, http.StatusOK, resp1.StatusCode)
+	dataInBytes1, err := io.ReadAll(resp1.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	result1 := *unittesting.HttpResponseToConsumableInformation(res.Body)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	var result1 map[string]interface{}
+	json.Unmarshal(dataInBytes1, &result1)
+	resp1.Body.Close()
+
 	assert.Equal(t, "OK", result1["status"])
-	assert.Equal(t, true, result1["exists"])
+
+	signInUserInfo := result1["user"].(map[string]interface{})
+
+	assert.Equal(t, signInUserInfo["id"], signupUserInfo["id"])
+	assert.Equal(t, signInUserInfo["email"], signupUserInfo["email"])
 }
 
-func TestGoodInputEmailDoesNotExist(t *testing.T) {
+func TestSigninAPIthrowsAnErrorWhenEmailDoesNotExist(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
@@ -148,7 +159,6 @@ func TestGoodInputEmailDoesNotExist(t *testing.T) {
 			}),
 		},
 	}
-
 	BeforeEach()
 	unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
@@ -160,63 +170,35 @@ func TestGoodInputEmailDoesNotExist(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
-	q := req.URL.Query()
-	q.Add("email", "random@gmail.com")
-	req.URL.RawQuery = q.Encode()
+	resp, err := unittesting.SignupRequest("random@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	res, err := http.DefaultClient.Do(req)
+
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	dataInBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	result := *unittesting.HttpResponseToConsumableInformation(res.Body)
-	assert.Equal(t, http.StatusOK, res.StatusCode)
+	var result map[string]interface{}
+	json.Unmarshal(dataInBytes, &result)
+	resp.Body.Close()
+
 	assert.Equal(t, "OK", result["status"])
-	assert.Equal(t, false, result["exists"])
-}
 
-func TestBadInputDoNotPassEmail(t *testing.T) {
-	configValue := supertokens.TypeInput{
-		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
-		},
-		AppInfo: supertokens.AppInfo{
-			APIDomain:     "api.supertokens.io",
-			AppName:       "SuperTokens",
-			WebsiteDomain: "supertokens.io",
-		},
-		RecipeList: []supertokens.Recipe{
-			Init(nil),
-			session.Init(&sessmodels.TypeInput{
-				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
-					return sessmodels.CookieTransferMethod
-				},
-			}),
-		},
-	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-	err := supertokens.Init(configValue)
+	resp1, err := unittesting.SignInRequest("rand@gmail.com", "validpass123", testServer.URL)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	mux := http.NewServeMux()
-	testServer := httptest.NewServer(supertokens.Middleware(mux))
-	defer testServer.Close()
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/signup/email/exists", nil)
+	assert.Equal(t, http.StatusOK, resp1.StatusCode)
+	dataInBytes1, err := io.ReadAll(resp1.Body)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	res, err := http.DefaultClient.Do(req)
-	if err != nil {
-		t.Error(err.Error())
-	}
-	result := *unittesting.HttpResponseToConsumableInformation(res.Body)
-	assert.Equal(t, http.StatusBadRequest, res.StatusCode)
-	assert.Equal(t, "Please provide the email as a GET param", result["message"])
+	var result1 map[string]interface{}
+	json.Unmarshal(dataInBytes1, &result1)
+	resp1.Body.Close()
+
+	assert.Equal(t, "WRONG_CREDENTIALS_ERROR", result1["status"])
 }

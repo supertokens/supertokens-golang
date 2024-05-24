@@ -101,7 +101,6 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 		if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
 			link, err := GetMagicLink(
 				options.AppInfo,
-				options.RecipeID,
 				response.OK.PreAuthSessionID,
 				response.OK.LinkCode,
 				tenantId,
@@ -283,7 +282,6 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 			if flowType == "MAGIC_LINK" || flowType == "USER_INPUT_CODE_AND_MAGIC_LINK" {
 				link, err := GetMagicLink(
 					options.AppInfo,
-					options.RecipeID,
 					response.OK.PreAuthSessionID,
 					response.OK.LinkCode,
 					tenantId,

@@ -34,6 +34,685 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+func TestForThatForCreateAndCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeA500Error(t *testing.T) {
+	isCreateAndSendCustomEmailCalled := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		isCreateAndSendCustomEmailCalled = true
+		return errors.New("test message")
+	}
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	email := map[string]interface{}{
+		"email": "test@example.com",
+	}
+
+	emailBody, err := json.Marshal(email)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, 500, emailResp.StatusCode)
+	assert.True(t, isCreateAndSendCustomEmailCalled)
+}
+
+func TestWithCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndMagicLinkAndEmailContactMethod(t *testing.T) {
+	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode != nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	email := map[string]interface{}{
+		"email": "test@example.com",
+	}
+
+	emailBody, err := json.Marshal(email)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
+
+	emailDataInBytes, err := io.ReadAll(emailResp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	emailResp.Body.Close()
+
+	var emailResult map[string]interface{}
+	err = json.Unmarshal(emailDataInBytes, &emailResult)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", emailResult["status"])
+	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
+}
+
+func TestCreateAndSendCustomEmailWithFlowTypeMagicLinkAndEmailContactMethod(t *testing.T) {
+	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode == nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "MAGIC_LINK",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	email := map[string]interface{}{
+		"email": "test@example.com",
+	}
+
+	emailBody, err := json.Marshal(email)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
+
+	emailDataInBytes, err := io.ReadAll(emailResp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	emailResp.Body.Close()
+
+	var emailResult map[string]interface{}
+	err = json.Unmarshal(emailDataInBytes, &emailResult)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", emailResult["status"])
+	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
+}
+
+func TestCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndEmailContactMethod(t *testing.T) {
+	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode != nil && input.PasswordlessLogin.UrlWithLinkCode == nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE",
+				EmailDelivery: &emaildelivery.TypeInput{
+					Service: &emaildelivery.EmailDeliveryInterface{
+						SendEmail: &sendEmail,
+					},
+				},
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	email := map[string]interface{}{
+		"email": "test@example.com",
+	}
+
+	emailBody, err := json.Marshal(email)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
+
+	emailDataInBytes, err := io.ReadAll(emailResp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	emailResp.Body.Close()
+
+	var emailResult map[string]interface{}
+	err = json.Unmarshal(emailDataInBytes, &emailResult)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", emailResult["status"])
+	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
+}
+
+func TestValidateEmailAdressThrowsGenericErrorInCaseOfReturningAString(t *testing.T) {
+	isValidateEmailAddressCalled := false
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
+						isValidateEmailAddressCalled = true
+						message := "test error"
+						return &message
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	email := map[string]interface{}{
+		"email": "test@example.com",
+	}
+
+	emailBody, err := json.Marshal(email)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
+
+	emailDataInBytes, err := io.ReadAll(emailResp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	emailResp.Body.Close()
+
+	var emailResult map[string]interface{}
+	err = json.Unmarshal(emailDataInBytes, &emailResult)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "GENERAL_ERROR", emailResult["status"])
+	assert.Equal(t, "test error", emailResult["message"])
+	assert.True(t, isValidateEmailAddressCalled)
+}
+
+func TestIfValidateEmailAdressIsCalledWithContactMethod(t *testing.T) {
+	isValidateEmailAddressCalled := false
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+					Enabled: true,
+					ValidateEmailAddress: func(email interface{}, tenantId string) *string {
+						isValidateEmailAddressCalled = true
+						return nil
+					},
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	email := map[string]interface{}{
+		"email": "test@example.com",
+	}
+
+	emailBody, err := json.Marshal(email)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	emailResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(emailBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, emailResp.StatusCode)
+
+	emailDataInBytes, err := io.ReadAll(emailResp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	emailResp.Body.Close()
+
+	var emailResult map[string]interface{}
+	err = json.Unmarshal(emailDataInBytes, &emailResult)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", emailResult["status"])
+	assert.True(t, isValidateEmailAddressCalled)
+}
+
+func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldReturnA500Error(t *testing.T) {
+	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		isUserInputCodeAndUrlWithLinkCodeValid = true
+		return errors.New("test message")
+	}
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "MAGIC_LINK",
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
+				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	phone := map[string]interface{}{
+		"phoneNumber": "+12345678901",
+	}
+
+	phoneBody, err := json.Marshal(phone)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	phoneResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(phoneBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, 500, phoneResp.StatusCode)
+	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
+}
+
+func TestCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndMagicLinkAndPhoneContactMethod(t *testing.T) {
+	isUserInputCodeAndUrlWithLinkCodeValid := false
+	sendSms := func(input smsdelivery.SmsType, userContext supertokens.UserContext) error {
+		if input.PasswordlessLogin.UserInputCode != nil && input.PasswordlessLogin.UrlWithLinkCode != nil {
+			isUserInputCodeAndUrlWithLinkCodeValid = true
+		}
+		return nil
+	}
+
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+			Init(plessmodels.TypeInput{
+				FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+				SmsDelivery: &smsdelivery.TypeInput{
+					Service: &smsdelivery.SmsDeliveryInterface{
+						SendSms: &sendSms,
+					},
+				},
+				ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+					Enabled: true,
+				},
+			}),
+		},
+	}
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	q, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	apiV, err := q.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	if unittesting.MaxVersion(apiV, "2.11") == "2.11" {
+		return
+	}
+
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	phone := map[string]interface{}{
+		"phoneNumber": "+12345678901",
+	}
+
+	phoneBody, err := json.Marshal(phone)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	phoneResp, err := http.Post(testServer.URL+"/auth/signinup/code", "application/json", bytes.NewBuffer(phoneBody))
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, phoneResp.StatusCode)
+
+	phoneDataInBytes, err := io.ReadAll(phoneResp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	phoneResp.Body.Close()
+
+	var phoneResult map[string]interface{}
+	err = json.Unmarshal(phoneDataInBytes, &phoneResult)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", phoneResult["status"])
+	assert.True(t, isUserInputCodeAndUrlWithLinkCodeValid)
+}
+
 func TestMinimumConfigWithEmailOrPhoneContactMethod(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{

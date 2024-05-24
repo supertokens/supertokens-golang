@@ -9,7 +9,7 @@ import (
 	"github.com/osohq/go-oso"
 	"github.com/supertokens/supertokens-golang/examples/with-chi-oso/models"
 	"github.com/supertokens/supertokens-golang/recipe/session"
-	"github.com/supertokens/supertokens-golang/recipe/thirdpartyemailpassword"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -92,7 +92,7 @@ func (s *service) Repo(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte(err.Error()))
 		return
 	}
-	userByID, err := thirdpartyemailpassword.GetUserById(sessionContainer.GetUserID())
+	userByID, err := thirdparty.GetUserByID(sessionContainer.GetUserID())
 	if err != nil {
 		w.WriteHeader(500)
 		w.Write([]byte(err.Error()))

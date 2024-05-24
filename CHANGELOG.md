@@ -7,6 +7,133 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.20.0] - 2024-05-23
+
+### Breaking change
+
+-   Removed ThirdPartyEmailPassword and ThirdPartyPasswordless recipes. Instead, you should use ThirdParty + EmailPassword or ThirdParty + Passwordless recipes separately in your recipe list.
+-   Removed `rid` query param from:
+    -   email verification links
+    -   passwordless magic links
+    -   password reset links
+
+### Changes
+
+-   If `rid` header is present in an API call, the routing no only only depends on that. If the SDK cannot resolve a request handler based on the `rid`, request path and method, it will try to resolve a request handler only based on the request path and method (therefore ignoring the `rid` header).
+-   New API handlers are:
+    -   `GET /emailpassword/email/exists` => email password, does email exist API (used to be `GET /signup/email/exists` with `rid` of `emailpassword` or `thirdpartyemailpassword` which is now deprecated)
+    -   `GET /passwordless/email/exists` => email password, does email exist API (used to be `GET /signup/email/exists` with `rid` of `passwordless` or `thirdpartypasswordless` which is now deprecated)
+    -   `GET /passwordless/phonenumber/exists` => email password, does email exist API (used to be `GET /signup/phonenumber/exists` which is now deprecated)
+-   Support for FDI 2.0
+
+### Migration guide
+
+-   If you were using `ThirdPartyEmailPassword`, you should now init `ThirdParty` and `EmailPassword` recipes separately. The config for the individual recipes are mostly the same, except the syntax may be different. Check our recipe guides for [ThirdParty](https://supertokens.com/docs/thirdparty/introduction) and [EmailPassword](https://supertokens.com/docs/emailpassword/introduction) for more information.
+
+-   If you were using `ThirdPartyPasswordless`, you should now init `ThirdParty` and `Passwordless` recipes separately. The config for the individual recipes are mostly the same, except the syntax may be different. Check our recipe guides for [ThirdParty](https://supertokens.com/docs/thirdparty/introduction) and [Passwordless](https://supertokens.com/docs/passwordless/introduction) for more information.
+
+- The way to get user information has changed:
+    - If you are using `thirdpartyemailpassword.GetUsersByEmail`:
+    
+        Before:
+        ```go
+        userInfo, err := thirdpartyemailpassword.GetUsersByEmail("public", "test@example.com")
+        ```
+
+        After:
+        ```go
+        thirdPartyUserInfo, err := thirdparty.GetUsersByEmail("public", "test@example.com")
+        if err != nil {
+            // TODO: Handle error
+        }
+
+        emailPasswordUserInfo, err := emailpassword.GetUserByEmail("public", "test@example.com")
+        if err != nil {
+            // TODO: Handle error
+        }
+
+        if emailPasswordUserInfo != nil {
+            fmt.Println(emailPasswordUserInfo)
+        }
+        if len(thirdPartyUserInfo) > 0 {
+            fmt.Println(thirdPartyUserInfo)
+        }
+        ```
+
+    - If you are using `thirdpartyemailpassword.GetUserById`:
+    
+        Before:
+        ```go
+        userInfo, err := thirdpartyemailpassword.GetUserById(userID)
+        ```
+
+        After:
+        ```go
+        userInfo, err := thirdparty.GetUserByID(userID)
+        if err != nil {
+            // TODO: Handle error
+        }
+        if userInfo == nil {
+            emailPasswordUserInfo, err := emailpassword.GetUserByID(userID)
+            if err != nil {
+                // TODO: Handle error
+            }
+            fmt.Println(emailPasswordUserInfo)
+        } else {
+            fmt.Println(userInfo)
+        }
+        ```
+    - If you are using `thirdpartypasswordless.GetUsersByEmail`:
+    
+        Before:
+        ```go
+        userInfo, err := thirdpartypasswordless.GetUsersByEmail("public", "test@example.com")
+        ```
+
+        After:
+        ```go
+        thirdPartyUserInfo, err := thirdparty.GetUsersByEmail("public", "test@example.com")
+        if err != nil {
+            return
+        }
+
+        passwordlessUserInfo, err := passwordless.GetUserByEmail("public", "test@example.com")
+        if err != nil {
+            return
+        }
+
+        if passwordlessUserInfo != nil {
+            fmt.Println(passwordlessUserInfo)
+        }
+        if len(thirdPartyUserInfo) > 0 {
+            fmt.Println(thirdPartyUserInfo)
+        }
+        ```
+
+    - If you are using `thirdpartypasswordless.GetUserById`:
+    
+        Before:
+        ```go
+        userInfo, err := thirdpartypasswordless.GetUserById(userID)
+        ```
+
+        After:
+        ```go
+        userInfo, err := thirdparty.GetUserByID(userID)
+        if err != nil {
+            // TODO: Handle error
+        }
+        if userInfo == nil {
+            passwordlessUserInfo, err := passwordless.GetUserByID(userID)
+            if err != nil {
+                // TODO: Handle error
+            }
+            fmt.Println(passwordlessUserInfo)
+        } else {
+            fmt.Println(userInfo)
+        }
+        ```
+
 ## [0.19.0] - 2024-05-01
 
 - Added `OlderCookieDomain` config option in the session recipe. This will allow users to clear cookies from the older domain when the `CookieDomain` is changed.

@@ -16,6 +16,7 @@
 package thirdparty
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -179,7 +180,7 @@ var customProvider2 = tpmodels.ProviderInput{
 	Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 			return tpmodels.TypeUserInfo{
-				ThirdPartyUserId: oAuthTokens["id"].(string),
+				ThirdPartyUserId: oAuthTokens["access_token"].(string),
 				Email: &tpmodels.EmailStruct{
 					ID:         oAuthTokens["email"].(string),
 					IsVerified: true,
@@ -235,6 +236,25 @@ var customProvider3 = tpmodels.ProviderInput{
 			return tpmodels.TypeUserInfo{
 				ThirdPartyUserId: "user",
 			}, nil
+		}
+		return originalImplementation
+	},
+}
+
+var signinupCustomProvider4 = tpmodels.ProviderInput{
+	Config: tpmodels.ProviderConfig{
+		ThirdPartyId: "custom",
+		Clients: []tpmodels.ProviderClientConfig{
+			{
+				ClientID: "supertokens",
+			},
+		},
+		AuthorizationEndpoint: "https://test.com/oauth/auth",
+		TokenEndpoint:         "https://test.com/oauth/token",
+	},
+	Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			return tpmodels.TypeUserInfo{}, errors.New("error from getUserInfo")
 		}
 		return originalImplementation
 	},

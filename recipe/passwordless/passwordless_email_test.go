@@ -26,12 +26,311 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification"
+	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
+	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/smtpService"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/plessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
+
+func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	getContentCalled := false
+	sendRawEmailCalled := false
+	email := ""
+	emailVerifyLink := ""
+	var userInputCode *string
+
+	evSmtpService := smtpService.MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
+			Host: "",
+			From: emaildelivery.SMTPFrom{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
+				if input.EmailVerification != nil {
+					email = input.EmailVerification.User.Email
+					emailVerifyLink = input.EmailVerification.EmailVerifyLink
+					getContentCalled = true
+				}
+				return emaildelivery.EmailContent{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tplSmtpService := MakeSMTPService(emaildelivery.SMTPServiceConfig{
+		Settings: emaildelivery.SMTPSettings{
+			Host: "",
+			From: emaildelivery.SMTPFrom{
+				Name:  "Test User",
+				Email: "",
+			},
+			Port:     123,
+			Password: "",
+		},
+		Override: func(originalImplementation emaildelivery.SMTPInterface) emaildelivery.SMTPInterface {
+			(*originalImplementation.GetContent) = func(input emaildelivery.EmailType, userContext supertokens.UserContext) (emaildelivery.EmailContent, error) {
+				if input.PasswordlessLogin != nil {
+					userInputCode = input.PasswordlessLogin.UserInputCode
+				}
+				return emaildelivery.EmailContent{}, nil
+			}
+
+			(*originalImplementation.SendRawEmail) = func(input emaildelivery.EmailContent, userContext supertokens.UserContext) error {
+				sendRawEmailCalled = true
+				return nil
+			}
+
+			return originalImplementation
+		},
+	})
+	tplConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+			Enabled: true,
+		},
+		EmailDelivery: &emaildelivery.TypeInput{
+			Service: tplSmtpService,
+		},
+	}
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Service: evSmtpService,
+			},
+		}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
+	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
+	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	var response map[string]interface{}
+	json.Unmarshal(bodyBytes, &response)
+
+	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *userInputCode, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	sendRawEmailCalled = false // it would be true for the passwordless login, so reset it
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	bodyBytes, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	json.Unmarshal(bodyBytes, &response)
+	assert.Equal(t, response["status"], "EMAIL_ALREADY_VERIFIED_ERROR")
+
+	// Default handler not called
+	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+
+	// Custom handler not called
+	assert.Empty(t, email)
+	assert.Empty(t, emailVerifyLink)
+	assert.False(t, getContentCalled)
+	assert.False(t, sendRawEmailCalled)
+}
+
+func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	customCalled := false
+	email := ""
+	emailVerifyLink := ""
+
+	tplConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+			Enabled: true,
+		},
+	}
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{
+			Mode: evmodels.ModeOptional,
+			EmailDelivery: &emaildelivery.TypeInput{
+				Override: func(originalImplementation emaildelivery.EmailDeliveryInterface) emaildelivery.EmailDeliveryInterface {
+					sendEmail := *originalImplementation.SendEmail
+					*originalImplementation.SendEmail = func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+						if input.EmailVerification != nil {
+							customCalled = true
+							email = input.EmailVerification.User.Email
+							emailVerifyLink = input.EmailVerification.EmailVerifyLink
+							return nil
+						}
+						return sendEmail(input, userContext)
+					}
+					return originalImplementation
+				},
+			},
+		}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
+	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
+	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	var response map[string]interface{}
+	json.Unmarshal(bodyBytes, &response)
+
+	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	bodyBytes, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	json.Unmarshal(bodyBytes, &response)
+	assert.Equal(t, response["status"], "EMAIL_ALREADY_VERIFIED_ERROR")
+
+	// Default handler not called
+	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+
+	// Custom handler not called
+	assert.Empty(t, email)
+	assert.Empty(t, emailVerifyLink)
+	assert.False(t, customCalled)
+}
+
+func TestDefaultBackwardCompatibilityEmailVerifyForUser(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+
+	tplConfig := plessmodels.TypeInput{
+		FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
+		ContactMethodEmail: plessmodels.ContactMethodEmailConfig{
+			Enabled: true,
+		},
+	}
+	testServer := supertokensInitForTest(
+		t,
+		emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}),
+		session.Init(&sessmodels.TypeInput{
+			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+				return sessmodels.CookieTransferMethod
+			},
+		}),
+		Init(tplConfig),
+	)
+	defer testServer.Close()
+
+	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
+	if err != nil {
+		t.Error(err.Error())
+	}
+	cdiVersion, err := querier.GetQuerierAPIVersion()
+	if err != nil {
+		t.Error(err.Error())
+	}
+	if unittesting.MaxVersion("2.10", cdiVersion) == "2.10" {
+		return
+	}
+
+	resp, err := unittesting.PasswordlessEmailLoginRequest("test@example.com", testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	bodyBytes, err := ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	var response map[string]interface{}
+	json.Unmarshal(bodyBytes, &response)
+
+	resp, err = unittesting.PasswordlessLoginWithCodeRequest(response["deviceId"].(string), response["preAuthSessionId"].(string), *PasswordlessLoginEmailDataForTest.UserInputCode, testServer.URL)
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+
+	cookies := resp.Cookies()
+	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+
+	bodyBytes, err = ioutil.ReadAll(resp.Body)
+	assert.NoError(t, err)
+
+	json.Unmarshal(bodyBytes, &response)
+	assert.Equal(t, response["status"], "EMAIL_ALREADY_VERIFIED_ERROR")
+
+	assert.NoError(t, err)
+	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.False(t, emailverification.EmailVerificationEmailSentForTest)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.User.Email)
+	assert.Empty(t, emailverification.EmailVerificationDataForTest.EmailVerifyURLWithToken)
+}
 
 func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	BeforeEach()

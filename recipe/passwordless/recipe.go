@@ -118,7 +118,15 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 	if err != nil {
 		return nil, err
 	}
+	doesEmailExistsAPINormalisedOld, err := supertokens.NewNormalisedURLPath(doesEmailExistAPIOld)
+	if err != nil {
+		return nil, err
+	}
 	doesEmailExistsAPINormalised, err := supertokens.NewNormalisedURLPath(doesEmailExistAPI)
+	if err != nil {
+		return nil, err
+	}
+	doesPhoneNumberExistsAPINormalisedOld, err := supertokens.NewNormalisedURLPath(doesPhoneNumberExistAPIOld)
 	if err != nil {
 		return nil, err
 	}
@@ -143,9 +151,19 @@ func (r *Recipe) getAPIsHandled() ([]supertokens.APIHandled, error) {
 		Disabled:               r.APIImpl.CreateCodePOST == nil,
 	}, {
 		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: doesEmailExistsAPINormalisedOld,
+		ID:                     doesEmailExistAPIOld,
+		Disabled:               r.APIImpl.EmailExistsGET == nil,
+	}, {
+		Method:                 http.MethodGet,
 		PathWithoutAPIBasePath: doesEmailExistsAPINormalised,
 		ID:                     doesEmailExistAPI,
 		Disabled:               r.APIImpl.EmailExistsGET == nil,
+	}, {
+		Method:                 http.MethodGet,
+		PathWithoutAPIBasePath: doesPhoneNumberExistsAPINormalisedOld,
+		ID:                     doesPhoneNumberExistAPIOld,
+		Disabled:               r.APIImpl.PhoneNumberExistsGET == nil,
 	}, {
 		Method:                 http.MethodGet,
 		PathWithoutAPIBasePath: doesPhoneNumberExistsAPINormalised,
@@ -175,9 +193,9 @@ func (r *Recipe) handleAPIRequest(id string, tenantId string, req *http.Request,
 		return api.ConsumeCode(r.APIImpl, tenantId, options, userContext)
 	} else if id == createCodeAPI {
 		return api.CreateCode(r.APIImpl, tenantId, options, userContext)
-	} else if id == doesEmailExistAPI {
+	} else if id == doesEmailExistAPIOld || id == doesEmailExistAPI {
 		return api.DoesEmailExist(r.APIImpl, tenantId, options, userContext)
-	} else if id == doesPhoneNumberExistAPI {
+	} else if id == doesPhoneNumberExistAPIOld || id == doesPhoneNumberExistAPI {
 		return api.DoesPhoneNumberExist(r.APIImpl, tenantId, options, userContext)
 	} else {
 		return api.ResendCode(r.APIImpl, tenantId, options, userContext)
@@ -212,7 +230,6 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId st
 	}
 	link, err := api.GetMagicLink(
 		stInstance.AppInfo,
-		r.RecipeModule.GetRecipeID(),
 		response.OK.PreAuthSessionID,
 		response.OK.LinkCode,
 		tenantId,
