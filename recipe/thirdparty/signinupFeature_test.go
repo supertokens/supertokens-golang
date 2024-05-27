@@ -1179,7 +1179,7 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 	gock.New("https://test.com/").
 		Post("oauth/token").
 		Reply(200).
-		JSON(map[string]string{"access_token": "abcdefghj", "email": "test@example.com"})
+		JSON(map[string]string{"access_token": "abcdefghj", "email": "test@example.com", "id": "abcdefghj"})
 
 	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
