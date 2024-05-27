@@ -92,11 +92,20 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 		return saveCode(input.PasswordlessLogin.PhoneNumber, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
 	}
 
+	sendPasswordlessLoginEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
+		return saveCode(input.PasswordlessLogin.Email, input.PasswordlessLogin.UserInputCode, input.PasswordlessLogin.UrlWithLinkCode, input.PasswordlessLogin.CodeLifetime, input.PasswordlessLogin.PreAuthSessionId, userContext)
+	}
+
 	if passwordlessConfig == nil {
 		passwordlessConfig = &plessmodels.TypeInput{
 			SmsDelivery: &smsdelivery.TypeInput{
 				Service: &smsdelivery.SmsDeliveryInterface{
 					SendSms: &sendPasswordlessLoginSms,
+				},
+			},
+			EmailDelivery: &emaildelivery.TypeInput{
+				Service: &emaildelivery.EmailDeliveryInterface{
+					SendEmail: &sendPasswordlessLoginEmail,
 				},
 			},
 			ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
@@ -414,6 +423,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 			rw.Write(bytes)
 		} else if r.URL.Path == "/beforeeach" && r.Method == "POST" {
 			deviceStore = map[string]CustomDevice{}
+			callSTInit(nil)
 			rw.WriteHeader(200)
 			rw.Header().Add("content-type", "application/json")
 			bytes, _ := json.Marshal(map[string]interface{}{})
