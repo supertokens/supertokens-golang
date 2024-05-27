@@ -69,17 +69,20 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 		Reply(200).
 		JSON(map[string]string{})
 
-	postData := map[string]interface{}{
-		"thirdPartyId": "custom",
-		"redirectURIInfo": map[string]interface{}{
-			"redirectURIOnProviderDashboard": "http://127.0.0.1/callback",
-			"redirectURIQueryParams": map[string]interface{}{
-				"code": "abcdefghj",
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": "test@example.com",
+			},
+			{
+				"id":    "password",
+				"value": "abcd1234",
 			},
 		},
 	}
 
-	postBody, err := json.Marshal(postData)
+	postBody, err := json.Marshal(formFields)
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -87,7 +90,7 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 	gock.New(testServer.URL).EnableNetworking().Persist()
 	gock.New("http://localhost:8080/").EnableNetworking().Persist()
 
-	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {
 		t.Error(err.Error())
 	}
