@@ -60,7 +60,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	r.RecipeImpl = verifiedConfig.Override.Functions(makeRecipeImplementation(verifiedConfig, jwtRecipe.RecipeImpl))
 	r.JwtRecipe = jwtRecipe
 
-	r.RecipeModule.ResetForTest = resetForTest
+	r.RecipeModule.ResetForTest = ResetForTest
 
 	return *r, nil
 }
@@ -133,6 +133,7 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return r.JwtRecipe.RecipeModule.HandleError(err, req, res, userContext)
 }
 
-func resetForTest() {
+func ResetForTest() {
 	singletonInstance = nil
+	jwt.ResetForTest()
 }

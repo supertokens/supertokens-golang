@@ -51,7 +51,7 @@ func MakeRecipe(recipeId string, appInfo supertokens.NormalisedAppinfo, config *
 	recipeModuleInstance := supertokens.MakeRecipeModule(recipeId, appInfo, r.handleAPIRequest, r.getAllCORSHeaders, r.getAPIsHandled, nil, r.handleError, onSuperTokensAPIError)
 	r.RecipeModule = recipeModuleInstance
 
-	r.RecipeModule.ResetForTest = resetForTest
+	r.RecipeModule.ResetForTest = ResetForTest
 
 	return *r, nil
 }
@@ -113,6 +113,6 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func resetForTest() {
+func ResetForTest() {
 	singletonInstance = nil
 }

@@ -1358,6 +1358,10 @@ func TestWithDuplicateProvider(t *testing.T) {
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
+		session.ResetForTest()
+		ResetForTest()
 		assert.Equal(t, "The providers array has multiple entries for the same third party provider.", err.Error())
+	} else {
+		t.Error("Test failed")
 	}
 }
