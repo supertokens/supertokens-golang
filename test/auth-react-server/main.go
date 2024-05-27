@@ -99,7 +99,7 @@ func callSTInit(passwordlessConfig *plessmodels.TypeInput) {
 					SendSms: &sendPasswordlessLoginSms,
 				},
 			},
-			ContactMethodPhone: plessmodels.ContactMethodPhoneConfig{
+			ContactMethodEmailOrPhone: plessmodels.ContactMethodEmailOrPhoneConfig{
 				Enabled: true,
 			},
 			FlowType: "USER_INPUT_CODE_AND_MAGIC_LINK",
