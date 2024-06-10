@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -45,6 +46,8 @@ var (
 	querierLock           sync.Mutex
 	querierHostLock       sync.Mutex
 	querierInterceptor    func(*http.Request, UserContext) *http.Request
+	querierGlobalCacheTag uint64
+	querierDisableCache   bool
 )
 
 func SetQuerierApiVersionForTests(version string) {
@@ -101,7 +104,7 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Request, UserContext) *http.Request) {
+func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Request, UserContext) *http.Request, disableCache bool) {
 	if !querierInitCalled {
 		querierInitCalled = true
 		QuerierHosts = hosts
@@ -111,10 +114,13 @@ func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Requ
 		querierAPIVersion = ""
 		querierLastTriedIndex = 0
 		querierInterceptor = interceptor
+		querierGlobalCacheTag = GetCurrTimeInMS()
+		querierDisableCache = disableCache
 	}
 }
 
 func (q *Querier) SendPostRequest(path string, data map[string]interface{}, userContext UserContext) (map[string]interface{}, error) {
+	q.InvalidateCoreCallCache(userContext, true)
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -157,6 +163,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}, user
 }
 
 func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string, userContext UserContext) (map[string]interface{}, error) {
+	q.InvalidateCoreCallCache(userContext, true)
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -215,21 +222,81 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 
 		query := req.URL.Query()
 
-		for k, v := range params {
-			query.Add(k, v)
+		// Sort the keys for deterministic order
+		sortedKeys := make([]string, 0, len(params))
+		for k := range params {
+			sortedKeys = append(sortedKeys, k)
 		}
-		req.URL.RawQuery = query.Encode()
+		sort.Strings(sortedKeys)
+
+		// Start with the path as the unique key
+		uniqueKey := nP.GetAsStringDangerous()
+
+		// Append sorted params to the unique key
+		for _, key := range sortedKeys {
+			value := params[key]
+			uniqueKey += ";" + key + "=" + value
+		}
+
+		// Append a separator for headers
+		uniqueKey += ";hdrs"
+
+		// Append sorted headers to the unique key
+		headers := make(map[string]string)
 
 		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
 			return nil, querierAPIVersionError
 		}
-		req.Header.Set("cdi-version", apiVersion)
+		headers["cdi-version"] = apiVersion
+
 		if QuerierAPIKey != nil {
-			req.Header.Set("api-key", *QuerierAPIKey)
+			headers["api-key"] = *QuerierAPIKey
 		}
+
 		if nP.IsARecipePath() && q.RIDToCore != "" {
-			req.Header.Set("rid", q.RIDToCore)
+			headers["rid"] = q.RIDToCore
+		}
+
+		sortedHeaderKeys := make([]string, 0, len(headers))
+		for k := range headers {
+			sortedHeaderKeys = append(sortedHeaderKeys, k)
+		}
+		sort.Strings(sortedHeaderKeys)
+
+		for _, key := range sortedHeaderKeys {
+			value := headers[key]
+			uniqueKey += ";" + key + "=" + value
+		}
+
+		for k, v := range params {
+			query.Add(k, v)
+		}
+		req.URL.RawQuery = query.Encode()
+
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+
+		if userContext != nil {
+			defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+			if !ok {
+				defaultContext = make(map[string]interface{})
+			}
+
+			globalCacheTag, ok := defaultContext["globalCacheTag"].(uint64)
+			if !ok || globalCacheTag != querierGlobalCacheTag {
+				q.InvalidateCoreCallCache(userContext, false)
+			}
+
+			coreCallCache, ok := defaultContext["coreCallCache"].(map[string]interface{})
+			if !ok {
+				coreCallCache = make(map[string]interface{})
+			}
+
+			if !querierDisableCache && coreCallCache[uniqueKey] != nil {
+				return coreCallCache[uniqueKey].(*http.Response), nil
+			}
 		}
 
 		if querierInterceptor != nil {
@@ -237,7 +304,30 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 		}
 
 		client := &http.Client{}
-		return client.Do(req)
+		response, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+
+		if response.StatusCode == 200 && !querierDisableCache && userContext != nil {
+			defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+			if !ok {
+				defaultContext = make(map[string]interface{})
+			}
+
+			coreCallCache, ok := defaultContext["coreCallCache"].(map[string]interface{})
+			if !ok {
+				coreCallCache = make(map[string]interface{})
+			}
+
+			coreCallCache[uniqueKey] = response
+			defaultContext["coreCallCache"] = coreCallCache
+			defaultContext["globalCacheTag"] = querierGlobalCacheTag
+
+			(*userContext)["_default"] = defaultContext
+		}
+
+		return response, nil
 	}, len(QuerierHosts), nil)
 	return resp, err
 }
@@ -283,6 +373,7 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 }
 
 func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userContext UserContext) (map[string]interface{}, error) {
+	q.InvalidateCoreCallCache(userContext, true)
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
@@ -319,6 +410,37 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userC
 		return client.Do(req)
 	}, len(QuerierHosts), nil)
 	return resp, err
+}
+
+func (q *Querier) InvalidateCoreCallCache(userContext UserContext, updGlobalCacheTagIfNecessary bool) {
+	if userContext == nil {
+		// Create an empty map to avoid nil pointer dereference
+		emptyMap := make(map[string]interface{})
+		userContext = &emptyMap
+	}
+
+	if updGlobalCacheTagIfNecessary {
+		defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+		if !ok {
+			defaultContext = make(map[string]interface{})
+		}
+
+		keepCacheAlive, ok := defaultContext["keepCacheAlive"].(bool)
+		if !ok || !keepCacheAlive {
+			// Update the global cache tag to invalidate the cache
+			querierGlobalCacheTag = GetCurrTimeInMS()
+		}
+	}
+
+	defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+	if !ok {
+		defaultContext = make(map[string]interface{})
+	}
+
+	// Clear the core call cache
+	defaultContext["coreCallCache"] = make(map[string]interface{})
+
+	(*userContext)["_default"] = defaultContext
 }
 
 type httpRequestFunction func(url string) (*http.Response, error)
