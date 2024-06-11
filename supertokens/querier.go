@@ -313,6 +313,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 		}
 
 		if response.StatusCode == 200 && !querierDisableCache && userContext != nil {
+			defer response.Body.Close()
 			body, err := ioutil.ReadAll(response.Body)
 			if err != nil {
 				return nil, nil, err
@@ -510,20 +511,18 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		if strings.Contains(err.Error(), "connection refused") {
 			return q.sendRequestHelper(path, httpRequest, numberOfTries-1, &_retryInfoMap)
 		}
-		if resp != nil {
+		if cachedBody == nil && resp != nil {
 			resp.Body.Close()
 		}
 		return nil, nil, err
 	}
 
 	body := cachedBody
-	if resp != nil {
-		defer resp.Body.Close()
-	}
 	if body == nil {
 		if resp == nil {
 			return nil, nil, errors.New("You found a bug in our code! Response should never be nil here")
 		}
+		defer resp.Body.Close()
 		body, err = ioutil.ReadAll(resp.Body)
 		if err != nil {
 			return nil, nil, err
