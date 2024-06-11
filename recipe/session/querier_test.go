@@ -3,13 +3,14 @@ package session
 import (
 	"encoding/json"
 	"errors"
-	"github.com/stretchr/testify/assert"
-	"github.com/supertokens/supertokens-golang/supertokens"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"sync"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 func resetQuerier() {
