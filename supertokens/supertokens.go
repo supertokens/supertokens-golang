@@ -487,5 +487,9 @@ func getRequestFromUserContext(userContext UserContext) *http.Request {
 		return nil
 	}
 
-	return defaultObj.(map[string]interface{})["request"].(*http.Request)
+	requestObj, ok := defaultObj.(map[string]interface{})["request"].(*http.Request)
+	if !ok {
+		return nil
+	}
+	return requestObj
 }
