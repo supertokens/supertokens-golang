@@ -29,6 +29,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 
 	"golang.org/x/net/publicsuffix"
 )
@@ -258,6 +259,10 @@ func formatOneDecimalFloat(n float64) (string, string) {
 	return fmt.Sprintf("%.1f", n), "s"
 }
 
+func GetCurrTimeInMS() uint64 {
+	return uint64(time.Now().UnixNano() / 1000000)
+}
+
 func HumaniseMilliseconds(m uint64) string {
 	t := m / 1000
 	var suffix string = ""
@@ -318,8 +323,10 @@ func SetRequestInUserContextIfNotDefined(userContext *map[string]interface{}, r 
 
 	if reflect.TypeOf(_userContext["_default"]).Kind() == reflect.TypeOf(emptyMap).Kind() {
 		defaultObj.(map[string]interface{})["request"] = r
-		_userContext["_default"] = defaultObj
+		defaultObj.(map[string]interface{})["keepCacheAlive"] = true
 	}
+
+	_userContext["_default"] = defaultObj
 
 	return &_userContext
 }

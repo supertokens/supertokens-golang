@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"sort"
 	"strings"
 	"sync"
 	"time"
@@ -45,6 +46,8 @@ var (
 	querierLock           sync.Mutex
 	querierHostLock       sync.Mutex
 	querierInterceptor    func(*http.Request, UserContext) *http.Request
+	querierGlobalCacheTag uint64
+	querierDisableCache   bool
 )
 
 func SetQuerierApiVersionForTests(version string) {
@@ -57,16 +60,17 @@ func (q *Querier) GetQuerierAPIVersion() (string, error) {
 	if querierAPIVersion != "" {
 		return querierAPIVersion, nil
 	}
-	response, _, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, error) {
+	response, _, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, []byte, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		if QuerierAPIKey != nil {
 			req.Header.Set("api-key", *QuerierAPIKey)
 		}
 		client := &http.Client{}
-		return client.Do(req)
+		resp, err := client.Do(req)
+		return resp, nil, err
 	}, len(QuerierHosts), nil)
 
 	if err != nil {
@@ -101,7 +105,7 @@ func GetNewQuerierInstanceOrThrowError(rIDToCore string) (*Querier, error) {
 	return &Querier{RIDToCore: rIDToCore}, nil
 }
 
-func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Request, UserContext) *http.Request) {
+func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Request, UserContext) *http.Request, disableCache bool) {
 	if !querierInitCalled {
 		querierInitCalled = true
 		QuerierHosts = hosts
@@ -111,30 +115,33 @@ func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Requ
 		querierAPIVersion = ""
 		querierLastTriedIndex = 0
 		querierInterceptor = interceptor
+		querierGlobalCacheTag = GetCurrTimeInMS()
+		querierDisableCache = disableCache
 	}
 }
 
 func (q *Querier) SendPostRequest(path string, data map[string]interface{}, userContext UserContext) (map[string]interface{}, error) {
+	q.InvalidateCoreCallCache(userContext, true)
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
 	}
-	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, []byte, error) {
 		if data == nil {
 			data = map[string]interface{}{}
 		}
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
-			return nil, querierAPIVersionError
+			return nil, nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
@@ -151,24 +158,26 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}, user
 		}
 
 		client := &http.Client{}
-		return client.Do(req)
+		resp, err := client.Do(req)
+		return resp, nil, err
 	}, len(QuerierHosts), nil)
 	return resp, err
 }
 
 func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, params map[string]string, userContext UserContext) (map[string]interface{}, error) {
+	q.InvalidateCoreCallCache(userContext, true)
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
 	}
-	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, []byte, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		req, err := http.NewRequest("DELETE", url, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		query := req.URL.Query()
@@ -180,7 +189,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 
 		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
-			return nil, querierAPIVersionError
+			return nil, nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
@@ -197,7 +206,8 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 		}
 
 		client := &http.Client{}
-		return client.Do(req)
+		resp, err := client.Do(req)
+		return resp, nil, err
 	}, len(QuerierHosts), nil)
 	return resp, err
 }
@@ -207,29 +217,89 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 	if err != nil {
 		return nil, err
 	}
-	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, []byte, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		query := req.URL.Query()
+
+		// Sort the keys for deterministic order
+		sortedKeys := make([]string, 0, len(params))
+		for k := range params {
+			sortedKeys = append(sortedKeys, k)
+		}
+		sort.Strings(sortedKeys)
+
+		// Start with the path as the unique key
+		uniqueKey := nP.GetAsStringDangerous()
+
+		// Append sorted params to the unique key
+		for _, key := range sortedKeys {
+			value := params[key]
+			uniqueKey += ";" + key + "=" + value
+		}
+
+		// Append a separator for headers
+		uniqueKey += ";hdrs"
+
+		// Append sorted headers to the unique key
+		headers := make(map[string]string)
+
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		if querierAPIVersionError != nil {
+			return nil, nil, querierAPIVersionError
+		}
+		headers["cdi-version"] = apiVersion
+
+		if QuerierAPIKey != nil {
+			headers["api-key"] = *QuerierAPIKey
+		}
+
+		if nP.IsARecipePath() && q.RIDToCore != "" {
+			headers["rid"] = q.RIDToCore
+		}
+
+		sortedHeaderKeys := make([]string, 0, len(headers))
+		for k := range headers {
+			sortedHeaderKeys = append(sortedHeaderKeys, k)
+		}
+		sort.Strings(sortedHeaderKeys)
+
+		for _, key := range sortedHeaderKeys {
+			value := headers[key]
+			uniqueKey += ";" + key + "=" + value
+		}
 
 		for k, v := range params {
 			query.Add(k, v)
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
-		if querierAPIVersionError != nil {
-			return nil, querierAPIVersionError
+		for k, v := range headers {
+			req.Header.Set(k, v)
 		}
-		req.Header.Set("cdi-version", apiVersion)
-		if QuerierAPIKey != nil {
-			req.Header.Set("api-key", *QuerierAPIKey)
-		}
-		if nP.IsARecipePath() && q.RIDToCore != "" {
-			req.Header.Set("rid", q.RIDToCore)
+
+		if userContext != nil {
+			defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+			if !ok {
+				defaultContext = make(map[string]interface{})
+			}
+
+			globalCacheTag, ok := defaultContext["globalCacheTag"].(uint64)
+			if !ok || globalCacheTag != querierGlobalCacheTag {
+				q.InvalidateCoreCallCache(userContext, false)
+			}
+
+			coreCallCache, ok := defaultContext["coreCallCache"].(map[string]interface{})
+			if !ok {
+				coreCallCache = make(map[string]interface{})
+			}
+
+			if !querierDisableCache && coreCallCache[uniqueKey] != nil {
+				return nil, coreCallCache[uniqueKey].([]byte), nil
+			}
 		}
 
 		if querierInterceptor != nil {
@@ -237,7 +307,37 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 		}
 
 		client := &http.Client{}
-		return client.Do(req)
+		response, err := client.Do(req)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		if response.StatusCode == 200 && !querierDisableCache && userContext != nil {
+			body, err := ioutil.ReadAll(response.Body)
+			if err != nil {
+				return nil, nil, err
+			}
+			defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+			if !ok {
+				defaultContext = make(map[string]interface{})
+			}
+
+			coreCallCache, ok := defaultContext["coreCallCache"].(map[string]interface{})
+			if !ok {
+				coreCallCache = make(map[string]interface{})
+			}
+			coreCallCache[uniqueKey] = body
+			defaultContext["coreCallCache"] = coreCallCache
+			defaultContext["globalCacheTag"] = querierGlobalCacheTag
+
+			(*userContext)["_default"] = defaultContext
+
+			// we send the cached body here because we cannot do ioutil.ReadAll(response.Body)
+			// once again on the body.
+			return response, body, nil
+		}
+
+		return response, nil, nil
 	}, len(QuerierHosts), nil)
 	return resp, err
 }
@@ -248,10 +348,10 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 		return nil, nil, err
 	}
 
-	return q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	return q.sendRequestHelper(nP, func(url string) (*http.Response, []byte, error) {
 		req, err := http.NewRequest("GET", url, nil)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		query := req.URL.Query()
@@ -263,7 +363,7 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 
 		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
-			return nil, querierAPIVersionError
+			return nil, nil, querierAPIVersionError
 		}
 		req.Header.Set("cdi-version", apiVersion)
 		if QuerierAPIKey != nil {
@@ -278,28 +378,30 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 		}
 
 		client := &http.Client{}
-		return client.Do(req)
+		resp, err := client.Do(req)
+		return resp, nil, err
 	}, len(QuerierHosts), nil)
 }
 
 func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userContext UserContext) (map[string]interface{}, error) {
+	q.InvalidateCoreCallCache(userContext, true)
 	nP, err := NewNormalisedURLPath(path)
 	if err != nil {
 		return nil, err
 	}
-	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, error) {
+	resp, _, err := q.sendRequestHelper(nP, func(url string) (*http.Response, []byte, error) {
 		jsonData, err := json.Marshal(data)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 		req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonData))
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 
 		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
 		if querierAPIVersionError != nil {
-			return nil, querierAPIVersionError
+			return nil, nil, querierAPIVersionError
 		}
 
 		req.Header.Set("content-type", "application/json; charset=utf-8")
@@ -316,12 +418,45 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userC
 		}
 
 		client := &http.Client{}
-		return client.Do(req)
+		resp, err := client.Do(req)
+		return resp, nil, err
 	}, len(QuerierHosts), nil)
 	return resp, err
 }
 
-type httpRequestFunction func(url string) (*http.Response, error)
+func (q *Querier) InvalidateCoreCallCache(userContext UserContext, updGlobalCacheTagIfNecessary bool) {
+	if userContext == nil {
+		// Create an empty map to avoid nil pointer dereference
+		emptyMap := make(map[string]interface{})
+		userContext = &emptyMap
+	}
+
+	if updGlobalCacheTagIfNecessary {
+		defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+		if !ok {
+			defaultContext = make(map[string]interface{})
+		}
+
+		keepCacheAlive, ok := defaultContext["keepCacheAlive"].(bool)
+		if !ok || !keepCacheAlive {
+			// Update the global cache tag to invalidate the cache
+			querierGlobalCacheTag = GetCurrTimeInMS()
+		}
+	}
+
+	defaultContext, ok := (*userContext)["_default"].(map[string]interface{})
+	if !ok {
+		defaultContext = make(map[string]interface{})
+	}
+
+	// Clear the core call cache
+	defaultContext["coreCallCache"] = make(map[string]interface{})
+
+	(*userContext)["_default"] = defaultContext
+}
+
+// response, body, err - body will be present if its cache, else not
+type httpRequestFunction func(url string) (*http.Response, []byte, error)
 
 func GetAllCoreUrlsForPath(path string) []string {
 	if QuerierHosts == nil {
@@ -369,7 +504,7 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 	querierLastTriedIndex = (querierLastTriedIndex + 1) % len(QuerierHosts)
 	querierHostLock.Unlock()
 
-	resp, err := httpRequest(url)
+	resp, cachedBody, err := httpRequest(url)
 
 	if err != nil {
 		if strings.Contains(err.Error(), "connection refused") {
@@ -381,13 +516,20 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		return nil, nil, err
 	}
 
-	defer resp.Body.Close()
-
-	body, readErr := ioutil.ReadAll(resp.Body)
-	if readErr != nil {
-		return nil, nil, readErr
+	body := cachedBody
+	if resp != nil {
+		defer resp.Body.Close()
 	}
-	if resp.StatusCode != 200 {
+	if body == nil {
+		if resp == nil {
+			return nil, nil, errors.New("You found a bug in our code! Response should never be nil here")
+		}
+		body, err = ioutil.ReadAll(resp.Body)
+		if err != nil {
+			return nil, nil, err
+		}
+	}
+	if resp != nil && resp.StatusCode != 200 {
 		if resp.StatusCode == RateLimitStatusCode {
 			retriesLeft := _retryInfoMap[url]
 
@@ -406,7 +548,10 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 		return nil, nil, fmt.Errorf("SuperTokens core threw an error for a request to path: '%s' with status code: %v and message: %s", path.GetAsStringDangerous(), resp.StatusCode, body)
 	}
 
-	headers := resp.Header.Clone()
+	var headers http.Header = nil
+	if resp != nil {
+		headers = resp.Header.Clone()
+	}
 	finalResult := make(map[string]interface{})
 	jsonError := json.Unmarshal(body, &finalResult)
 	if jsonError != nil {
