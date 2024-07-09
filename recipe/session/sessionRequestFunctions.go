@@ -383,7 +383,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 			}
 		}
 
-		False := false
+		True := true
 		return nil, errors.UnauthorizedError{
 			Msg:         "Refresh token not found. Are you sending the refresh token in the request as a cookie?",
 			ClearTokens: &True,
