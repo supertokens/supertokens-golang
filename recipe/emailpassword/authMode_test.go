@@ -1145,14 +1145,14 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 		setTokens                 string
 		clearedTokens             string
 	}{
-		{getTokenTransferMethodRes: "any", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
-		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
-		{getTokenTransferMethodRes: "cookie", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "any", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "both"},
+		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "both"},
+		{getTokenTransferMethodRes: "cookie", authHeader: false, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "both"},
 		{getTokenTransferMethodRes: "any", authHeader: false, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "none"},
-		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: true, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: true, output: "unauthorised", setTokens: "none", clearedTokens: "both"},
 		{getTokenTransferMethodRes: "cookie", authHeader: false, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "none"},
 		{getTokenTransferMethodRes: "any", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "none"},
-		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "both"},
 		{getTokenTransferMethodRes: "cookie", authHeader: true, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
 		{getTokenTransferMethodRes: "any", authHeader: true, authCookie: true, output: "validateheader", setTokens: "headers", clearedTokens: "cookies"},
 		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: true, output: "validateheader", setTokens: "headers", clearedTokens: "cookies"},
@@ -1224,6 +1224,13 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 				assert.Equal(t, refreshRes["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 				assert.Empty(t, refreshRes["sRefreshToken"])
 				assert.Equal(t, refreshRes["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+			} else if behaviour.clearedTokens == "both" {
+				assert.Empty(t, refreshRes["accessTokenFromHeader"])
+				assert.Empty(t, refreshRes["refreshTokenFromHeader"])
+				assert.Empty(t, refreshRes["sAccessToken"])
+				assert.Equal(t, refreshRes["accessTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
+				assert.Empty(t, refreshRes["sRefreshToken"])
+				assert.Equal(t, refreshRes["refreshTokenExpiry"], "Thu, 01 Jan 1970 00:00:00 GMT")
 			}
 
 			switch behaviour.setTokens {
@@ -1247,17 +1254,18 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 				}
 			}
 
-			if behaviour.setTokens != "cookies" && behaviour.clearedTokens != "cookies" {
-				assert.Equal(t, refreshRes["sAccessToken"], "-not-present-")
-				assert.Equal(t, refreshRes["accessTokenExpiry"], "-not-present-")
-				assert.Equal(t, refreshRes["sRefreshToken"], "-not-present-")
-				assert.Equal(t, refreshRes["refreshTokenExpiry"], "-not-present-")
+			if behaviour.setTokens != "both" {
+				if behaviour.setTokens != "cookies" && behaviour.clearedTokens != "cookies" {
+					assert.Equal(t, refreshRes["sAccessToken"], "-not-present-")
+					assert.Equal(t, refreshRes["accessTokenExpiry"], "-not-present-")
+					assert.Equal(t, refreshRes["sRefreshToken"], "-not-present-")
+					assert.Equal(t, refreshRes["refreshTokenExpiry"], "-not-present-")
+				}
+				if behaviour.setTokens != "headers" && behaviour.clearedTokens != "headers" {
+					assert.Equal(t, refreshRes["accessTokenFromHeader"], "-not-present-")
+					assert.Equal(t, refreshRes["refreshTokenFromHeader"], "-not-present-")
+				}
 			}
-			if behaviour.setTokens != "headers" && behaviour.clearedTokens != "headers" {
-				assert.Equal(t, refreshRes["accessTokenFromHeader"], "-not-present-")
-				assert.Equal(t, refreshRes["refreshTokenFromHeader"], "-not-present-")
-			}
-
 		})
 
 		t.Run(fmt.Sprintf("behaviour %v with invalid token", behaviour), func(t *testing.T) {

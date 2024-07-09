@@ -386,7 +386,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 		False := false
 		return nil, errors.UnauthorizedError{
 			Msg:         "Refresh token not found. Are you sending the refresh token in the request as a cookie?",
-			ClearTokens: &False,
+			ClearTokens: &True,
 		}
 	}
 
@@ -406,7 +406,7 @@ func RefreshSessionInRequest(req *http.Request, res http.ResponseWriter, config 
 
 		if ridFromHeader == nil {
 			supertokens.LogDebugMessage("refreshSession: Returning UNAUTHORISED because custom header (rid) was not passed")
-			clearTokens := false
+			clearTokens := true
 			return nil, errors.UnauthorizedError{
 				Msg:         "anti-csrf check failed. Please pass 'rid: \"session\"' header in the request.",
 				ClearTokens: &clearTokens,
