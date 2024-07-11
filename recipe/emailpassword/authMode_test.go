@@ -1152,8 +1152,8 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 		{getTokenTransferMethodRes: "header", authHeader: false, authCookie: true, output: "unauthorised", setTokens: "none", clearedTokens: "both"},
 		{getTokenTransferMethodRes: "cookie", authHeader: false, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "none"},
 		{getTokenTransferMethodRes: "any", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "none"},
-		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "both"},
-		{getTokenTransferMethodRes: "cookie", authHeader: true, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: false, output: "validateheader", setTokens: "headers", clearedTokens: "none"},
+		{getTokenTransferMethodRes: "cookie", authHeader: true, authCookie: false, output: "unauthorised", setTokens: "none", clearedTokens: "both"},
 		{getTokenTransferMethodRes: "any", authHeader: true, authCookie: true, output: "validateheader", setTokens: "headers", clearedTokens: "cookies"},
 		{getTokenTransferMethodRes: "header", authHeader: true, authCookie: true, output: "validateheader", setTokens: "headers", clearedTokens: "cookies"},
 		{getTokenTransferMethodRes: "cookie", authHeader: true, authCookie: true, output: "validatecookie", setTokens: "cookies", clearedTokens: "headers"},
@@ -1254,7 +1254,7 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 				}
 			}
 
-			if behaviour.setTokens != "both" {
+			if behaviour.clearedTokens != "both" {
 				if behaviour.setTokens != "cookies" && behaviour.clearedTokens != "cookies" {
 					assert.Equal(t, refreshRes["sAccessToken"], "-not-present-")
 					assert.Equal(t, refreshRes["accessTokenExpiry"], "-not-present-")
