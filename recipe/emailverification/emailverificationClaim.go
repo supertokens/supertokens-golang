@@ -34,8 +34,7 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 		}
 	}
 
-	var defaultMaxAge int64 = 300
-	evClaim, booleanClaimValidators := claims.BooleanClaim("st-ev", fetchValue, &defaultMaxAge)
+	evClaim, booleanClaimValidators := claims.BooleanClaim("st-ev", fetchValue, nil)
 
 	getLastRefetchTime := func(payload map[string]interface{}, userContext supertokens.UserContext) *int64 {
 		if value, ok := payload[evClaim.Key].(map[string]interface{}); ok {
@@ -57,15 +56,31 @@ func NewEmailVerificationClaim() (*claims.TypeSessionClaim, evclaims.TypeEmailVe
 				var defaultTimeout int64 = 10
 				refetchTimeOnFalseInSeconds = &defaultTimeout
 			}
-			if maxAgeInSeconds == nil {
-				var defaultTimeout int64 = 300
-				maxAgeInSeconds = &defaultTimeout
-			}
 
 			claimValidator := booleanClaimValidators.HasValue(true, maxAgeInSeconds, nil)
 			claimValidator.ShouldRefetch = func(payload map[string]interface{}, userContext supertokens.UserContext) bool {
 				value := evClaim.GetValueFromPayload(payload, userContext)
-				return value == nil || (*getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*maxAgeInSeconds*1000) || (value == false && *getLastRefetchTime(payload, userContext) < time.Now().UnixNano()/1000000-*refetchTimeOnFalseInSeconds*1000)
+
+				if value == nil {
+					return true
+				}
+
+				currentTime := time.Now().UnixNano() / 1000000
+				lastRefetchTime := getLastRefetchTime(payload, userContext)
+
+				if maxAgeInSeconds != nil {
+					if lastRefetchTime != nil && *lastRefetchTime < currentTime-*maxAgeInSeconds*1000 {
+						return true
+					}
+				}
+
+				if value == false {
+					if lastRefetchTime != nil && *lastRefetchTime < currentTime-*refetchTimeOnFalseInSeconds*1000 {
+						return true
+					}
+				}
+
+				return false
 			}
 			return claimValidator
 		},
