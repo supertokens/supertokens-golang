@@ -1,8 +1,6 @@
 package providers
 
 import (
-	"errors"
-
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
@@ -30,20 +28,18 @@ func BoxySaml(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			boxyURL, ok := config.AdditionalConfig["boxyURL"].(string)
-			if !ok {
-				return tpmodels.ProviderConfigForClientType{}, errors.New("please provide the boxyURL in the AdditionalConfig")
-			}
+			if ok {
+				if config.AuthorizationEndpoint == "" {
+					config.AuthorizationEndpoint = boxyURL + "/api/oauth/authorize"
+				}
 
-			if config.AuthorizationEndpoint == "" {
-				config.AuthorizationEndpoint = boxyURL + "/api/oauth/authorize"
-			}
+				if config.TokenEndpoint == "" {
+					config.TokenEndpoint = boxyURL + "/api/oauth/token"
+				}
 
-			if config.TokenEndpoint == "" {
-				config.TokenEndpoint = boxyURL + "/api/oauth/token"
-			}
-
-			if config.UserInfoEndpoint == "" {
-				config.UserInfoEndpoint = boxyURL + "/api/oauth/userinfo"
+				if config.UserInfoEndpoint == "" {
+					config.UserInfoEndpoint = boxyURL + "/api/oauth/userinfo"
+				}
 			}
 
 			return config, nil
