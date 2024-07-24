@@ -102,8 +102,9 @@ type OverrideStruct struct {
 }
 
 type ProviderInput struct {
-	Config   ProviderConfig
-	Override func(originalImplementation *TypeProvider) *TypeProvider
+	Config                             ProviderConfig
+	IncludeInNonPublicTenantsByDefault *bool
+	Override                           func(originalImplementation *TypeProvider) *TypeProvider
 }
 
 type ProviderConfig struct {
