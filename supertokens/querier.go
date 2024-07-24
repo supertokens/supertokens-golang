@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"sort"
 	"strings"
 	"sync"
@@ -54,14 +55,37 @@ func SetQuerierApiVersionForTests(version string) {
 	querierAPIVersion = version
 }
 
-func (q *Querier) GetQuerierAPIVersion() (string, error) {
+func (q *Querier) GetQuerierAPIVersion(userContextIn ...UserContext) (string, error) {
 	querierLock.Lock()
 	defer querierLock.Unlock()
 	if querierAPIVersion != "" {
 		return querierAPIVersion, nil
 	}
+
+	var userContext UserContext = nil
+	if len(userContextIn) > 0 {
+		userContext = userContextIn[0]
+	}
+
+	appInfo := superTokensInstance.AppInfo
+	req := getRequestFromUserContext(userContext)
+	websiteDomain, err := appInfo.GetOrigin(req, userContext)
+	if err != nil {
+		return "", err
+	}
+	queryParamsObj := map[string]string{
+		"apiDomain":     appInfo.APIDomain.GetAsStringDangerous(),
+		"websiteDomain": websiteDomain.GetAsStringDangerous(),
+	}
+
+	var queryParams []string
+	for key, value := range queryParamsObj {
+		queryParams = append(queryParams, fmt.Sprintf("%s=%s", key, url.QueryEscape(value)))
+	}
+	queryString := strings.Join(queryParams, "&")
+
 	response, _, err := q.sendRequestHelper(NormalisedURLPath{value: "/apiversion"}, func(url string) (*http.Response, []byte, error) {
-		req, err := http.NewRequest("GET", url, nil)
+		req, err := http.NewRequest("GET", url+"?"+queryString, nil)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -139,7 +163,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}, user
 			return nil, nil, err
 		}
 
-		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion(userContext)
 		if querierAPIVersionError != nil {
 			return nil, nil, querierAPIVersionError
 		}
@@ -187,7 +211,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion(userContext)
 		if querierAPIVersionError != nil {
 			return nil, nil, querierAPIVersionError
 		}
@@ -247,7 +271,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 		// Append sorted headers to the unique key
 		headers := make(map[string]string)
 
-		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion(userContext)
 		if querierAPIVersionError != nil {
 			return nil, nil, querierAPIVersionError
 		}
@@ -362,7 +386,7 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 		}
 		req.URL.RawQuery = query.Encode()
 
-		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion(userContext)
 		if querierAPIVersionError != nil {
 			return nil, nil, querierAPIVersionError
 		}
@@ -400,7 +424,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userC
 			return nil, nil, err
 		}
 
-		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion()
+		apiVersion, querierAPIVersionError := q.GetQuerierAPIVersion(userContext)
 		if querierAPIVersionError != nil {
 			return nil, nil, querierAPIVersionError
 		}

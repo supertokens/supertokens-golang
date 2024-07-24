@@ -60,7 +60,7 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		if err != nil {
 			return "", err
 		}
-		cdiVersion, err := querier.GetQuerierAPIVersion()
+		cdiVersion, err := querier.GetQuerierAPIVersion(userContext)
 		if err != nil {
 			return "", err
 		}
