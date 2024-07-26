@@ -11,7 +11,7 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	}
 
 	if input.Config.OIDCDiscoveryEndpoint == "" {
-		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/"
+		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/.well-known/openid-configuration"
 	}
 
 	if input.Config.AuthorizationEndpointQueryParams == nil {
@@ -38,6 +38,9 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			if len(config.Scope) == 0 {
 				config.Scope = []string{"openid", "email"}
 			}
+
+			// The config could be coming from core where we didn't add the well-known previously
+			config.OIDCDiscoveryEndpoint = normaliseOIDCEndpointToIncludeWellKnown(config.OIDCDiscoveryEndpoint)
 
 			return config, nil
 		}

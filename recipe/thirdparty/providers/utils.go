@@ -292,6 +292,10 @@ var oidcInfoMap = map[string]map[string]interface{}{}
 var oidcInfoMapLock = sync.Mutex{}
 
 func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
+	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+		return oidcInfo, nil
+	}
+
 	normalizedDomain, err := supertokens.NewNormalisedURLDomain(issuer)
 	if err != nil {
 		return nil, err
@@ -299,17 +303,6 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 	normalizedPath, err := supertokens.NewNormalisedURLPath(issuer)
 	if err != nil {
 		return nil, err
-	}
-
-	openIdConfigPath, err := supertokens.NewNormalisedURLPath("/.well-known/openid-configuration")
-	if err != nil {
-		return nil, err
-	}
-
-	normalizedPath = normalizedPath.AppendPath(openIdConfigPath)
-
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
-		return oidcInfo, nil
 	}
 
 	oidcInfoMapLock.Lock()
@@ -326,4 +319,28 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 	}
 	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
 	return oidcInfoMap[issuer], nil
+}
+
+func normaliseOIDCEndpointToIncludeWellKnown(url string) string {
+	// we call this only for built-in providers that use OIDC. We no longer generically add well-known in the custom provider
+	if strings.HasSuffix(url, "/.well-known/openid-configuration") {
+		return url
+	}
+
+	normalisedDomain, err := supertokens.NewNormalisedURLDomain(url)
+	if err != nil {
+		return url // Return original URL if normalization fails
+	}
+	normalisedPath, err := supertokens.NewNormalisedURLPath(url)
+	if err != nil {
+		return url // Return original URL if normalization fails
+	}
+	normalisedWellKnownPath, err := supertokens.NewNormalisedURLPath("/.well-known/openid-configuration")
+	if err != nil {
+		return url // Return original URL if normalization fails
+	}
+
+	return normalisedDomain.GetAsStringDangerous() +
+		normalisedPath.GetAsStringDangerous() +
+		normalisedWellKnownPath.GetAsStringDangerous()
 }

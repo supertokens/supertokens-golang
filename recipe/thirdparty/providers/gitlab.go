@@ -1,4 +1,4 @@
-/* Copyright (c) 2021, VRAI Labs and/or its affiliates. All rights reserved.
+/* Copyright (c) 2023, VRAI Labs and/or its affiliates. All rights reserved.
  *
  * This software is licensed under the Apache License, Version 2.0 (the
  * "License") as published by the Apache Software Foundation.
@@ -20,8 +20,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const gitlabID = "gitlab"
-
 func Gitlab(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "Gitlab"
@@ -41,14 +39,23 @@ func Gitlab(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				config.Scope = []string{"openid", "email"}
 			}
 
-			if config.OIDCDiscoveryEndpoint == "" {
-				config.OIDCDiscoveryEndpoint = "https://gitlab.com"
-				if config.AdditionalConfig != nil {
-					if gitlabBaseUrl, ok := config.AdditionalConfig["gitlabBaseUrl"].(string); ok {
-						config.OIDCDiscoveryEndpoint = gitlabBaseUrl
-					}
+			if config.AdditionalConfig != nil && config.AdditionalConfig["gitlabBaseUrl"] != nil {
+				gitlabBaseUrl := config.AdditionalConfig["gitlabBaseUrl"].(string)
+				oidcDomain, err := supertokens.NewNormalisedURLDomain(gitlabBaseUrl)
+				if err != nil {
+					return tpmodels.ProviderConfigForClientType{}, err
 				}
+				oidcPath, err := supertokens.NewNormalisedURLPath("/.well-known/openid-configuration")
+				if err != nil {
+					return tpmodels.ProviderConfigForClientType{}, err
+				}
+				config.OIDCDiscoveryEndpoint = oidcDomain.GetAsStringDangerous() + oidcPath.GetAsStringDangerous()
+			} else if config.OIDCDiscoveryEndpoint == "" {
+				config.OIDCDiscoveryEndpoint = "https://gitlab.com/.well-known/openid-configuration"
 			}
+
+			// The config could be coming from core where we didn't add the well-known previously
+			config.OIDCDiscoveryEndpoint = normaliseOIDCEndpointToIncludeWellKnown(config.OIDCDiscoveryEndpoint)
 
 			return config, nil
 		}

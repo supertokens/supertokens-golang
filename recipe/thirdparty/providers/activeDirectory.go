@@ -28,9 +28,16 @@ func ActiveDirectory(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
-			if config.OIDCDiscoveryEndpoint == "" {
-				config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://login.microsoftonline.com/%s/v2.0/", config.AdditionalConfig["directoryId"])
+			if config.AdditionalConfig == nil || config.AdditionalConfig["directoryId"] == nil {
+				if config.OIDCDiscoveryEndpoint == "" {
+					return tpmodels.ProviderConfigForClientType{}, fmt.Errorf("Please provide the directoryId in the additionalConfig of the Active Directory provider.")
+				}
+			} else {
+				config.OIDCDiscoveryEndpoint = fmt.Sprintf("https://login.microsoftonline.com/%s/v2.0/.well-known/openid-configuration", config.AdditionalConfig["directoryId"])
 			}
+
+			// The config could be coming from core where we didn't add the well-known previously
+			config.OIDCDiscoveryEndpoint = normaliseOIDCEndpointToIncludeWellKnown(config.OIDCDiscoveryEndpoint)
 
 			if len(config.Scope) == 0 {
 				config.Scope = []string{"openid", "email"}
