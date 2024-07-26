@@ -67,9 +67,59 @@ func makeSessionContainerInput(
 	}
 }
 
+func NewSessionContainerFromSessionContainerInputForTestServer(sessionMap map[string]interface{}) (sessmodels.SessionContainer, error) {
+	recipe, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil, err
+	}
+
+	session := &SessionContainerInput{
+		sessionHandle:         sessionMap["sessionHandle"].(string),
+		userID:                sessionMap["userId"].(string),
+		tenantId:              sessionMap["tenantId"].(string),
+		userDataInAccessToken: sessionMap["userDataInAccessToken"].(map[string]interface{}),
+		accessToken:           sessionMap["accessToken"].(string),
+		frontToken:            sessionMap["frontToken"].(string),
+		refreshToken:          nil,
+		antiCSRFToken:         nil,
+		accessTokenUpdated:    sessionMap["accessTokenUpdated"].(bool),
+	}
+
+	if refreshToken, ok := sessionMap["refreshToken"].(map[string]interface{}); ok {
+		session.refreshToken = &sessmodels.CreateOrRefreshAPIResponseToken{
+			Token:       refreshToken["token"].(string),
+			Expiry:      uint64(refreshToken["expiry"].(float64)),
+			CreatedTime: uint64(refreshToken["createdTime"].(float64)),
+		}
+	}
+
+	if antiCsrfToken, ok := sessionMap["antiCsrfToken"].(string); ok {
+		session.antiCSRFToken = &antiCsrfToken
+	}
+
+	session.recipeImpl = recipe.RecipeImpl
+
+	return newSessionContainer(recipe.Config, session), nil
+}
+
 func newSessionContainer(config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
 	sessionContainer := &sessmodels.TypeSessionContainer{}
+
+	sessionContainer.ToJsonableMap = func() map[string]interface{} {
+		return map[string]interface{}{
+			"sessionHandle":         session.sessionHandle,
+			"userId":                session.userID,
+			"tenantId":              session.tenantId,
+			"userDataInAccessToken": session.userDataInAccessToken,
+			"accessToken":           session.accessToken,
+			"frontToken":            session.frontToken,
+			"refreshToken":          session.refreshToken,
+			"antiCsrfToken":         session.antiCSRFToken,
+			"accessTokenUpdated":    session.accessTokenUpdated,
+		}
+	}
+
 	sessionContainer.RevokeSessionWithContext = func(userContext supertokens.UserContext) error {
 		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
 		if err != nil {

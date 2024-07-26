@@ -78,15 +78,3 @@ type TypeFormField struct {
 	ID    string `json:"id"`
 	Value string `json:"value"`
 }
-
-type CreateResetPasswordLinkResponse struct {
-	OK *struct {
-		Link string
-	}
-	UnknownUserIdError *struct{}
-}
-
-type SendResetPasswordEmailResponse struct {
-	OK                 *struct{}
-	UnknownUserIdError *struct{}
-}

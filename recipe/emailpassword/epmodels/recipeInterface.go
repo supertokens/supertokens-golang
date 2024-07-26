@@ -34,11 +34,37 @@ type SignUpResponse struct {
 	EmailAlreadyExistsError *struct{}
 }
 
+func (resp SignUpResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+			"user":   resp.OK.User,
+		}
+	} else {
+		return map[string]interface{}{
+			"status": "EMAIL_ALREADY_EXISTS_ERROR",
+		}
+	}
+}
+
 type SignInResponse struct {
 	OK *struct {
 		User User
 	}
 	WrongCredentialsError *struct{}
+}
+
+func (resp SignInResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+			"user":   resp.OK.User,
+		}
+	} else {
+		return map[string]interface{}{
+			"status": "WRONG_CREDENTIALS_ERROR",
+		}
+	}
 }
 
 type CreateResetPasswordTokenResponse struct {
@@ -48,11 +74,37 @@ type CreateResetPasswordTokenResponse struct {
 	UnknownUserIdError *struct{}
 }
 
+func (resp CreateResetPasswordTokenResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+			"token":  resp.OK.Token,
+		}
+	} else {
+		return map[string]interface{}{
+			"status": "UNKNOWN_USER_ID_ERROR",
+		}
+	}
+}
+
 type ResetPasswordUsingTokenResponse struct {
 	OK *struct {
 		UserId *string
 	}
 	ResetPasswordInvalidTokenError *struct{}
+}
+
+func (resp ResetPasswordUsingTokenResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+			"userId": resp.OK.UserId,
+		}
+	} else {
+		return map[string]interface{}{
+			"status": "RESET_PASSWORD_INVALID_TOKEN_ERROR",
+		}
+	}
 }
 
 type UpdateEmailOrPasswordResponse struct {
@@ -62,6 +114,73 @@ type UpdateEmailOrPasswordResponse struct {
 	PasswordPolicyViolatedError *PasswordPolicyViolatedError
 }
 
+func (resp UpdateEmailOrPasswordResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+		}
+	} else if resp.UnknownUserIdError != nil {
+		return map[string]interface{}{
+			"status": "UNKNOWN_USER_ID_ERROR",
+		}
+	} else if resp.EmailAlreadyExistsError != nil {
+		return map[string]interface{}{
+			"status": "EMAIL_ALREADY_EXISTS_ERROR",
+		}
+	} else if resp.PasswordPolicyViolatedError != nil {
+		return map[string]interface{}{
+			"status":        "PASSWORD_POLICY_VIOLATED_ERROR",
+			"failureReason": resp.PasswordPolicyViolatedError.FailureReason,
+		}
+	}
+	return map[string]interface{}{
+		"status": "UNKNOWN_ERROR",
+	}
+}
+
 type PasswordPolicyViolatedError struct {
 	FailureReason string
+}
+
+type CreateResetPasswordLinkResponse struct {
+	OK *struct {
+		Link string
+	}
+	UnknownUserIdError *struct{}
+}
+
+func (resp CreateResetPasswordLinkResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+			"link":   resp.OK.Link,
+		}
+	} else if resp.UnknownUserIdError != nil {
+		return map[string]interface{}{
+			"status": "UNKNOWN_USER_ID_ERROR",
+		}
+	}
+	return map[string]interface{}{
+		"status": "UNKNOWN_ERROR",
+	}
+}
+
+type SendResetPasswordEmailResponse struct {
+	OK                 *struct{}
+	UnknownUserIdError *struct{}
+}
+
+func (resp SendResetPasswordEmailResponse) ToJsonableMap() map[string]interface{} {
+	if resp.OK != nil {
+		return map[string]interface{}{
+			"status": "OK",
+		}
+	} else if resp.UnknownUserIdError != nil {
+		return map[string]interface{}{
+			"status": "UNKNOWN_USER_ID_ERROR",
+		}
+	}
+	return map[string]interface{}{
+		"status": "UNKNOWN_ERROR",
+	}
 }

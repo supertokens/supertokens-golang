@@ -55,7 +55,7 @@ type TypeInput struct {
 type ConnectionInfo struct {
 	ConnectionURI        string
 	APIKey               string
-	NetworkInterceptor   func(*http.Request, UserContext) *http.Request
+	NetworkInterceptor   func(*http.Request, UserContext) (*http.Request, error)
 	DisableCoreCallCache bool
 }
 
