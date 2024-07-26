@@ -15,6 +15,8 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/emailverification/evmodels"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty"
+	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -51,10 +53,10 @@ func main() {
 	addSessionRoutes(router)
 	// addAccountLinkingRoutes(router)
 	// addEmailVerificationRoutes(router)
-	// addMultitenancyRoutes(router)
+	addMultitenancyRoutes(router)
 	// addPasswordlessRoutes(router)
 	// addMultiFactorAuthRoutes(router)
-	// addThirdPartyRoutes(router)
+	addThirdPartyRoutes(router)
 	// addTOTPRoutes(router)
 	// addUserMetadataRoutes(router)
 
@@ -306,6 +308,43 @@ func recipeListFromRecipeConfigs(recipeListMaps []interface{}) []supertokens.Rec
 			}
 
 			recipeList = append(recipeList, emailverification.Init(recipeConfig))
+		} else if recipeItemMap["recipeId"] == "thirdparty" {
+			var recipeConfigMap map[string]interface{}
+			err := json.Unmarshal([]byte(recipeItemMap["config"].(string)), &recipeConfigMap)
+			if err != nil {
+				log.Printf("Error unmarshaling recipe config: %v", err)
+				continue
+			}
+			recipeConfig := tpmodels.TypeInput{}
+
+			if signInAndUpFeature, ok := recipeConfigMap["signInAndUpFeature"].(map[string]interface{}); ok {
+				if providers, ok := signInAndUpFeature["providers"].([]interface{}); ok {
+					for _, provider := range providers {
+						providerInput := tpmodels.ProviderInput{}
+						providerMap := provider.(map[string]interface{})
+
+						if config, ok := providerMap["config"].(map[string]interface{}); ok {
+							configBytes, err := json.Marshal(config)
+							if err != nil {
+								log.Printf("Error marshaling provider config: %v", err)
+								continue
+							}
+							err = json.Unmarshal(configBytes, &providerInput.Config)
+							if err != nil {
+								log.Printf("Error unmarshaling provider config: %v", err)
+								continue
+							}
+						}
+
+						if includeInNonPublicTenantsByDefault, ok := providerMap["includeInNonPublicTenantsByDefault"].(bool); ok {
+							providerInput.IncludeInNonPublicTenantsByDefault = &includeInNonPublicTenantsByDefault
+						}
+						recipeConfig.SignInAndUpFeature.Providers = append(recipeConfig.SignInAndUpFeature.Providers, providerInput)
+					}
+				}
+			}
+
+			recipeList = append(recipeList, thirdparty.Init(&recipeConfig))
 		}
 	}
 	return recipeList
