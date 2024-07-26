@@ -111,6 +111,7 @@ type TypeInput struct {
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 	UseDynamicAccessTokenSigningKey              *bool
+	JWKSRefreshIntervalSec                       *uint64
 }
 
 type OverrideStruct struct {
@@ -141,6 +142,7 @@ type TypeNormalisedInput struct {
 	GetTokenTransferMethod                       func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) TokenTransferMethod
 	ExposeAccessTokenToFrontendInCookieBasedAuth bool
 	UseDynamicAccessTokenSigningKey              bool
+	JWKSRefreshIntervalSec                       uint64
 }
 
 type AntiCsrfFunctionOrString struct {

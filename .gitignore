@@ -23,3 +23,6 @@ releasePassword
 .vscode/
 .idea/
 /test_report
+
+build-errors.log
+main

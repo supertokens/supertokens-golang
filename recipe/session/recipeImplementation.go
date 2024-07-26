@@ -38,6 +38,12 @@ var mutex sync.RWMutex
 func getJWKSFromCacheIfPresent() *sessmodels.GetJWKSResult {
 	mutex.RLock()
 	defer mutex.RUnlock()
+
+	sessionInstance, err := getRecipeInstanceOrThrowError()
+	if err != nil {
+		return nil
+	}
+
 	if jwksCache != nil {
 		// This means that we have valid JWKs for the given core path
 		// We check if we need to refresh before returning
@@ -48,7 +54,7 @@ func getJWKSFromCacheIfPresent() *sessmodels.GetJWKSResult {
 		// Note that this also means that the SDK will not try to query any other Core (if there are multiple)
 		// if it has a valid cache entry from one of the core URLs. It will only attempt to fetch
 		// from the cores again after the entry in the cache is expired
-		if (currentTime - jwksCache.LastFetched) < JWKCacheMaxAgeInMs {
+		if (currentTime - jwksCache.LastFetched) < int64(sessionInstance.Config.JWKSRefreshIntervalSec*1000) {
 			if supertokens.IsRunningInTestMode() {
 				if len(returnedFromCache) == cap(returnedFromCache) { // need to clear the channel if full because it's not being consumed in the test
 					close(returnedFromCache)

@@ -19,9 +19,9 @@ func TestNetworkInterceptorDuringSignIn(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(request *http.Request, context supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(request *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
-				return request
+				return request, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -105,11 +105,11 @@ func TestNetworkInterceptorIncorrectCoreURL(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(request *http.Request, context supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(request *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				newRequest := request
 				newRequest.URL.Path = "/public/recipe/incorrect/path"
-				return newRequest
+				return newRequest, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -149,12 +149,12 @@ func TestNetworkInterceptorIncorrectQueryParams(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, context supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				newRequest := r
 				q := url.Values{}
 				newRequest.URL.RawQuery = q.Encode()
-				return newRequest
+				return newRequest, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -191,12 +191,12 @@ func TestNetworkInterceptorRequestBody(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, context supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				newBody := bytes.NewReader([]byte(`{"newKey": "newValue"}`))
 				req, _ := http.NewRequest(r.Method, r.URL.String(), newBody)
 				req.Header = r.Header
-				return req
+				return req, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{

@@ -95,7 +95,7 @@ func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens
 
 			// We check if the token was created since the last time we refreshed the keys from the core
 			// Since we do not know the exact timing of the last refresh, we check against the max age
-			if timeCreated <= (GetCurrTimeInMS() - uint64(JWKCacheMaxAgeInMs)) {
+			if timeCreated <= (GetCurrTimeInMS() - config.JWKSRefreshIntervalSec*1000) {
 				return sessmodels.GetSessionResponse{}, err
 			}
 		} else {

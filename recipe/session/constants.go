@@ -32,7 +32,6 @@ const (
 	CookieSameSite_STRICT = "strict"
 )
 
-var JWKCacheMaxAgeInMs int64 = 60000
 var JWKRefreshRateLimit = 500
 var protectedProps = []string{
 	"sub",
