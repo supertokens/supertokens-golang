@@ -55,6 +55,7 @@ ST_CONNECTION_URI=http://localhost:8081
 
 # start test-server
 pushd test/test-server
+sh setup-for-test.sh
 API_PORT=$API_PORT ST_CONNECTION_URI=$ST_CONNECTION_URI /usr/local/go/bin/go run . &
 popd
 

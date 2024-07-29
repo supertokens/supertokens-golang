@@ -26,3 +26,5 @@ releasePassword
 
 build-errors.log
 main
+
+recipe/**/*_for_test_server.go
