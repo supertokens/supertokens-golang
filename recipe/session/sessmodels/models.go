@@ -237,8 +237,6 @@ type TypeSessionContainer struct {
 	GetClaimValue           func(claim *claims.TypeSessionClaim) interface{}
 	RemoveClaim             func(claim *claims.TypeSessionClaim) error
 	AttachToRequestResponse func(info RequestResponseInfo) error
-
-	ToJsonableMap func() map[string]interface{}
 }
 
 type SessionContainer = *TypeSessionContainer

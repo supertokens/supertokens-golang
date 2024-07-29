@@ -337,7 +337,7 @@ func recipeListFromRecipeConfigs(recipeListMaps []interface{}) []supertokens.Rec
 						}
 
 						if includeInNonPublicTenantsByDefault, ok := providerMap["includeInNonPublicTenantsByDefault"].(bool); ok {
-							providerInput.IncludeInNonPublicTenantsByDefault = &includeInNonPublicTenantsByDefault
+							providerInput.IncludeInNonPublicTenantsByDefault = includeInNonPublicTenantsByDefault
 						}
 						recipeConfig.SignInAndUpFeature.Providers = append(recipeConfig.SignInAndUpFeature.Providers, providerInput)
 					}

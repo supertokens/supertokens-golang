@@ -37,7 +37,18 @@ func addEmailPasswordRoutes(router *mux.Router) {
 			return
 		}
 
-		json.NewEncoder(w).Encode(response.ToJsonableMap())
+		var jsonResponse map[string]interface{}
+		if response.OK != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "OK",
+				"user":   response.OK.User,
+			}
+		} else {
+			jsonResponse = map[string]interface{}{
+				"status": "EMAIL_ALREADY_EXISTS_ERROR",
+			}
+		}
+		json.NewEncoder(w).Encode(jsonResponse)
 	}).Methods("POST")
 
 	router.HandleFunc("/test/emailpassword/signin", func(w http.ResponseWriter, r *http.Request) {
@@ -67,7 +78,18 @@ func addEmailPasswordRoutes(router *mux.Router) {
 			return
 		}
 
-		json.NewEncoder(w).Encode(response.ToJsonableMap())
+		var jsonResponse map[string]interface{}
+		if response.OK != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "OK",
+				"user":   response.OK.User,
+			}
+		} else {
+			jsonResponse = map[string]interface{}{
+				"status": "WRONG_CREDENTIALS_ERROR",
+			}
+		}
+		json.NewEncoder(w).Encode(jsonResponse)
 	}).Methods("POST")
 
 	router.HandleFunc("/test/emailpassword/createresetpasswordlink", func(w http.ResponseWriter, r *http.Request) {
@@ -96,7 +118,22 @@ func addEmailPasswordRoutes(router *mux.Router) {
 			return
 		}
 
-		json.NewEncoder(w).Encode(response.ToJsonableMap())
+		var jsonResponse map[string]interface{}
+		if response.OK != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "OK",
+				"link":   response.OK.Link,
+			}
+		} else if response.UnknownUserIdError != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "UNKNOWN_USER_ID_ERROR",
+			}
+		} else {
+			jsonResponse = map[string]interface{}{
+				"status": "UNKNOWN_ERROR",
+			}
+		}
+		json.NewEncoder(w).Encode(jsonResponse)
 	}).Methods("POST")
 
 	router.HandleFunc("/test/emailpassword/updateemailorpassword", func(w http.ResponseWriter, r *http.Request) {
@@ -124,6 +161,29 @@ func addEmailPasswordRoutes(router *mux.Router) {
 			return
 		}
 
-		json.NewEncoder(w).Encode(response.ToJsonableMap())
+		var jsonResponse map[string]interface{}
+		if response.OK != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "OK",
+			}
+		} else if response.UnknownUserIdError != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "UNKNOWN_USER_ID_ERROR",
+			}
+		} else if response.EmailAlreadyExistsError != nil {
+			jsonResponse = map[string]interface{}{
+				"status": "EMAIL_ALREADY_EXISTS_ERROR",
+			}
+		} else if response.PasswordPolicyViolatedError != nil {
+			jsonResponse = map[string]interface{}{
+				"status":        "PASSWORD_POLICY_VIOLATED_ERROR",
+				"failureReason": response.PasswordPolicyViolatedError.FailureReason,
+			}
+		} else {
+			jsonResponse = map[string]interface{}{
+				"status": "UNKNOWN_ERROR",
+			}
+		}
+		json.NewEncoder(w).Encode(jsonResponse)
 	}).Methods("POST")
 }

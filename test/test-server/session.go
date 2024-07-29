@@ -74,7 +74,17 @@ func createNewSessionWithoutRequestResponse(w http.ResponseWriter, r *http.Reque
 
 	w.Header().Add("Content-Type", "application/json")
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(sessionContainer.ToJsonableMap())
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"sessionHandle":         sessionContainer.GetHandle(),
+		"userId":                sessionContainer.GetUserID(),
+		"tenantId":              sessionContainer.GetTenantId(),
+		"userDataInAccessToken": sessionContainer.GetAccessTokenPayload(),
+		"accessToken":           sessionContainer.GetAccessToken(),
+		"frontToken":            sessionContainer.GetAllSessionTokensDangerously().FrontToken,
+		"refreshToken":          sessionContainer.GetAllSessionTokensDangerously().RefreshToken,
+		"antiCsrfToken":         sessionContainer.GetAllSessionTokensDangerously().AntiCsrfToken,
+		"accessTokenUpdated":    sessionContainer.GetAllSessionTokensDangerously().AccessAndFrontendTokenUpdated,
+	})
 }
 
 func getSessionWithoutRequestResponse(w http.ResponseWriter, r *http.Request) {
@@ -549,7 +559,17 @@ func assertClaims(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		logOverrideEvent("sessionobject.assertclaims", "RES", nil)
 		json.NewEncoder(w).Encode(map[string]interface{}{
-			"updatedSession": sessionContainer.ToJsonableMap(),
+			"updatedSession": map[string]interface{}{
+				"sessionHandle":         sessionContainer.GetHandle(),
+				"userId":                sessionContainer.GetUserID(),
+				"tenantId":              sessionContainer.GetTenantId(),
+				"userDataInAccessToken": sessionContainer.GetAccessTokenPayload(),
+				"accessToken":           sessionContainer.GetAccessToken(),
+				"frontToken":            sessionContainer.GetAllSessionTokensDangerously().FrontToken,
+				"refreshToken":          sessionContainer.GetAllSessionTokensDangerously().RefreshToken,
+				"antiCsrfToken":         sessionContainer.GetAllSessionTokensDangerously().AntiCsrfToken,
+				"accessTokenUpdated":    sessionContainer.GetAllSessionTokensDangerously().AccessAndFrontendTokenUpdated,
+			},
 		})
 	} else {
 		logOverrideEvent("sessionobject.assertclaims", "REJ", err)
@@ -586,8 +606,18 @@ func mergeIntoAccessTokenPayloadOnSessionObject(w http.ResponseWriter, r *http.R
 	}
 
 	json.NewEncoder(w).Encode(map[string]interface{}{
-		"status":         "OK",
-		"updatedSession": sessionContainer.ToJsonableMap(),
+		"status": "OK",
+		"updatedSession": map[string]interface{}{
+			"sessionHandle":         sessionContainer.GetHandle(),
+			"userId":                sessionContainer.GetUserID(),
+			"tenantId":              sessionContainer.GetTenantId(),
+			"userDataInAccessToken": sessionContainer.GetAccessTokenPayload(),
+			"accessToken":           sessionContainer.GetAccessToken(),
+			"frontToken":            sessionContainer.GetAllSessionTokensDangerously().FrontToken,
+			"refreshToken":          sessionContainer.GetAllSessionTokensDangerously().RefreshToken,
+			"antiCsrfToken":         sessionContainer.GetAllSessionTokensDangerously().AntiCsrfToken,
+			"accessTokenUpdated":    sessionContainer.GetAllSessionTokensDangerously().AccessAndFrontendTokenUpdated,
+		},
 	})
 }
 

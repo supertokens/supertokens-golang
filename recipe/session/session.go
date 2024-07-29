@@ -71,20 +71,6 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 
 	sessionContainer := &sessmodels.TypeSessionContainer{}
 
-	sessionContainer.ToJsonableMap = func() map[string]interface{} {
-		return map[string]interface{}{
-			"sessionHandle":         session.sessionHandle,
-			"userId":                session.userID,
-			"tenantId":              session.tenantId,
-			"userDataInAccessToken": session.userDataInAccessToken,
-			"accessToken":           session.accessToken,
-			"frontToken":            session.frontToken,
-			"refreshToken":          session.refreshToken,
-			"antiCsrfToken":         session.antiCSRFToken,
-			"accessTokenUpdated":    session.accessTokenUpdated,
-		}
-	}
-
 	sessionContainer.RevokeSessionWithContext = func(userContext supertokens.UserContext) error {
 		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
 		if err != nil {
