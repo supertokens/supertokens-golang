@@ -44,7 +44,14 @@ jobs:
             - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
             - run: rm -rf /etc/alternatives/java
             - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
-            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
+            - run:
+                name: Install Go 1.18.10
+                command: |
+                  wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz
+                  rm -rf /usr/local/go
+                  tar -C /usr/local -xzf go1.18.10.linux-amd64.tar.gz
+                  echo 'export PATH=$PATH:/usr/local/go/bin' >> $BASH_ENV
+                  source $BASH_ENV
             - run: go version
             - run: go get ./...
             - run: (cd .circleci/ && ./doBackendSDKTests.sh << parameters.cdi-version >> << parameters.fdi-version >>)
