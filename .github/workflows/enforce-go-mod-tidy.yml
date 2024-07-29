@@ -7,8 +7,6 @@ jobs:
       - uses: actions/checkout@v2
       - name: Set up go
         uses: actions/setup-go@v5
-        with:
-          go-version: 'latest'
       - name: Create a new git repository
         run: rm -rf .git && git init && git add --all && git -c user.name='test' -c user.email='test@example.com' commit -m 'init for pr action'
       - name: Go mod tidy for root project
