@@ -112,7 +112,7 @@ func isCustomProvider(thirdPartyId string) bool {
     return slices.Contains(customProviders, thirdPartyId)
 }
 
-func main2() {
+func main() {
     tenantRes, err := multitenancy.ListAllTenants()
     if err != nil {
         log.Fatal(err)
