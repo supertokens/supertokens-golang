@@ -1496,10 +1496,9 @@ This test verifies that the SDK calls the well known API properly in the normal 
 */
 func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
-	originalCacheAge := JWKCacheMaxAgeInMs
 
 	JWKRefreshRateLimit = 100
-	JWKCacheMaxAgeInMs = 2000
+	var JWKCacheMaxAgeInSec uint64 = 2
 
 	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
 
@@ -1513,7 +1512,9 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				JWKSRefreshIntervalSec: &JWKCacheMaxAgeInSec,
+			}),
 		},
 	}
 	BeforeEach()
@@ -1548,7 +1549,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	time.Sleep(time.Duration(JWKCacheMaxAgeInMs) * time.Millisecond)
+	time.Sleep(time.Duration(JWKCacheMaxAgeInSec) * time.Second)
 
 	logInfoAfterWaiting := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	wellKnownCallLogs = []string{}
@@ -1562,7 +1563,6 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	assert.Equal(t, len(wellKnownCallLogs), 1)
 
 	JWKRefreshRateLimit = originalRefreshlimit
-	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 /*
@@ -1578,10 +1578,9 @@ cache expired and the keys need to be refetched.
 */
 func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
-	originalCacheAge := JWKCacheMaxAgeInMs
 
 	JWKRefreshRateLimit = 100
-	JWKCacheMaxAgeInMs = 2000
+	JWKCacheMaxAgeInSec := uint64(2)
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1593,7 +1592,9 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				JWKSRefreshIntervalSec: &JWKCacheMaxAgeInSec,
+			}),
 		},
 	}
 	BeforeEach()
@@ -1633,7 +1634,6 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 
 	assert.True(t, len(newKeys) != 0)
 	JWKRefreshRateLimit = originalRefreshlimit
-	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 /*
@@ -1794,10 +1794,9 @@ This test verifies the behaviour of the JWKS cache maintained by the SDK
 */
 func TestJWKSCacheLogic(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
-	originalCacheAge := JWKCacheMaxAgeInMs
 
 	JWKRefreshRateLimit = 100
-	JWKCacheMaxAgeInMs = 2000
+	var JWKCacheMaxAgeInSec uint64 = 2
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1809,7 +1808,9 @@ func TestJWKSCacheLogic(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				JWKSRefreshIntervalSec: &JWKCacheMaxAgeInSec,
+			}),
 		},
 	}
 	BeforeEach()
@@ -1849,7 +1850,6 @@ func TestJWKSCacheLogic(t *testing.T) {
 	assert.NotNil(t, jwksCache)
 
 	JWKRefreshRateLimit = originalRefreshlimit
-	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 /*
@@ -1940,10 +1940,9 @@ This test ensures that the SDK's caching logic for fetching JWKs works fine
 */
 func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
-	originalCacheAge := JWKCacheMaxAgeInMs
 
 	JWKRefreshRateLimit = 100
-	JWKCacheMaxAgeInMs = 2000
+	var JWKCacheMaxAgeInSec uint64 = 2
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -1955,7 +1954,9 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 			APIDomain:     "api.supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				JWKSRefreshIntervalSec: &JWKCacheMaxAgeInSec,
+			}),
 		},
 	}
 	BeforeEach()
@@ -2002,7 +2003,6 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 	assert.Equal(t, <-returnedFromCache, false)
 
 	JWKRefreshRateLimit = originalRefreshlimit
-	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 /*
@@ -2205,10 +2205,9 @@ func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testi
 
 func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	originalRefreshlimit := JWKRefreshRateLimit
-	originalCacheAge := JWKCacheMaxAgeInMs
 
 	JWKRefreshRateLimit = 100
-	JWKCacheMaxAgeInMs = 2000
+	var JWKCacheMaxAgeInSec uint64 = 2
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
@@ -2220,7 +2219,9 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 			WebsiteDomain: "supertokens.io",
 		},
 		RecipeList: []supertokens.Recipe{
-			Init(nil),
+			Init(&sessmodels.TypeInput{
+				JWKSRefreshIntervalSec: &JWKCacheMaxAgeInSec,
+			}),
 		},
 	}
 	BeforeEach()
@@ -2295,7 +2296,6 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	assert.Equal(t, notReturnFromCacheCount, 5)
 
 	JWKRefreshRateLimit = originalRefreshlimit
-	JWKCacheMaxAgeInMs = originalCacheAge
 }
 
 func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t *testing.T) {

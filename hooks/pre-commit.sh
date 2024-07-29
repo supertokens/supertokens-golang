@@ -116,3 +116,17 @@ else
 	printf "${RED}Pushing to wrong branch. Stopping commit${NC}\n"
 	exit 1	
 fi
+
+# Check for _for_test_server.go files in recipe directory
+test_server_files=$(find ./recipe -name "*_for_test_server.go")
+
+if [ ! -z "$test_server_files" ]; then
+    RED='\033[0;31m'
+    NC='\033[0m' # No Color
+    printf "${RED}Error: Found _for_test_server.go files in recipe directory:${NC}\n"
+    echo "$test_server_files"
+    printf "${RED}These files should not be committed. Please remove them before committing.${NC}\n"
+    exit 1
+fi
+
+echo "No _for_test_server.go files found in recipe directory. Proceeding with commit."

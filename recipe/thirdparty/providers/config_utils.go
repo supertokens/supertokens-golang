@@ -98,12 +98,14 @@ func fetchAndSetConfig(provider *tpmodels.TypeProvider, clientType *string, user
 	return nil
 }
 
-func MergeProvidersFromCoreAndStatic(providerConfigsFromCore []tpmodels.ProviderConfig, providerInputsFromStatic []tpmodels.ProviderInput) []tpmodels.ProviderInput {
+func MergeProvidersFromCoreAndStatic(providerConfigsFromCore []tpmodels.ProviderConfig, providerInputsFromStatic []tpmodels.ProviderInput, includeAllProviders bool) []tpmodels.ProviderInput {
 	mergedProviders := []tpmodels.ProviderInput{}
 
 	if len(providerConfigsFromCore) == 0 {
 		for _, config := range providerInputsFromStatic {
-			mergedProviders = append(mergedProviders, config)
+			if includeAllProviders || config.IncludeInNonPublicTenantsByDefault {
+				mergedProviders = append(mergedProviders, config)
+			}
 		}
 	} else {
 		for _, providerConfigFromCore := range providerConfigsFromCore {

@@ -19,6 +19,7 @@ import (
 	"errors"
 
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
+	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	tpproviders "github.com/supertokens/supertokens-golang/recipe/thirdparty/providers"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -37,7 +38,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, providers []tpmodels.
 			return nil, errors.New("tenant not found")
 		}
 
-		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantConfig.ThirdParty.Providers, providers)
+		mergedProviders := tpproviders.MergeProvidersFromCoreAndStatic(tenantConfig.ThirdParty.Providers, providers, tenantId == multitenancymodels.DefaultTenantId)
 		provider, err := tpproviders.FindAndCreateProviderInstance(mergedProviders, thirdPartyID, clientType, userContext)
 		if err != nil {
 			return nil, err

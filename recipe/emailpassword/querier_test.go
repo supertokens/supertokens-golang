@@ -17,9 +17,9 @@ func TestCachingWorks(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -79,9 +79,9 @@ func TestNoCachingIfDisabledByUser(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 			DisableCoreCallCache: true,
 		},
@@ -124,9 +124,9 @@ func TestNoCachingIfHeadersAreDifferent(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -176,9 +176,9 @@ func TestCachingGetsClearWhenQueryWithoutUserContext(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -223,9 +223,9 @@ func TestCachingDoesNotGetClearWithNonGetIfKeepAlive(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -295,9 +295,9 @@ func TestCachingGetsClearWithNonGetIfKeepAliveIsFalse(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{
@@ -367,9 +367,9 @@ func TestCachingGetsClearWithNonGetIfKeepAliveIsNotSet(t *testing.T) {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "http://localhost:8080",
-			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) *http.Request {
+			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
-				return r
+				return r, nil
 			},
 		},
 		AppInfo: supertokens.AppInfo{

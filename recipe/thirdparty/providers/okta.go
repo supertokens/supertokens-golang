@@ -27,9 +27,24 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
-			if config.OIDCDiscoveryEndpoint == "" {
-				config.OIDCDiscoveryEndpoint = fmt.Sprint(config.AdditionalConfig["oktaDomain"])
+			if config.AdditionalConfig == nil || config.AdditionalConfig["oktaDomain"] == nil {
+				if config.OIDCDiscoveryEndpoint == "" {
+					return tpmodels.ProviderConfigForClientType{}, errors.New("please provide the oktaDomain in the AdditionalConfig of the Okta provider.")
+				}
+			} else {
+				oidcDomain, err := supertokens.NewNormalisedURLDomain(config.AdditionalConfig["oktaDomain"].(string))
+				if err != nil {
+					return tpmodels.ProviderConfigForClientType{}, err
+				}
+				oidcPath, err := supertokens.NewNormalisedURLPath("/.well-known/openid-configuration")
+				if err != nil {
+					return tpmodels.ProviderConfigForClientType{}, err
+				}
+				config.OIDCDiscoveryEndpoint = oidcDomain.GetAsStringDangerous() + oidcPath.GetAsStringDangerous()
 			}
+
+			// The config could be coming from core where we didn't add the well-known previously
+			config.OIDCDiscoveryEndpoint = normaliseOIDCEndpointToIncludeWellKnown(config.OIDCDiscoveryEndpoint)
 
 			if len(config.Scope) == 0 {
 				config.Scope = []string{"openid", "email"}

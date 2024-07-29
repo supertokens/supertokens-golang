@@ -7,6 +7,133 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.24.0] - 2024-07-29
+
+### Changes
+
+-   Adds test server for `backend-sdk-testing`
+-   Sends `websiteDomain` and `apiDomain` to core for telemetry.
+-   `boxyURL` is no more mandatory input in `additionalConfig` while adding boxy-saml provider in thirdParty.
+-   Adds `JWKSRefreshIntervalSec` config to `sessmodels.TypeInput` to set the default JWKS cache duration. The default is 4 hours.
+
+
+### Breaking changes
+
+-   Updates `NetworkInterceptor` function signature to return `error` along with `*http.Request`
+-   SDK will no longer add `.well-known/openid-configuration` to the `OIDCDiscoveryEndpoint` config in thirdParty providers. If you have specified any custom `OIDCDiscoveryEndpoint` in the ThirdParty.init or added to the core, please make sure to update them to include `.well-known/openid-configuration`.
+-   For a non-public tenant, when there are no providers added in the core, the SDK used to fallback to the providers added in the ThirdParty.init. Now, the SDK will not fallback to the providers added in the ThirdParty.init by default. If you require a thirdparty provider to be available for non-public tenants, you can make it available by setting `IncludeInNonPublicTenantsByDefault` for each of the providers. See the migration section below to see how to do this. Note that this only affects non-public tenants when there are no providers added in core.
+
+### Migration
+
+#### Make providers available in non-public tenants by default
+
+To make all the providers added in the ThirdParty.init available for non-public tenants by default,
+
+Before:
+
+```go
+thirdparty.Init(&tpmodels.TypeInput{
+    SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+        Providers: []tpmodels.ProviderInput{
+            {
+                Config: tpmodels.ProviderConfig{
+                    ThirdPartyId: "google",
+                    // rest of the config
+                },
+            },
+            {
+                Config: tpmodels.ProviderConfig{
+                    ThirdPartyId: "github",
+                    // rest of the config
+                },
+            },
+        },
+    },
+})
+```
+
+After:
+
+```go
+thirdparty.Init(&tpmodels.TypeInput{
+    SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
+        Providers: []tpmodels.ProviderInput{
+            {
+                Config: tpmodels.ProviderConfig{
+                    ThirdPartyId: "google",
+                    // rest of the config
+                },
+
+                // Add the following line to make this provider available in non-public tenants by default
+                IncludeInNonPublicTenantsByDefault: true,
+            },
+            {
+                Config: tpmodels.ProviderConfig{
+                    ThirdPartyId: "github",
+                    // rest of the config
+                },
+
+                // Add the following line to make this provider available in non-public tenants by default
+                IncludeInNonPublicTenantsByDefault: true,
+            },
+        },
+    },
+})
+```
+
+#### Migrating `oidcDiscoveryEndpoint` in core (for custom providers only):
+
+For each tenant, do the following
+
+1.  GET `/appid-<appId>/<tenantId>/recipe/multitenancy/tenant/v2`
+
+    You should see the thirdParty providers in the response using `response.thirdParty.providers`
+
+2.  For each config in providers list, if you have `oidcDiscoveryEndpoint` in the config, update it to include `.well-known/openid-configuration` at the end.
+
+Here's a sample code snippet to update the `oidcDiscoveryEndpoint`:
+
+```go
+package main
+
+import (
+    "log"
+    "slices"
+    "strings"
+
+    "github.com/supertokens/supertokens-golang/recipe/multitenancy"
+)
+
+func isCustomProvider(thirdPartyId string) bool {
+    customProviders := []string{
+        "custom",
+        //... all your custom thirdPartyIds
+    }
+    return slices.Contains(customProviders, thirdPartyId)
+}
+
+func main() {
+    tenantRes, err := multitenancy.ListAllTenants()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    tenants := tenantRes.OK.Tenants
+
+    for _, tenant := range tenants {
+        for _, provider := range tenant.ThirdParty.Providers {
+            if isCustomProvider(provider.ThirdPartyId) && provider.OIDCDiscoveryEndpoint != "" {
+                provider.OIDCDiscoveryEndpoint = strings.TrimSuffix(provider.OIDCDiscoveryEndpoint, "/")
+                provider.OIDCDiscoveryEndpoint = provider.OIDCDiscoveryEndpoint + "/.well-known/openid-configuration"
+
+                multitenancy.CreateOrUpdateThirdPartyConfig(tenant.TenantId, provider, nil)
+            }
+        }
+    }
+}
+```
+
+
 ## [0.23.0] - 2024-07-10
 
 ### Breaking Changes

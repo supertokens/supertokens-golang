@@ -70,6 +70,7 @@ func makeSessionContainerInput(
 func newSessionContainer(config sessmodels.TypeNormalisedInput, session *SessionContainerInput) sessmodels.SessionContainer {
 
 	sessionContainer := &sessmodels.TypeSessionContainer{}
+
 	sessionContainer.RevokeSessionWithContext = func(userContext supertokens.UserContext) error {
 		_, err := (*session.recipeImpl.RevokeSession)(session.sessionHandle, userContext)
 		if err != nil {

@@ -222,6 +222,11 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		useDynamicSigningKey = *config.UseDynamicAccessTokenSigningKey
 	}
 
+	var jwksRefreshIntervalSec uint64 = 4 * 3600 // 4 hours
+	if config != nil && config.JWKSRefreshIntervalSec != nil {
+		jwksRefreshIntervalSec = *config.JWKSRefreshIntervalSec
+	}
+
 	typeNormalisedInput := sessmodels.TypeNormalisedInput{
 		RefreshTokenPath:         appInfo.APIBasePath.AppendPath(refreshAPIPath),
 		CookieDomain:             cookieDomain,
@@ -233,6 +238,7 @@ func ValidateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		AntiCsrfFunctionOrString: antiCsrfFunctionOrString,
 		ExposeAccessTokenToFrontendInCookieBasedAuth: config.ExposeAccessTokenToFrontendInCookieBasedAuth,
 		UseDynamicAccessTokenSigningKey:              useDynamicSigningKey,
+		JWKSRefreshIntervalSec:                       jwksRefreshIntervalSec,
 		ErrorHandlers:                                errorHandlers,
 		GetTokenTransferMethod:                       config.GetTokenTransferMethod,
 		Override: sessmodels.OverrideStruct{

@@ -34,7 +34,7 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	}
 
 	if input.Config.OIDCDiscoveryEndpoint == "" {
-		input.Config.OIDCDiscoveryEndpoint = "https://appleid.apple.com/"
+		input.Config.OIDCDiscoveryEndpoint = "https://appleid.apple.com/.well-known/openid-configuration"
 	}
 
 	if input.Config.AuthorizationEndpointQueryParams == nil {
@@ -71,6 +71,9 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				}
 				config.ClientSecret = clientSecret
 			}
+
+			// The config could be coming from core where we didn't add the well-known previously
+			config.OIDCDiscoveryEndpoint = normaliseOIDCEndpointToIncludeWellKnown(config.OIDCDiscoveryEndpoint)
 
 			return config, nil
 		}

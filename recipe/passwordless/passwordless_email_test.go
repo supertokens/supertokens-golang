@@ -970,6 +970,9 @@ func TestThatMagicLinkUsesRightValueFromOriginFunction(t *testing.T) {
 			APIDomain: "api.supertokens.io",
 			AppName:   "SuperTokens",
 			GetOrigin: func(request *http.Request, userContext supertokens.UserContext) (string, error) {
+				if request == nil {
+					return "https://supertokens.com", nil
+				}
 				// read request body
 				decoder := json.NewDecoder(request.Body)
 				var requestBody map[string]interface{}

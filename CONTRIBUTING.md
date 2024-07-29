@@ -46,6 +46,25 @@ You will need to setup the `supertokens-core` in order to to run the `supertoken
    `INSTALL_DIR=../supertokens-root go test  ./... -p 1 -v count=1`
 5. If all tests pass the output should be:
 ![golang tests passing](https://github.com/supertokens/supertokens-logo/blob/master/images/supertokens-golang-test.png)
+6. Navigate to the `test-server` folder within the `supertokens-golang` project:
+   `cd ./test/test-server/`
+7. Setup for test:  
+   `sh setup-for-test.sh`
+8. Start the server:
+   `go run .`
+9. In the `supertokens-golang` root folder, open the `frontendDriverInterfaceSupported.json` file and note the latest version supported. This version will be used to check out the correct version of the `backend-sdk-testing` project.
+10. Fork the [backend-sdk-testing](https://github.com/supertokens/backend-sdk-testing) repository.
+11. Clone your forked repository into the parent directory of the `supertokens-root` project. Both `supertokens-root` and `backend-sdk-testing` should exist side by side within the same parent directory.
+12. Change to the `backend-sdk-testing` directory:
+    `cd backend-sdk-testing`
+13. Check out the supported FDI version to be tested (as specified in `frontendDriverInterfaceSupported.json`):
+    `git checkout <FDI-version>`
+14. Install dependencies and build the project:
+    `npm install && npm run build-pretty`
+15. Run all tests (make sure to have node version >= 16.20.0 and < 17.0.0):
+    `INSTALL_PATH=../supertokens-root npm test`
+
+Note that `setup-for-test.sh` copies some files into the recipe folder. Ensure that these files are not committed.
 
 ## Pull Request
 
