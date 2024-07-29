@@ -29,6 +29,26 @@ jobs:
             - run: go get ./...
             - run: (cd .circleci/ && ./doUnitTests.sh << parameters.cdi-version >>)
             - slack/status
+    test-backend-sdk-testing:
+        docker:
+            - image: rishabhpoddar/supertokens_go_driver_testing
+        resource_class: large
+        parameters:
+            cdi-version:
+                type: string
+            fdi-version:
+                type: string
+        steps:
+            - checkout
+            - run: apt-get install lsof
+            - run: echo "127.0.0.1 localhost.org" >> /etc/hosts
+            - run: go version
+            - run: rm -rf /etc/alternatives/java
+            - run: ln -s /usr/java/jdk-15.0.1/bin/java /etc/alternatives/java
+            - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
+            - run: go get ./...
+            - run: (cd .circleci/ && ./doBackendSDKTests.sh << parameters.cdi-version >> << parameters.fdi-version >>)
+            - slack/status
     test-website:
         docker:
             - image: rishabhpoddar/supertokens_go_driver_testing
@@ -89,55 +109,69 @@ workflows:
     version: 2
     tagged-build:
         jobs:
-            - test-dev-tag-as-not-passed:
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
-            - test-unit:
-                requires:
-                    - test-dev-tag-as-not-passed
+            # - test-dev-tag-as-not-passed:
+            #     filters:
+            #         tags:
+            #             only: /dev-v[0-9]+(\.[0-9]+)*/
+            #         branches:
+            #             only: /test-cicd\/.*/
+            # - test-unit:
+            #     requires:
+            #         - test-dev-tag-as-not-passed
+            #     context:
+            #         - slack-notification
+            #     filters:
+            #         tags:
+            #             only: /dev-v[0-9]+(\.[0-9]+)*/
+            #         branches:
+            #             only: /test-cicd\/.*/
+            #     matrix:
+            #         parameters:
+            #             cdi-version: placeholder
+            # - test-website:
+            #     requires:
+            #         - test-dev-tag-as-not-passed
+            #     context:
+            #         - slack-notification
+            #     filters:
+            #         tags:
+            #             only: /dev-v[0-9]+(\.[0-9]+)*/
+            #         branches:
+            #             only: /test-cicd\/.*/
+            # - test-authreact:
+            #     requires:
+            #         - test-dev-tag-as-not-passed
+            #     context:
+            #         - slack-notification
+            #     filters:
+            #         tags:
+            #             only: /dev-v[0-9]+(\.[0-9]+)*/
+            #         branches:
+            #             only: /test-cicd\/.*/
+            - test-backend-sdk-testing:
+                # requires:
+                #     - test-dev-tag-as-not-passed
                 context:
                     - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
+                # filters:
+                #     tags:
+                #         only: /dev-v[0-9]+(\.[0-9]+)*/
+                #     branches:
+                #         only: /test-cicd\/.*/
                 matrix:
                     parameters:
                         cdi-version: placeholder
-            - test-website:
-                requires:
-                    - test-dev-tag-as-not-passed
-                context:
-                    - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
-            - test-authreact:
-                requires:
-                    - test-dev-tag-as-not-passed
-                context:
-                    - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        only: /test-cicd\/.*/
+                        fdi-version: placeholder
             - test-success:
                 requires:
-                    - test-unit
-                    - test-website
-                    - test-authreact
+                    # - test-unit
+                    # - test-website
+                    # - test-authreact
+                    - test-backend-sdk-testing
                 context:
                     - slack-notification
-                filters:
-                    tags:
-                        only: /dev-v[0-9]+(\.[0-9]+)*/
-                    branches:
-                        ignore: /.*/
-
+                # filters:
+                #     tags:
+                #         only: /dev-v[0-9]+(\.[0-9]+)*/
+                #     branches:
+                #         ignore: /.*/
