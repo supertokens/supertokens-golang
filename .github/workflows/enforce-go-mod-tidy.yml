@@ -20,4 +20,4 @@ jobs:
       - name: git status
         run: git status
       - name: Check for file changes by go mod tidy
-        run: git status | grep -q 'nothing to commit, working directory clean' && exit 0 || exit 1
+        run: git status | grep -q 'nothing to commit, working tree clean' && exit 0 || exit 1
