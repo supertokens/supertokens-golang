@@ -12,13 +12,12 @@ jobs:
     pr-title:
         name: Pre commit hook check
         runs-on: ubuntu-latest
-        container: rishabhpoddar/supertokens_go_driver_testing
         steps:
             - uses: actions/checkout@v2
             - name: Set up node
               uses: actions/setup-node@v1
               with:
-                node-version: '12'
+                node-version: '16'
             - run: git init && git add --all && git -c user.name='test' -c user.email='test@example.com' commit -m 'init for pr action'
             - name: Install latest go
               run: wget https://go.dev/dl/go1.21.3.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz && export PATH=$PATH:/usr/local/go/bin && rm go1.21.3.linux-amd64.tar.gz
