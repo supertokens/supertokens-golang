@@ -103,7 +103,7 @@ func MergeProvidersFromCoreAndStatic(providerConfigsFromCore []tpmodels.Provider
 
 	if len(providerConfigsFromCore) == 0 {
 		for _, config := range providerInputsFromStatic {
-			if includeAllProviders || (config.IncludeInNonPublicTenantsByDefault != nil && *config.IncludeInNonPublicTenantsByDefault) {
+			if includeAllProviders || config.IncludeInNonPublicTenantsByDefault {
 				mergedProviders = append(mergedProviders, config)
 			}
 		}

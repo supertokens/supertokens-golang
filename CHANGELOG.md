@@ -55,7 +55,6 @@ thirdparty.Init(&tpmodels.TypeInput{
 After:
 
 ```go
-True := true
 thirdparty.Init(&tpmodels.TypeInput{
     SignInAndUpFeature: tpmodels.TypeInputSignInAndUp{
         Providers: []tpmodels.ProviderInput{
@@ -66,7 +65,7 @@ thirdparty.Init(&tpmodels.TypeInput{
                 },
 
                 // Add the following line to make this provider available in non-public tenants by default
-                IncludeInNonPublicTenantsByDefault: &True,
+                IncludeInNonPublicTenantsByDefault: true,
             },
             {
                 Config: tpmodels.ProviderConfig{
@@ -75,7 +74,7 @@ thirdparty.Init(&tpmodels.TypeInput{
                 },
 
                 // Add the following line to make this provider available in non-public tenants by default
-                IncludeInNonPublicTenantsByDefault: &True,
+                IncludeInNonPublicTenantsByDefault: true,
             },
         },
     },
