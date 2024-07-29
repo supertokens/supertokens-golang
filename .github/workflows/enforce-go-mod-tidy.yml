@@ -10,8 +10,6 @@ jobs:
       - name: Create a new git repository
         run: rm -rf .git && git init && git add --all && git -c user.name='test' -c user.email='test@example.com' commit -m 'init for pr action'
       - name: Go mod tidy for root project
-        run: wget https://go.dev/dl/go1.21.3.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz && export PATH=$PATH:/usr/local/go/bin && rm go1.21.3.linux-amd64.tar.gz
-      - name: Go mod tidy for root project
         run: go mod tidy
       - name: Go mod tidy for example apps      
         working-directory: ./examples
