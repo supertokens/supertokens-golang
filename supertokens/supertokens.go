@@ -335,13 +335,15 @@ func (s *superTokens) errorHandler(originalError error, req *http.Request, res h
 	}
 	for _, recipe := range s.RecipeModules {
 		LogDebugMessage("errorHandler: Checking recipe for match: " + recipe.recipeID)
+		LogDebugMessage("errorHandler: error: " + originalError.Error())
 		if recipe.HandleError != nil {
-			LogDebugMessage("errorHandler: Matched with recipeId: " + recipe.recipeID)
 			handled, err := recipe.HandleError(originalError, req, res, userContext)
 			if err != nil {
+				LogDebugMessage("errorHandler: error from error handler " + err.Error())
 				return err
 			}
 			if handled {
+				LogDebugMessage("errorHandler: Matched with recipeId: " + recipe.recipeID)
 				return nil
 			}
 		}

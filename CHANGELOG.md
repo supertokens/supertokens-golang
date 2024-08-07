@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.24.1] - 2024-09-07
+
+- Improves debug logs for error handlers.
+
 ## [0.24.0] - 2024-07-29
 
 ### Changes
