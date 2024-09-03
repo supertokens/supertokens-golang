@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
-## [0.24.1] - 2024-09-07
+## [0.24.2] - 2024-09-03
+
+- Fixes memory leak with the JWKS cache.
+
+## [0.24.1] - 2024-08-07
 
 - Improves debug logs for error handlers.
 

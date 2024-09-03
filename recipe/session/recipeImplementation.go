@@ -105,11 +105,11 @@ func getJWKS() (*keyfunc.JWKS, error) {
 				LastFetched: time.Now().UnixNano() / int64(time.Millisecond),
 			}
 
-			// Dont add to cache if there is an error to keep the logic of checking cache simple
-			//
-			// This also has the added benefit where if initially the request failed because the core
-			// was down and then it comes back up, the next time it will try to request that core again
-			// after the cache has expired
+			// Close any existing JWKS in the cache before replacing it
+			if jwksCache != nil && jwksCache.JWKS != nil {
+				jwksCache.JWKS.EndBackground()
+			}
+
 			jwksCache = &jwksResult
 
 			if supertokens.IsRunningInTestMode() {
