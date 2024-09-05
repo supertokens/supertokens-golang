@@ -2445,6 +2445,86 @@ func TestBadCaseInputWithoutOtional(t *testing.T) {
 
 }
 
+func TestOptionalInputFieldDoesNotThrowError(t *testing.T) {
+	optionalVal := true
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				SignUpFeature: &epmodels.TypeInputSignUp{
+					FormFields: []epmodels.TypeInputFormField{
+						{
+							ID:       "testField2",
+							Optional: &optionalVal,
+						},
+					},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": "validpass123",
+			},
+			{
+				"id":    "email",
+				"value": "random@gmail.com",
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	assert.Equal(t, 200, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "OK", data["status"].(string))
+}
+
 func TestGoodCaseInputWithOtional(t *testing.T) {
 	optionalVal := true
 	configValue := supertokens.TypeInput{
