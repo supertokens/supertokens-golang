@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.24.2] - 2024-09-03
 
 - Fixes memory leak with the JWKS cache.
+- Makes optional form fields (in sign up, sign in APIs) truly optional in the request body.
 
 ## [0.24.1] - 2024-08-07
 
