@@ -92,9 +92,9 @@ func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormFi
 
 func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, inputs []epmodels.TypeFormField, tenantId string) error {
 	var validationErrors []errors.ErrorPayload
-	if len(configFormFields) != len(inputs) {
+	if len(configFormFields) < len(inputs) {
 		return supertokens.BadInputError{
-			Msg: "Are you sending too many / too few formFields?",
+			Msg: "Are you sending too many formFields?",
 		}
 	}
 	for _, field := range configFormFields {
@@ -105,16 +105,27 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 				break
 			}
 		}
-		if input.Value == "" && !field.Optional {
+
+		isValidInput := input.Value != ""
+
+		// If the field is not option and input is invalid, we should
+		// throw a validation error.
+		if !isValidInput && !field.Optional {
 			validationErrors = append(validationErrors, errors.ErrorPayload{ID: field.ID, ErrorMsg: "Field is not optional"})
-		} else {
-			err := field.Validate(input.Value, tenantId)
-			if err != nil {
-				validationErrors = append(validationErrors, errors.ErrorPayload{
-					ID:       field.ID,
-					ErrorMsg: *err,
-				})
-			}
+		}
+
+		// If the input is invalid, we don't need to do anything
+		// as execution will reach here if field is optional.
+		if !isValidInput {
+			continue
+		}
+
+		err := field.Validate(input.Value, tenantId)
+		if err != nil {
+			validationErrors = append(validationErrors, errors.ErrorPayload{
+				ID:       field.ID,
+				ErrorMsg: *err,
+			})
 		}
 	}
 	if len(validationErrors) != 0 {

@@ -1041,14 +1041,15 @@ func TestFormFieldsHasNoEmailField(t *testing.T) {
 
 	resp.Body.Close()
 
-	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 
 	err = json.Unmarshal(dataInBytes1, &data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
-
+	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+	assert.Equal(t, 1, len(data["formFields"].([]interface{})))
+	assert.Equal(t, "email", (data["formFields"].([]interface{}))[0].(map[string]interface{})["id"].(string))
 }
 
 func TestFormFieldsHasNoPasswordField(t *testing.T) {
@@ -1130,12 +1131,14 @@ func TestFormFieldsHasNoPasswordField(t *testing.T) {
 
 	resp.Body.Close()
 
-	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 	err = json.Unmarshal(dataInBytes1, &data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
+	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+	assert.Equal(t, 1, len(data["formFields"].([]interface{})))
+	assert.Equal(t, "password", (data["formFields"].([]interface{}))[0].(map[string]interface{})["id"].(string))
 
 }
 
@@ -2343,14 +2346,15 @@ func TestFormFieldsAddedInConfigButNotInInputToSignupCheckErrorAboutItBeingMissi
 		t.Error(err.Error())
 	}
 	res.Body.Close()
-	assert.Equal(t, 400, res.StatusCode)
+	assert.Equal(t, 200, res.StatusCode)
 	var data map[string]interface{}
 	err = json.Unmarshal(dataInBytes, &data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
-
+	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+	assert.Equal(t, 1, len(data["formFields"].([]interface{})))
+	assert.Equal(t, "testField", (data["formFields"].([]interface{}))[0].(map[string]interface{})["id"].(string))
 }
 
 func TestBadCaseInputWithoutOtional(t *testing.T) {
@@ -2439,6 +2443,86 @@ func TestBadCaseInputWithoutOtional(t *testing.T) {
 	assert.Equal(t, "testField", data["formFields"].([]interface{})[0].(map[string]interface{})["id"])
 	assert.Equal(t, "Field is not optional", data["formFields"].([]interface{})[0].(map[string]interface{})["error"])
 
+}
+
+func TestOptionalInputFieldDoesNotThrowError(t *testing.T) {
+	optionalVal := true
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				SignUpFeature: &epmodels.TypeInputSignUp{
+					FormFields: []epmodels.TypeInputFormField{
+						{
+							ID:       "testField2",
+							Optional: &optionalVal,
+						},
+					},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": "validpass123",
+			},
+			{
+				"id":    "email",
+				"value": "random@gmail.com",
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	assert.Equal(t, 200, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "OK", data["status"].(string))
 }
 
 func TestGoodCaseInputWithOtional(t *testing.T) {
@@ -2587,14 +2671,15 @@ func TestInputFormFieldWithoutEmailField(t *testing.T) {
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 	var data map[string]interface{}
 	err = json.Unmarshal(dataInBytes, &data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
-
+	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+	assert.Equal(t, 1, len(data["formFields"].([]interface{})))
+	assert.Equal(t, "email", (data["formFields"].([]interface{}))[0].(map[string]interface{})["id"].(string))
 }
 
 func TestInputFormFieldWithoutPasswordField(t *testing.T) {
@@ -2654,13 +2739,15 @@ func TestInputFormFieldWithoutPasswordField(t *testing.T) {
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 	var data map[string]interface{}
 	err = json.Unmarshal(dataInBytes, &data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
+	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+	assert.Equal(t, 1, len(data["formFields"].([]interface{})))
+	assert.Equal(t, "password", (data["formFields"].([]interface{}))[0].(map[string]interface{})["id"].(string))
 }
 
 func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t *testing.T) {
@@ -2741,13 +2828,15 @@ func TestInputFormFieldHasADifferentNumberOfCustomFiledsThanInConfigFormFields(t
 	}
 	resp.Body.Close()
 
-	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, 200, resp.StatusCode)
 	var data map[string]interface{}
 	err = json.Unmarshal(dataInBytes, &data)
 	if err != nil {
 		t.Error(err.Error())
 	}
-	assert.Equal(t, "Are you sending too many / too few formFields?", data["message"].(string))
+	assert.Equal(t, "FIELD_ERROR", data["status"].(string))
+	assert.Equal(t, 1, len(data["formFields"].([]interface{})))
+	assert.Equal(t, "testField2", (data["formFields"].([]interface{}))[0].(map[string]interface{})["id"].(string))
 
 }
 
@@ -3176,4 +3265,90 @@ func TestSignUpAPIWorksWhenInputIsFine(t *testing.T) {
 
 	assert.Equal(t, "OK", result["status"])
 	assert.Equal(t, "random@gmail.com", result["user"].(map[string]interface{})["email"])
+}
+
+func TestInputFormFieldHasMoreNumberOfCustomFiledsThanInConfigFormFields(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				SignUpFeature: &epmodels.TypeInputSignUp{
+					FormFields: []epmodels.TypeInputFormField{
+						{
+							ID: "testField2",
+						},
+					},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]string{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": "validpass123",
+			},
+			{
+				"id":    "email",
+				"value": "random@gmail.com",
+			},
+			{
+				"id":    "testField",
+				"value": "",
+			},
+			{
+				"id":    "testField2",
+				"value": "",
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	assert.Equal(t, 400, resp.StatusCode)
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	assert.Equal(t, "Are you sending too many formFields?", data["message"].(string))
 }
