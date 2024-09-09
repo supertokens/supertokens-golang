@@ -100,9 +100,17 @@ jobs:
             - run: wget https://go.dev/dl/go1.18.10.linux-amd64.tar.gz && rm -rf /usr/local/go && tar -C /usr/local -xzf go*.tar.gz
             - run: go get ./...
             - run: (cd .circleci/ && ./authReact.sh)
+            - store_test_results:
+                  path: ../supertokens-auth-react/test_report/report_node-<< parameters.fdi-version >>.xml
+            - store_artifacts:
+                  path: ../supertokens-auth-react/test_report/screenshots
+                  destination: failed-test-screenshots
             - store_artifacts:
                   path: test_report/backend.log
                   destination: logs
+            - store_artifacts:
+                  path: ../supertokens-auth-react/test_report/logs
+                  destination: test-logs
             - slack/status
     test-success:
         docker:
