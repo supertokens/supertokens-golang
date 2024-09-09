@@ -101,7 +101,7 @@ jobs:
             - run: go get ./...
             - run: (cd .circleci/ && ./authReact.sh)
             - store_test_results:
-                  path: ../supertokens-auth-react/test_report/report_node-<< parameters.fdi-version >>.xml
+                  path: ../supertokens-auth-react/test_report/report_node.xml
             - store_artifacts:
                   path: ../supertokens-auth-react/test_report/screenshots
                   destination: failed-test-screenshots
