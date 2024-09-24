@@ -232,6 +232,98 @@ func TestPasswordValidation(t *testing.T) {
 	assert.Equal(t, "RESET_PASSWORD_INVALID_TOKEN_ERROR", data3["status"])
 }
 
+func TestInvalidTypeForPasswordAndEmail(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(nil),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]interface{}{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": 1234,
+			},
+		},
+	}
+	token := map[string]interface{}{
+		"token": "RandomToken",
+	}
+	var data map[string]interface{}
+
+	a, _ := json.Marshal(formFields)
+	json.Unmarshal(a, &data)
+	b, _ := json.Marshal(token)
+	json.Unmarshal(b, &data)
+
+	jData, _ := json.Marshal(data)
+
+	resp, err := http.Post(testServer.URL+"/auth/user/password/reset", "application/json", bytes.NewBuffer(jData))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NoError(t, err)
+
+	dataInBytes, _ := io.ReadAll(resp.Body)
+	resp.Body.Close()
+
+	var data1 map[string]interface{}
+	json.Unmarshal(dataInBytes, &data1)
+
+	assert.Equal(t, 400, resp.StatusCode)
+	assert.Equal(t, "password value must be a string", data1["message"])
+
+	tokenResetFormFields := map[string][]map[string]interface{}{
+		"formFields": {
+			{
+				"id":    "email",
+				"value": 123456,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(tokenResetFormFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resetResponse, resetErr := http.Post(testServer.URL+"/auth/user/password/reset/token", "application/json", bytes.NewBuffer(postBody))
+	respInBytes, _ := io.ReadAll(resetResponse.Body)
+	resetResponse.Body.Close()
+	var resetResponseData map[string]interface{}
+	json.Unmarshal(respInBytes, &resetResponseData)
+
+	if resetErr != nil {
+		t.Error(resetErr.Error())
+	}
+
+	assert.NoError(t, resetErr)
+	assert.Equal(t, 400, resetResponse.StatusCode)
+	assert.Equal(t, "email value must be a string", resetResponseData["message"])
+}
+
 func TestTokenMissingFromInput(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{

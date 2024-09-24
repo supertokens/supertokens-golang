@@ -40,7 +40,17 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var email string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
-				email = formField.Value
+				// NOTE: This check will never actually fail because the parent
+				// function already checks for the type however in order to read the
+				// value as a string, it's safer to keep it here in case something changes
+				// in the future.
+				valueAsString, parseErr := withValueAsString(formField.Value, "email value needs to be a string")
+				if parseErr != nil {
+					return epmodels.GeneratePasswordResetTokenPOSTResponse{
+						GeneralError: &supertokens.GeneralErrorResponse{Message: parseErr.Error()},
+					}, nil
+				}
+				email = valueAsString
 			}
 		}
 
@@ -102,7 +112,17 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var newPassword string
 		for _, formField := range formFields {
 			if formField.ID == "password" {
-				newPassword = formField.Value
+				// NOTE: This check will never actually fail because the parent
+				// function already checks for the type however in order to read the
+				// value as a string, it's safer to keep it here in case something changes
+				// in the future.
+				valueAsString, parseErr := withValueAsString(formField.Value, "password value needs to be a string")
+				if parseErr != nil {
+					return epmodels.ResetPasswordPOSTResponse{
+						GeneralError: &supertokens.GeneralErrorResponse{Message: parseErr.Error()},
+					}, nil
+				}
+				newPassword = valueAsString
 			}
 		}
 
@@ -126,10 +146,22 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var email string
 		var password string
 		for _, formField := range formFields {
-			if formField.ID == "email" {
-				email = formField.Value
-			} else if formField.ID == "password" {
-				password = formField.Value
+			// NOTE: The check for type of password/email will never actually
+			// fail because the parent function already checks for the type
+			// however in order to read the value as a string, it's safer to
+			// keep it here in case something changes in the future.
+			if formField.ID == "email" || formField.ID == "password" {
+				valueAsString, parseErr := withValueAsString(formField.Value, fmt.Sprintf("%s value needs to be a string", formField.ID))
+				if parseErr != nil {
+					return epmodels.SignInPOSTResponse{
+						WrongCredentialsError: &struct{}{},
+					}, nil
+				}
+				if formField.ID == "email" {
+					email = valueAsString
+				} else {
+					password = valueAsString
+				}
 			}
 		}
 
@@ -164,10 +196,22 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var email string
 		var password string
 		for _, formField := range formFields {
-			if formField.ID == "email" {
-				email = formField.Value
-			} else if formField.ID == "password" {
-				password = formField.Value
+			// NOTE: The check for type of password/email will never actually
+			// fail because the parent function already checks for the type
+			// however in order to read the value as a string, it's safer to
+			// keep it here in case something changes in the future.
+			if formField.ID == "email" || formField.ID == "password" {
+				valueAsString, parseErr := withValueAsString(formField.Value, fmt.Sprintf("%s value needs to be a string", formField.ID))
+				if parseErr != nil {
+					return epmodels.SignUpPOSTResponse{
+						GeneralError: &supertokens.GeneralErrorResponse{Message: parseErr.Error()},
+					}, nil
+				}
+				if formField.ID == "email" {
+					email = valueAsString
+				} else {
+					password = valueAsString
+				}
 			}
 		}
 
