@@ -168,8 +168,8 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					},
 				},
 			},
-			expected:   "formFields must be an array of objects containing id and value of type string",
-			fieldError: false,
+			expected:   "Field is not optional",
+			fieldError: true,
 		},
 		{
 			input: map[string]interface{}{
@@ -179,8 +179,8 @@ func TestInvalidAPIInputForFormFields(t *testing.T) {
 					},
 				},
 			},
-			expected:   "formFields must be an array of objects containing id and value of type string",
-			fieldError: false,
+			expected:   "Field is not optional",
+			fieldError: true,
 		},
 		{
 			input: map[string]interface{}{
