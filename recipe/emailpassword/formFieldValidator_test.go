@@ -40,6 +40,7 @@ func TestDefaultEmailValidator(t *testing.T) {
 	assert.Equal(t, "Email is invalid", *defaultEmailValidator("fasd", "public"))
 	assert.Equal(t, "Email is invalid", *defaultEmailValidator("dfa@@@abc.com", "public"))
 	assert.Equal(t, "Email is invalid", *defaultEmailValidator("", "public"))
+	assert.Equal(t, "Field is not optional", *defaultEmailValidator(nil, "public"))
 }
 
 func TestDefaultPasswordValidator(t *testing.T) {
@@ -54,6 +55,7 @@ func TestDefaultPasswordValidator(t *testing.T) {
 	assert.Nil(t, defaultPasswordValidator("abc!@#$%^&*()gftr8", "public"))
 	assert.Nil(t, defaultPasswordValidator("    dskj3", "public"))
 	assert.Nil(t, defaultPasswordValidator("    dsk  3", "public"))
+	assert.Equal(t, "Field is not optional", *defaultPasswordValidator(nil, "public"))
 
 	assert.Equal(t, "Password must contain at least 8 characters, including a number", *defaultPasswordValidator("asd", "public"))
 
