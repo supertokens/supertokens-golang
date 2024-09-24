@@ -38,6 +38,208 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+func TestInvalidTypeForPassword(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				SignUpFeature: &epmodels.TypeInputSignUp{
+					FormFields: []epmodels.TypeInputFormField{},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]interface{}{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": 123,
+			},
+			{
+				"id":    "email",
+				"value": "random@gmail.com",
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 400, resp.StatusCode)
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NotNil(t, data["message"].(string))
+	assert.Equal(t, "password value must be a string", data["message"].(string))
+
+	// Test the signin flow
+	respSignIn, err := http.Post(testServer.URL+"/auth/signin", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 400, respSignIn.StatusCode)
+
+	dataInBytesSignIn, err := io.ReadAll(respSignIn.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	respSignIn.Body.Close()
+
+	var dataSignIn map[string]interface{}
+	err = json.Unmarshal(dataInBytesSignIn, &dataSignIn)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NotNil(t, dataSignIn["message"].(string))
+	assert.Equal(t, "password value must be a string", dataSignIn["message"].(string))
+}
+
+func TestInvalidTypeForEmail(t *testing.T) {
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				SignUpFeature: &epmodels.TypeInputSignUp{
+					FormFields: []epmodels.TypeInputFormField{},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]interface{}{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": "testpw1234",
+			},
+			{
+				"id":    "email",
+				"value": 1234,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 400, resp.StatusCode)
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NotNil(t, data["message"].(string))
+	assert.Equal(t, "email value must be a string", data["message"].(string))
+
+	// Test the signin flow
+	respSignIn, err := http.Post(testServer.URL+"/auth/signin", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 400, respSignIn.StatusCode)
+
+	dataInBytesSignIn, err := io.ReadAll(respSignIn.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	respSignIn.Body.Close()
+
+	var dataSignIn map[string]interface{}
+	err = json.Unmarshal(dataInBytesSignIn, &dataSignIn)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.NotNil(t, dataSignIn["message"].(string))
+	assert.Equal(t, "email value must be a string", dataSignIn["message"].(string))
+}
+
 func TestGoodCaseInputWithOptionalAndBoolean(t *testing.T) {
 	optionalVal := true
 	configValue := supertokens.TypeInput{

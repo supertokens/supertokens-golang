@@ -76,13 +76,14 @@ func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormFi
 			return nil, err
 		}
 
-		if formField.ID == "email" {
-			valueAsString, parseErr := withValueAsString(formField.Value, "Email value needs to be a string")
+		if formField.ID == "email" || formField.ID == "password" {
+			valueAsString, parseErr := withValueAsString(formField.Value, fmt.Sprintf("%s value must be a string", formField.ID))
 			if parseErr != nil {
 				return nil, supertokens.BadInputError{
-					Msg: "Email value must be a string",
+					Msg: parseErr.Error(),
 				}
 			}
+
 			formFields = append(formFields, epmodels.TypeFormField{
 				ID:    formField.ID,
 				Value: strings.TrimSpace(valueAsString),
