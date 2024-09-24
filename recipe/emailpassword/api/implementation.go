@@ -40,7 +40,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var email string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
-				email = formField.Value
+				valueAsString, parseErr := withValueAsString(formField.Value, "Email value needs to be a string")
+				if parseErr != nil {
+					return epmodels.GeneratePasswordResetTokenPOSTResponse{}, parseErr
+				}
+				email = valueAsString
 			}
 		}
 
@@ -102,7 +106,11 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var newPassword string
 		for _, formField := range formFields {
 			if formField.ID == "password" {
-				newPassword = formField.Value
+				valueAsString, parseErr := withValueAsString(formField.Value, "Password value needs to be a string")
+				if parseErr != nil {
+					return epmodels.ResetPasswordPOSTResponse{}, parseErr
+				}
+				newPassword = valueAsString
 			}
 		}
 
@@ -127,9 +135,17 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var password string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
-				email = formField.Value
+				valueAsString, parseErr := withValueAsString(formField.Value, "Email value needs to be a string")
+				if parseErr != nil {
+					return epmodels.SignInPOSTResponse{}, parseErr
+				}
+				email = valueAsString
 			} else if formField.ID == "password" {
-				password = formField.Value
+				valueAsString, parseErr := withValueAsString(formField.Value, "Password value needs to be a string")
+				if parseErr != nil {
+					return epmodels.SignInPOSTResponse{}, parseErr
+				}
+				password = valueAsString
 			}
 		}
 
@@ -165,9 +181,17 @@ func MakeAPIImplementation() epmodels.APIInterface {
 		var password string
 		for _, formField := range formFields {
 			if formField.ID == "email" {
-				email = formField.Value
+				valueAsString, parseErr := withValueAsString(formField.Value, "Email value needs to be a string")
+				if parseErr != nil {
+					return epmodels.SignUpPOSTResponse{}, parseErr
+				}
+				email = valueAsString
 			} else if formField.ID == "password" {
-				password = formField.Value
+				valueAsString, parseErr := withValueAsString(formField.Value, "Password value needs to be a string")
+				if parseErr != nil {
+					return epmodels.SignUpPOSTResponse{}, parseErr
+				}
+				password = valueAsString
 			}
 		}
 

@@ -217,6 +217,11 @@ func defaultPasswordValidator(value interface{}, tenantId string) *string {
 	// length >= 8 && < 100
 	// must have a number and a character
 
+	if (value) == nil {
+		msg := "Field is not optional"
+		return &msg
+	}
+
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the password field yields a string"
 		return &msg
@@ -243,6 +248,11 @@ func defaultPasswordValidator(value interface{}, tenantId string) *string {
 }
 
 func defaultEmailValidator(value interface{}, tenantId string) *string {
+	if (value) == nil {
+		msg := "Field is not optional"
+		return &msg
+	}
+
 	if reflect.TypeOf(value).Kind() != reflect.String {
 		msg := "Development bug: Please make sure the email field yields a string"
 		return &msg

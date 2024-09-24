@@ -38,6 +38,94 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
+func TestGoodCaseInputWithOptionalAndBoolean(t *testing.T) {
+	optionalVal := true
+	configValue := supertokens.TypeInput{
+		Supertokens: &supertokens.ConnectionInfo{
+			ConnectionURI: "http://localhost:8080",
+		},
+		AppInfo: supertokens.AppInfo{
+			APIDomain:     "api.supertokens.io",
+			AppName:       "SuperTokens",
+			WebsiteDomain: "supertokens.io",
+		},
+		RecipeList: []supertokens.Recipe{
+			Init(&epmodels.TypeInput{
+				SignUpFeature: &epmodels.TypeInputSignUp{
+					FormFields: []epmodels.TypeInputFormField{
+						{
+							ID:       "autoVerify",
+							Optional: &optionalVal,
+						},
+					},
+				},
+			}),
+			session.Init(&sessmodels.TypeInput{
+				GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
+					return sessmodels.CookieTransferMethod
+				},
+			}),
+		},
+	}
+
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
+	err := supertokens.Init(configValue)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	mux := http.NewServeMux()
+	testServer := httptest.NewServer(supertokens.Middleware(mux))
+	defer testServer.Close()
+
+	formFields := map[string][]map[string]interface{}{
+		"formFields": {
+			{
+				"id":    "password",
+				"value": "validpass123",
+			},
+			{
+				"id":    "email",
+				"value": "random@gmail.com",
+			},
+			{
+				"id":    "autoVerify",
+				"value": false,
+			},
+		},
+	}
+
+	postBody, err := json.Marshal(formFields)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, 200, resp.StatusCode)
+
+	dataInBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		t.Error(err.Error())
+	}
+	resp.Body.Close()
+
+	var data map[string]interface{}
+	err = json.Unmarshal(dataInBytes, &data)
+	if err != nil {
+		t.Error(err.Error())
+	}
+
+	assert.Equal(t, "OK", data["status"])
+	assert.NotNil(t, data["user"].(map[string]interface{})["id"])
+	assert.Equal(t, "random@gmail.com", data["user"].(map[string]interface{})["email"])
+}
+
 func TestRightRidButRecipeMissingReturns404(t *testing.T) {
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{

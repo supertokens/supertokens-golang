@@ -26,6 +26,16 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+func withValueAsString(emailValue interface{}, errorStr string) (string, error) {
+	// Throw error if the value is not a string
+	valueAsString, asStrOk := emailValue.(string)
+	if !asStrOk {
+		return "", fmt.Errorf(errorStr)
+	}
+
+	return valueAsString, nil
+}
+
 func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormField, formFieldsRaw interface{}, tenantId string) ([]epmodels.TypeFormField, error) {
 	if formFieldsRaw == nil {
 		return nil, supertokens.BadInputError{
@@ -56,14 +66,6 @@ func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormFi
 			}
 		}
 
-		if rawFormField.(map[string]interface{})["value"] != nil {
-			if _, ok := rawFormField.(map[string]interface{})["value"].(string); !ok {
-				return nil, supertokens.BadInputError{
-					Msg: "formFields must be an array of objects containing id and value of type string",
-				}
-			}
-		}
-
 		jsonformField, err := json.Marshal(rawFormField)
 		if err != nil {
 			return nil, err
@@ -75,9 +77,15 @@ func validateFormFieldsOrThrowError(configFormFields []epmodels.NormalisedFormFi
 		}
 
 		if formField.ID == "email" {
+			valueAsString, parseErr := withValueAsString(formField.Value, "Email value needs to be a string")
+			if parseErr != nil {
+				return nil, supertokens.BadInputError{
+					Msg: "Email value must be a string",
+				}
+			}
 			formFields = append(formFields, epmodels.TypeFormField{
 				ID:    formField.ID,
-				Value: strings.TrimSpace(formField.Value),
+				Value: strings.TrimSpace(valueAsString),
 			})
 		} else {
 			formFields = append(formFields, epmodels.TypeFormField{
@@ -106,7 +114,16 @@ func validateFormOrThrowError(configFormFields []epmodels.NormalisedFormField, i
 			}
 		}
 
-		isValidInput := input.Value != ""
+		isValidInput := true
+		if input.Value == nil {
+			isValidInput = false
+		} else {
+			// If it is a string, it shouldn't be empty.
+			valueAsStr, err := withValueAsString(input.Value, "")
+			if err == nil && strings.TrimSpace(valueAsStr) == "" {
+				isValidInput = false
+			}
+		}
 
 		// If the field is not option and input is invalid, we should
 		// throw a validation error.
