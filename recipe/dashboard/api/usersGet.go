@@ -121,6 +121,10 @@ func UsersGet(apiImplementation dashboardmodels.APIInterface, tenantId string, o
 			User     map[string]interface{} `json:"user"`
 		}) {
 			defer processingGroup.Done()
+
+			// NOTE: If userContext is passed in the following call, it could
+			// possibly lead to a concurrent map write error so it's important
+			// to be careful while adding that.
 			userMetadataResponse, err := usermetadata.GetUserMetadata(userObj.User["id"].(string))
 			<-sem
 			if err != nil {
