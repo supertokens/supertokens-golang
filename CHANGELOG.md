@@ -18,6 +18,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Changes the type of `value` in `TypeFormField` to `interface{}` instead of `string` to add support for any type of value in form fields.
 
+### Migration
+
+#### Typecast value of form fields to expected type before using it
+
+To read a value from formFields where id is `name`,
+
+Before:
+
+```go
+// formField should be of type []epmodels.TypeFormField
+var name string
+for id, value := range formFields {
+    if id == "name" {
+        name = value
+    }
+}
+```
+
+After:
+
+```go
+// formField should be of type []epmodels.TypeFormField
+var name string
+for id, value := ranger formFields {
+    if id == "name" {
+        nameAsStr, asStrOk := value.(string)
+        if !asStrOk {
+            // Handle the error accordingly
+        }
+        name = nameAsStr
+    }
+}
+```
+
 ## [0.24.2] - 2024-09-03
 
 - Fixes memory leak with the JWKS cache.
