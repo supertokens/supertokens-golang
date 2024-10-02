@@ -17,6 +17,7 @@ package api
 
 import (
 	"strconv"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/constants"
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
@@ -45,7 +46,15 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		if err != nil {
 			return "", err
 		}
-		connectionURI := stInstance.SuperTokens.ConnectionURI
+
+		connectionURIToNormalize := strings.Split(stInstance.SuperTokens.ConnectionURI, ";")[0]
+
+		var normalizationError error
+		normalizedConnectionURI, normalizationError := supertokens.NewNormalisedURLDomain(connectionURIToNormalize)
+		if normalizationError != nil {
+			return "", normalizationError
+		}
+		connectionURI := normalizedConnectionURI.GetAsStringDangerous()
 
 		normalizedDashboardPath, err := supertokens.NewNormalisedURLPath(constants.DashboardAPI)
 		if err != nil {
