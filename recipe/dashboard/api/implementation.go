@@ -47,11 +47,18 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 			return "", err
 		}
 
+		// We are splitting the passed URI here so that if multiple URI's are passed
+		// separated by a colon, the first one is returned.
 		connectionURIToNormalize := strings.Split(stInstance.SuperTokens.ConnectionURI, ";")[0]
 
+		// This normalizes the URI to make sure that it has things like protocol etc
+		// injected into it before it is returned.
 		var normalizationError error
 		normalizedConnectionURI, normalizationError := supertokens.NewNormalisedURLDomain(connectionURIToNormalize)
 		if normalizationError != nil {
+			// In case of failures, we want to return a 500 here, mainly because that
+			// is what we return if the connectionURI is invalid which is the case here
+			// if normalization fails.
 			return "", normalizationError
 		}
 		connectionURI := normalizedConnectionURI.GetAsStringDangerous()
