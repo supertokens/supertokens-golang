@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [unreleased]
 
+## [0.25.1] - 2024-10-02
+
+- Adds support for normalizing the connection URI's before returning them in dashboard GET response.
+
 ## [0.25.0] - 2024-09-25
 
 ### Changes
