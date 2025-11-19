@@ -49,6 +49,7 @@ var (
 	querierInterceptor    func(*http.Request, UserContext) (*http.Request, error)
 	querierGlobalCacheTag uint64
 	querierDisableCache   bool
+	querierHTTPClient     *http.Client
 )
 
 func SetQuerierApiVersionForTests(version string) {
@@ -113,8 +114,7 @@ func (q *Querier) GetQuerierAPIVersion(userContextIn ...UserContext) (string, er
 			req.Header = headers
 		}
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		resp, err := querierHTTPClient.Do(req)
 		return resp, nil, err
 	}, len(QuerierHosts), nil)
 
@@ -162,6 +162,8 @@ func initQuerier(hosts []QuerierHost, APIKey string, interceptor func(*http.Requ
 		querierInterceptor = interceptor
 		querierGlobalCacheTag = GetCurrTimeInMS()
 		querierDisableCache = disableCache
+
+		querierHTTPClient = &http.Client{}
 	}
 }
 
@@ -205,8 +207,7 @@ func (q *Querier) SendPostRequest(path string, data map[string]interface{}, user
 			}
 		}
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		resp, err := querierHTTPClient.Do(req)
 		return resp, nil, err
 	}, len(QuerierHosts), nil)
 	return resp, err
@@ -256,8 +257,7 @@ func (q *Querier) SendDeleteRequest(path string, data map[string]interface{}, pa
 			}
 		}
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		resp, err := querierHTTPClient.Do(req)
 		return resp, nil, err
 	}, len(QuerierHosts), nil)
 	return resp, err
@@ -360,8 +360,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 			}
 		}
 
-		client := &http.Client{}
-		response, err := client.Do(req)
+		response, err := querierHTTPClient.Do(req)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -435,8 +434,7 @@ func (q *Querier) SendGetRequestWithResponseHeaders(path string, params map[stri
 			}
 		}
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		resp, err := querierHTTPClient.Do(req)
 		return resp, nil, err
 	}, len(QuerierHosts), nil)
 }
@@ -478,8 +476,7 @@ func (q *Querier) SendPutRequest(path string, data map[string]interface{}, userC
 			}
 		}
 
-		client := &http.Client{}
-		resp, err := client.Do(req)
+		resp, err := querierHTTPClient.Do(req)
 		return resp, nil, err
 	}, len(QuerierHosts), nil)
 	return resp, err
