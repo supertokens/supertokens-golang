@@ -622,6 +622,10 @@ func ResetQuerierForTest() {
 	querierInitCalled = false
 }
 
+func SetHTTPClient(client *http.Client) {
+	querierHTTPClient = client
+}
+
 func (q *Querier) SetApiVersionForTests(apiVersion string) {
 	querierAPIVersion = apiVersion
 }
