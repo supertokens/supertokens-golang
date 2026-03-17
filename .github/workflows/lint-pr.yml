@@ -1,0 +1,58 @@
+name: "Lint PR"
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - edited
+      - synchronize
+      - labeled
+      - unlabeled
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint-pr-title:
+    name: Lint PR Title
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          validateSingleCommit: true
+
+  lint-changelog:
+    name: Require Changelog Fragment
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check for changelog fragment
+        if: "!contains(github.event.pull_request.labels.*.name, 'Skip-Changelog')"
+        run: |
+          git fetch origin ${{ github.base_ref }}
+
+          new_fragments=$(git diff --name-only --diff-filter=A \
+            "origin/${{ github.base_ref }}...HEAD" -- .changes/unreleased/)
+
+          if [[ -z "$new_fragments" ]]; then
+            echo "::error::No changelog fragment found in .changes/unreleased/"
+            echo ""
+            echo "Please add a fragment before merging:"
+            echo "  changie new"
+            echo ""
+            echo "Or add the 'Skip-Changelog' label to skip this check."
+            exit 1
+          fi
+
+          echo "Found changelog fragment(s):"
+          echo "$new_fragments"
