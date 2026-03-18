@@ -100,14 +100,11 @@ jobs:
       (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-tests'))
     runs-on: ubuntu-latest
     needs: [skip-check, define-versions]
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.define-versions.outputs.testMatrix) }}
-
-    env:
-      SUPERTOKENS_CORE_HOST: localhost
-      SUPERTOKENS_CORE_PORT: 3567
 
     steps:
       - uses: actions/checkout@v4
@@ -116,29 +113,29 @@ jobs:
         id: core-version
         run: |
           coreVersion=$(echo '${{ needs.define-versions.outputs.coreCdiVersionMap }}' | jq -r '.["${{ matrix.cdi-version }}"]')
-
           echo "coreVersion=${coreVersion}" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Clone and build supertokens-root
+        run: |
+          cd ../
+          git clone https://github.com/supertokens/supertokens-root.git
+          cd supertokens-root
+          echo "core,${{ steps.core-version.outputs.coreVersion }},supertokens
+          plugin-interface,${{ steps.core-version.outputs.coreVersion }},supertokens" > modules.txt
+          ./loadModules
+          bash ./utils/setupTestEnvLocal
+
       - name: Download Go modules
         run: go mod download
-
-      - name: Start supertokens core
-        run: |
-          docker run -d --name supertokens \
-            -p 3567:3567 \
-            supertokens/supertokens-dev-postgresql:${{ steps.core-version.outputs.coreVersion }}
-          # Wait for core to be ready
-          for i in $(seq 1 30); do
-            if curl -s http://localhost:3567/hello | grep -q "Hello"; then
-              echo "Core is ready"
-              break
-            fi
-            sleep 2
-          done
 
       - name: Install gotestsum
         run: go install gotest.tools/gotestsum@latest
@@ -147,6 +144,8 @@ jobs:
         run: |
           mkdir -p test-results
           gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1
+        env:
+          INSTALL_DIR: "../supertokens-root"
 
       - uses: dorny/test-reporter@v1
         name: Surface failing tests

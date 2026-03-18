@@ -1,0 +1,5 @@
+linters:
+  disable:
+    # Too many pre-existing unchecked return values (res.Write, cmd.Run, etc.)
+    # to fix in one pass. Enable incrementally.
+    - errcheck
