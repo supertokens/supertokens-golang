@@ -140,6 +140,18 @@ jobs:
           mkdir -p logs/
           docker compose logs -f core &> logs/core.log &
 
+          cd test/test-server
+          go run . &> ../../logs/test-server.log &
+
+          # Wait for test-server to be ready
+          for i in $(seq 1 30); do
+            if curl -s http://localhost:3030/test/ping >/dev/null 2>&1; then
+              echo "Test server is ready"
+              break
+            fi
+            sleep 1
+          done
+
       - uses: supertokens/actions/backend-sdk-testing-action@main
         with:
           version: ${{ matrix.fdi-version }}
