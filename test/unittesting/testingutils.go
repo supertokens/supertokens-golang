@@ -248,9 +248,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 			} else {
 				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-
-			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.HasPrefix(property, " Domain=") {
 					refreshTokenDomain = strings.TrimPrefix(property, " Domain=")
@@ -268,8 +265,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
 			} else {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
-			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.HasPrefix(property, " Domain=") {
@@ -829,7 +824,7 @@ func GenerateRandomCode(size int) string {
 }
 
 func EmailVerificationTokenRequest(cookies []*http.Cookie, testUrl string) (*http.Response, error) {
-	req, err := http.NewRequest("POST", testUrl+"/auth/user/email/verify/token", nil)
+	req, _ := http.NewRequest("POST", testUrl+"/auth/user/email/verify/token", nil)
 
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)

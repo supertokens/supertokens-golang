@@ -61,7 +61,7 @@ func createNewSessionHelper(config sessmodels.TypeNormalisedInput, querier super
 
 func getSessionHelper(config sessmodels.TypeNormalisedInput, querier supertokens.Querier, parsedAccessToken sessmodels.ParsedJWTInfo, antiCsrfToken *string, doAntiCsrfCheck, alwaysCheckCore bool, userContext supertokens.UserContext) (sessmodels.GetSessionResponse, error) {
 	var accessTokenInfo *AccessTokenInfoStruct = nil
-	var err error = nil
+	var err error
 	combinedJwks, jwksError := GetCombinedJWKS()
 	if jwksError != nil {
 		supertokens.LogDebugMessage(fmt.Sprintf("getSessionHelper: Returning TryRefreshTokenError because there was an error fetching JWKs - %s", jwksError))

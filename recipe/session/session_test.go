@@ -1693,7 +1693,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	}
 
 	tokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1832,7 +1832,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 	assert.Nil(t, jwksCache)
 
 	tokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1842,7 +1842,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -2244,9 +2244,7 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	}
 	<-returnedFromCache // this value must be ignored
 
-	for _, k := range jwks.KIDs() {
-		keys = append(keys, k)
-	}
+	keys = append(keys, jwks.KIDs()...)
 
 	go func() {
 		time.Sleep(11 * time.Second)

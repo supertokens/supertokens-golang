@@ -82,7 +82,7 @@ func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 			rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
 
-			userInfoFromEmail, err := doGetRequest(
+			userInfoFromEmail, _ := doGetRequest(
 				"https://api.bitbucket.org/2.0/user/emails",
 				nil,
 				headers,

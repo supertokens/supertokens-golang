@@ -28,6 +28,6 @@ func formatMessage(message string) string {
 func LogDebugMessage(message string) {
 	_, exists := os.LookupEnv("SUPERTOKENS_DEBUG")
 	if exists || DebugEnabled == true {
-		Logger.Printf(formatMessage(message))
+		Logger.Printf("%s", formatMessage(message))
 	}
 }

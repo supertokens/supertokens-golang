@@ -54,7 +54,7 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 	version := 2
 	// V2 or older tokens did not save the key id;
 	err := checkHeader(splittedInput[0])
-	payload := map[string]interface{}{}
+	var payload map[string]interface{}
 
 	// If err != nil, it is a V3 token (or above)
 	if err != nil {
