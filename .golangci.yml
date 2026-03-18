@@ -10,7 +10,7 @@ linters:
     staticcheck:
       checks:
         - "all"
-        - "-ST*"   # style checks — naming conventions (ST1003), package comments (ST1000), etc.
+        - "-ST*"   # style checks — naming conventions, package comments, etc.
         - "-QF*"   # quick-fix suggestions — not errors
 
   exclusions:
@@ -20,7 +20,7 @@ linters:
           - staticcheck
           - gosimple
           - ineffassign
-      - path: test/
+      - path: ^test/
         linters:
           - staticcheck
           - gosimple
