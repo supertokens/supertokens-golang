@@ -58,7 +58,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           include-cdi: 'true'
-          extra-axes: '{"go-version":["1.21","1.22","1.23"]}'
+          extra-axes: '{"go-version":["1.23"]}'
           latest-extra: '{"go-version":"1.23"}'
 
   # Required status check for PRs. Enforces that every PR explicitly opts in to

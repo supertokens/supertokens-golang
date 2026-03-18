@@ -69,7 +69,7 @@ func TestThatUserGetReturnsTenantIDsCorrectly(t *testing.T) {
 
 	userId := signupResponse.OK.User.ID
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+userId+"&recipeId=emailpassword", strings.NewReader(`{}`))
+	req, _ := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+userId+"&recipeId=emailpassword", strings.NewReader(`{}`))
 	req.Header.Set("Authorization", "Bearer testapikey")
 	res, err := http.DefaultClient.Do(req)
 

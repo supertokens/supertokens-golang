@@ -148,7 +148,7 @@ func TestThatDashboardGetReturnsFirstURIWhenMultipleArePassed(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard", strings.NewReader(`{}`))
+	req, _ := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard", strings.NewReader(`{}`))
 	req.Header.Set("Authorization", "Bearer testapikey")
 	res, err := http.DefaultClient.Do(req)
 	assert.Equal(t, res.StatusCode, 200)

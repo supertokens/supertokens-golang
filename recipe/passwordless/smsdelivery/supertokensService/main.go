@@ -82,7 +82,7 @@ func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface 
 				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
 			}
 
-			err = fmt.Errorf("Error sending SMS. API returned %d status.", resp.StatusCode)
+			_ = fmt.Errorf("Error sending SMS. API returned %d status.", resp.StatusCode)
 		}
 
 		supertokens.LogDebugMessage("Logging the input below:")

@@ -16,8 +16,6 @@
 package dashboard
 
 import (
-	"testing"
-
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
@@ -38,17 +36,3 @@ func AfterEach() {
 	unittesting.CleanST()
 }
 
-func canRunTest(t *testing.T) bool {
-	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
-	if err != nil {
-		t.Error(err.Error())
-	}
-	cdiVersion, err := querier.GetQuerierAPIVersion()
-	if err != nil {
-		t.Error(err.Error())
-	}
-	if unittesting.MaxVersion("2.13", cdiVersion) == "2.13" {
-		return false
-	}
-	return true
-}

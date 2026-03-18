@@ -141,6 +141,7 @@ jobs:
           docker compose logs -f core &> logs/core.log &
 
           cd test/test-server
+          bash setup-for-test.sh
           go run . &> ../../logs/test-server.log &
 
           # Wait for test-server to be ready

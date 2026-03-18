@@ -90,17 +90,6 @@ func TestShouldMakeSignInUpReturn500WhenUsingProtectedProp(t *testing.T) {
 	assert.True(t, cookies["frontToken"] == "")
 }
 
-func checkResponse(t *testing.T, res *http.Response, exposed bool) {
-	info := unittesting.ExtractInfoFromResponse(res)
-
-	if exposed {
-		assert.Equal(t, info["sAccessToken"], info["accessTokenFromHeader"])
-	} else {
-		assert.Equal(t, info["accessTokenFromHeader"], "")
-		assert.NotEqual(t, info["sAccessToken"], "")
-	}
-}
-
 func GetTestServer(t *testing.T) *httptest.Server {
 	mux := http.NewServeMux()
 	checkDBTrue := true

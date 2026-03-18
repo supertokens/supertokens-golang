@@ -23,8 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const bitbucketID = "bitbucket"
-
 func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "Bitbucket"

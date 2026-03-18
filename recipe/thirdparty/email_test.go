@@ -172,7 +172,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 		},
 	}
 
-	postBody, err := json.Marshal(signinupPostData)
+	postBody, _ := json.Marshal(signinupPostData)
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	assert.NoError(t, err)
 
@@ -223,7 +223,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 		},
 	}
 
-	postBody, err := json.Marshal(signinupPostData)
+	postBody, _ := json.Marshal(signinupPostData)
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	assert.NoError(t, err)
 

@@ -1976,7 +1976,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 	assert.Nil(t, jwksCache)
 
 	tokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1984,7 +1984,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 
 	assert.Equal(t, <-returnedFromCache, false)
 
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1994,7 +1994,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
