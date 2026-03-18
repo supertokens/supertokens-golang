@@ -142,7 +142,7 @@ func TestUpdateEmailPass(t *testing.T) {
 
 	password = "test"
 	applyPasswordPolicy := true
-	res3, err := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, &applyPasswordPolicy, nil)
+	res3, _ := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, &applyPasswordPolicy, nil)
 	assert.NotNil(t, res3.PasswordPolicyViolatedError)
 	assert.Equal(t, "Password must contain at least 8 characters, including a number", res3.PasswordPolicyViolatedError.FailureReason)
 }
@@ -225,7 +225,7 @@ func TestUpdateEmailPassWithCustomValidator(t *testing.T) {
 	email := "testrandom@gmail.com"
 	password := "test"
 
-	res1, err := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil, nil)
+	res1, _ := UpdateEmailOrPassword(data["user"].(map[string]interface{})["id"].(string), &email, &password, nil, nil)
 	assert.NotNil(t, res1.PasswordPolicyViolatedError)
 	assert.Equal(t, "Password length must be more than 5 characters", res1.PasswordPolicyViolatedError.FailureReason)
 
@@ -297,7 +297,7 @@ func TestAPICustomResponse(t *testing.T) {
 	}
 
 	assert.Equal(t, 201, res.StatusCode)
-	dataInBytes, err := io.ReadAll(res.Body)
+	dataInBytes, _ := io.ReadAll(res.Body)
 	data := map[string]interface{}{}
 	json.Unmarshal(dataInBytes, &data)
 	assert.Equal(t, "My custom response", data["message"])
