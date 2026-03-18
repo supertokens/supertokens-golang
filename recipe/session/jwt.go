@@ -47,7 +47,7 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 	latestAccessTokenVersion := 3
 	var kid *string
 	if len(splittedInput) != 3 {
-		errors.New("Invalid JWT")
+		return sessmodels.ParsedJWTInfo{}, errors.New("Invalid JWT")
 	}
 
 	// V1&V2 is functionally identical, plus all legacy tokens should be V2 now.
