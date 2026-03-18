@@ -131,7 +131,7 @@ jobs:
       - name: Run unit tests
         run: |
           mkdir -p test-results
-          gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1
+          gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1 -timeout 30m
         env:
           SUPERTOKENS_CORE_VERSION: ${{ steps.core-version.outputs.coreVersion }}
 

@@ -143,7 +143,7 @@ func StartUpSTWithMultitenancy(host string, port string) string {
 }
 
 func stopContainer(name string) {
-	exec.Command("docker", "stop", name).Run()
+	// Use rm -f to skip the graceful shutdown wait (docker stop has a 10s default timeout)
 	exec.Command("docker", "rm", "-f", name).Run()
 }
 

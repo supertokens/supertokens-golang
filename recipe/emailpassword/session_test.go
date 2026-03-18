@@ -100,7 +100,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			t.Error(err.Error())
 		}
 		var result map[string]interface{}
-		err = json.Unmarshal(dataInBytes, &result)
+		_ = json.Unmarshal(dataInBytes, &result)
 
 		var payload map[string]interface{}
 
@@ -134,7 +134,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			t.Error(err.Error())
 		}
 		var result map[string]interface{}
-		err = json.Unmarshal(dataInBytes, &result)
+		_ = json.Unmarshal(dataInBytes, &result)
 
 		err = session.MergeIntoAccessTokenPayload(result["payload"].(map[string]interface{}))
 		assert.NoError(t, err)
