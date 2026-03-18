@@ -2348,7 +2348,7 @@ func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t 
 	}
 
 	sessionTokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(sessionTokens.AccessToken, sessionTokens.AntiCsrfToken, nil)
+	_, err = GetSessionWithoutRequestResponse(sessionTokens.AccessToken, sessionTokens.AntiCsrfToken, nil)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), "The access token doesn't match the useDynamicAccessTokenSigningKey setting")
 }

@@ -119,20 +119,8 @@ jobs:
         with:
           go-version: ${{ matrix.go-version }}
 
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Clone and build supertokens-root
-        run: |
-          cd ../
-          git clone https://github.com/supertokens/supertokens-root.git
-          cd supertokens-root
-          echo "core,${{ steps.core-version.outputs.coreVersion }},supertokens
-          plugin-interface,${{ steps.core-version.outputs.coreVersion }},supertokens" > modules.txt
-          ./loadModules
-          bash ./utils/setupTestEnvLocal
+      - name: Pull core Docker image
+        run: docker pull --platform linux/amd64 supertokens/supertokens-dev-postgresql:${{ steps.core-version.outputs.coreVersion }}
 
       - name: Download Go modules
         run: go mod download
@@ -145,7 +133,7 @@ jobs:
           mkdir -p test-results
           gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1
         env:
-          INSTALL_DIR: "../supertokens-root"
+          SUPERTOKENS_CORE_VERSION: ${{ steps.core-version.outputs.coreVersion }}
 
       - uses: dorny/test-reporter@v1
         name: Surface failing tests

@@ -153,6 +153,28 @@ jobs:
             sleep 1
           done
 
+      - name: Debug connectivity
+        working-directory: supertokens-golang
+        if: always()
+        run: |
+          echo "=== Docker containers ==="
+          docker ps -a
+          echo ""
+          echo "=== Core /hello ==="
+          curl -sv http://localhost:3567/hello 2>&1 || true
+          echo ""
+          echo "=== Core /recipe/multitenancy/app/v2 ==="
+          curl -sv http://localhost:3567/recipe/multitenancy/app/v2 2>&1 || true
+          echo ""
+          echo "=== Test server /test/ping ==="
+          curl -sv http://localhost:3030/test/ping 2>&1 || true
+          echo ""
+          echo "=== Core container logs (last 50 lines) ==="
+          docker compose logs core --tail 50 2>&1 || true
+          echo ""
+          echo "=== Test server logs (last 50 lines) ==="
+          tail -50 logs/test-server.log 2>/dev/null || echo "(no test-server log)"
+
       - uses: supertokens/actions/backend-sdk-testing-action@main
         with:
           version: ${{ matrix.fdi-version }}

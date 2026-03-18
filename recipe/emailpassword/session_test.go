@@ -82,7 +82,7 @@ func TestShouldMakeSignInUpReturn500WhenUsingProtectedProp(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+	resp, _ := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
 	assert.Equal(t, 500, resp.StatusCode)
 	cookies := unittesting.ExtractInfoFromResponse(resp)
 	assert.True(t, cookies["accessTokenFromAny"] == "")
