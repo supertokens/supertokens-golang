@@ -63,7 +63,9 @@ func SetUpST() {
 	configDir = dir
 
 	// Write a minimal default config
-	defaultConfig := "core_config_version: 0\n"
+	// info_log_path: null → log to stdout (captured by docker logs)
+	// error_log_path: null → log to stderr (captured by docker logs)
+	defaultConfig := "core_config_version: 0\ninfo_log_path: null\nerror_log_path: null\n"
 	err = os.WriteFile(filepath.Join(configDir, "config.yaml"), []byte(defaultConfig), 0644)
 	if err != nil {
 		panic(fmt.Sprintf("failed to write config.yaml: %s", err))
@@ -944,9 +946,60 @@ type InfoLogData struct {
 	Output   []string
 }
 
+func getRunningContainerName() string {
+	cmd := exec.Command("docker", "ps", "--filter", fmt.Sprintf("name=supertokens-test-%d-", os.Getpid()), "--format", "{{.Names}}")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	names := strings.TrimSpace(string(output))
+	if names == "" {
+		return ""
+	}
+	// Return the first running container
+	return strings.Split(names, "\n")[0]
+}
+
 func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
-	// With Docker-based core, logs are in the container stdout, not a file.
-	// This function is kept for compatibility but returns empty data.
-	t.Log("GetInfoLogData: Docker-based core does not write to a log file")
-	return InfoLogData{}
+	containerName := getRunningContainerName()
+	if containerName == "" {
+		t.Log("GetInfoLogData: no running container found")
+		return InfoLogData{}
+	}
+
+	cmd := exec.Command("docker", "logs", containerName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Logf("GetInfoLogData: docker logs failed: %s", err)
+		return InfoLogData{}
+	}
+
+	lines := strings.Split(string(output), "\n")
+	var lastLine string
+	var resultLines []string
+
+	shouldRecord := startWith == ""
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+
+		if !shouldRecord && startWith != "" && strings.Contains(line, startWith) {
+			shouldRecord = true
+			continue
+		}
+
+		if shouldRecord {
+			resultLines = append(resultLines, line)
+		}
+
+		lastLine = line
+	}
+
+	return InfoLogData{
+		LastLine: lastLine,
+		Output:   resultLines,
+	}
 }
