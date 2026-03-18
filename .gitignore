@@ -28,3 +28,10 @@ build-errors.log
 main
 
 recipe/**/*_for_test_server.go
+
+# MCP server
+mcp.env
+mcp-server/node_modules/
+test-results/
+test-output/
+.test-runs/
