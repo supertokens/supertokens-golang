@@ -17,7 +17,6 @@ on:
 
 permissions:
   contents: read
-  checks: write
 
 # Only one instance of this workflow will run on the same ref (PR/Branch/Tag)
 # Previous runs will be cancelled.
@@ -136,10 +135,10 @@ jobs:
         env:
           SUPERTOKENS_CORE_VERSION: ${{ steps.core-version.outputs.coreVersion }}
 
-      - uses: dorny/test-reporter@v1
+      - uses: pmeier/pytest-results-action@main
         name: Surface failing tests
         if: always()
         with:
-          name: "[Core=${{ steps.core-version.outputs.coreVersion }}][Go=${{ matrix.go-version }}] Unit Test Results"
           path: test-results/junit.xml
-          reporter: java-junit
+          summary: true
+          title: "[Core=${{ steps.core-version.outputs.coreVersion }}][Go=${{ matrix.go-version }}] Unit Test Results"
