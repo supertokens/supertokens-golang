@@ -140,7 +140,7 @@ jobs:
           mkdir -p logs/
           docker compose logs -f core &> logs/core.log &
 
-      - uses: supertokens/backend-sdk-testing-action@main
+      - uses: supertokens/actions/backend-sdk-testing-action@main
         with:
           version: ${{ matrix.fdi-version }}
           check-name-suffix: '[CDI=${{ matrix.cdi-version }}][Core=${{ steps.core-version.outputs.coreVersion }}][FDI=${{ matrix.fdi-version }}][Go=${{ matrix.go-version }}][Node=20]'
