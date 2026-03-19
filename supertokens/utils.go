@@ -277,9 +277,6 @@ func HumaniseMilliseconds(m uint64) string {
 		}
 		return fmt.Sprintf("%d minute%s", t/60, suffix)
 	}
-	if t/3600 > 1 {
-		suffix = "s"
-	}
 	h := float64(t) / 3600
 	hStr, suffix := formatOneDecimalFloat(h)
 	return fmt.Sprintf("%s hour%s", hStr, suffix)

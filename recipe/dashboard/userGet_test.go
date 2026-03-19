@@ -69,7 +69,7 @@ func TestThatUserGetReturnsTenantIDsCorrectly(t *testing.T) {
 
 	userId := signupResponse.OK.User.ID
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+userId+"&recipeId=emailpassword", strings.NewReader(`{}`))
+	req, _ := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+userId+"&recipeId=emailpassword", strings.NewReader(`{}`))
 	req.Header.Set("Authorization", "Bearer testapikey")
 	res, err := http.DefaultClient.Do(req)
 
@@ -161,7 +161,7 @@ func TestThatUserGetReturnsValidUserForThirdPartyUserWhenUsingThirdPartyPassword
 		t.Error(err.Error())
 	}
 
-	req, err := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/users?limit=10", strings.NewReader(`{}`))
+	req, _ := http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/users?limit=10", strings.NewReader(`{}`))
 	req.Header.Set("Authorization", "Bearer testapikey")
 	res, err := http.DefaultClient.Do(req)
 
@@ -175,7 +175,7 @@ func TestThatUserGetReturnsValidUserForThirdPartyUserWhenUsingThirdPartyPassword
 
 	user := listResponse.Users[0].User
 
-	req, err = http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+user.Id+"&recipeId=thirdparty", strings.NewReader(`{}`))
+	req, _ = http.NewRequest(http.MethodGet, testServer.URL+"/auth/dashboard/api/user?userId="+user.Id+"&recipeId=thirdparty", strings.NewReader(`{}`))
 	req.Header.Set("Authorization", "Bearer testapikey")
 	res, err = http.DefaultClient.Do(req)
 

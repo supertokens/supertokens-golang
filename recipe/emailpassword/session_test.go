@@ -82,23 +82,12 @@ func TestShouldMakeSignInUpReturn500WhenUsingProtectedProp(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
+	resp, _ := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
 	assert.Equal(t, 500, resp.StatusCode)
 	cookies := unittesting.ExtractInfoFromResponse(resp)
 	assert.True(t, cookies["accessTokenFromAny"] == "")
 	assert.True(t, cookies["refreshTokenFromAny"] == "")
 	assert.True(t, cookies["frontToken"] == "")
-}
-
-func checkResponse(t *testing.T, res *http.Response, exposed bool) {
-	info := unittesting.ExtractInfoFromResponse(res)
-
-	if exposed {
-		assert.Equal(t, info["sAccessToken"], info["accessTokenFromHeader"])
-	} else {
-		assert.Equal(t, info["accessTokenFromHeader"], "")
-		assert.NotEqual(t, info["sAccessToken"], "")
-	}
 }
 
 func GetTestServer(t *testing.T) *httptest.Server {
@@ -111,7 +100,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			t.Error(err.Error())
 		}
 		var result map[string]interface{}
-		err = json.Unmarshal(dataInBytes, &result)
+		_ = json.Unmarshal(dataInBytes, &result)
 
 		var payload map[string]interface{}
 
@@ -145,7 +134,7 @@ func GetTestServer(t *testing.T) *httptest.Server {
 			t.Error(err.Error())
 		}
 		var result map[string]interface{}
-		err = json.Unmarshal(dataInBytes, &result)
+		_ = json.Unmarshal(dataInBytes, &result)
 
 		err = session.MergeIntoAccessTokenPayload(result["payload"].(map[string]interface{}))
 		assert.NoError(t, err)

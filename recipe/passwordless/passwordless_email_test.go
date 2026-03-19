@@ -317,7 +317,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForUser(t *testing.T) {
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 
 	cookies := resp.Cookies()
-	resp, err = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
+	resp, _ = unittesting.EmailVerificationTokenRequest(cookies, testServer.URL)
 
 	bodyBytes, err = ioutil.ReadAll(resp.Body)
 	assert.NoError(t, err)

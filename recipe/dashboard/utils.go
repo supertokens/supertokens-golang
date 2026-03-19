@@ -18,7 +18,6 @@ package dashboard
 import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
-	"strings"
 )
 
 func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config *dashboardmodels.TypeInput) dashboardmodels.TypeNormalisedInput {
@@ -71,8 +70,3 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo) dashboardmod
 	}
 }
 
-func normaliseEmail(email string) string {
-	_email := strings.TrimSpace(email)
-	_email = strings.ToLower(_email)
-	return _email
-}

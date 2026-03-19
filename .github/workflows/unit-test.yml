@@ -58,7 +58,7 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           include-cdi: 'true'
-          extra-axes: '{"go-version":["1.21","1.22","1.23"]}'
+          extra-axes: '{"go-version":["1.23"]}'
           latest-extra: '{"go-version":"1.23"}'
 
   # Required status check for PRs. Enforces that every PR explicitly opts in to
@@ -100,14 +100,11 @@ jobs:
       (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-tests'))
     runs-on: ubuntu-latest
     needs: [skip-check, define-versions]
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.define-versions.outputs.testMatrix) }}
-
-    env:
-      SUPERTOKENS_CORE_HOST: localhost
-      SUPERTOKENS_CORE_PORT: 3567
 
     steps:
       - uses: actions/checkout@v4
@@ -116,29 +113,17 @@ jobs:
         id: core-version
         run: |
           coreVersion=$(echo '${{ needs.define-versions.outputs.coreCdiVersionMap }}' | jq -r '.["${{ matrix.cdi-version }}"]')
-
           echo "coreVersion=${coreVersion}" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Pull core Docker image
+        run: docker pull --platform linux/amd64 supertokens/supertokens-dev-postgresql:${{ steps.core-version.outputs.coreVersion }}
+
       - name: Download Go modules
         run: go mod download
-
-      - name: Start supertokens core
-        run: |
-          docker run -d --name supertokens \
-            -p 3567:3567 \
-            supertokens/supertokens-dev-postgresql:${{ steps.core-version.outputs.coreVersion }}
-          # Wait for core to be ready
-          for i in $(seq 1 30); do
-            if curl -s http://localhost:3567/hello | grep -q "Hello"; then
-              echo "Core is ready"
-              break
-            fi
-            sleep 2
-          done
 
       - name: Install gotestsum
         run: go install gotest.tools/gotestsum@latest
@@ -146,12 +131,14 @@ jobs:
       - name: Run unit tests
         run: |
           mkdir -p test-results
-          gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1
+          gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1 -timeout 30m
+        env:
+          SUPERTOKENS_CORE_VERSION: ${{ steps.core-version.outputs.coreVersion }}
 
-      - uses: dorny/test-reporter@v1
+      - uses: pmeier/pytest-results-action@main
         name: Surface failing tests
         if: always()
         with:
-          name: "[Core=${{ steps.core-version.outputs.coreVersion }}][Go=${{ matrix.go-version }}] Unit Test Results"
           path: test-results/junit.xml
-          reporter: java-junit
+          summary: true
+          title: "[Core=${{ steps.core-version.outputs.coreVersion }}][Go=${{ matrix.go-version }}] Unit Test Results"

@@ -90,7 +90,7 @@ func makeRecipeImplementation(querier supertokens.Querier, config jwtmodels.Type
 			regex := regexp.MustCompile(`/,?\s*max-age=(\d+)(?:,|$)/`)
 			maxAgeHeader := regex.FindAllString(cacheControlHeader, -1)
 
-			if maxAgeHeader != nil && len(maxAgeHeader) > 0 {
+			if len(maxAgeHeader) > 0 {
 				validityInSeconds, err = strconv.Atoi(maxAgeHeader[1])
 
 				if err != nil {

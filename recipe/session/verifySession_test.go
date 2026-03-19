@@ -886,7 +886,7 @@ func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
 	assert.True(t, *tokensAfterRefresh.RefreshToken != "")
 	assert.True(t, tokensAfterRefresh.FrontToken != "")
 
-	getSessionResp, err = GetSessionWithoutRequestResponse(tokensAfterRefresh.AccessToken, tokensAfterRefresh.AntiCsrfToken, nil)
+	_, err = GetSessionWithoutRequestResponse(tokensAfterRefresh.AccessToken, tokensAfterRefresh.AntiCsrfToken, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}

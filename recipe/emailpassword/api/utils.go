@@ -30,7 +30,7 @@ func withValueAsString(emailValue interface{}, errorStr string) (string, error) 
 	// Throw error if the value is not a string
 	valueAsString, asStrOk := emailValue.(string)
 	if !asStrOk {
-		return "", fmt.Errorf(errorStr)
+		return "", fmt.Errorf("%s", errorStr)
 	}
 
 	return valueAsString, nil

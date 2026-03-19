@@ -17,17 +17,16 @@
 package unittesting
 
 import (
-	"bufio"
 	"bytes"
 	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"testing"
@@ -38,161 +37,123 @@ import (
 	"gopkg.in/h2non/gock.v1"
 )
 
-func getListOfPids() []string {
-	installationPath := getInstallationDir()
-	pathOfDirToRead := installationPath + "/.started/"
-	files, err := ioutil.ReadDir(pathOfDirToRead)
-	if err != nil {
-		return []string{}
+// containerCounter tracks running containers for unique naming
+var containerCounter int
+
+// configDir is the temporary directory holding config.yaml for the current test
+var configDir string
+
+func getCoreImage() string {
+	img := os.Getenv("SUPERTOKENS_CORE_IMAGE")
+	if img != "" {
+		return img
 	}
-	var result []string
-	for _, file := range files {
-		pathOfFileToBeRead := installationPath + "/.started/" + file.Name()
-		data, err := ioutil.ReadFile(pathOfFileToBeRead)
-		if err != nil {
-			log.Fatalf(err.Error(), "THIS IS GET-LIST-OF-PIDS")
-		}
-		if string(data) != "" {
-			result = append(result, string(data))
-		}
+	version := os.Getenv("SUPERTOKENS_CORE_VERSION")
+	if version == "" {
+		version = "master"
 	}
-	return result
+	return "supertokens/supertokens-dev-postgresql:" + version
 }
 
 func SetUpST() {
-	shellout(true, "cp", "temp/config.yaml", "./config.yaml")
+	dir, err := os.MkdirTemp("", "st-config-*")
+	if err != nil {
+		panic(fmt.Sprintf("failed to create temp config dir: %s", err))
+	}
+	configDir = dir
+
+	// Write a minimal default config
+	// info_log_path: null → log to stdout (captured by docker logs)
+	// error_log_path: null → log to stderr (captured by docker logs)
+	defaultConfig := "core_config_version: 0\ninfo_log_path: null\nerror_log_path: null\n"
+	err = os.WriteFile(filepath.Join(configDir, "config.yaml"), []byte(defaultConfig), 0644)
+	if err != nil {
+		panic(fmt.Sprintf("failed to write config.yaml: %s", err))
+	}
 }
 
 func StartUpST(host string, port string) string {
-	pidsBefore := getListOfPids()
-	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
-	startTime := getCurrTimeInMS()
-	shellout(false, "bash", "-c", command)
-	for getCurrTimeInMS()-startTime < 30000 {
-		pidsAfter := getListOfPids()
-		if len(pidsAfter) <= len(pidsBefore) {
-			time.Sleep(100 * time.Millisecond)
-			continue
+	containerCounter++
+	containerName := fmt.Sprintf("supertokens-test-%d-%d", os.Getpid(), containerCounter)
+
+	args := []string{
+		"run", "-d",
+		"--name", containerName,
+		"--platform", "linux/amd64",
+		"-p", fmt.Sprintf("%s:3567", port),
+	}
+
+	// Mount config if we have one
+	if configDir != "" {
+		configPath := filepath.Join(configDir, "config.yaml")
+		args = append(args, "-v", fmt.Sprintf("%s:/usr/lib/supertokens/config.yaml", configPath))
+	}
+
+	args = append(args, getCoreImage(),
+		"/usr/lib/supertokens/jre/bin/java",
+		"-classpath", "/usr/lib/supertokens/core/*:/usr/lib/supertokens/plugin-interface/*:/usr/lib/supertokens/ee/*",
+		"io.supertokens.Main", "/usr/lib/supertokens/", "DEV",
+		fmt.Sprintf("host=%s", "0.0.0.0"),
+		fmt.Sprintf("port=%s", "3567"),
+		"test_mode",
+	)
+
+	cmd := exec.Command("docker", args...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		panic(fmt.Sprintf("could not start ST container: %s\nOutput: %s", err, string(output)))
+	}
+
+	// Wait for core to be ready
+	startTime := time.Now()
+	for time.Since(startTime) < 30*time.Second {
+		resp, err := http.Get(fmt.Sprintf("http://localhost:%s/hello", port))
+		if err == nil {
+			resp.Body.Close()
+			if resp.StatusCode == 200 {
+				return containerName
+			}
 		}
-		nonIntersection := getNonIntersection(pidsAfter, pidsBefore)
-		if len(nonIntersection) < 1 {
-			panic("something went wrong while starting ST")
-		} else {
-			return nonIntersection[0]
-		}
+		time.Sleep(500 * time.Millisecond)
 	}
 	panic("could not start ST process")
 }
 
 func StartUpSTWithMultitenancy(host string, port string) string {
-	pidsBefore := getListOfPids()
-	command := fmt.Sprintf(`java -Djava.security.egd=file:/dev/urandom -classpath "./core/*:./plugin-interface/*" io.supertokens.Main ./ DEV host=%s port=%s test_mode`, host, port)
-	startTime := getCurrTimeInMS()
-	shellout(false, "bash", "-c", command)
-	for getCurrTimeInMS()-startTime < 30000 {
-		pidsAfter := getListOfPids()
-		if len(pidsAfter) <= len(pidsBefore) {
-			time.Sleep(100 * time.Millisecond)
-			continue
-		}
-		nonIntersection := getNonIntersection(pidsAfter, pidsBefore)
-		if len(nonIntersection) < 1 {
-			panic("something went wrong while starting ST")
-		} else {
-			const OPAQUE_KEY_WITH_MULTITENANCY_FEATURE = "ijaleljUd2kU9XXWLiqFYv5br8nutTxbyBqWypQdv2N-BocoNriPrnYQd0NXPm8rVkeEocN9ayq0B7c3Pv-BTBIhAZSclXMlgyfXtlwAOJk=9BfESEleW6LyTov47dXu"
+	containerName := StartUpST(host, port)
 
-			jsonData, err := json.Marshal(map[string]interface{}{
-				"licenseKey": OPAQUE_KEY_WITH_MULTITENANCY_FEATURE,
-			})
-			if err != nil {
-				panic(err)
-			}
-			req, err := http.NewRequest("PUT", fmt.Sprintf("http://%s:%s/ee/license", host, port), bytes.NewBuffer(jsonData))
-			if err != nil {
-				panic(err)
-			}
-			req.Header.Set("Content-Type", "application/json")
+	const OPAQUE_KEY_WITH_MULTITENANCY_FEATURE = "ijaleljUd2kU9XXWLiqFYv5br8nutTxbyBqWypQdv2N-BocoNriPrnYQd0NXPm8rVkeEocN9ayq0B7c3Pv-BTBIhAZSclXMlgyfXtlwAOJk=9BfESEleW6LyTov47dXu"
 
-			res, err := http.DefaultClient.Do(req)
-			if err != nil {
-				panic(err)
-			}
-			defer res.Body.Close()
-			return nonIntersection[0]
-		}
+	jsonData, err := json.Marshal(map[string]interface{}{
+		"licenseKey": OPAQUE_KEY_WITH_MULTITENANCY_FEATURE,
+	})
+	if err != nil {
+		panic(err)
 	}
-	panic("could not start ST process")
+	req, err := http.NewRequest("PUT", fmt.Sprintf("http://%s:%s/ee/license", host, port), bytes.NewBuffer(jsonData))
+	if err != nil {
+		panic(err)
+	}
+	req.Header.Set("Content-Type", "application/json")
+
+	res, err := http.DefaultClient.Do(req)
+	if err != nil {
+		panic(err)
+	}
+	defer res.Body.Close()
+	return containerName
 }
 
-func getNonIntersection(a1 []string, a2 []string) []string {
-	var result = []string{}
-	for i := 0; i < len(a1); i++ {
-		there := false
-		for y := 0; y < len(a2); y++ {
-			if a1[i] == a2[y] {
-				there = true
-			}
-		}
-		if !there {
-			result = append(result, a1[i])
-		}
-	}
-	return result
-}
-
-func getCurrTimeInMS() uint64 {
-	return uint64(time.Now().UnixNano() / 1000000)
-}
-
-// helper function to execute shell commands
-func shellout(waitFor bool, name string, args ...string) {
-	cmd := exec.Command(name, args...)
-	cmd.Dir = getInstallationDir()
-	cmd.Start()
-	if waitFor {
-		cmd.Wait()
-	}
-}
-
-func stopST(pid string) {
-	pidsBefore := getListOfPids()
-	if len(pidsBefore) == 0 {
-		return
-	}
-	if len(pidsBefore) == 1 {
-		if pidsBefore[0] == "" {
-			return
-		}
-	}
-	pid = strings.Trim(pid, "\n")
-	cmd := exec.Command("kill", pid)
-	cmd.Dir = getInstallationDir()
-	cmd.Run()
-	startTime := getCurrTimeInMS()
-	for getCurrTimeInMS()-startTime < 10000 {
-		pidsAfter := getListOfPids()
-		if itemExists(pidsAfter, pid) {
-			time.Sleep(100 * time.Millisecond)
-		} else {
-			return
-		}
-	}
-	panic("Could not stop ST")
-}
-
-func itemExists(arr []string, item string) bool {
-	for i := 0; i < len(arr); i++ {
-		if arr[i] == item {
-			return true
-		}
-	}
-	return false
+func stopContainer(name string) {
+	// Use rm -f to skip the graceful shutdown wait (docker stop has a 10s default timeout)
+	exec.Command("docker", "rm", "-f", name).Run()
 }
 
 func CleanST() {
-	shellout(true, "rm", "config.yaml")
-	shellout(true, "rm", "-rf", ".webserver-temp-*")
-	shellout(true, "rm", "-rf", ".started")
+	if configDir != "" {
+		os.RemoveAll(configDir)
+		configDir = ""
+	}
 }
 
 // MaxVersion returns max of v1 and v2
@@ -219,9 +180,38 @@ func MaxVersion(version1 string, version2 string) string {
 }
 
 func KillAllST() {
-	pids := getListOfPids()
-	for i := 0; i < len(pids); i++ {
-		stopST(pids[i])
+	// Stop all containers matching our naming pattern
+	cmd := exec.Command("docker", "ps", "-a", "--filter", fmt.Sprintf("name=supertokens-test-%d-", os.Getpid()), "--format", "{{.Names}}")
+	output, err := cmd.Output()
+	if err != nil {
+		return
+	}
+	names := strings.TrimSpace(string(output))
+	if names == "" {
+		return
+	}
+	for _, name := range strings.Split(names, "\n") {
+		name = strings.TrimSpace(name)
+		if name != "" {
+			stopContainer(name)
+		}
+	}
+}
+
+func SetKeyValueInConfig(key string, value string) {
+	if configDir == "" {
+		panic("SetKeyValueInConfig called before SetUpST")
+	}
+	pathToConfigYamlFile := filepath.Join(configDir, "config.yaml")
+	f, err := os.OpenFile(pathToConfigYamlFile, os.O_APPEND|os.O_WRONLY, 0600)
+	if err != nil {
+		panic(err)
+	}
+
+	defer f.Close()
+
+	if _, err = f.WriteString(key + ": " + value + "\n"); err != nil {
+		panic(err)
 	}
 }
 
@@ -248,9 +238,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 			} else {
 				refreshTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
 			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
-
-			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.HasPrefix(property, " Domain=") {
 					refreshTokenDomain = strings.TrimPrefix(property, " Domain=")
@@ -268,8 +255,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[2], "=")[1]
 			} else {
 				accessTokenExpiry = strings.Split(strings.Split(cookie, ";")[3], "=")[1]
-			}
-			if strings.Split(strings.Split(cookie, ";")[1], "=")[0] == " Path" {
 			}
 			for _, property := range strings.Split(cookie, ";") {
 				if strings.HasPrefix(property, " Domain=") {
@@ -454,31 +439,6 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 		"accessTokenExpiry":    accessTokenExpiry,
 		"accessTokenDomain":    accessTokenDomain,
 		"accessTokenHttpOnly":  accessTokenHttpOnly,
-	}
-}
-
-func getInstallationDir() string {
-	installationDir := os.Getenv("INSTALL_DIR")
-	if installationDir == "" {
-		installationDir = "../../" + "../supertokens-root"
-	} else {
-		installationDir = "../../" + installationDir
-	}
-	return installationDir
-}
-
-func SetKeyValueInConfig(key string, value string) {
-	installationPath := getInstallationDir()
-	pathToConfigYamlFile := installationPath + "/config.yaml"
-	f, err := os.OpenFile(pathToConfigYamlFile, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(key + ": " + value + "\n"); err != nil {
-		panic(err)
 	}
 }
 
@@ -829,7 +789,7 @@ func GenerateRandomCode(size int) string {
 }
 
 func EmailVerificationTokenRequest(cookies []*http.Cookie, testUrl string) (*http.Response, error) {
-	req, err := http.NewRequest("POST", testUrl+"/auth/user/email/verify/token", nil)
+	req, _ := http.NewRequest("POST", testUrl+"/auth/user/email/verify/token", nil)
 
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)
@@ -986,49 +946,60 @@ type InfoLogData struct {
 	Output   []string
 }
 
+func getRunningContainerName() string {
+	cmd := exec.Command("docker", "ps", "--filter", fmt.Sprintf("name=supertokens-test-%d-", os.Getpid()), "--format", "{{.Names}}")
+	output, err := cmd.Output()
+	if err != nil {
+		return ""
+	}
+	names := strings.TrimSpace(string(output))
+	if names == "" {
+		return ""
+	}
+	// Return the first running container
+	return strings.Split(names, "\n")[0]
+}
+
 func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
-	dir := getInstallationDir()
-	logFilePath := dir + "/logs/info.log"
-	file, err := os.Open(logFilePath)
-	if err != nil {
-		t.Fatalf("failed opening file: %s", err)
+	containerName := getRunningContainerName()
+	if containerName == "" {
+		t.Log("GetInfoLogData: no running container found")
+		return InfoLogData{}
 	}
-	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
+	cmd := exec.Command("docker", "logs", containerName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Logf("GetInfoLogData: docker logs failed: %s", err)
+		return InfoLogData{}
+	}
+
+	lines := strings.Split(string(output), "\n")
 	var lastLine string
-	var output []string
+	var resultLines []string
 
-	shouldRecordOutput := false
+	shouldRecord := startWith == ""
 
-	if startWith == "" {
-		shouldRecordOutput = true
-	}
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		if strings.TrimSpace(line) != "" {
-			if startWith != "" && strings.Contains(line, startWith) {
-				shouldRecordOutput = true
-				continue
-			}
-
-			if shouldRecordOutput {
-				output = append(output, line)
-			}
-
-			lastLine = line
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
 		}
-	}
 
-	err = scanner.Err()
-	if err != nil {
-		t.Fatalf("scanner error: %s", err)
+		if !shouldRecord && startWith != "" && strings.Contains(line, startWith) {
+			shouldRecord = true
+			continue
+		}
+
+		if shouldRecord {
+			resultLines = append(resultLines, line)
+		}
+
+		lastLine = line
 	}
 
 	return InfoLogData{
 		LastLine: lastLine,
-		Output:   output,
+		Output:   resultLines,
 	}
 }
