@@ -17,7 +17,9 @@ import (
 )
 
 func TestThatDashboardGetNormalizesConnectionURIWithoutHTTP(t *testing.T) {
-	connectionURI := "http://localhost:8080"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	connectionURIWithoutProtocol := strings.Replace(connectionURI, "http://", "", -1)
 	config := supertokens.TypeInput{
 		OnSuperTokensAPIError: func(err error, req *http.Request, res http.ResponseWriter) {
@@ -38,10 +40,6 @@ func TestThatDashboardGetNormalizesConnectionURIWithoutHTTP(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())

@@ -38,7 +38,7 @@ import (
 
 func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	getContentCalled := false
@@ -112,6 +112,7 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
 			EmailDelivery: &emaildelivery.TypeInput{
@@ -179,7 +180,7 @@ func TestSMTPOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 
 func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -194,6 +195,7 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
 			EmailDelivery: &emaildelivery.TypeInput{
@@ -270,7 +272,7 @@ func TestCustomOverrideEmailVerifyForPasswordlessUser(t *testing.T) {
 
 func TestDefaultBackwardCompatibilityEmailVerifyForUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	tplConfig := plessmodels.TypeInput{
@@ -281,6 +283,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}),
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
@@ -334,7 +337,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForUser(t *testing.T) {
 
 func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	tplConfig := plessmodels.TypeInput{
@@ -345,6 +348,7 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -396,7 +400,7 @@ func TestDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 
 func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -426,6 +430,7 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -491,7 +496,7 @@ func TestBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 
 func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -522,6 +527,7 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -587,7 +593,7 @@ func TestCustomOverridePasswordlessLogin(t *testing.T) {
 
 func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	getContentCalled := false
@@ -637,6 +643,7 @@ func TestSMTPOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -732,9 +739,12 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 			return originalImplementation
 		},
 	})
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -753,9 +763,6 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLink(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -807,9 +814,12 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 			return originalImplementation
 		},
 	})
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -828,9 +838,6 @@ func TestSMTPServiceOverrideEmailTemplateForOtp(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -884,9 +891,12 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 			return originalImplementation
 		},
 	})
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -905,9 +915,6 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -933,7 +940,7 @@ func TestSMTPServiceOverrideEmailTemplateForMagicLinkAndOtp(t *testing.T) {
 
 func TestThatMagicLinkUsesRightValueFromOriginFunction(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -964,7 +971,7 @@ func TestThatMagicLinkUsesRightValueFromOriginFunction(t *testing.T) {
 
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain: "api.supertokens.io",

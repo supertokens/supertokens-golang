@@ -9,11 +9,11 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func initForUserIdMappingTest(t *testing.T) {
+func initForUserIdMappingTest(t *testing.T, connectionURI string) {
 
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -32,10 +32,10 @@ func initForUserIdMappingTest(t *testing.T) {
 
 func TestCreateUserIdMapping(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -69,10 +69,10 @@ func TestCreateUserIdMapping(t *testing.T) {
 
 func TestCreateUserIdMappingWithUnknownSupertokensUserId(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -95,10 +95,10 @@ func TestCreateUserIdMappingWithUnknownSupertokensUserId(t *testing.T) {
 
 func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -160,10 +160,10 @@ func TestCreateUserIdMappingWhenAlreadyExists(t *testing.T) {
 
 func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -216,10 +216,10 @@ func TestCreateUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 
 func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -257,10 +257,10 @@ func TestEPCreateUserIdMappingGetUserById(t *testing.T) {
 
 func TestEPCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)

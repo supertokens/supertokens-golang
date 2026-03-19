@@ -16,9 +16,12 @@ import (
 var isNetworkIntercepted = false
 
 func TestNetworkInterceptorDuringSignIn(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(request *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				return request, nil
@@ -33,12 +36,6 @@ func TestNetworkInterceptorDuringSignIn(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -61,9 +58,12 @@ func TestNetworkInterceptorDuringSignIn(t *testing.T) {
 
 func TestNetworkInterceptorNotSet(t *testing.T) {
 	isNetworkIntercepted = false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -74,12 +74,6 @@ func TestNetworkInterceptorNotSet(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -102,9 +96,12 @@ func TestNetworkInterceptorNotSet(t *testing.T) {
 
 func TestNetworkInterceptorIncorrectCoreURL(t *testing.T) {
 	isNetworkIntercepted = false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(request *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				newRequest := request
@@ -121,12 +118,6 @@ func TestNetworkInterceptorIncorrectCoreURL(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -146,9 +137,12 @@ func TestNetworkInterceptorIncorrectCoreURL(t *testing.T) {
 
 func TestNetworkInterceptorIncorrectQueryParams(t *testing.T) {
 	isNetworkIntercepted = false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				newRequest := r
@@ -167,12 +161,6 @@ func TestNetworkInterceptorIncorrectQueryParams(t *testing.T) {
 			userroles.Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
-
 	supertokens.Init(configValue)
 
 	mux := http.NewServeMux()
@@ -188,9 +176,12 @@ func TestNetworkInterceptorIncorrectQueryParams(t *testing.T) {
 
 func TestNetworkInterceptorRequestBody(t *testing.T) {
 	isNetworkIntercepted = false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, context supertokens.UserContext) (*http.Request, error) {
 				isNetworkIntercepted = true
 				newBody := bytes.NewReader([]byte(`{"newKey": "newValue"}`))
@@ -208,12 +199,6 @@ func TestNetworkInterceptorRequestBody(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
-
 	supertokens.Init(configValue)
 
 	mux := http.NewServeMux()

@@ -33,9 +33,12 @@ import (
 
 func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -52,9 +55,6 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -88,7 +88,7 @@ func TestDefaultRouteShouldRevokeSession(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {

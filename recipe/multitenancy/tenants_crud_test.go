@@ -11,9 +11,12 @@ import (
 )
 
 func TestCreate(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -24,10 +27,6 @@ func TestCreate(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -59,9 +58,12 @@ func TestCreate(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -72,10 +74,6 @@ func TestGet(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -127,9 +125,12 @@ func TestGet(t *testing.T) {
 }
 
 func TestUpdate(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -140,10 +141,6 @@ func TestUpdate(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -190,9 +187,12 @@ func TestUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -203,10 +203,6 @@ func TestDelete(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -246,9 +242,12 @@ func TestDelete(t *testing.T) {
 }
 
 func TestCreateThirdPartyConfig(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -259,10 +258,6 @@ func TestCreateThirdPartyConfig(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -298,9 +293,12 @@ func TestCreateThirdPartyConfig(t *testing.T) {
 }
 
 func TestDeleteThirdPartyConfig(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -311,10 +309,6 @@ func TestDeleteThirdPartyConfig(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -357,9 +351,12 @@ func TestDeleteThirdPartyConfig(t *testing.T) {
 }
 
 func TestUpdateThirdPartyConfig(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpSTWithMultitenancy("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -370,10 +367,6 @@ func TestUpdateThirdPartyConfig(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpSTWithMultitenancy("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

@@ -33,7 +33,7 @@ import (
 
 func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	plessConfig := plessmodels.TypeInput{
@@ -44,6 +44,7 @@ func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -95,7 +96,7 @@ func TestSmsDefaultBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 
 func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -125,6 +126,7 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -190,7 +192,7 @@ func TestSmsBackwardCompatibilityPasswordlessLogin(t *testing.T) {
 
 func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -221,6 +223,7 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -286,7 +289,7 @@ func TestSmsCustomOverridePasswordlessLogin(t *testing.T) {
 
 func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	getContentCalled := false
@@ -334,6 +337,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -404,7 +408,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 
 // 	configValue := supertokens.TypeInput{
 // 		Supertokens: &supertokens.ConnectionInfo{
-// 			ConnectionURI: "http://localhost:8080",
+// 			ConnectionURI: connectionURI,
 // 		},
 // 		AppInfo: supertokens.AppInfo{
 // 			APIDomain:     "api.supertokens.io",
@@ -463,7 +467,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 
 // 	configValue := supertokens.TypeInput{
 // 		Supertokens: &supertokens.ConnectionInfo{
-// 			ConnectionURI: "http://localhost:8080",
+// 			ConnectionURI: connectionURI,
 // 		},
 // 		AppInfo: supertokens.AppInfo{
 // 			APIDomain:     "api.supertokens.io",
@@ -488,7 +492,7 @@ func TestSmsTwilioOverridePasswordlessLogin(t *testing.T) {
 // 	}
 
 // 	BeforeEach()
-// 	unittesting.StartUpST("localhost", "8080")
+// 	connectionURI := unittesting.StartUpST("localhost", "8080")
 // 	defer AfterEach()
 // 	err = supertokens.Init(configValue)
 // 	if err != nil {

@@ -38,9 +38,14 @@ import (
 )
 
 func TestCreateCodeAPIWithRidAsThirdpartypasswordless(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -78,10 +83,6 @@ func TestCreateCodeAPIWithRidAsThirdpartypasswordless(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -141,9 +142,14 @@ func TestCreateCodeAPIWithRidAsThirdpartypasswordless(t *testing.T) {
 }
 
 func TestCreateCodeAPIWithRidAsRandom(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -181,10 +187,6 @@ func TestCreateCodeAPIWithRidAsRandom(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -244,9 +246,14 @@ func TestCreateCodeAPIWithRidAsRandom(t *testing.T) {
 }
 
 func TestCreateCodeAPIWithWrongRid(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -284,10 +291,6 @@ func TestCreateCodeAPIWithWrongRid(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -347,9 +350,12 @@ func TestCreateCodeAPIWithWrongRid(t *testing.T) {
 }
 
 func TestWithEmailExistAPI(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -370,10 +376,6 @@ func TestWithEmailExistAPI(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -430,9 +432,12 @@ func TestWithEmailExistAPI(t *testing.T) {
 }
 
 func TestWithEmailExistAPINewPath(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -453,10 +458,6 @@ func TestWithEmailExistAPINewPath(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -518,9 +519,12 @@ func TestMagicLinkFormatInCreateCodeAPI(t *testing.T) {
 		magicLinkURL, _ = url.Parse(*input.PasswordlessLogin.UrlWithLinkCode)
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -546,10 +550,6 @@ func TestMagicLinkFormatInCreateCodeAPI(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -604,9 +604,12 @@ func TestPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheEmailOr
 		return nil
 	}
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -637,10 +640,6 @@ func TestPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheEmailOr
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -743,9 +742,12 @@ func TestPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheEmailOr
 }
 
 func TestWithInvalidInputToCreateCodeAPIWhileUsingTheEmailOrPhoneContactMethod(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -766,10 +768,6 @@ func TestWithInvalidInputToCreateCodeAPIWhileUsingTheEmailOrPhoneContactMethod(t
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -831,9 +829,12 @@ func TestForCreatingACodeWithEmailAndThenResendingTheCodeAndCheckThatTheSendingC
 		isCreateAndSendCustomEmailCalled = true
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -859,10 +860,6 @@ func TestForCreatingACodeWithEmailAndThenResendingTheCodeAndCheckThatTheSendingC
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -929,9 +926,12 @@ func TestSignUpSignInFlowWithPhoneNumberUsingEmailOrPhoneContactMethod(t *testin
 		userInputCodeRef = *input.PasswordlessLogin.UserInputCode
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -957,10 +957,6 @@ func TestSignUpSignInFlowWithPhoneNumberUsingEmailOrPhoneContactMethod(t *testin
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1033,9 +1029,12 @@ func TestSignInUpFlowWithEmailUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 		userInputCodeRef = input.PasswordlessLogin.UserInputCode
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1061,9 +1060,6 @@ func TestSignInUpFlowWithEmailUsingTheEmailOrPhoneContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1157,9 +1153,12 @@ func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing
 		userInputCodeRef = input.PasswordlessLogin.UserInputCode
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1185,9 +1184,6 @@ func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1276,9 +1272,12 @@ func TestSignInUpFlowWithPhoneNumberUsingTheEmailOrPhoneContactMethod(t *testing
 }
 
 func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1299,9 +1298,6 @@ func TestInvalidInputToCreateCodeApiUsingTheEmailOrPhoneContactMethod(t *testing
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1387,9 +1383,12 @@ func TestAddingPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheE
 		userInputCodeRef = input.PasswordlessLogin.UserInputCode
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1420,9 +1419,6 @@ func TestAddingPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheE
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1571,9 +1567,12 @@ func TestAddingPhoneNumberToAUsersInfoAndSigningInWillSignInTheSameUserUsingTheE
 }
 
 func TestNotPassingAnyFieldsToConsumeCodeAPI(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1594,9 +1593,6 @@ func TestNotPassingAnyFieldsToConsumeCodeAPI(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1648,9 +1644,12 @@ func TestNotPassingAnyFieldsToConsumeCodeAPI(t *testing.T) {
 }
 
 func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1671,9 +1670,6 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1762,9 +1758,12 @@ func TestConsumeCodeAPIWithMagicLink(t *testing.T) {
 }
 
 func TestConsumeCodeAPIWithCode(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1785,9 +1784,6 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1911,9 +1907,14 @@ func TestConsumeCodeAPIWithCode(t *testing.T) {
 }
 
 func TestConsumeCodeAPIWithExpiredCode(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1934,10 +1935,6 @@ func TestConsumeCodeAPIWithExpiredCode(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1999,9 +1996,14 @@ func TestConsumeCodeAPIWithExpiredCode(t *testing.T) {
 }
 
 func TestCreateCodeAPIWithEmail(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2022,10 +2024,6 @@ func TestCreateCodeAPIWithEmail(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2108,9 +2106,14 @@ func TestCreateCodeAPIWithEmail(t *testing.T) {
 }
 
 func TestCreateCodeAPIWithPhoneNumber(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2131,10 +2134,6 @@ func TestCreateCodeAPIWithPhoneNumber(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2217,9 +2216,14 @@ func TestCreateCodeAPIWithPhoneNumber(t *testing.T) {
 }
 
 func TestEmailExistsAPI(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2240,10 +2244,6 @@ func TestEmailExistsAPI(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2321,9 +2321,14 @@ func TestEmailExistsAPI(t *testing.T) {
 }
 
 func TestPhoneNumberExistsAPI(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2344,10 +2349,6 @@ func TestPhoneNumberExistsAPI(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2425,9 +2426,14 @@ func TestPhoneNumberExistsAPI(t *testing.T) {
 }
 
 func TestPhoneNumberExistsAPINewPath(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2448,10 +2454,6 @@ func TestPhoneNumberExistsAPINewPath(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2529,9 +2531,14 @@ func TestPhoneNumberExistsAPINewPath(t *testing.T) {
 }
 
 func TestResendCodeAPI(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"passwordless_code_lifetime": 1000,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2552,10 +2559,6 @@ func TestResendCodeAPI(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("passwordless_code_lifetime", "1000")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

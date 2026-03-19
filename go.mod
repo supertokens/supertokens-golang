@@ -8,6 +8,7 @@ require (
 	github.com/MicahParks/keyfunc/v2 v2.1.0
 	github.com/derekstavis/go-qs v0.0.0-20180720192143-9eef69e6c4e7
 	github.com/golang-jwt/jwt/v5 v5.0.0
+	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.3.0
 	github.com/nyaruka/phonenumbers v1.0.73
 	github.com/stretchr/testify v1.7.0
