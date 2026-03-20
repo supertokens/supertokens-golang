@@ -1,0 +1,3 @@
+kind: Changed
+body: Reuse HTTP client across requests for improved performance
+time: 2026-03-20T13:09:37.918123+01:00
