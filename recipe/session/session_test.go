@@ -1497,11 +1497,10 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	var JWKCacheMaxAgeInSec uint64 = 2
 
-	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
-
 	BeforeEach()
 	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
+
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: connectionURI,
@@ -1517,16 +1516,24 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 			}),
 		},
 	}
+
+	// Capture log marker right before Init to avoid picking up app creation logs
+	time.Sleep(500 * time.Millisecond)
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
+	jwksLogPattern := "API called:"
+	jwksEndpointPattern := ".well-known/jwks.json"
+
 	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	var wellKnownCallLogs []string
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1552,7 +1559,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfterWaiting.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1648,13 +1655,12 @@ exist in the keyfunc library's cache
 - Verify that no call is made
 */
 func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
-	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
-
 	BeforeEach()
 	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
 		"access_token_dynamic_signing_key_update_interval": "0.0014",
 	})
 	defer AfterEach()
+
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: connectionURI,
@@ -1668,16 +1674,24 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 			Init(nil),
 		},
 	}
+
+	// Capture log marker right before Init to avoid picking up app creation logs
+	time.Sleep(500 * time.Millisecond)
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
+	jwksLogPattern := "API called:"
+	jwksEndpointPattern := ".well-known/jwks.json"
+
 	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	var wellKnownCallLogs []string
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1701,7 +1715,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1726,7 +1740,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1740,7 +1754,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1902,11 +1916,11 @@ error as long as one of the provided urls return a valid response
 */
 func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080;example.com:8080;localhost:90",
+			ConnectionURI: connectionURI + ";example.com:8080;localhost:90",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2019,11 +2033,11 @@ This test uses multiple hosts with only the last one being valid to make sure al
 */
 func TestThatTheSDKTriesFetchingJWKSForAllCoreHosts(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "example.com;localhost:90;http://localhost:8080",
+			ConnectionURI: "example.com;localhost:90;" + connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2059,9 +2073,12 @@ This test makes sure that the SDK stop fetching JWKS from multiple cores as soon
 - Verify that two urls were used to fetch and that the 3rd one was never used
 */
 func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "example.com;http://localhost:8080;localhost:90",
+			ConnectionURI: "example.com;" + connectionURI + ";localhost:90",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2087,7 +2104,7 @@ func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) 
 
 	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
 	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "example.com"))
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], connectionURI))
 }
 
 func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {

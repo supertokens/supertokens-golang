@@ -1753,6 +1753,11 @@ func TestDefaultSignoutRouteRevokesSession(t *testing.T) {
 		t.Error(err.Error())
 	}
 
+	var res1Body map[string]interface{}
+	err = json.NewDecoder(res1.Body).Decode(&res1Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "OK", res1Body["status"])
+
 	cookieData1 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res1)
 
 	assert.Equal(t, "", cookieData1["sAccessToken"])
@@ -1835,6 +1840,7 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: connectionURI,
 		},
+		Debug: true,
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
 			AppName:       "SuperTokens",
@@ -1915,6 +1921,11 @@ func TestSignoutAPIreturnsTryRefreshTokenAndSignoutShouldReturnOK(t *testing.T) 
 	if err != nil {
 		t.Error(err.Error())
 	}
+
+	var res3Body map[string]interface{}
+	err = json.NewDecoder(res3.Body).Decode(&res3Body)
+	assert.NoError(t, err)
+	assert.Equal(t, "OK", res3Body["status"])
 
 	cookieData2 := unittesting.ExtractInfoFromResponseWhenAntiCSRFisNone(res3)
 

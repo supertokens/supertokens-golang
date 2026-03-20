@@ -52,16 +52,20 @@ func MakeAPIImplementation() dashboardmodels.APIInterface {
 		connectionURIToNormalize := strings.Split(stInstance.SuperTokens.ConnectionURI, ";")[0]
 
 		// This normalizes the URI to make sure that it has things like protocol etc
-		// injected into it before it is returned.
-		var normalizationError error
-		normalizedConnectionURI, normalizationError := supertokens.NewNormalisedURLDomain(connectionURIToNormalize)
-		if normalizationError != nil {
+		// injected into it before it is returned. We normalize both domain and path
+		// to preserve any path component (e.g. /appid-xxx).
+		normalizedDomain, domainErr := supertokens.NewNormalisedURLDomain(connectionURIToNormalize)
+		if domainErr != nil {
 			// In case of failures, we want to return a 500 here, mainly because that
 			// is what we return if the connectionURI is invalid which is the case here
 			// if normalization fails.
-			return "", normalizationError
+			return "", domainErr
 		}
-		connectionURI := normalizedConnectionURI.GetAsStringDangerous()
+		normalizedPath, pathErr := supertokens.NewNormalisedURLPath(connectionURIToNormalize)
+		if pathErr != nil {
+			return "", pathErr
+		}
+		connectionURI := normalizedDomain.GetAsStringDangerous() + normalizedPath.GetAsStringDangerous()
 
 		normalizedDashboardPath, err := supertokens.NewNormalisedURLPath(constants.DashboardAPI)
 		if err != nil {

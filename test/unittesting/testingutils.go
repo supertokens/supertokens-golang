@@ -25,6 +25,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"os/exec"
 	"strings"
 	"strconv"
 	"testing"
@@ -136,6 +137,7 @@ func CreateCoreApp(coreConfig map[string]interface{}) string {
 }
 
 // RemoveCoreApp deletes an application from the running core.
+// It first removes all non-public tenants, then removes the app.
 func RemoveCoreApp(connectionURI string) {
 	if connectionURI == "" {
 		return
@@ -146,6 +148,33 @@ func RemoveCoreApp(connectionURI string) {
 		return
 	}
 
+	// First, list and delete all non-public tenants for this app
+	appBase := fmt.Sprintf("%s/appid-%s", base, appId)
+	listResp, err := http.Get(appBase + "/recipe/multitenancy/tenant/list/v2")
+	if err == nil {
+		defer listResp.Body.Close()
+		var listResult map[string]interface{}
+		json.NewDecoder(listResp.Body).Decode(&listResult)
+		if tenants, ok := listResult["tenants"].([]interface{}); ok {
+			for _, t := range tenants {
+				if tm, ok := t.(map[string]interface{}); ok {
+					if tenantId, ok := tm["tenantId"].(string); ok && tenantId != "public" {
+						delBody, _ := json.Marshal(map[string]interface{}{
+							"tenantId": tenantId,
+						})
+						delReq, _ := http.NewRequest("POST", appBase+"/recipe/multitenancy/tenant/remove", bytes.NewBuffer(delBody))
+						delReq.Header.Set("Content-Type", "application/json")
+						delResp, err := http.DefaultClient.Do(delReq)
+						if err == nil {
+							delResp.Body.Close()
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Now remove the app
 	body, _ := json.Marshal(map[string]interface{}{
 		"appId": appId,
 	})
@@ -756,9 +785,56 @@ type InfoLogData struct {
 	Output   []string
 }
 
+func getCoreContainerName() string {
+	// Try compose container first
+	cmd := exec.Command("docker", "compose", "ps", "--format", "{{.Name}}")
+	output, err := cmd.Output()
+	if err == nil {
+		for _, name := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+			if strings.Contains(name, "core") {
+				return name
+			}
+		}
+	}
+	return ""
+}
+
 func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
-	// With app-based testing on a shared core, we can't isolate per-test logs.
-	// Tests that depend on this need to be reworked.
-	t.Log("GetInfoLogData: not supported with app-based testing")
-	return InfoLogData{}
+	containerName := getCoreContainerName()
+	if containerName == "" {
+		t.Log("GetInfoLogData: no core container found")
+		return InfoLogData{}
+	}
+
+	cmd := exec.Command("docker", "logs", containerName)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		t.Logf("GetInfoLogData: docker logs failed: %s", err)
+		return InfoLogData{}
+	}
+
+	lines := strings.Split(string(output), "\n")
+	var lastLine string
+	var resultLines []string
+	shouldRecord := startWith == ""
+
+	for _, line := range lines {
+		trimmed := strings.TrimSpace(line)
+		if trimmed == "" {
+			continue
+		}
+		if !shouldRecord && strings.Contains(line, startWith) {
+			shouldRecord = true
+			continue
+		}
+		if shouldRecord {
+			resultLines = append(resultLines, line)
+		}
+		lastLine = line
+	}
+
+	return InfoLogData{
+		LastLine: lastLine,
+		Output:   resultLines,
+	}
 }

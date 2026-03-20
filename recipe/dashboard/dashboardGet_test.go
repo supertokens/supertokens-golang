@@ -57,7 +57,9 @@ func TestThatDashboardGetNormalizesConnectionURIWithoutHTTP(t *testing.T) {
 	if err != nil {
 		t.Error(err.Error())
 	}
-
+	// this may be a legit bug
+//     dashboardGet_test.go:67: Expected: window.connectionURI = "http://localhost:3567/appid-go-test-2243be9b-0cb0-448b-ba16-2fc5db586a87"
+    // dashboardGet_test.go:73: Match 0: window.connectionURI = "http://localhost:3567"
 	body, _ := io.ReadAll(res.Body)
 	assert.True(t, strings.Contains(string(body), fmt.Sprintf("window.connectionURI = \"%s\"", connectionURI)))
 }
