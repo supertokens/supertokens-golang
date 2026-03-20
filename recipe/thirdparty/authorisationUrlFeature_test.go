@@ -32,9 +32,12 @@ import (
 )
 
 func TestReqWithThirdPartyEmailPasswordRecipe(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -64,10 +67,6 @@ func TestReqWithThirdPartyEmailPasswordRecipe(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -114,9 +113,12 @@ func TestReqWithThirdPartyEmailPasswordRecipe(t *testing.T) {
 }
 
 func TestReqWithThirdPartyEmailPasswordRecipe2(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -146,10 +148,6 @@ func TestReqWithThirdPartyEmailPasswordRecipe2(t *testing.T) {
 			emailpassword.Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -196,9 +194,12 @@ func TestReqWithThirdPartyEmailPasswordRecipe2(t *testing.T) {
 }
 
 func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -227,10 +228,6 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -270,9 +267,12 @@ func TestUsingDevOAuthKeysWillUseDevAuthUrl(t *testing.T) {
 }
 
 func TestMinimumConfigForThirdPartyModule(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -291,10 +291,6 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -335,9 +331,12 @@ func TestMinimumConfigForThirdPartyModule(t *testing.T) {
 }
 
 func TestThirdPartyProviderDoesnotExist(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -356,10 +355,6 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -393,9 +388,12 @@ func TestThirdPartyProviderDoesnotExist(t *testing.T) {
 }
 
 func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -414,10 +412,6 @@ func TestInvalidGetParamsForThirdPartyModule(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {

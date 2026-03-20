@@ -31,9 +31,12 @@ import (
 )
 
 func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -58,9 +61,6 @@ func TestBackwardCompatibilityServiceWithoutCustomFunction(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -83,9 +83,12 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 	funcCalled := false
 	overrideCalled := false
 	ridInfo := ""
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -120,9 +123,6 @@ func TestBackwardCompatibilityServiceWithOverride(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -171,9 +171,12 @@ func TestSMTPServiceOverride(t *testing.T) {
 			return originalImplementation
 		},
 	})
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -197,9 +200,6 @@ func TestSMTPServiceOverride(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -247,9 +247,12 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 			return originalImplementation
 		},
 	})
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -273,9 +276,6 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -297,9 +297,12 @@ func TestSMTPServiceOverrideDefaultEmailTemplate(t *testing.T) {
 
 func TestThatLinkUsesResultFromOriginFunction(t *testing.T) {
 	link := ""
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain: "api.supertokens.io",
@@ -324,10 +327,6 @@ func TestThatLinkUsesResultFromOriginFunction(t *testing.T) {
 			session.Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -373,7 +372,7 @@ func TestThatLinkUsesResultFromOriginFunction(t *testing.T) {
 // 	})
 // 	configValue := supertokens.TypeInput{
 // 		Supertokens: &supertokens.ConnectionInfo{
-// 			ConnectionURI: "http://localhost:8080",
+// 			ConnectionURI: connectionURI,
 // 		},
 // 		AppInfo: supertokens.AppInfo{
 // 			APIDomain:     "api.supertokens.io",

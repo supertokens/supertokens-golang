@@ -31,9 +31,12 @@ import (
 )
 
 func TestSingleConfigWithoutClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -62,10 +65,6 @@ func TestSingleConfigWithoutClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -100,9 +99,12 @@ func TestSingleConfigWithoutClientTypeSpecified(t *testing.T) {
 }
 
 func TestSingleConfigWithoutClientTypeSpecifiedOnlyInConfig(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -132,10 +134,6 @@ func TestSingleConfigWithoutClientTypeSpecifiedOnlyInConfig(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -170,9 +168,12 @@ func TestSingleConfigWithoutClientTypeSpecifiedOnlyInConfig(t *testing.T) {
 }
 
 func TestSingleConfigWithClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -202,10 +203,6 @@ func TestSingleConfigWithClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -240,9 +237,12 @@ func TestSingleConfigWithClientTypeSpecified(t *testing.T) {
 }
 
 func TestSingleConfigWithDifferentClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -272,10 +272,6 @@ func TestSingleConfigWithDifferentClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -306,9 +302,12 @@ func TestSingleConfigWithDifferentClientTypeSpecified(t *testing.T) {
 }
 
 func TestMultipleProviderSingleConfigWithoutClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -348,10 +347,6 @@ func TestMultipleProviderSingleConfigWithoutClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -386,9 +381,12 @@ func TestMultipleProviderSingleConfigWithoutClientTypeSpecified(t *testing.T) {
 }
 
 func TestMultipleConfigWithoutClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -428,10 +426,6 @@ func TestMultipleConfigWithoutClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -462,9 +456,12 @@ func TestMultipleConfigWithoutClientTypeSpecified(t *testing.T) {
 }
 
 func TestMultipleConfigWithClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -504,10 +501,6 @@ func TestMultipleConfigWithClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -543,9 +536,12 @@ func TestMultipleConfigWithClientTypeSpecified(t *testing.T) {
 }
 
 func TestMultipleProviderMultipleConfigWithoutClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -607,10 +603,6 @@ func TestMultipleProviderMultipleConfigWithoutClientTypeSpecified(t *testing.T) 
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -641,9 +633,12 @@ func TestMultipleProviderMultipleConfigWithoutClientTypeSpecified(t *testing.T) 
 }
 
 func TestMultipleProviderMultipleConfigWithClientTypeSpecified(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -705,10 +700,6 @@ func TestMultipleProviderMultipleConfigWithClientTypeSpecified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {

@@ -17,9 +17,12 @@ import (
 )
 
 func TestShouldAllowWithoutClaimsRequiredOrPresent(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -34,9 +37,6 @@ func TestShouldAllowWithoutClaimsRequiredOrPresent(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -55,9 +55,12 @@ func TestShouldAllowWithoutClaimsRequiredOrPresent(t *testing.T) {
 }
 
 func TestShouldAllowClaimValidAfterRefetching(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -85,9 +88,6 @@ func TestShouldAllowClaimValidAfterRefetching(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -106,9 +106,12 @@ func TestShouldAllowClaimValidAfterRefetching(t *testing.T) {
 }
 
 func TestShouldRejectClaimRequiredButNotAdded(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -136,9 +139,6 @@ func TestShouldRejectClaimRequiredButNotAdded(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -176,9 +176,12 @@ func TestShouldAllowCustomValidatorReturningTrue(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -204,9 +207,6 @@ func TestShouldAllowCustomValidatorReturningTrue(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -233,9 +233,12 @@ func TestShouldRejectCustomValidatorReturningFalse(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -261,9 +264,6 @@ func TestShouldRejectCustomValidatorReturningFalse(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -297,9 +297,12 @@ func TestShouldRejectCustomValidatorReturningFalseWithReason(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -325,9 +328,6 @@ func TestShouldRejectCustomValidatorReturningFalseWithReason(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -361,9 +361,12 @@ func TestShouldRejectIfAssertClaimsReturnsError(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -399,9 +402,6 @@ func TestShouldRejectIfAssertClaimsReturnsError(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -435,9 +435,12 @@ func TestShouldAllowIfAssertClaimsReturnsNoError(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -468,9 +471,6 @@ func TestShouldAllowIfAssertClaimsReturnsNoError(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -491,9 +491,12 @@ func TestShouldAllowIfAssertClaimsReturnsNoError(t *testing.T) {
 }
 
 func TestShouldAllowWithEmptyListAsOverride(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -521,9 +524,6 @@ func TestShouldAllowWithEmptyListAsOverride(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -551,9 +551,12 @@ func TestShouldAllowWithEmptyListAsOverride(t *testing.T) {
 }
 
 func TestShouldAllowClaimValidAfterRefetchingWithOverride(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -581,9 +584,6 @@ func TestShouldAllowClaimValidAfterRefetchingWithOverride(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -612,9 +612,12 @@ func TestShouldAllowClaimValidAfterRefetchingWithOverride(t *testing.T) {
 }
 
 func TestShouldRejectClaimInvalidAfterRefetchingWithOverride(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -642,9 +645,6 @@ func TestShouldRejectClaimInvalidAfterRefetchingWithOverride(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -692,9 +692,12 @@ func TestShouldRejectCustomValidatorReturningFalseWithOverride(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -721,9 +724,6 @@ func TestShouldRejectCustomValidatorReturningFalseWithOverride(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -765,9 +765,12 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 			}
 		},
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -795,9 +798,6 @@ func TestShouldAllowCustomValidatorReturningTrueWithOverride(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -833,9 +833,12 @@ This test is to make sure that we dont always call the core for session verifica
 4. Call get session and expect the core to be called
 */
 func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -846,9 +849,6 @@ func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -895,9 +895,12 @@ func TestThatVerifySessionDoesNotAlwaysCallCore(t *testing.T) {
 }
 
 func TestThatVerifySessionReturns401IfNoAccessTokenIsSentAndMiddlewareIsNotAdded(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -908,9 +911,6 @@ func TestThatVerifySessionReturns401IfNoAccessTokenIsSentAndMiddlewareIsNotAdded
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -929,9 +929,12 @@ func TestThatVerifySessionReturns401IfNoAccessTokenIsSentAndMiddlewareIsNotAdded
 
 func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPassed(t *testing.T) {
 	AntiCsrf := AntiCSRF_VIA_CUSTOM_HEADER
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -947,9 +950,6 @@ func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPas
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -978,9 +978,12 @@ func TestThatAntiCSRFCheckIsSkippedIfSessionRequiredIsFalseAndNoAccessTokenIsPas
 }
 
 func TestThatResponseHeadersAreCorrectWhenUsingCookies(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -991,9 +994,6 @@ func TestThatResponseHeadersAreCorrectWhenUsingCookies(t *testing.T) {
 			Init(&sessmodels.TypeInput{}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1062,9 +1062,12 @@ func TestThatResponseHeadersAreCorrectWhenUsingCookies(t *testing.T) {
 }
 
 func TestThatResponseHeadersAreCorrectWhenUsingHeaders(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1075,9 +1078,6 @@ func TestThatResponseHeadersAreCorrectWhenUsingHeaders(t *testing.T) {
 			Init(&sessmodels.TypeInput{}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

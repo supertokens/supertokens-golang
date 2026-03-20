@@ -26,9 +26,12 @@ import (
 )
 
 func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -39,10 +42,6 @@ func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
 			Init(&tpmodels.TypeInput{}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	// It is not expected to throw this error: thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config
@@ -50,9 +49,12 @@ func TestConfigForValidInputForThirdPartyModule(t *testing.T) {
 }
 
 func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -69,10 +71,6 @@ func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testi
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	// It is not expected to throw this error: thirdparty recipe requires at least 1 provider to be passed in signInAndUpFeature.providers config
@@ -80,9 +78,12 @@ func TestConfigForInValidInputWithEmptyProviderSliceForThirdPartyModule(t *testi
 }
 
 func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -119,10 +120,6 @@ func TestMinimumConfigForThirdpartyModuleCustomProvider(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {

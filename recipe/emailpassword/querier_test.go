@@ -14,9 +14,12 @@ import (
 func TestCachingWorks(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -33,10 +36,6 @@ func TestCachingWorks(t *testing.T) {
 			thirdparty.Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())
@@ -76,9 +75,12 @@ func TestCachingWorks(t *testing.T) {
 func TestNoCachingIfDisabledByUser(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -95,10 +97,6 @@ func TestNoCachingIfDisabledByUser(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())
@@ -121,9 +119,12 @@ func TestNoCachingIfDisabledByUser(t *testing.T) {
 func TestNoCachingIfHeadersAreDifferent(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -140,10 +141,6 @@ func TestNoCachingIfHeadersAreDifferent(t *testing.T) {
 			thirdparty.Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())
@@ -173,9 +170,12 @@ func TestNoCachingIfHeadersAreDifferent(t *testing.T) {
 func TestCachingGetsClearWhenQueryWithoutUserContext(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -191,10 +191,6 @@ func TestCachingGetsClearWhenQueryWithoutUserContext(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())
@@ -220,9 +216,12 @@ func TestCachingGetsClearWhenQueryWithoutUserContext(t *testing.T) {
 func TestCachingDoesNotGetClearWithNonGetIfKeepAlive(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -238,10 +237,6 @@ func TestCachingDoesNotGetClearWithNonGetIfKeepAlive(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())
@@ -292,9 +287,12 @@ func TestCachingDoesNotGetClearWithNonGetIfKeepAlive(t *testing.T) {
 func TestCachingGetsClearWithNonGetIfKeepAliveIsFalse(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -310,10 +308,6 @@ func TestCachingGetsClearWithNonGetIfKeepAliveIsFalse(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())
@@ -364,9 +358,12 @@ func TestCachingGetsClearWithNonGetIfKeepAliveIsFalse(t *testing.T) {
 func TestCachingGetsClearWithNonGetIfKeepAliveIsNotSet(t *testing.T) {
 	calledCore := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			NetworkInterceptor: func(r *http.Request, uc supertokens.UserContext) (*http.Request, error) {
 				calledCore = true
 				return r, nil
@@ -382,10 +379,6 @@ func TestCachingGetsClearWithNonGetIfKeepAliveIsNotSet(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())

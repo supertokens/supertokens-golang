@@ -36,9 +36,12 @@ import (
 )
 
 func TestThatThirdPartyUserThatIsEmailVerifiedReturnsTheCorrectEmailVerificationStatus(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -63,10 +66,6 @@ func TestThatThirdPartyUserThatIsEmailVerifiedReturnsTheCorrectEmailVerification
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -105,9 +104,12 @@ func TestThatThirdPartyUserThatIsEmailVerifiedReturnsTheCorrectEmailVerification
 }
 
 func TestWithDisabledAPIDefaultSigninupAPIdoesnNotWork(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -142,10 +144,6 @@ func TestWithDisabledAPIDefaultSigninupAPIdoesnNotWork(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -176,9 +174,12 @@ func TestWithDisabledAPIDefaultSigninupAPIdoesnNotWork(t *testing.T) {
 
 func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -203,10 +204,6 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -269,9 +266,12 @@ func TestMinimumConfigWithoutCodeForThirdPartyModule(t *testing.T) {
 
 func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -296,10 +296,6 @@ func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -328,9 +324,12 @@ func TestMissingCodeAndAuthCodeResponse(t *testing.T) {
 
 func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -355,10 +354,6 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -391,7 +386,7 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {
@@ -433,9 +428,12 @@ func TestMinimumConfigForThirdPartyModuleWithCode(t *testing.T) {
 
 func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -463,10 +461,6 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -499,7 +493,7 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {
@@ -546,9 +540,12 @@ func TestMinimumConfigForThirdPartyModuleWithEmailUnverified(t *testing.T) {
 }
 
 func TestThirdPartyProviderDoesNotExist(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -572,10 +569,6 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -625,9 +618,12 @@ func TestThirdPartyProviderDoesNotExist(t *testing.T) {
 }
 
 func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -651,10 +647,6 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -741,9 +733,12 @@ func TestInvalidPostParamsForThirdPartyModule(t *testing.T) {
 }
 
 func TestErrorThrownFromGetProfileInfoFunction(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -765,10 +760,6 @@ func TestErrorThrownFromGetProfileInfoFunction(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -812,7 +803,7 @@ func TestErrorThrownFromGetProfileInfoFunction(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {
@@ -823,9 +814,12 @@ func TestErrorThrownFromGetProfileInfoFunction(t *testing.T) {
 
 func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -850,10 +844,6 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -886,7 +876,7 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {
@@ -912,9 +902,12 @@ func TestEmailNotReturnedInGetProfileInfoFunction(t *testing.T) {
 
 func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -939,10 +932,6 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -975,7 +964,7 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	userDataBeforeSignup, err := GetUserByID("as")
 
@@ -1018,9 +1007,12 @@ func TestGetUserByIdWhenUserDoesNotExist(t *testing.T) {
 
 func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	customAntiCsrfValue := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1045,10 +1037,6 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -1081,7 +1069,7 @@ func TestGetUserByThirdPartyInfoWhenUserDoesNotExist(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	userBegoreSignup, err := GetUserByThirdPartyInfo("public", "custom", "user")
 	if err != nil {
@@ -1124,9 +1112,12 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 	userId := ""
 	loginType := ""
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1164,9 +1155,6 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1197,7 +1185,7 @@ func TestHandlePostSignUpInGetsSetCorrectly(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {

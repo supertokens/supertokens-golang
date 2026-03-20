@@ -37,7 +37,7 @@ import (
 
 func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	getContentCalled := false
@@ -80,6 +80,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
 			EmailDelivery: &emaildelivery.TypeInput{
@@ -124,7 +125,7 @@ func TestSMTPOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -138,6 +139,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		emailverification.Init(evmodels.TypeInput{
 			Mode: evmodels.ModeOptional,
 			EmailDelivery: &emaildelivery.TypeInput{
@@ -194,7 +196,7 @@ func TestCustomOverrideEmailVerifyForThirdpartyUser(t *testing.T) {
 
 func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	tplConfig := tpmodels.TypeInput{
@@ -206,6 +208,7 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		emailverification.Init(evmodels.TypeInput{Mode: evmodels.ModeOptional}),
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
@@ -239,11 +242,12 @@ func TestDefaultBackwardCompatibilityEmailVerifyForThirdpartyUser(t *testing.T) 
 
 func TestDefaultBackwardCompatibilityPasswordResetForThirdpartyUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -265,7 +269,7 @@ func TestDefaultBackwardCompatibilityPasswordResetForThirdpartyUser(t *testing.T
 
 func TestCustomOverrideResetPasswordForThirdpartyUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	customCalled := false
@@ -289,6 +293,7 @@ func TestCustomOverrideResetPasswordForThirdpartyUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod
@@ -317,7 +322,7 @@ func TestCustomOverrideResetPasswordForThirdpartyUser(t *testing.T) {
 
 func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	getContentCalled := false
@@ -360,6 +365,7 @@ func TestSMTPOverridePasswordResetForThirdpartyUser(t *testing.T) {
 	}
 	testServer := supertokensInitForTest(
 		t,
+		connectionURI,
 		session.Init(&sessmodels.TypeInput{
 			GetTokenTransferMethod: func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 				return sessmodels.CookieTransferMethod

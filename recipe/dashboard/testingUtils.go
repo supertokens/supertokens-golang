@@ -25,14 +25,12 @@ func resetAll() {
 }
 
 func BeforeEach() {
-	unittesting.KillAllST()
+	unittesting.CleanupAllCoreApps()
 	resetAll()
-	unittesting.SetUpST()
 }
 
 func AfterEach() {
-	unittesting.KillAllST()
+	unittesting.CleanupAllCoreApps()
 	resetAll()
-	unittesting.CleanST()
 }
 

@@ -25,9 +25,12 @@ import (
 )
 
 func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipe(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -38,10 +41,6 @@ func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipe(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -70,9 +69,12 @@ func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipe(t *testing.T) {
 
 func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipeWithApiBasePath(t *testing.T) {
 	customAPIBasePath := "/"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -84,10 +86,6 @@ func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipeWithApiBasePath(t *testin
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -117,9 +115,12 @@ func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipeWithApiBasePath(t *testin
 func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipeWithIssuer(t *testing.T) {
 	customIssuer := "https://customissuer.com"
 	customAPIBasePath := "/"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -133,10 +134,6 @@ func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipeWithIssuer(t *testing.T) 
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -165,9 +162,12 @@ func TestDefaultConfigSetsValueCorrectlyForOpenIDrecipeWithIssuer(t *testing.T) 
 
 func TestIssuerWithoutAPIBasePathThrowsErr(t *testing.T) {
 	customIssuer := "https://customissuer.com"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -180,10 +180,6 @@ func TestIssuerWithoutAPIBasePathThrowsErr(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		assert.Equal(t, "The path of the issuer URL must be equal to the apiBasePath. The default value is /auth", err.Error())
@@ -192,9 +188,12 @@ func TestIssuerWithoutAPIBasePathThrowsErr(t *testing.T) {
 
 func TestIssuerWithGateWayPathWorksFine(t *testing.T) {
 	customGatewayPath := "/gateway"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:      "api.supertokens.io",
@@ -206,10 +205,6 @@ func TestIssuerWithGateWayPathWorksFine(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

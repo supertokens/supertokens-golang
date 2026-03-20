@@ -26,134 +26,220 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path/filepath"
-	"strconv"
 	"strings"
+	"strconv"
 	"testing"
-	"time"
 
+	"github.com/google/uuid"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"gopkg.in/h2non/gock.v1"
 )
 
-// containerCounter tracks running containers for unique naming
-var containerCounter int
+const testAppPrefix = "go-test-"
 
-// configDir is the temporary directory holding config.yaml for the current test
-var configDir string
+var licenseKeySet = false
 
-func getCoreImage() string {
-	img := os.Getenv("SUPERTOKENS_CORE_IMAGE")
-	if img != "" {
-		return img
+// coreURL returns the base URL for the running core instance.
+func coreURL() string {
+	host := os.Getenv("SUPERTOKENS_CORE_HOST")
+	if host == "" {
+		host = "localhost"
 	}
-	version := os.Getenv("SUPERTOKENS_CORE_VERSION")
-	if version == "" {
-		version = "master"
+	port := os.Getenv("SUPERTOKENS_CORE_PORT")
+	if port == "" {
+		port = "3567"
 	}
-	return "supertokens/supertokens-dev-postgresql:" + version
+	return fmt.Sprintf("http://%s:%s", host, port)
 }
 
-func SetUpST() {
-	dir, err := os.MkdirTemp("", "st-config-*")
-	if err != nil {
-		panic(fmt.Sprintf("failed to create temp config dir: %s", err))
-	}
-	configDir = dir
-
-	// Write a minimal default config
-	// info_log_path: null → log to stdout (captured by docker logs)
-	// error_log_path: null → log to stderr (captured by docker logs)
-	defaultConfig := "core_config_version: 0\ninfo_log_path: null\nerror_log_path: null\n"
-	err = os.WriteFile(filepath.Join(configDir, "config.yaml"), []byte(defaultConfig), 0644)
-	if err != nil {
-		panic(fmt.Sprintf("failed to write config.yaml: %s", err))
-	}
-}
-
-func StartUpST(host string, port string) string {
-	containerCounter++
-	containerName := fmt.Sprintf("supertokens-test-%d-%d", os.Getpid(), containerCounter)
-
-	args := []string{
-		"run", "-d",
-		"--name", containerName,
-		"--platform", "linux/amd64",
-		"-p", fmt.Sprintf("%s:3567", port),
+func ensureLicenseKey(connectionURI string) {
+	licenseKey := os.Getenv("SUPERTOKENS_LICENSE_KEY")
+	if licenseKey == "" {
+		// Use the hardcoded test key for multitenancy
+		licenseKey = "ijaleljUd2kU9XXWLiqFYv5br8nutTxbyBqWypQdv2N-BocoNriPrnYQd0NXPm8rVkeEocN9ayq0B7c3Pv-BTBIhAZSclXMlgyfXtlwAOJk=9BfESEleW6LyTov47dXu"
 	}
 
-	// Mount config if we have one
-	if configDir != "" {
-		configPath := filepath.Join(configDir, "config.yaml")
-		args = append(args, "-v", fmt.Sprintf("%s:/usr/lib/supertokens/config.yaml", configPath))
-	}
-
-	args = append(args, getCoreImage(),
-		"/usr/lib/supertokens/jre/bin/java",
-		"-classpath", "/usr/lib/supertokens/core/*:/usr/lib/supertokens/plugin-interface/*:/usr/lib/supertokens/ee/*",
-		"io.supertokens.Main", "/usr/lib/supertokens/", "DEV",
-		fmt.Sprintf("host=%s", "0.0.0.0"),
-		fmt.Sprintf("port=%s", "3567"),
-		"test_mode",
-	)
-
-	cmd := exec.Command("docker", args...)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		panic(fmt.Sprintf("could not start ST container: %s\nOutput: %s", err, string(output)))
-	}
-
-	// Wait for core to be ready
-	startTime := time.Now()
-	for time.Since(startTime) < 30*time.Second {
-		resp, err := http.Get(fmt.Sprintf("http://localhost:%s/hello", port))
-		if err == nil {
-			resp.Body.Close()
-			if resp.StatusCode == 200 {
-				return containerName
-			}
-		}
-		time.Sleep(500 * time.Millisecond)
-	}
-	panic("could not start ST process")
-}
-
-func StartUpSTWithMultitenancy(host string, port string) string {
-	containerName := StartUpST(host, port)
-
-	const OPAQUE_KEY_WITH_MULTITENANCY_FEATURE = "ijaleljUd2kU9XXWLiqFYv5br8nutTxbyBqWypQdv2N-BocoNriPrnYQd0NXPm8rVkeEocN9ayq0B7c3Pv-BTBIhAZSclXMlgyfXtlwAOJk=9BfESEleW6LyTov47dXu"
-
-	jsonData, err := json.Marshal(map[string]interface{}{
-		"licenseKey": OPAQUE_KEY_WITH_MULTITENANCY_FEATURE,
+	jsonData, _ := json.Marshal(map[string]interface{}{
+		"licenseKey": licenseKey,
 	})
+	req, _ := http.NewRequest("PUT", connectionURI+"/ee/license", bytes.NewBuffer(jsonData))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("ensureLicenseKey failed: %s", err))
 	}
-	req, err := http.NewRequest("PUT", fmt.Sprintf("http://%s:%s/ee/license", host, port), bytes.NewBuffer(jsonData))
-	if err != nil {
-		panic(err)
+	defer resp.Body.Close()
+}
+
+// SetUpST is now a no-op — app-based testing doesn't need per-test setup.
+// Kept for backward compatibility with BeforeEach/AfterEach patterns.
+func SetUpST() {}
+
+// CleanST is now a no-op — app cleanup is handled by RemoveCoreApp.
+func CleanST() {}
+
+// StartUpST creates a core application and returns the connection URI.
+// The host and port parameters are ignored — the shared core is used.
+func StartUpST(host string, port string) string {
+	return CreateCoreApp(nil)
+}
+
+// StartUpSTWithMultitenancy creates a core application with multitenancy support.
+// The host and port parameters are ignored.
+func StartUpSTWithMultitenancy(host string, port string) string {
+	return CreateCoreApp(nil)
+}
+
+// CreateCoreApp creates a new isolated application in the running core.
+// coreConfig is an optional map of core configuration overrides.
+// Returns the connection URI for the created app.
+func CreateCoreApp(coreConfig map[string]interface{}) string {
+	base := coreURL()
+
+	if !licenseKeySet {
+		ensureLicenseKey(base)
+		licenseKeySet = true
 	}
+
+	appId := testAppPrefix + uuid.New().String()
+
+	if coreConfig == nil {
+		coreConfig = map[string]interface{}{}
+	}
+
+	body, _ := json.Marshal(map[string]interface{}{
+		"appId":      appId,
+		"coreConfig": coreConfig,
+	})
+
+	req, _ := http.NewRequest("PUT", base+"/recipe/multitenancy/app/v2", bytes.NewBuffer(body))
 	req.Header.Set("Content-Type", "application/json")
 
-	res, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		panic(err)
+		panic(fmt.Sprintf("CreateCoreApp failed: %s", err))
 	}
-	defer res.Body.Close()
-	return containerName
+	defer resp.Body.Close()
+
+	var result map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&result)
+
+	if result["status"] != "OK" {
+		respBytes, _ := json.Marshal(result)
+		panic(fmt.Sprintf("CreateCoreApp failed: %s", string(respBytes)))
+	}
+
+	connectionURI := fmt.Sprintf("%s/appid-%s", base, appId)
+	ensureLicenseKey(connectionURI)
+
+	return connectionURI
 }
 
-func stopContainer(name string) {
-	// Use rm -f to skip the graceful shutdown wait (docker stop has a 10s default timeout)
-	exec.Command("docker", "rm", "-f", name).Run()
+// RemoveCoreApp deletes an application from the running core.
+// It first removes all non-public tenants, then removes the app.
+func RemoveCoreApp(connectionURI string) {
+	if connectionURI == "" {
+		return
+	}
+
+	base, appId := parseConnectionURI(connectionURI)
+	if appId == "" {
+		return
+	}
+
+	// First, list and delete all non-public tenants for this app
+	appBase := fmt.Sprintf("%s/appid-%s", base, appId)
+	listResp, err := http.Get(appBase + "/recipe/multitenancy/tenant/list/v2")
+	if err == nil {
+		defer listResp.Body.Close()
+		var listResult map[string]interface{}
+		json.NewDecoder(listResp.Body).Decode(&listResult)
+		if tenants, ok := listResult["tenants"].([]interface{}); ok {
+			for _, t := range tenants {
+				if tm, ok := t.(map[string]interface{}); ok {
+					if tenantId, ok := tm["tenantId"].(string); ok && tenantId != "public" {
+						delBody, _ := json.Marshal(map[string]interface{}{
+							"tenantId": tenantId,
+						})
+						delReq, _ := http.NewRequest("POST", appBase+"/recipe/multitenancy/tenant/remove", bytes.NewBuffer(delBody))
+						delReq.Header.Set("Content-Type", "application/json")
+						delResp, err := http.DefaultClient.Do(delReq)
+						if err == nil {
+							delResp.Body.Close()
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Now remove the app
+	body, _ := json.Marshal(map[string]interface{}{
+		"appId": appId,
+	})
+
+	req, _ := http.NewRequest("POST", base+"/recipe/multitenancy/app/remove", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return // best-effort cleanup
+	}
+	defer resp.Body.Close()
 }
 
-func CleanST() {
-	if configDir != "" {
-		os.RemoveAll(configDir)
-		configDir = ""
+// KillAllST cleans up all test applications created by this process.
+func KillAllST() {
+	CleanupAllCoreApps()
+}
+
+// CleanupAllCoreApps removes all test applications matching our prefix.
+func CleanupAllCoreApps() {
+	base := coreURL()
+
+	resp, err := http.Get(base + "/recipe/multitenancy/app/list/v2")
+	if err != nil {
+		return // core may not be running
 	}
+	defer resp.Body.Close()
+
+	var result map[string]interface{}
+	json.NewDecoder(resp.Body).Decode(&result)
+
+	apps, ok := result["apps"].([]interface{})
+	if !ok {
+		return
+	}
+
+	for _, app := range apps {
+		appMap, ok := app.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		appId, ok := appMap["appId"].(string)
+		if !ok {
+			continue
+		}
+		if strings.HasPrefix(appId, testAppPrefix) {
+			RemoveCoreApp(fmt.Sprintf("%s/appid-%s", base, appId))
+		}
+	}
+}
+
+// SetKeyValueInConfig is kept for backward compatibility but should not be used
+// with app-based testing. Use the coreConfig parameter of CreateCoreApp instead.
+// This function panics to catch any remaining callers that need to be migrated.
+func SetKeyValueInConfig(key string, value string) {
+	panic("SetKeyValueInConfig is not supported with app-based testing. Pass coreConfig to CreateCoreApp instead.")
+}
+
+func parseConnectionURI(connectionURI string) (base string, appId string) {
+	if strings.Contains(connectionURI, "appid-") {
+		parts := strings.SplitN(connectionURI, "/appid-", 2)
+		return parts[0], parts[1]
+	}
+	return connectionURI, ""
 }
 
 // MaxVersion returns max of v1 and v2
@@ -179,42 +265,6 @@ func MaxVersion(version1 string, version2 string) string {
 	return version2
 }
 
-func KillAllST() {
-	// Stop all containers matching our naming pattern
-	cmd := exec.Command("docker", "ps", "-a", "--filter", fmt.Sprintf("name=supertokens-test-%d-", os.Getpid()), "--format", "{{.Names}}")
-	output, err := cmd.Output()
-	if err != nil {
-		return
-	}
-	names := strings.TrimSpace(string(output))
-	if names == "" {
-		return
-	}
-	for _, name := range strings.Split(names, "\n") {
-		name = strings.TrimSpace(name)
-		if name != "" {
-			stopContainer(name)
-		}
-	}
-}
-
-func SetKeyValueInConfig(key string, value string) {
-	if configDir == "" {
-		panic("SetKeyValueInConfig called before SetUpST")
-	}
-	pathToConfigYamlFile := filepath.Join(configDir, "config.yaml")
-	f, err := os.OpenFile(pathToConfigYamlFile, os.O_APPEND|os.O_WRONLY, 0600)
-	if err != nil {
-		panic(err)
-	}
-
-	defer f.Close()
-
-	if _, err = f.WriteString(key + ": " + value + "\n"); err != nil {
-		panic(err)
-	}
-}
-
 func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	antiCsrf := res.Header["Anti-Csrf"]
 	cookies := res.Header["Set-Cookie"]
@@ -227,7 +277,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	var accessTokenDomain string
 	var accessTokenHttpOnly = "false"
 
-	// Cookie stuff
 	for _, cookie := range cookies {
 		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
 			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
@@ -242,7 +291,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				if strings.HasPrefix(property, " Domain=") {
 					refreshTokenDomain = strings.TrimPrefix(property, " Domain=")
 				}
-
 				if strings.Index(property, "HttpOnly") == 1 {
 					refreshTokenHttpOnly = "true"
 				}
@@ -260,7 +308,6 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 				if strings.HasPrefix(property, " Domain=") {
 					accessTokenDomain = strings.TrimPrefix(property, " Domain=")
 				}
-
 				if strings.Index(property, "HttpOnly") == 1 {
 					accessTokenHttpOnly = "true"
 				}
@@ -273,34 +320,29 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 	}
 	frontToken := res.Header.Get("front-token")
 
-	// Header stuff
-	var refreshTokenFromHeader string = res.Header.Get("st-refresh-token")
-	var accessTokenFromHeader string = res.Header.Get("st-access-token")
+	var refreshTokenFromHeader = res.Header.Get("st-refresh-token")
+	var accessTokenFromHeader = res.Header.Get("st-access-token")
 
 	refreshTokenFromAny := refreshToken
-
 	if refreshTokenFromAny == "" {
 		refreshTokenFromAny = refreshTokenFromHeader
 	}
-
 	accessTokenFromAny := accessToken
-
 	if accessTokenFromAny == "" {
 		accessTokenFromAny = accessTokenFromHeader
 	}
 
 	return map[string]string{
-		"antiCsrf":             antiCsrfVal,
-		"sAccessToken":         accessToken,
-		"sRefreshToken":        refreshToken,
-		"refreshTokenExpiry":   refreshTokenExpiry,
-		"refreshTokenDomain":   refreshTokenDomain,
-		"refreshTokenHttpOnly": refreshTokenHttpOnly,
-		"accessTokenExpiry":    accessTokenExpiry,
-		"accessTokenDomain":    accessTokenDomain,
-		"accessTokenHttpOnly":  accessTokenHttpOnly,
-		"frontToken":           frontToken,
-
+		"antiCsrf":               antiCsrfVal,
+		"sAccessToken":           accessToken,
+		"sRefreshToken":          refreshToken,
+		"refreshTokenExpiry":     refreshTokenExpiry,
+		"refreshTokenDomain":     refreshTokenDomain,
+		"refreshTokenHttpOnly":   refreshTokenHttpOnly,
+		"accessTokenExpiry":      accessTokenExpiry,
+		"accessTokenDomain":      accessTokenDomain,
+		"accessTokenHttpOnly":    accessTokenHttpOnly,
+		"frontToken":             frontToken,
 		"refreshTokenFromHeader": refreshTokenFromHeader,
 		"accessTokenFromHeader":  accessTokenFromHeader,
 		"refreshTokenFromAny":    refreshTokenFromAny,
@@ -311,16 +353,15 @@ func ExtractInfoFromResponse(res *http.Response) map[string]string {
 func ExtractInfoFromResponseForAuthModeTests(res *http.Response) map[string]string {
 	antiCsrf := res.Header["Anti-Csrf"]
 	cookies := res.Header["Set-Cookie"]
-	var refreshToken string = "-not-present-"
-	var refreshTokenExpiry string = "-not-present-"
-	var refreshTokenDomain string = "-not-present-"
+	var refreshToken = "-not-present-"
+	var refreshTokenExpiry = "-not-present-"
+	var refreshTokenDomain = "-not-present-"
 	var refreshTokenHttpOnly = "false"
-	var accessToken string = "-not-present-"
-	var accessTokenExpiry string = "-not-present-"
-	var accessTokenDomain string = "-not-present-"
+	var accessToken = "-not-present-"
+	var accessTokenExpiry = "-not-present-"
+	var accessTokenDomain = "-not-present-"
 	var accessTokenHttpOnly = "false"
 
-	// Cookie stuff
 	for _, cookie := range cookies {
 		if strings.Split(strings.Split(cookie, ";")[0], "=")[0] == "sRefreshToken" {
 			refreshToken = strings.Split(strings.Split(cookie, ";")[0], "=")[1]
@@ -360,28 +401,26 @@ func ExtractInfoFromResponseForAuthModeTests(res *http.Response) map[string]stri
 	}
 	frontToken := res.Header.Get("front-token")
 
-	// Header stuff
-	var refreshTokenFromHeader string = "-not-present-"
+	var refreshTokenFromHeader = "-not-present-"
 	if len(res.Header.Values("st-refresh-token")) > 0 {
 		refreshTokenFromHeader = res.Header.Get("st-refresh-token")
 	}
-	var accessTokenFromHeader string = "-not-present-"
+	var accessTokenFromHeader = "-not-present-"
 	if len(res.Header.Values("st-access-token")) > 0 {
 		accessTokenFromHeader = res.Header.Get("st-access-token")
 	}
 
 	return map[string]string{
-		"antiCsrf":             antiCsrfVal,
-		"sAccessToken":         accessToken,
-		"sRefreshToken":        refreshToken,
-		"refreshTokenExpiry":   refreshTokenExpiry,
-		"refreshTokenDomain":   refreshTokenDomain,
-		"refreshTokenHttpOnly": refreshTokenHttpOnly,
-		"accessTokenExpiry":    accessTokenExpiry,
-		"accessTokenDomain":    accessTokenDomain,
-		"accessTokenHttpOnly":  accessTokenHttpOnly,
-		"frontToken":           frontToken,
-
+		"antiCsrf":               antiCsrfVal,
+		"sAccessToken":           accessToken,
+		"sRefreshToken":          refreshToken,
+		"refreshTokenExpiry":     refreshTokenExpiry,
+		"refreshTokenDomain":     refreshTokenDomain,
+		"refreshTokenHttpOnly":   refreshTokenHttpOnly,
+		"accessTokenExpiry":      accessTokenExpiry,
+		"accessTokenDomain":      accessTokenDomain,
+		"accessTokenHttpOnly":    accessTokenHttpOnly,
+		"frontToken":             frontToken,
 		"refreshTokenFromHeader": refreshTokenFromHeader,
 		"accessTokenFromHeader":  accessTokenFromHeader,
 	}
@@ -445,208 +484,108 @@ func ExtractInfoFromResponseWhenAntiCSRFisNone(res *http.Response) map[string]st
 func SignupRequest(email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {
-			{
-				"id":    "email",
-				"value": email,
-			},
-			{
-				"id":    "password",
-				"value": password,
-			},
+			{"id": "email", "value": email},
+			{"id": "password", "value": password},
 		},
 	}
-
 	postBody, err := json.Marshal(formFields)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/signup", "application/json", bytes.NewBuffer(postBody))
 }
 
 func SignupRequestWithTenantId(tenantId string, email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {
-			{
-				"id":    "email",
-				"value": email,
-			},
-			{
-				"id":    "password",
-				"value": password,
-			},
+			{"id": "email", "value": email},
+			{"id": "password", "value": password},
 		},
 	}
-
 	postBody, err := json.Marshal(formFields)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+fmt.Sprintf("/auth/%s/signup", tenantId), "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+fmt.Sprintf("/auth/%s/signup", tenantId), "application/json", bytes.NewBuffer(postBody))
 }
 
 func SignInRequest(email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {
-			{
-				"id":    "email",
-				"value": email,
-			},
-			{
-				"id":    "password",
-				"value": password,
-			},
+			{"id": "email", "value": email},
+			{"id": "password", "value": password},
 		},
 	}
-
 	postBody, err := json.Marshal(formFields)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/signin", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/signin", "application/json", bytes.NewBuffer(postBody))
 }
 
 func SignInRequestWithThirdpartyemailpasswordRid(email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {
-			{
-				"id":    "email",
-				"value": email,
-			},
-			{
-				"id":    "password",
-				"value": password,
-			},
+			{"id": "email", "value": email},
+			{"id": "password", "value": password},
 		},
 	}
-
 	postBody, err := json.Marshal(formFields)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
 	client := &http.Client{}
 	req, _ := http.NewRequest("POST", testUrl+"/auth/signin", bytes.NewBuffer(postBody))
-
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("rid", "thirdpartyemailpassword")
-
-	resp, err := client.Do(req)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return client.Do(req)
 }
 
 func SignInRequestWithTenantId(tenantId string, email string, password string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
 		"formFields": {
-			{
-				"id":    "email",
-				"value": email,
-			},
-			{
-				"id":    "password",
-				"value": password,
-			},
+			{"id": "email", "value": email},
+			{"id": "password", "value": password},
 		},
 	}
-
 	postBody, err := json.Marshal(formFields)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+fmt.Sprintf("/auth/%s/signin", tenantId), "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+fmt.Sprintf("/auth/%s/signin", tenantId), "application/json", bytes.NewBuffer(postBody))
 }
 
 func EmailVerifyTokenRequest(testUrl string, userId string, accessToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/user/email/verify/token", bytes.NewBuffer([]byte(userId)))
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Cookie", "sAccessToken="+accessToken)
 	req.Header.Add("anti-csrf", antiCsrf)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-	return resp, nil
+	return http.DefaultClient.Do(req)
 }
 
 func SignoutRequest(testUrl string, accessToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/signout", nil)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Cookie", "sAccessToken="+accessToken)
 	req.Header.Add("anti-csrf", antiCsrf)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-	return resp, nil
+	return http.DefaultClient.Do(req)
 }
 
 func SessionRefresh(testUrl string, refreshToken string, antiCsrf string) (*http.Response, error) {
 	req, err := http.NewRequest(http.MethodPost, testUrl+"/auth/session/refresh", nil)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Add("Cookie", "sRefreshToken="+refreshToken)
 	req.Header.Add("anti-csrf", antiCsrf)
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-	return resp, nil
+	return http.DefaultClient.Do(req)
 }
 
 func ReturnCustomProviderWithAuthRedirectParams() tpmodels.ProviderInput {
@@ -660,10 +599,7 @@ func ReturnCustomProviderWithAuthRedirectParams() tpmodels.ProviderInput {
 			},
 			TokenEndpoint: "https://test.com/oauth/token",
 			Clients: []tpmodels.ProviderClientConfig{
-				{
-					ClientID: "supertokens",
-					Scope:    []string{"test"},
-				},
+				{ClientID: "supertokens", Scope: []string{"test"}},
 			},
 		},
 		Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
@@ -673,23 +609,17 @@ func ReturnCustomProviderWithAuthRedirectParams() tpmodels.ProviderInput {
 				if err != nil {
 					return config, err
 				}
-
 				if _default, ok := (*userContext)["_default"].(map[string]interface{}); ok {
 					if req, ok := _default["request"].(*http.Request); ok {
 						config.AuthorizationEndpointQueryParams["dynamic"] = req.URL.Query().Get("dynamic")
 					}
 				}
-
 				return config, nil
 			}
-
 			originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 				return tpmodels.TypeUserInfo{
 					ThirdPartyUserId: "user",
-					Email: &tpmodels.EmailStruct{
-						ID:         "email@test.com",
-						IsVerified: true,
-					},
+					Email:            &tpmodels.EmailStruct{ID: "email@test.com", IsVerified: true},
 				}, nil
 			}
 			return originalImplementation
@@ -704,20 +634,14 @@ func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.ProviderInput {
 			AuthorizationEndpoint: "https://test.com/oauth/auth",
 			TokenEndpoint:         "https://test.com/oauth/token",
 			Clients: []tpmodels.ProviderClientConfig{
-				{
-					ClientID: "supertokens",
-					Scope:    []string{"test"},
-				},
+				{ClientID: "supertokens", Scope: []string{"test"}},
 			},
 		},
 		Override: func(originalImplementation *tpmodels.TypeProvider) *tpmodels.TypeProvider {
 			originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
 				return tpmodels.TypeUserInfo{
 					ThirdPartyUserId: "user",
-					Email: &tpmodels.EmailStruct{
-						ID:         "email@test.com",
-						IsVerified: true,
-					},
+					Email:            &tpmodels.EmailStruct{ID: "email@test.com", IsVerified: true},
 				}, nil
 			}
 			return originalImplementation
@@ -727,13 +651,10 @@ func ReturnCustomProviderWithoutAuthRedirectParams() tpmodels.ProviderInput {
 
 func SigninupCustomRequest(testServerUrl string, email string, id string) (*http.Response, error) {
 	defer gock.OffAll()
-	gock.New("https://test.com/").
-		Post("oauth/token").
-		Reply(200).
-		JSON(map[string]interface{}{
-			"email": email,
-			"id":    id,
-		})
+	gock.New("https://test.com/").Post("oauth/token").Reply(200).JSON(map[string]interface{}{
+		"email": email,
+		"id":    id,
+	})
 	postData := map[string]interface{}{
 		"thirdPartyId": "custom",
 		"redirectURIInfo": map[string]interface{}{
@@ -743,20 +664,13 @@ func SigninupCustomRequest(testServerUrl string, email string, id string) (*http
 			},
 		},
 	}
-
 	postBody, err := json.Marshal(postData)
 	if err != nil {
 		return nil, err
 	}
-
 	gock.New(testServerUrl).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
-
-	resp, err := http.Post(testServerUrl+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
-	if err != nil {
-		return nil, err
-	}
-	return resp, nil
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
+	return http.Post(testServerUrl+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 }
 
 func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interface{} {
@@ -766,111 +680,58 @@ func HttpResponseToConsumableInformation(body io.ReadCloser) *map[string]interfa
 	}
 	body.Close()
 	var result map[string]interface{}
-
 	err = json.Unmarshal(dataInBytes, &result)
-
 	if err != nil {
 		return nil
 	}
-
 	return &result
 }
 
 func GenerateRandomCode(size int) string {
 	characters := "ABCDEFGHIJKLMNOPQRSTUVWXTZabcdefghiklmnopqrstuvwxyz"
 	randomString := ""
-
 	for i := 0; i < size; i++ {
 		randomNumber := rand.Intn(len(characters))
 		randomString += characters[randomNumber : randomNumber+1]
 	}
-
 	return randomString
 }
 
 func EmailVerificationTokenRequest(cookies []*http.Cookie, testUrl string) (*http.Response, error) {
 	req, _ := http.NewRequest("POST", testUrl+"/auth/user/email/verify/token", nil)
-
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)
 	}
-
-	resp, err := http.DefaultClient.Do(req)
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.DefaultClient.Do(req)
 }
 
 func PasswordResetTokenRequest(email string, testUrl string) (*http.Response, error) {
 	formFields := map[string][]map[string]string{
-		"formFields": {
-			{
-				"id":    "email",
-				"value": email,
-			},
-		},
+		"formFields": {{"id": "email", "value": email}},
 	}
-
 	postBody, err := json.Marshal(formFields)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/user/password/reset/token", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/user/password/reset/token", "application/json", bytes.NewBuffer(postBody))
 }
 
 func PasswordlessEmailLoginRequest(email string, testUrl string) (*http.Response, error) {
-	body := map[string]string{
-		"email": email,
-	}
-
+	body := map[string]string{"email": email}
 	postBody, err := json.Marshal(body)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
 }
 
 func PasswordlessPhoneLoginRequest(phone string, testUrl string) (*http.Response, error) {
-	body := map[string]string{
-		"phoneNumber": phone,
-	}
-
+	body := map[string]string{"phoneNumber": phone}
 	postBody, err := json.Marshal(body)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/signinup/code", "application/json", bytes.NewBuffer(postBody))
 }
 
 func PasswordlessLoginResendRequest(deviceId string, preAuthSessionId string, testUrl string) (*http.Response, error) {
@@ -878,21 +739,11 @@ func PasswordlessLoginResendRequest(deviceId string, preAuthSessionId string, te
 		"deviceId":         deviceId,
 		"preAuthSessionId": preAuthSessionId,
 	}
-
 	postBody, err := json.Marshal(body)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/signinup/code/resend", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/signinup/code/resend", "application/json", bytes.NewBuffer(postBody))
 }
 
 func PasswordlessLoginWithCodeRequest(deviceId string, preAuthSessionId string, code string, testUrl string) (*http.Response, error) {
@@ -901,21 +752,11 @@ func PasswordlessLoginWithCodeRequest(deviceId string, preAuthSessionId string, 
 		"preAuthSessionId": preAuthSessionId,
 		"userInputCode":    code,
 	}
-
 	postBody, err := json.Marshal(body)
 	if err != nil {
-		fmt.Println(err.Error())
 		return nil, err
 	}
-
-	resp, err := http.Post(testUrl+"/auth/signinup/code/consume", "application/json", bytes.NewBuffer(postBody))
-
-	if err != nil {
-		fmt.Println(err.Error())
-		return nil, err
-	}
-
-	return resp, nil
+	return http.Post(testUrl+"/auth/signinup/code/consume", "application/json", bytes.NewBuffer(postBody))
 }
 
 func GetRequestWithJSONResult(url string, cookies []*http.Cookie) (int, map[string]interface{}, error) {
@@ -923,11 +764,9 @@ func GetRequestWithJSONResult(url string, cookies []*http.Cookie) (int, map[stri
 	if err != nil {
 		return 0, nil, err
 	}
-
 	for _, cookie := range cookies {
 		req.AddCookie(cookie)
 	}
-
 	res, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return 0, nil, err
@@ -946,24 +785,24 @@ type InfoLogData struct {
 	Output   []string
 }
 
-func getRunningContainerName() string {
-	cmd := exec.Command("docker", "ps", "--filter", fmt.Sprintf("name=supertokens-test-%d-", os.Getpid()), "--format", "{{.Names}}")
+func getCoreContainerName() string {
+	// Try compose container first
+	cmd := exec.Command("docker", "compose", "ps", "--format", "{{.Name}}")
 	output, err := cmd.Output()
-	if err != nil {
-		return ""
+	if err == nil {
+		for _, name := range strings.Split(strings.TrimSpace(string(output)), "\n") {
+			if strings.Contains(name, "core") {
+				return name
+			}
+		}
 	}
-	names := strings.TrimSpace(string(output))
-	if names == "" {
-		return ""
-	}
-	// Return the first running container
-	return strings.Split(names, "\n")[0]
+	return ""
 }
 
 func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
-	containerName := getRunningContainerName()
+	containerName := getCoreContainerName()
 	if containerName == "" {
-		t.Log("GetInfoLogData: no running container found")
+		t.Log("GetInfoLogData: no core container found")
 		return InfoLogData{}
 	}
 
@@ -977,7 +816,6 @@ func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
 	lines := strings.Split(string(output), "\n")
 	var lastLine string
 	var resultLines []string
-
 	shouldRecord := startWith == ""
 
 	for _, line := range lines {
@@ -985,16 +823,13 @@ func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
 		if trimmed == "" {
 			continue
 		}
-
-		if !shouldRecord && startWith != "" && strings.Contains(line, startWith) {
+		if !shouldRecord && strings.Contains(line, startWith) {
 			shouldRecord = true
 			continue
 		}
-
 		if shouldRecord {
 			resultLines = append(resultLines, line)
 		}
-
 		lastLine = line
 	}
 

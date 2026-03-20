@@ -32,9 +32,12 @@ import (
 
 func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -56,9 +59,6 @@ func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -77,9 +77,12 @@ func TestDisablingDefaultAPIActuallyDisablesIt(t *testing.T) {
 
 func TestSessionVerifyMiddleware(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -108,9 +111,6 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -367,9 +367,12 @@ func TestSessionVerifyMiddleware(t *testing.T) {
 
 func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -398,9 +401,6 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -646,9 +646,12 @@ func TestSessionVerifyMiddlewareWithAutoRefresh(t *testing.T) {
 func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
 	customapiBasePath := "/custom"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -678,9 +681,6 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -939,9 +939,12 @@ func TestSessionVerifyMiddlewareWithDriverConfig(t *testing.T) {
 func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
 	customapiBasePath := "/custom"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -971,9 +974,6 @@ func TestSessionVerifyMiddlewareWithDriverConfigWithAutoRefresh(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

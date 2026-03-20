@@ -22,7 +22,6 @@ import (
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
-	"strconv"
 	"testing"
 	"time"
 
@@ -36,9 +35,12 @@ import (
 )
 
 func TestThatCallingTheAPIwithoutASessionShouldReturnUnauthorized(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -62,10 +64,6 @@ func TestThatCallingTheAPIwithoutASessionShouldReturnUnauthorized(t *testing.T) 
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -101,9 +99,12 @@ func TestThatCallingTheAPIwithoutASessionShouldReturnUnauthorized(t *testing.T) 
 
 func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -130,10 +131,6 @@ func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 			),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -166,7 +163,7 @@ func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {
@@ -220,9 +217,14 @@ func TestTheDefaultRouteShouldRevokeSession(t *testing.T) {
 
 func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldReturnOk(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_validity": 2,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -250,10 +252,6 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 		},
 	}
 
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("access_token_validity", strconv.Itoa(2))
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -286,7 +284,7 @@ func TestThatSignoutAPIReturnsTryRefreshTokenRefreshSessionAndSignoutShouldRetur
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	if err != nil {

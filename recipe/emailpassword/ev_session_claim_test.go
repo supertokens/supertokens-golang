@@ -24,9 +24,12 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 	sendEmailFunc := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -51,10 +54,6 @@ func TestEVGenerateUpdatesSessionClaims(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

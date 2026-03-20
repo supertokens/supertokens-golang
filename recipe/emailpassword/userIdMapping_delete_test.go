@@ -11,10 +11,10 @@ import (
 
 func TestDeleteUnknownUserIdMapping(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -53,10 +53,10 @@ func TestDeleteUnknownUserIdMapping(t *testing.T) {
 
 func TestDeleteUserIdMappingOfSupertokensUserId(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -88,10 +88,10 @@ func TestDeleteUserIdMappingOfSupertokensUserId(t *testing.T) {
 
 func TestDeleteUserIdMappingOfExternalUserId(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -123,10 +123,10 @@ func TestDeleteUserIdMappingOfExternalUserId(t *testing.T) {
 
 func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -181,10 +181,10 @@ func TestDeleteUserIdMappingOfAnyUsrId(t *testing.T) {
 
 func TestDeleteUserIdMappingWithMetadataAndWithAndWithoutForce(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)

@@ -29,9 +29,12 @@ import (
 )
 
 func TestWithDefaultConfigCallingDiscoveryConfigurationEndpointWorksAsExpected(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -42,10 +45,6 @@ func TestWithDefaultConfigCallingDiscoveryConfigurationEndpointWorksAsExpected(t
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -92,9 +91,12 @@ func TestWithDefaultConfigCallingDiscoveryConfigurationEndpointWorksAsExpected(t
 
 func TestWithAPIBasePathCallingDiscoveryConfigurationEndpointWorksAsExpected(t *testing.T) {
 	customAPIBasePath := "/"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -106,10 +108,6 @@ func TestWithAPIBasePathCallingDiscoveryConfigurationEndpointWorksAsExpected(t *
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -156,9 +154,12 @@ func TestWithAPIBasePathCallingDiscoveryConfigurationEndpointWorksAsExpected(t *
 
 func TestDiscoveryEndPointDoesNotWorkWhenDisabled(t *testing.T) {
 	customAPIBasePath := "/"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -177,10 +178,6 @@ func TestDiscoveryEndPointDoesNotWorkWhenDisabled(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
