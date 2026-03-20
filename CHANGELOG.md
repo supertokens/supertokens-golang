@@ -1,15 +1,21 @@
 # Changelog
-
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [unreleased]
 
-## [0.25.1] - 2024-10-02
+## [0.25.2] - 2026-03-20
+
+### Changed
+- Reuse HTTP client across requests for improved performance
+- Add HTTP client override support in querier for custom transport configuration
+### Fixed
+- Resolve go vet errors in session JWT parsing, dashboard struct tag, and thirdparty API handler
+- Fix recipe override not being applied for session revocation operations## [0.25.1] - 2024-10-02
 
 - Adds support for normalizing the connection URI's before returning them in dashboard GET response.
+
 
 ## [0.25.0] - 2024-09-25
 
@@ -55,6 +61,7 @@ for id, value := ranger formFields {
     }
 }
 ```
+
 
 ## [0.24.2] - 2024-09-03
 
@@ -192,7 +199,6 @@ func main() {
 }
 ```
 
-
 ## [0.22.1] - 2024-07-09
 
 ### Changes
@@ -206,6 +212,7 @@ func main() {
 -   The access token cookie expiry has been changed from 100 years to 1 year due to some browsers capping the maximum expiry at 400 days. No action is needed on your part.
 
 ## [0.21.0] - 2024-06-10
+
 - Adds caching per API based on user context.
 
 ## [0.20.0] - 2024-05-23
@@ -383,6 +390,7 @@ With this update, verifySession will return a 401 error if it detects multiple a
 - Make session required during signout.
 
 ## [0.17.5] - 2024-03-14
+
 - Adds a type uint64 to the `accessTokenCookiesExpiryDurationMillis` local variable in `recipe/session/utils.go`. It also removes the redundant `uint64` type forcing needed because of the untyped variable.
 - Fixes the passing of `tenantId` in `getAllSessionHandlesForUser` and `revokeAllSessionsForUser` based on `fetchAcrossAllTenants` and `revokeAcrossAllTenants` inputs respectively.
 - Updated fake email generation
@@ -1411,12 +1419,15 @@ session.Init(&sessmodels.TypeInput{
 ```
 
 ## [0.11.0] - 2023-04-28
+
 - Added missing arguments in `GetUsersNewestFirst` and `GetUsersOldestFirst`
 
 ## [0.10.8] - 2023-04-18
+
 - Email template for verify email updated 
 
 ## [0.10.7] - 2023-04-11
+
 - Changed email template to render correctly in outlook
 
 ## [0.10.6]
@@ -1432,11 +1443,13 @@ session.Init(&sessmodels.TypeInput{
 -   Adds a telemetry API to the dashboard recipe
 
 ## [0.10.3] - 2023-03-29
+
 -   Adds unit test for Apple callback form post
 -   Updates all example apps to also initialise dashboard recipe
 -   Adds login with gitlab (for single tenant only) and bitbucket
 
 ## [0.10.2] - 2023-02-24
+
 -   Adds APIs and logic to the dashboard recipe to enable email password based login
 
 ## [0.10.1] - 2023-02-06
@@ -1505,15 +1518,19 @@ func httpHandler(w http.ResponseWriter, r *http.Request,) {
 -   Updates user GET API for dashboard recipe
 
 ## [0.9.13] - 2022-12-26
+
 -   Adds optional `Username` to `SMTPSettings`, which can be used for SMTP login if username is different from `From.Email`.
 
 ## [0.9.12] - 2022-12-26
+
 -   Fixes `newPassword` validation in Dashboard API
 
 ## [0.9.11]
+
 -   Fixes panic issue with dashboard usersGet API
 
 ## [0.9.10]
+
 -   Fixes issue where if SendEmail is overridden with a different email, it will reset that email.
 
 ## [0.9.9] - 2022-11-24
@@ -1525,20 +1542,24 @@ func httpHandler(w http.ResponseWriter, r *http.Request,) {
 - Updates dashboard version to 0.2
 
 ## [0.9.8] - 2022-11-16
+
 - Fixes go fiber to handle handler chaining correctly with verifySession.
 - Added test to check JWT contains updated value when MergeIntoAccessTokenPayload is called.
 - Adds updating of session claims in email verification token generation API in case the session claims are outdated.
 
 ## [0.9.7] - 2022-10-20
+
 - Updated Frontend integration test server for angular tests
 
 ### Fixes
 - Fixes Apple secret key computation
 
 ## [0.9.6] - 2022-10-17
+
 - Updated google token endpoint
 
 ## [0.9.5] - 2022-10-14
+
 ### Fixes
 - Fixes crash in findRightProvider
 
@@ -1548,26 +1569,27 @@ func httpHandler(w http.ResponseWriter, r *http.Request,) {
 -   Added a 5 minute defaultMaxAge to UserRoleClaim, PermissionClaim and EmailVerificationClaim
 
 ## [0.9.4] - 2022-09-30
+
 ### Fixes
 - Using UnixNano instead of UnixMilli to support go version < 1.17
 
 ## [0.9.3] - 2022-09-29
+
 ### Fixes
 - Clears cookies before calling onUnauthorizedError handler if ClearCookies is nil or set to true
 - Email verification endpoints will now clear the session if called by a deleted/unknown user
 
 ## [0.9.2] - 2022-09-22
+
 ### Changed
 
 - Email verification endpoints will now clear the session if called by a deleted/unknown user
-
 
 ## [0.9.1] - 2022-09-20
 
 ### Adds:
 
 - Adds Dashboard recipe
-
 
 ## [0.9.0] - 2022-09-14
 
@@ -1749,14 +1771,13 @@ The UserRoles recipe now adds role and permission information into the access to
 - You can disable this behaviour by setting `SkipAddingRolesToAccessToken` and `SkipAddingPermissionsToAccessToken` to true in the recipe init.
 - Check how to use the new claims in the updated guide: https://supertokens.com/docs/userroles/protecting-routes
 
-
 ## [0.8.3] - 2022-07-30
+
 ### Added
 - Adds test to verify that session container uses overridden functions
 - Adds with-go-zero example: https://github.com/supertokens/supertokens-golang/issues/157
 - UserId Mapping functionality and compatibility with CDI 2.15
 - Adds `CreateUserIdMapping`, `GetUserIdMapping`, `DeleteUserIdMapping`, `UpdateOrDeleteUserIdMappingInfo` functions to supertokens package
-
 
 ## [0.8.2] - 2022-07-18
 
@@ -1795,13 +1816,16 @@ SignIn: func (..., userContext supertokens.UserContext) {
 ```
 
 ## [0.7.2] - 2022-06-29
+
 -   Adds unit tests for resend email & sms services for passwordless and thirdpartypasswordless recipes
 -   Adds User Roles recipe and compatibility with CDI 2.14
 
 ## [0.7.1] - 2022-06-27
+
 -   Fixes panic while returning empty result object with nil error in the API overrides. Related to https://github.com/supertokens/supertokens-golang/issues/107
 
 ## [0.7.0] - 2022-06-23
+
 ### Breaking change
 -   Renamed `SMTPServiceConfig` to `SMTPSettings`
 -   Changed type of `Secure` in `SMTPSettings` from `*bool` to `bool`
@@ -1832,6 +1856,7 @@ SignIn: func (..., userContext supertokens.UserContext) {
 - Changes `getEmailForUserIdForEmailVerification` function inside thirdpartypasswordless to take into account passwordless emails and return an empty string in case a passwordless email doesn't exist. This helps situations where the dev wants to customise the email verification functions in the thirdpartypasswordless recipe.
 
 ## [0.6.8] - 2022-06-17
+
 ### Added
 - `EmailDelivery` user config for Emailpassword, Thirdparty, ThirdpartyEmailpassword, Passwordless and ThirdpartyPasswordless recipes.
 - `SmsDelivery` user config for Passwordless and ThirdpartyPasswordless recipes.
@@ -1945,6 +1970,7 @@ supertokens.Init(supertokens.TypeInput{
 ```
 
 ## [0.6.7]
+
 - Fixes panic when call to thirdparty provider API returns a non 2xx status.
 
 ### Breaking change
@@ -1964,30 +1990,37 @@ supertokens.Init(supertokens.TypeInput{
 - If there is an error in the `errorHandler`, we no longer call `OnSuperTokensAPIError` in that, but instead, we return an error back.
 
 ## [0.6.6]
+
 - Fixes facebook login
 
 ## [0.6.5]
+
 - Fixes issue in reading request body in API override: https://github.com/supertokens/supertokens-golang/issues/116
 
 ## [0.6.4]
+
 - Fixes issue in writing custom response in API override with general error
 ### Added
 - Adds unit tests to thirdpartypasswordless recipe
 
 ## [0.6.3] - 2022-05-19
+
 ### Fixes
 - Fixes the function signature of the `GetUserByThirdPartyInfo` function in the `thirdpartypasswordless` recipe.
 
 ## [0.6.2] - 2022-05-18
+
 ### Fixes
 - Fixes issue in writing custom response in API Override
 
 ## [0.6.1] - 2022-05-17
+
 ### Fixes
 - https://github.com/supertokens/supertokens-golang/issues/102. Sending `preAuthSessionID` instead of `preAuthSessionId` to the core.
 - Fixes the error message in AuthorizationUrlAPI function in the `api` module of the thirdparty recipe in case when providers is nil
 
 ## [0.6.0] - 2022-05-13
+
 ### Breaking Change
 
 - Adds both with context and without context functions to thirdparty passwordless recipe, Like all other recipes. Where we expose both WithContext functions and without context functions, which are basically the same as WithContext ones with an emtpy map[string]interface{} passed as context
@@ -2000,10 +2033,12 @@ supertokens.Init(supertokens.TypeInput{
 - Fixes stopSt function in testing utils
 
 ## [0.5.9] - 2022-05-10
+
 ### Fixes
 - Fixes bug in the revokeCode function of the recipeimplementation in passwordless recipe 
 
 ## [0.5.8] - 2022-05-05
+
 ### Added
 - Adds Github Actions for testing and pre-commit hooks.
 - Adds more unit tests for thirdpary email password recipe
@@ -2015,6 +2050,7 @@ supertokens.Init(supertokens.TypeInput{
 - Third party sign in up API response correction.
 
 ## [0.5.7] - 2022-04-23
+
 - Adds functions to delete passwordless user info in recipes that have passwordless users.
 - Fixes bug in signinup helper function exposed by passwordless recipe
 
@@ -2023,6 +2059,7 @@ supertokens.Init(supertokens.TypeInput{
 - Adds UserMetadata recipe
 
 ## [0.5.5] - 2022-04-11
+
 ### Added 
 -   Adds functions for debug logging
 
@@ -2037,6 +2074,7 @@ supertokens.Init(supertokens.TypeInput{
 - Checks if discord returned email before setting it in the profile info obj.
 
 ## [0.5.2] - 2022-03-17
+
 - Adds thirdpartypasswordless recipe: https://github.com/supertokens/supertokens-core/issues/331
 
 ## [0.5.1] - 2022-02-07
@@ -2046,6 +2084,7 @@ supertokens.Init(supertokens.TypeInput{
 -   Adds example implementation with go fiber
 
 ## [0.5.0] - 2022-02-20
+
 ### Breaking Change
 
 -   Adds user context to all functions exposed to the user, and to API and Recipe interface functions. This is a non breaking change for User exposed function calls, but a breaking change if you are using the Recipe or APIs override feature
@@ -2067,6 +2106,7 @@ supertokens.Init(supertokens.TypeInput{
 -   Uses recipe interface inside session class so that any modification to those get reflected in the session class functions too.
 
 ## [0.4.2] - 2022-01-31
+
 - Adds ability to give a path for each of the hostnames in the connectionURI: https://github.com/supertokens/supertokens-node/issues/252
 - Adds workflow to verify if pr title follows conventional commits
 - Added userId as an optional property to the response of `recipe/user/password/reset` (Compatibility with CDI 2.12).
@@ -2080,8 +2120,8 @@ supertokens.Init(supertokens.TypeInput{
 
 -   Allows passing of custom user context everywhere: https://github.com/supertokens/supertokens-golang/issues/64
 
-
 ## [0.4.1] - 2022-01-27
+
 -   Fixes https://github.com/supertokens/supertokens-node/issues/244 - throws an error if a user tries to update email / password of a third party login user.
 -   Adds check to see if user has provided empty connectionInfo
 -   Adds fixes to solve casting of data in session-functions
@@ -2107,16 +2147,17 @@ supertokens.Init(supertokens.TypeInput{
 - Add DeleteUser function
 
 ## [0.3.2] - 2021-12-06
+
 ### Added
 -   The ability to enable JWT creation with session management, this allows easier integration with services that require JWT based authentication: https://github.com/supertokens/supertokens-core/issues/250
 
 ## [0.3.1] - 2021-12-06
+
 ### Changes
 - Upgrade `keyfunc` dependency to stable version.
 
 ### Fixes
 - Removes use of apiGatewayPath from apple's redirect URI since that is already there in the apiBasePath
-
 
 ## [0.3.0] - 2021-11-23
 
@@ -2200,3 +2241,4 @@ supertokens.Init(supertokens.TypeInput{
 
 ### Added
 - Initial version of the repo
+
