@@ -622,8 +622,12 @@ func ResetQuerierForTest() {
 	querierInitCalled = false
 }
 
+// Must be called after supertokens.Init(), which sets a default client. 
+// Swapping the client while requests are in-flight is not supported.
 func SetHTTPClient(client *http.Client) {
-	querierHTTPClient = client
+	if client != nil {
+		querierHTTPClient = client
+	}
 }
 
 func (q *Querier) SetApiVersionForTests(apiVersion string) {
