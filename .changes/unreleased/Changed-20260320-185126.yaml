@@ -1,3 +1,0 @@
-kind: Changed
-body: Add HTTP client override support in querier for custom transport configuration
-time: 2026-03-20T18:51:26.677453+01:00
