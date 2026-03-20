@@ -20,9 +20,12 @@ const exampleJWTForTest string = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiO
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionShouldDefaultToHeaderBasedSession(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -36,10 +39,6 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionShouldDefaultToHeaderB
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -62,9 +61,12 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionShouldDefaultToHeaderB
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithBadAuthModeHeaderShouldDefaultToHeaderBasedSession(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -78,10 +80,6 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithBadAuthModeHeaderS
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -105,9 +103,12 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithBadAuthModeHeaderS
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedAsHeader(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -121,10 +122,6 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -148,9 +145,12 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 
 func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedAsCookie(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -164,10 +164,6 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -192,9 +188,12 @@ func TestWithDefaultGetTokenTransferMethodCreateNewSessionWithAuthModeSpecifiedA
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIfMethodReturnsAny(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -211,10 +210,6 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -265,9 +260,12 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIfMethodReturnsHeader(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -284,10 +282,6 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -310,9 +304,12 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseHeaderIf
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearCookiesIfMethodReturnsHeader(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -329,10 +326,6 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearCookie
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -360,9 +353,12 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearCookie
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseCookieIfMethodReturnsCookie(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -379,10 +375,6 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseCookieIf
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -406,9 +398,12 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldUseCookieIf
 
 func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearHeaderIfMethodReturnsCookie(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -425,10 +420,6 @@ func TestWithGetTokenTransferMethodProvidedCreateNewSessionWithShouldClearHeader
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -486,9 +477,12 @@ func TestVerifySessionBehaviour(t *testing.T) {
 
 	for _, behaviour := range behaviourTable {
 		t.Run(fmt.Sprintf("behaviour: %v with valid token", behaviour), func(t *testing.T) {
+			BeforeEach()
+			connectionURI := unittesting.StartUpST("localhost", "8080")
+			defer AfterEach()
 			configValue := supertokens.TypeInput{
 				Supertokens: &supertokens.ConnectionInfo{
-					ConnectionURI: "http://localhost:8080",
+					ConnectionURI: connectionURI,
 				},
 				AppInfo: supertokens.AppInfo{
 					APIDomain:     "api.supertokens.io",
@@ -505,10 +499,6 @@ func TestVerifySessionBehaviour(t *testing.T) {
 					}),
 				},
 			}
-
-			BeforeEach()
-			unittesting.StartUpST("localhost", "8080")
-			defer AfterEach()
 
 			err := supertokens.Init(configValue)
 			if err != nil {
@@ -554,9 +544,14 @@ func TestVerifySessionBehaviour(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("behaviour: %v with expired token", behaviour), func(t *testing.T) {
+			BeforeEach()
+			connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+				"access_token_validity": 2,
+			})
+			defer AfterEach()
 			configValue := supertokens.TypeInput{
 				Supertokens: &supertokens.ConnectionInfo{
-					ConnectionURI: "http://localhost:8080",
+					ConnectionURI: connectionURI,
 				},
 				AppInfo: supertokens.AppInfo{
 					APIDomain:     "api.supertokens.io",
@@ -573,11 +568,6 @@ func TestVerifySessionBehaviour(t *testing.T) {
 					}),
 				},
 			}
-
-			BeforeEach()
-			unittesting.SetKeyValueInConfig("access_token_validity", "2")
-			unittesting.StartUpST("localhost", "8080")
-			defer AfterEach()
 
 			err := supertokens.Init(configValue)
 			if err != nil {
@@ -625,9 +615,12 @@ func TestVerifySessionBehaviour(t *testing.T) {
 
 func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsAny(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -644,10 +637,6 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsAny(
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -682,9 +671,12 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsAny(
 
 func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsHeader(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -701,10 +693,6 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsHead
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -739,9 +727,12 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseHeadersIfMethodReturnsHead
 
 func TestWithAccessTokenInBothHeaderAndCookieShouldUseCookieIfMethodReturnsCookie(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -761,10 +752,6 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseCookieIfMethodReturnsCooki
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -799,9 +786,12 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldUseCookieIfMethodReturnsCooki
 
 func TestWithAccessTokenInBothHeaderAndCookieShouldRejectRequestWithsIdRefreshToken(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -815,10 +805,6 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldRejectRequestWithsIdRefreshTo
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -859,9 +845,12 @@ func TestWithAccessTokenInBothHeaderAndCookieShouldRejectRequestWithsIdRefreshTo
 
 func TestWithNonSTAuthorizeHeaderShouldUseCookiesIfPresentAndMethodReturnsAny(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -878,10 +867,6 @@ func TestWithNonSTAuthorizeHeaderShouldUseCookiesIfPresentAndMethodReturnsAny(t 
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -919,9 +904,12 @@ func TestWithNonSTAuthorizeHeaderShouldUseCookiesIfPresentAndMethodReturnsAny(t 
 
 func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfMethodReturnsHeader(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -941,10 +929,6 @@ func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfMethodReturnsHead
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -982,9 +966,12 @@ func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfMethodReturnsHead
 
 func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfCookiesAreNotPresent(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1001,10 +988,6 @@ func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfCookiesAreNotPres
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1032,9 +1015,12 @@ func TestWithNonSTAuthorizeHeaderShouldRejectWithUnauthorisedIfCookiesAreNotPres
 
 func TestMergeIntoAccessTokenPayloadShouldUpdateCookiesIfSessionWasCookieBased(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1048,10 +1034,6 @@ func TestMergeIntoAccessTokenPayloadShouldUpdateCookiesIfSessionWasCookieBased(t
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1084,9 +1066,12 @@ func TestMergeIntoAccessTokenPayloadShouldUpdateCookiesIfSessionWasCookieBased(t
 
 func TestMergeIntoAccessTokenPayloadShouldAllowHeadersIfSessionWasHeaderBased(t *testing.T) {
 	viaToken := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1100,10 +1085,6 @@ func TestMergeIntoAccessTokenPayloadShouldAllowHeadersIfSessionWasHeaderBased(t 
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1161,9 +1142,12 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 
 	for _, behaviour := range behaviourTable {
 		t.Run(fmt.Sprintf("behaviour %v with valid token", behaviour), func(t *testing.T) {
+			BeforeEach()
+			connectionURI := unittesting.StartUpST("localhost", "8080")
+			defer AfterEach()
 			configValue := supertokens.TypeInput{
 				Supertokens: &supertokens.ConnectionInfo{
-					ConnectionURI: "http://localhost:8080",
+					ConnectionURI: connectionURI,
 				},
 				AppInfo: supertokens.AppInfo{
 					APIDomain:     "api.supertokens.io",
@@ -1180,10 +1164,6 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 					}),
 				},
 			}
-
-			BeforeEach()
-			unittesting.StartUpST("localhost", "8080")
-			defer AfterEach()
 
 			err := supertokens.Init(configValue)
 			if err != nil {
@@ -1269,9 +1249,12 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 		})
 
 		t.Run(fmt.Sprintf("behaviour %v with invalid token", behaviour), func(t *testing.T) {
+			BeforeEach()
+			connectionURI := unittesting.StartUpST("localhost", "8080")
+			defer AfterEach()
 			configValue := supertokens.TypeInput{
 				Supertokens: &supertokens.ConnectionInfo{
-					ConnectionURI: "http://localhost:8080",
+					ConnectionURI: connectionURI,
 				},
 				AppInfo: supertokens.AppInfo{
 					APIDomain:     "api.supertokens.io",
@@ -1288,10 +1271,6 @@ func TestRefreshTokenBehaviour(t *testing.T) {
 					}),
 				},
 			}
-
-			BeforeEach()
-			unittesting.StartUpST("localhost", "8080")
-			defer AfterEach()
 
 			err := supertokens.Init(configValue)
 			if err != nil {

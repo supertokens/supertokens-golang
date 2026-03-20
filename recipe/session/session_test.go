@@ -35,14 +35,14 @@ import (
 
 func TestMultipleSessionCookies(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	cfgVal := func(tokenTransferMethod sessmodels.TokenTransferMethod, olderCookieDomain *string) supertokens.TypeInput {
 		customAntiCsrfVal := "VIA_TOKEN"
 		return supertokens.TypeInput{
 			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
+				ConnectionURI: connectionURI,
 			},
 			AppInfo: supertokens.AppInfo{
 				AppName:       "SuperTokens",
@@ -170,16 +170,16 @@ func TestMultipleSessionCookies(t *testing.T) {
 
 func TestRefreshAPI(t *testing.T) {
 	BeforeEach()
-
-	unittesting.SetKeyValueInConfig("access_token_validity", "2")
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_validity": 2,
+	})
 	defer AfterEach()
 
 	cfgVal := func(tokenTransferMethod sessmodels.TokenTransferMethod, olderCookieDomain *string) supertokens.TypeInput {
 		customAntiCsrfVal := "VIA_TOKEN"
 		return supertokens.TypeInput{
 			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
+				ConnectionURI: connectionURI,
 			},
 			AppInfo: supertokens.AppInfo{
 				AppName:       "SuperTokens",
@@ -265,14 +265,14 @@ func TestRefreshAPI(t *testing.T) {
 
 func TestHeaderBasedAuthAndMultipleTokensInCookies(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	cfgVal := func(tokenTransferMethod sessmodels.TokenTransferMethod, olderCookieDomain *string) supertokens.TypeInput {
 		customAntiCsrfVal := "VIA_TOKEN"
 		return supertokens.TypeInput{
 			Supertokens: &supertokens.ConnectionInfo{
-				ConnectionURI: "http://localhost:8080",
+				ConnectionURI: connectionURI,
 			},
 			AppInfo: supertokens.AppInfo{
 				AppName:       "SuperTokens",
@@ -354,9 +354,12 @@ func TestHeaderBasedAuthAndMultipleTokensInCookies(t *testing.T) {
 
 func TestTokenTheftDetection(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -372,9 +375,6 @@ func TestTokenTheftDetection(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -444,9 +444,14 @@ func TestTokenTheftDetection(t *testing.T) {
 
 func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"api_keys": "shfo3h98308hOIHoei309saiho",
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 			APIKey:        "shfo3h98308hOIHoei309saiho",
 		},
 		AppInfo: supertokens.AppInfo{
@@ -463,10 +468,6 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("api_keys", "shfo3h98308hOIHoei309saiho")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -535,9 +536,12 @@ func TestTokenTheftDetectionWithAPIKey(t *testing.T) {
 
 func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -553,9 +557,6 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -598,9 +599,12 @@ func TestSessionVerificationWithoutAntiCsrfPresent(t *testing.T) {
 
 func TestRevokingOfSessions(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -616,9 +620,6 @@ func TestRevokingOfSessions(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -685,9 +686,12 @@ func TestRevokingOfSessions(t *testing.T) {
 
 func TestManipulatingSessionData(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -703,9 +707,6 @@ func TestManipulatingSessionData(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -766,9 +767,12 @@ func TestManipulatingSessionData(t *testing.T) {
 
 func TestNilValuesPassedForSessionData(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -784,9 +788,6 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -844,9 +845,12 @@ func TestNilValuesPassedForSessionData(t *testing.T) {
 
 func TestManipulatingJWTpayload(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -862,9 +866,6 @@ func TestManipulatingJWTpayload(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -941,9 +942,12 @@ func TestManipulatingJWTpayload(t *testing.T) {
 func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFine(t *testing.T) {
 	customAntiCsrfVal := "NONE"
 	True := true
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -960,9 +964,6 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1036,9 +1037,12 @@ func TestWhenAntiCsrfIsDisabledFromSTcoreNotHavingThatInInputToVerifySessionIsFi
 func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 	customAntiCsrfVal := "NONE"
 	customCookieSameSiteVal := "none"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1055,11 +1059,6 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 
 	assert.NoError(t, err)
@@ -1068,9 +1067,12 @@ func TestAntiCsrfDisabledAndSameSiteNoneDoesNotThrowAnError(t *testing.T) {
 func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 	customAntiCsrfVal := "NONE"
 	customCookieSameSiteVal := "lax"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1087,10 +1089,6 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	assert.NoError(t, err)
 }
@@ -1098,9 +1096,12 @@ func TestAntiCsrfDisabledAndSameSiteLaxDoesNotThrowAnError(t *testing.T) {
 func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 	customAntiCsrfVal := "NONE"
 	customCookieSameSiteVal := "strict"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1117,19 +1118,18 @@ func TestAntiCsrfDisabledAndSameSiteStrictDoesNotThrowAnError(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	assert.NoError(t, err)
 }
 
 func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1145,9 +1145,6 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1195,9 +1192,12 @@ func TestCustomUserIdIsReturnedCorrectly(t *testing.T) {
 
 func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1213,9 +1213,6 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1270,9 +1267,12 @@ func TestRevokedSessionThrowsErrorWhenCallingGetSessionBySessionHandle(t *testin
 func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 	sessionHandle := ""
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1288,9 +1288,6 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1326,9 +1323,12 @@ func TestSignoutWorksAfterSessionDeletedOnBackend(t *testing.T) {
 
 func TestSessionContainerOverride(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1361,9 +1361,6 @@ func TestSessionContainerOverride(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1381,9 +1378,12 @@ func TestSessionContainerOverride(t *testing.T) {
 }
 
 func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1394,9 +1394,6 @@ func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1438,9 +1435,12 @@ func TestGetSessionReturnsNilForJWTWithoutSessionClaims(t *testing.T) {
 }
 
 func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSessionRequiredFalse(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1451,9 +1451,6 @@ func TestGetSessionReturnsNilForRequestWithNoSessionWithCheckDatabaseTrueAndSess
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1500,11 +1497,13 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	var JWKCacheMaxAgeInSec uint64 = 2
 
-	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1517,19 +1516,24 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
+
+	// Capture log marker right before Init to avoid picking up app creation logs
+	time.Sleep(500 * time.Millisecond)
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
+	jwksLogPattern := "API called:"
+	jwksEndpointPattern := ".well-known/jwks.json"
+
 	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	var wellKnownCallLogs []string
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1555,7 +1559,7 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfterWaiting.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1582,9 +1586,14 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	JWKCacheMaxAgeInSec := uint64(2)
 
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_dynamic_signing_key_update_interval": 0.0004,
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1597,11 +1606,6 @@ func TestThatJWKSResultIsRefreshedProperly(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	// 0.004 = 2 seconds roughly
-	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0004")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1651,11 +1655,15 @@ exist in the keyfunc library's cache
 - Verify that no call is made
 */
 func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
-	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_dynamic_signing_key_update_interval": "0.0014",
+	})
+	defer AfterEach()
 
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1666,20 +1674,24 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
+
+	// Capture log marker right before Init to avoid picking up app creation logs
+	time.Sleep(500 * time.Millisecond)
+	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
+
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
+	jwksLogPattern := "API called:"
+	jwksEndpointPattern := ".well-known/jwks.json"
+
 	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
 	var wellKnownCallLogs []string
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1693,7 +1705,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	}
 
 	tokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1703,7 +1715,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1728,7 +1740,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1742,7 +1754,7 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	wellKnownCallLogs = []string{}
 
 	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, "API called: /.well-known/jwks.json. Method: GET") {
+		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
 			wellKnownCallLogs = append(wellKnownCallLogs, line)
 		}
 	}
@@ -1756,6 +1768,9 @@ This test makes sure that initialising SuperTokens and Session with an invalid c
 result in an error during startup
 */
 func TestThatInvalidConnectionUriDoesNotThrowDuringInitForJWKS(t *testing.T) {
+	BeforeEach()
+	unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: "https://try.supertokens.io:8080",
@@ -1770,8 +1785,9 @@ func TestThatInvalidConnectionUriDoesNotThrowDuringInitForJWKS(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
-	unittesting.StartUpST("localhost", "8080")
+	unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_dynamic_signing_key_update_interval": "0.0014",
+	})
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
@@ -1798,9 +1814,12 @@ func TestJWKSCacheLogic(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	var JWKCacheMaxAgeInSec uint64 = 2
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1813,9 +1832,6 @@ func TestJWKSCacheLogic(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1832,7 +1848,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 	assert.Nil(t, jwksCache)
 
 	tokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1842,7 +1858,7 @@ func TestJWKSCacheLogic(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 	if err != nil {
 		t.Error(err.Error())
 	}
@@ -1873,8 +1889,9 @@ func TestThatCombinedJWKSThrowsForInvalidConnectionUri(t *testing.T) {
 		},
 	}
 	BeforeEach()
-	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
-	unittesting.StartUpST("localhost", "8080")
+	unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_dynamic_signing_key_update_interval": "0.0014",
+	})
 	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
@@ -1898,9 +1915,12 @@ error as long as one of the provided urls return a valid response
 - verify that there is a response and that there are no errors
 */
 func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080;example.com:8080;localhost:90",
+			ConnectionURI: connectionURI + ";example.com:8080;localhost:90",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1911,9 +1931,6 @@ func TestThatGetCombinedJWKSDoesNotThrowIfAtleastOneCoreURLIsValid(t *testing.T)
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1944,9 +1961,12 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	var JWKCacheMaxAgeInSec uint64 = 2
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1959,9 +1979,6 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1976,7 +1993,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 	assert.Nil(t, jwksCache)
 
 	tokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1984,7 +2001,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 
 	assert.Equal(t, <-returnedFromCache, false)
 
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -1994,7 +2011,7 @@ func TestThatJWKSReturnsFromCacheCorrectly(t *testing.T) {
 
 	time.Sleep(3 * time.Second)
 
-	session, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
+	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
 	if err != nil {
 		t.Error(err.Error())
@@ -2015,9 +2032,12 @@ This test uses multiple hosts with only the last one being valid to make sure al
 - Make sure that the SDK tried fetching for all URLs (since only the last one would return a valid keyset)
 */
 func TestThatTheSDKTriesFetchingJWKSForAllCoreHosts(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "example.com;localhost:90;http://localhost:8080",
+			ConnectionURI: "example.com;localhost:90;" + connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2028,9 +2048,6 @@ func TestThatTheSDKTriesFetchingJWKSForAllCoreHosts(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2056,9 +2073,12 @@ This test makes sure that the SDK stop fetching JWKS from multiple cores as soon
 - Verify that two urls were used to fetch and that the 3rd one was never used
 */
 func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "example.com;http://localhost:8080;localhost:90",
+			ConnectionURI: "example.com;" + connectionURI + ";localhost:90",
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2069,9 +2089,6 @@ func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) 
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2087,13 +2104,16 @@ func TestThatTheSDKFetchesJWKSFromAllCoreHostsUntilAValidResponse(t *testing.T) 
 
 	assert.Equal(t, len(urlsAttemptedForJWKSFetch), 2)
 	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[0], "example.com"))
-	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], "http://localhost:8080"))
+	assert.True(t, strings.Contains(urlsAttemptedForJWKSFetch[1], connectionURI))
 }
 
 func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2104,9 +2124,6 @@ func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2138,9 +2155,12 @@ func TestSessionVerificationOfJWTBasedOnSessionPayload(t *testing.T) {
 }
 
 func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2151,9 +2171,6 @@ func TestSessionVerificationOfJWTBasedOnSessionPayloadWithCheckDatabase(t *testi
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2209,9 +2226,14 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	JWKRefreshRateLimit = 100
 	var JWKCacheMaxAgeInSec uint64 = 2
 
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_dynamic_signing_key_update_interval": "0.0014",
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2224,10 +2246,6 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2244,9 +2262,7 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 	}
 	<-returnedFromCache // this value must be ignored
 
-	for _, k := range jwks.KIDs() {
-		keys = append(keys, k)
-	}
+	keys = append(keys, jwks.KIDs()...)
 
 	go func() {
 		time.Sleep(11 * time.Second)
@@ -2300,9 +2316,14 @@ func TestThatLockingForJWKSCacheWorksFine(t *testing.T) {
 
 func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t *testing.T) {
 	False := false
+	BeforeEach()
+	connectionURI := unittesting.CreateCoreApp(map[string]interface{}{
+		"access_token_dynamic_signing_key_update_interval": "0.0014",
+	})
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2315,11 +2336,6 @@ func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t 
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.SetKeyValueInConfig("access_token_dynamic_signing_key_update_interval", "0.0014")
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2331,7 +2347,7 @@ func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t 
 	True := true
 	configValue = supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -2350,15 +2366,18 @@ func TestThatGetSessionThrowsWIthDynamicKeysIfSessionWasCreatedWithStaticKeys(t 
 	}
 
 	sessionTokens := session.GetAllSessionTokensDangerously()
-	session, err = GetSessionWithoutRequestResponse(sessionTokens.AccessToken, sessionTokens.AntiCsrfToken, nil)
+	_, err = GetSessionWithoutRequestResponse(sessionTokens.AccessToken, sessionTokens.AntiCsrfToken, nil)
 	assert.Error(t, err)
 	assert.Equal(t, err.Error(), "The access token doesn't match the useDynamicAccessTokenSigningKey setting")
 }
 
 func TestThatRevokedAccessTokenThrowsUnauthorisedErrorWhenRegenerateTokenIsCalled(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2369,11 +2388,6 @@ func TestThatRevokedAccessTokenThrowsUnauthorisedErrorWhenRegenerateTokenIsCalle
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

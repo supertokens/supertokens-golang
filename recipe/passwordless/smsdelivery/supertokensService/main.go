@@ -19,7 +19,6 @@ package supertokensService
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
@@ -83,7 +82,7 @@ func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface 
 				supertokens.LogDebugMessage(fmt.Sprintf("Error response: %s", string(body)))
 			}
 
-			err = errors.New(fmt.Sprintf("Error sending SMS. API returned %d status.", resp.StatusCode))
+			_ = fmt.Errorf("Error sending SMS. API returned %d status.", resp.StatusCode)
 		}
 
 		supertokens.LogDebugMessage("Logging the input below:")
@@ -95,7 +94,7 @@ func MakeSupertokensSMSService(apiKey string) *smsdelivery.SmsDeliveryInterface 
 		if input.PasswordlessLogin != nil {
 			return sendPasswordlessLoginSms(*input.PasswordlessLogin, userContext)
 		} else {
-			return errors.New("should never come here")
+			return fmt.Errorf("should never come here")
 		}
 	}
 

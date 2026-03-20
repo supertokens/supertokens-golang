@@ -25,12 +25,12 @@ import (
 
 func TestCreateRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -54,12 +54,12 @@ func TestCreateRole(t *testing.T) {
 
 func TestCreateRoleTwice(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -88,12 +88,12 @@ func TestCreateRoleTwice(t *testing.T) {
 
 func TestCreateRoleWithPermissions(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -122,12 +122,12 @@ func TestCreateRoleWithPermissions(t *testing.T) {
 
 func TestAddPermissionToRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -163,12 +163,12 @@ func TestAddPermissionToRole(t *testing.T) {
 
 func TestDuplicatePermission(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -204,12 +204,12 @@ func TestDuplicatePermission(t *testing.T) {
 
 func TestPermissionsOfUnknownRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -233,12 +233,12 @@ func TestPermissionsOfUnknownRole(t *testing.T) {
 
 func TestGetRolesThatHavePermission(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -274,12 +274,12 @@ func TestGetRolesThatHavePermission(t *testing.T) {
 
 func TestGetRolesThatHaveUnknownPermission(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -312,12 +312,12 @@ func TestGetRolesThatHaveUnknownPermission(t *testing.T) {
 
 func TestDeletePermissionFromRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -360,12 +360,12 @@ func TestDeletePermissionFromRole(t *testing.T) {
 
 func TestDeletePermissionFromUnknownRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",

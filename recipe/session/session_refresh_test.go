@@ -14,9 +14,12 @@ import (
 
 func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -50,10 +53,6 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -98,9 +97,12 @@ func TestRevokingSessionDuringRefreshWithRevokeSession(t *testing.T) {
 
 func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -137,10 +139,6 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -185,9 +183,12 @@ func TestRevokingSessionDuringRefreshWithRevokeSessionAndSend401(t *testing.T) {
 
 func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -219,10 +220,6 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -267,9 +264,12 @@ func TestRevokingSessionDuringRefreshWithThrowingUnauthorizedError(t *testing.T)
 
 func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 	customAntiCsrfVal := "VIA_TOKEN"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -302,10 +302,6 @@ func TestRevokingSessionDuringRefreshFailsIfJustSending401(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

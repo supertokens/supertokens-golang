@@ -7,12 +7,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-type signInPostResponse struct {
-	Status    string `json:"status"`
-	SessionId string `json:"sessionId,omitempty"`
-	Message   string `json:"message,omitempty"`
-}
-
 type signInRequestBody struct {
 	Email    *string `json:"email"`
 	Password *string `json:"password"`

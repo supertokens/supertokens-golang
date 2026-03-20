@@ -645,43 +645,6 @@ func customAuth0Provider() tpmodels.ProviderInput {
 	return providerInput
 }
 
-func getAuth0AuthRequest(authHeader string) (interface{}, error) {
-	url := "https://" + os.Getenv("AUTH0_DOMAIN") + "/userinfo"
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return nil, err
-	}
-	req.Header.Add("Authorization", authHeader)
-	return doGetRequest(req)
-}
-
-func doGetRequest(req *http.Request) (interface{}, error) {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		return nil, err
-	}
-	body, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	var result interface{}
-	err = json.Unmarshal(body, &result)
-	if err != nil {
-		return nil, err
-	}
-	return result, nil
-}
-
-type auth0GetProfileInfoInput struct {
-	AccessToken  string `json:"access_token"`
-	RefreshToken string `json:"refresh_token"`
-	IDToken      string `json:"id_token"`
-	TokenType    string `json:"token_type"`
-}
-
 func corsMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(response http.ResponseWriter, r *http.Request) {
 		response.Header().Set("Access-Control-Allow-Origin", "http://localhost:"+webPort)

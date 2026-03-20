@@ -20,9 +20,12 @@ import (
 )
 
 func TestShouldCreateAV4Token(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -33,9 +36,6 @@ func TestShouldCreateAV4Token(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -82,9 +82,12 @@ func TestShouldCreateAV4Token(t *testing.T) {
 
 func TestShouldCreateV4TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 	useDynamicKey := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -97,9 +100,6 @@ func TestShouldCreateV4TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -145,9 +145,12 @@ func TestShouldCreateV4TokenSignedByStaticKeyIfSetInConfig(t *testing.T) {
 }
 
 func TestShouldThrowErrorWhenUsingProtectedProps(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -158,9 +161,6 @@ func TestShouldThrowErrorWhenUsingProtectedProps(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -198,9 +198,12 @@ func TestShouldThrowErrorWhenUsingProtectedProps(t *testing.T) {
 }
 
 func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -211,9 +214,6 @@ func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) 
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -328,9 +328,12 @@ func TestMergeIntoATShouldHelpMigratingV2TokenUsingProtectedProps(t *testing.T) 
 }
 
 func TestShouldHelpMigratingV2TokenUsingProtectedPropsWhenCalledUsingSessionHandle(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -341,9 +344,6 @@ func TestShouldHelpMigratingV2TokenUsingProtectedPropsWhenCalledUsingSessionHand
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -434,9 +434,12 @@ func TestShouldHelpMigratingV2TokenUsingProtectedPropsWhenCalledUsingSessionHand
 }
 
 func TestVerifyShouldValidateV2Tokens(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -447,9 +450,6 @@ func TestVerifyShouldValidateV2Tokens(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -521,9 +521,12 @@ func TestVerifyShouldValidateV2Tokens(t *testing.T) {
 }
 
 func TestVerifyShouldValidateV2TokensWithCheckDatabaseEnabled(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -534,9 +537,6 @@ func TestVerifyShouldValidateV2TokensWithCheckDatabaseEnabled(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -628,9 +628,12 @@ func TestVerifyShouldValidateV2TokensWithCheckDatabaseEnabled(t *testing.T) {
 }
 
 func TestVerifyShouldValidateV3TokensWithCheckDatabaseEnabled(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -641,9 +644,6 @@ func TestVerifyShouldValidateV3TokensWithCheckDatabaseEnabled(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -704,9 +704,12 @@ func TestVerifyShouldValidateV3TokensWithCheckDatabaseEnabled(t *testing.T) {
 
 func TestVerifyShouldNotValidateTokenSignedByStaticKeyIfNotSetInConfig(t *testing.T) {
 	useDynamicKey := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -719,9 +722,6 @@ func TestVerifyShouldNotValidateTokenSignedByStaticKeyIfNotSetInConfig(t *testin
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -787,7 +787,7 @@ func TestVerifyShouldNotValidateTokenSignedByStaticKeyIfNotSetInConfig(t *testin
 	useDynamicKey = true
 	configValue = supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -854,9 +854,12 @@ func TestVerifyShouldNotValidateTokenSignedByStaticKeyIfNotSetInConfig(t *testin
 }
 
 func TestShouldRefreshLegacySessionsToNewVersion(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -867,9 +870,6 @@ func TestShouldRefreshLegacySessionsToNewVersion(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -932,9 +932,12 @@ func TestShouldRefreshLegacySessionsToNewVersion(t *testing.T) {
 }
 
 func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -945,9 +948,6 @@ func TestShouldThrowWhenRefreshInLegacySessionsWithProtectedProp(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

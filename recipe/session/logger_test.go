@@ -25,9 +25,12 @@ func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 
 	supertokens.Logger = log.New(&buf, "test", 0)
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -39,11 +42,6 @@ func TestLogDebugMessageWhenDebugTrue(t *testing.T) {
 		},
 		Debug: true,
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
 	defer resetLogger()
 
 	err := supertokens.Init(configValue)
@@ -62,9 +60,12 @@ func TestLogDebugMessageWhenDebugFalse(t *testing.T) {
 
 	supertokens.Logger = log.New(&buf, "test", 0)
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -76,11 +77,6 @@ func TestLogDebugMessageWhenDebugFalse(t *testing.T) {
 		},
 		Debug: false,
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
 	defer resetLogger()
 
 	err := supertokens.Init(configValue)
@@ -99,9 +95,12 @@ func TestLogDebugMessageWhenDebugNotSet(t *testing.T) {
 
 	supertokens.Logger = log.New(&buf, "test", 0)
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -112,11 +111,6 @@ func TestLogDebugMessageWhenDebugNotSet(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
 	defer resetLogger()
 
 	err := supertokens.Init(configValue)
@@ -136,9 +130,12 @@ func TestLogDebugMessageWithEnvVar(t *testing.T) {
 	supertokens.Logger = log.New(&buf, "test", 0)
 	os.Setenv("SUPERTOKENS_DEBUG", "1")
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -149,11 +146,6 @@ func TestLogDebugMessageWithEnvVar(t *testing.T) {
 			Init(nil),
 		},
 	}
-	BeforeEach()
-
-	unittesting.StartUpST("localhost", "8080")
-
-	defer AfterEach()
 	defer resetLogger()
 
 	err := supertokens.Init(configValue)

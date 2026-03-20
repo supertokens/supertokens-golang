@@ -150,7 +150,7 @@ func newSessionContainer(config sessmodels.TypeNormalisedInput, session *Session
 	sessionContainer.MergeIntoAccessTokenPayloadWithContext = func(accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) error {
 		accessTokenPayload := sessionContainer.GetAccessTokenPayloadWithContext(userContext)
 
-		for k, _ := range accessTokenPayload {
+		for k := range accessTokenPayload {
 			if supertokens.DoesSliceContainString(k, protectedProps) {
 				delete(accessTokenPayload, k)
 			}

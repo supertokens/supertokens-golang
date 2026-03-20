@@ -43,7 +43,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	signInUpPOST := func(provider *tpmodels.TypeProvider, input tpmodels.TypeSignInUpInput, tenantId string, options tpmodels.APIOptions, userContext supertokens.UserContext) (tpmodels.SignInUpPOSTResponse, error) {
-		var oAuthTokens map[string]interface{} = nil
+		var oAuthTokens map[string]interface{}
 		var err error
 
 		if input.RedirectURIInfo != nil {

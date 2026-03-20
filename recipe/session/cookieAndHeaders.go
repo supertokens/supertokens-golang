@@ -45,9 +45,6 @@ const (
 
 	frontTokenHeaderKey = "front-token"
 
-	frontendSDKNameHeaderKey    = "supertokens-sdk-name"
-	frontendSDKVersionHeaderKey = "supertokens-sdk-version"
-
 	authModeHeaderKey = "st-auth-mode"
 )
 

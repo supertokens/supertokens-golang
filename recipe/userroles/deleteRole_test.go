@@ -25,12 +25,12 @@ import (
 
 func TestCreateAssignAndDeleteRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",
@@ -92,12 +92,12 @@ func TestCreateAssignAndDeleteRole(t *testing.T) {
 
 func TestDeleteUnknownRole(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
 	supertokens.Init(supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "Supertokens Demo",

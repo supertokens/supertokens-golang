@@ -103,11 +103,9 @@ func supertokensInit(config TypeInput) error {
 		} else {
 			return errors.New("please provide 'ConnectionURI' value. If you do not want to provide a connection URI, then set config.Supertokens to nil")
 		}
-	} else {
-		// TODO: Add tests for init without supertokens core.
 	}
 
-	if config.RecipeList == nil || len(config.RecipeList) == 0 {
+	if len(config.RecipeList) == 0 {
 		return errors.New("please provide at least one recipe to the supertokens.init function call")
 	}
 

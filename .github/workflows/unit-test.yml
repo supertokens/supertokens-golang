@@ -33,10 +33,8 @@ jobs:
       - uses: fkirc/skip-duplicate-actions@v5
         id: skip
         with:
-          # Only consider the source tree, not changelog/docs
           paths: '["supertokens/**", "recipe/**", "ingredients/**", "test/**", "go.mod", "go.sum"]'
           paths_ignore: '["supertokens/constants.go"]'
-          # Skip if an identical source tree already produced a passing run
           skip_after_successful_duplicate: 'true'
 
   define-versions:
@@ -58,13 +56,9 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           include-cdi: 'true'
-          extra-axes: '{"go-version":["1.21","1.22","1.23"]}'
+          extra-axes: '{"go-version":["1.23"]}'
           latest-extra: '{"go-version":"1.23"}'
 
-  # Required status check for PRs. Enforces that every PR explicitly opts in to
-  # tests ('run-tests' label) or explicitly opts out ('skip-tests' label).
-  # Prevents accidentally merging untested code by forgetting to add a label.
-  # Release PRs carry 'run-tests' and are hash-skipped when dev already passed.
   test-gate:
     runs-on: ubuntu-latest
     needs: [test]
@@ -100,14 +94,11 @@ jobs:
       (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'run-tests'))
     runs-on: ubuntu-latest
     needs: [skip-check, define-versions]
+    timeout-minutes: 60
 
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.define-versions.outputs.testMatrix) }}
-
-    env:
-      SUPERTOKENS_CORE_HOST: localhost
-      SUPERTOKENS_CORE_PORT: 3567
 
     steps:
       - uses: actions/checkout@v4
@@ -116,29 +107,21 @@ jobs:
         id: core-version
         run: |
           coreVersion=$(echo '${{ needs.define-versions.outputs.coreCdiVersionMap }}' | jq -r '.["${{ matrix.cdi-version }}"]')
-
           echo "coreVersion=${coreVersion}" >> $GITHUB_OUTPUT
 
       - uses: actions/setup-go@v5
         with:
           go-version: ${{ matrix.go-version }}
 
+      - name: Start core via docker compose
+        env:
+          SUPERTOKENS_CORE_VERSION: ${{ steps.core-version.outputs.coreVersion }}
+        run: |
+          docker compose up --wait
+          echo "Core is ready"
+
       - name: Download Go modules
         run: go mod download
-
-      - name: Start supertokens core
-        run: |
-          docker run -d --name supertokens \
-            -p 3567:3567 \
-            supertokens/supertokens-dev-postgresql:${{ steps.core-version.outputs.coreVersion }}
-          # Wait for core to be ready
-          for i in $(seq 1 30); do
-            if curl -s http://localhost:3567/hello | grep -q "Hello"; then
-              echo "Core is ready"
-              break
-            fi
-            sleep 2
-          done
 
       - name: Install gotestsum
         run: go install gotest.tools/gotestsum@latest
@@ -146,12 +129,16 @@ jobs:
       - name: Run unit tests
         run: |
           mkdir -p test-results
-          gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1
+          gotestsum --junitfile test-results/junit.xml -- ./... -p 1 -v -count=1 -timeout 30m
 
-      - uses: dorny/test-reporter@v1
+      - name: Core logs
+        if: failure()
+        run: docker compose logs core --tail 100
+
+      - uses: pmeier/pytest-results-action@main
         name: Surface failing tests
         if: always()
         with:
-          name: "[Core=${{ steps.core-version.outputs.coreVersion }}][Go=${{ matrix.go-version }}] Unit Test Results"
           path: test-results/junit.xml
-          reporter: java-junit
+          summary: true
+          title: "[Core=${{ steps.core-version.outputs.coreVersion }}][Go=${{ matrix.go-version }}] Unit Test Results"

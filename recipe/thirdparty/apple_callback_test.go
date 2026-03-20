@@ -23,7 +23,7 @@ func TestAppleRedirectFormPost(t *testing.T) {
 	// FIXME
 	// configValue := supertokens.TypeInput{
 	// 	Supertokens: &supertokens.ConnectionInfo{
-	// 		ConnectionURI: "http://localhost:8080",
+	// 		ConnectionURI: connectionURI,
 	// 	},
 	// 	AppInfo: supertokens.AppInfo{
 	// 		APIDomain:     "api.supertokens.io",

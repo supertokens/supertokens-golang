@@ -22,7 +22,6 @@ import (
 	"strconv"
 
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
-
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"

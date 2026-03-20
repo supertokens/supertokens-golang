@@ -2859,8 +2859,6 @@ func getPasswordlessLoginEmailHTML(appName string, codeLifetime uint64, urlWithL
 		emailBody = magicLinkLoginTemplate
 	} else if userInputCode != nil {
 		emailBody = otpLoginTemplate
-	} else {
-		// Should never come here
 	}
 
 	humanisedCodeLifetime := supertokens.HumaniseMilliseconds(codeLifetime)

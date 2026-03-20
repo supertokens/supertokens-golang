@@ -29,9 +29,12 @@ import (
 )
 
 func TestOverridingOpenIDfuntion(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -59,10 +62,6 @@ func TestOverridingOpenIDfuntion(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -108,9 +107,12 @@ func TestOverridingOpenIDfuntion(t *testing.T) {
 }
 
 func TestOverridingAPIS(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -138,10 +140,6 @@ func TestOverridingAPIS(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

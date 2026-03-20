@@ -25,9 +25,12 @@ import (
 )
 
 func TestDefaultConfigSetsValuesCorrectlyForJWTRecipe(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -38,10 +41,6 @@ func TestDefaultConfigSetsValuesCorrectlyForJWTRecipe(t *testing.T) {
 			Init(nil),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -70,9 +69,12 @@ func TestDefaultConfigSetsValuesCorrectlyForJWTRecipe(t *testing.T) {
 
 func TestConfigSetsValueCorrectlyForJWTrecipeWhenJWTValidityisSet(t *testing.T) {
 	customValidity := uint64(24 * 60 * 60) // 24 hours
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -85,10 +87,6 @@ func TestConfigSetsValueCorrectlyForJWTrecipeWhenJWTValidityisSet(t *testing.T) 
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

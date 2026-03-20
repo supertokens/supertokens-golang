@@ -9,11 +9,11 @@ import (
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
-func initForUserIdMappingTest(t *testing.T) {
+func initForUserIdMappingTest(t *testing.T, connectionURI string) {
 
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -45,10 +45,10 @@ func initForUserIdMappingTest(t *testing.T) {
 
 func TestCreateUserIdMappingUsingEmail(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
