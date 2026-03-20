@@ -55,8 +55,6 @@ func getPasswordlessLoginSmsBody(appName string, codeLifetime uint64, urlWithLin
 		smsBody = magicLinkLoginTemplate
 	} else if userInputCode != nil {
 		smsBody = otpLoginTemplate
-	} else {
-		// Should never come here
 	}
 
 	humanisedCodeLifetime := supertokens.HumaniseMilliseconds(codeLifetime)

@@ -32,15 +32,13 @@ func resetAll() {
 }
 
 func BeforeEach() {
-	unittesting.KillAllST()
+	unittesting.CleanupAllCoreApps()
 	resetAll()
-	unittesting.SetUpST()
 }
 
 func AfterEach() {
-	unittesting.KillAllST()
+	unittesting.CleanupAllCoreApps()
 	resetAll()
-	unittesting.CleanST()
 }
 
 type PostDataForCustomProvider struct {
@@ -52,10 +50,10 @@ type PostDataForCustomProvider struct {
 	OAuthTokens map[string]interface{} `json:"oAuthTokens,omitempty"`
 }
 
-func supertokensInitForTest(t *testing.T, recipes ...supertokens.Recipe) *httptest.Server {
+func supertokensInitForTest(t *testing.T, connectionURI string, recipes ...supertokens.Recipe) *httptest.Server {
 	config := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",

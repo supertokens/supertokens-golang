@@ -10,10 +10,10 @@ import (
 
 func TestUpdateUserIdMappingForUnknownUserId(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -50,10 +50,10 @@ func TestUpdateUserIdMappingForUnknownUserId(t *testing.T) {
 
 func TestUpdateInfoInUserIdMapping(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -132,10 +132,10 @@ func TestUpdateInfoInUserIdMapping(t *testing.T) {
 
 func TestDeleteInfoInUserIdMapping(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)

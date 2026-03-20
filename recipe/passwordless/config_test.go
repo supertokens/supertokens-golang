@@ -41,9 +41,12 @@ func TestForThatForCreateAndCustomEmailIfErrorIsThrownTheStatusInTheResponseShou
 		return errors.New("test message")
 	}
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -69,9 +72,6 @@ func TestForThatForCreateAndCustomEmailIfErrorIsThrownTheStatusInTheResponseShou
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -117,9 +117,12 @@ func TestWithCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndMagicLinkAndEma
 		}
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -145,9 +148,6 @@ func TestWithCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndMagicLinkAndEma
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -207,9 +207,12 @@ func TestCreateAndSendCustomEmailWithFlowTypeMagicLinkAndEmailContactMethod(t *t
 		}
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -235,9 +238,6 @@ func TestCreateAndSendCustomEmailWithFlowTypeMagicLinkAndEmailContactMethod(t *t
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -298,9 +298,12 @@ func TestCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndEmailContactMethod(
 		return nil
 
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -326,9 +329,6 @@ func TestCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndEmailContactMethod(
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -382,9 +382,12 @@ func TestCreateAndSendCustomEmailWithFlowTypeUserInputCodeAndEmailContactMethod(
 
 func TestValidateEmailAdressThrowsGenericErrorInCaseOfReturningAString(t *testing.T) {
 	isValidateEmailAddressCalled := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -410,9 +413,6 @@ func TestValidateEmailAdressThrowsGenericErrorInCaseOfReturningAString(t *testin
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -467,9 +467,12 @@ func TestValidateEmailAdressThrowsGenericErrorInCaseOfReturningAString(t *testin
 
 func TestIfValidateEmailAdressIsCalledWithContactMethod(t *testing.T) {
 	isValidateEmailAddressCalled := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -494,9 +497,6 @@ func TestIfValidateEmailAdressIsCalledWithContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -554,9 +554,12 @@ func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldReturnA500Error(t 
 		isUserInputCodeAndUrlWithLinkCodeValid = true
 		return errors.New("test message")
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -582,9 +585,6 @@ func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldReturnA500Error(t 
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -631,9 +631,12 @@ func TestCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndMagicLinkAndPhone
 		return nil
 	}
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -659,9 +662,6 @@ func TestCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndMagicLinkAndPhone
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -714,9 +714,12 @@ func TestCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndMagicLinkAndPhone
 }
 
 func TestMinimumConfigWithEmailOrPhoneContactMethod(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -737,9 +740,6 @@ func TestMinimumConfigWithEmailOrPhoneContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -766,9 +766,12 @@ func TestAddingCustomValidatorsForPhoneAndEmailWithEmailOrPhoneContactMethod(t *
 	isValidateEmailAddressCalled := false
 	isValidatePhoneNumberCalled := false
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -797,9 +800,6 @@ func TestAddingCustomValidatorsForPhoneAndEmailWithEmailOrPhoneContactMethod(t *
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -889,9 +889,12 @@ func TestCustomFunctionToSendEmailWithEmailOrPhoneContactMethod(t *testing.T) {
 		isCreateAndSendCustomEmailCalled = true
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -917,9 +920,6 @@ func TestCustomFunctionToSendEmailWithEmailOrPhoneContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -980,9 +980,12 @@ func TestCustomFunctionToSendTextSMSWithEmailOrPhoneContactMethod(t *testing.T) 
 		return nil
 	}
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1008,9 +1011,6 @@ func TestCustomFunctionToSendTextSMSWithEmailOrPhoneContactMethod(t *testing.T) 
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1064,9 +1064,12 @@ func TestCustomFunctionToSendTextSMSWithEmailOrPhoneContactMethod(t *testing.T) 
 }
 
 func TestMinimumConfigWithPhoneContactMethod(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1087,9 +1090,6 @@ func TestMinimumConfigWithPhoneContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1115,9 +1115,12 @@ func TestMinimumConfigWithPhoneContactMethod(t *testing.T) {
 
 func TestIfValidatePhoneNumberIsCalledWithPhoneContactMethod(t *testing.T) {
 	isValidatePhoneNumberCalled := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1142,9 +1145,6 @@ func TestIfValidatePhoneNumberIsCalledWithPhoneContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1198,9 +1198,12 @@ func TestIfValidatePhoneNumberIsCalledWithPhoneContactMethod(t *testing.T) {
 
 func TestErrorMessageWithValidatePhoneNumberWithPhoneContactMethod(t *testing.T) {
 	isValidatePhoneNumberCalled := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1226,9 +1229,6 @@ func TestErrorMessageWithValidatePhoneNumberWithPhoneContactMethod(t *testing.T)
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1292,9 +1292,12 @@ func TestCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndPhoneContactNumbe
 		return nil
 
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1320,9 +1323,6 @@ func TestCreateAndSendCustomMessageWithFlowTypeUserInputCodeAndPhoneContactNumbe
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1383,9 +1383,12 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeMagicLinkAndPhoneContactMetho
 		}
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1411,9 +1414,6 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeMagicLinkAndPhoneContactMetho
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1473,9 +1473,12 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeUserInputCodeAndMagicLinkAndP
 		}
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1501,9 +1504,6 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeUserInputCodeAndMagicLinkAndP
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1561,9 +1561,12 @@ func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainA500Error(t
 		isCreateAndSendCustomTextMessageCalled = true
 		return errors.New("test message")
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1589,9 +1592,6 @@ func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainA500Error(t
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1630,9 +1630,12 @@ func TestCreateAndSendCustomTextMessageIfErrorIsThrownItShouldContainA500Error(t
 }
 
 func TestMinimumConfigWithEmailContactMethod(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1653,9 +1656,6 @@ func TestMinimumConfigWithEmailContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1681,9 +1681,12 @@ func TestMinimumConfigWithEmailContactMethod(t *testing.T) {
 
 func TestIfValidateEmailIsCalledWithEmailContactMethod(t *testing.T) {
 	isValidateEmailAddressCalled := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1708,9 +1711,6 @@ func TestIfValidateEmailIsCalledWithEmailContactMethod(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1763,9 +1763,12 @@ func TestIfValidateEmailIsCalledWithEmailContactMethod(t *testing.T) {
 
 func TestValidateEmailWithGeneralErrorWithContactMethodSetToEmail(t *testing.T) {
 	isValidateEmailAddressCalled := false
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1791,9 +1794,6 @@ func TestValidateEmailWithGeneralErrorWithContactMethodSetToEmail(t *testing.T) 
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1853,9 +1853,12 @@ func TestCreateAndSendCustomEmailWithFlowTypeMagicLinkAndCustomEmailContactMetho
 		}
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1881,9 +1884,6 @@ func TestCreateAndSendCustomEmailWithFlowTypeMagicLinkAndCustomEmailContactMetho
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -1942,9 +1942,12 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeUserInputCodeAndMagicLinkAndE
 		}
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -1970,9 +1973,6 @@ func TestCreateAndSendCustomTextMessageWithFlowTypeUserInputCodeAndMagicLinkAndE
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2031,9 +2031,12 @@ func TestCreateAndSendCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeA5
 		return errors.New("test message")
 	}
 
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2059,9 +2062,6 @@ func TestCreateAndSendCustomEmailIfErrorIsThrownTheStatusInTheResponseShouldBeA5
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2106,9 +2106,12 @@ func TestPassingGetCustomUserInputCodeUsingDifferentCodes(t *testing.T) {
 		userCodeSent = input.PasswordlessLogin.UserInputCode
 		return nil
 	}
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2138,9 +2141,6 @@ func TestPassingGetCustomUserInputCodeUsingDifferentCodes(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -2225,9 +2225,12 @@ func TestPassingGetCustomUserInputCodeUsingDifferentCodes(t *testing.T) {
 
 func TestBasicOverrideUsageInPasswordLess(t *testing.T) {
 	customDeviceId := "customDeviceId"
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -2259,9 +2262,6 @@ func TestBasicOverrideUsageInPasswordLess(t *testing.T) {
 			}),
 		},
 	}
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())

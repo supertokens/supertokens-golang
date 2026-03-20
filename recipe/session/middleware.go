@@ -43,7 +43,7 @@ func VerifySessionHelper(recipeInstance Recipe, options *sessmodels.VerifySessio
 			return
 		}
 		if session != nil {
-			ctx := context.WithValue(r.Context(), sessmodels.SessionContext, session)
+			ctx := context.WithValue(r.Context(), sessmodels.SessionContext, session) //nolint:staticcheck // using built-in type as key is a public API, changing would be breaking
 			otherHandler(dw, r.WithContext(ctx))
 		} else {
 			otherHandler(dw, r)

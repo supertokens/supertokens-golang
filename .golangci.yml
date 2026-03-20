@@ -1,0 +1,27 @@
+version: "2"
+
+linters:
+  disable:
+    # Too many pre-existing unchecked return values (res.Write, cmd.Run, etc.)
+    # to fix in one pass. Enable incrementally.
+    - errcheck
+
+  settings:
+    staticcheck:
+      checks:
+        - "all"
+        - "-ST*"   # style checks — naming conventions, package comments, etc.
+        - "-QF*"   # quick-fix suggestions — not errors
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - staticcheck
+          - gosimple
+          - ineffassign
+      - path: ^test/
+        linters:
+          - staticcheck
+          - gosimple
+          - ineffassign

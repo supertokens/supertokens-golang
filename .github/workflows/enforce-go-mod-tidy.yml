@@ -1,10 +1,14 @@
 name: "Enforcing go mod tidy in PRs Workflow"
 on: [pull_request]
+
+permissions:
+  contents: read
+
 jobs:
   go_mod_tidy_job:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
       - name: Set up go
         uses: actions/setup-go@v5
       - name: Create a new git repository

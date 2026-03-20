@@ -17,7 +17,6 @@ package sessmodels
 
 import (
 	"net/http"
-	"time"
 
 	"github.com/MicahParks/keyfunc/v2"
 
@@ -54,10 +53,6 @@ type GetJWKSFunctionObject struct {
 }
 
 type GetJWKSFunction = func(string) GetJWKSResult
-
-func getCurrTimeInMS() uint64 {
-	return uint64(time.Now().UnixNano() / 1000000)
-}
 
 type KeyInfo struct {
 	PublicKey  string

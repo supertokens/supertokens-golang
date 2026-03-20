@@ -23,8 +23,6 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
-const bitbucketID = "bitbucket"
-
 func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	if input.Config.Name == "" {
 		input.Config.Name = "Bitbucket"
@@ -82,7 +80,7 @@ func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 			rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
 
-			userInfoFromEmail, err := doGetRequest(
+			userInfoFromEmail, _ := doGetRequest(
 				"https://api.bitbucket.org/2.0/user/emails",
 				nil,
 				headers,

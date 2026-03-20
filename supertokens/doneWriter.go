@@ -44,7 +44,7 @@ func MakeDoneWriter(w http.ResponseWriter) DoneWriter {
 		return dw
 	}
 
-	_, cn := w.(http.CloseNotifier)
+	_, cn := w.(http.CloseNotifier) //nolint:staticcheck // http.CloseNotifier is deprecated but replacing it would change behaviour
 	_, fl := w.(http.Flusher)
 	_, hj := w.(http.Hijacker)
 	_, rf := w.(io.ReaderFrom)
@@ -115,7 +115,7 @@ func (f *flushWriter) Flush() {
 
 // type checking to make sure that we have implemented all the interface functions correctly.
 var (
-	_ http.CloseNotifier = &fancyWriter{}
+	_ http.CloseNotifier = &fancyWriter{} //nolint:staticcheck // http.CloseNotifier is deprecated but replacing it would change behaviour
 	_ http.Flusher       = &fancyWriter{}
 	_ http.Hijacker      = &fancyWriter{}
 	_ io.ReaderFrom      = &fancyWriter{}

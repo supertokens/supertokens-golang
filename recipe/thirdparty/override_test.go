@@ -39,9 +39,12 @@ import (
 func TestOverridingAPIs(t *testing.T) {
 	var userRef *tpmodels.User
 	var newUser bool
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -79,10 +82,6 @@ func TestOverridingAPIs(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -142,7 +141,7 @@ func TestOverridingAPIs(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	assert.NoError(t, err)
@@ -194,9 +193,12 @@ func TestOverridingAPIs(t *testing.T) {
 func TestOverridingFunctions(t *testing.T) {
 	var userRef *tpmodels.User
 	var newUser bool
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -240,10 +242,6 @@ func TestOverridingFunctions(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
@@ -303,7 +301,7 @@ func TestOverridingFunctions(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 	assert.NoError(t, err)
@@ -379,9 +377,12 @@ func TestOverridingFunctions(t *testing.T) {
 func TestOverrideFunctions(t *testing.T) {
 	var createdNewUser bool
 	var user tpmodels.User
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -429,11 +430,6 @@ func TestOverrideFunctions(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -482,7 +478,7 @@ func TestOverrideFunctions(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 
@@ -534,9 +530,12 @@ func TestOverrideFunctions(t *testing.T) {
 func TestOverrideAPIs(t *testing.T) {
 	var createdNewUser bool
 	var user tpmodels.User
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -575,11 +574,6 @@ func TestOverrideAPIs(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
-
 	err := supertokens.Init(configValue)
 
 	if err != nil {
@@ -628,7 +622,7 @@ func TestOverrideAPIs(t *testing.T) {
 	}
 
 	gock.New(testServer.URL).EnableNetworking().Persist()
-	gock.New("http://localhost:8080/").EnableNetworking().Persist()
+	gock.New("http://localhost:3567/").EnableNetworking().Persist()
 
 	resp, err := http.Post(testServer.URL+"/auth/signinup", "application/json", bytes.NewBuffer(postBody))
 

@@ -301,10 +301,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, tenantId string, options
 		}
 
 		if updateResponse.Status != "OK" {
-			return userPutResponse{
-				Status: updateResponse.Status,
-				Error:  updateResponse.Error,
-			}, nil
+			return userPutResponse(updateResponse), nil
 		}
 	}
 
@@ -316,10 +313,7 @@ func UserPut(apiInterface dashboardmodels.APIInterface, tenantId string, options
 		}
 
 		if updateResponse.Status != "OK" {
-			return userPutResponse{
-				Status: updateResponse.Status,
-				Error:  updateResponse.Error,
-			}, nil
+			return userPutResponse(updateResponse), nil
 		}
 	}
 

@@ -20,12 +20,15 @@ import (
 - Should result in no errors and same user should be returned
 */
 func TestThatUpdatingPasswordWithNoSignUpFeatureInTPEPWorks(t *testing.T) {
+	BeforeEach()
+	connectionURI := unittesting.StartUpST("localhost", "8080")
+	defer AfterEach()
 	config := supertokens.TypeInput{
 		OnSuperTokensAPIError: func(err error, req *http.Request, res http.ResponseWriter) {
 			print(err)
 		},
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: "http://localhost:8080",
+			ConnectionURI: connectionURI,
 		},
 		AppInfo: supertokens.AppInfo{
 			APIDomain:     "api.supertokens.io",
@@ -39,10 +42,6 @@ func TestThatUpdatingPasswordWithNoSignUpFeatureInTPEPWorks(t *testing.T) {
 			}),
 		},
 	}
-
-	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
-	defer AfterEach()
 	err := supertokens.Init(config)
 	if err != nil {
 		t.Error(err.Error())

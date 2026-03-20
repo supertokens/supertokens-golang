@@ -25,6 +25,7 @@ import (
 	"time"
 
 	"github.com/MicahParks/keyfunc/v2"
+
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy/multitenancymodels"
 	"github.com/supertokens/supertokens-golang/recipe/session/claims"
 	"github.com/supertokens/supertokens-golang/recipe/session/errors"
@@ -153,13 +154,12 @@ func GetCombinedJWKS() (*keyfunc.JWKS, error) {
 }
 
 func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.TypeNormalisedInput, appInfo supertokens.NormalisedAppinfo) sessmodels.RecipeInterface {
-	var result sessmodels.RecipeInterface
 
 	createNewSession := func(userID string, accessTokenPayload map[string]interface{}, sessionDataInDatabase map[string]interface{}, disableAntiCsrf *bool, tenantId string, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
 		supertokens.LogDebugMessage("createNewSession: Started")
 
 		sessionResponse, err := createNewSessionHelper(
-			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf == true, accessTokenPayload, sessionDataInDatabase, tenantId, userContext,
+			config, querier, userID, disableAntiCsrf != nil && *disableAntiCsrf, accessTokenPayload, sessionDataInDatabase, tenantId, userContext,
 		)
 		if err != nil {
 			return nil, err
@@ -174,21 +174,27 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 
 		frontToken := BuildFrontToken(sessionResponse.Session.UserID, sessionResponse.AccessToken.Expiry, parsedJWT.Payload)
 		session := sessionResponse.Session
-		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, session.TenantId, parsedJWT.Payload, result, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
+
+		recipe, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return nil, err
+		}
+
+		sessionContainerInput := makeSessionContainerInput(sessionResponse.AccessToken.Token, session.Handle, session.UserID, session.TenantId, parsedJWT.Payload, recipe.RecipeImpl, frontToken, sessionResponse.AntiCsrfToken, nil, &sessionResponse.RefreshToken, true)
 		return newSessionContainer(config, &sessionContainerInput), nil
 	}
 
 	// In all cases if sIdRefreshToken token exists (so it's a legacy session) we return TRY_REFRESH_TOKEN. The refresh endpoint will clear this cookie and try to upgrade the session.
 	// Check https://supertokens.com/docs/contribute/decisions/session/0007 for further details and a table of expected behaviours
 	getSession := func(accessTokenString *string, antiCsrfToken *string, options *sessmodels.VerifySessionOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		if options != nil && options.AntiCsrfCheck != nil && *options.AntiCsrfCheck != false && config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
+		if options != nil && options.AntiCsrfCheck != nil && *options.AntiCsrfCheck && config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
 		supertokens.LogDebugMessage("getSession: Started")
 
 		if accessTokenString == nil {
-			if options != nil && options.SessionRequired != nil && *options.SessionRequired == false {
+			if options != nil && options.SessionRequired != nil && !*options.SessionRequired {
 				supertokens.LogDebugMessage("getSession: returning nil because accessToken is nil and sessionRequired is false")
 				return nil, nil
 			}
@@ -208,7 +214,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		accessTokenResponse, err := ParseJWTWithoutSignatureVerification(*accessTokenString)
 
 		if err != nil {
-			if options != nil && *options.SessionRequired == false {
+			if options != nil && !*options.SessionRequired {
 				supertokens.LogDebugMessage("getSession: Returning nil because parsing failed and sessionRequired is false")
 				return nil, nil
 			}
@@ -224,7 +230,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		err = ValidateAccessTokenStructure(accessTokenResponse.Payload, accessTokenResponse.Version)
 
 		if err != nil {
-			if options != nil && *options.SessionRequired == false {
+			if options != nil && !*options.SessionRequired {
 				supertokens.LogDebugMessage("getSession: Returning nil because parsing failed and sessionRequired is false")
 				return nil, nil
 			}
@@ -239,12 +245,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		alwaysCheckCore := false
 
 		if options != nil && options.CheckDatabase != nil {
-			alwaysCheckCore = *options.CheckDatabase == true
+			alwaysCheckCore = *options.CheckDatabase
 		}
 
 		doAntiCsrfCheck := true
 
-		if options != nil && options.AntiCsrfCheck != nil && *options.AntiCsrfCheck == false {
+		if options != nil && options.AntiCsrfCheck != nil && !*options.AntiCsrfCheck {
 			doAntiCsrfCheck = false
 		}
 
@@ -283,7 +289,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		frontToken := BuildFrontToken(response.Session.UserID, response.Session.ExpiryTime, payload)
 		session := response.Session
 
-		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, session.TenantId, payload, result, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
+		recipeInstance, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return nil, err
+		}
+
+		sessionContainerInput := makeSessionContainerInput(accessTokenStringForSession, session.Handle, session.UserID, session.TenantId, payload, recipeInstance.RecipeImpl, frontToken, antiCsrfToken, nil, nil, !accessTokenNil)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
@@ -294,7 +305,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	refreshSession := func(refreshToken string, antiCsrfToken *string, disableAntiCsrf bool, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
-		if disableAntiCsrf != true && config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
+		if !disableAntiCsrf && config.AntiCsrfFunctionOrString.FunctionValue == nil && config.AntiCsrfFunctionOrString.StrValue == AntiCSRF_VIA_CUSTOM_HEADER {
 			return nil, defaultErrors.New("Since the anti-csrf mode is VIA_CUSTOM_HEADER getSession can't check the CSRF token. Please either use VIA_TOKEN or set antiCsrfCheck to false")
 		}
 
@@ -314,7 +325,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		session := response.Session
 		frontToken := BuildFrontToken(session.UserID, response.AccessToken.Expiry, responseToken.Payload)
 
-		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, session.TenantId, responseToken.Payload, result, frontToken, response.AntiCsrfToken, nil, &response.RefreshToken, true)
+		recipeInstance, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return nil, err
+		}
+
+		sessionContainerInput := makeSessionContainerInput(response.AccessToken.Token, session.Handle, session.UserID, session.TenantId, responseToken.Payload, recipeInstance.RecipeImpl, frontToken, response.AntiCsrfToken, nil, &response.RefreshToken, true)
 		sessionContainer := newSessionContainer(config, &sessionContainerInput)
 
 		return sessionContainer, nil
@@ -345,7 +361,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	mergeIntoAccessTokenPayload := func(sessionHandle string, accessTokenPayloadUpdate map[string]interface{}, userContext supertokens.UserContext) (bool, error) {
-		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
+		recipe, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return false, err
+		}
+
+		sessionInfo, err := (*recipe.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return false, err
 		}
@@ -357,7 +378,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 			newAccessTokenPayload[k] = v
 		}
 
-		for k, _ := range newAccessTokenPayload {
+		for k := range newAccessTokenPayload {
 			if supertokens.DoesSliceContainString(k, protectedProps) {
 				delete(newAccessTokenPayload, k)
 			}
@@ -433,7 +454,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	fetchAndSetClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
-		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
+		recipe, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return false, err
+		}
+
+		sessionInfo, err := (*recipe.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return false, err
 		}
@@ -444,16 +470,24 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		if err != nil {
 			return false, err
 		}
-		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+		return (*recipe.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
 	setClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, value interface{}, userContext supertokens.UserContext) (bool, error) {
+		recipe, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return false, err
+		}
 		accessTokenPayloadUpdate := claim.AddToPayload_internal(map[string]interface{}{}, value, userContext)
-		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+		return (*recipe.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
 
 	getClaimValue := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (sessmodels.GetClaimValueResult, error) {
-		sessionInfo, err := (*result.GetSessionInformation)(sessionHandle, userContext)
+		recipe, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return sessmodels.GetClaimValueResult{}, err
+		}
+		sessionInfo, err := (*recipe.RecipeImpl.GetSessionInformation)(sessionHandle, userContext)
 		if err != nil {
 			return sessmodels.GetClaimValueResult{}, err
 		}
@@ -471,10 +505,16 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 	}
 
 	removeClaim := func(sessionHandle string, claim *claims.TypeSessionClaim, userContext supertokens.UserContext) (bool, error) {
+		recipe, err := getRecipeInstanceOrThrowError()
+		if err != nil {
+			return false, err
+		}
+
 		accessTokenPayloadUpdate := claim.RemoveFromPayloadByMerge_internal(map[string]interface{}{}, userContext)
-		return (*result.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
+		return (*recipe.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext)
 	}
-	result = sessmodels.RecipeInterface{
+
+	return sessmodels.RecipeInterface{
 		CreateNewSession:            &createNewSession,
 		GetSession:                  &getSession,
 		RefreshSession:              &refreshSession,
@@ -496,5 +536,4 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		RemoveClaim:                 &removeClaim,
 	}
 
-	return result
 }

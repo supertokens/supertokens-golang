@@ -10,10 +10,10 @@ import (
 
 func TestCreateUserIdMappingGetUserById(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -51,10 +51,10 @@ func TestCreateUserIdMappingGetUserById(t *testing.T) {
 
 func TestCreateUserIdMappingGetUserByEmail(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -84,10 +84,10 @@ func TestCreateUserIdMappingGetUserByEmail(t *testing.T) {
 
 func TestCreateUserIdMappingSignIn(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -118,10 +118,10 @@ func TestCreateUserIdMappingSignIn(t *testing.T) {
 
 func TestCreateUserIdMappingPasswordReset(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
@@ -160,10 +160,10 @@ func TestCreateUserIdMappingPasswordReset(t *testing.T) {
 
 func TestCreateUserIdMappingUpdateEmailPassword(t *testing.T) {
 	BeforeEach()
-	unittesting.StartUpST("localhost", "8080")
+	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
-	initForUserIdMappingTest(t)
+	initForUserIdMappingTest(t, connectionURI)
 
 	querier, err := supertokens.GetNewQuerierInstanceOrThrowError("")
 	assert.NoError(t, err)
