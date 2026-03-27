@@ -33,9 +33,10 @@ type TypeInputWithService struct {
 }
 
 type EmailType struct {
-	EmailVerification *EmailVerificationType
-	PasswordReset     *PasswordResetType
-	PasswordlessLogin *PasswordlessLoginType
+	EmailVerification      *EmailVerificationType
+	PasswordReset          *PasswordResetType
+	PasswordlessLogin      *PasswordlessLoginType
+	WebauthnRecoverAccount *WebauthnRecoverAccountType
 }
 
 type EmailVerificationType struct {
@@ -62,4 +63,10 @@ type PasswordlessLoginType struct {
 type User struct {
 	ID    string
 	Email string
+}
+
+type WebauthnRecoverAccountType struct {
+	User               User
+	RecoverAccountLink string
+	TenantId           string
 }
