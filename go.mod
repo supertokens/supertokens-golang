@@ -21,6 +21,7 @@ require (
 
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/goforj/godump v1.9.1
 	github.com/golang/mock v1.6.0 // indirect
 	github.com/golang/protobuf v1.3.2 // indirect
 	github.com/h2non/parth v0.0.0-20190131123155-b4df798d6542 // indirect

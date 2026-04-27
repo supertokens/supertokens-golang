@@ -19,6 +19,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	"github.com/goforj/godump"
+
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/webauthn/webauthnmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
@@ -124,6 +126,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 			body["supportedAlgorithmIds"] = supportedAlgorithmIds
 		}
 
+		godump.Dump(body)
+
 		resp, err := querier.SendPostRequest(
 			fmt.Sprintf("/%s/recipe/webauthn/options/register", tenantId),
 			body,
@@ -132,6 +136,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		if err != nil {
 			return webauthnmodels.RegisterOptionsResponse{}, err
 		}
+		godump.Dump(resp)
 		status := resp["status"].(string)
 		if status == "RECOVER_ACCOUNT_TOKEN_INVALID_ERROR" {
 			return webauthnmodels.RegisterOptionsResponse{
