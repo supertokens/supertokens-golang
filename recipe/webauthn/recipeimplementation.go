@@ -561,20 +561,16 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		if status != "OK" {
 			return webauthnmodels.GetCredentialResponse{}, fmt.Errorf("unexpected status: %s", status)
 		}
-		credMap, ok := resp["credential"].(map[string]interface{})
-		if !ok {
-			return webauthnmodels.GetCredentialResponse{}, fmt.Errorf("missing credential in response")
-		}
 		return webauthnmodels.GetCredentialResponse{
 			OK: &struct {
 				Credential webauthnmodels.CredentialDetails
 			}{
 				Credential: webauthnmodels.CredentialDetails{
-					WebauthnCredentialId: credMap["webauthnCredentialId"].(string),
-					RecipeUserId:         credMap["recipeUserId"].(string),
-					RelyingPartyId:       credMap["relyingPartyId"].(string),
-					CreatedAt:            int64(credMap["createdAt"].(float64)),
-					UpdatedAt:            int64(credMap["updatedAt"].(float64)),
+					WebauthnCredentialId: resp["webauthnCredentialId"].(string),
+					RecipeUserId:         resp["recipeUserId"].(string),
+					RelyingPartyId:       resp["relyingPartyId"].(string),
+					CreatedAt:            int64(resp["createdAt"].(float64)),
+					UpdatedAt:            int64(resp["updatedAt"].(float64)),
 				},
 			},
 		}, nil
