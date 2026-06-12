@@ -16,7 +16,10 @@
 package webauthn
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -26,14 +29,67 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+const SUPERTOKENS_WEBAUTHN_RECOVER_ACCOUNT_URL = "https://api.supertokens.com/0/st/auth/webauthn/recover"
+
+func makeRecoverAccountRequest(appInfo supertokens.NormalisedAppinfo, input emaildelivery.WebauthnRecoverAccountType) (*http.Request, error) {
+	data := map[string]any{
+		"email":             input.User.Email,
+		"appName":           appInfo.AppName,
+		"recoverAccountURL": input.RecoverAccountLink,
+	}
+
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequest("POST", SUPERTOKENS_WEBAUTHN_RECOVER_ACCOUNT_URL, bytes.NewBuffer(jsonData))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("content-type", "application/json; charset=utf-8")
+	req.Header.Set("api-version", "0")
+	return req, nil
+}
+
+func createAndSendEmailUsingSupertokensService(appInfo supertokens.NormalisedAppinfo, input emaildelivery.WebauthnRecoverAccountType) error {
+	if supertokens.IsRunningInTestMode() {
+		return nil
+	}
+
+	req, err := makeRecoverAccountRequest(appInfo, input)
+	if err != nil {
+		return err
+	}
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		supertokens.LogDebugMessage(fmt.Sprintf("Error sending webauthn recover account email: %s", err.Error()))
+		return err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode < 300 {
+		supertokens.LogDebugMessage(fmt.Sprintf("Email sent to %s", input.User.Email))
+		return nil
+	}
+
+	body, readErr := io.ReadAll(resp.Body)
+	if readErr == nil {
+		supertokens.LogDebugMessage(fmt.Sprintf("Error sending webauthn recover account email. API returned %d status. Response: %s", resp.StatusCode, string(body)))
+	} else {
+		supertokens.LogDebugMessage(fmt.Sprintf("Error sending webauthn recover account email. API returned %d status.", resp.StatusCode))
+	}
+	return fmt.Errorf("error sending webauthn recover account email. API returned %d status", resp.StatusCode)
+}
+
 func makeDefaultEmailService(appInfo supertokens.NormalisedAppinfo) emaildelivery.EmailDeliveryInterface {
 	sendEmail := func(input emaildelivery.EmailType, userContext supertokens.UserContext) error {
 		if input.WebauthnRecoverAccount != nil {
-			supertokens.LogDebugMessage(
-				fmt.Sprintf("Sending webauthn recover account email to %s", input.WebauthnRecoverAccount.User.Email),
-			)
+			return createAndSendEmailUsingSupertokensService(appInfo, *input.WebauthnRecoverAccount)
 		}
-		return nil
+		return fmt.Errorf("should never come here")
 	}
 	return emaildelivery.EmailDeliveryInterface{
 		SendEmail: &sendEmail,
