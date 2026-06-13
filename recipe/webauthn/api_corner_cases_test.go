@@ -89,7 +89,7 @@ func getReq(t *testing.T, url string) *http.Response {
 }
 
 // -----------------------------------------------------------------------------
-// registerOptions — POST /auth/webauthn/register/options
+// registerOptions — POST /auth/webauthn/options/register
 // -----------------------------------------------------------------------------
 
 // Validates the FDI success response shape per
@@ -102,7 +102,7 @@ func TestRegisterOptionsWithValidEmailReturnsOKShape(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	resp := postJSON(t, ts.URL+"/auth/webauthn/register/options", map[string]interface{}{
+	resp := postJSON(t, ts.URL+"/auth/webauthn/options/register", map[string]interface{}{
 		"email": "user@example.com",
 	})
 	require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -150,7 +150,7 @@ func TestRegisterOptionsWithInvalidRecoverAccountTokenReturnsTokenInvalidError(t
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	resp := postJSON(t, ts.URL+"/auth/webauthn/register/options", map[string]interface{}{
+	resp := postJSON(t, ts.URL+"/auth/webauthn/options/register", map[string]interface{}{
 		"recoverAccountToken": "this-token-does-not-exist",
 	})
 	require.Equal(t, http.StatusOK, resp.StatusCode)
@@ -159,7 +159,7 @@ func TestRegisterOptionsWithInvalidRecoverAccountTokenReturnsTokenInvalidError(t
 }
 
 // -----------------------------------------------------------------------------
-// signInOptions — POST /auth/webauthn/signin/options
+// signInOptions — POST /auth/webauthn/options/signin
 // -----------------------------------------------------------------------------
 
 // Validates FDI success shape for the signin options endpoint
@@ -172,7 +172,7 @@ func TestSignInOptionsReturnsOKShape(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
-	resp := postJSON(t, ts.URL+"/auth/webauthn/signin/options", map[string]interface{}{})
+	resp := postJSON(t, ts.URL+"/auth/webauthn/options/signin", map[string]interface{}{})
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
 
@@ -221,9 +221,9 @@ func TestSignInWithInvalidCredentialShapeReturnsInvalidCredentialsError(t *testi
 	assert.Equal(t, "INVALID_CREDENTIALS_ERROR", result["status"])
 }
 
-// When the user submits a webauthnGeneratedOptionsId that the core has never
-// seen, the FDI says we must respond with OPTIONS_NOT_FOUND_ERROR.
-func TestSignInWithUnknownOptionsIdReturnsOptionsNotFoundError(t *testing.T) {
+// signInPOST masks the various recipe errors as a single INVALID_CREDENTIALS_ERROR
+// so an unknown webauthnGeneratedOptionsId must not surface as OPTIONS_NOT_FOUND_ERROR.
+func TestSignInWithUnknownOptionsIdReturnsInvalidCredentialsError(t *testing.T) {
 	BeforeEach()
 	defer AfterEach()
 	initWebauthnRecipeForAPITests(t)
@@ -248,7 +248,7 @@ func TestSignInWithUnknownOptionsIdReturnsOptionsNotFoundError(t *testing.T) {
 	})
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	result := *unittesting.HttpResponseToConsumableInformation(resp.Body)
-	assert.Equal(t, "OPTIONS_NOT_FOUND_ERROR", result["status"])
+	assert.Equal(t, "INVALID_CREDENTIALS_ERROR", result["status"])
 }
 
 // -----------------------------------------------------------------------------

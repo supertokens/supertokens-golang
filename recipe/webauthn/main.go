@@ -20,6 +20,21 @@ import (
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
+// VerifyCredentials verifies a webauthn credential against previously generated
+// options WITHOUT creating a session. The response intentionally omits the user
+// / recipe user id so it cannot be used to sign a user in; use the sign-in API
+// for that.
+func VerifyCredentials(webauthnGeneratedOptionsId string, credential webauthnmodels.AuthenticationPayload, tenantId string, userContext ...supertokens.UserContext) (webauthnmodels.VerifyCredentialsResponse, error) {
+	instance, err := GetRecipeInstanceOrThrowError()
+	if err != nil {
+		return webauthnmodels.VerifyCredentialsResponse{}, err
+	}
+	if len(userContext) == 0 {
+		userContext = append(userContext, &map[string]interface{}{})
+	}
+	return (*instance.RecipeImpl.VerifyCredentials)(webauthnGeneratedOptionsId, credential, tenantId, userContext[0])
+}
+
 func ListCredentials(recipeUserId string, userContext ...supertokens.UserContext) (webauthnmodels.ListCredentialsResponse, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {

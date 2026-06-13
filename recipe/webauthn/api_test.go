@@ -66,7 +66,7 @@ func TestRegisterOptionsRequiresEmailOrRecoverToken(t *testing.T) {
 	testServer := httptest.NewServer(supertokens.Middleware(mux))
 	defer testServer.Close()
 
-	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/webauthn/register/options", bytes.NewBuffer([]byte(`{}`)))
+	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/webauthn/options/register", bytes.NewBuffer([]byte(`{}`)))
 	assert.NoError(t, err)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("rid", "webauthn")
@@ -94,7 +94,7 @@ func TestRegisterOptionsWithInvalidEmailReturnsInvalidEmailError(t *testing.T) {
 	})
 	assert.NoError(t, err)
 
-	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/webauthn/register/options", bytes.NewBuffer(requestBody))
+	req, err := http.NewRequest(http.MethodPost, testServer.URL+"/auth/webauthn/options/register", bytes.NewBuffer(requestBody))
 	assert.NoError(t, err)
 	req.Header.Add("Content-Type", "application/json")
 	req.Header.Add("rid", "webauthn")

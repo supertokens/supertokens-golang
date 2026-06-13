@@ -47,6 +47,7 @@ type RecipeInterface struct {
 
 	SignInOptions *func(
 		relyingPartyId string,
+		relyingPartyName string,
 		origin string,
 		timeout *int,
 		userVerification *UserVerification,
@@ -95,12 +96,6 @@ type RecipeInterface struct {
 		credential RegistrationPayload,
 		userContext supertokens.UserContext,
 	) (RegisterCredentialResponse, error)
-
-	GetUserFromCredentialId *func(
-		credentialId string,
-		tenantId string,
-		userContext supertokens.UserContext,
-	) (GetUserFromCredentialIdResponse, error)
 
 	GetUserByEmail *func(
 		email string,
@@ -243,6 +238,7 @@ type VerifyCredentialsResponse struct {
 	InvalidOptionsError       *struct{}
 	InvalidAuthenticatorError *struct{ Reason string }
 	CredentialNotFoundError   *struct{}
+	UnknownUserIdError        *struct{}
 	OptionsNotFoundError      *struct{}
 }
 
@@ -265,14 +261,6 @@ type RegisterCredentialResponse struct {
 	InvalidOptionsError       *struct{}
 	InvalidAuthenticatorError *struct{ Reason string }
 	OptionsNotFoundError      *struct{}
-}
-
-type GetUserFromCredentialIdResponse struct {
-	OK *struct {
-		User         supertokens.User
-		RecipeUserId string
-	}
-	CredentialNotFoundError *struct{}
 }
 
 type GetUserFromRecoverAccountTokenResponse struct {

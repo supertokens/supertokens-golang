@@ -37,9 +37,8 @@ func recoverAccountInput() emaildelivery.WebauthnRecoverAccountType {
 	}
 }
 
-// Mirrors the supertokens-node BackwardCompatibilityService: the request must hit
-// the supertokens recover endpoint with api-version 0 and a JSON body of
-// { email, appName, recoverAccountURL }.
+// The request must hit the supertokens recover endpoint with api-version 0 and a
+// JSON body of { email, appName, recoverAccountURL }.
 func TestMakeRecoverAccountRequestMatchesNodeService(t *testing.T) {
 	appInfo := supertokens.NormalisedAppinfo{AppName: "TestApp"}
 	input := recoverAccountInput()
@@ -64,8 +63,7 @@ func TestMakeRecoverAccountRequestMatchesNodeService(t *testing.T) {
 	assert.Len(t, body, 3)
 }
 
-// In test mode the service must short-circuit before issuing any network call,
-// mirroring node's isTestEnv() guard.
+// In test mode the service must short-circuit before issuing any network call.
 func TestDefaultEmailServiceSkipsSendInTestMode(t *testing.T) {
 	emailService := makeDefaultEmailService(supertokens.NormalisedAppinfo{AppName: "TestApp"})
 	assert.NotNil(t, emailService.SendEmail)

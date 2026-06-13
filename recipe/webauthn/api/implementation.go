@@ -18,7 +18,6 @@ package api
 import (
 	"fmt"
 	"net/http"
-	"strings"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -37,35 +36,8 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		options webauthnmodels.APIOptions,
 		userContext supertokens.UserContext,
 	) (webauthnmodels.RegisterOptionsPOSTResponse, error) {
-		// When a recoverAccountToken is supplied, resolve it to the user's
-		// email up-front (without consuming the token) so we can populate the
-		// `email` field that the core's /recipe/webauthn/options/register
-		// endpoint requires. Mirrors supertokens-node `registerOptionsPOST`
-		// in `lib/ts/recipe/webauthn/api/implementation.ts`.
-		if recoverAccountToken != nil && (email == nil || *email == "") {
-			resolveResp, err := (*options.RecipeImplementation.GetUserFromRecoverAccountToken)(
-				*recoverAccountToken, tenantId, userContext,
-			)
-			if err != nil {
-				return webauthnmodels.RegisterOptionsPOSTResponse{}, err
-			}
-			if resolveResp.RecoverAccountTokenInvalidError != nil {
-				return webauthnmodels.RegisterOptionsPOSTResponse{
-					RecoverAccountTokenInvalidError: &struct{}{},
-				}, nil
-			}
-			resolvedEmail := pickWebauthnEmail(resolveResp.OK.User, resolveResp.OK.RecipeUserId)
-			if resolvedEmail == "" {
-				// Token was valid but the underlying user has no webauthn
-				// login method with an email. Treat as invalid token so we
-				// don't leak account state.
-				return webauthnmodels.RegisterOptionsPOSTResponse{
-					RecoverAccountTokenInvalidError: &struct{}{},
-				}, nil
-			}
-			email = &resolvedEmail
-		}
-
+		// email / recoverAccountToken are resolved in the RegisterOptions recipe
+		// function, so they're forwarded through unchanged.
 		relyingPartyId, err := options.Config.GetRelyingPartyId(tenantId, options.Req, userContext)
 		if err != nil {
 			return webauthnmodels.RegisterOptionsPOSTResponse{}, err
@@ -135,6 +107,10 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		if err != nil {
 			return webauthnmodels.SignInOptionsPOSTResponse{}, err
 		}
+		relyingPartyName, err := options.Config.GetRelyingPartyName(tenantId, options.Req, userContext)
+		if err != nil {
+			return webauthnmodels.SignInOptionsPOSTResponse{}, err
+		}
 		origin, err := options.Config.GetOrigin(tenantId, options.Req, userContext)
 		if err != nil {
 			return webauthnmodels.SignInOptionsPOSTResponse{}, err
@@ -146,6 +122,7 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 
 		resp, err := (*options.RecipeImplementation.SignInOptions)(
 			relyingPartyId,
+			relyingPartyName,
 			origin,
 			&defaultTimeout,
 			&defaultUserVerification,
@@ -237,20 +214,14 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		if resp.InvalidCredentialsError != nil {
 			return webauthnmodels.SignInPOSTResponse{InvalidCredentialsError: resp.InvalidCredentialsError}, nil
 		}
-		if resp.InvalidOptionsError != nil {
-			return webauthnmodels.SignInPOSTResponse{InvalidOptionsError: resp.InvalidOptionsError}, nil
-		}
-		if resp.InvalidAuthenticatorError != nil {
-			return webauthnmodels.SignInPOSTResponse{InvalidAuthenticatorError: resp.InvalidAuthenticatorError}, nil
-		}
-		if resp.CredentialNotFoundError != nil {
-			return webauthnmodels.SignInPOSTResponse{CredentialNotFoundError: resp.CredentialNotFoundError}, nil
-		}
-		if resp.UnknownUserIdError != nil {
-			return webauthnmodels.SignInPOSTResponse{UnknownUserIdError: resp.UnknownUserIdError}, nil
-		}
-		if resp.OptionsNotFoundError != nil {
-			return webauthnmodels.SignInPOSTResponse{OptionsNotFoundError: resp.OptionsNotFoundError}, nil
+		// The remaining errors are masked as INVALID_CREDENTIALS_ERROR so a
+		// sign-in attempt doesn't leak which part failed.
+		if resp.InvalidOptionsError != nil ||
+			resp.InvalidAuthenticatorError != nil ||
+			resp.CredentialNotFoundError != nil ||
+			resp.UnknownUserIdError != nil ||
+			resp.OptionsNotFoundError != nil {
+			return webauthnmodels.SignInPOSTResponse{InvalidCredentialsError: &struct{}{}}, nil
 		}
 
 		newSession, err := session.CreateNewSession(
@@ -421,7 +392,9 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 			return webauthnmodels.ListCredentialsGETResponse{}, err
 		}
 		if user == nil {
-			return webauthnmodels.ListCredentialsGETResponse{}, fmt.Errorf("user not found")
+			return webauthnmodels.ListCredentialsGETResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{Message: "User not found"},
+			}, nil
 		}
 
 		var allCredentials []struct {
@@ -477,6 +450,51 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		userContext supertokens.UserContext,
 	) (webauthnmodels.RegisterCredentialPOSTResponse, error) {
 		recipeUserId := getSessionRecipeUserID(sess, userContext)
+
+		// The session user must have a webauthn login method for this recipe user
+		// id; the credential must not be registered against a non-webauthn user.
+		user, err := (*options.RecipeImplementation.GetUserByID)(sess.GetUserIDWithContext(userContext), userContext)
+		if err != nil {
+			return webauthnmodels.RegisterCredentialPOSTResponse{}, err
+		}
+		if user == nil {
+			return webauthnmodels.RegisterCredentialPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{Message: "User not found"},
+			}, nil
+		}
+		var loginMethodEmail *string
+		foundLoginMethod := false
+		for _, lm := range user.LoginMethods {
+			if lm.RecipeID == "webauthn" && lm.RecipeUserID == recipeUserId {
+				loginMethodEmail = lm.Email
+				foundLoginMethod = true
+				break
+			}
+		}
+		if !foundLoginMethod {
+			return webauthnmodels.RegisterCredentialPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{Message: "User not found"},
+			}, nil
+		}
+
+		// The options must have been generated for the login method's email, else
+		// a user could register a credential against an email that isn't theirs.
+		generatedOptions, err := (*options.RecipeImplementation.GetGeneratedOptions)(webauthnGeneratedOptionsId, tenantId, userContext)
+		if err != nil {
+			return webauthnmodels.RegisterCredentialPOSTResponse{}, err
+		}
+		if generatedOptions.OptionsNotFoundError != nil {
+			return webauthnmodels.RegisterCredentialPOSTResponse{OptionsNotFoundError: &struct{}{}}, nil
+		}
+		if generatedOptions.OK == nil || generatedOptions.OK.Email == nil {
+			return webauthnmodels.RegisterCredentialPOSTResponse{}, fmt.Errorf("generated options are missing an email")
+		}
+		if loginMethodEmail == nil || *loginMethodEmail != *generatedOptions.OK.Email {
+			return webauthnmodels.RegisterCredentialPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{Message: "Email mismatch"},
+			}, nil
+		}
+
 		resp, err := (*options.RecipeImplementation.RegisterCredential)(recipeUserId, webauthnGeneratedOptionsId, credential, userContext)
 		if err != nil {
 			return webauthnmodels.RegisterCredentialPOSTResponse{}, err
@@ -509,21 +527,34 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 			return webauthnmodels.RemoveCredentialPOSTResponse{}, err
 		}
 		if user == nil {
-			return webauthnmodels.RemoveCredentialPOSTResponse{}, fmt.Errorf("user not found")
+			return webauthnmodels.RemoveCredentialPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{Message: "User not found"},
+			}, nil
 		}
 
-		userFromCredential, err := (*options.RecipeImplementation.GetUserFromCredentialId)(webauthnCredentialId, tenantId, userContext)
-		if err != nil {
-			return webauthnmodels.RemoveCredentialPOSTResponse{}, err
+		// Only let the user remove a credential that one of their own webauthn
+		// login methods owns.
+		var ownerRecipeUserId string
+		for _, lm := range user.LoginMethods {
+			if lm.RecipeID != "webauthn" {
+				continue
+			}
+			cred, err := (*options.RecipeImplementation.GetCredential)(webauthnCredentialId, lm.RecipeUserID, tenantId, userContext)
+			if err != nil {
+				return webauthnmodels.RemoveCredentialPOSTResponse{}, err
+			}
+			if cred.OK != nil {
+				ownerRecipeUserId = lm.RecipeUserID
+				break
+			}
 		}
-		if userFromCredential.CredentialNotFoundError != nil {
-			return webauthnmodels.RemoveCredentialPOSTResponse{}, fmt.Errorf("user not found")
-		}
-		if userFromCredential.OK == nil || userFromCredential.OK.User.ID != user.ID {
-			return webauthnmodels.RemoveCredentialPOSTResponse{}, fmt.Errorf("user not found")
+		if ownerRecipeUserId == "" {
+			return webauthnmodels.RemoveCredentialPOSTResponse{
+				GeneralError: &supertokens.GeneralErrorResponse{Message: "User not found"},
+			}, nil
 		}
 
-		resp, err := (*options.RecipeImplementation.RemoveCredential)(webauthnCredentialId, userFromCredential.OK.RecipeUserId, userContext)
+		resp, err := (*options.RecipeImplementation.RemoveCredential)(webauthnCredentialId, ownerRecipeUserId, userContext)
 		if err != nil {
 			return webauthnmodels.RemoveCredentialPOSTResponse{}, err
 		}
@@ -532,8 +563,6 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		}
 		return webauthnmodels.RemoveCredentialPOSTResponse{OK: &struct{}{}}, nil
 	}
-
-	_ = strings.Contains // keep strings import used via getRecoverAccountLink
 
 	return webauthnmodels.APIInterface{
 		RegisterOptionsPOST:             &registerOptionsPOST,
@@ -558,25 +587,6 @@ func getSessionRecipeUserID(session sessmodels.SessionContainer, userContext sup
 		}
 	}
 	return session.GetUserIDWithContext(userContext)
-}
-
-// pickWebauthnEmail returns the email of the webauthn login method on `user`
-// whose recipe user id matches `preferredRecipeUserId` (when set). Falls back
-// to the first webauthn login method's email, or "" if none exist.
-func pickWebauthnEmail(user supertokens.User, preferredRecipeUserId *string) string {
-	var fallback string
-	for _, lm := range user.LoginMethods {
-		if lm.RecipeID != "webauthn" || lm.Email == nil {
-			continue
-		}
-		if preferredRecipeUserId != nil && lm.RecipeUserID == *preferredRecipeUserId {
-			return *lm.Email
-		}
-		if fallback == "" {
-			fallback = *lm.Email
-		}
-	}
-	return fallback
 }
 
 func getRecoverAccountLink(appInfo supertokens.NormalisedAppinfo, token string, tenantId string, req *http.Request, userContext supertokens.UserContext) (string, error) {

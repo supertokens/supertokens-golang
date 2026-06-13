@@ -26,6 +26,13 @@ import (
 
 func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery emaildelivery.Ingredient) webauthnmodels.RecipeInterface {
 
+	// Predeclared so registerOptions can call it; assigned below.
+	var getUserFromRecoverAccountToken func(
+		token string,
+		tenantId string,
+		userContext supertokens.UserContext,
+	) (webauthnmodels.GetUserFromRecoverAccountTokenResponse, error)
+
 	getGeneratedOptions := func(
 		webauthnGeneratedOptionsId string,
 		tenantId string,
@@ -95,25 +102,53 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		tenantId string,
 		userContext supertokens.UserContext,
 	) (webauthnmodels.RegisterOptionsResponse, error) {
+		// When only a recoverAccountToken is supplied, resolve it to the user's
+		// email (without consuming it). The token is not forwarded to the core,
+		// which requires `email` and ignores the token.
+		var resolvedEmail *string
+		if email != nil && *email != "" {
+			resolvedEmail = email
+		} else if recoverAccountToken != nil {
+			tokenResp, err := getUserFromRecoverAccountToken(*recoverAccountToken, tenantId, userContext)
+			if err != nil {
+				return webauthnmodels.RegisterOptionsResponse{}, err
+			}
+			if tokenResp.RecoverAccountTokenInvalidError != nil {
+				return webauthnmodels.RegisterOptionsResponse{
+					RecoverAccountTokenInvalidError: &struct{}{},
+				}, nil
+			}
+			// No recipe user id means no webauthn login method yet, so fall back
+			// to the primary user id (recovery then acts as a sign up).
+			targetUserId := tokenResp.OK.User.ID
+			if tokenResp.OK.RecipeUserId != nil {
+				targetUserId = *tokenResp.OK.RecipeUserId
+			}
+			for _, lm := range tokenResp.OK.User.LoginMethods {
+				if lm.RecipeUserID == targetUserId {
+					resolvedEmail = lm.Email
+					break
+				}
+			}
+		}
+
+		if resolvedEmail == nil || *resolvedEmail == "" {
+			return webauthnmodels.RegisterOptionsResponse{
+				InvalidEmailError: &struct{ Err string }{Err: "The email is missing"},
+			}, nil
+		}
+
 		body := map[string]interface{}{
 			"relyingPartyId":   relyingPartyId,
 			"relyingPartyName": relyingPartyName,
 			"origin":           origin,
-		}
-		if email != nil {
-			body["email"] = *email
+			"email":            *resolvedEmail,
 		}
 		if displayName != nil {
 			body["displayName"] = *displayName
+		} else {
+			body["displayName"] = *resolvedEmail
 		}
-		// Note: recoverAccountToken is intentionally NOT forwarded to the
-		// core. The API layer resolves the token to an email via
-		// GetUserFromRecoverAccountToken before calling RegisterOptions, and
-		// passes that resolved email in via the `email` argument. The core's
-		// /recipe/webauthn/options/register requires `email` and ignores
-		// `recoverAccountToken` if both are sent, which would silently let
-		// invalid tokens through.
-		_ = recoverAccountToken
 		if timeout != nil {
 			body["timeout"] = *timeout
 		}
@@ -162,6 +197,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 
 	signInOptions := func(
 		relyingPartyId string,
+		relyingPartyName string,
 		origin string,
 		timeout *int,
 		userVerification *webauthnmodels.UserVerification,
@@ -170,7 +206,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		userContext supertokens.UserContext,
 	) (webauthnmodels.SignInOptionsResponse, error) {
 		body := map[string]interface{}{
-			"relyingPartyName": "something",
+			"relyingPartyName": relyingPartyName,
 			"relyingPartyId":   relyingPartyId,
 			"origin":           origin,
 		}
@@ -288,8 +324,9 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 			"webauthnGeneratedOptionsId": webauthnGeneratedOptionsId,
 			"credential":                 credentialMap,
 		}
+		// Same core endpoint as signIn, but the caller does not create a session.
 		resp, err := querier.SendPostRequest(
-			fmt.Sprintf("/%s/recipe/webauthn/credential/verify", tenantId),
+			fmt.Sprintf("/%s/recipe/webauthn/signin", tenantId),
 			body,
 			userContext,
 		)
@@ -308,6 +345,8 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 			return webauthnmodels.VerifyCredentialsResponse{InvalidAuthenticatorError: &struct{ Reason string }{Reason: resp["reason"].(string)}}, nil
 		case "CREDENTIAL_NOT_FOUND_ERROR":
 			return webauthnmodels.VerifyCredentialsResponse{CredentialNotFoundError: &struct{}{}}, nil
+		case "UNKNOWN_USER_ID_ERROR":
+			return webauthnmodels.VerifyCredentialsResponse{UnknownUserIdError: &struct{}{}}, nil
 		case "OPTIONS_NOT_FOUND_ERROR":
 			return webauthnmodels.VerifyCredentialsResponse{OptionsNotFoundError: &struct{}{}}, nil
 		}
@@ -411,47 +450,14 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		return webauthnmodels.RegisterCredentialResponse{}, fmt.Errorf("unknown status: %s", status)
 	}
 
-	getUserFromCredentialId := func(
-		credentialId string,
-		tenantId string,
-		userContext supertokens.UserContext,
-	) (webauthnmodels.GetUserFromCredentialIdResponse, error) {
-		resp, err := querier.SendGetRequest(
-			fmt.Sprintf("/%s/recipe/webauthn/user/credential", tenantId),
-			map[string]string{"credentialId": credentialId},
-			userContext,
-		)
-		if err != nil {
-			return webauthnmodels.GetUserFromCredentialIdResponse{}, err
-		}
-		status := resp["status"].(string)
-		if status == "CREDENTIAL_NOT_FOUND_ERROR" {
-			return webauthnmodels.GetUserFromCredentialIdResponse{
-				CredentialNotFoundError: &struct{}{},
-			}, nil
-		}
-		user := parseUser(resp["user"].(map[string]interface{}))
-		return webauthnmodels.GetUserFromCredentialIdResponse{
-			OK: &struct {
-				User         supertokens.User
-				RecipeUserId string
-			}{
-				User:         user,
-				RecipeUserId: resp["recipeUserId"].(string),
-			},
-		}, nil
-	}
-
 	getUserByEmail := func(
 		email string,
 		tenantId string,
 		userContext supertokens.UserContext,
 	) (*supertokens.User, error) {
-		// The core does not expose a webauthn-scoped get-user-by-email
-		// endpoint; look up via the cross-recipe accountinfo endpoint and
-		// filter for users with a matching webauthn login method.
-		// See supertokens-node `lib/ts/recipe/webauthn/api/implementation.ts`
-		// (emailExistsGET / generateRecoverAccountTokenPOST).
+		// The core has no webauthn-scoped get-user-by-email endpoint; look up via
+		// the cross-recipe accountinfo endpoint and filter for a webauthn login
+		// method with a matching email.
 		resp, err := querier.SendGetRequest(
 			fmt.Sprintf("/%s/users/by-accountinfo", tenantId),
 			map[string]string{
@@ -541,8 +547,9 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		tenantId string,
 		userContext supertokens.UserContext,
 	) (webauthnmodels.GetCredentialResponse, error) {
+		// This core endpoint is not tenant-scoped.
 		resp, err := querier.SendGetRequest(
-			fmt.Sprintf("/%s/recipe/webauthn/user/credential", tenantId),
+			"/recipe/webauthn/user/credential",
 			map[string]string{
 				"recipeUserId":         recipeUserId,
 				"webauthnCredentialId": webauthnCredentialId,
@@ -561,17 +568,20 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		if status != "OK" {
 			return webauthnmodels.GetCredentialResponse{}, fmt.Errorf("unexpected status: %s", status)
 		}
+		credential := webauthnmodels.CredentialDetails{
+			WebauthnCredentialId: resp["webauthnCredentialId"].(string),
+			RecipeUserId:         resp["recipeUserId"].(string),
+			RelyingPartyId:       resp["relyingPartyId"].(string),
+			CreatedAt:            int64(resp["createdAt"].(float64)),
+		}
+		if updatedAt, ok := resp["updatedAt"].(float64); ok {
+			credential.UpdatedAt = int64(updatedAt)
+		}
 		return webauthnmodels.GetCredentialResponse{
 			OK: &struct {
 				Credential webauthnmodels.CredentialDetails
 			}{
-				Credential: webauthnmodels.CredentialDetails{
-					WebauthnCredentialId: resp["webauthnCredentialId"].(string),
-					RecipeUserId:         resp["recipeUserId"].(string),
-					RelyingPartyId:       resp["relyingPartyId"].(string),
-					CreatedAt:            int64(resp["createdAt"].(float64)),
-					UpdatedAt:            int64(resp["updatedAt"].(float64)),
-				},
+				Credential: credential,
 			},
 		}, nil
 	}
@@ -602,15 +612,12 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		return webauthnmodels.RemoveCredentialResponse{OK: &struct{}{}}, nil
 	}
 
-	getUserFromRecoverAccountToken := func(
+	getUserFromRecoverAccountToken = func(
 		token string,
 		tenantId string,
 		userContext supertokens.UserContext,
 	) (webauthnmodels.GetUserFromRecoverAccountTokenResponse, error) {
-		// Resolve a recover-account token into the underlying user without
-		// consuming the token. Mirrors supertokens-node
-		// `getUserFromRecoverAccountToken` in
-		// `lib/ts/recipe/webauthn/recipeImplementation.ts`.
+		// Resolves the token into the underlying user without consuming it.
 		resp, err := querier.SendGetRequest(
 			fmt.Sprintf("/%s/recipe/webauthn/user/recover", tenantId),
 			map[string]string{"token": token},
@@ -664,7 +671,6 @@ func MakeRecipeImplementation(querier supertokens.Querier, recipeEmailDelivery e
 		GenerateRecoverAccountToken:    &generateRecoverAccountToken,
 		ConsumeRecoverAccountToken:     &consumeRecoverAccountToken,
 		RegisterCredential:             &registerCredential,
-		GetUserFromCredentialId:        &getUserFromCredentialId,
 		GetUserByEmail:                 &getUserByEmail,
 		GetUserFromRecoverAccountToken: &getUserFromRecoverAccountToken,
 		GetUserByID:                    &getUserByID,
