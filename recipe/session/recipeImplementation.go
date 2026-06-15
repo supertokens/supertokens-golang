@@ -214,7 +214,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		accessTokenResponse, err := ParseJWTWithoutSignatureVerification(*accessTokenString)
 
 		if err != nil {
-			if options != nil && !*options.SessionRequired {
+			if options != nil && options.SessionRequired != nil && !*options.SessionRequired {
 				supertokens.LogDebugMessage("getSession: Returning nil because parsing failed and sessionRequired is false")
 				return nil, nil
 			}
@@ -230,7 +230,7 @@ func MakeRecipeImplementation(querier supertokens.Querier, config sessmodels.Typ
 		err = ValidateAccessTokenStructure(accessTokenResponse.Payload, accessTokenResponse.Version)
 
 		if err != nil {
-			if options != nil && !*options.SessionRequired {
+			if options != nil && options.SessionRequired != nil && !*options.SessionRequired {
 				supertokens.LogDebugMessage("getSession: Returning nil because parsing failed and sessionRequired is false")
 				return nil, nil
 			}
