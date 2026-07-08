@@ -203,17 +203,3 @@ func makeTypeNormalisedInput(appInfo supertokens.NormalisedAppinfo, inputConfig 
 		},
 	}
 }
-
-func GetRecoverAccountLink(appInfo supertokens.NormalisedAppinfo, token string, tenantId string, req *http.Request, userContext supertokens.UserContext) (string, error) {
-	origin, err := appInfo.GetOrigin(req, userContext)
-	if err != nil {
-		return "", err
-	}
-	websiteBasePath := appInfo.WebsiteBasePath.GetAsStringDangerous()
-	return fmt.Sprintf("%s%s/webauthn/recover?token=%s&tenantId=%s",
-		origin.GetAsStringDangerous(),
-		websiteBasePath,
-		token,
-		tenantId,
-	), nil
-}

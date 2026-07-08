@@ -281,7 +281,7 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 			return webauthnmodels.GenerateRecoverAccountTokenPOSTResponse{OK: &struct{}{}}, nil
 		}
 
-		recoverAccountLink, err := getRecoverAccountLink(options.AppInfo, resp.OK.Token, tenantId, options.Req, userContext)
+		recoverAccountLink, err := GetRecoverAccountLink(options.AppInfo, resp.OK.Token, tenantId, options.Req, userContext)
 		if err != nil {
 			return webauthnmodels.GenerateRecoverAccountTokenPOSTResponse{}, err
 		}
@@ -589,7 +589,7 @@ func getSessionRecipeUserID(session sessmodels.SessionContainer, userContext sup
 	return session.GetUserIDWithContext(userContext)
 }
 
-func getRecoverAccountLink(appInfo supertokens.NormalisedAppinfo, token string, tenantId string, req *http.Request, userContext supertokens.UserContext) (string, error) {
+func GetRecoverAccountLink(appInfo supertokens.NormalisedAppinfo, token string, tenantId string, req *http.Request, userContext supertokens.UserContext) (string, error) {
 	origin, err := appInfo.GetOrigin(req, userContext)
 	if err != nil {
 		return "", err

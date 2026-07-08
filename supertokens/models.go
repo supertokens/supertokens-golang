@@ -80,21 +80,27 @@ type User struct {
 	Emails        []string      `json:"emails"`
 	PhoneNumbers  []string      `json:"phoneNumbers"`
 	ThirdParty    []ThirdParty  `json:"thirdParty"`
+	Webauthn      *Webauthn     `json:"webauthn,omitempty"`
 	LoginMethods  []LoginMethod `json:"loginMethods"`
 }
 
 type LoginMethod struct {
-	RecipeID     string   `json:"recipeId"`
-	RecipeUserID string   `json:"recipeUserId"`
-	Verified     bool     `json:"verified"`
-	TenantIDs    []string `json:"tenantIds"`
-	TimeJoined   int64    `json:"timeJoined"`
-	Email        *string  `json:"email,omitempty"`
-	PhoneNumber  *string  `json:"phoneNumber,omitempty"`
-	ThirdParty   ThirdParty
+	RecipeID     string      `json:"recipeId"`
+	RecipeUserID string      `json:"recipeUserId"`
+	Verified     bool        `json:"verified"`
+	TenantIDs    []string    `json:"tenantIds"`
+	TimeJoined   int64       `json:"timeJoined"`
+	Email        *string     `json:"email,omitempty"`
+	PhoneNumber  *string     `json:"phoneNumber,omitempty"`
+	ThirdParty   *ThirdParty `json:"thirdParty,omitempty"`
+	Webauthn     *Webauthn   `json:"webauthn,omitempty"`
 }
 
 type ThirdParty struct {
-	ID     string `json:"Id"`
+	ID     string `json:"id"`
 	UserID string `json:"userId"`
+}
+
+type Webauthn struct {
+	CredentialIds []string `json:"credentialIds"`
 }

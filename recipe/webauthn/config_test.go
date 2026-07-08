@@ -22,6 +22,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
+	"github.com/supertokens/supertokens-golang/recipe/webauthn/api"
 	"github.com/supertokens/supertokens-golang/recipe/webauthn/webauthnmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
@@ -174,7 +175,7 @@ func TestGetRecoverAccountLinkReturnsExpectedValue(t *testing.T) {
 	}
 
 	req := httptest.NewRequest(http.MethodGet, "https://api.supertokens.io", nil)
-	link, err := GetRecoverAccountLink(recipeInstance.RecipeModule.GetAppInfo(), "token-123", "tenant1", req, nil)
+	link, err := api.GetRecoverAccountLink(recipeInstance.RecipeModule.GetAppInfo(), "token-123", "tenant1", req, nil)
 	if err != nil {
 		t.Error(err.Error())
 	}
