@@ -71,3 +71,36 @@ type UserContext = *map[string]interface{}
 type GeneralErrorResponse struct {
 	Message string
 }
+
+type User struct {
+	ID            string        `json:"id"`
+	TimeJoined    int64         `json:"timeJoined"`
+	IsPrimaryUser bool          `json:"isPrimaryUser"`
+	TenantIDs     []string      `json:"tenantIds"`
+	Emails        []string      `json:"emails"`
+	PhoneNumbers  []string      `json:"phoneNumbers"`
+	ThirdParty    []ThirdParty  `json:"thirdParty"`
+	Webauthn      *Webauthn     `json:"webauthn,omitempty"`
+	LoginMethods  []LoginMethod `json:"loginMethods"`
+}
+
+type LoginMethod struct {
+	RecipeID     string      `json:"recipeId"`
+	RecipeUserID string      `json:"recipeUserId"`
+	Verified     bool        `json:"verified"`
+	TenantIDs    []string    `json:"tenantIds"`
+	TimeJoined   int64       `json:"timeJoined"`
+	Email        *string     `json:"email,omitempty"`
+	PhoneNumber  *string     `json:"phoneNumber,omitempty"`
+	ThirdParty   *ThirdParty `json:"thirdParty,omitempty"`
+	Webauthn     *Webauthn   `json:"webauthn,omitempty"`
+}
+
+type ThirdParty struct {
+	ID     string `json:"id"`
+	UserID string `json:"userId"`
+}
+
+type Webauthn struct {
+	CredentialIds []string `json:"credentialIds"`
+}
