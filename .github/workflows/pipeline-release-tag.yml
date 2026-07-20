@@ -45,6 +45,14 @@ jobs:
       releaseTag: ${{ steps.versions.outputs.releaseTag }}
 
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: supertokens
+          repositories: ${{ github.event.repository.name }}
+
       - name: Determine release branch
         id: params
         run: |
@@ -59,7 +67,7 @@ jobs:
           ref: ${{ steps.params.outputs.branch }}
           fetch-depth: 0
           fetch-tags: true
-          token: ${{ secrets.ALL_REPO_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Populate variables
         id: versions
@@ -162,11 +170,19 @@ jobs:
       - mark-as-success
 
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: supertokens
+          repositories: ${{ github.event.repository.name }}
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.setup.outputs.branch }}
           fetch-tags: true
-          token: ${{ secrets.ALL_REPO_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup git
         run: |
@@ -233,7 +249,7 @@ jobs:
 
       - name: Create GitHub Release
         env:
-          GH_TOKEN: ${{ secrets.ALL_REPO_PAT }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
           notes=$(sed '1d' .changes/${{ needs.setup.outputs.releaseTag }}.md | sed '/./,$!d')
           gh release create "${{ needs.setup.outputs.releaseTag }}" \
@@ -247,12 +263,20 @@ jobs:
       - release
 
     steps:
+      - uses: actions/create-github-app-token@v2
+        id: app-token
+        with:
+          app-id: ${{ vars.RELEASE_APP_ID }}
+          private-key: ${{ secrets.RELEASE_APP_PRIVATE_KEY }}
+          owner: supertokens
+          repositories: ${{ github.event.repository.name }}
+
       - uses: actions/checkout@v4
         with:
           ref: ${{ needs.setup.outputs.branch }}
           fetch-depth: 0
           fetch-tags: true
-          token: ${{ secrets.ALL_REPO_PAT }}
+          token: ${{ steps.app-token.outputs.token }}
 
       - name: Setup git
         run: |
