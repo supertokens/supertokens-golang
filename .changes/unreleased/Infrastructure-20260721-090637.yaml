@@ -1,0 +1,3 @@
+kind: Infrastructure
+body: Replace the release-tag pipeline with a thin caller of the shared reusable release-tag workflow in supertokens/actions.
+time: 2026-07-21T09:06:37Z
