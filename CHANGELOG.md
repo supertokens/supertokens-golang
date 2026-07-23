@@ -5,6 +5,12 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
+## [Unreleased]
+
+### Changed
+- webauthn: sign-in errors masked as `INVALID_CREDENTIALS_ERROR` are now debug-logged with the underlying status and reason
+
+
 ## [0.25.2] - 2026-03-20
 
 ### Changed
