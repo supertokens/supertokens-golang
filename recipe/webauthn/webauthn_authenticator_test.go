@@ -64,10 +64,18 @@ func cborMapHeader(n uint64) []byte { return cborHead(5, n) }
 func b64url(b []byte) string { return base64.RawURLEncoding.EncodeToString(b) }
 
 // virtualAuthenticator is a single ES256 credential.
+//
+// signCount is the signature counter reported in authenticatorData. It stays 0
+// unless a test sets it — matching Apple/Google passkeys, which never increment
+// it, so the core's clone-detection check (WebAuthn L3 §7.2 step 24) is skipped.
+// Real hardware like Windows Hello and security keys DO increment it, which is
+// the behavior counter-related regression tests must simulate (see
+// supertokens-core#1195 for a bug that only such authenticators could surface).
 type virtualAuthenticator struct {
-	key    *ecdsa.PrivateKey
-	credID []byte
-	aaguid []byte
+	key       *ecdsa.PrivateKey
+	credID    []byte
+	aaguid    []byte
+	signCount uint32
 }
 
 func newVirtualAuthenticator() *virtualAuthenticator {
@@ -118,7 +126,9 @@ func (a *virtualAuthenticator) authData(rpID string, attested bool) []byte {
 
 	b := append([]byte{}, rpHash[:]...)
 	b = append(b, flags)
-	b = append(b, 0, 0, 0, 0) // signCount
+	var count [4]byte
+	binary.BigEndian.PutUint32(count[:], a.signCount)
+	b = append(b, count[:]...)
 	if attested {
 		b = append(b, a.aaguid...)
 		var l [2]byte

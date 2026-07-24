@@ -39,6 +39,10 @@ func initWebauthnWithSession(t *testing.T) {
 	cookieMethod := func(req *http.Request, forCreateNewSession bool, userContext supertokens.UserContext) sessmodels.TokenTransferMethod {
 		return sessmodels.CookieTransferMethod
 	}
+	// The https apiDomain makes cookies Secure by default, but the httptest
+	// server is plain http — Go's cookiejar won't send Secure cookies over
+	// http, so session-protected requests would 401.
+	cookieSecure := false
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
 			ConnectionURI: connectionURI,
@@ -52,6 +56,7 @@ func initWebauthnWithSession(t *testing.T) {
 			Init(nil),
 			session.Init(&sessmodels.TypeInput{
 				GetTokenTransferMethod: cookieMethod,
+				CookieSecure:           &cookieSecure,
 			}),
 		},
 	}

@@ -216,11 +216,21 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		}
 		// The remaining errors are masked as INVALID_CREDENTIALS_ERROR so a
 		// sign-in attempt doesn't leak which part failed.
-		if resp.InvalidOptionsError != nil ||
-			resp.InvalidAuthenticatorError != nil ||
-			resp.CredentialNotFoundError != nil ||
-			resp.UnknownUserIdError != nil ||
-			resp.OptionsNotFoundError != nil {
+		var maskedStatus string
+		switch {
+		case resp.InvalidOptionsError != nil:
+			maskedStatus = "INVALID_OPTIONS_ERROR"
+		case resp.InvalidAuthenticatorError != nil:
+			maskedStatus = fmt.Sprintf("INVALID_AUTHENTICATOR_ERROR (reason: %s)", resp.InvalidAuthenticatorError.Reason)
+		case resp.CredentialNotFoundError != nil:
+			maskedStatus = "CREDENTIAL_NOT_FOUND_ERROR"
+		case resp.UnknownUserIdError != nil:
+			maskedStatus = "UNKNOWN_USER_ID_ERROR"
+		case resp.OptionsNotFoundError != nil:
+			maskedStatus = "OPTIONS_NOT_FOUND_ERROR"
+		}
+		if maskedStatus != "" {
+			supertokens.LogDebugMessage("signInPOST: returning INVALID_CREDENTIALS_ERROR because sign in returned " + maskedStatus)
 			return webauthnmodels.SignInPOSTResponse{InvalidCredentialsError: &struct{}{}}, nil
 		}
 
