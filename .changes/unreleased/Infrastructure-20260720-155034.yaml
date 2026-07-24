@@ -1,3 +1,0 @@
-kind: Infrastructure
-body: Mint a short-lived GitHub App installation token in the release pipeline instead of the ALL_REPO_PAT org secret.
-time: 2026-07-20T15:50:34Z

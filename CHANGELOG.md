@@ -5,13 +5,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 
-## [Unreleased]
+## [0.26.0] - 2026-07-24
 
-### Changed
-- webauthn: sign-in errors masked as `INVALID_CREDENTIALS_ERROR` are now debug-logged with the underlying status and reason
-
-
-## [0.25.2] - 2026-03-20
+### Added
+- WebAuthN Recipe
+### Infrastructure
+- Adopt the shared reusable lint-pr workflow from supertokens/actions.
+- Adopt the shared reusable dev-sync workflow from supertokens/actions.
+- Mint a short-lived GitHub App installation token in the release pipeline instead of the ALL_REPO_PAT org secret.
+- Replace the release-tag pipeline with a thin caller of the shared reusable release-tag workflow in supertokens/actions.## [0.25.2] - 2026-03-20
 
 ### Changed
 - Reuse HTTP client across requests for improved performance
