@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "go-build-tools": {
+      "command": "node",
+      "args": ["mcp-server/mcp-tool.mjs"]
+    }
+  }
+}

@@ -1,0 +1,45 @@
+FROM golang:1.23-bookworm
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    git curl ca-certificates socat nodejs npm \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install golangci-lint
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh \
+    | sh -s -- -b /usr/local/bin latest
+
+# Install MCP server Node dependencies
+WORKDIR /opt/mcp-server
+COPY mcp-server/package.json ./
+RUN npm install --omit=dev && npm cache clean --force
+
+COPY mcp-server/server.mjs ./
+
+# Pre-warm Go module cache
+COPY go.mod go.sum /tmp/sdk-deps/
+RUN cd /tmp/sdk-deps && go mod download && rm -rf /tmp/sdk-deps
+
+RUN mkdir -p /workspace /workspace/test-results /workspace/test-output
+
+COPY <<'ENTRY' /opt/mcp-server/entrypoint.sh
+#!/bin/bash
+set -e
+cd /workspace
+go mod download 2>/dev/null || echo "[mcp] Warning: go mod download failed"
+
+# Forward localhost:<core-port> → <core-host>:<core-port>
+CORE_HOST="${SUPERTOKENS_CORE_HOST:-localhost}"
+CORE_PORT="${SUPERTOKENS_CORE_PORT:-3567}"
+if [ "$CORE_HOST" != "localhost" ] && [ "$CORE_HOST" != "127.0.0.1" ]; then
+    echo "[mcp] Forwarding localhost:${CORE_PORT} → ${CORE_HOST}:${CORE_PORT}"
+    socat TCP-LISTEN:${CORE_PORT},fork,reuseaddr TCP:${CORE_HOST}:${CORE_PORT} &
+    export SUPERTOKENS_CORE_HOST=localhost
+fi
+
+exec node /opt/mcp-server/server.mjs
+ENTRY
+RUN chmod +x /opt/mcp-server/entrypoint.sh
+
+EXPOSE 3000
+ENTRYPOINT ["/opt/mcp-server/entrypoint.sh"]
