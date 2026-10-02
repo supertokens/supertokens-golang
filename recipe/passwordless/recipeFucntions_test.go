@@ -1034,8 +1034,9 @@ func TestCreatingMagicLink(t *testing.T) {
 		return
 	}
 
-	link, err := CreateMagicLinkByPhoneNumber("public", "+1234567890")
+	link, codeLifetime, err := CreateMagicLinkByPhoneNumber("public", "+1234567890")
 	assert.NoError(t, err)
+	assert.True(t, codeLifetime > 0)
 
 	res, err := url.Parse(link)
 	assert.NoError(t, err)

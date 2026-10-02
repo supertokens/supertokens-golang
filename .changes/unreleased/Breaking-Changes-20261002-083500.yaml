@@ -1,0 +1,3 @@
+kind: Breaking Changes
+body: Return code lifetime in milliseconds in CreateMagicLink helper functions
+time: 2026-10-02T08:35:00.000000+00:00

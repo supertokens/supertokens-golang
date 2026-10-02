@@ -232,23 +232,24 @@ func (r *Recipe) handleError(err error, req *http.Request, res http.ResponseWrit
 	return false, nil
 }
 
-func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (string, error) {
+// CreateMagicLink generates a magic link and returns the link URL, the code lifetime in milliseconds, and any error.
+func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (string, uint64, error) {
 	stInstance, err := supertokens.GetInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	var userInputCodeInput *string
 	if r.Config.GetCustomUserInputCode != nil {
 		c, err := r.Config.GetCustomUserInputCode(tenantId, userContext)
 		if err != nil {
-			return "", err
+			return "", 0, err
 		}
 		userInputCodeInput = &c
 	}
 
 	response, err := (*r.RecipeImpl.CreateCode)(email, phoneNumber, userInputCodeInput, tenantId, userContext)
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	link, err := api.GetMagicLink(
 		stInstance.AppInfo,
@@ -258,8 +259,11 @@ func (r *Recipe) CreateMagicLink(email *string, phoneNumber *string, tenantId st
 		supertokens.GetRequestFromUserContext(userContext),
 		userContext,
 	)
+	if err != nil {
+		return "", 0, err
+	}
 
-	return link, err
+	return link, response.OK.CodeLifetime, nil
 }
 
 func (r *Recipe) SignInUp(email *string, phoneNumber *string, tenantId string, userContext supertokens.UserContext) (struct {

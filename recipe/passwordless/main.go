@@ -208,10 +208,11 @@ func ListCodesByPreAuthSessionID(tenantId string, preAuthSessionID string, userC
 	return (*instance.RecipeImpl.ListCodesByPreAuthSessionID)(preAuthSessionID, tenantId, userContext[0])
 }
 
-func CreateMagicLinkByEmail(tenantId string, email string, userContext ...supertokens.UserContext) (string, error) {
+// CreateMagicLinkByEmail generates a magic link for the provided email and returns the link URL, the code lifetime in milliseconds, and any error.
+func CreateMagicLinkByEmail(tenantId string, email string, userContext ...supertokens.UserContext) (string, uint64, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
@@ -219,10 +220,11 @@ func CreateMagicLinkByEmail(tenantId string, email string, userContext ...supert
 	return instance.CreateMagicLink(&email, nil, tenantId, userContext[0])
 }
 
-func CreateMagicLinkByPhoneNumber(tenantId string, phoneNumber string, userContext ...supertokens.UserContext) (string, error) {
+// CreateMagicLinkByPhoneNumber generates a magic link for the provided phone number and returns the link URL, the code lifetime in milliseconds, and any error.
+func CreateMagicLinkByPhoneNumber(tenantId string, phoneNumber string, userContext ...supertokens.UserContext) (string, uint64, error) {
 	instance, err := GetRecipeInstanceOrThrowError()
 	if err != nil {
-		return "", err
+		return "", 0, err
 	}
 	if len(userContext) == 0 {
 		userContext = append(userContext, &map[string]interface{}{})
