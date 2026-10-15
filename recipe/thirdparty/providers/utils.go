@@ -183,10 +183,17 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 
 // JWKS utils
 var jwksKeys = map[string]*keyfunc.JWKS{}
-var jwksKeysLock = sync.Mutex{}
+var jwksKeysLock = sync.RWMutex{}
+
+func getCachedJWKS(url string) (*keyfunc.JWKS, bool) {
+	jwksKeysLock.RLock()
+	defer jwksKeysLock.RUnlock()
+	jwks, ok := jwksKeys[url]
+	return jwks, ok
+}
 
 func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
-	if jwks, ok := jwksKeys[url]; ok {
+	if jwks, ok := getCachedJWKS(url); ok {
 		return jwks, nil
 	}
 
@@ -336,10 +343,17 @@ func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodel
 }
 
 var oidcInfoMap = map[string]map[string]interface{}{}
-var oidcInfoMapLock = sync.Mutex{}
+var oidcInfoMapLock = sync.RWMutex{}
+
+func getCachedOIDCDiscoveryInfo(issuer string) (map[string]interface{}, bool) {
+	oidcInfoMapLock.RLock()
+	defer oidcInfoMapLock.RUnlock()
+	oidcInfo, ok := oidcInfoMap[issuer]
+	return oidcInfo, ok
+}
 
 func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+	if oidcInfo, ok := getCachedOIDCDiscoveryInfo(issuer); ok {
 		return oidcInfo, nil
 	}
 

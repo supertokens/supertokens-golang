@@ -31,11 +31,13 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return tpmodels.ProviderConfigForClientType{}, err
 			}
 
+			authorizationEndpointQueryParams := copyConfigMapForUpdate(config.AuthorizationEndpointQueryParams)
 			if config.AdditionalConfig == nil || config.AdditionalConfig["hd"] == nil || config.AdditionalConfig["hd"] == "" {
-				config.AuthorizationEndpointQueryParams["hd"] = "*"
+				authorizationEndpointQueryParams["hd"] = "*"
 			} else {
-				config.AuthorizationEndpointQueryParams["hd"] = config.AdditionalConfig["hd"]
+				authorizationEndpointQueryParams["hd"] = config.AdditionalConfig["hd"]
 			}
+			config.AuthorizationEndpointQueryParams = authorizationEndpointQueryParams
 
 			return config, nil
 		}
