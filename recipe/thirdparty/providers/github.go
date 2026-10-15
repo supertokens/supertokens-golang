@@ -70,7 +70,12 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return wrongClientIdError
 			}
 
-			clientId, clientIdOk := app.(map[string]interface{})["client_id"]
+			appMap, appMapOk := app.(map[string]interface{})
+			if !appMapOk {
+				return wrongClientIdError
+			}
+
+			clientId, clientIdOk := appMap["client_id"]
 
 			if !clientIdOk {
 				return wrongClientIdError
@@ -152,17 +157,36 @@ func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse 
 		return tpmodels.TypeUserInfo{}, errors.New("rawUserInfoResponse.FromUserInfoAPI is not available")
 	}
 
-	result := tpmodels.TypeUserInfo{
-		ThirdPartyUserId: fmt.Sprint(int64(rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})["id"].(float64))),
+	user, userOk := rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})
+	if !userOk {
+		return tpmodels.TypeUserInfo{}, errors.New("the user info response from GitHub is not a JSON object")
+	}
+	userId, userIdOk := user["id"].(float64)
+	if !userIdOk {
+		return tpmodels.TypeUserInfo{}, errors.New("third party user id is missing")
 	}
 
-	emailsInfo := rawUserInfoResponse.FromUserInfoAPI["emails"].([]interface{})
+	result := tpmodels.TypeUserInfo{
+		ThirdPartyUserId: fmt.Sprint(int64(userId)),
+	}
+
+	emailsInfo, emailsInfoOk := rawUserInfoResponse.FromUserInfoAPI["emails"].([]interface{})
+	if !emailsInfoOk {
+		return tpmodels.TypeUserInfo{}, errors.New("the emails response from GitHub is not a JSON array")
+	}
 	for _, info := range emailsInfo {
-		emailInfoMap := info.(map[string]interface{})
-		if emailInfoMap["primary"].(bool) {
+		emailInfoMap, emailInfoMapOk := info.(map[string]interface{})
+		if !emailInfoMapOk {
+			continue
+		}
+		if primary, primaryOk := emailInfoMap["primary"].(bool); primaryOk && primary {
+			email, emailOk := emailInfoMap["email"].(string)
+			if !emailOk {
+				continue
+			}
 			verified, verifiedOk := emailInfoMap["verified"].(bool)
 			result.Email = &tpmodels.EmailStruct{
-				ID:         emailInfoMap["email"].(string),
+				ID:         email,
 				IsVerified: verified && verifiedOk,
 			}
 			break

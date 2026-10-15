@@ -157,7 +157,8 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.StatusCode, err
+		// resp is nil if the request failed
+		return nil, -1, err
 	}
 	defer resp.Body.Close()
 
@@ -219,15 +220,19 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 // User map utils
 func accessField(obj interface{}, key string) (interface{}, bool) {
 	keyParts := strings.Split(key, ".")
-	var ok bool
 	for _, k := range keyParts {
-		obj, ok = obj.(map[string]interface{})[k]
+		objMap, isMap := obj.(map[string]interface{})
+		if !isMap {
+			return nil, false
+		}
 
+		var ok bool
+		obj, ok = objMap[k]
 		if !ok {
 			return nil, false
 		}
 	}
-	return obj, ok
+	return obj, true
 }
 
 var DevOauthClientIds = [...]string{
@@ -378,8 +383,12 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 	if err != nil {
 		return nil, err
 	}
-	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
-	return oidcInfoMap[issuer], nil
+	oidcInfoObj, ok := oidcInfo.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("the OIDC discovery response from %s is not a JSON object", issuer)
+	}
+	oidcInfoMap[issuer] = oidcInfoObj
+	return oidcInfoObj, nil
 }
 
 func normaliseOIDCEndpointToIncludeWellKnown(url string) string {

@@ -53,14 +53,26 @@ func Linkedin(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
-			rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
+			userInfoMap, ok := userInfoFromAccessToken.(map[string]interface{})
+			if !ok {
+				return tpmodels.TypeUserInfo{}, errors.New("the user info response from LinkedIn is not a JSON object")
+			}
+			rawUserInfoFromProvider.FromUserInfoAPI = userInfoMap
+
+			sub, ok := userInfoMap["sub"].(string)
+			if !ok {
+				return tpmodels.TypeUserInfo{}, errors.New("third party user id is missing")
+			}
 
 			userInfoResult := tpmodels.TypeUserInfo{
-				ThirdPartyUserId: rawUserInfoFromProvider.FromUserInfoAPI["sub"].(string),
-				Email: &tpmodels.EmailStruct{
-					ID:         rawUserInfoFromProvider.FromUserInfoAPI["email"].(string),
-					IsVerified: rawUserInfoFromProvider.FromUserInfoAPI["email_verified"].(bool),
-				},
+				ThirdPartyUserId: sub,
+			}
+			if email, ok := userInfoMap["email"].(string); ok {
+				emailVerified, _ := userInfoMap["email_verified"].(bool)
+				userInfoResult.Email = &tpmodels.EmailStruct{
+					ID:         email,
+					IsVerified: emailVerified,
+				}
 			}
 
 			return tpmodels.TypeUserInfo{
