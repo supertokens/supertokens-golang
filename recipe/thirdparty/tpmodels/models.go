@@ -16,6 +16,8 @@
 package tpmodels
 
 import (
+	"net/http"
+
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -86,14 +88,53 @@ type TypeNormalisedInputSignInAndUp struct {
 	Providers []ProviderInput
 }
 
+// IsValidFrontendRedirectURIFunc decides whether the Apple callback may redirect to the
+// frontendRedirectURI found in the state. frontendRedirectURI is the target after parsing and
+// re-serialising it: the browser is sent to exactly this scheme, host, port, path and fragment.
+// Only the query changes: the posted fields (code, state, id_token, ...) are set on it, replacing
+// params with the same name, and it is re-encoded with its keys sorted. Returning false rejects
+// the request with a 400, and returning an error ends the request with that error without
+// redirecting.
+//
+// The value is normalised less than in the Node.js SDK: the scheme is lowercased and special
+// characters are escaped, but the host's case, an explicit default port and an empty path are
+// kept. For example, https://app.example.com is passed as https://app.example.com (not
+// https://app.example.com/), and https://App.example.com:443/cb is passed unchanged. If you compare
+// against an exact list, either list every form your frontends send, or parse the value and
+// compare the lowercased host, the port (with the default filled in) and the path.
+//
+// Treat frontendRedirectURI as untrusted: whoever starts the sign-in controls the whole state.
+// Compare it against an exact list of allowed URLs, or parse it and compare the scheme, host,
+// port and path. Don't use prefix or substring checks. For example, all of these pass a
+// strings.HasPrefix(uri, "https://app.example.com") check:
+//   - https://app.example.com.evil.test/
+//   - https://app.example.com@evil.test/
+//   - intent://callback#Intent;package=attacker.app;end (the fragment picks the receiving app)
+//
+// The redirect carries Apple's code and id_token. Any app on the device can register a custom
+// scheme, so prefer verified https universal/app links over custom schemes.
+type IsValidFrontendRedirectURIFunc func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error)
+
 type TypeInput struct {
 	SignInAndUpFeature TypeInputSignInAndUp
 	Override           *OverrideStruct
+	// IsValidFrontendRedirectURI is optional. When set, it replaces the default check that
+	// the Apple callback only redirects to the configured website origin. Use it if the
+	// origin depends on the request, if one backend serves several frontends, or to allow
+	// mobile deep links (https app links or custom schemes such as myapp://callback).
+	// Relative URLs, and javascript:, data:, vbscript:, file:, blob:, about: and filesystem:
+	// URLs are always rejected without calling it.
+	//
+	// The URL comes from the request and is untrusted: compare it exactly, never by prefix or
+	// substring. See IsValidFrontendRedirectURIFunc for examples, and prefer verified https
+	// universal/app links over custom schemes, since the redirect carries Apple's code and id_token.
+	IsValidFrontendRedirectURI IsValidFrontendRedirectURIFunc
 }
 
 type TypeNormalisedInput struct {
-	SignInAndUpFeature TypeNormalisedInputSignInAndUp
-	Override           OverrideStruct
+	SignInAndUpFeature         TypeNormalisedInputSignInAndUp
+	Override                   OverrideStruct
+	IsValidFrontendRedirectURI IsValidFrontendRedirectURIFunc
 }
 
 type OverrideStruct struct {

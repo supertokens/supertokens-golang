@@ -22,6 +22,7 @@ import (
 	"fmt"
 	"net/http"
 	"net/url"
+	"regexp"
 	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
@@ -124,59 +125,87 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 
 		state, ok := formPostInfoFromProvider["state"].(string)
 		if !ok || state == "" {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is missing or not a string")
 			return invalidStateError
 		}
 
-		stateBytes, err := base64.StdEncoding.DecodeString(state)
+		stateBytes, err := decodeAppleState(state)
 		if err != nil {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is not base64 encoded")
 			return invalidStateError
 		}
 
 		var stateObj map[string]interface{}
 		err = json.Unmarshal(stateBytes, &stateObj)
 		if err != nil || stateObj == nil {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is not a JSON object")
 			return invalidStateError
 		}
 
 		redirectURL, ok := stateObj["frontendRedirectURI"].(string)
 		if !ok {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because frontendRedirectURI in the state is missing or not a string")
 			return invalidRedirectError
 		}
 
 		parsedRedirectURL, err := url.Parse(redirectURL)
 		if err != nil {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because frontendRedirectURI can not be parsed: " + err.Error())
 			return invalidRedirectError
 		}
 
-		redirectOrigin, err := getComparableOrigin(parsedRedirectURL)
-		if err != nil {
-			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI: " + err.Error())
-			return invalidRedirectError
-		}
+		if options.Config.IsValidFrontendRedirectURI != nil {
+			// The app decides which targets are allowed, so we also accept custom schemes (e.g.: for mobile deep
+			// links) here, but never schemes that could run code or read local data in the browser.
+			err := checkRedirectTargetForCustomCheck(parsedRedirectURL)
+			if err != nil {
+				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI: " + err.Error())
+				return invalidRedirectError
+			}
 
-		websiteOrigin, err := options.AppInfo.GetOrigin(options.Req, userContext)
-		if err != nil {
-			return err
-		}
-		parsedWebsiteOrigin, err := url.Parse(websiteOrigin.GetAsStringDangerous())
-		if err != nil {
-			return err
-		}
-		expectedOrigin, err := getComparableOrigin(parsedWebsiteOrigin)
-		if err != nil {
-			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI because the configured origin can not be compared: " + err.Error())
-			return invalidRedirectError
-		}
+			// We pass the URL as it will be serialised in the Location header (before the posted fields
+			// are added), so the app validates exactly where the browser will be sent.
+			isValid, err := options.Config.IsValidFrontendRedirectURI(parsedRedirectURL.String(), options.Req, userContext)
+			if err != nil {
+				return err
+			}
+			if !isValid {
+				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI because IsValidFrontendRedirectURI returned false")
+				return invalidRedirectError
+			}
+		} else {
+			redirectOrigin, err := getComparableOrigin(parsedRedirectURL)
+			if err != nil {
+				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI: " + err.Error() + ". To allow other targets (e.g. mobile deep links), use IsValidFrontendRedirectURI.")
+				return invalidRedirectError
+			}
 
-		if redirectOrigin != expectedOrigin {
-			supertokens.LogDebugMessage(fmt.Sprintf("appleRedirectHandlerPOST: rejecting frontendRedirectURI because its origin (%s) does not match the configured origin (%s)", redirectOrigin, expectedOrigin))
-			return invalidRedirectError
+			websiteOrigin, err := options.AppInfo.GetOrigin(options.Req, userContext)
+			if err != nil {
+				return err
+			}
+			parsedWebsiteOrigin, err := url.Parse(websiteOrigin.GetAsStringDangerous())
+			if err != nil {
+				return err
+			}
+			expectedOrigin, err := getComparableOrigin(parsedWebsiteOrigin)
+			if err != nil {
+				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI because the configured origin can not be compared: " + err.Error() + ". Use IsValidFrontendRedirectURI to allow redirects in this case.")
+				return invalidRedirectError
+			}
+
+			if redirectOrigin != expectedOrigin {
+				supertokens.LogDebugMessage(fmt.Sprintf("appleRedirectHandlerPOST: rejecting frontendRedirectURI because its origin (%s) does not match the configured origin (%s). If the origin depends on the request, check what it resolves to for this request, or use IsValidFrontendRedirectURI.", redirectOrigin, expectedOrigin))
+				return invalidRedirectError
+			}
 		}
 
 		query := parsedRedirectURL.Query()
 
+		// The posted fields replace any query params with the same name, so the frontend always reads
+		// the values Apple sent
 		for k, v := range formPostInfoFromProvider {
-			query.Add(k, fmt.Sprint(v))
+			query.Set(k, fmt.Sprint(v))
 		}
 
 		parsedRedirectURL.RawQuery = query.Encode()
@@ -192,6 +221,42 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		SignInUpPOST:             &signInUpPOST,
 		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
 	}
+}
+
+// The Apple callback state is base64 encoded, either with the standard or the URL-safe alphabet,
+// and with or without padding
+var appleStateRegex = regexp.MustCompile(`^[A-Za-z0-9+/_-]+={0,2}$`)
+
+func decodeAppleState(state string) ([]byte, error) {
+	if !appleStateRegex.MatchString(state) {
+		return nil, errors.New("the state is not base64 encoded")
+	}
+	normalisedState := strings.NewReplacer("-", "+", "_", "/").Replace(strings.TrimRight(state, "="))
+	return base64.RawStdEncoding.DecodeString(normalisedState)
+}
+
+// Schemes we never redirect to, because the browser would run code or expose local data with them
+var disallowedRedirectSchemes = []string{"javascript", "data", "vbscript", "file", "blob", "about", "filesystem"}
+
+// checkRedirectTargetForCustomCheck returns an error if the URL can't be passed to the app's
+// IsValidFrontendRedirectURI: it must be absolute, http(s) URLs must have a host, and the scheme
+// must not be one of disallowedRedirectSchemes.
+func checkRedirectTargetForCustomCheck(parsedURL *url.URL) error {
+	// url.Parse lowercases the scheme
+	scheme := strings.ToLower(parsedURL.Scheme)
+	if scheme == "" {
+		return errors.New("the URL must be absolute")
+	}
+	if scheme == "http" || scheme == "https" {
+		_, err := getComparableOrigin(parsedURL)
+		return err
+	}
+	for _, disallowedScheme := range disallowedRedirectSchemes {
+		if scheme == disallowedScheme {
+			return errors.New("the URL uses a disallowed scheme: " + scheme)
+		}
+	}
+	return nil
 }
 
 type comparableOrigin struct {

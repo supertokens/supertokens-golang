@@ -3,6 +3,7 @@ package thirdparty
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -139,6 +140,7 @@ func TestAppleCallbackRejectsRedirectToAnotherOrigin(t *testing.T) {
 		"//evil.test/cb",
 		"/auth/callback/apple",
 		"javascript:alert(1)",
+		"myapp://callback",
 		"",
 	} {
 		assertAppleCallbackRejected(t, testServer, appleCallbackForm(encodeAppleStateWithRedirect(redirect)), redirect)
@@ -194,4 +196,228 @@ func TestAppleCallbackHandlerRejectsNonStringStateWithoutPanicking(t *testing.T)
 		assert.ErrorAs(t, err, &supertokens.BadInputError{})
 		assert.Empty(t, rec.Header().Get("Location"))
 	}
+}
+
+func TestAppleCallbackCustomRedirectValidatorReplacesOriginCheck(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	validatedURIs := []string{}
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, &tpmodels.TypeInput{
+		IsValidFrontendRedirectURI: func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+			assert.NotNil(t, req)
+			validatedURIs = append(validatedURIs, frontendRedirectURI)
+			return frontendRedirectURI == "https://other.example.com/auth/callback/apple", nil
+		},
+	})
+	defer testServer.Close()
+
+	// A different origin is allowed when the custom validator allows it
+	state := encodeAppleStateWithRedirect("https://other.example.com/auth/callback/apple")
+	res, _ := postAppleCallback(t, testServer, appleCallbackForm(state))
+	if assert.NotNil(t, res) {
+		assert.Equal(t, http.StatusSeeOther, res.StatusCode)
+		location, err := url.Parse(res.Header.Get("Location"))
+		assert.NoError(t, err)
+		assert.Equal(t, "other.example.com", location.Host)
+		assert.Equal(t, "testcode", location.Query().Get("code"))
+	}
+
+	// The configured origin is rejected when the custom validator rejects it
+	assertAppleCallbackRejected(t, testServer, appleCallbackForm(encodeAppleStateWithRedirect("https://app.example.com/auth/callback/apple")), "same origin rejected by custom validator")
+
+	assert.Equal(t, []string{
+		"https://other.example.com/auth/callback/apple",
+		"https://app.example.com/auth/callback/apple",
+	}, validatedURIs)
+
+	// Disallowed schemes are still rejected before the custom validator is called
+	assertAppleCallbackRejected(t, testServer, appleCallbackForm(encodeAppleStateWithRedirect("javascript:alert(1)")), "javascript URL")
+	assert.Len(t, validatedURIs, 2)
+}
+
+func TestAppleCallbackCustomRedirectValidatorAllowsCustomSchemes(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, &tpmodels.TypeInput{
+		IsValidFrontendRedirectURI: func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+			return true, nil
+		},
+	})
+	defer testServer.Close()
+
+	for _, redirect := range []string{
+		"myapp://callback",
+		"myapp:callback",
+		"com.example.app:/oauth2redirect",
+		"intent://callback#Intent;package=com.example.app;scheme=signinwithapple;end",
+	} {
+		state := encodeAppleStateWithRedirect(redirect)
+		res, _ := postAppleCallback(t, testServer, appleCallbackForm(state))
+		if !assert.NotNil(t, res, redirect) {
+			continue
+		}
+		assert.Equal(t, http.StatusSeeOther, res.StatusCode, redirect)
+
+		// The posted fields are added as the query, keeping the rest of the target as it was
+		locationHeader := res.Header.Get("Location")
+		targetWithoutFragment, fragment, hasFragment := strings.Cut(redirect, "#")
+		assert.True(t, strings.HasPrefix(locationHeader, targetWithoutFragment+"?"), "%s -> %s", redirect, locationHeader)
+		if hasFragment {
+			assert.True(t, strings.HasSuffix(locationHeader, "#"+fragment), "%s -> %s", redirect, locationHeader)
+		}
+
+		location, err := url.Parse(locationHeader)
+		if !assert.NoError(t, err, redirect) {
+			continue
+		}
+		target, _ := url.Parse(redirect)
+		assert.Equal(t, target.Scheme, location.Scheme, redirect)
+		assert.Equal(t, target.Host, location.Host, redirect)
+		assert.Equal(t, target.Path, location.Path, redirect)
+		assert.Equal(t, target.Opaque, location.Opaque, redirect)
+		assert.Equal(t, target.Fragment, location.Fragment, redirect)
+		assert.Equal(t, "testcode", location.Query().Get("code"), redirect)
+		assert.Equal(t, state, location.Query().Get("state"), redirect)
+	}
+}
+
+func TestAppleCallbackCustomRedirectValidatorReceivesTheRedirectTarget(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	var validatedURI string
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, &tpmodels.TypeInput{
+		IsValidFrontendRedirectURI: func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+			validatedURI = frontendRedirectURI
+			return true, nil
+		},
+	})
+	defer testServer.Close()
+
+	postedFields := appleCallbackForm("")
+	for _, redirect := range []string{
+		"HTTPS://other.example.com/auth/callback/apple",
+		"https://other.example.com/auth/callback/apple?existing=1",
+		"https://other.example.com/a b",
+		"MyApp://callback",
+		"myapp:callback",
+		"intent://callback#Intent;package=com.example.app;scheme=signinwithapple;end",
+	} {
+		validatedURI = ""
+		res, _ := postAppleCallback(t, testServer, appleCallbackForm(encodeAppleStateWithRedirect(redirect)))
+		if !assert.NotNil(t, res, redirect) {
+			continue
+		}
+		assert.Equal(t, http.StatusSeeOther, res.StatusCode, redirect)
+
+		// The function must see exactly where the browser is sent, without the posted fields
+		location, err := url.Parse(res.Header.Get("Location"))
+		if !assert.NoError(t, err, redirect) {
+			continue
+		}
+		query := location.Query()
+		for field := range postedFields {
+			query.Del(field)
+		}
+		location.RawQuery = query.Encode()
+		assert.Equal(t, location.String(), validatedURI, redirect)
+	}
+}
+
+func TestAppleCallbackCustomRedirectValidatorIsNotCalledForDisallowedTargets(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	validatedURIs := []string{}
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, &tpmodels.TypeInput{
+		IsValidFrontendRedirectURI: func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+			validatedURIs = append(validatedURIs, frontendRedirectURI)
+			return true, nil
+		},
+	})
+	defer testServer.Close()
+
+	for _, redirect := range []string{
+		"javascript:alert(1)",
+		"JavaScript:alert(1)",
+		"data:text/html,<script>alert(1)</script>",
+		"vbscript:msgbox(1)",
+		"file:///etc/passwd",
+		"blob:https://app.example.com/x",
+		"about:blank",
+		"filesystem:https://app.example.com/temporary/x",
+		"/auth/callback/apple",
+		"//evil.test/cb",
+		"https:evil.test",
+	} {
+		assertAppleCallbackRejected(t, testServer, appleCallbackForm(encodeAppleStateWithRedirect(redirect)), redirect)
+	}
+	assert.Empty(t, validatedURIs)
+}
+
+func TestAppleCallbackAcceptsURLSafeBase64State(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, nil)
+	defer testServer.Close()
+
+	stateJSON, _ := json.Marshal(map[string]interface{}{
+		"frontendRedirectURI": "https://app.example.com/auth/callback/apple",
+		"stateForProvider":    "??>>??>>",
+	})
+	// Make sure the test covers the characters that differ between the two alphabets
+	assert.True(t, strings.ContainsAny(base64.StdEncoding.EncodeToString(stateJSON), "+/"))
+
+	for description, state := range map[string]string{
+		"URL-safe alphabet with padding":    base64.URLEncoding.EncodeToString(stateJSON),
+		"URL-safe alphabet without padding": base64.RawURLEncoding.EncodeToString(stateJSON),
+		"standard alphabet without padding": base64.RawStdEncoding.EncodeToString(stateJSON),
+	} {
+		res, _ := postAppleCallback(t, testServer, appleCallbackForm(state))
+		if !assert.NotNil(t, res, description) {
+			continue
+		}
+		assert.Equal(t, http.StatusSeeOther, res.StatusCode, description)
+		assert.True(t, strings.HasPrefix(res.Header.Get("Location"), "https://app.example.com/auth/callback/apple?"), description)
+	}
+}
+
+func TestAppleCallbackReturnsErrorFromCustomRedirectValidator(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, &tpmodels.TypeInput{
+		IsValidFrontendRedirectURI: func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+			return true, errors.New("custom validator failure")
+		},
+	})
+	defer testServer.Close()
+
+	res, body := postAppleCallback(t, testServer, appleCallbackForm(encodeAppleStateWithRedirect("https://app.example.com/auth/callback/apple")))
+	if assert.NotNil(t, res) {
+		assert.Equal(t, http.StatusInternalServerError, res.StatusCode)
+		assert.Empty(t, res.Header.Get("Location"))
+		assert.Contains(t, body, "custom validator failure")
+	}
+}
+
+func TestAppleCallbackReplacesQueryParamsWithThePostedFields(t *testing.T) {
+	BeforeEach()
+	defer AfterEach()
+	testServer := setUpAppleRedirectTest(t, supertokens.AppInfo{WebsiteDomain: "https://app.example.com"}, nil)
+	defer testServer.Close()
+
+	state := encodeAppleStateWithRedirect("https://app.example.com/auth/callback/apple?code=stale-code&state=stale-state&existing=1")
+	res, _ := postAppleCallback(t, testServer, appleCallbackForm(state))
+	if !assert.NotNil(t, res) {
+		return
+	}
+	assert.Equal(t, http.StatusSeeOther, res.StatusCode)
+
+	location, err := url.Parse(res.Header.Get("Location"))
+	if !assert.NoError(t, err) {
+		return
+	}
+	query := location.Query()
+	assert.Equal(t, []string{"testcode"}, query["code"])
+	assert.Equal(t, []string{state}, query["state"])
+	assert.Equal(t, []string{"testidtoken"}, query["id_token"])
+	assert.Equal(t, []string{"1"}, query["existing"])
 }
