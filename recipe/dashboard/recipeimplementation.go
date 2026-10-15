@@ -55,13 +55,20 @@ func makeRecipeImplementation(querier supertokens.Querier) dashboardmodels.Recip
 
 			// For all non GET requests we also want to check if the user is allowed to perform this operation
 			if req.Method != http.MethodGet {
+				// The exemptions below are matched against the normalised request path
+				// (the same one used for routing), never the query string.
+				requestPath, err := supertokens.NewNormalisedURLPath(req.URL.Path)
+				if err != nil {
+					return false, err
+				}
+
 				// We dont want to block the analytics API
-				if strings.HasSuffix(req.RequestURI, constants.DashboardAnalyticsAPI) {
+				if strings.HasSuffix(requestPath.GetAsStringDangerous(), constants.DashboardAnalyticsAPI) {
 					return true, nil
 				}
 
 				// We do not want to block the sign out request
-				if strings.HasSuffix(req.RequestURI, constants.SignOutAPI) {
+				if strings.HasSuffix(requestPath.GetAsStringDangerous(), constants.SignOutAPI) {
 					return true, nil
 				}
 
