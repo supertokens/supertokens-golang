@@ -90,6 +90,53 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 	return result, nil
 }
 
+// doPostRequestWithJSONBody sends params as a JSON body, for APIs that don't accept form data.
+// It returns -1 as the status if the request itself failed. It doesn't log the request or response
+// bodies, because they can contain tokens.
+func doPostRequestWithJSONBody(url string, params map[string]interface{}, headers map[string]string) (map[string]interface{}, int, error) {
+	supertokens.LogDebugMessage(fmt.Sprintf("POST request with a JSON body to %s", url))
+
+	postBody, err := json.Marshal(params)
+	if err != nil {
+		return nil, -1, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+	if err != nil {
+		return nil, -1, err
+	}
+	req.Header.Set("accept", "application/json")
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+	req.Header.Set("content-type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, -1, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
+
+	supertokens.LogDebugMessage(fmt.Sprintf("Received response with status %d from %s", resp.StatusCode, url))
+
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
+
+	if resp.StatusCode >= 300 {
+		return nil, resp.StatusCode, fmt.Errorf("POST request to %s resulted in %d status", url, resp.StatusCode)
+	}
+
+	return result, resp.StatusCode, nil
+}
+
 func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, int, error) {
 	supertokens.LogDebugMessage(fmt.Sprintf("POST request to %s, with form fields %v and headers %v", url, params, headers))
 
