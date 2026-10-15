@@ -121,13 +121,20 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 	rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{}
 
 	if idTokenOk && config.JwksURI != "" {
+		// The id_token must have been issued for this client. An empty expected
+		// audience would disable the aud check in the jwt library, so we fail closed.
+		expectedAudience := getActualClientIdFromDevelopmentClientId(config.ClientID)
+		if expectedAudience == "" {
+			return tpmodels.TypeUserInfo{}, errors.New("cannot verify id_token: the provider's clientId is not configured")
+		}
+
 		claims := jwt.MapClaims{}
 		jwksURL := config.JwksURI
 		jwks, err := getJWKSFromURL(jwksURL)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
+		token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc, jwt.WithAudience(expectedAudience))
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
