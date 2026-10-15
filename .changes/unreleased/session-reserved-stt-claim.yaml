@@ -1,0 +1,3 @@
+kind: Changed
+body: "`stt` is now a reserved access token payload claim, like `sub` or `exp`. Access tokens with an `stt` claim other than `0` are rejected, so if your app sets a custom claim named `stt`, rename it before upgrading: users whose access token carries one will be signed out."
+time: 2026-10-15T23:23:00.000000+02:00
