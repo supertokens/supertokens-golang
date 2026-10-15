@@ -18,9 +18,11 @@ package api
 import (
 	"encoding/base64"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailverification"
 	"github.com/supertokens/supertokens-golang/recipe/session"
@@ -117,23 +119,58 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		state := formPostInfoFromProvider["state"].(string)
+		invalidStateError := supertokens.BadInputError{Msg: "Invalid state in the Apple callback"}
+		invalidRedirectError := supertokens.BadInputError{Msg: "Invalid frontendRedirectURI in the Apple callback state"}
+
+		state, ok := formPostInfoFromProvider["state"].(string)
+		if !ok || state == "" {
+			return invalidStateError
+		}
+
 		stateBytes, err := base64.StdEncoding.DecodeString(state)
-
 		if err != nil {
-			return err
+			return invalidStateError
 		}
 
-		stateObj := map[string]interface{}{}
+		var stateObj map[string]interface{}
 		err = json.Unmarshal(stateBytes, &stateObj)
-		if err != nil {
-			return err
+		if err != nil || stateObj == nil {
+			return invalidStateError
 		}
 
-		redirectURL := stateObj["frontendRedirectURI"].(string)
+		redirectURL, ok := stateObj["frontendRedirectURI"].(string)
+		if !ok {
+			return invalidRedirectError
+		}
+
 		parsedRedirectURL, err := url.Parse(redirectURL)
 		if err != nil {
+			return invalidRedirectError
+		}
+
+		redirectOrigin, err := getComparableOrigin(parsedRedirectURL)
+		if err != nil {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI: " + err.Error())
+			return invalidRedirectError
+		}
+
+		websiteOrigin, err := options.AppInfo.GetOrigin(options.Req, userContext)
+		if err != nil {
 			return err
+		}
+		parsedWebsiteOrigin, err := url.Parse(websiteOrigin.GetAsStringDangerous())
+		if err != nil {
+			return err
+		}
+		expectedOrigin, err := getComparableOrigin(parsedWebsiteOrigin)
+		if err != nil {
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI because the configured origin can not be compared: " + err.Error())
+			return invalidRedirectError
+		}
+
+		if redirectOrigin != expectedOrigin {
+			supertokens.LogDebugMessage(fmt.Sprintf("appleRedirectHandlerPOST: rejecting frontendRedirectURI because its origin (%s) does not match the configured origin (%s)", redirectOrigin, expectedOrigin))
+			return invalidRedirectError
 		}
 
 		query := parsedRedirectURL.Query()
@@ -155,4 +192,43 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		SignInUpPOST:             &signInUpPOST,
 		AppleRedirectHandlerPOST: &appleRedirectHandlerPOST,
 	}
+}
+
+type comparableOrigin struct {
+	scheme string
+	host   string
+	port   string
+}
+
+func (o comparableOrigin) String() string {
+	return o.scheme + "://" + o.host + ":" + o.port
+}
+
+// getComparableOrigin returns the origin of an absolute http(s) URL in a form that can be compared
+// directly: the scheme and host are lowercased and the default port is filled in.
+func getComparableOrigin(parsedURL *url.URL) (comparableOrigin, error) {
+	scheme := strings.ToLower(parsedURL.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return comparableOrigin{}, errors.New("the URL must be an absolute http or https URL")
+	}
+
+	host := strings.ToLower(parsedURL.Hostname())
+	if host == "" {
+		return comparableOrigin{}, errors.New("the URL must have a host")
+	}
+
+	port := parsedURL.Port()
+	if port == "" {
+		if scheme == "https" {
+			port = "443"
+		} else {
+			port = "80"
+		}
+	}
+
+	return comparableOrigin{
+		scheme: scheme,
+		host:   host,
+		port:   port,
+	}, nil
 }
