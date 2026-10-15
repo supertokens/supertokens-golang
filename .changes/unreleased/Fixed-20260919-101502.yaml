@@ -1,0 +1,4 @@
+kind: Fixed
+body: '`DefaultValidatePhoneNumber` reported "Please make sure the email field yields
+  a string" when given a non-string value. It now refers to the phone number field.'
+time: 2026-09-19T10:15:02Z

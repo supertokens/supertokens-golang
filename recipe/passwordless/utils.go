@@ -19,7 +19,7 @@ import (
 	"reflect"
 	"regexp"
 
-	"github.com/nyaruka/phonenumbers"
+	"github.com/nyaruka/phonenumbers/v2"
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/emaildelivery/backwardCompatibilityService"
@@ -167,7 +167,7 @@ func DefaultValidateEmailAddress(value interface{}, tenantId string) *string {
 
 func DefaultValidatePhoneNumber(value interface{}, tenantId string) *string {
 	if reflect.TypeOf(value).Kind() != reflect.String {
-		msg := "Development bug: Please make sure the email field yields a string"
+		msg := "Development bug: Please make sure the phone number field yields a string"
 		return &msg
 	}
 

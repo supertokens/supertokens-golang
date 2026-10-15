@@ -20,7 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/url"
 	"sort"
@@ -367,7 +367,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 
 		if response.StatusCode == 200 && !querierDisableCache && userContext != nil {
 			defer response.Body.Close()
-			body, err := ioutil.ReadAll(response.Body)
+			body, err := io.ReadAll(response.Body)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -386,7 +386,7 @@ func (q *Querier) SendGetRequest(path string, params map[string]string, userCont
 
 			(*userContext)["_default"] = defaultContext
 
-			// we send the cached body here because we cannot do ioutil.ReadAll(response.Body)
+			// we send the cached body here because we cannot do io.ReadAll(response.Body)
 			// once again on the body.
 			return response, body, nil
 		}
@@ -580,7 +580,7 @@ func (q *Querier) sendRequestHelper(path NormalisedURLPath, httpRequest httpRequ
 			return nil, nil, errors.New("You found a bug in our code! Response should never be nil here")
 		}
 		defer resp.Body.Close()
-		body, err = ioutil.ReadAll(resp.Body)
+		body, err = io.ReadAll(resp.Body)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -21,7 +21,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/passwordless/smsdelivery/supertokensService"
@@ -55,7 +55,7 @@ func logAndReturnError(resp *http.Response, err error) error {
 
 	supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
 	var body []byte
-	body, err = ioutil.ReadAll(resp.Body)
+	body, err = io.ReadAll(resp.Body)
 	if err != nil {
 		supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 		return err

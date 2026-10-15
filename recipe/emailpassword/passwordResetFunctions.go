@@ -20,7 +20,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 
 	"github.com/supertokens/supertokens-golang/recipe/emailpassword/epmodels"
@@ -74,7 +74,7 @@ func DefaultCreateAndSendCustomPasswordResetEmail(appInfo supertokens.Normalised
 			supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 		} else {
 			supertokens.LogDebugMessage(fmt.Sprintf("Error status: %d", resp.StatusCode))
-			body, err := ioutil.ReadAll(resp.Body)
+			body, err := io.ReadAll(resp.Body)
 			if err != nil {
 				supertokens.LogDebugMessage(fmt.Sprintf("Error: %s", err.Error()))
 			} else {

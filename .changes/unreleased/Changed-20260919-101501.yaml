@@ -1,0 +1,6 @@
+kind: Changed
+body: 'Upgraded `github.com/nyaruka/phonenumbers` from v1.0.73 to v2.0.12, which refreshes
+  the bundled libphonenumber metadata. Phone numbers whose validity changed upstream
+  since 2022 are now validated against current metadata. The library API used by the
+  passwordless recipe (`Parse`, `IsValidNumber`, `Format`) is unchanged.'
+time: 2026-09-19T10:15:01Z

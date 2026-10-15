@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math"
 	"net/http"
 	"net/url"
@@ -237,7 +236,7 @@ func SendUnauthorisedAccess(res http.ResponseWriter) error {
 
 func ReadFromRequest(r *http.Request) ([]byte, error) {
 	f := r.Body
-	buf, err := ioutil.ReadAll(f)
+	buf, err := io.ReadAll(f)
 	if err != nil {
 		return buf, err
 	}

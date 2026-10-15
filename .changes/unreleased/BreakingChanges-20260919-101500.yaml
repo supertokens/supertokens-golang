@@ -1,0 +1,8 @@
+kind: Breaking Changes
+body: 'Raised the minimum supported Go version from 1.18 to 1.25, following the `go`
+  directive of `github.com/nyaruka/phonenumbers/v2`. `go get github.com/supertokens/supertokens-golang`
+  on Go 1.21 or newer downloads a matching toolchain on its own and raises the `go`
+  directive of the consuming module to 1.25.0. Consumers on Go 1.20 or older, on `GOTOOLCHAIN=local`,
+  or building in an environment that cannot download a toolchain must install Go 1.25
+  first.'
+time: 2026-09-19T10:15:00Z
