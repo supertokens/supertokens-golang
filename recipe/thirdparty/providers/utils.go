@@ -198,20 +198,22 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 		return jwks, nil
 	}
 
-	jwksKeysLock.Lock()
-	defer jwksKeysLock.Unlock()
-
-	// Check again to see if it was added while we were waiting for the lock
-	if jwks, ok := jwksKeys[url]; ok {
-		return jwks, nil
-	}
-
+	// We fetch without holding the lock, so a slow JWKS endpoint doesn't block lookups of other cached keys
 	options := keyfunc.Options{
 		RefreshInterval: time.Hour,
 	}
 	jwks, err := keyfunc.Get(url, options)
 	if err != nil {
 		return nil, err
+	}
+
+	jwksKeysLock.Lock()
+	defer jwksKeysLock.Unlock()
+
+	// If another request cached the keys while we were fetching, we use those and stop our background refresh
+	if existingJWKS, ok := jwksKeys[url]; ok {
+		jwks.EndBackground()
+		return existingJWKS, nil
 	}
 	jwksKeys[url] = jwks
 	return jwks, nil
@@ -371,14 +373,7 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	oidcInfoMapLock.Lock()
-	defer oidcInfoMapLock.Unlock()
-
-	// Check again to see if it was added while we were waiting for the lock
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
-		return oidcInfo, nil
-	}
-
+	// We fetch without holding the lock, so a slow issuer doesn't block lookups of other cached issuers
 	oidcInfo, err := doGetRequest(normalizedDomain.GetAsStringDangerous()+normalizedPath.GetAsStringDangerous(), nil, nil)
 	if err != nil {
 		return nil, err
@@ -386,6 +381,14 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 	oidcInfoObj, ok := oidcInfo.(map[string]interface{})
 	if !ok {
 		return nil, fmt.Errorf("the OIDC discovery response from %s is not a JSON object", issuer)
+	}
+
+	oidcInfoMapLock.Lock()
+	defer oidcInfoMapLock.Unlock()
+
+	// If another request cached the info while we were fetching, we keep that
+	if existingOIDCInfo, ok := oidcInfoMap[issuer]; ok {
+		return existingOIDCInfo, nil
 	}
 	oidcInfoMap[issuer] = oidcInfoObj
 	return oidcInfoObj, nil
