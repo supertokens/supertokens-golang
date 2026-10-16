@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -56,6 +57,204 @@ func callAppleRedirectHandler(t *testing.T, websiteDomain string, isValidFronten
 	}
 	assert.Equal(t, http.StatusSeeOther, rec.Code)
 	return rec.Header().Get("Location"), nil
+}
+
+// withoutPostedFields removes the fields the handler adds to the redirect target's query.
+func withoutPostedFields(t *testing.T, location string) string {
+	parsedLocation, err := url.Parse(location)
+	if !assert.NoError(t, err, location) {
+		return ""
+	}
+	query := parsedLocation.Query()
+	assert.Equal(t, "testcode", query.Get("code"), location)
+	for _, field := range []string{"state", "code", "id_token"} {
+		query.Del(field)
+	}
+	parsedLocation.RawQuery = query.Encode()
+	return parsedLocation.String()
+}
+
+func TestRemoveDotSegments(t *testing.T) {
+	for input, expected := range map[string]string{
+		"https://app.example.com/a/../cb":                 "https://app.example.com/cb",
+		"https://app.example.com/a/./b/../../cb":          "https://app.example.com/cb",
+		"https://app.example.com/a/%2e%2e/cb":             "https://app.example.com/cb",
+		"https://app.example.com/a/%2E%2e/cb":             "https://app.example.com/cb",
+		"https://app.example.com/a/.%2e/cb":               "https://app.example.com/cb",
+		"https://app.example.com/a/%2E./cb":               "https://app.example.com/cb",
+		"https://app.example.com/a/%2e/cb":                "https://app.example.com/a/cb",
+		"https://app.example.com/../../cb":                "https://app.example.com/cb",
+		"https://app.example.com/a/b/..":                  "https://app.example.com/a/",
+		"https://app.example.com/./cb?x=../y#../z":        "https://app.example.com/cb?x=../y#../z",
+		"https://app.example.com/%41/%2e%2e/b%2fc":        "https://app.example.com/b%2fc",
+		"https://app.example.com/a/%2e%2e%2e/b":           "https://app.example.com/a/%2e%2e%2e/b",
+		"https://app.example.com/a/..b/c":                 "https://app.example.com/a/..b/c",
+		"https://App.Example.com:443/a/../cb":             "https://App.Example.com:443/cb",
+		"https://app.example.com":                         "https://app.example.com",
+		"https://app.example.com/":                        "https://app.example.com/",
+		"myapp://callback/a/../b":                         "myapp://callback/b",
+		"myapp://callback/a/%2e%2e/b":                     "myapp://callback/b",
+		"com.example.app:/a/../oauth2redirect":            "com.example.app:/oauth2redirect",
+		"intent://callback/a/..#Intent;package=x.y;end":   "intent://callback/#Intent;package=x.y;end",
+		"myapp:callback/../other":                         "myapp:callback/../other",
+		"https://user@app.example.com/a/%2e%2e/b?c=d#e/f": "https://user@app.example.com/b?c=d#e/f",
+	} {
+		parsedInput, err := url.Parse(input)
+		if !assert.NoError(t, err, input) {
+			continue
+		}
+		result := removeDotSegments(parsedInput)
+		assert.Equal(t, expected, result.String(), input)
+		// The input is not modified
+		assert.Equal(t, input, parsedInput.String(), input)
+
+		// Removing the dot segments again changes nothing, so the browser opens the URL as it is
+		reparsed, err := url.Parse(result.String())
+		if assert.NoError(t, err, input) {
+			assert.Equal(t, expected, removeDotSegments(reparsed).String(), input)
+		}
+	}
+}
+
+func TestGetComparableOriginComparesHostsInIDNAASCIIForm(t *testing.T) {
+	expected := comparableOrigin{scheme: "https", host: "xn--bcher-kva.example", port: "443"}
+	for _, input := range []string{
+		"https://bücher.example",
+		"https://BÜCHER.example/cb",
+		"HTTPS://Bücher.Example:443/cb",
+		"https://xn--bcher-kva.example/cb",
+		"https://XN--BCHER-KVA.example/cb",
+		"https://b%C3%BCcher.example/cb",
+		"https://ｂüｃｈｅｒ.example/cb",
+	} {
+		parsedInput, err := url.Parse(input)
+		if !assert.NoError(t, err, input) {
+			continue
+		}
+		origin, err := getComparableOrigin(parsedInput)
+		if assert.NoError(t, err, input) {
+			assert.Equal(t, expected, origin, input)
+		}
+	}
+
+	for input, expectedOrigin := range map[string]comparableOrigin{
+		"https://App.Example.com/cb":      {scheme: "https", host: "app.example.com", port: "443"},
+		"http://localhost:3000/cb":        {scheme: "http", host: "localhost", port: "3000"},
+		"http://127.0.0.1/cb":             {scheme: "http", host: "127.0.0.1", port: "80"},
+		"http://[::1]:3000/cb":            {scheme: "http", host: "::1", port: "3000"},
+		"https://my_app.example.com/cb":   {scheme: "https", host: "my_app.example.com", port: "443"},
+		"https://r3---sn-x.example.com/":  {scheme: "https", host: "r3---sn-x.example.com", port: "443"},
+		"https://bücher.example:8443/cb":  {scheme: "https", host: "xn--bcher-kva.example", port: "8443"},
+		"https://app.example.com.evil.de": {scheme: "https", host: "app.example.com.evil.de", port: "443"},
+	} {
+		parsedInput, err := url.Parse(input)
+		if !assert.NoError(t, err, input) {
+			continue
+		}
+		origin, err := getComparableOrigin(parsedInput)
+		if assert.NoError(t, err, input) {
+			assert.Equal(t, expectedOrigin, origin, input)
+		}
+	}
+
+	// Hosts that browsers can't convert to their ASCII form are rejected
+	for _, input := range []string{
+		"https://xn--zz.example/cb",
+		"https://xn--a.example/cb",
+	} {
+		parsedInput, err := url.Parse(input)
+		if !assert.NoError(t, err, input) {
+			continue
+		}
+		_, err = getComparableOrigin(parsedInput)
+		assert.Error(t, err, input)
+	}
+}
+
+func TestAppleCallbackRemovesDotSegmentsBeforeTheOriginCheck(t *testing.T) {
+	for redirect, expected := range map[string]string{
+		"https://app.example.com/a/../cb":         "https://app.example.com/cb",
+		"https://app.example.com/a/%2e%2e/cb":     "https://app.example.com/cb",
+		"https://app.example.com/%2E%2e/%2e/cb":   "https://app.example.com/cb",
+		"https://app.example.com/auth/./callback": "https://app.example.com/auth/callback",
+	} {
+		location, err := callAppleRedirectHandler(t, "https://app.example.com", nil, appleStateWithRedirect(redirect))
+		if assert.NoError(t, err, redirect) {
+			assert.Equal(t, expected, withoutPostedFields(t, location), redirect)
+		}
+	}
+
+	for _, redirect := range []string{
+		"https://evil.test/a/../cb",
+		"https://evil.test/%2e%2e/app.example.com/cb",
+		"https://app.example.com.evil.test/a/%2e%2e/cb",
+	} {
+		_, err := callAppleRedirectHandler(t, "https://app.example.com", nil, appleStateWithRedirect(redirect))
+		assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state does not match the configured origin"}, err, redirect)
+	}
+}
+
+func TestAppleCallbackPassesTheURLWithoutDotSegmentsToIsValidFrontendRedirectURI(t *testing.T) {
+	var validatedURIs []string
+	isValidFrontendRedirectURI := func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+		validatedURIs = append(validatedURIs, frontendRedirectURI)
+		return frontendRedirectURI == "https://other.example.com/cb" || frontendRedirectURI == "myapp://callback/cb", nil
+	}
+
+	for redirect, expected := range map[string]string{
+		"https://other.example.com/a/../cb":     "https://other.example.com/cb",
+		"https://other.example.com/a/%2e%2e/cb": "https://other.example.com/cb",
+		"https://other.example.com/a/.%2E/cb":   "https://other.example.com/cb",
+		"myapp://callback/a/../cb":              "myapp://callback/cb",
+		"myapp://callback/a/b/%2e%2e/../cb":     "myapp://callback/cb",
+	} {
+		validatedURIs = nil
+		location, err := callAppleRedirectHandler(t, "https://app.example.com", isValidFrontendRedirectURI, appleStateWithRedirect(redirect))
+		if assert.NoError(t, err, redirect) {
+			// The hook sees exactly the URL the browser is sent to, without the posted fields
+			assert.Equal(t, []string{expected}, validatedURIs, redirect)
+			assert.Equal(t, expected, withoutPostedFields(t, location), redirect)
+		}
+	}
+
+	// A target that only matches before the dot segments are removed is rejected
+	validatedURIs = nil
+	_, err := callAppleRedirectHandler(t, "https://app.example.com", isValidFrontendRedirectURI, appleStateWithRedirect("https://other.example.com/cb/%2e%2e/admin"))
+	assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state is not allowed"}, err)
+	assert.Equal(t, []string{"https://other.example.com/admin"}, validatedURIs)
+}
+
+func TestAppleCallbackMatchesAnIDNWebsiteDomain(t *testing.T) {
+	for _, websiteDomain := range []string{"https://bücher.example", "https://xn--bcher-kva.example"} {
+		for _, redirect := range []string{
+			"https://bücher.example/auth/callback/apple",
+			"https://BÜCHER.example/auth/callback/apple",
+			"https://xn--bcher-kva.example/auth/callback/apple",
+			"https://b%C3%BCcher.example:443/auth/callback/apple",
+		} {
+			location, err := callAppleRedirectHandler(t, websiteDomain, nil, appleStateWithRedirect(redirect))
+			if !assert.NoError(t, err, websiteDomain+" "+redirect) {
+				continue
+			}
+			parsedLocation, err := url.Parse(location)
+			if assert.NoError(t, err, location) {
+				assert.Equal(t, "/auth/callback/apple", parsedLocation.Path, location)
+				assert.Equal(t, "testcode", parsedLocation.Query().Get("code"), location)
+			}
+		}
+
+		for _, redirect := range []string{
+			"https://bucher.example/auth/callback/apple",
+			"https://xn--bcher-kva.example.evil.test/auth/callback/apple",
+			"http://bücher.example/auth/callback/apple",
+		} {
+			_, err := callAppleRedirectHandler(t, websiteDomain, nil, appleStateWithRedirect(redirect))
+			assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state does not match the configured origin"}, err, websiteDomain+" "+redirect)
+		}
+
+		_, err := callAppleRedirectHandler(t, websiteDomain, nil, appleStateWithRedirect("https://xn--zz.example/auth/callback/apple"))
+		assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute http or https URL"}, err)
+	}
 }
 
 func TestAppleCallbackErrorMessages(t *testing.T) {

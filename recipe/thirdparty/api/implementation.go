@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"net/url"
 	"regexp"
@@ -30,6 +31,7 @@ import (
 	"github.com/supertokens/supertokens-golang/recipe/session/sessmodels"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
+	"golang.org/x/net/idna"
 )
 
 func MakeAPIImplementation() tpmodels.APIInterface {
@@ -154,6 +156,11 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute http or https URL"}
 		}
 
+		// Browsers remove "." and ".." segments (also when percent-encoded) from the path when they open
+		// the URL, so we check and redirect to the URL without them: this way the checks below and
+		// IsValidFrontendRedirectURI see the URL the browser opens.
+		parsedRedirectURL = removeDotSegments(parsedRedirectURL)
+
 		if options.Config.IsValidFrontendRedirectURI != nil {
 			// The app decides which targets are allowed, so we also accept custom schemes (e.g.: for mobile deep
 			// links) here, but never schemes that could run code or read local data in the browser.
@@ -261,6 +268,43 @@ func checkRedirectTargetForCustomCheck(parsedURL *url.URL) error {
 	return nil
 }
 
+// removeDotSegments returns a copy of the URL with the "." and ".." segments removed from its path, as
+// described in RFC 3986 section 5.2.4. Like browsers, it also treats the percent-encoded forms (e.g.
+// %2e%2e or .%2E) as dot segments. URLs with an opaque path (e.g. myapp:callback) are returned
+// unchanged, because their path has no segments.
+func removeDotSegments(parsedURL *url.URL) *url.URL {
+	ref := *parsedURL
+	if ref.Opaque == "" {
+		escapedPath := ref.EscapedPath()
+		segments := strings.Split(escapedPath, "/")
+		for i, segment := range segments {
+			switch strings.ToLower(segment) {
+			case "%2e":
+				segments[i] = "."
+			case "%2e%2e", ".%2e", "%2e.":
+				segments[i] = ".."
+			}
+		}
+		// Decoding the dots only changes the encoded path, so Path stays valid, and the other
+		// percent-encoded characters are kept as they were
+		ref.RawPath = strings.Join(segments, "/")
+	}
+	// For an absolute reference, ResolveReference ignores the (empty) base and only removes the dot
+	// segments from the path, keeping everything else
+	return (&url.URL{}).ResolveReference(&ref)
+}
+
+// hostIDNAProfile converts hosts to their IDNA A-label (punycode) form the way browsers do (UTS #46
+// with the options of the URL standard's "domain to ASCII"): it maps the host (e.g. lowercases it
+// and maps full-width characters), and allows characters such as '_' and hyphens in any position.
+var hostIDNAProfile = idna.New(
+	idna.MapForLookup(),
+	idna.Transitional(false),
+	idna.BidiRule(),
+	idna.StrictDomainName(false),
+	idna.CheckHyphens(false),
+)
+
 type comparableOrigin struct {
 	scheme string
 	host   string
@@ -272,17 +316,26 @@ func (o comparableOrigin) String() string {
 }
 
 // getComparableOrigin returns the origin of an absolute http(s) URL in a form that can be compared
-// directly: the scheme and host are lowercased and the default port is filled in.
+// directly: the scheme is lowercased, the host is converted to its lowercase IDNA A-label (punycode)
+// form, and the default port is filled in.
 func getComparableOrigin(parsedURL *url.URL) (comparableOrigin, error) {
 	scheme := strings.ToLower(parsedURL.Scheme)
 	if scheme != "http" && scheme != "https" {
 		return comparableOrigin{}, errors.New("the URL must be an absolute http or https URL")
 	}
 
-	host := strings.ToLower(parsedURL.Hostname())
+	host := parsedURL.Hostname()
 	if host == "" {
 		return comparableOrigin{}, errors.New("the URL must have a host")
 	}
+	if net.ParseIP(host) == nil {
+		asciiHost, err := hostIDNAProfile.ToASCII(host)
+		if err != nil {
+			return comparableOrigin{}, errors.New("the URL's host is not a valid domain name: " + err.Error())
+		}
+		host = asciiHost
+	}
+	host = strings.ToLower(host)
 
 	port := parsedURL.Port()
 	if port == "" {
