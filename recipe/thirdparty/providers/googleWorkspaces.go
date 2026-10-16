@@ -64,9 +64,11 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 // When a specific hosted domain is configured, the user has to come from a verified id_token (whose hd
 // claim is checked by ValidateIdTokenPayload) or from a user info response with a matching hd claim.
+// Only a missing hd and "*" allow any domain. Like in ValidateIdTokenPayload, an empty hd is compared
+// as a value, so it only matches an empty hd claim.
 func checkGoogleWorkspacesHostedDomain(config tpmodels.ProviderConfigForClientType, rawUserInfo tpmodels.TypeRawUserInfoFromProvider) error {
 	hd := config.AdditionalConfig["hd"]
-	if hd == nil || hd == "" || hd == "*" {
+	if hd == nil || hd == "*" {
 		return nil
 	}
 	if rawUserInfo.FromIdTokenPayload != nil {
