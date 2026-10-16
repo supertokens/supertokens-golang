@@ -129,9 +129,14 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 		}
 
 		stateBytes, err := decodeAppleState(state)
-		if err != nil {
+		if errors.Is(err, errAppleStateNotBase64) {
 			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is not base64 encoded")
 			return supertokens.BadInputError{Msg: "state must be base64 encoded"}
+		}
+		if err != nil {
+			// The state only has base64 characters, but can't be decoded (e.g. because of its length)
+			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state can not be decoded: " + err.Error())
+			return supertokens.BadInputError{Msg: "state must be a base64 encoded JSON object"}
 		}
 
 		var stateObj map[string]interface{}
@@ -237,9 +242,13 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 // and with or without padding
 var appleStateRegex = regexp.MustCompile(`^[A-Za-z0-9+/_-]+={0,2}$`)
 
+// errAppleStateNotBase64 is returned by decodeAppleState for a state that contains characters
+// other than the base64 ones
+var errAppleStateNotBase64 = errors.New("the state is not base64 encoded")
+
 func decodeAppleState(state string) ([]byte, error) {
 	if !appleStateRegex.MatchString(state) {
-		return nil, errors.New("the state is not base64 encoded")
+		return nil, errAppleStateNotBase64
 	}
 	normalisedState := strings.NewReplacer("-", "+", "_", "/").Replace(strings.TrimRight(state, "="))
 	return base64.RawStdEncoding.DecodeString(normalisedState)

@@ -343,6 +343,11 @@ func TestAppleCallbackErrorMessages(t *testing.T) {
 		{"", "Please provide the state in the request body"},
 		{1, "Please provide the state in the request body"},
 		{"%%%not-base64%%%", "state must be base64 encoded"},
+		// Only base64 characters, but a length that can't be decoded
+		{"A", "state must be a base64 encoded JSON object"},
+		{"AAAAA", "state must be a base64 encoded JSON object"},
+		{"AAAAA==", "state must be a base64 encoded JSON object"},
+		{"e30-_", "state must be a base64 encoded JSON object"},
 		{encode("not json"), "state must be a base64 encoded JSON object"},
 		{encode("null"), "state must be a base64 encoded JSON object"},
 		{encode(`["https://app.example.com/cb"]`), "state must be a base64 encoded JSON object"},
