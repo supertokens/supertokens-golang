@@ -156,10 +156,11 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			return supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute http or https URL"}
 		}
 
-		// Browsers remove "." and ".." segments (also when percent-encoded) from the path when they open
-		// the URL, so we check and redirect to the URL without them: this way the checks below and
-		// IsValidFrontendRedirectURI see the URL the browser opens.
-		parsedRedirectURL = removeDotSegments(parsedRedirectURL)
+		// Browsers remove "." and ".." segments (also when percent-encoded) from the path and convert
+		// internationalised hosts of http(s) URLs to their ASCII form when they open the URL, so we check
+		// and redirect to the URL in that form: this way the checks below and IsValidFrontendRedirectURI
+		// see the URL the browser opens.
+		parsedRedirectURL = withASCIIHost(removeDotSegments(parsedRedirectURL))
 
 		if options.Config.IsValidFrontendRedirectURI != nil {
 			// The app decides which targets are allowed, so we also accept custom schemes (e.g.: for mobile deep
@@ -248,8 +249,8 @@ func decodeAppleState(state string) ([]byte, error) {
 var disallowedRedirectSchemes = []string{"javascript", "data", "vbscript", "file", "blob", "about", "filesystem"}
 
 // checkRedirectTargetForCustomCheck returns an error if the URL can't be passed to the app's
-// IsValidFrontendRedirectURI: it must be absolute, http(s) URLs must have a host, and the scheme
-// must not be one of disallowedRedirectSchemes.
+// IsValidFrontendRedirectURI: it must be absolute, http(s) URLs must have a valid host (see
+// toASCIIHost), and the scheme must not be one of disallowedRedirectSchemes.
 func checkRedirectTargetForCustomCheck(parsedURL *url.URL) error {
 	// url.Parse lowercases the scheme
 	scheme := strings.ToLower(parsedURL.Scheme)
@@ -330,6 +331,41 @@ func removeDotSegmentsFromPath(escapedPath string) string {
 	return "/" + strings.Join(output, "/")
 }
 
+// withASCIIHost returns the URL with the host converted to its IDNA A-label (punycode) form (see
+// toASCIIHost), which is also the form browsers open, if it is an http(s) URL whose host contains
+// non-ASCII characters (e.g. https://Bücher.example/cb becomes https://xn--bcher-kva.example/cb).
+// ASCII hosts keep their case. Other URLs, and URLs whose host can't be converted (the checks
+// reject them), are returned unchanged.
+func withASCIIHost(parsedURL *url.URL) *url.URL {
+	scheme := strings.ToLower(parsedURL.Scheme)
+	if scheme != "http" && scheme != "https" {
+		return parsedURL
+	}
+	host := parsedURL.Hostname()
+	if isASCII(host) {
+		return parsedURL
+	}
+	asciiHost, err := toASCIIHost(host)
+	if err != nil {
+		return parsedURL
+	}
+	result := *parsedURL
+	result.Host = asciiHost
+	if port := parsedURL.Port(); port != "" {
+		result.Host += ":" + port
+	}
+	return &result
+}
+
+func isASCII(s string) bool {
+	for i := 0; i < len(s); i++ {
+		if s[i] >= 0x80 {
+			return false
+		}
+	}
+	return true
+}
+
 // hostIDNAProfile converts hosts to their IDNA A-label (punycode) form the way browsers do (UTS #46
 // with the options of the URL standard's "domain to ASCII"): it maps the host (e.g. lowercases it
 // and maps full-width characters), and allows characters such as '_' and hyphens in any position.
@@ -340,6 +376,37 @@ var hostIDNAProfile = idna.New(
 	idna.StrictDomainName(false),
 	idna.CheckHyphens(false),
 )
+
+// forbiddenDomainCodePoints are the ASCII characters (other than the C0 controls and DEL) that the
+// URL standard doesn't allow in a domain. IDNA mapping can produce them from other characters, e.g.
+// the full-width solidus (U+FF0F) becomes "/".
+const forbiddenDomainCodePoints = " #%/:<>?@[\\]^|"
+
+// toASCIIHost returns the host (a domain name or an IP address, without brackets and port) in a
+// lowercase form that can be compared directly: domain names are converted to their IDNA A-label
+// (punycode) form with hostIDNAProfile. It returns an error for domain names that can't be
+// converted, that contain characters the URL standard doesn't allow in a domain after the
+// conversion, or that have an empty label (other than after a trailing dot, e.g. a..example).
+func toASCIIHost(host string) (string, error) {
+	if net.ParseIP(host) != nil {
+		return strings.ToLower(host), nil
+	}
+	asciiHost, err := hostIDNAProfile.ToASCII(host)
+	if err != nil {
+		return "", errors.New("the URL's host is not a valid domain name: " + err.Error())
+	}
+	for i := 0; i < len(asciiHost); i++ {
+		if asciiHost[i] <= 0x20 || asciiHost[i] == 0x7f || strings.IndexByte(forbiddenDomainCodePoints, asciiHost[i]) != -1 {
+			return "", fmt.Errorf("the URL's host is not a valid domain name: it contains %q", asciiHost[i])
+		}
+	}
+	for _, label := range strings.Split(strings.TrimSuffix(asciiHost, "."), ".") {
+		if label == "" {
+			return "", errors.New("the URL's host is not a valid domain name: it has an empty label")
+		}
+	}
+	return strings.ToLower(asciiHost), nil
+}
 
 type comparableOrigin struct {
 	scheme string
@@ -353,7 +420,8 @@ func (o comparableOrigin) String() string {
 
 // getComparableOrigin returns the origin of an absolute http(s) URL in a form that can be compared
 // directly: the scheme is lowercased, the host is converted to its lowercase IDNA A-label (punycode)
-// form, and the default port is filled in.
+// form (see toASCIIHost), and the default port is filled in. It returns an error for other URLs and
+// for hosts toASCIIHost rejects.
 func getComparableOrigin(parsedURL *url.URL) (comparableOrigin, error) {
 	scheme := strings.ToLower(parsedURL.Scheme)
 	if scheme != "http" && scheme != "https" {
@@ -364,14 +432,10 @@ func getComparableOrigin(parsedURL *url.URL) (comparableOrigin, error) {
 	if host == "" {
 		return comparableOrigin{}, errors.New("the URL must have a host")
 	}
-	if net.ParseIP(host) == nil {
-		asciiHost, err := hostIDNAProfile.ToASCII(host)
-		if err != nil {
-			return comparableOrigin{}, errors.New("the URL's host is not a valid domain name: " + err.Error())
-		}
-		host = asciiHost
+	host, err := toASCIIHost(host)
+	if err != nil {
+		return comparableOrigin{}, err
 	}
-	host = strings.ToLower(host)
 
 	port := parsedURL.Port()
 	if port == "" {

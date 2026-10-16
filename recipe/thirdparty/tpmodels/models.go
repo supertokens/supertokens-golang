@@ -97,27 +97,38 @@ type TypeNormalisedInputSignInAndUp struct {
 // without redirecting.
 //
 // The scheme is lowercased, "." and ".." path segments are removed the way browsers remove them
-// (also percent-encoded ones, such as %2e%2e) and special characters are escaped. For example,
-// https://app.example.com/a/../cb and https://app.example.com/a/%2e%2e/cb are both passed as
-// https://app.example.com/cb. Empty path segments are kept, so
+// (also percent-encoded ones, such as %2e%2e), the host of an http(s) URL is converted to its IDNA
+// A-label (punycode) form if it contains non-ASCII characters, and special characters are escaped.
+// For example, https://app.example.com/a/../cb and https://app.example.com/a/%2e%2e/cb are both
+// passed as https://app.example.com/cb, and https://Bücher.example/cb is passed as
+// https://xn--bcher-kva.example/cb. Empty path segments are kept, so
 // https://app.example.com/..//evil.test/x is passed as https://app.example.com//evil.test/x (its
 // host is app.example.com). In a URL without a host, a path that starts with "//" after removing
 // the dot segments gets a "/." prefix, so that it isn't read as a host: myapp:/a/..//evil.test/x is
 // passed as myapp:/.//evil.test/x. (Before Go 1.19, url.URL serialises a URL without a host with
 // an empty one, e.g. com.example.app:/cb as com.example.app:///cb and myapp:/a/..//evil.test/x as
 // myapp:///.//evil.test/x, and that form is passed and redirected to.)
-// The value is normalised less than in the Node.js SDK: the host's case, an explicit default port
-// and an empty path are kept, and an internationalised host is not converted to its IDNA
-// (punycode) form. For example, https://app.example.com is passed as https://app.example.com (not
-// https://app.example.com/), https://App.example.com:443/cb is passed unchanged, and
-// https://bücher.example/cb is passed as https://b%C3%BCcher.example/cb (the browser opens
-// https://xn--bcher-kva.example/cb).
+// The value is normalised less than in the Node.js SDK: the case of an ASCII host, an explicit
+// default port and an empty path are kept. For example, https://app.example.com is passed as
+// https://app.example.com (not https://app.example.com/), and https://App.example.com:443/cb is
+// passed unchanged.
+//
+// http(s) URLs with a host that isn't a valid IP address or domain name are rejected without
+// calling the function. This includes hosts that can't be converted to their A-label form, hosts
+// that contain characters the URL standard doesn't allow in a domain name after the conversion
+// (e.g. "/", "@" or ":", which full-width characters such as U+FF0F, U+FF20 or U+FF1A are
+// converted to) and hosts with an empty label (e.g. app..example.com; a single trailing dot is
+// allowed).
 //
 // So parse frontendRedirectURI (e.g. with url.Parse) and compare its parts with your allowed
-// targets, instead of comparing the string: the scheme, the host (lowercased, or converted with
-// idna.Lookup.ToASCII from golang.org/x/net/idna if you allow internationalised domains), the port
-// (with the default filled in) and the path, and for intent: URLs also the fragment, which picks
-// the receiving app.
+// targets, instead of comparing the string: the scheme, the host (lowercased: http(s) hosts are
+// already in their A-label form, so list internationalised domains in that form), the port (with
+// the default filled in) and the path, and for intent: URLs also the fragment, which picks the
+// receiving app. If you convert hosts yourself, e.g. with idna.Lookup.ToASCII from
+// golang.org/x/net/idna, note that it rejects some hosts that the default check and browsers
+// accept, such as hosts with an underscore (my_app.example.com) or with "--" in the third and
+// fourth positions of a label (r3---sn-x.example.com). Comparing the lowercased host with a fixed
+// list of allowed hosts avoids this.
 //
 // Treat frontendRedirectURI as untrusted: whoever starts the sign-in controls the whole state.
 // Never use prefix or substring checks. For example, all of these pass a

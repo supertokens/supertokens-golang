@@ -303,6 +303,7 @@ func TestAppleCallbackMatchesAnIDNWebsiteDomain(t *testing.T) {
 			}
 			parsedLocation, err := url.Parse(location)
 			if assert.NoError(t, err, location) {
+				assert.Equal(t, "xn--bcher-kva.example", parsedLocation.Hostname(), location)
 				assert.Equal(t, "/auth/callback/apple", parsedLocation.Path, location)
 				assert.Equal(t, "testcode", parsedLocation.Query().Get("code"), location)
 			}
@@ -414,5 +415,126 @@ func TestAppleCallbackDoesNotAddAHostToCustomSchemeTargets(t *testing.T) {
 			assert.Equal(t, "myapp:/.//evil.test/x", validatedURIs[0], redirect)
 			assert.Equal(t, "myapp:/.//evil.test/x", withoutPostedFields(t, location), redirect)
 		}
+	}
+}
+
+func TestWithASCIIHost(t *testing.T) {
+	for input, expected := range map[string]string{
+		"https://bücher.example/cb":             "https://xn--bcher-kva.example/cb",
+		"https://BÜCHER.example/cb":             "https://xn--bcher-kva.example/cb",
+		"https://App.Bücher.example:8443/cb":    "https://app.xn--bcher-kva.example:8443/cb",
+		"https://ｂüｃｈｅｒ.example/cb":             "https://xn--bcher-kva.example/cb",
+		"https://b%C3%BCcher.example/cb":        "https://xn--bcher-kva.example/cb",
+		"https://bücher.example:443/cb":         "https://xn--bcher-kva.example:443/cb",
+		"https://bücher.example":                "https://xn--bcher-kva.example",
+		"https://user@bücher.example/cb?q#f":    "https://user@xn--bcher-kva.example/cb?q#f",
+		"http://ａｐｐ.example.com/cb":             "http://app.example.com/cb",
+		"https://１２７.０.０.１/cb":                  "https://127.0.0.1/cb",
+		"https://app。example。com/cb":            "https://app.example.com/cb",
+		"https://xn--bcher-kva.example/cb":      "https://xn--bcher-kva.example/cb",
+		"https://XN--BCHER-KVA.example/cb":      "https://XN--BCHER-KVA.example/cb",
+		"https://App.Example.com/cb":            "https://App.Example.com/cb",
+		"http://[::1]:3000/cb":                  "http://[::1]:3000/cb",
+		"myapp://bücher/cb":                     "myapp://b%C3%BCcher/cb",
+		"https://xn--zz.bücher.example/cb":      "https://xn--zz.b%C3%BCcher.example/cb",
+		"https://evil.test／＠app.example.com/cb": "https://evil.test%EF%BC%8F%EF%BC%A0app.example.com/cb",
+	} {
+		parsedInput, err := url.Parse(input)
+		if !assert.NoError(t, err, input) {
+			continue
+		}
+		assert.Equal(t, expected, withASCIIHost(parsedInput).String(), input)
+		// The input is not modified
+		reparsedInput, _ := url.Parse(input)
+		assert.Equal(t, reparsedInput, parsedInput, input)
+	}
+}
+
+func TestAppleCallbackPassesTheASCIIFormOfInternationalisedHosts(t *testing.T) {
+	var validatedURIs []string
+	isValidFrontendRedirectURI := func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+		validatedURIs = append(validatedURIs, frontendRedirectURI)
+		return true, nil
+	}
+
+	for redirect, expected := range map[string]string{
+		"https://bücher.example/a/../cb":      "https://xn--bcher-kva.example/cb",
+		"https://BÜCHER.example:8443/cb":      "https://xn--bcher-kva.example:8443/cb",
+		"https://b%C3%BCcher.example/cb":      "https://xn--bcher-kva.example/cb",
+		"https://ｂüｃｈｅｒ.example/cb":           "https://xn--bcher-kva.example/cb",
+		"https://App.Example.com/cb":          "https://App.Example.com/cb",
+		"https://app.example.com:443/cb":      "https://app.example.com:443/cb",
+		"myapp://bücher/cb":                   "myapp://b%C3%BCcher/cb",
+		"https://app.example.com./cb":         "https://app.example.com./cb",
+		"https://my_app.example.com/cb":       "https://my_app.example.com/cb",
+		"https://r3---sn-x.example.com/cb":    "https://r3---sn-x.example.com/cb",
+		"https://bücher.example/%C3%BC/../cb": "https://xn--bcher-kva.example/cb",
+	} {
+		validatedURIs = nil
+		location, err := callAppleRedirectHandler(t, "https://app.example.com", isValidFrontendRedirectURI, appleStateWithRedirect(redirect))
+		if assert.NoError(t, err, redirect) {
+			assert.Equal(t, []string{expected}, validatedURIs, redirect)
+			assert.Equal(t, expected, withoutPostedFields(t, location), redirect)
+		}
+	}
+}
+
+func TestAppleCallbackRejectsHostsThatAreNotValidDomainNames(t *testing.T) {
+	hookCalled := false
+	alwaysValid := func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+		hookCalled = true
+		return true, nil
+	}
+
+	for _, redirect := range []string{
+		// Full-width characters that are converted to characters not allowed in a domain name
+		"https://evil.test／＠app.example.com/cb",
+		"https://app.example.com／evil.test/cb",
+		"https://evil.test＠app.example.com/cb",
+		"https://app.example.com：443/cb",
+		"https://app.example.com？x/cb",
+		"https://app.example.com＃x/cb",
+		"https://app.example.com％2f/cb",
+		"https://app.example.com＼x/cb",
+		"https://app.example.com＾x/cb",
+		"https://app.example.com｜x/cb",
+		"https://app.example.com＜x＞/cb",
+		"https://app　example.com/cb",
+		// ASCII characters that url.Parse allows in a host
+		"https://app.example.com<x>/cb",
+		// Empty labels
+		"https://app..example.com/cb",
+		"https://.app.example.com/cb",
+		"https://app.example.com../cb",
+		"https://app。。example.com/cb",
+		"https://xn--zz.example/cb",
+	} {
+		_, err := callAppleRedirectHandler(t, "https://app.example.com", nil, appleStateWithRedirect(redirect))
+		assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute http or https URL"}, err, redirect)
+
+		hookCalled = false
+		_, err = callAppleRedirectHandler(t, "https://app.example.com", alwaysValid, appleStateWithRedirect(redirect))
+		assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute URL with an allowed scheme"}, err, redirect)
+		assert.False(t, hookCalled, redirect)
+
+		parsedRedirect, err := url.Parse(redirect)
+		if assert.NoError(t, err, redirect) {
+			_, err = getComparableOrigin(parsedRedirect)
+			assert.Error(t, err, redirect)
+		}
+	}
+
+	// A single trailing dot is allowed, but it is a different host for the default check
+	for _, redirect := range []string{"https://app.example.com./cb", "https://app.example.com。/cb"} {
+		parsedRedirect, err := url.Parse(redirect)
+		if !assert.NoError(t, err, redirect) {
+			continue
+		}
+		origin, err := getComparableOrigin(parsedRedirect)
+		if assert.NoError(t, err, redirect) {
+			assert.Equal(t, comparableOrigin{scheme: "https", host: "app.example.com.", port: "443"}, origin, redirect)
+		}
+		_, err = callAppleRedirectHandler(t, "https://app.example.com", nil, appleStateWithRedirect(redirect))
+		assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state does not match the configured origin"}, err, redirect)
 	}
 }
