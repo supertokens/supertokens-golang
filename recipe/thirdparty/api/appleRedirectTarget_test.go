@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"net/url"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -94,25 +95,89 @@ func TestRemoveDotSegments(t *testing.T) {
 		"https://app.example.com/":                        "https://app.example.com/",
 		"myapp://callback/a/../b":                         "myapp://callback/b",
 		"myapp://callback/a/%2e%2e/b":                     "myapp://callback/b",
-		"com.example.app:/a/../oauth2redirect":            "com.example.app:/oauth2redirect",
 		"intent://callback/a/..#Intent;package=x.y;end":   "intent://callback/#Intent;package=x.y;end",
 		"myapp:callback/../other":                         "myapp:callback/../other",
 		"https://user@app.example.com/a/%2e%2e/b?c=d#e/f": "https://user@app.example.com/b?c=d#e/f",
+		// Empty segments are kept, as in RFC 3986 section 5.2.4 and in browsers
+		"https://app.example.com/..//evil.test/x":      "https://app.example.com//evil.test/x",
+		"https://app.example.com/%2e%2e/%2e%2e//evil":  "https://app.example.com//evil",
+		"https://app.example.com/a/b/../../../..//x":   "https://app.example.com//x",
+		"https://app.example.com/%2e%2e//%2e%2e//evil": "https://app.example.com//evil",
+		"https://app.example.com//a/../b":              "https://app.example.com//b",
+		"https://app.example.com/a//../b":              "https://app.example.com/a/b",
+		"https://app.example.com/a/b//..":              "https://app.example.com/a/b/",
+		"myapp://host/..//evil/x":                      "myapp://host//evil/x",
+		"myapp://user@host/a/..//b":                    "myapp://user@host//b",
+		"https://app.example.com/a/b/.":                "https://app.example.com/a/b/",
+		"https://app.example.com/a/b/%2E":              "https://app.example.com/a/b/",
+		"https://app.example.com/.":                    "https://app.example.com/",
+		"https://app.example.com/..":                   "https://app.example.com/",
+		"https://app.example.com/.../x":                "https://app.example.com/.../x",
+		"https://app.example.com/%C3%BC/../x":          "https://app.example.com/x",
+		// A URL with an empty host keeps it
+		"myapp:////evil.test/x": "myapp:///.//evil.test/x",
+	} {
+		checkRemoveDotSegments(t, input, expected)
+	}
+}
+
+// urlStringOmitsMissingHost is false before Go 1.19, which serialises a URL without a host (e.g.
+// com.example.app:/cb) with an empty one (com.example.app:///cb), because url.URL has no OmitHost
+var urlStringOmitsMissingHost = func() bool {
+	parsedURL, err := url.Parse("com.example.app:/cb")
+	return err == nil && parsedURL.String() == "com.example.app:/cb"
+}()
+
+func TestRemoveDotSegmentsDoesNotAddAHost(t *testing.T) {
+	for input, expected := range map[string]string{
+		"com.example.app:/a/../oauth2redirect": "com.example.app:/oauth2redirect",
+		"myapp:/.//evil.test/x":                "myapp:/.//evil.test/x",
+		"myapp:/a/..//evil.test/x":             "myapp:/.//evil.test/x",
+		"myapp:/%2e//evil.test/x":              "myapp:/.//evil.test/x",
+		"myapp:/a/%2e%2e//evil.test/x":         "myapp:/.//evil.test/x",
+		"myapp:/%2E%2E//evil.test/x":           "myapp:/.//evil.test/x",
+		"myapp:/a/b/../..//evil.test/x":        "myapp:/.//evil.test/x",
+		"myapp:/a/..//evil.test/x?y=z#f":       "myapp:/.//evil.test/x?y=z#f",
 	} {
 		parsedInput, err := url.Parse(input)
 		if !assert.NoError(t, err, input) {
 			continue
 		}
 		result := removeDotSegments(parsedInput)
-		assert.Equal(t, expected, result.String(), input)
-		// The input is not modified
-		assert.Equal(t, input, parsedInput.String(), input)
-
-		// Removing the dot segments again changes nothing, so the browser opens the URL as it is
+		assert.NotContains(t, result.String(), "://evil.test", input)
 		reparsed, err := url.Parse(result.String())
 		if assert.NoError(t, err, input) {
-			assert.Equal(t, expected, removeDotSegments(reparsed).String(), input)
+			assert.Empty(t, reparsed.Host, input)
+			assert.Nil(t, reparsed.User, input)
+			assert.Equal(t, result.String(), removeDotSegments(reparsed).String(), input)
 		}
+
+		if !urlStringOmitsMissingHost {
+			// Go 1.18 serialises these with an empty host (e.g. myapp:///.//evil.test/x), which is
+			// checked above not to become a host either
+			t.Logf("not comparing %s with %s: url.URL can't serialise a URL without a host before Go 1.19", input, expected)
+			continue
+		}
+		checkRemoveDotSegments(t, input, expected)
+	}
+}
+
+func checkRemoveDotSegments(t *testing.T, input string, expected string) {
+	parsedInput, err := url.Parse(input)
+	if !assert.NoError(t, err, input) {
+		return
+	}
+	result := removeDotSegments(parsedInput)
+	assert.Equal(t, expected, result.String(), input)
+	// The input is not modified
+	assert.Equal(t, input, parsedInput.String(), input)
+
+	// Removing the dot segments again changes nothing, so the browser opens the URL as it is, and the
+	// URL keeps its host
+	reparsed, err := url.Parse(result.String())
+	if assert.NoError(t, err, input) {
+		assert.Equal(t, expected, removeDotSegments(reparsed).String(), input)
+		assert.Equal(t, parsedInput.Host, reparsed.Host, input)
 	}
 }
 
@@ -315,4 +380,39 @@ func TestAppleCallbackErrorMessages(t *testing.T) {
 	}
 	_, err := callAppleRedirectHandler(t, "https://app.example.com", neverValid, appleStateWithRedirect("https://app.example.com/cb"))
 	assert.Equal(t, supertokens.BadInputError{Msg: "frontendRedirectURI in state is not allowed"}, err)
+}
+
+func TestAppleCallbackDoesNotAddAHostToCustomSchemeTargets(t *testing.T) {
+	var validatedURIs []string
+	isValidFrontendRedirectURI := func(frontendRedirectURI string, req *http.Request, userContext supertokens.UserContext) (bool, error) {
+		validatedURIs = append(validatedURIs, frontendRedirectURI)
+		// A hook that only allows the evil.test host must not see it in these URLs
+		parsedURI, err := url.Parse(frontendRedirectURI)
+		return err == nil && parsedURI.Host != "evil.test", nil
+	}
+
+	for _, redirect := range []string{
+		"myapp:/.//evil.test/x",
+		"myapp:/a/..//evil.test/x",
+		"myapp:/%2e//evil.test/x",
+		"myapp:/a/%2e%2e//evil.test/x",
+	} {
+		validatedURIs = nil
+		location, err := callAppleRedirectHandler(t, "https://app.example.com", isValidFrontendRedirectURI, appleStateWithRedirect(redirect))
+		if !assert.NoError(t, err, redirect) || !assert.Len(t, validatedURIs, 1, redirect) {
+			continue
+		}
+		for _, target := range []string{validatedURIs[0], location} {
+			assert.NotContains(t, target, "://evil.test", redirect)
+			parsedTarget, err := url.Parse(target)
+			if assert.NoError(t, err, target) {
+				assert.Empty(t, parsedTarget.Host, target)
+				assert.Equal(t, "//evil.test/x", strings.TrimPrefix(parsedTarget.Path, "/."), target)
+			}
+		}
+		if urlStringOmitsMissingHost {
+			assert.Equal(t, "myapp:/.//evil.test/x", validatedURIs[0], redirect)
+			assert.Equal(t, "myapp:/.//evil.test/x", withoutPostedFields(t, location), redirect)
+		}
+	}
 }

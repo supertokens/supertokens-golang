@@ -96,9 +96,16 @@ type TypeNormalisedInputSignInAndUp struct {
 // false rejects the request with a 400, and returning an error ends the request with that error
 // without redirecting.
 //
-// The scheme is lowercased, "." and ".." path segments are removed (also percent-encoded ones,
-// such as %2e%2e) and special characters are escaped. For example, https://app.example.com/a/../cb
-// and https://app.example.com/a/%2e%2e/cb are both passed as https://app.example.com/cb.
+// The scheme is lowercased, "." and ".." path segments are removed the way browsers remove them
+// (also percent-encoded ones, such as %2e%2e) and special characters are escaped. For example,
+// https://app.example.com/a/../cb and https://app.example.com/a/%2e%2e/cb are both passed as
+// https://app.example.com/cb. Empty path segments are kept, so
+// https://app.example.com/..//evil.test/x is passed as https://app.example.com//evil.test/x (its
+// host is app.example.com). In a URL without a host, a path that starts with "//" after removing
+// the dot segments gets a "/." prefix, so that it isn't read as a host: myapp:/a/..//evil.test/x is
+// passed as myapp:/.//evil.test/x. (Before Go 1.19, url.URL serialises a URL without a host with
+// an empty one, e.g. com.example.app:/cb as com.example.app:///cb and myapp:/a/..//evil.test/x as
+// myapp:///.//evil.test/x, and that form is passed and redirected to.)
 // The value is normalised less than in the Node.js SDK: the host's case, an explicit default port
 // and an empty path are kept, and an internationalised host is not converted to its IDNA
 // (punycode) form. For example, https://app.example.com is passed as https://app.example.com (not

@@ -269,29 +269,65 @@ func checkRedirectTargetForCustomCheck(parsedURL *url.URL) error {
 }
 
 // removeDotSegments returns a copy of the URL with the "." and ".." segments removed from its path, as
-// described in RFC 3986 section 5.2.4. Like browsers, it also treats the percent-encoded forms (e.g.
-// %2e%2e or .%2E) as dot segments. URLs with an opaque path (e.g. myapp:callback) are returned
-// unchanged, because their path has no segments.
+// described in RFC 3986 section 5.2.4 (see removeDotSegmentsFromPath). The rest of the URL is kept as
+// it is. URLs with an opaque path (e.g. myapp:callback) or a path that doesn't start with "/" are
+// returned unchanged, because their path has no segments to remove.
+//
+// If the URL has no host, a resulting path that starts with "//" is prefixed with "/." (which the
+// browser removes again), so that the serialised URL is not read as one with a host: e.g.
+// myapp:/a/..//evil.test/x becomes myapp:/.//evil.test/x instead of myapp://evil.test/x.
 func removeDotSegments(parsedURL *url.URL) *url.URL {
-	ref := *parsedURL
-	if ref.Opaque == "" {
-		escapedPath := ref.EscapedPath()
-		segments := strings.Split(escapedPath, "/")
-		for i, segment := range segments {
-			switch strings.ToLower(segment) {
-			case "%2e":
-				segments[i] = "."
-			case "%2e%2e", ".%2e", "%2e.":
-				segments[i] = ".."
-			}
-		}
-		// Decoding the dots only changes the encoded path, so Path stays valid, and the other
-		// percent-encoded characters are kept as they were
-		ref.RawPath = strings.Join(segments, "/")
+	result := *parsedURL
+	if result.Opaque != "" {
+		return &result
 	}
-	// For an absolute reference, ResolveReference ignores the (empty) base and only removes the dot
-	// segments from the path, keeping everything else
-	return (&url.URL{}).ResolveReference(&ref)
+	// We work on the escaped path, so the percent-encoded characters other than the dots of dot
+	// segments are kept as they were (e.g. %2f does not become a separator)
+	escapedPath := result.EscapedPath()
+	if !strings.HasPrefix(escapedPath, "/") {
+		return &result
+	}
+	escapedPath = removeDotSegmentsFromPath(escapedPath)
+	if result.Host == "" && result.User == nil && strings.HasPrefix(escapedPath, "//") {
+		escapedPath = "/." + escapedPath
+	}
+	path, err := url.PathUnescape(escapedPath)
+	if err != nil {
+		// Can't happen: removing segments from a valid escaped path leaves a valid escaped path
+		return &result
+	}
+	result.Path = path
+	result.RawPath = escapedPath
+	return &result
+}
+
+// removeDotSegmentsFromPath removes the "." and ".." segments from an escaped path that starts with
+// "/", following RFC 3986 section 5.2.4. Like browsers, it also treats the percent-encoded forms
+// (%2e in either case, e.g. %2e%2e or .%2E) as dot segments. Empty segments are kept, so
+// /..//evil.test/x becomes //evil.test/x.
+func removeDotSegmentsFromPath(escapedPath string) string {
+	segments := strings.Split(escapedPath[1:], "/")
+	output := make([]string, 0, len(segments))
+	for i, segment := range segments {
+		isLastSegment := i == len(segments)-1
+		switch strings.ToLower(segment) {
+		case ".", "%2e":
+			if isLastSegment {
+				// A path ending with a dot segment ends with a "/"
+				output = append(output, "")
+			}
+		case "..", ".%2e", "%2e.", "%2e%2e":
+			if len(output) > 0 {
+				output = output[:len(output)-1]
+			}
+			if isLastSegment {
+				output = append(output, "")
+			}
+		default:
+			output = append(output, segment)
+		}
+	}
+	return "/" + strings.Join(output, "/")
 }
 
 // hostIDNAProfile converts hosts to their IDNA A-label (punycode) form the way browsers do (UTS #46
