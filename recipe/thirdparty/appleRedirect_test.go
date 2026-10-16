@@ -235,6 +235,14 @@ func TestAppleCallbackCustomRedirectValidatorReplacesOriginCheck(t *testing.T) {
 	assert.Len(t, validatedURIs, 2)
 }
 
+// urlStringOmitsMissingHost is false before Go 1.19, which serialises a URL without a host (e.g.
+// com.example.app:/oauth2redirect) with an empty one (com.example.app:///oauth2redirect), because
+// url.URL has no OmitHost
+var urlStringOmitsMissingHost = func() bool {
+	parsedURL, err := url.Parse("com.example.app:/oauth2redirect")
+	return err == nil && parsedURL.String() == "com.example.app:/oauth2redirect"
+}()
+
 func TestAppleCallbackCustomRedirectValidatorAllowsCustomSchemes(t *testing.T) {
 	BeforeEach()
 	defer AfterEach()
@@ -251,6 +259,10 @@ func TestAppleCallbackCustomRedirectValidatorAllowsCustomSchemes(t *testing.T) {
 		"com.example.app:/oauth2redirect",
 		"intent://callback#Intent;package=com.example.app;scheme=signinwithapple;end",
 	} {
+		if redirect == "com.example.app:/oauth2redirect" && !urlStringOmitsMissingHost {
+			t.Logf("skipping %s: url.URL can't serialise a URL without a host before Go 1.19", redirect)
+			continue
+		}
 		state := encodeAppleStateWithRedirect(redirect)
 		res, _ := postAppleCallback(t, testServer, appleCallbackForm(state))
 		if !assert.NotNil(t, res, redirect) {
