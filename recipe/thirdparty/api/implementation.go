@@ -120,38 +120,38 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 	}
 
 	appleRedirectHandlerPOST := func(formPostInfoFromProvider map[string]interface{}, options tpmodels.APIOptions, userContext supertokens.UserContext) error {
-		invalidStateError := supertokens.BadInputError{Msg: "Invalid state in the Apple callback"}
-		invalidRedirectError := supertokens.BadInputError{Msg: "Invalid frontendRedirectURI in the Apple callback state"}
-
 		state, ok := formPostInfoFromProvider["state"].(string)
 		if !ok || state == "" {
 			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is missing or not a string")
-			return invalidStateError
+			return supertokens.BadInputError{Msg: "Please provide the state in the request body"}
 		}
 
 		stateBytes, err := decodeAppleState(state)
 		if err != nil {
 			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is not base64 encoded")
-			return invalidStateError
+			return supertokens.BadInputError{Msg: "state must be base64 encoded"}
 		}
 
 		var stateObj map[string]interface{}
 		err = json.Unmarshal(stateBytes, &stateObj)
 		if err != nil || stateObj == nil {
 			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because the state is not a JSON object")
-			return invalidStateError
+			return supertokens.BadInputError{Msg: "state must be a base64 encoded JSON object"}
 		}
 
 		redirectURL, ok := stateObj["frontendRedirectURI"].(string)
 		if !ok {
 			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because frontendRedirectURI in the state is missing or not a string")
-			return invalidRedirectError
+			return supertokens.BadInputError{Msg: "state must contain frontendRedirectURI as a string"}
 		}
 
 		parsedRedirectURL, err := url.Parse(redirectURL)
 		if err != nil {
 			supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting the callback because frontendRedirectURI can not be parsed: " + err.Error())
-			return invalidRedirectError
+			if options.Config.IsValidFrontendRedirectURI != nil {
+				return supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute URL with an allowed scheme"}
+			}
+			return supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute http or https URL"}
 		}
 
 		if options.Config.IsValidFrontendRedirectURI != nil {
@@ -160,7 +160,7 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			err := checkRedirectTargetForCustomCheck(parsedRedirectURL)
 			if err != nil {
 				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI: " + err.Error())
-				return invalidRedirectError
+				return supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute URL with an allowed scheme"}
 			}
 
 			// We pass the URL as it will be serialised in the Location header (before the posted fields
@@ -171,13 +171,15 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			}
 			if !isValid {
 				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI because IsValidFrontendRedirectURI returned false")
-				return invalidRedirectError
+				return supertokens.BadInputError{Msg: "frontendRedirectURI in state is not allowed"}
 			}
 		} else {
+			originMismatchError := supertokens.BadInputError{Msg: "frontendRedirectURI in state does not match the configured origin"}
+
 			redirectOrigin, err := getComparableOrigin(parsedRedirectURL)
 			if err != nil {
 				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI: " + err.Error() + ". To allow other targets (e.g. mobile deep links), use IsValidFrontendRedirectURI.")
-				return invalidRedirectError
+				return supertokens.BadInputError{Msg: "frontendRedirectURI in state must be an absolute http or https URL"}
 			}
 
 			websiteOrigin, err := options.AppInfo.GetOrigin(options.Req, userContext)
@@ -191,12 +193,12 @@ func MakeAPIImplementation() tpmodels.APIInterface {
 			expectedOrigin, err := getComparableOrigin(parsedWebsiteOrigin)
 			if err != nil {
 				supertokens.LogDebugMessage("appleRedirectHandlerPOST: rejecting frontendRedirectURI because the configured origin can not be compared: " + err.Error() + ". Use IsValidFrontendRedirectURI to allow redirects in this case.")
-				return invalidRedirectError
+				return originMismatchError
 			}
 
 			if redirectOrigin != expectedOrigin {
 				supertokens.LogDebugMessage(fmt.Sprintf("appleRedirectHandlerPOST: rejecting frontendRedirectURI because its origin (%s) does not match the configured origin (%s). If the origin depends on the request, check what it resolves to for this request, or use IsValidFrontendRedirectURI.", redirectOrigin, expectedOrigin))
-				return invalidRedirectError
+				return originMismatchError
 			}
 		}
 
