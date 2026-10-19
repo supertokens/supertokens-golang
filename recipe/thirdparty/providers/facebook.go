@@ -82,6 +82,8 @@ func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return oauth2_GetUserInfo(config, oAuthTokens, userContext)
 		}
 
+		addClientAccessTokenCheck(originalImplementation, input.Config, checkFacebookAccessToken)
+
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)
 		}

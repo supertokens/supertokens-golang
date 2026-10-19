@@ -14,6 +14,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 const concurrentSignIns = 50
@@ -65,6 +66,10 @@ func TestFacebookSignInsWithDifferentAccessTokensResolveTheirOwnUsers(t *testing
 				},
 				Clients: []tpmodels.ProviderClientConfig{
 					{ClientID: "facebook-client-id", ClientSecret: "facebook-client-secret"},
+				},
+				// This test is about the user info request, so it skips the check of the access token with Facebook
+				ValidateAccessToken: func(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, userContext supertokens.UserContext) error {
+					return nil
 				},
 			},
 		},

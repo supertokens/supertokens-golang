@@ -44,6 +44,8 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
+		addClientAccessTokenCheck(originalImplementation, input.Config, checkGoogleAccessToken)
+
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)
 		}
