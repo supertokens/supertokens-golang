@@ -32,6 +32,7 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/session"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 	"github.com/supertokens/supertokens-golang/test/unittesting"
 )
 
@@ -112,6 +113,10 @@ func initGoogleWorkspacesForTest(t *testing.T, p *googleWorkspacesTestProvider, 
 						Config: tpmodels.ProviderConfig{
 							ThirdPartyId:          "google-workspaces",
 							OIDCDiscoveryEndpoint: p.server.URL + "/.well-known/openid-configuration",
+							// These tests are about the hd check on the user info, so they accept any access token
+							ValidateAccessToken: func(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, userContext supertokens.UserContext) error {
+								return nil
+							},
 							Clients: []tpmodels.ProviderClientConfig{
 								{
 									ClientID:         "test-client-id",

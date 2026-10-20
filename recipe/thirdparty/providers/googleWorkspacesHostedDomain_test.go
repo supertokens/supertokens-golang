@@ -23,6 +23,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
+	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
 // These tests call the Google Workspaces provider directly with a fake OIDC provider, so they
@@ -56,6 +57,10 @@ func createGoogleWorkspacesProviderForHdTest(t *testing.T, server *httptest.Serv
 			Config: tpmodels.ProviderConfig{
 				ThirdPartyId:          "google-workspaces",
 				OIDCDiscoveryEndpoint: server.URL + "/.well-known/openid-configuration",
+				// These tests are about the hd check on the user info, so they accept any access token
+				ValidateAccessToken: func(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, userContext supertokens.UserContext) error {
+					return nil
+				},
 				Clients: []tpmodels.ProviderClientConfig{
 					{
 						ClientID:         "test-client-id",
