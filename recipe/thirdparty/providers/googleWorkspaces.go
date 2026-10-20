@@ -42,6 +42,19 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
+		oGetUserInfo := originalImplementation.GetUserInfo
+		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			userInfo, err := oGetUserInfo(oAuthTokens, userContext)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			err = checkGoogleWorkspacesHostedDomain(originalImplementation.Config, userInfo.RawUserInfoFromProvider)
+			if err != nil {
+				return tpmodels.TypeUserInfo{}, err
+			}
+			return userInfo, nil
+		}
+
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)
 		}
@@ -49,4 +62,22 @@ func GoogleWorkspaces(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 	}
 
 	return Google(input)
+}
+
+// When a specific hosted domain is configured, the user has to come from a verified id_token (whose hd
+// claim is checked by ValidateIdTokenPayload) or from a user info response with a matching hd claim.
+// Only a missing hd and "*" allow any domain. Like in ValidateIdTokenPayload, an empty hd is compared
+// as a value, so it only matches an empty hd claim.
+func checkGoogleWorkspacesHostedDomain(config tpmodels.ProviderConfigForClientType, rawUserInfo tpmodels.TypeRawUserInfoFromProvider) error {
+	hd := config.AdditionalConfig["hd"]
+	if hd == nil || hd == "*" {
+		return nil
+	}
+	if rawUserInfo.FromIdTokenPayload != nil {
+		return nil
+	}
+	if rawUserInfo.FromUserInfoAPI != nil && rawUserInfo.FromUserInfoAPI["hd"] == hd {
+		return nil
+	}
+	return errors.New("the value for hd claim in the user info does not match the value provided in the config")
 }
