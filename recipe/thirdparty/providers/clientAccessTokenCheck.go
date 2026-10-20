@@ -144,10 +144,7 @@ func doAccessTokenCheckRequest(method string, requestURL string, queryParams map
 
 	supertokens.LogDebugMessage(fmt.Sprintf("Received response with status %d from %s", resp.StatusCode, requestURL))
 
-	if resp.StatusCode >= 400 {
-		return nil, resp.StatusCode, nil
-	}
-
+	// Error responses are parsed too: Facebook's error body tells a token of another app apart from a config problem
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, resp.StatusCode, err
@@ -190,6 +187,21 @@ func checkGoogleAccessToken(accessToken string, clientConfig tpmodels.ProviderCo
 	return nil
 }
 
+// isFacebookErrorForTokenOfAnotherApp tells if Facebook refused to debug a token because it was issued to another app:
+// it answers with error 100, "The App_id in the input_token did not match the Viewing App", instead of returning the
+// token's app_id.
+func isFacebookErrorForTokenOfAnotherApp(resp map[string]interface{}) bool {
+	errorObj, ok := resp["error"].(map[string]interface{})
+	if !ok {
+		return false
+	}
+	message, ok := errorObj["message"].(string)
+	if !ok || !strings.Contains(strings.ToLower(message), "did not match the viewing app") {
+		return false
+	}
+	return fmt.Sprint(errorObj["code"]) == "100"
+}
+
 // checkFacebookAccessToken uses Facebook's debug token API, which needs an app access token, made from the client id
 // and the client secret.
 func checkFacebookAccessToken(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, clientIDs map[string]bool) error {
@@ -205,6 +217,9 @@ func checkFacebookAccessToken(accessToken string, clientConfig tpmodels.Provider
 	}
 	data, dataOk := resp["data"].(map[string]interface{})
 	if err != nil || status != 200 || !dataOk {
+		if isFacebookErrorForTokenOfAnotherApp(resp) {
+			return errAccessTokenOfAnotherApp
+		}
 		return fmt.Errorf("Could not check the access token with Facebook (status %d). Please check the ClientID and ClientSecret of the Facebook provider.", status)
 	}
 	if isValid, ok := data["is_valid"].(bool); !ok || !isValid {

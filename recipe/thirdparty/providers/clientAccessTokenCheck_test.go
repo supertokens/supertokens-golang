@@ -272,6 +272,19 @@ func TestFacebookRejectsAnInvalidAccessToken(t *testing.T) {
 	assert.EqualError(t, err, "Invalid access token")
 }
 
+func TestFacebookRejectsAnAccessTokenOfAnotherAppThatFacebookWontDebug(t *testing.T) {
+	api := newFakeFacebookAPI(t, respond(400, map[string]interface{}{"error": map[string]interface{}{
+		"message": "(#100) The App_id in the input_token did not match the Viewing App",
+		"type":    "OAuthException",
+		"code":    100,
+	}}))
+	provider := createProviderForTest(t, facebookConfigForTest("fb-secret"), nil)
+
+	_, err := getUserInfoWithToken(provider, "fb-token")
+	assert.EqualError(t, err, "Access token does not belong to your application")
+	assert.Equal(t, 0, api.callCount("/me"))
+}
+
 func TestFacebookReportsAFailedDebugTokenCall(t *testing.T) {
 	newFakeFacebookAPI(t, respond(400, map[string]interface{}{"error": map[string]interface{}{"message": "Invalid OAuth access token", "code": 190}}))
 	provider := createProviderForTest(t, facebookConfigForTest("fb-secret"), nil)
