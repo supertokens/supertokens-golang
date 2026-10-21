@@ -317,12 +317,28 @@ func ValidateClaimsForSessionHandle(
 		claimValidators = overrideGlobalClaimValidators(claimValidators, *sessionInfo, userContext[0])
 	}
 
-	claimValidationResponse, err := (*instance.RecipeImpl.ValidateClaims)(sessionInfo.UserId, sessionInfo.CustomClaimsInAccessTokenPayload, claimValidators, userContext[0])
+	// The custom claims do not include the tenant id, so we add it to make sure that
+	// claims are fetched for the tenant of the session
+	accessTokenPayload := map[string]interface{}{}
+	for k, v := range sessionInfo.CustomClaimsInAccessTokenPayload {
+		accessTokenPayload[k] = v
+	}
+	accessTokenPayload["tId"] = sessionInfo.TenantId
+
+	claimValidationResponse, err := (*instance.RecipeImpl.ValidateClaims)(sessionInfo.UserId, accessTokenPayload, claimValidators, userContext[0])
 	if err != nil {
 		return sessmodels.ValidateClaimsResponse{}, err
 	}
 	if claimValidationResponse.AccessTokenPayloadUpdate != nil {
-		ok, err := (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, claimValidationResponse.AccessTokenPayloadUpdate, userContext[0])
+		// Protected props (including the tenant id we added above) are not custom claims, so they must
+		// not be merged into the custom claims
+		accessTokenPayloadUpdate := map[string]interface{}{}
+		for k, v := range claimValidationResponse.AccessTokenPayloadUpdate {
+			if !supertokens.DoesSliceContainString(k, protectedProps) {
+				accessTokenPayloadUpdate[k] = v
+			}
+		}
+		ok, err := (*instance.RecipeImpl.MergeIntoAccessTokenPayload)(sessionHandle, accessTokenPayloadUpdate, userContext[0])
 		if err != nil {
 			return sessmodels.ValidateClaimsResponse{}, err
 		}

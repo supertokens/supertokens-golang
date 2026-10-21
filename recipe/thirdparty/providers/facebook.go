@@ -58,30 +58,31 @@ func Facebook(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
-		oGetUserInfo := originalImplementation.GetUserInfo
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
-			if originalImplementation.Config.UserInfoEndpointQueryParams == nil {
-				originalImplementation.Config.UserInfoEndpointQueryParams = map[string]interface{}{}
-			}
+			// The access token is specific to this call, so the query params and headers are built
+			// for this call only instead of being written into the provider config.
+			config := originalImplementation.Config
 
-			if _, ok := originalImplementation.Config.UserInfoEndpointQueryParams["access_token"]; !ok {
-				originalImplementation.Config.UserInfoEndpointQueryParams["access_token"] = oAuthTokens["access_token"]
+			queryParams := copyConfigMapForUpdate(config.UserInfoEndpointQueryParams)
+			if _, ok := queryParams["access_token"]; !ok {
+				queryParams["access_token"] = oAuthTokens["access_token"]
 			}
-			if _, ok := originalImplementation.Config.UserInfoEndpointQueryParams["fields"]; !ok {
-				originalImplementation.Config.UserInfoEndpointQueryParams["fields"] = "id,email"
+			if _, ok := queryParams["fields"]; !ok {
+				queryParams["fields"] = "id,email"
 			}
-			if _, ok := originalImplementation.Config.UserInfoEndpointQueryParams["format"]; !ok {
-				originalImplementation.Config.UserInfoEndpointQueryParams["format"] = "json"
+			if _, ok := queryParams["format"]; !ok {
+				queryParams["format"] = "json"
 			}
+			config.UserInfoEndpointQueryParams = queryParams
 
-			if originalImplementation.Config.UserInfoEndpointHeaders == nil {
-				originalImplementation.Config.UserInfoEndpointHeaders = map[string]interface{}{}
-			}
+			headers := copyConfigMapForUpdate(config.UserInfoEndpointHeaders)
+			headers["Authorization"] = nil
+			config.UserInfoEndpointHeaders = headers
 
-			originalImplementation.Config.UserInfoEndpointHeaders["Authorization"] = nil
-
-			return oGetUserInfo(oAuthTokens, userContext)
+			return oauth2_GetUserInfo(config, oAuthTokens, userContext)
 		}
+
+		addClientAccessTokenCheck(originalImplementation, input.Config, checkFacebookAccessToken)
 
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)

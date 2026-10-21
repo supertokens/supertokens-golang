@@ -51,6 +51,8 @@ func MakeAPIImplementation() epmodels.APIInterface {
 					}, nil
 				}
 				email = valueAsString
+				// Only the first matching field is used
+				break
 			}
 		}
 
@@ -123,6 +125,8 @@ func MakeAPIImplementation() epmodels.APIInterface {
 					}, nil
 				}
 				newPassword = valueAsString
+				// Only the first matching field is used
+				break
 			}
 		}
 
@@ -145,6 +149,8 @@ func MakeAPIImplementation() epmodels.APIInterface {
 	signInPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignInPOSTResponse, error) {
 		var email string
 		var password string
+		emailFound := false
+		passwordFound := false
 		for _, formField := range formFields {
 			// NOTE: The check for type of password/email will never actually
 			// fail because the parent function already checks for the type
@@ -157,10 +163,17 @@ func MakeAPIImplementation() epmodels.APIInterface {
 						WrongCredentialsError: &struct{}{},
 					}, nil
 				}
+				// Only the first matching field is used
 				if formField.ID == "email" {
-					email = valueAsString
+					if !emailFound {
+						email = valueAsString
+						emailFound = true
+					}
 				} else {
-					password = valueAsString
+					if !passwordFound {
+						password = valueAsString
+						passwordFound = true
+					}
 				}
 			}
 		}
@@ -195,6 +208,8 @@ func MakeAPIImplementation() epmodels.APIInterface {
 	signUpPOST := func(formFields []epmodels.TypeFormField, tenantId string, options epmodels.APIOptions, userContext supertokens.UserContext) (epmodels.SignUpPOSTResponse, error) {
 		var email string
 		var password string
+		emailFound := false
+		passwordFound := false
 		for _, formField := range formFields {
 			// NOTE: The check for type of password/email will never actually
 			// fail because the parent function already checks for the type
@@ -207,10 +222,17 @@ func MakeAPIImplementation() epmodels.APIInterface {
 						GeneralError: &supertokens.GeneralErrorResponse{Message: parseErr.Error()},
 					}, nil
 				}
+				// Only the first matching field is used
 				if formField.ID == "email" {
-					email = valueAsString
+					if !emailFound {
+						email = valueAsString
+						emailFound = true
+					}
 				} else {
-					password = valueAsString
+					if !passwordFound {
+						password = valueAsString
+						passwordFound = true
+					}
 				}
 			}
 		}

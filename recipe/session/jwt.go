@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"reflect"
 	"strconv"
 	"strings"
 
@@ -71,26 +70,22 @@ func ParseJWTWithoutSignatureVerification(token string) (sessmodels.ParsedJWTInf
 			versionInHeader = fmt.Sprint(latestAccessTokenVersion)
 		}
 
-		if reflect.TypeOf(versionInHeader).Kind() != reflect.String {
-			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
-		}
-
-		versionNumber, parseError := strconv.Atoi(versionInHeader.(string))
-
-		kidInHeader, ok := parsedHeader["kid"]
-
+		versionString, ok := versionInHeader.(string)
 		if !ok {
 			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
-		if reflect.TypeOf(kidInHeader).Kind() != reflect.String {
+		versionNumber, parseError := strconv.Atoi(versionString)
+
+		kidString, ok := parsedHeader["kid"].(string)
+		if !ok {
 			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 
-		kidString := kidInHeader.(string)
 		kid = &kidString
 
-		if parsedHeader["typ"].(string) != "JWT" || parseError != nil || versionNumber < 3 || parsedHeader["kid"] == nil {
+		typ, ok := parsedHeader["typ"].(string)
+		if !ok || typ != "JWT" || parseError != nil || versionNumber < 3 {
 			return sessmodels.ParsedJWTInfo{}, errors.New("JWT header mismatch")
 		}
 

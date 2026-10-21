@@ -37,9 +37,8 @@ func Apple(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.OIDCDiscoveryEndpoint = "https://appleid.apple.com/.well-known/openid-configuration"
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams == nil {
-		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
-	}
+	// The input config is shared between requests, so we never write into its maps
+	input.Config.AuthorizationEndpointQueryParams = copyConfigMapForUpdate(input.Config.AuthorizationEndpointQueryParams)
 
 	if _, ok := input.Config.AuthorizationEndpointQueryParams["response_mode"]; !ok {
 		input.Config.AuthorizationEndpointQueryParams["response_mode"] = "form_post"

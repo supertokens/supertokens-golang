@@ -43,4 +43,5 @@ var protectedProps = []string{
 	"antiCsrfToken",
 	"rsub",
 	"tId",
+	"stt",
 }

@@ -79,9 +79,17 @@ func MakeRecipeModule(
 				pathAppend := appInfo.APIBasePath.AppendPath(APIshandled.PathWithoutAPIBasePath)
 				if !APIshandled.Disabled && APIshandled.Method == method {
 					if pathAppend.Equals(path) {
-						return &APIshandled.ID, DefaultTenantId, nil
+						finalTenantId, err := getTenantIdUsingMultitenancyRecipe(DefaultTenantId, userContext)
+						if err != nil {
+							return nil, "", err
+						}
+						return &APIshandled.ID, finalTenantId, nil
 					} else if remainingPath != nil && appInfo.APIBasePath.AppendPath(APIshandled.PathWithoutAPIBasePath).Equals(appInfo.APIBasePath.AppendPath(*remainingPath)) {
-						return &APIshandled.ID, tenantId, nil
+						finalTenantId, err := getTenantIdUsingMultitenancyRecipe(tenantId, userContext)
+						if err != nil {
+							return nil, "", err
+						}
+						return &APIshandled.ID, finalTenantId, nil
 					}
 				}
 			}
@@ -107,4 +115,13 @@ func (r RecipeModule) GetRecipeID() string {
 
 func (r RecipeModule) GetAppInfo() NormalisedAppinfo {
 	return r.appInfo
+}
+
+func getTenantIdUsingMultitenancyRecipe(tenantIdFromFrontend string, userContext UserContext) (string, error) {
+	if GetTenantIdFuncFromUsingMultitenancyRecipe == nil {
+		// this can be nil if the user has not used the multitenancy recipe
+		// which happens if they are only using the session recipe.
+		return tenantIdFromFrontend, nil
+	}
+	return GetTenantIdFuncFromUsingMultitenancyRecipe(tenantIdFromFrontend, userContext)
 }
