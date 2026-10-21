@@ -25,10 +25,8 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
-	"os/exec"
 	"strings"
 	"strconv"
-	"testing"
 
 	"github.com/google/uuid"
 	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
@@ -780,61 +778,4 @@ func GetRequestWithJSONResult(url string, cookies []*http.Cookie) (int, map[stri
 	return res.StatusCode, respObj, nil
 }
 
-type InfoLogData struct {
-	LastLine string
-	Output   []string
-}
 
-func getCoreContainerName() string {
-	// Try compose container first
-	cmd := exec.Command("docker", "compose", "ps", "--format", "{{.Name}}")
-	output, err := cmd.Output()
-	if err == nil {
-		for _, name := range strings.Split(strings.TrimSpace(string(output)), "\n") {
-			if strings.Contains(name, "core") {
-				return name
-			}
-		}
-	}
-	return ""
-}
-
-func GetInfoLogData(t *testing.T, startWith string) InfoLogData {
-	containerName := getCoreContainerName()
-	if containerName == "" {
-		t.Log("GetInfoLogData: no core container found")
-		return InfoLogData{}
-	}
-
-	cmd := exec.Command("docker", "logs", containerName)
-	output, err := cmd.CombinedOutput()
-	if err != nil {
-		t.Logf("GetInfoLogData: docker logs failed: %s", err)
-		return InfoLogData{}
-	}
-
-	lines := strings.Split(string(output), "\n")
-	var lastLine string
-	var resultLines []string
-	shouldRecord := startWith == ""
-
-	for _, line := range lines {
-		trimmed := strings.TrimSpace(line)
-		if trimmed == "" {
-			continue
-		}
-		if !shouldRecord && strings.Contains(line, startWith) {
-			shouldRecord = true
-			continue
-		}
-		if shouldRecord {
-			resultLines = append(resultLines, line)
-		}
-		lastLine = line
-	}
-
-	return InfoLogData{
-		LastLine: lastLine,
-		Output:   resultLines,
-	}
-}

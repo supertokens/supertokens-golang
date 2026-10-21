@@ -21,8 +21,11 @@ import (
 	"io"
 	"net/http"
 	"net/http/httptest"
+	"net/http/httputil"
+	"net/url"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -1501,9 +1504,21 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 	connectionURI := unittesting.StartUpST("localhost", "8080")
 	defer AfterEach()
 
+	// Set up a reverse proxy that counts JWKS requests
+	var jwksCalls int64
+	coreURL, _ := url.Parse(connectionURI)
+	proxy := httputil.NewSingleHostReverseProxy(coreURL)
+	proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, ".well-known/jwks.json") {
+			atomic.AddInt64(&jwksCalls, 1)
+		}
+		proxy.ServeHTTP(w, r)
+	}))
+	defer proxyServer.Close()
+
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: connectionURI,
+			ConnectionURI: proxyServer.URL,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1517,28 +1532,13 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 		},
 	}
 
-	// Capture log marker right before Init to avoid picking up app creation logs
-	time.Sleep(500 * time.Millisecond)
-	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
-
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	jwksLogPattern := "API called:"
-	jwksEndpointPattern := ".well-known/jwks.json"
-
-	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
-	var wellKnownCallLogs []string
-
-	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
-			wellKnownCallLogs = append(wellKnownCallLogs, line)
-		}
-	}
-
-	assert.Equal(t, len(wellKnownCallLogs), 0)
+	// No JWKS fetch on init
+	assert.Equal(t, int64(0), atomic.LoadInt64(&jwksCalls))
 
 	session, err := CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
@@ -1555,16 +1555,8 @@ func TestThatJWKSIsFetchedAsExpected(t *testing.T) {
 
 	time.Sleep(time.Duration(JWKCacheMaxAgeInSec) * time.Second)
 
-	logInfoAfterWaiting := unittesting.GetInfoLogData(t, lastLineBeforeTest)
-	wellKnownCallLogs = []string{}
-
-	for _, line := range logInfoAfterWaiting.Output {
-		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
-			wellKnownCallLogs = append(wellKnownCallLogs, line)
-		}
-	}
-
-	assert.Equal(t, len(wellKnownCallLogs), 1)
+	// After cache expiry, exactly 1 JWKS fetch should have happened
+	assert.Equal(t, int64(1), atomic.LoadInt64(&jwksCalls))
 
 	JWKRefreshRateLimit = originalRefreshlimit
 }
@@ -1661,9 +1653,21 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 	})
 	defer AfterEach()
 
+	// Set up a reverse proxy that counts JWKS requests
+	var jwksCalls int64
+	coreURL, _ := url.Parse(connectionURI)
+	proxy := httputil.NewSingleHostReverseProxy(coreURL)
+	proxyServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if strings.Contains(r.URL.Path, ".well-known/jwks.json") {
+			atomic.AddInt64(&jwksCalls, 1)
+		}
+		proxy.ServeHTTP(w, r)
+	}))
+	defer proxyServer.Close()
+
 	configValue := supertokens.TypeInput{
 		Supertokens: &supertokens.ConnectionInfo{
-			ConnectionURI: connectionURI,
+			ConnectionURI: proxyServer.URL,
 		},
 		AppInfo: supertokens.AppInfo{
 			AppName:       "SuperTokens",
@@ -1675,28 +1679,13 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 		},
 	}
 
-	// Capture log marker right before Init to avoid picking up app creation logs
-	time.Sleep(500 * time.Millisecond)
-	lastLineBeforeTest := unittesting.GetInfoLogData(t, "").LastLine
-
 	err := supertokens.Init(configValue)
 	if err != nil {
 		t.Error(err.Error())
 	}
 
-	jwksLogPattern := "API called:"
-	jwksEndpointPattern := ".well-known/jwks.json"
-
-	logInfoAfter := unittesting.GetInfoLogData(t, lastLineBeforeTest)
-	var wellKnownCallLogs []string
-
-	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
-			wellKnownCallLogs = append(wellKnownCallLogs, line)
-		}
-	}
-
-	assert.Equal(t, len(wellKnownCallLogs), 0)
+	// No JWKS fetch on init
+	assert.Equal(t, int64(0), atomic.LoadInt64(&jwksCalls))
 
 	session, err := CreateNewSessionWithoutRequestResponse("public", "rope", map[string]interface{}{}, map[string]interface{}{}, nil)
 
@@ -1711,16 +1700,8 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
-	wellKnownCallLogs = []string{}
-
-	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
-			wellKnownCallLogs = append(wellKnownCallLogs, line)
-		}
-	}
-
-	assert.Equal(t, len(wellKnownCallLogs), 1)
+	// 1 JWKS fetch after first session verification
+	assert.Equal(t, int64(1), atomic.LoadInt64(&jwksCalls))
 
 	time.Sleep(10 * time.Second)
 
@@ -1736,30 +1717,14 @@ func TestThatJWKSAreRefreshedIfKIDIsUnkown(t *testing.T) {
 		t.Error(err.Error())
 	}
 
-	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
-	wellKnownCallLogs = []string{}
-
-	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
-			wellKnownCallLogs = append(wellKnownCallLogs, line)
-		}
-	}
-
-	assert.Equal(t, len(wellKnownCallLogs), 2)
+	// 2 JWKS fetches after key rotation
+	assert.Equal(t, int64(2), atomic.LoadInt64(&jwksCalls))
 
 	tokens = session.GetAllSessionTokensDangerously()
 	_, err = GetSessionWithoutRequestResponse(tokens.AccessToken, tokens.AntiCsrfToken, &sessmodels.VerifySessionOptions{})
 
-	logInfoAfter = unittesting.GetInfoLogData(t, lastLineBeforeTest)
-	wellKnownCallLogs = []string{}
-
-	for _, line := range logInfoAfter.Output {
-		if strings.Contains(line, jwksLogPattern) && strings.Contains(line, jwksEndpointPattern) {
-			wellKnownCallLogs = append(wellKnownCallLogs, line)
-		}
-	}
-
-	assert.Equal(t, len(wellKnownCallLogs), 2)
+	// Still 2 — no additional fetch when key is already known
+	assert.Equal(t, int64(2), atomic.LoadInt64(&jwksCalls))
 }
 
 /*

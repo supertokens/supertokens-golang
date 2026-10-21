@@ -1,0 +1,118 @@
+services:
+  core:
+    # Uses `$SUPERTOKENS_CORE_VERSION` when available, else latest
+    image: supertokens/supertokens-dev-postgresql:${SUPERTOKENS_CORE_VERSION:-master}
+    entrypoint: [
+      "/usr/lib/supertokens/jre/bin/java",
+      "-classpath", "/usr/lib/supertokens/core/*:/usr/lib/supertokens/plugin-interface/*:/usr/lib/supertokens/ee/*",
+      "io.supertokens.Main", "/usr/lib/supertokens/", "DEV", "test_mode"
+    ]
+    ports:
+      - ${SUPERTOKENS_CORE_PORT:-3567}:3567
+    platform: linux/amd64
+    depends_on:
+      oauth:
+        condition: service_started
+      pg:
+        condition: service_healthy
+    environment:
+      OAUTH_PROVIDER_PUBLIC_SERVICE_URL: http://oauth:4444
+      OAUTH_PROVIDER_ADMIN_SERVICE_URL: http://oauth:4445
+      OAUTH_PROVIDER_CONSENT_LOGIN_BASE_URL: http://localhost:3001/auth
+      OAUTH_CLIENT_SECRET_ENCRYPTION_KEY: asdfasdfasdfasdfasdf
+      INFO_LOG_PATH: "null"
+      ERROR_LOG_PATH: "null"
+      LOG_LEVEL: "DEBUG"
+      POSTGRESQL_HOST: "pg"
+      POSTGRESQL_PORT: "5432"
+      POSTGRESQL_USER: "root"
+      POSTGRESQL_PASSWORD: "root"
+      POSTGRESQL_DATABASE_NAME: "postgres"
+      SUPERTOKENS_LICENSE_KEY: ${SUPERTOKENS_LICENSE_KEY:-}
+    healthcheck:
+      test: bash -c 'curl -s "http://127.0.0.1:3567/hello" | grep "Hello"'
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+# ── PostgreSQL ───────────────────────────────────────────────────────
+  pg:
+    image: percona/percona-distribution-postgresql:13
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: postgres
+    tmpfs:
+      - /var/lib/postgresql/data:size=4g
+    mem_limit: 4g
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    command: >
+      postgres
+        -c max_connections=1000
+        -c fsync=off
+        -c synchronous_commit=off
+        -c full_page_writes=off
+        -c wal_level=minimal
+        -c max_wal_senders=0
+        -c max_wal_size=2GB
+        -c shared_buffers=512MB
+        -c work_mem=64MB
+
+  oauth:
+    image: oryd/hydra:v2.2.0
+    restart: unless-stopped
+    environment:
+      DSN: memory
+      URLS_SELF_ISSUER: http://oauth:4444
+      URLS_LOGIN: http://localhost:3001/auth/oauth/login
+      URLS_CONSENT: http://localhost:3001/auth/oauth/consent
+      URLS_LOGOUT: http://localhost:3001/auth/oauth/logout
+      SECRETS_SYSTEM: thisIsATestSecretThatIsAtLeast32Chars
+      SECRETS_COOKIE: thisIsATestCookieSecretAtLeast32
+      SERVE_COOKIES_SAME_SITE_MODE: Lax
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4445/health/alive"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    mem_limit: 2g
+    depends_on:
+      pg:
+        condition: service_healthy
+    entrypoint: ["sh", "-c"]
+    command: ["hydra migrate sql -e --yes && hydra serve all --dev"]
+
+  mcp:
+    build:
+      context: .
+      dockerfile: Dockerfile.mcp
+    ports:
+      - "127.0.0.1:${MCP_PORT:-3001}:3000"
+    environment:
+      MCP_TRANSPORT: sse
+      MCP_PORT: "3000"
+      GO_MCP_WORKSPACE: /workspace
+      SUPERTOKENS_CORE_HOST: core
+      SUPERTOKENS_CORE_PORT: "3567"
+      SUPERTOKENS_LICENSE_KEY: ${SUPERTOKENS_LICENSE_KEY:-}
+    volumes:
+      - .:/workspace
+      - go-cache:/root/go/pkg/mod
+      - ${BACKEND_SDK_TESTING_PATH:-../backend-sdk-testing}:/cross-sdk-tests
+      - cross-sdk-node-modules:/cross-sdk-tests/node_modules
+    depends_on:
+      core:
+        condition: service_healthy
+    mem_limit: 8g
+    cpus: 8
+    pids_limit: 4096
+
+volumes:
+  go-cache:
+  cross-sdk-node-modules:
