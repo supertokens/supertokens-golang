@@ -1,3 +1,0 @@
-kind: Security
-body: The user dashboard's `Admins` restriction now matches the sign-out and analytics exemptions against the request path only, so other write operations by non-admin dashboard users are always rejected.
-time: 2026-10-15T10:10:00.000000+02:00

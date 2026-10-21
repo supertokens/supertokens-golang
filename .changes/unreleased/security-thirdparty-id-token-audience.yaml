@@ -1,3 +1,0 @@
-kind: Security
-body: Third-party sign-in now requires the `aud` claim of a provider's id_token to match the configured client ID, and rejects id_tokens when no client ID is configured.
-time: 2026-10-15T10:00:00.000000+02:00

@@ -1,3 +1,0 @@
-kind: Changed
-body: "session: `FetchAndSetClaim` and `FetchAndSetClaimWithContext` on a `SessionContainer` now fetch the claim value for the session's tenant instead of `public`, like `session.FetchAndSetClaim` with a session handle already did. For example, `UserRoleClaim` and `PermissionClaim` now use the user's roles in the session's tenant, `AllowedDomainsClaim` gets the allowed domains of the session's tenant, and custom claims get the session's tenant id as the `tenantId` argument of their fetch function."
-time: 2026-10-16T20:40:00.000000+02:00

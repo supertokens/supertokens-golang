@@ -1,3 +1,0 @@
-kind: Changed
-body: "session: `ValidateClaimsForSessionHandle` now fetches claim values for the session's tenant instead of `public` (e.g. `UserRoleClaim` and `PermissionClaim` now use the user's roles in the session's tenant). The access token payload it passes to `ValidateClaims` now includes the session's tenant id (`tId`), and protected claims (such as `tId`, `sub` or `exp`) in the `AccessTokenPayloadUpdate` that `ValidateClaims` returns are no longer merged into the session's access token payload."
-time: 2026-10-16T20:41:00.000000+02:00

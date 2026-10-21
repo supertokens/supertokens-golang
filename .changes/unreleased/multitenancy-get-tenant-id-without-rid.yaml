@@ -1,3 +1,0 @@
-kind: Changed
-body: "multitenancy: an overridden `GetTenantId` now also runs for requests without a `rid` header, including requests to the JWKS and OpenID discovery endpoints, so it runs for every request the SDK's middleware handles (with the tenant id from the path, or `public`). Make sure your override handles these requests too, e.g. that it doesn't reject requests to the JWKS endpoint."
-time: 2026-10-16T17:12:00.000000+02:00

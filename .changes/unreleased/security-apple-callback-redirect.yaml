@@ -1,3 +1,0 @@
-kind: Security
-body: "thirdparty: the Apple form_post callback now only redirects to the configured `Origin` / `WebsiteDomain` and answers invalid callback state with a 400. Apps whose `Origin` depends on the request, or that redirect to other targets (e.g. another origin, https universal/app links or custom-scheme mobile deep links such as `myapp://callback`), can allow them with the new `IsValidFrontendRedirectURI` thirdparty config option. `javascript:`, `data:` and similar schemes are always rejected."
-time: 2026-10-15T10:20:00.000000+02:00

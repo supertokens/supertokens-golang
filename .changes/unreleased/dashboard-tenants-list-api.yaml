@@ -1,3 +1,0 @@
-kind: Changed
-body: "dashboard: the dashboard's tenants list API (`/dashboard/api/tenants/list` under your API base path) now returns only each tenant's id and whether its email password, passwordless and third party login methods are enabled, without the tenant's third party provider configs. If your code reads the providers from this API, use `multitenancy.GetTenant` on your backend instead."
-time: 2026-10-16T17:11:00.000000+02:00

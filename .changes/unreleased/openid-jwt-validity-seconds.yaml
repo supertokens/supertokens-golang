@@ -1,3 +1,0 @@
-kind: Changed
-body: "openid: `JwtValiditySeconds` in the `openid.Init` config is now passed to the JWT recipe, so JWTs created without an explicit validity (e.g. with `openid.CreateJWT`) now expire after that many seconds instead of using the default of 100 years. If you set it, check that the value is what you want."
-time: 2026-10-16T17:14:00.000000+02:00
