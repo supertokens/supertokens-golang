@@ -186,6 +186,15 @@ func GetInfoFromAccessToken(jwtInfo sessmodels.ParsedJWTInfo, jwks *keyfunc.JWKS
 func ValidateAccessTokenStructure(payload map[string]interface{}, version int) error {
 	err := errors.New("Access token does not contain all the information. Maybe the structure has changed?")
 
+	// stt is the session token type: 0 is an access token. It is optional, but if it is present
+	// it has to identify an access token.
+	if stt, ok := payload["stt"]; ok {
+		if sttNum, isNum := stt.(float64); !isNum || sttNum != float64(0) {
+			supertokens.LogDebugMessage("ValidateAccessTokenStructure: stt claim in JWT payload is not an access token type")
+			return errors.New("Wrong token type")
+		}
+	}
+
 	if version >= 3 {
 		supertokens.LogDebugMessage("ValidateAccessTokenStructure: Access token is using version >= 3")
 		if _, ok := payload["sessionHandle"].(string); !ok {

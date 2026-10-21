@@ -90,6 +90,53 @@ func doGetRequest(url string, queryParams map[string]interface{}, headers map[st
 	return result, nil
 }
 
+// doPostRequestWithJSONBody sends params as a JSON body, for APIs that don't accept form data.
+// It returns -1 as the status if the request itself failed. It doesn't log the request or response
+// bodies, because they can contain tokens.
+func doPostRequestWithJSONBody(url string, params map[string]interface{}, headers map[string]string) (map[string]interface{}, int, error) {
+	supertokens.LogDebugMessage(fmt.Sprintf("POST request with a JSON body to %s", url))
+
+	postBody, err := json.Marshal(params)
+	if err != nil {
+		return nil, -1, err
+	}
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(postBody))
+	if err != nil {
+		return nil, -1, err
+	}
+	req.Header.Set("accept", "application/json")
+	for key, value := range headers {
+		req.Header.Set(key, value)
+	}
+	req.Header.Set("content-type", "application/json")
+
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, -1, err
+	}
+	defer resp.Body.Close()
+
+	body, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
+
+	supertokens.LogDebugMessage(fmt.Sprintf("Received response with status %d from %s", resp.StatusCode, url))
+
+	var result map[string]interface{}
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, resp.StatusCode, err
+	}
+
+	if resp.StatusCode >= 300 {
+		return nil, resp.StatusCode, fmt.Errorf("POST request to %s resulted in %d status", url, resp.StatusCode)
+	}
+
+	return result, resp.StatusCode, nil
+}
+
 func doPostRequest(url string, params map[string]interface{}, headers map[string]interface{}) (map[string]interface{}, int, error) {
 	supertokens.LogDebugMessage(fmt.Sprintf("POST request to %s, with form fields %v and headers %v", url, params, headers))
 
@@ -110,7 +157,8 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil, resp.StatusCode, err
+		// resp is nil if the request failed
+		return nil, -1, err
 	}
 	defer resp.Body.Close()
 
@@ -136,27 +184,36 @@ func doPostRequest(url string, params map[string]interface{}, headers map[string
 
 // JWKS utils
 var jwksKeys = map[string]*keyfunc.JWKS{}
-var jwksKeysLock = sync.Mutex{}
+var jwksKeysLock = sync.RWMutex{}
+
+func getCachedJWKS(url string) (*keyfunc.JWKS, bool) {
+	jwksKeysLock.RLock()
+	defer jwksKeysLock.RUnlock()
+	jwks, ok := jwksKeys[url]
+	return jwks, ok
+}
 
 func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
-	if jwks, ok := jwksKeys[url]; ok {
+	if jwks, ok := getCachedJWKS(url); ok {
 		return jwks, nil
 	}
 
-	jwksKeysLock.Lock()
-	defer jwksKeysLock.Unlock()
-
-	// Check again to see if it was added while we were waiting for the lock
-	if jwks, ok := jwksKeys[url]; ok {
-		return jwks, nil
-	}
-
+	// We fetch without holding the lock, so a slow JWKS endpoint doesn't block lookups of other cached keys
 	options := keyfunc.Options{
 		RefreshInterval: time.Hour,
 	}
 	jwks, err := keyfunc.Get(url, options)
 	if err != nil {
 		return nil, err
+	}
+
+	jwksKeysLock.Lock()
+	defer jwksKeysLock.Unlock()
+
+	// If another request cached the keys while we were fetching, we use those and stop our background refresh
+	if existingJWKS, ok := jwksKeys[url]; ok {
+		jwks.EndBackground()
+		return existingJWKS, nil
 	}
 	jwksKeys[url] = jwks
 	return jwks, nil
@@ -165,15 +222,19 @@ func getJWKSFromURL(url string) (*keyfunc.JWKS, error) {
 // User map utils
 func accessField(obj interface{}, key string) (interface{}, bool) {
 	keyParts := strings.Split(key, ".")
-	var ok bool
 	for _, k := range keyParts {
-		obj, ok = obj.(map[string]interface{})[k]
+		objMap, isMap := obj.(map[string]interface{})
+		if !isMap {
+			return nil, false
+		}
 
+		var ok bool
+		obj, ok = objMap[k]
 		if !ok {
 			return nil, false
 		}
 	}
-	return obj, ok
+	return obj, true
 }
 
 var DevOauthClientIds = [...]string{
@@ -289,10 +350,17 @@ func discoverOIDCEndpoints(config tpmodels.ProviderConfigForClientType) (tpmodel
 }
 
 var oidcInfoMap = map[string]map[string]interface{}{}
-var oidcInfoMapLock = sync.Mutex{}
+var oidcInfoMapLock = sync.RWMutex{}
+
+func getCachedOIDCDiscoveryInfo(issuer string) (map[string]interface{}, bool) {
+	oidcInfoMapLock.RLock()
+	defer oidcInfoMapLock.RUnlock()
+	oidcInfo, ok := oidcInfoMap[issuer]
+	return oidcInfo, ok
+}
 
 func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
+	if oidcInfo, ok := getCachedOIDCDiscoveryInfo(issuer); ok {
 		return oidcInfo, nil
 	}
 
@@ -305,20 +373,25 @@ func getOIDCDiscoveryInfo(issuer string) (map[string]interface{}, error) {
 		return nil, err
 	}
 
-	oidcInfoMapLock.Lock()
-	defer oidcInfoMapLock.Unlock()
-
-	// Check again to see if it was added while we were waiting for the lock
-	if oidcInfo, ok := oidcInfoMap[issuer]; ok {
-		return oidcInfo, nil
-	}
-
+	// We fetch without holding the lock, so a slow issuer doesn't block lookups of other cached issuers
 	oidcInfo, err := doGetRequest(normalizedDomain.GetAsStringDangerous()+normalizedPath.GetAsStringDangerous(), nil, nil)
 	if err != nil {
 		return nil, err
 	}
-	oidcInfoMap[issuer] = oidcInfo.(map[string]interface{})
-	return oidcInfoMap[issuer], nil
+	oidcInfoObj, ok := oidcInfo.(map[string]interface{})
+	if !ok {
+		return nil, fmt.Errorf("the OIDC discovery response from %s is not a JSON object", issuer)
+	}
+
+	oidcInfoMapLock.Lock()
+	defer oidcInfoMapLock.Unlock()
+
+	// If another request cached the info while we were fetching, we keep that
+	if existingOIDCInfo, ok := oidcInfoMap[issuer]; ok {
+		return existingOIDCInfo, nil
+	}
+	oidcInfoMap[issuer] = oidcInfoObj
+	return oidcInfoObj, nil
 }
 
 func normaliseOIDCEndpointToIncludeWellKnown(url string) string {

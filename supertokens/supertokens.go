@@ -241,19 +241,12 @@ func (s *superTokens) middleware(theirHandler http.Handler) http.Handler {
 
 			LogDebugMessage("middleware: Request being handled by recipe. ID is: " + *id)
 
-			tenantId := "public"
-
-			if GetTenantIdFuncFromUsingMultitenancyRecipe != nil {
+			// The tenant id has already been resolved by ReturnAPIIdIfCanHandleRequest
+			tenantId := *finalTenantId
+			if GetTenantIdFuncFromUsingMultitenancyRecipe == nil {
 				// this can be nil if the user has not used the multitenancy recipe
 				// which happens if they are only using the session recipe.
-				tenantId, err = GetTenantIdFuncFromUsingMultitenancyRecipe(*finalTenantId, userContext)
-				if err != nil {
-					err = s.errorHandler(err, r, dw, userContext)
-					if err != nil && !dw.IsDone() {
-						s.OnSuperTokensAPIError(err, r, dw)
-					}
-					return
-				}
+				tenantId = DefaultTenantId
 			}
 
 			apiErr := finalMatchedRecipe.HandleAPIRequest(*id, tenantId, r, dw, theirHandler.ServeHTTP, path, method, userContext)

@@ -3,7 +3,6 @@ package api
 import (
 	"github.com/supertokens/supertokens-golang/recipe/dashboard/dashboardmodels"
 	"github.com/supertokens/supertokens-golang/recipe/multitenancy"
-	"github.com/supertokens/supertokens-golang/recipe/thirdparty/tpmodels"
 	"github.com/supertokens/supertokens-golang/supertokens"
 )
 
@@ -21,8 +20,7 @@ type tenantType struct {
 		Enabled bool `json:"enabled"`
 	} `json:"passwordless"`
 	ThirdParty struct {
-		Enabled   bool                      `json:"enabled"`
-		Providers []tpmodels.ProviderConfig `json:"providers"`
+		Enabled bool `json:"enabled"`
 	} `json:"thirdParty"`
 }
 
@@ -50,11 +48,9 @@ func TenantsListGet(apiInterface dashboardmodels.APIInterface, tenantId string, 
 				Enabled: tenant.Passwordless.Enabled,
 			},
 			ThirdParty: struct {
-				Enabled   bool                      `json:"enabled"`
-				Providers []tpmodels.ProviderConfig `json:"providers"`
+				Enabled bool `json:"enabled"`
 			}{
-				Enabled:   tenant.ThirdParty.Enabled,
-				Providers: tenant.ThirdParty.Providers,
+				Enabled: tenant.ThirdParty.Enabled,
 			},
 		}
 	}

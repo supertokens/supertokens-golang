@@ -24,10 +24,14 @@ import (
 )
 
 func getSessionWithoutClaimValidation(options webauthnmodels.APIOptions, userContext supertokens.UserContext) (sessmodels.SessionContainer, error) {
+	// These APIs manage the user's credentials, so we check that the session hasn't been revoked
+	// (e.g. by account recovery) instead of only verifying the access token.
+	checkDatabase := true
 	return session.GetSession(
 		options.Req,
 		options.Res,
 		&sessmodels.VerifySessionOptions{
+			CheckDatabase: &checkDatabase,
 			OverrideGlobalClaimValidators: func(_ []claims.SessionClaimValidator, _ sessmodels.SessionContainer, _ supertokens.UserContext) ([]claims.SessionClaimValidator, error) {
 				return []claims.SessionClaimValidator{}, nil
 			},

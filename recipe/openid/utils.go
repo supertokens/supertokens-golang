@@ -44,6 +44,10 @@ func validateAndNormaliseUserInput(appInfo supertokens.NormalisedAppinfo, config
 		}
 	}
 
+	if config != nil && config.JwtValiditySeconds != nil {
+		result.JwtValiditySeconds = config.JwtValiditySeconds
+	}
+
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
 			result.Override.Functions = config.Override.Functions
