@@ -13,17 +13,17 @@ func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpm
 		ClientSecret:     clientConfig.ClientSecret,
 		Scope:            clientConfig.Scope,
 		ForcePKCE:        clientConfig.ForcePKCE,
-		AdditionalConfig: clientConfig.AdditionalConfig,
+		AdditionalConfig: copyConfigMap(clientConfig.AdditionalConfig),
 
 		Name: config.Name,
 
 		AuthorizationEndpoint:            config.AuthorizationEndpoint,
-		AuthorizationEndpointQueryParams: config.AuthorizationEndpointQueryParams,
+		AuthorizationEndpointQueryParams: copyConfigMap(config.AuthorizationEndpointQueryParams),
 		TokenEndpoint:                    config.TokenEndpoint,
-		TokenEndpointBodyParams:          config.TokenEndpointBodyParams,
+		TokenEndpointBodyParams:          copyConfigMap(config.TokenEndpointBodyParams),
 		UserInfoEndpoint:                 config.UserInfoEndpoint,
-		UserInfoEndpointQueryParams:      config.UserInfoEndpointQueryParams,
-		UserInfoEndpointHeaders:          config.UserInfoEndpointHeaders,
+		UserInfoEndpointQueryParams:      copyConfigMap(config.UserInfoEndpointQueryParams),
+		UserInfoEndpointHeaders:          copyConfigMap(config.UserInfoEndpointHeaders),
 		JwksURI:                          config.JwksURI,
 		OIDCDiscoveryEndpoint:            config.OIDCDiscoveryEndpoint,
 		UserInfoMap:                      config.UserInfoMap,
@@ -32,6 +32,43 @@ func getProviderConfigForClient(config tpmodels.ProviderConfig, clientConfig tpm
 		RequireEmail:                     config.RequireEmail,
 		GenerateFakeEmail:                config.GenerateFakeEmail,
 	}
+}
+
+// copyConfigMap returns a deep copy of a config map (nil stays nil), so that the config used for a
+// single request never shares a map with the static config or with other requests.
+func copyConfigMap(m map[string]interface{}) map[string]interface{} {
+	if m == nil {
+		return nil
+	}
+	result := make(map[string]interface{}, len(m))
+	for k, v := range m {
+		result[k] = copyConfigValue(v)
+	}
+	return result
+}
+
+func copyConfigValue(v interface{}) interface{} {
+	switch typed := v.(type) {
+	case map[string]interface{}:
+		return copyConfigMap(typed)
+	case []interface{}:
+		copied := make([]interface{}, len(typed))
+		for i, item := range typed {
+			copied[i] = copyConfigValue(item)
+		}
+		return copied
+	default:
+		return v
+	}
+}
+
+// copyConfigMapForUpdate is like copyConfigMap, but returns an empty map instead of nil so that the
+// result can be written to.
+func copyConfigMapForUpdate(m map[string]interface{}) map[string]interface{} {
+	if m == nil {
+		return map[string]interface{}{}
+	}
+	return copyConfigMap(m)
 }
 
 func FindAndCreateProviderInstance(providers []tpmodels.ProviderInput, thirdPartyId string, clientType *string, userContext supertokens.UserContext) (*tpmodels.TypeProvider, error) {

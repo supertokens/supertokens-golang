@@ -173,6 +173,10 @@ func init() {
 
 	supertokens.GetTenantIdFuncFromUsingMultitenancyRecipe = func(tenantIdFromFrontend string, userContext supertokens.UserContext) (string, error) {
 		mtRecipe := GetRecipeInstance()
+		if mtRecipe == nil {
+			// There is no recipe instance (and so no override) to resolve the tenant id with
+			return tenantIdFromFrontend, nil
+		}
 		return (*mtRecipe.RecipeImpl.GetTenantId)(tenantIdFromFrontend, userContext)
 	}
 }

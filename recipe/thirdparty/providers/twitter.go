@@ -69,11 +69,7 @@ func Twitter(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			/* Transformation needed for dev keys END */
 
 			basicAuthToken := base64.StdEncoding.EncodeToString([]byte(clientId + ":" + originalImplementation.Config.ClientSecret))
-			twitterOauthParams := map[string]interface{}{}
-
-			if originalImplementation.Config.TokenEndpointBodyParams != nil {
-				twitterOauthParams = originalImplementation.Config.TokenEndpointBodyParams
-			}
+			twitterOauthParams := copyConfigMapForUpdate(originalImplementation.Config.TokenEndpointBodyParams)
 
 			codeVerifier := ""
 

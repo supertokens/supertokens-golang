@@ -66,6 +66,8 @@ func Discord(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
+		addClientAccessTokenCheck(originalImplementation, input.Config, checkDiscordAccessToken)
+
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)
 		}

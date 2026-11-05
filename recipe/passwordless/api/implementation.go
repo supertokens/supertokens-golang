@@ -17,6 +17,7 @@ package api
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/supertokens/supertokens-golang/ingredients/emaildelivery"
 	"github.com/supertokens/supertokens-golang/ingredients/smsdelivery"
@@ -30,6 +31,12 @@ import (
 func MakeAPIImplementation() plessmodels.APIInterface {
 
 	consumeCodePOST := func(userInput *plessmodels.UserInputCodeWithDeviceID, linkCode *string, preAuthSessionID string, tenantId string, options plessmodels.APIOptions, userContext supertokens.UserContext) (plessmodels.ConsumeCodePOSTResponse, error) {
+		// We need to know where the code was sent to, and the device is deleted when the code is consumed
+		deviceInfo, err := (*options.RecipeImplementation.ListCodesByPreAuthSessionID)(preAuthSessionID, tenantId, userContext)
+		if err != nil {
+			return plessmodels.ConsumeCodePOSTResponse{}, err
+		}
+
 		response, err := (*options.RecipeImplementation.ConsumeCode)(userInput, linkCode, preAuthSessionID, tenantId, userContext)
 		if err != nil {
 			return plessmodels.ConsumeCodePOSTResponse{}, err
@@ -45,7 +52,8 @@ func MakeAPIImplementation() plessmodels.APIInterface {
 
 		user := response.OK.User
 
-		if user.Email != nil {
+		// The email is only verified if the code was sent to it
+		if user.Email != nil && deviceInfo != nil && deviceInfo.Email != nil && strings.EqualFold(strings.TrimSpace(*deviceInfo.Email), strings.TrimSpace(*user.Email)) {
 			evInstance := emailverification.GetRecipeInstance()
 			if evInstance != nil {
 				tokenResponse, err := (*evInstance.RecipeImpl.CreateEmailVerificationToken)(user.ID, *user.Email, tenantId, userContext)

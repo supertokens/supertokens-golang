@@ -60,6 +60,8 @@ func Gitlab(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			return config, nil
 		}
 
+		addClientAccessTokenCheck(originalImplementation, input.Config, checkGitlabAccessToken)
+
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)
 		}

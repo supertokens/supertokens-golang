@@ -51,15 +51,14 @@ func Okta(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			}
 
 			if config.ClientSecret == "" && config.AdditionalConfig["privateKey"] != nil {
-				if config.TokenEndpointBodyParams == nil {
-					config.TokenEndpointBodyParams = map[string]interface{}{}
-				}
-				config.TokenEndpointBodyParams["client_assertion_type"] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
+				tokenEndpointBodyParams := copyConfigMapForUpdate(config.TokenEndpointBodyParams)
+				tokenEndpointBodyParams["client_assertion_type"] = "urn:ietf:params:oauth:client-assertion-type:jwt-bearer"
 				ca, err := getOktaClientAssertion(config)
 				if err != nil {
 					return tpmodels.ProviderConfigForClientType{}, err
 				}
-				config.TokenEndpointBodyParams["client_assertion"] = ca
+				tokenEndpointBodyParams["client_assertion"] = ca
+				config.TokenEndpointBodyParams = tokenEndpointBodyParams
 			}
 
 			return config, nil

@@ -78,8 +78,13 @@ func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			if err != nil {
 				return tpmodels.TypeUserInfo{}, err
 			}
-			rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
+			userInfoMap, ok := userInfoFromAccessToken.(map[string]interface{})
+			if !ok {
+				return tpmodels.TypeUserInfo{}, errors.New("the user info response from Bitbucket is not a JSON object")
+			}
+			rawUserInfoFromProvider.FromUserInfoAPI = userInfoMap
 
+			// Errors are ignored here, in which case the user is treated as having no email
 			userInfoFromEmail, _ := doGetRequest(
 				"https://api.bitbucket.org/2.0/user/emails",
 				nil,
@@ -90,11 +95,16 @@ func Bitbucket(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 			email := ""
 			isVerified := false
 
-			for _, emailInfo := range userInfoFromEmail.(map[string]interface{})["values"].([]interface{}) {
-				emailInfoMap := emailInfo.(map[string]interface{})
-				if emailInfoMap["is_primary"].(bool) {
-					email = emailInfoMap["email"].(string)
-					isVerified = emailInfoMap["is_confirmed"].(bool)
+			emailsResponse, _ := userInfoFromEmail.(map[string]interface{})
+			emailValues, _ := emailsResponse["values"].([]interface{})
+			for _, emailInfo := range emailValues {
+				emailInfoMap, ok := emailInfo.(map[string]interface{})
+				if !ok {
+					continue
+				}
+				if isPrimary, _ := emailInfoMap["is_primary"].(bool); isPrimary {
+					email, _ = emailInfoMap["email"].(string)
+					isVerified, _ = emailInfoMap["is_confirmed"].(bool)
 					break
 				}
 			}

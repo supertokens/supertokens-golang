@@ -340,6 +340,15 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		options webauthnmodels.APIOptions,
 		userContext supertokens.UserContext,
 	) (webauthnmodels.RecoverAccountPOSTResponse, error) {
+		// Loading the options does not consume them, so this can be done before the token is spent.
+		generatedOptions, err := (*options.RecipeImplementation.GetGeneratedOptions)(webauthnGeneratedOptionsId, tenantId, userContext)
+		if err != nil {
+			return webauthnmodels.RecoverAccountPOSTResponse{}, err
+		}
+		if generatedOptions.OptionsNotFoundError != nil || generatedOptions.OK == nil {
+			return webauthnmodels.RecoverAccountPOSTResponse{OptionsNotFoundError: &struct{}{}}, nil
+		}
+
 		consumeResp, err := (*options.RecipeImplementation.ConsumeRecoverAccountToken)(token, tenantId, userContext)
 		if err != nil {
 			return webauthnmodels.RecoverAccountPOSTResponse{}, err
@@ -350,8 +359,43 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 			}, nil
 		}
 
+		// The options must have been generated for the email the recovery token was issued for.
+		if generatedOptions.OK.Email == nil || *generatedOptions.OK.Email != consumeResp.OK.Email {
+			return webauthnmodels.RecoverAccountPOSTResponse{InvalidOptionsError: &struct{}{}}, nil
+		}
+
+		recipeUserId := consumeResp.OK.UserId
+
+		// If the email of this user was never verified, the credentials registered so far were added
+		// without proving ownership of the email. Using the recovery token proves it, so the sessions
+		// created before it are revoked, and every credential except the new one is removed once the
+		// new credential is registered.
+		user, err := (*options.RecipeImplementation.GetUserByID)(recipeUserId, userContext)
+		if err != nil {
+			return webauthnmodels.RecoverAccountPOSTResponse{}, err
+		}
+		emailWasVerified := false
+		if user != nil {
+			for _, lm := range user.LoginMethods {
+				if lm.RecipeID == "webauthn" && lm.RecipeUserID == recipeUserId {
+					emailWasVerified = lm.Verified
+					break
+				}
+			}
+		}
+
+		if !emailWasVerified {
+			// We revoke the sessions before registering (as the token is already spent), so they are
+			// revoked even if the registration fails. The credential APIs check that the session still
+			// exists, so after this no earlier session can add a credential.
+			_, err := session.RevokeAllSessionsForUser(recipeUserId, nil, userContext)
+			if err != nil {
+				return webauthnmodels.RecoverAccountPOSTResponse{}, err
+			}
+		}
+
 		registerResp, err := (*options.RecipeImplementation.RegisterCredential)(
-			consumeResp.OK.UserId,
+			recipeUserId,
 			webauthnGeneratedOptionsId,
 			credential,
 			userContext,
@@ -370,6 +414,27 @@ func MakeAPIImplementation() webauthnmodels.APIInterface {
 		}
 		if registerResp.InvalidAuthenticatorError != nil {
 			return webauthnmodels.RecoverAccountPOSTResponse{InvalidAuthenticatorError: registerResp.InvalidAuthenticatorError}, nil
+		}
+
+		if !emailWasVerified {
+			// We list the credentials after registering, which also catches any added while this
+			// recovery was running, and remove all but the new one.
+			existingCredentials, err := (*options.RecipeImplementation.ListCredentials)(recipeUserId, userContext)
+			if err != nil {
+				return webauthnmodels.RecoverAccountPOSTResponse{}, err
+			}
+			if existingCredentials.OK != nil {
+				for _, existingCredential := range existingCredentials.OK.Credentials {
+					// The core uses the id of the registration payload as the credential id
+					if existingCredential.WebauthnCredentialId == credential.ID {
+						continue
+					}
+					_, err := (*options.RecipeImplementation.RemoveCredential)(existingCredential.WebauthnCredentialId, recipeUserId, userContext)
+					if err != nil {
+						return webauthnmodels.RecoverAccountPOSTResponse{}, err
+					}
+				}
+			}
 		}
 
 		return webauthnmodels.RecoverAccountPOSTResponse{OK: &struct{}{}}, nil

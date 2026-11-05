@@ -39,16 +39,27 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 	if input.Config.ValidateAccessToken == nil {
 		input.Config.ValidateAccessToken = func(accessToken string, clientConfig tpmodels.ProviderConfigForClientType, userContext supertokens.UserContext) error {
+			if clientConfig.ClientSecret == "" {
+				return errors.New("The GitHub provider needs the ClientSecret of the client to validate access tokens. Please add it to the provider config, or set a custom ValidateAccessToken.")
+			}
 			basicAuthToken := base64.StdEncoding.EncodeToString([]byte(clientConfig.ClientID + ":" + clientConfig.ClientSecret))
 			wrongClientIdError := errors.New("Access token does not belong to your application")
 
-			resp, status, err := doPostRequest("https://api.github.com/applications/"+clientConfig.ClientID+"/token", map[string]interface{}{
+			// GitHub's token check API only accepts a JSON body, so we can't use doPostRequest (which sends form data)
+			resp, status, err := doPostRequestWithJSONBody("https://api.github.com/applications/"+clientConfig.ClientID+"/token", map[string]interface{}{
 				"access_token": accessToken,
-			}, map[string]interface{}{
+			}, map[string]string{
 				"Authorization": "Basic " + basicAuthToken,
-				"Content-Type":  "application/json",
+				"Accept":        "application/vnd.github+json",
 			})
 
+			if status == -1 {
+				// The request itself failed (e.g. a network error), so this says nothing about the token
+				return err
+			}
+			if status == 401 || status == 403 {
+				return errors.New("GitHub rejected the client credentials used to validate the access token. Please check the ClientID and ClientSecret of the GitHub provider.")
+			}
 			if err != nil || status != 200 {
 				return errors.New("Invalid access token")
 			}
@@ -59,7 +70,12 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 				return wrongClientIdError
 			}
 
-			clientId, clientIdOk := app.(map[string]interface{})["client_id"]
+			appMap, appMapOk := app.(map[string]interface{})
+			if !appMapOk {
+				return wrongClientIdError
+			}
+
+			clientId, clientIdOk := appMap["client_id"]
 
 			if !clientIdOk {
 				return wrongClientIdError
@@ -91,6 +107,13 @@ func Github(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		}
 
 		originalImplementation.GetUserInfo = func(oAuthTokens tpmodels.TypeOAuthTokens, userContext supertokens.UserContext) (tpmodels.TypeUserInfo, error) {
+			if accessToken, ok := oAuthTokens["access_token"].(string); ok && originalImplementation.Config.ValidateAccessToken != nil {
+				err := originalImplementation.Config.ValidateAccessToken(accessToken, originalImplementation.Config, userContext)
+				if err != nil {
+					return tpmodels.TypeUserInfo{}, err
+				}
+			}
+
 			headers := map[string]string{
 				"Authorization": fmt.Sprintf("Bearer %s", oAuthTokens["access_token"]),
 				"Accept":        "application/vnd.github.v3+json",
@@ -134,17 +157,36 @@ func getSupertokensUserInfoFromRawUserInfoResponseForGithub(rawUserInfoResponse 
 		return tpmodels.TypeUserInfo{}, errors.New("rawUserInfoResponse.FromUserInfoAPI is not available")
 	}
 
-	result := tpmodels.TypeUserInfo{
-		ThirdPartyUserId: fmt.Sprint(int64(rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})["id"].(float64))),
+	user, userOk := rawUserInfoResponse.FromUserInfoAPI["user"].(map[string]interface{})
+	if !userOk {
+		return tpmodels.TypeUserInfo{}, errors.New("the user info response from GitHub is not a JSON object")
+	}
+	userId, userIdOk := user["id"].(float64)
+	if !userIdOk {
+		return tpmodels.TypeUserInfo{}, errors.New("third party user id is missing")
 	}
 
-	emailsInfo := rawUserInfoResponse.FromUserInfoAPI["emails"].([]interface{})
+	result := tpmodels.TypeUserInfo{
+		ThirdPartyUserId: fmt.Sprint(int64(userId)),
+	}
+
+	emailsInfo, emailsInfoOk := rawUserInfoResponse.FromUserInfoAPI["emails"].([]interface{})
+	if !emailsInfoOk {
+		return tpmodels.TypeUserInfo{}, errors.New("the emails response from GitHub is not a JSON array")
+	}
 	for _, info := range emailsInfo {
-		emailInfoMap := info.(map[string]interface{})
-		if emailInfoMap["primary"].(bool) {
+		emailInfoMap, emailInfoMapOk := info.(map[string]interface{})
+		if !emailInfoMapOk {
+			continue
+		}
+		if primary, primaryOk := emailInfoMap["primary"].(bool); primaryOk && primary {
+			email, emailOk := emailInfoMap["email"].(string)
+			if !emailOk {
+				continue
+			}
 			verified, verifiedOk := emailInfoMap["verified"].(bool)
 			result.Email = &tpmodels.EmailStruct{
-				ID:         emailInfoMap["email"].(string),
+				ID:         email,
 				IsVerified: verified && verifiedOk,
 			}
 			break

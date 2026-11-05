@@ -14,9 +14,8 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 		input.Config.OIDCDiscoveryEndpoint = "https://accounts.google.com/.well-known/openid-configuration"
 	}
 
-	if input.Config.AuthorizationEndpointQueryParams == nil {
-		input.Config.AuthorizationEndpointQueryParams = map[string]interface{}{}
-	}
+	// The input config is shared between requests, so we never write into its maps
+	input.Config.AuthorizationEndpointQueryParams = copyConfigMapForUpdate(input.Config.AuthorizationEndpointQueryParams)
 
 	if _, ok := input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"]; !ok {
 		input.Config.AuthorizationEndpointQueryParams["include_granted_scopes"] = "true"
@@ -44,6 +43,8 @@ func Google(input tpmodels.ProviderInput) *tpmodels.TypeProvider {
 
 			return config, nil
 		}
+
+		addClientAccessTokenCheck(originalImplementation, input.Config, checkGoogleAccessToken)
 
 		if oOverride != nil {
 			originalImplementation = oOverride(originalImplementation)

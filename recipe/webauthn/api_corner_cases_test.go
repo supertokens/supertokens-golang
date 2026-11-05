@@ -562,9 +562,11 @@ func TestRecoverAccountWithInvalidTokenReturnsTokenInvalidError(t *testing.T) {
 	ts := newTestServer(t)
 	defer ts.Close()
 
+	optionsId, _, _ := registerOptions(t, ts.URL, "recover-invalid-token@example.com")
+
 	resp := postJSON(t, ts.URL+"/auth/user/webauthn/reset", map[string]interface{}{
 		"token":                      "definitely-not-a-real-token",
-		"webauthnGeneratedOptionsId": "00000000-0000-0000-0000-000000000000",
+		"webauthnGeneratedOptionsId": optionsId,
 		"credential": map[string]interface{}{
 			"id":    "cred-id",
 			"rawId": "cred-id",

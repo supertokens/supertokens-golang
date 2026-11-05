@@ -69,7 +69,8 @@ func oauth2_GetAuthorisationRedirectURL(config tpmodels.ProviderConfigForClientT
 }
 
 func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClientType, redirectURIInfo tpmodels.TypeRedirectURIInfo, userContext supertokens.UserContext) (tpmodels.TypeOAuthTokens, error) {
-	if redirectURIInfo.RedirectURIQueryParams == nil || redirectURIInfo.RedirectURIQueryParams["code"] == nil {
+	code, codeOk := redirectURIInfo.RedirectURIQueryParams["code"].(string)
+	if !codeOk {
 		return nil, supertokens.BadInputError{Msg: "code not found in redirect URI query params"}
 	}
 
@@ -81,7 +82,7 @@ func oauth2_ExchangeAuthCodeForOAuthTokens(config tpmodels.ProviderConfigForClie
 	accessTokenAPIParams := map[string]interface{}{
 		"client_id":    config.ClientID,
 		"redirect_uri": redirectURIInfo.RedirectURIOnProviderDashboard,
-		"code":         redirectURIInfo.RedirectURIQueryParams["code"].(string),
+		"code":         code,
 		"grant_type":   "authorization_code",
 	}
 	if config.ClientSecret != "" {
@@ -121,13 +122,20 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 	rawUserInfoFromProvider := tpmodels.TypeRawUserInfoFromProvider{}
 
 	if idTokenOk && config.JwksURI != "" {
+		// The id_token must have been issued for this client. An empty expected
+		// audience would disable the aud check in the jwt library, so we fail closed.
+		expectedAudience := getActualClientIdFromDevelopmentClientId(config.ClientID)
+		if expectedAudience == "" {
+			return tpmodels.TypeUserInfo{}, errors.New("cannot verify id_token: the provider's clientId is not configured")
+		}
+
 		claims := jwt.MapClaims{}
 		jwksURL := config.JwksURI
 		jwks, err := getJWKSFromURL(jwksURL)
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
-		token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc)
+		token, err := jwt.ParseWithClaims(idToken, claims, jwks.Keyfunc, jwt.WithAudience(expectedAudience))
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
@@ -174,11 +182,15 @@ func oauth2_GetUserInfo(config tpmodels.ProviderConfigForClientType, oAuthTokens
 		}
 
 		userInfoFromAccessToken, err := doGetRequest(config.UserInfoEndpoint, queryParams, headers)
-		rawUserInfoFromProvider.FromUserInfoAPI = userInfoFromAccessToken.(map[string]interface{})
-
 		if err != nil {
 			return tpmodels.TypeUserInfo{}, err
 		}
+
+		userInfoMap, ok := userInfoFromAccessToken.(map[string]interface{})
+		if !ok {
+			return tpmodels.TypeUserInfo{}, errors.New("the user info response from the provider is not a JSON object")
+		}
+		rawUserInfoFromProvider.FromUserInfoAPI = userInfoMap
 	}
 
 	userInfoResult, err := oauth2_getSupertokensUserInfoResultFromRawUserInfo(config, rawUserInfoFromProvider)

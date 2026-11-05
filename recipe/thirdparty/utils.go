@@ -34,6 +34,7 @@ func validateAndNormaliseUserInput(recipeInstance *Recipe, appInfo supertokens.N
 		return tpmodels.TypeNormalisedInput{}, err
 	}
 	typeNormalisedInput.SignInAndUpFeature = signInAndUpFeature
+	typeNormalisedInput.IsValidFrontendRedirectURI = config.IsValidFrontendRedirectURI
 
 	if config != nil && config.Override != nil {
 		if config.Override.Functions != nil {
