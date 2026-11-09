@@ -1,3 +1,3 @@
 kind: Fixed
-body: 'dashboard: the user sessions API no longer crashes the process with a concurrent map write, loses sessions, or hangs when reading one session fails.'
+body: 'dashboard: the user sessions API no longer crashes the process with a concurrent map write, loses sessions, or hangs when reading one session fails. Overrides of GetSessionInformation no longer receive the request userContext on this API.'
 time: 2026-11-09T01:00:00Z
