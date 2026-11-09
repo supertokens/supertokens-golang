@@ -57,15 +57,20 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, tenantId string,
 
 	var processingGroup sync.WaitGroup
 	processingGroup.Add(len(response))
+	var resultLock sync.Mutex
 	var errInBackground error
 
-	for i, sessionHandle := range response {
-		if errInBackground != nil {
-			return userSessionsGetResponse{}, errInBackground
-		}
+	for _, sessionHandle := range response {
+		go func(handle string) {
+			defer processingGroup.Done()
 
-		go func(i int, handle string) {
-			sessionResponse, sessionError := session.GetSessionInformation(handle, userContext)
+			// NOTE: userContext must not be passed in the following call. The
+			// querier writes its call cache into it, and these goroutines would
+			// then crash with a concurrent map write error.
+			sessionResponse, sessionError := session.GetSessionInformation(handle)
+
+			resultLock.Lock()
+			defer resultLock.Unlock()
 
 			if sessionError != nil {
 				errInBackground = sessionError
@@ -82,16 +87,14 @@ func UserSessionsGet(apiInterface dashboardmodels.APIInterface, tenantId string,
 					SessionHandle:                    sessionResponse.SessionHandle,
 				})
 			}
-
-			defer processingGroup.Done()
-		}(i, sessionHandle)
+		}(sessionHandle)
 	}
+
+	processingGroup.Wait()
 
 	if errInBackground != nil {
 		return userSessionsGetResponse{}, errInBackground
 	}
-
-	processingGroup.Wait()
 
 	return userSessionsGetResponse{
 		Status:   "OK",
